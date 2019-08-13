@@ -12,6 +12,8 @@ local animation = require('animation')
 local menu = require('menu')
 local menuItems = require('menuItems')
 local party = require('party')
+local music = require('music/music')
+local ds = require('libds')
 
 local devEnabled = false
 
@@ -28,6 +30,10 @@ function love.load()
   charView.init(gff.charOverview, menu, charNav)
   charInventory.init(gff.inventory, menu, charNav)
   menu.init(draw, animation, menuItems.elements, charView, charInventory.elements, popup(gff.popup, menu))
+  music.init();
+  -- Play startup music
+  local midi = ds.get_chunk_as_midi(0, 1363497804, 2)
+  music.music_play_mem(midi)
 end
 
 function love.draw()
