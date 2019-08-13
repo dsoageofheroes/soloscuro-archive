@@ -1,0 +1,9 @@
+[[
+  This is just an example. Copy and rename to 'solconfig.lua', then change the settings.
+]]
+
+return
+{
+  ds1Path = './path/to/game/directory',
+  ds2Path = './path/to/game/directory',
+}

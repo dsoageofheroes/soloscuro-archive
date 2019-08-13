@@ -9,9 +9,9 @@ local private = {}
 -- GFF file list
 local GFF_RESOURCE = "resource.gff"
 
-function gff.init()
+function gff.init(_config)
   ds.gff_init()
-  ds.gff_load_directory('love2d/ui/')
+  ds.gff_load_directory(_config.ds1Path)
   gff_file = ds.gff_find_index(GFF_RESOURCE)
 
   private.loadAllResources()
@@ -26,7 +26,7 @@ function private.loadAllResources()
 
   -- Load main menu assets
   gff.menu = {
-    dev = love.graphics.newImage('dsun_000.png'),
+    dev = love.graphics.newImage('dsun_001.png'),
     sun = private.getGraphic(GFF_RESOURCE, 20028),
     stone = private.getGraphic(GFF_RESOURCE, 20029),
     start = private.getGraphic(GFF_RESOURCE, 2048, true),
@@ -77,6 +77,11 @@ function private.loadAllResources()
     statusbox = private.getGraphic(GFF_RESOURCE, 10001),
   }
 
+  -- Load full character portraits
+  for i = 0, 13 do 
+    gff.inventory.chars[i] = private.getGraphic(GFF_RESOURCE, 20000 + i)
+  end
+
   gff.popup = 
   {
     createChar = private.getGraphic(GFF_RESOURCE, 14000),
@@ -86,10 +91,14 @@ function private.loadAllResources()
     corona = gff.charOverview.corona,
   }
 
-  -- Load full character portraits
-  for i = 0, 13 do 
-    gff.inventory.chars[i] = private.getGraphic(GFF_RESOURCE, 20000 + i)
-  end
+  gff.createChar =
+  {
+    background = private.getGraphic(GFF_RESOURCE, 13001),
+    charBackground = gff.inventory.charBackground,
+    dieRoll = {}
+  }
+
+
 
   -- IMAGES
   -- 3009 - save/load screen

@@ -1,5 +1,6 @@
-require('util')
+require 'util'
 
+local config = require 'solconfig'
 local popup = require('menu/popup')
 local charInventory = require('menu/inventory')
 local charNav = require('menu/nav')
@@ -17,7 +18,7 @@ local devEnabled = false
 
 function love.load()
   draw.init()
-  gff.init()
+  gff.init(config)
   
   --Sample debug statement
   --draw.debug1 = 'Hello there!'
