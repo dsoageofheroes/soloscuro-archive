@@ -1,7 +1,8 @@
 MAIN   = src/main.c
 SRCS   = $(filter-out $(MAIN), $(wildcard src/*.c))
 OBJS   = $(SRCS:src/%.c=obj/%.o)
-CFLAGS = -g -I src/ -I xmimidi/ -L./ -Werror -Wall -llua5.1 -lxmimidi -O2
+MUSIC_OBJS = $(SRCS:src/%music.c=obj/%music.o)
+CFLAGS = -g -I . -I src/ -I xmimidi/ -L./ -Lfluidsynth -Werror -Wall -llua5.1 -lxmimidi -lfluidsynth-2 -O2
 EXEC   = mdark
 
 ifdef OS
@@ -9,21 +10,25 @@ ifdef OS
 else
 	LIB_EXT = so
     CFLAGS += -fPIC
+	LINUX_CFLAGS = -fPIC
 endif
 
 
 .PHONY: clean test all
 
-all: $(SRCS) $(EXEC) libds.so
+all: $(SRCS) $(EXEC) libds.so music.so
 
-$(EXEC): $(OBJS) $(MAIN) libds.so
+$(EXEC): $(OBJS) $(MAIN) libds.so music.so
 	gcc $(CFLAGS) $(OBJS) $(MAIN) -o $@
 
-libds.so: $(OBJS) libxmimidi.so
-	gcc -L./ $(OBJS) -shared -o libds.$(LIB_EXT) -llua5.1 -lxmimidi
+libds.so: $(OBJS) libxmimidi.so music.so
+	gcc -L./ -Lfluidsynth $(OBJS) -shared -o libds.$(LIB_EXT) -llua5.1 -lxmimidi -lfluidsynth-2
+
+music.so: $(MUSIC_OBJS) 
+	gcc -I xmimidi/ $(LINUX_CFLAGS) -I. -L. -Lfluidsynth $(MUSIC_OBJS) -shared -o dsmusic.$(LIB_EXT) -llua5.1 -lxmimidi -lfluidsynth-2
 
 libxmimidi.so: $(OBJS) 
-	gcc xmimidi/*.c -shared -o libxmimidi.$(LIB_EXT)
+	gcc xmimidi/*.c $(LINUX_CFLAGS) -shared -o libxmimidi.$(LIB_EXT)
 
 obj/%.o: src/%.c src/%.h obj
 	gcc -c $(CFLAGS) $< -o $@
