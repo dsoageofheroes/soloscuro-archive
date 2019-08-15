@@ -46,7 +46,7 @@ void music_play(const char *midipath) {
     fluid_player_play(player);
 }
 
-void music_play_mem(const const void * buffer, size_t len) {
+void music_play_mem(const void * buffer, size_t len) {
     fluid_player_add_mem(player, buffer, len);
     fluid_player_play(player);
 }
