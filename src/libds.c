@@ -336,6 +336,37 @@ int lua_map_is_danger(lua_State *L) {
 
     return 1;
 }
+
+int lua_map_get_number_of_objects(lua_State *L) {
+    lua_Integer gff_index = luaL_checkinteger (L, 1);
+    lua_Integer res_id = luaL_checkinteger (L, 2);
+
+    lua_pushinteger(L, gff_map_get_num_objects(gff_index, res_id));
+
+    return 1;
+}
+
+int lua_map_get_object_bmp(lua_State *L) {
+    lua_Integer gff_index = luaL_checkinteger (L, 1);
+    lua_Integer res_id = luaL_checkinteger (L, 2);
+    lua_Integer obj_id = luaL_checkinteger (L, 3);
+
+    int w, h;
+
+    char *data = (char*)gff_map_get_object_bmp(gff_index, res_id, obj_id, &w, &h);
+
+    if (data == NULL) {
+        lua_pushinteger(L, 0);
+    } else {
+        lua_pushlstring(L, data, 4 * w * h);
+        free(data);
+    }
+
+    lua_pushinteger(L, w);
+    lua_pushinteger(L, h);
+
+    return 3;
+}
 /* End Map Functions */
 
 //library to be registered
@@ -373,6 +404,8 @@ static const struct luaL_Reg lslib [] = {
       {"map_is_block", lua_map_is_block},
       {"map_is_actor", lua_map_is_actor},
       {"map_is_danger", lua_map_is_danger},
+      {"map_get_number_of_objects", lua_map_get_number_of_objects},
+      {"map_get_object_bmp", lua_map_get_object_bmp},
 
       // The End
       {NULL, NULL}  /* sentinel */

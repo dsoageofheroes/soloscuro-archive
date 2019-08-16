@@ -14,6 +14,17 @@
 #define GFFSEGFLAGMASK   (0x80000000L)
 #define NUM_FILES (256)
 
+enum {
+    RESOURCE_GFF_INDEX,
+    OBJEX_GFF_INDEX,
+    GPLDATA_GFF_INDEX,
+    CHARSAVE_GFF_INDEX,
+    DARKSAVE_GFF_INDEX,
+    CINE_GFF_INDEX,
+    REST_GFF_INDEX
+};
+
+
 typedef struct {
 
   uint32_t	  identity;
@@ -146,6 +157,8 @@ typedef struct _gff_file_t {
     char *filename;
     gff_palette_t *palettes;
     unsigned int num_palettes;
+    int num_objects;
+    gff_map_object_t *entry_table;
 } gff_file_t;
 
 extern gff_file_t open_files[NUM_FILES];

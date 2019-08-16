@@ -6,6 +6,7 @@ gff_filename = "resource.gff"
 RMAP_TYPE = 1346456914
 GMAP_TYPE = 1346456903
 TILE_TYPE = 1162627412
+ETAB_TYPE = 1111577669
 
 function init_current_file()
     -- Returns how many different types of data are stored in the gff file (EX: image, text music, etc...)
@@ -44,6 +45,10 @@ function init_current_file()
     -- Set the start location for the RMAP
     rmapstartx = 0
     rmapstarty = 0
+
+    -- Set the number of possible objects
+    num_objects = 0
+    cobject = 0
 end
 
 function get_tiles() 
@@ -201,6 +206,8 @@ function love.keypressed( key )
         end
         midi_data = 0
         -- with 0 referenced it would be: current_resource_id_index = (current_resource_id_index + 1) % table.getn(current_resource_id_list)
+        cobject = cobject + 1
+        cobject = cobject % num_objects
     end
     if key == "left" then
         if (not (music == 0)) then
@@ -214,6 +221,8 @@ function love.keypressed( key )
             current_resource_id_index = current_resource_id_index - 1
         end
         midi_data = 0
+        cobject = cobject - 1
+        cobject = cobject % num_objects
     end
     if key == "f" then
         cframe = cframe + 1
@@ -341,6 +350,24 @@ function love.draw()
         love.graphics.print("Use e, s, d, f to scroll by tile.", 10, 110)
         draw_rmap_with_blocks()
         type_displayed = true
+    end
+    if (type_id == ETAB_TYPE) then
+        num_objects = ds.map_get_number_of_objects(gff_file, res_id)
+        love.graphics.print("current object # " .. cobject .. " of " .. num_objects, 10, 110)
+        love.graphics.print("use right/left arrows to cycle through", 10, 130)
+        if (current_image == 0) then
+            data, width, height = ds.map_get_object_bmp(gff_file, res_id, cobject)
+            if (data ~=  0) then -- always check that it got the image!
+                imageData = love.image.newImageData(width, height, "rgba8", data)
+                current_image = love.graphics.newImage( imageData )
+            end
+        end
+        if (current_image ~= 0) then -- always check the image is available!
+            love.graphics.draw(current_image, 0, 170, 0, 2, 2.4)
+        else
+            love.graphics.print("Unable to convert image.  Inform the developer.", 10, 150)
+        end
+        type_displayed = true;
     end
     if (not type_displayed) then
         love.graphics.print("Unable to display.", 10, 110)

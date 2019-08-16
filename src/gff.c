@@ -33,16 +33,6 @@ static gff_chunk_list_t* get_gffi_header(gff_file_t *file);
 static gff_type_header_t* get_type_header(int idx);
 static int get_next_idx(char *name);
 
-enum {
-    RESOURCE_GFF_INDEX,
-    OBJEX_GFF_INDEX,
-    GPLDATA_GFF_INDEX,
-    CHARSAVE_GFF_INDEX,
-    DARKSAVE_GFF_INDEX,
-    CINE_GFF_INDEX,
-    REST_GFF_INDEX
-};
-
 int gff_get_master() {
     return master_gff;
 }
@@ -81,7 +71,7 @@ int get_next_idx(char *name) {
     }
 
     if (strcmp(name, "resource.gff") == 0) { return RESOURCE_GFF_INDEX; }
-    if (strcmp(name, "objex.gff") == 0) { return OBJEX_GFF_INDEX; }
+    if (strcmp(name, "segobjex.gff") == 0) { return OBJEX_GFF_INDEX; }
     if (strcmp(name, "gpldata.gff") == 0) { return GPLDATA_GFF_INDEX; }
     if (strcmp(name, "charsave.gff") == 0) { return CHARSAVE_GFF_INDEX; }
     if (strcmp(name, "darksave.gff") == 0) { return DARKSAVE_GFF_INDEX; }
@@ -255,6 +245,8 @@ int gff_open(const char *pathName) {
     open_files[idx].data = malloc(open_files[idx].len);
     open_files[idx].palettes = NULL;
     open_files[idx].num_palettes = 0;
+    open_files[idx].num_objects = -1;
+    open_files[idx].entry_table = NULL;
 
     read_amt = fread(open_files[idx].data, 1, open_files[idx].len, file);
 
