@@ -104,25 +104,6 @@ int gff_map_is_danger(int gff_file, int row, int column) { gff_map_t *map = get_
     return (int32_t)(map->flags[row][column] & MAP_DANGER);
 }
 
-#define OBJECT_PRIORITY_MASK (0x07)
-#define OBJECT_EXISTS        (0x08)
-#define OBJECT_DONT_DRAW     (0x10)
-#define OBJECT_ONE_OBJECT    (0x20) // This object is aliased!
-#define OBJECT_REDRAW        (0x40)
-#define OBJECT_XMIRROR       (0x80) // Need to flip x axis.
-
-typedef struct _disk_object_t {
-    uint16_t flags;
-    int16_t  xoffset;
-    int16_t  yoffset;
-    uint16_t xpos;
-    uint16_t ypos;
-    int8_t   zpos;
-    uint8_t  object_index;
-    uint16_t bmp_id;
-    uint16_t script_id;
-} disk_object_t;
-
 static disk_object_t* gff_get_object(int object_index) {
     unsigned long len;
     if (!open_files[OBJEX_GFF_INDEX].data) {
@@ -160,12 +141,6 @@ int gff_map_get_num_objects(int gff_index, int res_id) {
                 }
             }
         }
-        /*
-        for (i = 0; i < num_entries; i++) {
-            disk_object_t *object = gff_get_object(entry_table[i].index);
-            printf("[%d]: object = %p, bmp_id = %u\n", i, object, object->bmp_id);
-        }
-        */
         open_files[gff_index].num_objects = num_entries;
         return num_entries;
     }
@@ -174,7 +149,6 @@ int gff_map_get_num_objects(int gff_index, int res_id) {
 
 unsigned char* gff_map_get_object_bmp(int gff_index, int res_id, int obj_id, int *w, int *h) {
     int num_objects = gff_map_get_num_objects(gff_index, res_id);
-    //unsigned long len;
     if (gff_index < 0 || gff_index >= NUM_FILES || obj_id < 0 || obj_id >= num_objects) {
         return NULL;
     }
@@ -186,4 +160,19 @@ unsigned char* gff_map_get_object_bmp(int gff_index, int res_id, int obj_id, int
     *w = get_frame_width(OBJEX_GFF_INDEX, GT_BMP, disk_object->bmp_id, 0);
     *h = get_frame_height(OBJEX_GFF_INDEX, GT_BMP, disk_object->bmp_id, 0);
     return get_frame_rgba_with_palette(OBJEX_GFF_INDEX, GT_BMP, disk_object->bmp_id, 0, -1);
+}
+
+void gff_map_get_object_location(int gff_index, int res_id, int obj_id, uint16_t *x, uint16_t *y, uint8_t *z) {
+    int num_objects = gff_map_get_num_objects(gff_index, res_id);
+    if (gff_index < 0 || gff_index >= NUM_FILES || obj_id < 0 || obj_id >= num_objects) {
+        *x = *y = 0xFFFF;
+        return;
+    }
+
+    gff_map_object_t *entry = open_files[gff_index].entry_table;
+    if (entry == NULL) { *x = *y = 0xFFFF; return; }
+    entry += obj_id;
+    *x = entry->xpos;
+    *y = entry->ypos;
+    *z = entry->zpos;
 }

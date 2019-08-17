@@ -367,6 +367,22 @@ int lua_map_get_object_bmp(lua_State *L) {
 
     return 3;
 }
+
+int lua_map_get_object_location(lua_State *L) {
+    lua_Integer gff_index = luaL_checkinteger (L, 1);
+    lua_Integer res_id = luaL_checkinteger (L, 2);
+    lua_Integer obj_id = luaL_checkinteger (L, 3);
+
+    uint16_t x, y;
+    uint8_t z;
+    gff_map_get_object_location(gff_index, res_id, obj_id, &x, &y, &z);
+
+    lua_pushinteger(L, x);
+    lua_pushinteger(L, y);
+    lua_pushinteger(L, z);
+
+    return 3;
+}
 /* End Map Functions */
 
 //library to be registered
@@ -406,6 +422,7 @@ static const struct luaL_Reg lslib [] = {
       {"map_is_danger", lua_map_is_danger},
       {"map_get_number_of_objects", lua_map_get_number_of_objects},
       {"map_get_object_bmp", lua_map_get_object_bmp},
+      {"map_get_object_location", lua_map_get_object_location},
 
       // The End
       {NULL, NULL}  /* sentinel */
