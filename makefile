@@ -2,7 +2,7 @@ MAIN   = src/main.c
 SRCS   = $(filter-out $(MAIN), $(wildcard src/*.c))
 OBJS   = $(SRCS:src/%.c=obj/%.o)
 MUSIC_OBJS = $(SRCS:src/%music.c=obj/%music.o)
-CFLAGS = -g -I . -I src/ -I xmimidi/ -L./ -Lfluidsynth -Werror -Wall -llua5.1 -lxmimidi -lfluidsynth-2 -O2
+CFLAGS = -g -I . -I src/ -I xmimidi/ -L./ -Lfluidsynth -Werror -Wall -llua5.1 -lxmimidi -lfluidsynth -O2
 EXEC   = mdark
 
 ifdef OS
@@ -22,10 +22,10 @@ $(EXEC): $(OBJS) $(MAIN) libds.so music.so
 	gcc $(CFLAGS) $(OBJS) $(MAIN) -o $@
 
 libds.so: $(OBJS) libxmimidi.so music.so
-	gcc -L./ -Lfluidsynth $(OBJS) -shared -o libds.$(LIB_EXT) -llua5.1 -lxmimidi -lfluidsynth-2
+	gcc -L./ -Lfluidsynth $(OBJS) -shared -o libds.$(LIB_EXT) -llua5.1 -lxmimidi -lfluidsynth
 
 music.so: $(MUSIC_OBJS) 
-	gcc -I xmimidi/ $(LINUX_CFLAGS) -I. -L. -Lfluidsynth $(MUSIC_OBJS) -shared -o dsmusic.$(LIB_EXT) -llua5.1 -lxmimidi -lfluidsynth-2
+	gcc -I xmimidi/ $(LINUX_CFLAGS) -I. -L. -Lfluidsynth $(MUSIC_OBJS) -shared -o dsmusic.$(LIB_EXT) -llua5.1 -lxmimidi -lfluidsynth
 
 libxmimidi.so: $(OBJS) 
 	gcc xmimidi/*.c $(LINUX_CFLAGS) -shared -o libxmimidi.$(LIB_EXT)
