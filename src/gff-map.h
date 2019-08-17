@@ -17,6 +17,24 @@
 #define VALID_MAP_ROW(row) (row >= 0 && row < MAP_ROWS)
 #define VALID_MAP_COLUMN(col) (col >= 0 && col < MAP_COLUMNS)
 #define HAS_MAP_DATA(gff_index) (gff_index >= 0 && gff_file < NUM_FILES && open_files[gff_index].map)
+#define OBJECT_PRIORITY_MASK (0x07)
+#define OBJECT_EXISTS        (0x08)
+#define OBJECT_DONT_DRAW     (0x10)
+#define OBJECT_ONE_OBJECT    (0x20) // This object is aliased!
+#define OBJECT_REDRAW        (0x40)
+#define OBJECT_XMIRROR       (0x80) // Need to flip x axis.
+
+typedef struct _disk_object_t {
+    uint16_t flags;
+    int16_t  xoffset;
+    int16_t  yoffset;
+    uint16_t xpos;
+    uint16_t ypos;
+    int8_t   zpos;
+    uint8_t  object_index;
+    uint16_t bmp_id;
+    uint16_t script_id;
+} disk_object_t;
 
 typedef struct _gff_map_t {
     uint8_t flags[MAP_ROWS][MAP_COLUMNS];
@@ -41,5 +59,6 @@ int gff_map_is_danger(int gff_file, int row, int column);
 int32_t get_tile_id(int gff_file, int row, int column);
 int gff_map_get_num_objects(int gff_index, int res_id);
 unsigned char* gff_map_get_object_bmp(int gff_index, int res_id, int obj_id, int *w, int *h);
+void gff_map_get_object_location(int gff_index, int res_id, int obj_id, uint16_t *x, uint16_t *y, uint8_t *z);
 
 #endif

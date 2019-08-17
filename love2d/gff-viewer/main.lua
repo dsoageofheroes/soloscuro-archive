@@ -367,6 +367,8 @@ function love.draw()
         else
             love.graphics.print("Unable to convert image.  Inform the developer.", 10, 150)
         end
+        x, y, z = ds.map_get_object_location(gff_file, res_id, cobject)
+        love.graphics.print("location (" .. x .. ", " .. y .. ", " .. z ..")", 10, 150)
         type_displayed = true;
     end
     if (not type_displayed) then
