@@ -1,4 +1,11 @@
 local party = {}
-local private = {}
+local private = 
+{
+  activeChar = 1
+}
+
+function party.init()
+
+end
 
 return party

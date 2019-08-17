@@ -19,16 +19,14 @@ local devEnabled = false
 function love.load()
   draw.init()
   gff.init(config)
-  
-  --Sample debug statement
-  --draw.debug1 = 'Hello there!'
-
   mouse.init(gff.cursors, draw)
+
+  popup.init(gff.popup, menu)
   menuItems.init(gff.menu, menu)
   charNav.init(gff.charOverview, menu)
   charView.init(gff.charOverview, menu, charNav)
   charInventory.init(gff.inventory, menu, charNav)
-  menu.init(draw, animation, menuItems.elements, charView, charInventory.elements, popup(gff.popup, menu))
+  menu.init(draw, animation, menuItems.elements, charView, charInventory.elements, popup)
 end
 
 function love.draw()

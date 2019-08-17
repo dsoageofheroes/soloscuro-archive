@@ -1,40 +1,46 @@
-return function(_popupAssets, _menu)
-  local self = {}
-  local menu = _menu
+local popup = {}
+local private = {}
 
-  function self.createChar(_x, _y)
-    local anim = { 4, interval = 0.1 }
-    local simpleClicked = function(self, x, y)
-      self.timer = 0
-    end
+local menu = 1
+local popupAssets = 1
 
-    local cancel = function()
-      menu.closePopup()
-    end
+function popup.init(_popupAssets, _menu)
+  menu = _menu
+  popupAssets = _popupAssets
+end
 
-    return
-    {
-      { assets = _popupAssets.createChar, x = _x, y = _y },
-      { assets = _popupAssets.text1, x = _x + 8, y = _y + 17, animation = anim, clicked = simpleClicked, hover = 2 },
-      { assets = _popupAssets.text2, x = _x + 8, y = _y + 29, animation = anim, clicked = simpleClicked, hover = 2 },
-      { 
-        assets = _popupAssets.text3, 
-        x = _x + 8, 
-        y = _y + 41, 
-        hover = 2,
-        animation = anim, 
-        clicked = simpleClicked, 
-        animComplete = cancel,
-      },
-      { 
-        assets = _popupAssets.corona, 
-        x = _x + 102, 
-        y = _y + 36, 
-        hover = 2,
-        clicked = cancel,
-      },
-    }
+function popup.createChar(_x, _y)
+  local anim = { 4, interval = 0.1 }
+  local simpleClicked = function(self, x, y)
+    self.timer = 0
   end
 
-  return self
+  local cancel = function()
+    menu.closePopup()
+  end
+
+  return
+  {
+    { assets = popupAssets.createChar, x = _x, y = _y },
+    { assets = popupAssets.text1, x = _x + 8, y = _y + 17, animation = anim, clicked = simpleClicked, hover = 2 },
+    { assets = popupAssets.text2, x = _x + 8, y = _y + 29, animation = anim, clicked = simpleClicked, hover = 2 },
+    { 
+      assets = popupAssets.text3, 
+      x = _x + 8, 
+      y = _y + 41, 
+      hover = 2,
+      animation = anim, 
+      clicked = simpleClicked, 
+      animComplete = cancel,
+    },
+    { 
+      assets = popupAssets.corona, 
+      x = _x + 102, 
+      y = _y + 36, 
+      hover = 2,
+      clicked = cancel,
+    },
+  }
 end
+
+return popup

@@ -8,3 +8,7 @@ obj/
 
 # Config
 solconfig.lua
+
+# Media
+*.sf2
+*.mid

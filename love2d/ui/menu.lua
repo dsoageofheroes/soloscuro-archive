@@ -21,6 +21,7 @@ local private =
   isInventoryOpen = false,
   isPowersOpen = false,
   isEffectsOpen = false,
+  isActivePopupOpen = false,
 
   -- Popups
   activePopupWindow = false,
@@ -34,24 +35,28 @@ local menu =
     return self.selectedCharIndex
   end,
   open = function(self, formId)
-    self.close()
+    self.closeAll()
     private['is'..formId..'Open'] = true
   end,
-  close = function()
+  closeAll = function()
     private.isMainMenuOpen = false
     private.isCharViewOpen = false
     private.isInventoryOpen = false
     private.isPowersOpen = false
     private.isEffectsOpen = false
   end,
+  close = function(name)
+    private['is'..name..'Open'] = false
+  end,
   isOpen = function(name)
     return private['is'..name..'Open']
   end,
-  openPopup = function(_x, _y)
-    private.activePopupWindow = popup.createChar(_x, _y)
+  openPopup = function(elementName, _x, _y)
+    private.activePopupWindow = popup[elementName](_x, _y)
+    private.isActivePopupOpen = true
   end,
   closePopup = function()
-    private.activePopupWindow = false
+    private.isActivePopupOpen = false
   end,
 }
 
@@ -87,7 +92,7 @@ function menu.draw()
     draw.collection(view.effects)
   end
 
-  if private.activePopupWindow then
+  if private.isActivePopupOpen then
     draw.collection(private.activePopupWindow)
   end
 
@@ -95,7 +100,7 @@ end
 
 function menu.update(dt)
 
-  if private.activePopupWindow then
+  if private.isActivePopupOpen then
     animation.updateCollection(dt, private.activePopupWindow)
   end
 
@@ -124,7 +129,7 @@ end
 
 function menu.clicked(x, y, button)
 
-  if private.activePopupWindow then
+  if private.isActivePopupOpen then
     draw.clickItemIn(private.activePopupWindow, x, y, button)
     return
   end

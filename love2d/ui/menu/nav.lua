@@ -283,7 +283,7 @@ function private.portrait(_x, _y, index)
       menu:selectedChar(index)
 
       if button == 2 then
-        menu.openPopup(_x + portraitWidth, _y - 4)
+        menu.openPopup('createChar', _x + portraitWidth, _y - 4)
       end
     end 
   }
