@@ -11,6 +11,7 @@ local draw = 1
 local animation = 1
 local view = 1
 local inventory = 1
+local createChar = 1
 local popup = 1
 
 local private = 
@@ -21,6 +22,7 @@ local private =
   isInventoryOpen = false,
   isPowersOpen = false,
   isEffectsOpen = false,
+  isCreateCharOpen = false,
   isActivePopupOpen = false,
 
   -- Popups
@@ -44,6 +46,8 @@ local menu =
     private.isInventoryOpen = false
     private.isPowersOpen = false
     private.isEffectsOpen = false
+    private.isCreateCharOpen = false
+    private.isActivePopupOpen = false
   end,
   close = function(name)
     private['is'..name..'Open'] = false
@@ -60,19 +64,20 @@ local menu =
   end,
 }
 
-function menu.init(_draw, _animation, _menuItems, _view, _inventory, _popup)
+function menu.init(_draw, _animation, _menuItems, _view, _inventory, _createChar, _popup)
   menuItems = _menuItems
   draw = _draw
   animation = _animation
   view = _view
   inventory = _inventory
+  createChar = _createChar
   popup = _popup
 end
 
 function menu.draw()
   
   if private.isMainMenuOpen then
-    draw.collection(menuItems)
+    draw.collection(menuItems.elements)
   end
 
   if private.isCharViewOpen then
@@ -92,6 +97,10 @@ function menu.draw()
     draw.collection(view.effects)
   end
 
+  if private.isCreateCharOpen then
+    draw.collection(createChar.elements)
+  end
+
   if private.isActivePopupOpen then
     draw.collection(private.activePopupWindow)
   end
@@ -105,7 +114,7 @@ function menu.update(dt)
   end
 
   if private.isMainMenuOpen then
-    animation.updateCollection(dt, menuItems)
+    animation.updateCollection(dt, menuItems.elements)
   end
 
   if private.isCharViewOpen then
@@ -125,6 +134,10 @@ function menu.update(dt)
     animation.updateCollection(dt, view.effects)
   end
 
+  if private.isCreateCharOpen then
+    animation.updateCollection(dt, createChar.elements)
+  end
+
 end
 
 function menu.clicked(x, y, button)
@@ -135,7 +148,7 @@ function menu.clicked(x, y, button)
   end
 
   if private.isMainMenuOpen then
-    draw.clickItemIn(menuItems, x, y, button)
+    draw.clickItemIn(menuItems.elements, x, y, button)
   end
 
   if private.isCharViewOpen then
@@ -153,6 +166,10 @@ function menu.clicked(x, y, button)
 
   if private.isEffectsOpen then
     draw.clickItemIn(view.effects, x, y, button)
+  end
+
+  if private.isCreateCharOpen then
+    draw.clickItemIn(createChar.elements, x, y, button)
   end
 
 end

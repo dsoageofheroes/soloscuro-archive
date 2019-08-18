@@ -22,7 +22,17 @@ function popup.createChar(_x, _y)
   return
   {
     { assets = popupAssets.createChar, x = _x, y = _y },
-    { assets = popupAssets.text1, x = _x + 8, y = _y + 17, animation = anim, clicked = simpleClicked, hover = 2 },
+    { 
+      assets = popupAssets.text1, 
+      x = _x + 8, 
+      y = _y + 17, 
+      hover = 2,
+      animation = anim, 
+      clicked = simpleClicked, 
+      animComplete = function()
+        menu:open('CreateChar')
+      end
+    },
     { assets = popupAssets.text2, x = _x + 8, y = _y + 29, animation = anim, clicked = simpleClicked, hover = 2 },
     { 
       assets = popupAssets.text3, 

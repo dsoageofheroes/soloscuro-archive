@@ -1,18 +1,19 @@
 require 'util'
 
 local config = require 'solconfig'
-local popup = require('menu/popup')
-local charInventory = require('menu/inventory')
-local charNav = require('menu/nav')
-local charView = require('menu/view')
-local gff = require ('io/gff')
-local mouse = require('io/mouse')
-local keyboard = require('io/keyboard')
-local draw = require('io/draw')
-local animation = require('animation')
-local menu = require('menu')
-local menuItems = require('menuItems')
-local party = require('party')
+local popup = require 'menu/popup'
+local charInventory = require 'menu/inventory'
+local charNav = require 'menu/nav'
+local charView = require 'menu/view'
+local createChar = require 'menu/create'
+local gff = require 'io/gff'
+local mouse = require 'io/mouse'
+local keyboard = require 'io/keyboard'
+local draw = require 'io/draw'
+local animation = require 'animation'
+local menu = require 'menu'
+local menuItems = require 'menuItems'
+local party = require 'party'
 
 local devEnabled = false
 
@@ -26,7 +27,8 @@ function love.load()
   charNav.init(gff.charOverview, menu)
   charView.init(gff.charOverview, menu, charNav)
   charInventory.init(gff.inventory, menu, charNav)
-  menu.init(draw, animation, menuItems.elements, charView, charInventory.elements, popup)
+  createChar.init(gff.createChar, menu)
+  menu.init(draw, animation, menuItems, charView, charInventory.elements, createChar, popup)
 end
 
 function love.draw()

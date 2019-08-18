@@ -24,6 +24,22 @@ function private.loadAllResources()
     gff.cursors[i] = private.getGraphic(gff_resource, 6000 + i, true)
   end
 
+  gff.parchments =
+  {
+    smallSquare = private.getGraphic(GFF_RESOURCE, 20083),
+    mediumSquare = private.getGraphic(GFF_RESOURCE, 20085),
+    shortRect = private.getGraphic(GFF_RESOURCE, 20087),
+    mediumRect = private.getGraphic(GFF_RESOURCE, 20086),
+    tallRect = private.getGraphic(GFF_RESOURCE, 20084),
+  }
+
+  gff.buttons = 
+  {
+    done = private.getGraphic(GFF_RESOURCE, 2000, true),
+    exit = private.getGraphic(GFF_RESOURCE, 2058, true),
+    save = private.getGraphic(GFF_RESOURCE, 2057, true),
+  }
+
   -- Load main menu assets
   gff.menu = {
     dev = love.graphics.newImage('dsun_001.png'),
@@ -94,8 +110,13 @@ function private.loadAllResources()
   gff.createChar =
   {
     background = private.getGraphic(GFF_RESOURCE, 13001),
-    charBackground = gff.inventory.charBackground,
-    dieRoll = {}
+    portraitBackground = gff.parchments.tallRect,
+    spriteBackground = gff.parchments.smallSquare,
+    diceBackground = gff.parchments.mediumSquare,
+    classBackground = gff.parchments.mediumRect,
+    powersBackground = gff.parchments.shortRect,
+    buttons = gff.buttons,
+    dieRoll = {},
   }
 
 
