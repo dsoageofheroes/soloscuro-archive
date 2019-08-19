@@ -176,3 +176,95 @@ void gff_map_get_object_location(int gff_index, int res_id, int obj_id, uint16_t
     *y = entry->ypos;
     *z = entry->zpos;
 }
+
+so_object_t* gff_create_object(char *data, rdff_disk_object_t *entry, int16_t id) {
+    int i;
+    so_object_t* obj = calloc(1, sizeof(so_object_t)); // calloc zeroizes.
+    if (!obj) { return NULL; } // Calloc failed.
+    //int16_t *objectHeader;
+    //data += 9;
+    obj->type = SO_EMPTY;
+    switch(entry->type) {
+        case COMBAT_OBJECT:
+            obj->type = SO_DS1_COMBAT;
+            //printf("COMBAT\n");
+            memcpy(&(obj->data.ds1_combat), (ds1_combat_t*) data, sizeof(ds1_combat_t) - 16); // Don't copy the name over!
+            ds1_combat_t *combat = &(obj->data.ds1_combat);
+            for (i = 0; i < 17 && ((ds1_combat_t*)data)->name[i]; i++) {
+                combat->name[i] = ((ds1_combat_t*)data)->name[i];
+            }
+            i = i >= 17 ? 16 : i;
+            combat->name[i] = '\0';
+            //printf("name = %s\n", combat->name);
+            /*
+            printf("\n[%d]:", 0);
+            for (int i = 0; i < sizeof(ds1_combat_t); i++) {
+                printf("%d, ", ((char*)combat)[i]);
+                if ((i % 16) == 15) { printf("\n[%d]:", i+1); }
+            }
+            printf("\n");
+            printf("ac = %d, movement = %d, thac0 = %d, hp = %d, psi = %d"
+                "special attack = %d\n", 
+                combat->ac, combat->move, combat->thac0, combat->hp, combat->psi,
+                combat->special_attack);
+            */
+            combat->char_index = NULL_OBJECT;
+            combat->ready_item_index = NULL_OBJECT;
+            combat->weapon_index = NULL_OBJECT;
+            combat->pack_index = NULL_OBJECT;
+            // Always start at least with an OK combat status.
+            if (combat->status == 0) {
+                combat->status = COMBAT_STATUS_OK;
+            }
+            break;
+        case ITEM_OBJECT:
+            //printf("ITEM\n");
+            /*
+            ds1_item_t *item = &(obj->data.ds1_item);
+            memcpy(item, (ds1_item_t*) data, sizeof(ds1_item_t));
+            printf("name_index = %d\n", item->name_index);
+            for (int i = 0; i < sizeof(ds1_item_t)/2; i++) {
+                printf("%d, ", ((uint16_t*)item)[i]);
+                if ((i % 16) == 15) { printf("\n[%d]:", i+1); }
+            }
+            */
+            break;
+        case MINI_OBJECT:
+            printf("MINI\n");
+            break;
+        default:
+            printf("-----------UNKNOWN ITEM TYPE: %d\n", entry->type);
+            break;
+    }
+    return obj;
+}
+
+so_object_t* gff_object_inspect(int gff_index, int res_id) {
+    unsigned long len;
+    so_object_t *ret = NULL;
+    char *data = gff_get_raw_bytes(gff_index, GT_RDFF, res_id, &len);
+    rdff_disk_object_t *entry = (rdff_disk_object_t*) data;
+    //printf ("HERE!!!!%d %d, len = %lu, total = %lu\n", gff_index, res_id, len, len / sizeof(rdff_disk_object_t));
+    //printf ("proc = %d, bocknum = %d, type = %d, index = %d, from = %d, len = %d\n",
+        //entry->load_action, entry->blocknum, entry->type, entry->index, entry->from, entry->len);
+    switch(entry->load_action) {
+        case RDFF_OBJECT:
+            //printf("ITEM\n");
+            data += sizeof(rdff_disk_object_t);
+            ret = gff_create_object((char*) data, entry, -1);
+            break;
+        case RDFF_CONTAINER:
+            printf("CONTAINER\n");
+            break;
+        case RDFF_POINTER:
+            printf("POINTER\n");
+            break;
+        case RDFF_NEXT:
+            printf("NEXT\n");
+            break;
+        case RDFF_END:
+            printf("END\n");
+            break;
+    }
+    return ret;
+}

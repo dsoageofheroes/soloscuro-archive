@@ -45,7 +45,7 @@ gff_palette_t* create_palettes(int gff_index, unsigned int *len) {
         }
 
         num_palettes += *len;
-        printf("Number of palettes: %d\n", *len);
+        //printf("Number of palettes: %d\n", *len);
         for (int i = 0; i < *len; i++) {
             unsigned long tlen;
             unsigned char* raw_pal = (unsigned char*)gff_get_raw_bytes(gff_index, GT_PAL, ids[i], &tlen);
@@ -77,7 +77,7 @@ gff_palette_t* create_palettes(int gff_index, unsigned int *len) {
     }
 
     num_palettes += *len;
-    printf("Number of palettes: %d\n", *len);
+    //printf("Number of palettes: %d\n", *len);
     for (int i = 0; i < *len; i++) {
         unsigned long tlen;
         unsigned char* raw_pal = (unsigned char*)gff_get_raw_bytes(gff_index, GT_PAL, ids[i], &tlen);
@@ -266,7 +266,7 @@ static int plnr_get_next(unsigned char* image_data, int bits_per_symbol) {
 
 unsigned char* get_frame_rgba_with_palette(int gff_index, int type_id, int res_id, int frame_id, int palette_id) {
     gff_palette_t *cpal = NULL;
-    printf("master_palette = %p\n", master_palette);
+    //printf("master_palette = %p\n", master_palette);
     if (palette_id < 0 || open_files[gff_index].num_palettes < 1) {
         cpal = master_palette;
     } else {
@@ -282,7 +282,7 @@ unsigned char* get_frame_rgba_with_palette(int gff_index, int type_id, int res_i
     unsigned short width = *(unsigned short*)(chunk + frame_offset);
     unsigned short height = *(unsigned short*)(chunk + frame_offset + 2);
 
-    printf("offset = %d, width = %d, height = %d\n", frame_offset, width, height);
+    //printf("offset = %d, width = %d, height = %d\n", frame_offset, width, height);
     char *frame_type = ((char*)(chunk + frame_offset + 5));
     if (cpal == NULL) {
         printf("palette is NULL! returning no image.\n");
@@ -328,7 +328,7 @@ unsigned char* get_frame_rgba_with_palette(int gff_index, int type_id, int res_i
     } else if (strncmp(frame_type, "PLAN", 4) == 0) {
         printf("PLAN\n");
     } else {
-        printf("DS1 frame detected.\n");
+        //printf("DS1 frame detected.\n");
         unsigned char* ret_img = create_ds1_rgba(chunk, frame_offset + 4, width, height, cpal);
         if (ret_img == NULL) {
             fprintf(stderr, "Error creating image: %d\n", res_id);
