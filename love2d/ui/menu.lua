@@ -16,6 +16,8 @@ local popup = 1
 
 local private = 
 {
+  selectedCharIndex = 1,
+
   -- Forms
   isMainMenuOpen = true,
   isCharViewOpen = false,
@@ -26,15 +28,14 @@ local private =
   isActivePopupOpen = false,
 
   -- Popups
-  activePopupWindow = false,
+  activePopupWindow = 1,
 }
 
 local menu = 
 {
-  selectedCharIndex = 1,
   selectedChar = function(self, index)
-    if index then self.selectedCharIndex = index end
-    return self.selectedCharIndex
+    if index then private.selectedCharIndex = index end
+    return private.selectedCharIndex
   end,
   open = function(self, formId)
     self.closeAll()
@@ -85,8 +86,8 @@ function menu.draw()
   end
 
   if private.isInventoryOpen then
-    draw.collection(inventory.menuElements)
-    draw.collection(inventory.invElements)
+    draw.collection(inventory.elements.menu)
+    draw.collection(inventory.elements.inv)
   end
 
   if private.isPowersOpen then
@@ -122,8 +123,8 @@ function menu.update(dt)
   end
 
   if private.isInventoryOpen then
-    animation.updateCollection(dt, inventory.menuElements)
-    animation.updateCollection(dt, inventory.invElements)
+    animation.updateCollection(dt, inventory.elements.menu)
+    animation.updateCollection(dt, inventory.elements.inv)
   end
 
   if private.isPowersOpen then
@@ -156,8 +157,8 @@ function menu.clicked(x, y, button)
   end
 
   if private.isInventoryOpen then
-    draw.clickItemIn(inventory.menuElements, x, y, button)
-    draw.clickItemIn(inventory.invElements, x, y, button)
+    draw.clickItemIn(inventory.elements.menu, x, y, button)
+    draw.clickItemIn(inventory.elements.inv, x, y, button)
   end
 
   if private.isPowersOpen then

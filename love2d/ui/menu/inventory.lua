@@ -72,10 +72,10 @@ function inventory.init(_inventory, _menu, _nav)
     bowSlot = private.slot(57, 42, 12),
   }
 
-  inventory.elements = 
+  inventory.elements =
   {
-    menuElements = menuElements,
-    invElements = invElements
+    menu = menuElements,
+    inv = invElements
   }
 
 end

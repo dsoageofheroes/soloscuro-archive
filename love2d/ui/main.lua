@@ -28,7 +28,7 @@ function love.load()
   charView.init(gff.charOverview, menu, charNav)
   charInventory.init(gff.inventory, menu, charNav)
   createChar.init(gff.createChar, menu)
-  menu.init(draw, animation, menuItems, charView, charInventory.elements, createChar, popup)
+  menu.init(draw, animation, menuItems, charView, charInventory, createChar, popup)
 end
 
 function love.draw()
