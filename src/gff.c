@@ -240,7 +240,7 @@ int gff_open(const char *pathName) {
     len = ftell(file);
     fseek(file, 0L, SEEK_SET);
 
-    printf("Detected file size of '%s': %d\n", filename, len);
+    //printf("Detected file size of '%s': %d\n", filename, len);
     open_files[idx].len = len;
     open_files[idx].data = malloc(open_files[idx].len);
     open_files[idx].palettes = NULL;

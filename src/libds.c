@@ -11,6 +11,23 @@
 #include "gff-xmi.h"
 #include "gff-map.h"
 
+/* Helper functions */
+
+static void create_table_entry_si(lua_State *L, const char *key, const int val) {
+    lua_pushstring(L, key);
+    lua_pushinteger(L, val);
+    lua_settable(L, -3);
+}
+
+static void create_table_entry_ss(lua_State *L, const char *key, const char *val) {
+    lua_pushstring(L, key);
+    lua_pushstring(L, val);
+    lua_settable(L, -3);
+}
+
+static void push_ds1_combat(lua_State *L, ds1_combat_t *dc);
+/* End Helper Functions */
+
 static int lua_gff_init(lua_State *L) {
     gff_init();
     
@@ -385,6 +402,31 @@ int lua_map_get_object_location(lua_State *L) {
 }
 /* End Map Functions */
 
+static void push_ds1_combat(lua_State *L, ds1_combat_t *dc);
+
+/* Object Functions */
+int lua_object_inspect(lua_State *L) {
+    lua_Integer gff_index = luaL_checkinteger (L, 1);
+    lua_Integer res_id = luaL_checkinteger (L, 2);
+
+    so_object_t* so = gff_object_inspect(gff_index, res_id);
+    lua_createtable(L, 0, 0);
+
+    switch (so->type) {
+        case SO_DS1_COMBAT:
+            push_ds1_combat(L, &(so->data.ds1_combat));
+            break;
+        case SO_EMPTY:
+        default:
+            create_table_entry_si(L, "type", SO_EMPTY);
+            break;
+    }
+
+    free(so);
+    return 1;
+}
+/* End Object Functions */
+
 //library to be registered
 static const struct luaL_Reg lslib [] = {
       {"gff_init", lua_gff_init},
@@ -424,6 +466,9 @@ static const struct luaL_Reg lslib [] = {
       {"map_get_object_bmp", lua_map_get_object_bmp},
       {"map_get_object_location", lua_map_get_object_location},
 
+      // Object Functions
+      {"object_inspect", lua_object_inspect},
+
       // The End
       {NULL, NULL}  /* sentinel */
     };
@@ -432,4 +477,21 @@ static const struct luaL_Reg lslib [] = {
 int luaopen_libds (lua_State *L){
     luaL_register(L, "libds", lslib);
     return 1;
+}
+
+static void push_ds1_combat(lua_State *L, ds1_combat_t *dc) {
+    create_table_entry_si(L, "type", SO_DS1_COMBAT);
+    create_table_entry_si(L, "hp", dc->hp);
+    create_table_entry_si(L, "psi", dc->psi);
+    create_table_entry_si(L, "id", abs(dc->id));
+    create_table_entry_si(L, "ac", dc->ac);
+    create_table_entry_si(L, "move", dc->move);
+    create_table_entry_si(L, "thac0", dc->thac0);
+    create_table_entry_si(L, "str", dc->stats[0]);
+    create_table_entry_si(L, "dex", dc->stats[1]);
+    create_table_entry_si(L, "con", dc->stats[2]);
+    create_table_entry_si(L, "int", dc->stats[3]);
+    create_table_entry_si(L, "wis", dc->stats[4]);
+    create_table_entry_si(L, "cha", dc->stats[5]);
+    create_table_entry_ss(L, "name", dc->name);
 }

@@ -7,6 +7,7 @@ RMAP_TYPE = 1346456914
 GMAP_TYPE = 1346456903
 TILE_TYPE = 1162627412
 ETAB_TYPE = 1111577669
+RDFF_TYPE = 1179010130
 
 function init_current_file()
     -- Returns how many different types of data are stored in the gff file (EX: image, text music, etc...)
@@ -371,9 +372,33 @@ function love.draw()
         love.graphics.print("location (" .. x .. ", " .. y .. ", " .. z ..")", 10, 150)
         type_displayed = true;
     end
+    if (type_id == RDFF_TYPE) then
+        object = ds.object_inspect(gff_file, res_id)
+        if (object == nil) then return end
+        if (object["type"] == 1) then
+            print_ds1_combat(object)
+            type_displayed = true;
+        end
+    end
     if (not type_displayed) then
         love.graphics.print("Unable to display.", 10, 110)
     end
     love.graphics.print("up/down: change the type selected in the GFF. ", 10, 550)
     love.graphics.print("left/right: change the current selected data in the GFF. ", 10, 570)
+end
+
+function print_ds1_combat(object)
+    love.graphics.print("DarkSun1 Combat Object: " .. object["name"], 10, 110)
+    love.graphics.print("HP: " .. object["hp"], 10, 130)
+    love.graphics.print("Psi: " .. object["psi"], 10, 150)
+    love.graphics.print("game id: " .. object["id"], 10, 170)
+    love.graphics.print("AC: " .. object["ac"], 10, 190)
+    love.graphics.print("Movement: " .. object["move"], 10, 210)
+    love.graphics.print("THAC0: " .. object["thac0"], 10, 230)
+    love.graphics.print("str: " .. object["str"], 10, 250)
+    love.graphics.print("dex: " .. object["dex"], 10, 270)
+    love.graphics.print("con: " .. object["con"], 10, 290)
+    love.graphics.print("int: " .. object["int"], 10, 310)
+    love.graphics.print("wis: " .. object["wis"], 10, 330)
+    love.graphics.print("cha: " .. object["cha"], 10, 350)
 end

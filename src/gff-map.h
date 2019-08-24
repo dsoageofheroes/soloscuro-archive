@@ -50,6 +50,129 @@ typedef struct _gff_map_object_t {
     int16_t  index;
 } gff_map_object_t;
 
+// The small 'n' means next. IE: nbmp_idx = next bitmap index.
+typedef struct _gff_script_cmd_t {
+    uint8_t nbmp_idx;     // 0-254 = valid, 255 invalid.
+    uint8_t nbmp_delay;   // 0-255 = valid
+    uint8_t flags;
+    int8_t  nxoffset;
+    int8_t  nyoffset;
+    int8_t  npxoffset;
+    int8_t  npyoffset;
+    uint8_t sound_index;
+} gff_script_cmd_t;
+
+#define MAX_SCRIPTS (240)
+#define MAX_SCRIPT_JUMPS (36)
+typedef struct _gff_script_jump_t {
+    uint16_t jump_ids[MAX_SCRIPTS][MAX_SCRIPT_JUMPS];
+} gff_script_jump_t;
+
+typedef struct _gff_script_entry_t {
+    uint8_t use_count;
+    uint16_t chunk_id;
+    gff_script_cmd_t *cmds;
+    int16_t size;
+} gff_script_entry_t;
+
+extern gff_script_entry_t script_entry_table[MAX_SCRIPTS];
+
+typedef struct _rdff_disk_object_t {
+    int8_t  load_action;
+    int8_t  blocknum;
+    int16_t type;
+    int16_t index;
+    int16_t from;
+    int16_t len;
+} rdff_disk_object_t;
+
+enum {
+    RDFF_OBJECT    = 1,
+    RDFF_CONTAINER = 2,
+    RDFF_POINTER   = 3,
+    RDFF_NEXT      = 4,
+    RDFF_END       =-1
+};
+
+enum {
+    ITEM_OBJECT   = 1,
+    COMBAT_OBJECT = 2,
+    MINI_OBJECT   = 5,
+};
+
+#define COMBAT_NAME_SIZE (18)
+
+typedef struct _ds1_combat_t {
+    int16_t hp; // At byte pos 0, confirmed
+    int16_t psi; // 2, confirmed
+    int16_t char_index; // 4, unconfirmed but looks right.
+    int16_t id;  // 6, yes, but is id *-1
+    int16_t ready_item_index; // 8, to be cleared.
+    int16_t weapon_index; // 10, to be cleared
+    int16_t pack_index;   // 12, to be cleared
+    uint8_t data_block[8]; // just to shift down 8 bytes.
+    uint8_t special_attack; // 22, looks probable.
+    uint8_t special_defense; // 23, looks probable.
+    int16_t icon; // doesn't look right
+    int8_t  ac;   // 26, confirmed
+    uint8_t move; // 27, confirmed
+    uint8_t status;
+    uint8_t allegiance;
+    uint8_t data;
+    int8_t  thac0; // 31, confirmed
+    uint8_t priority;
+    uint8_t flags;
+    uint8_t stats[6]; // 34, confirmed
+    //uint8_t direction;
+    // WARNING: This is actually 16, but we do 18 as a buffer.
+    char    name[COMBAT_NAME_SIZE]; // 40, confirmed
+} ds1_combat_t;
+
+typedef struct _ds1_item_t { // Not confirmed at all...
+    int16_t  id;
+    uint16_t quantity;
+    int16_t  next;
+    uint16_t value;
+    int16_t  pack_index;
+    int16_t  item_index;
+    int16_t  icon;
+    uint16_t charges;
+    uint16_t special;
+    uint8_t  priority;
+    int8_t   slot;
+    uint16_t name_index;
+    int8_t   adds;
+} ds1_item_t;
+
+// Types of Sol Oscuro objects
+enum {
+    SO_EMPTY = 0, // Empty: free to overide!
+    SO_DS1_COMBAT,
+    SO_DS1_ITEM
+};
+
+typedef struct _so_object_t {
+    uint16_t type;
+    union {
+        ds1_combat_t ds1_combat;
+        ds1_item_t   ds1_item;
+    } data;
+} so_object_t;
+
+#define NULL_OBJECT (9999) // why 9999?  I dunno!
+
+enum {
+    COMBAT_STATUS_OK          = 1,
+    COMBAT_STATUS_STUNNED     = 2,
+    COMBAT_STATUS_UNCONSCIOUS = 3,
+    COMBAT_STATUS_DYING       = 4,
+    COMBAT_STATUS_ANIMATED    = 5,
+    COMBAT_STATUS_PETRIFIED   = 6,
+    COMBAT_STATUS_DEAD        = 7,
+    COMBAT_STATUS_GONE        = 8,
+    COMBAT_STATUS_MAX
+};
+
 int gff_load_map_tile_ids(int gff_file, int res_id);
 int gff_load_map_flags(int gff_file, int res_id);
 int gff_load_map(int gff_file);
@@ -60,5 +183,6 @@ int32_t get_tile_id(int gff_file, int row, int column);
 int gff_map_get_num_objects(int gff_index, int res_id);
 unsigned char* gff_map_get_object_bmp(int gff_index, int res_id, int obj_id, int *w, int *h);
 void gff_map_get_object_location(int gff_index, int res_id, int obj_id, uint16_t *x, uint16_t *y, uint8_t *z);
+so_object_t* gff_object_inspect(int gff_index, int res_id);
 
 #endif
