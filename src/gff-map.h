@@ -129,10 +129,10 @@ typedef struct _ds1_combat_t {
 } ds1_combat_t;
 
 typedef struct _ds1_item_t { // Not confirmed at all...
-    int16_t  id;
-    uint16_t quantity;
-    int16_t  next;
-    uint16_t value;
+    int16_t  id; // 0, confirmed (but is negative...)
+    uint16_t quantity; // ?
+    int16_t  next;  // ?
+    uint16_t value; // 6, look correct.
     int16_t  pack_index;
     int16_t  item_index;
     int16_t  icon;
@@ -184,5 +184,6 @@ int gff_map_get_num_objects(int gff_index, int res_id);
 unsigned char* gff_map_get_object_bmp(int gff_index, int res_id, int obj_id, int *w, int *h);
 void gff_map_get_object_location(int gff_index, int res_id, int obj_id, uint16_t *x, uint16_t *y, uint8_t *z);
 so_object_t* gff_object_inspect(int gff_index, int res_id);
+disk_object_t* gff_get_object(int object_index);
 
 #endif

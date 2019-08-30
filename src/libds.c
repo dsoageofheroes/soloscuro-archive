@@ -26,6 +26,8 @@ static void create_table_entry_ss(lua_State *L, const char *key, const char *val
 }
 
 static void push_ds1_combat(lua_State *L, ds1_combat_t *dc);
+static void push_ds1_monster(lua_State *L, gff_monster_entry_t *me);
+static void push_ds1_item(lua_State *L, ds1_item_t *dc);
 /* End Helper Functions */
 
 static int lua_gff_init(lua_State *L) {
@@ -412,9 +414,13 @@ int lua_object_inspect(lua_State *L) {
     so_object_t* so = gff_object_inspect(gff_index, res_id);
     lua_createtable(L, 0, 0);
 
+    //printf("type = %d, %d\n", so->type, SO_DS1_COMBAT);
     switch (so->type) {
         case SO_DS1_COMBAT:
             push_ds1_combat(L, &(so->data.ds1_combat));
+            break;
+        case SO_DS1_ITEM:
+            push_ds1_item(L, &(so->data.ds1_item));
             break;
         case SO_EMPTY:
         default:
@@ -423,6 +429,18 @@ int lua_object_inspect(lua_State *L) {
     }
 
     free(so);
+    return 1;
+}
+
+int lua_load_monster(lua_State *L) {
+    lua_Integer region_id = luaL_checkinteger (L, 1);
+    lua_Integer monster_id = luaL_checkinteger (L, 2);
+
+    gff_monster_entry_t* me = gff_load_monster(region_id, monster_id);
+
+    lua_createtable(L, 0, 0);
+    push_ds1_monster(L, me);
+
     return 1;
 }
 /* End Object Functions */
@@ -468,6 +486,7 @@ static const struct luaL_Reg lslib [] = {
 
       // Object Functions
       {"object_inspect", lua_object_inspect},
+      {"load_monster", lua_load_monster},
 
       // The End
       {NULL, NULL}  /* sentinel */
@@ -477,6 +496,11 @@ static const struct luaL_Reg lslib [] = {
 int luaopen_libds (lua_State *L){
     luaL_register(L, "libds", lslib);
     return 1;
+}
+
+static void push_ds1_monster(lua_State *L, gff_monster_entry_t *me) {
+    create_table_entry_si(L, "id", me->id);
+    create_table_entry_si(L, "level", me->level);
 }
 
 static void push_ds1_combat(lua_State *L, ds1_combat_t *dc) {
@@ -494,4 +518,19 @@ static void push_ds1_combat(lua_State *L, ds1_combat_t *dc) {
     create_table_entry_si(L, "wis", dc->stats[4]);
     create_table_entry_si(L, "cha", dc->stats[5]);
     create_table_entry_ss(L, "name", dc->name);
+}
+
+static void push_ds1_item(lua_State *L, ds1_item_t *di) {
+    create_table_entry_si(L, "type", SO_DS1_ITEM);
+    create_table_entry_si(L, "id", abs(di->id));
+    create_table_entry_si(L, "quantity", di->quantity);
+    create_table_entry_si(L, "value", di->value);
+    create_table_entry_si(L, "icon", di->icon);
+    create_table_entry_si(L, "charges", di->charges);
+    create_table_entry_si(L, "special", di->special);
+    create_table_entry_si(L, "slot", di->slot);
+    create_table_entry_si(L, "name_index", di->name_index);
+    disk_object_t* diskobject = gff_get_object(di->id);
+    create_table_entry_si(L, "bmp_id", diskobject->bmp_id);
+    create_table_entry_si(L, "script_id", diskobject->script_id);
 }

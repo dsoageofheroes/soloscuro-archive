@@ -104,7 +104,7 @@ int gff_map_is_danger(int gff_file, int row, int column) { gff_map_t *map = get_
     return (int32_t)(map->flags[row][column] & MAP_DANGER);
 }
 
-static disk_object_t* gff_get_object(int object_index) {
+disk_object_t* gff_get_object(int object_index) {
     unsigned long len;
     if (!open_files[OBJEX_GFF_INDEX].data) {
         return NULL;
@@ -187,12 +187,12 @@ so_object_t* gff_create_object(char *data, rdff_disk_object_t *entry, int16_t id
     switch(entry->type) {
         case COMBAT_OBJECT:
             obj->type = SO_DS1_COMBAT;
-            //printf("COMBAT\n");
             memcpy(&(obj->data.ds1_combat), (ds1_combat_t*) data, sizeof(ds1_combat_t) - 16); // Don't copy the name over!
             ds1_combat_t *combat = &(obj->data.ds1_combat);
             for (i = 0; i < 17 && ((ds1_combat_t*)data)->name[i]; i++) {
                 combat->name[i] = ((ds1_combat_t*)data)->name[i];
             }
+            // Force the name to be null-terminated.
             i = i >= 17 ? 16 : i;
             combat->name[i] = '\0';
             //printf("name = %s\n", combat->name);
@@ -218,15 +218,24 @@ so_object_t* gff_create_object(char *data, rdff_disk_object_t *entry, int16_t id
             }
             break;
         case ITEM_OBJECT:
-            //printf("ITEM\n");
-            /*
+            obj->type = SO_DS1_ITEM;
             ds1_item_t *item = &(obj->data.ds1_item);
             memcpy(item, (ds1_item_t*) data, sizeof(ds1_item_t));
+            /*
+            printf("id = %d\n", item->id);
+            printf("quantity = %d\n", item->quantity);
+            printf("next = %d\n", item->next);
+            printf("value = %d\n", item->value);
+            printf("pack_index = %d\n", item->item_index);
+            printf("icon = %d\n", item->icon);
+            printf("charges = %d\n", item->charges);
+            printf("special = %d\n", item->special);
+            printf("slot = %d\n", item->slot);
             printf("name_index = %d\n", item->name_index);
-            for (int i = 0; i < sizeof(ds1_item_t)/2; i++) {
-                printf("%d, ", ((uint16_t*)item)[i]);
-                if ((i % 16) == 15) { printf("\n[%d]:", i+1); }
-            }
+            printf("adds = %d\n", item->adds);
+            disk_object_t* diskobject = gff_get_object(item->id);
+            printf("bmpid = %d\n", diskobject->bmp_id);
+            printf("script_id = %d\n", diskobject->script_id);
             */
             break;
         case MINI_OBJECT:

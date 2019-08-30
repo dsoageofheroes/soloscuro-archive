@@ -21,6 +21,7 @@ enum {
     CHARSAVE_GFF_INDEX,
     DARKSAVE_GFF_INDEX,
     CINE_GFF_INDEX,
+    DARKRUN_GFF_INDEX,
     REST_GFF_INDEX
 };
 
@@ -186,4 +187,18 @@ extern void gff_cleanup();
 // functions for other modules, NOT "public"
 extern gff_chunk_list_t* search_for_chunk_by_name(gff_file_t *file, unsigned long name);
 
+// Need to find location for these:
+#define MAX_MONSTERS_PER_REGION (10)
+
+typedef struct _gff_monster_entry_t {
+    int16_t id;
+    int16_t level;
+} gff_monster_entry_t;
+
+typedef struct _gff_monster_region_t {
+    int16_t region;
+    gff_monster_entry_t monsters[MAX_MONSTERS_PER_REGION];
+} gff_monster_region_t;
+
+extern gff_monster_entry_t* gff_load_monster(int region_id, int monster_id);
 #endif

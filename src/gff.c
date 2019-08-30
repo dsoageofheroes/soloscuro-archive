@@ -76,6 +76,7 @@ int get_next_idx(char *name) {
     if (strcmp(name, "charsave.gff") == 0) { return CHARSAVE_GFF_INDEX; }
     if (strcmp(name, "darksave.gff") == 0) { return DARKSAVE_GFF_INDEX; }
     if (strcmp(name, "cine.gff") == 0) { return CINE_GFF_INDEX; }
+    if (strcmp(name, "darkrun.gff") == 0) { return DARKRUN_GFF_INDEX; }
 
     for (i = REST_GFF_INDEX; i < NUM_FILES; i++) {
         if (!open_files[i].data) {
@@ -693,3 +694,22 @@ void gff_close (int gff_file) {
     open_files[gff_file].len = 0;
 }
 
+
+gff_monster_entry_t* gff_load_monster(int region_id, int monster_id) {
+    if (monster_id < 0 || monster_id > MAX_MONSTERS_PER_REGION) { return NULL; }
+    unsigned long len;
+    gff_monster_region_t *mr = (gff_monster_region_t*)gff_get_raw_bytes(RESOURCE_GFF_INDEX, GT_MONR, 1, &len);
+    if (!mr) {return NULL;}
+
+    for (int i = 0; i < len/sizeof(gff_monster_entry_t); i++) {
+        if (mr->region == i) {
+            return mr->monsters + monster_id;
+        }
+    }
+
+    printf("mr->region = %d\n", mr->region);
+    for (int j = 0; j < MAX_MONSTERS_PER_REGION; j++) {
+        printf("%d: level %d\n", mr->monsters[j].id, mr->monsters[j].level);
+    }
+    return NULL;
+}

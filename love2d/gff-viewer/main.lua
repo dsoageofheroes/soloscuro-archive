@@ -8,6 +8,8 @@ GMAP_TYPE = 1346456903
 TILE_TYPE = 1162627412
 ETAB_TYPE = 1111577669
 RDFF_TYPE = 1179010130
+BMP_TYPE  = 542133570
+MONR_TYPE = 1380863821
 
 function init_current_file()
     -- Returns how many different types of data are stored in the gff file (EX: image, text music, etc...)
@@ -60,7 +62,6 @@ function get_tiles()
             width = ds.get_frame_width(gff_file, TILE_TYPE, tile_id, 0)
             height = ds.get_frame_height(gff_file, TILE_TYPE, tile_id, 0)
             imageData = love.image.newImageData(width, height, "rgba8", data)
-            print ("tile_id" .. tile_id)
             tiles[tile_id] = love.graphics.newImage( imageData )
         end
     end
@@ -379,6 +380,15 @@ function love.draw()
             print_ds1_combat(object)
             type_displayed = true;
         end
+        if (object["type"] == 2) then
+            print_ds1_item(object)
+            type_displayed = true;
+        end
+    end
+    if (type_id == MONR_TYPE) then
+        monster = ds.load_monster(2, 2)
+        if (monster == nil) then return end
+        love.graphics.print("id = " .. monster["id"] .. ", level = " .. monster["level"], 10, 150)
     end
     if (not type_displayed) then
         love.graphics.print("Unable to display.", 10, 110)
@@ -401,4 +411,23 @@ function print_ds1_combat(object)
     love.graphics.print("int: " .. object["int"], 10, 310)
     love.graphics.print("wis: " .. object["wis"], 10, 330)
     love.graphics.print("cha: " .. object["cha"], 10, 350)
+    --if (current_image ~= 0) then -- always check the image is available!
+        --love.graphics.draw(current_image, 50, 130, 0, 2, 2.4)
+    --end
+end
+
+function print_ds1_item(object)
+    love.graphics.print("DarkSun1 item Object: " .. object["name_index"], 10, 110)
+    love.graphics.print("id: " .. object["id"], 10, 130)
+    love.graphics.print("quantity: " .. object["quantity"], 10, 150)
+    love.graphics.print("value: " .. object["value"], 10, 170)
+    love.graphics.print("icon: " .. object["icon"], 10, 190)
+    love.graphics.print("charges: " .. object["charges"], 10, 210)
+    love.graphics.print("special: " .. object["special"], 10, 230)
+    love.graphics.print("slot: " .. object["slot"], 10, 250)
+    love.graphics.print("bmp_id: " .. object["bmp_id"], 10, 270)
+    love.graphics.print("script_id: " .. object["script_id"], 10, 290)
+    --if (current_image ~= 0) then -- always check the image is available!
+        --love.graphics.draw(current_image, 50, 130, 0, 2, 2.4)
+    --end
 end
