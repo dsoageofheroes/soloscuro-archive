@@ -281,9 +281,14 @@ function private.portrait(_x, _y, index)
     active = 2,
     clicked = function(self, button)
       menu:selectedChar(index)
+      local yAdjust = -4
+
+      if index == 4 and menu.isOpen('Inventory') then
+        yAdjust = -20
+      end
 
       if button == 2 then
-        menu.openPopup('createChar', _x + portraitWidth, _y - 4)
+        menu.openPopup('createChar', _x + portraitWidth, _y + yAdjust)
       end
     end 
   }
