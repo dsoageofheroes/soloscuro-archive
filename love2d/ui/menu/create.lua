@@ -1,7 +1,13 @@
-local create = {}
+local create = 
+{
+  roll = function()
+    return math.ceil(math.random() * 6)
+  end
+}
 
 function create.init(_createAssets, _menu)
   local buttonAnim = { 4, interval = .1 }
+  local diceAnim = { 3, 4, 5, 6, 3, interval = .1 }
   local simpleClicked = function(self)
     self.timer = 0
   end
@@ -40,6 +46,26 @@ function create.init(_createAssets, _menu)
         _menu:open('CharView')
       end 
     },
+    { 
+      assets = _createAssets.dieRoll, 
+      x = 139, 
+      y = 66, 
+      active = create.roll() + 6,
+      clicked = simpleClicked,
+      animation = diceAnim,
+      animComplete = function(self)
+        self.active = create.roll() + 6
+      end
+    },
+    {
+      assets = _createAssets.chars,
+      x = 26,
+      y = 13,
+      active = 1,
+      clicked = function(self)
+        self.active = self.active < #self.assets and self.active + 1 or 1
+      end
+    }
   }
 
 end

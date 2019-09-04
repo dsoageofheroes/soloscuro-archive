@@ -17,6 +17,8 @@ local party = require 'party'
 
 local devEnabled = false
 
+math.randomseed(os.clock())
+
 function love.load()
   draw.init()
   gff.init(config)

@@ -26,7 +26,7 @@ function animation.update(dt, graphic)
       graphic.anim = nil
 
       if graphic.animComplete then
-        graphic.animComplete()
+        graphic:animComplete()
       end
     end
   end

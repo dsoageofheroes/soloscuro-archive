@@ -94,8 +94,8 @@ function private.loadAllResources()
   }
 
   -- Load full character portraits
-  for i = 0, 13 do 
-    gff.inventory.chars[i] = private.getGraphic(GFF_RESOURCE, 20000 + i)
+  for i = 0,13 do 
+    gff.inventory.chars[i + 1] = private.getGraphic(GFF_RESOURCE, 20000 + i)[1]
   end
 
   gff.popup = 
@@ -117,9 +117,12 @@ function private.loadAllResources()
     powersBackground = gff.parchments.shortRect,
     buttons = gff.buttons,
     dieRoll = {},
+    chars = gff.inventory.chars,
   }
 
-
+  for i = 0,12 do
+    gff.createChar.dieRoll[i + 1] = private.getGraphic(GFF_RESOURCE, 20047 + i)[1]
+  end
 
   -- IMAGES
   -- 3009 - save/load screen
@@ -141,7 +144,7 @@ function private.getGraphic(gff_filename, res_type, isIcon)
 
   for i = 1, frameCount do
     local imageData = private.getImageData(gff_file, res_type, isIcon, i - 1)
-    graphic['data'..i] = imageData
+    -- graphic['data'..i] = imageData
     graphic[i] = love.graphics.newImage(imageData)
   end
 
