@@ -264,6 +264,54 @@ static int plnr_get_next(unsigned char* image_data, int bits_per_symbol) {
 }
 /* END PLNR CODE */
 
+/*
+static void set_color_by_pallete(unsigned char *img_row, const int x, const int pallete_index) {
+    gff_color_t *color = master_palette->color + pallete_index;
+    *(img_row + 4*(x) + 0) = color->r;
+    *(img_row + 4*(x) + 1) = color->g;
+    *(img_row + 4*(x) + 2) = color->b;
+    if (color->r == 0 && color->g == 0 && color->b == 0) {
+        *(img_row + 4*(x) + 3) = 0x00;
+    } else {
+        *(img_row + 4*(x) + 3) = 0xFF;
+    }
+}
+*/
+
+int int_byte_swap(const int val) {
+    int ret = (val >> 24) & 0xFF;
+    ret |= (val >> 8) & 0xFF00;
+    ret |= (val << 8) & 0xFF0000;
+    ret |= (val << 24) & 0xFF000000;
+
+    return ret;
+}
+
+unsigned char* create_font_rgba(int gff_index, int c, int color) {
+    unsigned long len;
+    uint8_t *pixel_idx = NULL;
+    ds_font_t *font = (ds_font_t*) gff_get_raw_bytes(gff_index, GT_FONT, 100, &len);
+
+    if (!master_palette || c < 0 || c >= font->num) {return NULL;}
+
+    ds_char_t *ds_char = (ds_char_t*)(((uint8_t*)font) + font->char_offset[c]);
+    pixel_idx = ds_char->data;
+
+    if (font->height <= 0 || ds_char->width <= 0) { return NULL; }
+
+    unsigned char* img = create_initialized_image_rgb(ds_char->width, font->height);
+    unsigned char* img_row = img;
+    for (int x = 0; x < font->height; x++) {
+        for (int y = 0; y < ds_char->width; y++, pixel_idx++) {
+            *(int*)(img_row + 4*y) = int_byte_swap(color<<8);
+            *(img_row + 4*y + 3) = font->colors[*pixel_idx];
+        }
+        img_row += 4 * ds_char->width;
+    }
+
+    return img;
+}
+
 unsigned char* get_frame_rgba_with_palette(int gff_index, int type_id, int res_id, int frame_id, int palette_id) {
     gff_palette_t *cpal = NULL;
     //printf("master_palette = %p\n", master_palette);
@@ -313,8 +361,8 @@ unsigned char* get_frame_rgba_with_palette(int gff_index, int type_id, int res_i
                 int palette_index = plnr_get_next(data, bits_per_symbol);
                 gff_color_t color = cpal->color[pixel_value_dictionary[palette_index]];
                 *(img + row_offset + 4*(k) + 0) = color.r;
-                *(img + row_offset + 4*(k) + 1) = color.r;
-                *(img + row_offset + 4*(k) + 2) = color.r;
+                *(img + row_offset + 4*(k) + 1) = color.g;
+                *(img + row_offset + 4*(k) + 2) = color.b;
                 if (color.r == 0 && color.g == 0 && color.b == 0) {
                     *(img + row_offset + 4*(k) + 3) = 0x00;
                 } else {

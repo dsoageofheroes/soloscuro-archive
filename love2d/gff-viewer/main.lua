@@ -10,6 +10,7 @@ ETAB_TYPE = 1111577669
 RDFF_TYPE = 1179010130
 BMP_TYPE  = 542133570
 MONR_TYPE = 1380863821
+FONT_TYPE = 1414418246
 
 function init_current_file()
     -- Returns how many different types of data are stored in the gff file (EX: image, text music, etc...)
@@ -52,6 +53,29 @@ function init_current_file()
     -- Set the number of possible objects
     num_objects = 0
     cobject = 0
+
+    -- Zero out the font
+    font = nil
+end
+
+function get_font() 
+    yellow_color = 0xFFFF00 -- R, G, B
+    if (font == nil) then
+        font = {}
+        font_count = ds.font_count(gff_file)
+        for i=0,255 do
+            font[i] = {}
+            img, w, h = ds.create_font_img(gff_file, i, yellow_color);
+            current_image = nil
+            if (not (w == 0)) then
+                imageData = love.image.newImageData(w, h, "rgba8", img)
+                current_image = love.graphics.newImage( imageData )
+            end
+            font[i]["img"] = current_image;
+            font[i]["w"] = w;
+            font[i]["h"] = h;
+        end
+    end
 end
 
 function get_tiles() 
@@ -389,6 +413,22 @@ function love.draw()
         monster = ds.load_monster(2, 2)
         if (monster == nil) then return end
         love.graphics.print("id = " .. monster["id"] .. ", level = " .. monster["level"], 10, 150)
+    end
+    if (type_id == FONT_TYPE) then
+        get_font() 
+        xpos = 0;
+        ypos = 130;
+        for i=0,255 do
+            if (not (font[i]["img"] == nil)) then
+                love.graphics.draw(font[i]["img"], xpos, ypos, 0, 2, 2.4)
+                type_displayed = true
+            end
+            xpos = xpos + 20
+            if (xpos > 320) then
+                xpos = 0;
+                ypos = ypos + 25
+            end
+        end
     end
     if (not type_displayed) then
         love.graphics.print("Unable to display.", 10, 110)

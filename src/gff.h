@@ -201,4 +201,19 @@ typedef struct _gff_monster_region_t {
 } gff_monster_region_t;
 
 extern gff_monster_entry_t* gff_load_monster(int region_id, int monster_id);
+
+typedef struct _ds_font_t {
+    uint16_t num;
+    uint16_t height;
+    uint16_t background_color;
+    uint16_t flags;
+    uint8_t  colors[256];
+    uint16_t char_offset[1];
+} ds_font_t;
+
+typedef struct _ds_char_t {
+    uint16_t width;
+    uint8_t  data[1];
+} ds_char_t;
+
 #endif
