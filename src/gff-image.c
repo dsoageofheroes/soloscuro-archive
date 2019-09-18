@@ -287,7 +287,7 @@ int int_byte_swap(const int val) {
     return ret;
 }
 
-unsigned char* create_font_rgba(int gff_index, int c, int color) {
+unsigned char* create_font_rgba(int gff_index, int c, int fg_color, int bg_color) {
     unsigned long len;
     uint8_t *pixel_idx = NULL;
     ds_font_t *font = (ds_font_t*) gff_get_raw_bytes(gff_index, GT_FONT, 100, &len);
@@ -301,10 +301,27 @@ unsigned char* create_font_rgba(int gff_index, int c, int color) {
 
     unsigned char* img = create_initialized_image_rgb(ds_char->width, font->height);
     unsigned char* img_row = img;
+    int transparent = 0x00000000; // No color!
     for (int x = 0; x < font->height; x++) {
         for (int y = 0; y < ds_char->width; y++, pixel_idx++) {
-            *(int*)(img_row + 4*y) = int_byte_swap(color<<8);
-            *(img_row + 4*y + 3) = font->colors[*pixel_idx];
+            float intensity = font->colors[*pixel_idx] / 255.0;
+            if (intensity <= 0.0001) {
+                *(int*)(img_row + 4*y) = transparent;
+                continue;
+            }
+            int true_fg_color = int_byte_swap(fg_color);
+            int true_bg_color = int_byte_swap(bg_color);
+            unsigned char *cp = (unsigned char*)(img_row + 4*y);
+            unsigned char *fcp = (unsigned char*)&true_fg_color;
+            unsigned char *bcp = (unsigned char*)&true_bg_color;
+            *(cp + 0) = *(fcp + 0) * intensity;
+            *(cp + 1) = *(fcp + 1) * intensity;
+            *(cp + 2) = *(fcp + 2) * intensity;
+            *(cp + 3) = *(fcp + 3) * intensity;
+            *(cp + 0) += *(bcp + 0) * (1.0 - intensity);
+            *(cp + 1) += *(bcp + 1) * (1.0 - intensity);
+            *(cp + 2) += *(bcp + 2) * (1.0 - intensity);
+            *(cp + 3) += *(bcp + 3) * (1.0 - intensity);
         }
         img_row += 4 * ds_char->width;
     }

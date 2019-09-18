@@ -59,13 +59,14 @@ function init_current_file()
 end
 
 function get_font() 
-    yellow_color = 0xFFFF00 -- R, G, B
+    yellow_color = 0xFFFF00FF -- R, G, B, A
+    black_color = 0x000000FF -- R, G, B, A
     if (font == nil) then
         font = {}
         font_count = ds.font_count(gff_file)
         for i=0,255 do
             font[i] = {}
-            img, w, h = ds.create_font_img(gff_file, i, yellow_color);
+            img, w, h = ds.create_font_img(gff_file, i, yellow_color, black_color);
             current_image = nil
             if (not (w == 0)) then
                 imageData = love.image.newImageData(w, h, "rgba8", img)

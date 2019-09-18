@@ -18,6 +18,6 @@ int get_frame_width(int gff_index, int type_id, int res_id, int frame_id);
 int get_frame_height(int gff_index, int type_id, int res_id, int frame_id);
 unsigned char* get_frame_rgba(int gff_index, int type_id, int res_id, int frame_id);
 unsigned char* get_frame_rgba_with_palette(int gff_index, int type_id, int res_id, int frame_id, int palette_id);
-unsigned char* create_font_rgba(int gff_index, int c, int color);
+unsigned char* create_font_rgba(int gff_index, int c, int fg_color, int bg_color);
 
 #endif

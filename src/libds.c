@@ -448,12 +448,13 @@ int lua_load_monster(lua_State *L) {
 int lua_create_font_img(lua_State *L) {
     lua_Integer gff_idx = luaL_checkinteger (L, 1);
     lua_Integer c = luaL_checkinteger (L, 2);
-    lua_Integer color = luaL_checkinteger (L, 3);
+    lua_Integer fg_color = luaL_checkinteger (L, 3);
+    lua_Integer bg_color = luaL_checkinteger (L, 4);
     unsigned long len;
 
     ds_font_t *font = (ds_font_t*) gff_get_raw_bytes(gff_idx, GT_FONT, 100, &len);
     ds_char_t *ds_char = (ds_char_t*)(((uint8_t*)font) + font->char_offset[c]);
-    char *data = (char*)create_font_rgba(gff_idx, c, color);
+    char *data = (char*)create_font_rgba(gff_idx, c, fg_color, bg_color);
 
     if (data == NULL) {
         lua_pushinteger(L, 0);
