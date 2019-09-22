@@ -6,13 +6,14 @@
 
 ]]
 
-local menuItems = 1
-local draw = 1
-local animation = 1
-local view = 1
-local inventory = 1
-local createChar = 1
-local popup = 1
+local 
+menuItems,
+draw,
+animation,
+view,
+inventory,
+createChar,
+popup
 
 local private = 
 {
@@ -100,6 +101,7 @@ function menu.draw()
 
   if private.isCreateCharOpen then
     draw.collection(createChar.elements)
+    draw.textCollection(createChar.texts)
   end
 
   if private.isActivePopupOpen then

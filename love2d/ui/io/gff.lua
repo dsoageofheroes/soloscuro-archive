@@ -12,16 +12,26 @@ local GFF_RESOURCE = "resource.gff"
 function gff.init(_config)
   ds.gff_init()
   ds.gff_load_directory(_config.ds1Path)
-  gff_file = ds.gff_find_index(GFF_RESOURCE)
 
   private.loadAllResources()
+end
+
+function gff.loadFontChar(i, color, shadow)
+  local char
+  local img, w, h = ds.create_font_img(0, i, color, shadow);
+  
+  if w > 0 then
+    char = love.image.newImageData(w, h, "rgba8", img)
+  end
+
+  return char
 end
 
 function private.loadAllResources()
 
   -- Load mouse cursor images
   for i=1,10 do
-    gff.cursors[i] = private.getGraphic(gff_resource, 6000 + i, true)
+    gff.cursors[i] = private.getGraphic(GFF_RESOURCE, 6000 + i, true)
   end
 
   gff.parchments =
@@ -139,11 +149,12 @@ end
 
 function private.getGraphic(gff_filename, res_type, isIcon)
   local graphic = {}
+  local fileIndex = ds.gff_find_index(gff_filename)
 
-  local frameCount = ds.get_frame_count(gff_file, isIcon and 1313817417 or 542133570, res_type)
+  local frameCount = ds.get_frame_count(fileIndex, isIcon and 1313817417 or 542133570, res_type)
 
   for i = 1, frameCount do
-    local imageData = private.getImageData(gff_file, res_type, isIcon, i - 1)
+    local imageData = private.getImageData(fileIndex, res_type, isIcon, i - 1)
     -- graphic['data'..i] = imageData
     graphic[i] = love.graphics.newImage(imageData)
   end
@@ -156,14 +167,14 @@ function private.getImage(gff_filename, res_type, isIcon, frame, palette)
   return love.graphics.newImage(img)
 end
 
-function private.getImageData(gff_filename, res_type, isIcon, frame, palette)
+function private.getImageData(fileIndex, res_type, isIcon, frame, palette)
   local frame = frame or 0
   local palette = palette or 0
   local image_type_id = isIcon and 1313817417 or 542133570
 
-  local data = ds.get_frame_rgba_with_palette(gff_file, image_type_id, res_type, frame, palette)
-  local width = ds.get_frame_width(gff_file, image_type_id, res_type, frame)
-  local height = ds.get_frame_height(gff_file, image_type_id, res_type, frame)
+  local data = ds.get_frame_rgba_with_palette(fileIndex, image_type_id, res_type, frame, palette)
+  local width = ds.get_frame_width(fileIndex, image_type_id, res_type, frame)
+  local height = ds.get_frame_height(fileIndex, image_type_id, res_type, frame)
   local imageData = love.image.newImageData(width, height, "rgba8", data)
   return imageData
 end

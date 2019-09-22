@@ -2,7 +2,10 @@
 
 .init()
 .graphics(graphic)
+.collection(graphics)
 .absolute(image, x, y)
+.text(text)
+.textCollection(texts)
 .isMouseInBox(x, y, width, height)
 .isMouseOverGraphic(graphic)
 .scaleUp()
@@ -22,14 +25,6 @@ local aspectCorrection = 1.2
 function draw.init()
   love.graphics.setDefaultFilter('nearest', 'nearest')
   private.resetWindow()
-end
-
-function draw.collection(graphics)
-  for k,v in pairs(graphics) do
-    if type(v) == 'table' then
-      draw.graphics(v)
-    end
-  end
 end
 
 function draw.clickItemIn(graphics, x, y, button)
@@ -67,8 +62,50 @@ function draw.graphics(graphic)
 
 end
 
+function draw.collection(graphics)
+  for k,v in pairs(graphics) do
+    if type(v) == 'table' then
+      draw.graphics(v)
+    end
+  end
+end
+
 function draw.absolute(image, x, y)
   love.graphics.draw(image, x, y, 0, scaleFactor, scaleFactor * aspectCorrection)
+end
+
+function draw.text(text)
+  love.graphics.setFont(get(text.font))
+
+  if text.w then
+    love.graphics.printf(
+      text.value, 
+      text.x * scaleFactor, 
+      text.y * scaleFactor, 
+      text.w * scaleFactor, 
+      text.align, 
+      0, 
+      scaleFactor, --/ aspectCorrection, 
+      scaleFactor --* aspectCorrection
+    )
+  else
+    love.graphics.print(
+      text.value, 
+      text.x * scaleFactor, 
+      text.y * scaleFactor, 
+      0, 
+      scaleFactor, --/ aspectCorrection, 
+      scaleFactor --* aspectCorrection
+    )
+  end
+end
+
+function draw.textCollection(texts)
+  for k,v in pairs(texts) do
+    if type(v) == 'table' then
+      draw.text(v)
+    end
+  end
 end
 
 function private.drawImage(image, x, y)

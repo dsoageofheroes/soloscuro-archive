@@ -1,6 +1,9 @@
 require 'util'
 
+Text = require 'models/Text'
+
 local config = require 'solconfig'
+local font = require 'font'
 local popup = require 'menu/popup'
 local charInventory = require 'menu/inventory'
 local charNav = require 'menu/nav'
@@ -11,25 +14,26 @@ local mouse = require 'io/mouse'
 local keyboard = require 'io/keyboard'
 local draw = require 'io/draw'
 local animation = require 'animation'
-local menu = require 'menu'
-local menuItems = require 'menuItems'
+local menu = require 'menu/menu'
+local menuItems = require 'menu/menuItems'
 local party = require 'party'
 
 local devEnabled = false
 
-math.randomseed(os.clock())
-
 function love.load()
+  math.randomseed(os.clock())
+
   draw.init()
   gff.init(config)
   mouse.init(gff.cursors, draw)
+  font.init(gff.loadFontChar)
 
   popup.init(gff.popup, menu)
   menuItems.init(gff.menu, menu)
   charNav.init(gff.charOverview, menu)
   charView.init(gff.charOverview, menu, charNav)
   charInventory.init(gff.inventory, menu, charNav)
-  createChar.init(gff.createChar, menu)
+  createChar.init(gff.createChar, menu, font)
   menu.init(draw, animation, menuItems, charView, charInventory, createChar, popup)
 end
 

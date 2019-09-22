@@ -5,7 +5,7 @@ local create =
   end
 }
 
-function create.init(_createAssets, _menu)
+function create.init(_createAssets, _menu, _font)
   local buttonAnim = { 4, interval = .1 }
   local diceAnim = { 3, 4, 5, 6, 3, interval = .1 }
   local simpleClicked = function(self)
@@ -66,6 +66,13 @@ function create.init(_createAssets, _menu)
         self.active = self.active < #self.assets and self.active + 1 or 1
       end
     }
+  }
+
+  create.texts = 
+  {
+    Text("PSI DISCIPLINES", _font.black, 226, 114),
+    Text("TRUE NEUTRAL", _font.white, 86, 171),
+    Text("MALE HUMAN", _font.white, 86, 162),
   }
 
 end
