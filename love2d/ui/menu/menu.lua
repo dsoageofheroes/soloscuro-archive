@@ -105,7 +105,7 @@ function menu.draw()
   end
 
   if private.isActivePopupOpen then
-    draw.collection(private.activePopupWindow)
+    draw.collection(private.activePopupWindow.elements)
   end
 
 end
@@ -113,7 +113,7 @@ end
 function menu.update(dt)
 
   if private.isActivePopupOpen then
-    animation.updateCollection(dt, private.activePopupWindow)
+    animation.updateCollection(dt, private.activePopupWindow.elements)
   end
 
   if private.isMainMenuOpen then
@@ -146,7 +146,7 @@ end
 function menu.clicked(x, y, button)
 
   if private.isActivePopupOpen then
-    draw.clickItemIn(private.activePopupWindow, x, y, button)
+    draw.clickItemIn(private.activePopupWindow.elements, x, y, button)
     return
   end
 

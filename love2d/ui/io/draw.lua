@@ -41,14 +41,14 @@ function draw.clickItemIn(graphics, x, y, button)
   return clicked
 end
 
-function draw.graphics(graphic)
+function draw.graphics(graphic, noAspect)
   local a = graphic.anim
   local h = graphic.hover
   local i = get(graphic.active) or 1
 
   local image = graphic.assets[i]
 
-  private.drawImage(image, graphic.x, graphic.y)
+  private.drawImage(image, graphic.x, graphic.y, noAspect)
 
   if a and graphic.timer then
     private.drawImage(graphic.assets[a], graphic.x, graphic.y)
@@ -79,7 +79,7 @@ function draw.text(text)
 
   if text.w then
     love.graphics.printf(
-      text.value, 
+      get(text.value), 
       text.x * scaleFactor, 
       text.y * scaleFactor, 
       text.w * scaleFactor, 
@@ -90,7 +90,7 @@ function draw.text(text)
     )
   else
     love.graphics.print(
-      text.value, 
+      get(text.value), 
       text.x * scaleFactor, 
       text.y * scaleFactor, 
       0, 
@@ -108,8 +108,8 @@ function draw.textCollection(texts)
   end
 end
 
-function private.drawImage(image, x, y)
-  love.graphics.draw(image, x * scaleFactor, y * scaleFactor * aspectCorrection, 0, scaleFactor, scaleFactor * aspectCorrection)
+function private.drawImage(image, x, y, noAspect)
+  love.graphics.draw(image, x * scaleFactor, y * scaleFactor * aspectCorrection, 0, scaleFactor, scaleFactor * (noAspect and 1 or aspectCorrection))
 end
 
 function draw.isMouseInBox(x, y, width, height)

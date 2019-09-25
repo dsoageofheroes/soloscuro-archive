@@ -1,6 +1,9 @@
 local private = {}
 local font = 
 {
+  -- Hardcoded glyph arrangement - keep the length exactly as-is
+  glyphs = [[ !"#$%&'()*+,-./0123456789:;<=>?%ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{Ɵ}~ƟƟƟƟƟƟƟƟƟƟƟƟƟƟƟƟƟƟƟƟƟƟƟƟƟƟƟƟƟƟƟƟƟƟƟƟƟƟƟƟƟƟƟ]],
+
   -- These are implemented as getter functions to allow memoized lazy loading
   dark = function() return private.get('202038FF', 'A6A6BEFF') end,
   light = function() return private.get('8A8AA2FF', '202038FF') end,
@@ -12,50 +15,41 @@ local font =
 
 local 
 loadChar,
-fontDivider,
-smallFontImageData,
-largeFontImageData,
-glyphs
+fontPatch,
+moreFontSheet
 
-function font.init(_loadChar)
+function font.init(_loadChar, _fontPatch)
   loadChar = _loadChar
+  fontPatch = _fontPatch
 
   private.loadAssets()
+  private.buildFontSheet()
 end
 
---[[ DEPRECATED
-
-local function getFontDivider()
-  if fontDivider == nil then
-    fontDivider = love.image.newImageData(1,9)
-    for i=1,9 do
-      fontDivider:setPixel(0, i - 1, 0.1, 0.1, 0.1, 0.1)
-    end
-  end
-
-  return fontDivider
-end
-
-local function buildFont(color, shadow)
+function private.buildFontSheet()
   local sheetHeight = 9
-  local sheetWidth = 0
+  local sheetWidth = 1
 
   local chars = {}
   
   for i=0,255 do
-    local char = loadChar(i, color, shadow)
+    local char = loadChar(i)
 
     if char then
-      table.insert(chars, char)
+      table.insert(chars, private.patchChar(fontPatch[i], char))
 
-      sheetWidth = sheetWidth + char:getWidth()
+      sheetWidth = sheetWidth + char:getWidth() + 1
     end
   end
 
-  local fontSheet = love.image.newImageData(sheetWidth, sheetHeight)
-  local divider = getFontDivider()
+  local fontSheet = love.image.newImageData(sheetWidth + moreFontSheet:getWidth(), sheetHeight)
+  local divider = love.image.newImageData(1,9)
   local charX = 0
   local charY = 0
+
+  for i=1,9 do
+    divider:setPixel(0, i - 1, 0.1, 0.1, 0.1, 0.1)
+  end
 
   for i=1,#chars do
     fontSheet:paste(divider, charX, charY, 0, 0, divider:getWidth(), divider:getHeight())
@@ -63,59 +57,75 @@ local function buildFont(color, shadow)
     charX = charX + chars[i]:getWidth() + 1
   end
 
-  -- Drop in one last divider for the font image
-  fontSheet:paste(divider, charX, charY, 0, 0, divider:getWidth(), divider:getHeight())
+  -- Add in the additional chars
+  fontSheet:paste(moreFontSheet, charX, charY, 0, 0, moreFontSheet:getWidth(), moreFontSheet:getHeight())
 
-  local glyphs = [-[ !"#$%&'()*+,-./0123456789:;<=>?%ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{@}~^]-]
-  local imageFont = love.graphics.newImageFont(fontSheet, glyphs)
-
-  return imageFont
+  private.fontSheet = fontSheet
 end
-]]
 
-local function buildFont(color, shadow)
-  local w = smallFontImageData:getWidth()
-  local h = smallFontImageData:getHeight()
-  local fontImageData = love.image.newImageData(w, h)
+function private.patchChar(patch, char)
+  local w = patch and patch.w or char:getWidth()
+  local h = patch and patch.h or char:getHeight()
+  local newChar = love.image.newImageData(w, h)
 
-  local cR, cG, cB, cA = private.hexToRGBA(color)
-  local sR, sG, sB, sA = private.hexToRGBA(shadow)
+  for x=0,w-1 do
+    for y=0,h-1 do
+      local r,g,b,a = char:getPixel((patch and patch.x or 0) + x, y)
+      r = r > .5 and 1 or 0 
+      g = g > .5 and 1 or 0
+      b = b > .5 and 1 or 0
+      a = a > .5 and 1 or 0
+      newChar:setPixel(x,y,r,g,b,a)
+    end
+  end
 
-  for i=0,w-1 do
-    for j=0,h-1 do
-      local r, g, b, a = smallFontImageData:getPixel(i, j)
+  if patch then
+    for i,v in ipairs(patch) do
+      newChar:setPixel(unpack(v))
+    end
+  end
 
-      if r == 1 and a == 1 then
-        fontImageData:setPixel(i, j, cR, cG, cB, cA)
-      elseif r == 0 and a == 1 then
-        fontImageData:setPixel(i, j, sR, sG, sB, sA)
+  return newChar
+end
+
+function private.colorize(color, shadow)
+  local newFont = private.fontSheet:clone()
+  local cR,cG,cB,cA = private.hexToRGBA(color)
+  local sR,sG,sB,sA = private.hexToRGBA(shadow)
+
+  for x=0,newFont:getWidth()-1 do
+    for y=0,newFont:getHeight()-1 do
+      local r,g,b,a = private.fontSheet:getPixel(x,y,r,g,b,a)
+
+      if a == 1 and r == 1 then
+        newFont:setPixel(x,y,cR,cG,cB,cA)
+      elseif a == 1 and r == 0 then
+        newFont:setPixel(x,y,sR,sG,sB,sA)
       else
-        fontImageData:setPixel(i, j, r, g, b, a)
+        newFont:setPixel(x,y,r,g,b,a)
       end
     end
   end
 
-  return love.graphics.newImageFont(fontImageData, glyphs)
+  return love.graphics.newImageFont(newFont, font.glyphs)
 end
 
 function private.get(color, shadow)
   local key = color .. shadow
 
   if not private[key] then
-    private[key] = buildFont(color, shadow)
-  else
+    private[key] = private.colorize(color, shadow)
   end
 
   return private[key]
 end
 
 function private.loadAssets()
-  for line in love.filesystem.lines("assets/font/glyphs.txt") do
-    glyphs = line
+  for line in love.filesystem.lines("assets/font/more_glyphs.txt") do
+    font.glyphs = font.glyphs..line
   end
 
-  smallFontImageData = love.image.newImageData('assets/font/smallfont.png')
-  largeFontImageData = love.image.newImageData('assets/font/largefont.png')
+  moreFontSheet = love.image.newImageData('assets/font/more_font.png')
 end
 
 function private.hexToRGBA(hex)

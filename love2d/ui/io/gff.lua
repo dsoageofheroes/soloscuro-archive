@@ -16,9 +16,9 @@ function gff.init(_config)
   private.loadAllResources()
 end
 
-function gff.loadFontChar(i, color, shadow)
+function gff.loadFontChar(i)
   local char
-  local img, w, h = ds.create_font_img(0, i, color, shadow);
+  local img, w, h = ds.create_font_img(0, i, 0xFFFFFFFF, 0x000000FF);
   
   if w > 0 then
     char = love.image.newImageData(w, h, "rgba8", img)

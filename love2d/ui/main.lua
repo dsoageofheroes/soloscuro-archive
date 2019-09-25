@@ -4,6 +4,7 @@ Text = require 'models/Text'
 
 local config = require 'solconfig'
 local font = require 'font'
+local fontPatch = require 'patch/font'
 local popup = require 'menu/popup'
 local charInventory = require 'menu/inventory'
 local charNav = require 'menu/nav'
@@ -26,7 +27,7 @@ function love.load()
   draw.init()
   gff.init(config)
   mouse.init(gff.cursors, draw)
-  font.init(gff.loadFontChar)
+  font.init(gff.loadFontChar, fontPatch)
 
   popup.init(gff.popup, menu)
   menuItems.init(gff.menu, menu)
@@ -40,7 +41,7 @@ end
 function love.draw()
 
   menu.draw()
-  
+
   draw.debug()
 
   if devEnabled then

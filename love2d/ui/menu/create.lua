@@ -65,14 +65,20 @@ function create.init(_createAssets, _menu, _font)
       clicked = function(self)
         self.active = self.active < #self.assets and self.active + 1 or 1
       end
-    }
+    },
   }
+
+  local function charCount()
+    return (_font.CharCount or 0)..''
+  end
 
   create.texts = 
   {
     Text("PSI DISCIPLINES", _font.black, 226, 114),
     Text("TRUE NEUTRAL", _font.white, 86, 171),
     Text("MALE HUMAN", _font.white, 86, 162),
+    Text([[ abcdefghijklmnopqrstuvwxyz{@|$}~^]], _font.white, 2, 180),
+    Text([[ z{@}~|]], _font.white, 25, 205),
   }
 
 end

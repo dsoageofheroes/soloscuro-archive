@@ -19,7 +19,7 @@ function popup.createChar(_x, _y)
     menu.closePopup()
   end
 
-  return
+  local elements = 
   {
     { assets = popupAssets.createChar, x = _x, y = _y },
     { 
@@ -50,6 +50,11 @@ function popup.createChar(_x, _y)
       hover = 2,
       clicked = cancel,
     },
+  }
+
+  return 
+  {
+    elements = elements
   }
 end
 
