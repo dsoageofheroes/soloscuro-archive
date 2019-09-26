@@ -1,15 +1,16 @@
-local ds = require('libds')
-
 local gff = {
   cursors = {},
   menu = {}
 }
 local private = {}
 
+local ds
+
 -- GFF file list
 local GFF_RESOURCE = "resource.gff"
 
-function gff.init(_config)
+function gff.init(_ds, _config)
+  ds = _ds
   ds.gff_init()
   ds.gff_load_directory(_config.ds1Path)
 

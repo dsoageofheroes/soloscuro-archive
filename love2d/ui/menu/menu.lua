@@ -1,11 +1,3 @@
---[[ PUBLIC MEMBERS
-
-.init(_items, _draw, _charOverview)
-.draw()
-.clicked(x, y)
-
-]]
-
 local 
 menuItems,
 draw,

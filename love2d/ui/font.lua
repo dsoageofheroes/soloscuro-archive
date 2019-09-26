@@ -95,7 +95,7 @@ function private.colorize(color, shadow)
 
   for x=0,newFont:getWidth()-1 do
     for y=0,newFont:getHeight()-1 do
-      local r,g,b,a = private.fontSheet:getPixel(x,y,r,g,b,a)
+      local r,g,b,a = private.fontSheet:getPixel(x,y)
 
       if a == 1 and r == 1 then
         newFont:setPixel(x,y,cR,cG,cB,cA)

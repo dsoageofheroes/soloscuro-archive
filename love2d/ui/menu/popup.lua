@@ -10,7 +10,7 @@ function popup.init(_popupAssets, _menu)
 end
 
 function popup.createChar(_x, _y)
-  local anim = { 4, interval = 0.1 }
+  local anim = Animation(4):setInterval(.1)
   local simpleClicked = function(self, x, y)
     self.timer = 0
   end
@@ -21,35 +21,24 @@ function popup.createChar(_x, _y)
 
   local elements = 
   {
-    { assets = popupAssets.createChar, x = _x, y = _y },
-    { 
-      assets = popupAssets.text1, 
-      x = _x + 8, 
-      y = _y + 17, 
-      hover = 2,
-      animation = anim, 
-      clicked = simpleClicked, 
-      animComplete = function()
+    Graphic(popupAssets.createChar, _x, _y),
+    Graphic(popupAssets.text1, _x + 8, _y + 17)
+      :setHover(2)
+      :setClicked(simpleClicked)
+      :animate(anim, function()
         menu:open('CreateChar')
-      end
-    },
-    { assets = popupAssets.text2, x = _x + 8, y = _y + 29, animation = anim, clicked = simpleClicked, hover = 2 },
-    { 
-      assets = popupAssets.text3, 
-      x = _x + 8, 
-      y = _y + 41, 
-      hover = 2,
-      animation = anim, 
-      clicked = simpleClicked, 
-      animComplete = cancel,
-    },
-    { 
-      assets = popupAssets.corona, 
-      x = _x + 102, 
-      y = _y + 36, 
-      hover = 2,
-      clicked = cancel,
-    },
+      end),
+    Graphic(popupAssets.text2, _x + 8, _y + 29)
+      :setHover(2)
+      :setClicked(simpleClicked)
+      :animate(anim),
+    Graphic(popupAssets.text3, _x + 8, _y + 41)
+      :setHover(2)
+      :setClicked(simpleClicked)
+      :animate(anim, cancel),
+    Graphic(popupAssets.corona, _x + 102, _y + 36)
+      :setHover(2)
+      :setClicked(cancel),
   }
 
   return 

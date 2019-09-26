@@ -1,18 +1,3 @@
---[[ PUBLIC MEMBERS
-
-.init()
-.graphics(graphic)
-.collection(graphics)
-.absolute(image, x, y)
-.text(text)
-.textCollection(texts)
-.isMouseInBox(x, y, width, height)
-.isMouseOverGraphic(graphic)
-.scaleUp()
-.scaleDown()
-
-]]
-
 local draw = {
   debug1 = '',
   debug2 = ''

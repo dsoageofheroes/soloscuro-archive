@@ -3,18 +3,18 @@ local inventory = {
 }
 local private =
 {
-  anim = { 4, interval = .1 },
+  anim = Animation(4),
   simpleClicked = function(self, x, y)
     self.timer = 0
   end,
 }
 
-local menuElements = {}
-local invElements = {}
-
-local invAssets = 1
-local menu = 1
-local nav = 1
+local 
+menuElements,
+invElements,
+invAssets,
+menu,
+nav
 
 function inventory.init(_inventory, _menu, _nav)
   invAssets = _inventory
@@ -24,13 +24,13 @@ function inventory.init(_inventory, _menu, _nav)
   menuElements =
   {
     -- Main overlay
-    { assets = _inventory.background, x = 0, y = 0 },
-    { assets = _inventory.aside, x = 233, y = 4 },
-    { assets = _inventory.charBackground, x = 75, y = 36 },
+    Graphic(_inventory.background),
+    Graphic(_inventory.aside, 233, 4),
+    Graphic(_inventory.charBackground, 75, 36),
     
-    { assets = _inventory.textbox, x = 53, y = 3, active = 2 },
-    { assets = _inventory.textbox, x = 46, y = 161, active = 4 },
-    { assets = _inventory.textbox, x = 57, y = 183, active = 1 },
+    Graphic(_inventory.textbox, 53, 3):setActive(2),
+    Graphic(_inventory.textbox, 46, 161):setActive(4),
+    Graphic(_inventory.textbox, 57, 183):setActive(1),
   }
 
   addRange(menuElements, nav.inventory())
@@ -81,16 +81,11 @@ function inventory.init(_inventory, _menu, _nav)
 end
 
 function private.slot(_x, _y, assetIndex)
-  return
-  { 
-    assets = invAssets.slot, 
-    animation = private.anim, 
-    clicked = private.simpleClicked, 
-    x = _x, 
-    y = _y, 
-    active = assetIndex, 
-    hover = 8 
-  }
+  return Graphic(invAssets.slot, _x, _y)
+          :setActive(assetIndex)
+          :setHover(8)
+          :setClicked(private.simpleClicked)
+          :animate(private.anim)
 end
 
 return inventory

@@ -22,9 +22,4 @@ function view.init(_overview, _menu, _nav)
 
 end
 
--- GUI functions
-function private.simpleClicked(self, x, y)
-  self.timer = 0
-end
-
 return view

@@ -1,43 +1,41 @@
 local menuItems = {}
 local private = {}
 
-local menu = 1
+local menu
+
+local function simpleClicked(self, x, y)
+  self.timer = 0
+end
 
 function menuItems.init(_items, _menu)
   menu = _menu
 
-  local anim = { 3, 2, 4, 3, 2, 4, interval = .035 }
-
-  function private.simpleClicked(self, x, y)
-    self.timer = 0
-  end
+  local anim = Animation(3, 2, 4, 3, 2, 4):setInterval(.035)
 
   menuItems.elements =
   {
-    { assets = _items.sun, x = 47, y = 25 },
-    { assets = _items.stone, x = 4, y = 45 },
-    { assets = _items.start, hover = 2, x = 94, y = 70,
-      animation = anim,
-      clicked = private.simpleClicked,
-    },
-    { assets = _items.create, hover = 2, x = 50, y = 87,
-      animation = anim,
-      animComplete = function()
+    Graphic(_items.sun, 47, 25),
+    Graphic(_items.stone, 4, 45),
+    Graphic(_items.start, 94, 70)
+      :setHover(2)
+      :setClicked(simpleClicked)
+      :animate(anim),
+    Graphic(_items.create, 50, 87)
+      :setHover(2)
+      :setClicked(simpleClicked)
+      :animate(anim, function()
         menu:open('CharView')
-      end,
-      clicked = private.simpleClicked,
-    },
-    { assets = _items.load, hover = 2, x = 64, y = 104,
-      animation = anim,
-      clicked = private.simpleClicked,
-    },
-    { assets = _items.exit, hover = 2, x = 92, y = 120,
-      animation = anim,
-      animComplete = function()
+      end),
+    Graphic(_items.load, 64, 104)
+      :setHover(2)
+      :setClicked(simpleClicked)
+      :animate(anim),
+    Graphic(_items.exit, 92, 120)
+      :setHover(2)
+      :setClicked(simpleClicked)
+      :animate(anim, function()
         love.event.quit(0)
-      end,
-      clicked = private.simpleClicked,
-    }
+      end),
   }
 end
 

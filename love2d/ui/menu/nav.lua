@@ -1,20 +1,20 @@
 local nav = {}
 local private = 
 {
-  anim = { 4, interval = .2 },
+  anim = Animation(4):setInterval(.2),
   simpleClicked = function(self, x, y)
     self.timer = 0
   end,
 }
 
-local menu = 1
-local navItems = 1
-
-local baseMenu = 1
-local charViewNav = 1
-local inventoryNav = 1
-local powersNav = 1
-local effectsNav = 1
+local 
+menu,
+navItems,
+baseMenu,
+charViewNav,
+inventoryNav,
+powersNav,
+effectsNav
 
 function nav.init(_navItems, _menu)
   navItems = _navItems
@@ -22,13 +22,13 @@ function nav.init(_navItems, _menu)
 
   baseMenu =
   {
-    { assets = _navItems.sun, x = 47, y = 0 },
-    { assets = _navItems.panel, x = 0, y = 9 },
+    Graphic(_navItems.sun, 47),
+    Graphic(_navItems.panel, 0, 9),
   }
 
   charViewNav =
   {
-    { assets = _navItems.viewTitle, x = 56, y = 11 },
+    Graphic(_navItems.viewTitle, 56, 11),
     private.charView(43, 164, true),
     private.inventory(67, 164),
     private.powers(91, 164),
@@ -81,7 +81,7 @@ function nav.init(_navItems, _menu)
 
   powersNav =
   {
-    { assets = _navItems.powersTitle, x = 109, y = 11 },
+    Graphic(_navItems.powersTitle, 109, 11),
     private.charView(43, 164),
     private.inventory(67, 164),
     private.powers(91, 164, true),
@@ -108,7 +108,7 @@ function nav.init(_navItems, _menu)
 
   effectsNav =
   {
-    { assets = _navItems.effectsTitle, x = 85, y = 11 },
+    Graphic(_navItems.effectsTitle, 85, 11),
     private.charView(43, 164),
     private.inventory(67, 164),
     private.powers(91, 164),
@@ -156,93 +156,64 @@ function nav.effects()
 end
 
 function private.charView(_x, _y, selected)
-  local view = 
-  { 
-    assets = navItems.viewChar, 
-    x = _x, 
-    y = _y, 
-    hover = 2, 
-    animation = private.anim, 
-    animComplete = 
-    function()
-      menu:open('CharView')
-    end,
-    clicked = private.simpleClicked
-  }
+  local view = Graphic(navItems.viewChar, _x, _y)
 
   if selected then
-    view.clicked = nil
-    view.hover = nil
     view.active = 4
+  else
+    view:setHover(2)
+        :setClicked(private.simpleClicked)
+        :animate(private.anim, function()
+          menu:open('CharView')
+        end)
   end
 
   return view
 end
 
 function private.inventory(_x, _y, selected)
-  local inv =
-  { 
-    assets = navItems.viewInv, 
-    x = _x, 
-    y = _y, 
-    hover = 2, 
-    animation = private.anim,
-    animComplete = function()
-      menu:open('Inventory')
-    end,
-    clicked = private.simpleClicked
-  }
+  local inv = Graphic(navItems.viewInv, _x, _y)
 
   if selected then
-    inv.clicked = nil
-    inv.hover = nil
     inv.active = 4
+  else 
+    inv:setHover(2)
+       :setClicked(private.simpleClicked)
+       :animate(private.anim, function()
+        menu:open('Inventory')
+      end)
   end
 
   return inv
 end
 
 function private.powers(_x, _y, selected)
-  local pow = 
-  { 
-    assets = navItems.viewPowers, 
-    x = _x, 
-    y = _y, 
-    hover = 2,
-    animation = private.anim,
-    animComplete = function()
-      menu:open('Powers')
-    end,
-    clicked = private.simpleClicked
-  }
+  local pow = Graphic(navItems.viewPowers, _x, _y)
 
   if selected then
-    pow.clicked = nil
-    pow.hover = nil
     pow.active = 4
+  else
+    pow:setHover(2)
+       :setClicked(private.simpleClicked)
+       :animate(private.anim, function()
+        menu:open('Powers')
+      end)
   end
 
   return pow
 end
 
 function private.effects(_x, _y, selected)
-  local eff = 
-  { 
-    assets = navItems.viewEffects, 
-    x = _x, 
-    y = _y, 
-    hover = 2,
-    animation = private.anim,
-    animComplete = function()
-      menu:open('Effects')
-    end,
-    clicked = private.simpleClicked
-  }
+  local eff = Graphic(navItems.viewEffects, _x, _y)
 
   if selected then
-    eff.clicked = nil
-    eff.hover = nil
     eff.active = 4
+  else
+    eff:setHover(2)
+       :setClicked(private.simpleClicked)
+       :animate(private.anim, function()
+        menu:open('Effects')
+      end)
   end
 
   return eff
@@ -250,68 +221,53 @@ end
 
 -- Restored item; unused so far
 function private.spellbook(_x, _y)
-  return { assets = navItems.spellbook, x = 138, y = 164, hover = 2 }
+  return Graphic(navItems.spellbook, 138, 164):setHover(2)
 end
 
 function private.miniMenu(_x, _y)
-  return { assets = navItems.miniMenu, x = _x, y = _y, active = 3 }
+  return Graphic(navItems.miniMenu, _x, _y):setActive(3)
 end
 
 function private.corona(_x, _y)
-  return
-  { 
-    assets = navItems.corona, 
-    x = _x, 
-    y = _y, 
-    hover = 2,
-    clicked = function(self, button)
-      menu:open('MainMenu')
-    end
-  }
+  return Graphic(navItems.corona, _x, _y)
+          :setHover(2)
+          :setClicked(function(self, button)
+            menu:open('MainMenu')
+          end)
 end
 
 function private.portrait(_x, _y, index)
   local portraitWidth = navItems.portraitBorder[1]:getWidth()
 
-  return
-  { 
-    assets = navItems.portrait, 
-    x = _x, 
-    y = _y, 
-    active = 2,
-    clicked = function(self, button)
-      menu:selectedChar(index)
-      local yAdjust = -4
-
-      if index == 4 and menu.isOpen('Inventory') then
-        yAdjust = -20
-      end
-
-      if button == 2 then
-        menu.openPopup('createChar', _x + portraitWidth, _y + yAdjust)
-      end
-    end 
-  }
+  return Graphic(navItems.portrait, _x, _y)
+          :setActive(2)
+          :setClicked(function(self, button)
+            menu:selectedChar(index)
+            local yAdjust = -4
+      
+            if index == 4 and menu.isOpen('Inventory') then
+              yAdjust = -20
+            end
+      
+            if button == 2 then
+              menu.openPopup('createChar', _x + portraitWidth, _y + yAdjust)
+            end
+          end )
 end
 
 function private.portraitBorder(_x, _y, index)
-  return
-  { 
-    assets = navItems.portraitBorder, 
-    x = _x, 
-    y = _y, 
-    active = function() 
-      return menu:selectedChar() == index and 4 or 1 
-    end 
-  }
+  return Graphic(navItems.portraitBorder, _x, _y)
+          :setActive(function() 
+            return menu:selectedChar() == index and 4 or 1 
+          end)
 end
 
 function private.leader(_x, _y, index)
-  return { assets = navItems.leader, x = _x, y = _y, active = 3 }
+  return Graphic(navItems.leader, _x, _y):setActive(3)
 end
 
 function private.AI(_x, _y)
-  return { assets = navItems.AI, x = _x, y = _y, active = 3 }
+  return Graphic(navItems.AI, _x, _y):setActive(3)
 end
 
 return nav

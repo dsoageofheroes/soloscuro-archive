@@ -1,13 +1,13 @@
-local animation = {}
+local animate = {}
 local private = {}
 
-function animation.updateCollection(dt, graphics)
+function animate.updateCollection(dt, graphics)
   for k,v in pairs(graphics) do
-    animation.update(dt, v)
+    animate.update(dt, v)
   end
 end
 
-function animation.update(dt, graphic)
+function animate.update(dt, graphic)
   if graphic.animation and graphic.timer then
     graphic.timer = graphic.timer + dt
     local imgIndex = 1
@@ -32,4 +32,4 @@ function animation.update(dt, graphic)
   end
 end
 
-return animation
+return animate

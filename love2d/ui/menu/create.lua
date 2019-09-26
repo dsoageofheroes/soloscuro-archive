@@ -6,71 +6,43 @@ local create =
 }
 
 function create.init(_createAssets, _menu, _font)
-  local buttonAnim = { 4, interval = .1 }
-  local diceAnim = { 3, 4, 5, 6, 3, interval = .1 }
+  local buttonAnim = Animation(4)
+  local diceAnim = Animation(3, 4, 5, 6, 3)
   local simpleClicked = function(self)
     self.timer = 0
   end
 
   create.elements =
   {
-    { assets = _createAssets.background, x = 0, y = 0 },
-    { assets = _createAssets.portraitBackground, x = 0, y = 0 },
-    { assets = _createAssets.spriteBackground, x = 135, y = 19 },
-    { assets = _createAssets.diceBackground, x = 129, y = 70 },
-    { assets = _createAssets.classBackground, x = 208, y = 0 },
-    { 
-      assets = _createAssets.powersBackground, 
-      x = 210, 
-      y = 88 
-    },
-    { 
-      assets = _createAssets.buttons.exit, 
-      x = 258, 
-      y = 157, 
-      hover = 2,
-      clicked = simpleClicked,
-      animation = buttonAnim,
-      animComplete = function()
+    Graphic(_createAssets.background),
+    Graphic(_createAssets.portraitBackground),
+    Graphic(_createAssets.spriteBackground, 135, 19),
+    Graphic(_createAssets.diceBackground, 129, 70),
+    Graphic(_createAssets.classBackground, 208),
+    Graphic(_createAssets.powersBackground, 210, 88),
+    Graphic(_createAssets.buttons.exit, 258, 157)
+      :setHover(2)
+      :setClicked(simpleClicked)
+      :animate(buttonAnim, function()
         _menu:open('CharView')
-      end
-    },
-    { 
-      assets = _createAssets.buttons.done, 
-      x = 243, 
-      y = 174, 
-      hover = 2,
-      clicked = simpleClicked,
-      animation = buttonAnim,
-      animComplete = function()
+      end),
+    Graphic(_createAssets.buttons.done, 243, 174)
+      :setHover(2)
+      :setClicked(simpleClicked)
+      :animate(buttonAnim, function()
         _menu:open('CharView')
-      end 
-    },
-    { 
-      assets = _createAssets.dieRoll, 
-      x = 139, 
-      y = 66, 
-      active = create.roll() + 6,
-      clicked = simpleClicked,
-      animation = diceAnim,
-      animComplete = function(self)
+      end),
+    Graphic(_createAssets.dieRoll, 139, 66)
+      :setActive(create.roll() + 6)
+      :setClicked(simpleClicked)
+      :animate(diceAnim, function(self)
         self.active = create.roll() + 6
-      end
-    },
-    {
-      assets = _createAssets.chars,
-      x = 26,
-      y = 13,
-      active = 1,
-      clicked = function(self)
+      end),
+    Graphic(_createAssets.chars, 26, 13)
+      :setClicked(function(self)
         self.active = self.active < #self.assets and self.active + 1 or 1
-      end
-    },
+      end),
   }
-
-  local function charCount()
-    return (_font.CharCount or 0)..''
-  end
 
   create.texts = 
   {
