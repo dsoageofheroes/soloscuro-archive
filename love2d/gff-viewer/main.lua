@@ -255,9 +255,16 @@ function love.keypressed( key )
         cframe = cframe + 1
         current_image = 0
     end
-    if key == "p" then
-        current_palette = (current_palette + 1) % ds.gff_get_number_of_palettes(gff_file)
+    if key == "p" or key == "o" then
+        num_palettes = ds.gff_get_number_of_palettes()
+        if key == "p" then
+            current_palette = (current_palette + 1) % num_palettes
+        else
+            current_palette = (current_palette - 1 + num_palettes) % num_palettes
+        end
         current_image = 0
+        tiles = {}
+        get_tiles()
         if (not (midi_data == 0)) then
             if (not (music == 0)) then
                 music:stop()
@@ -327,11 +334,7 @@ function love.draw()
     end
     love.graphics.print("Current ID: " .. res_id , 10, 70)
     love.graphics.print("Data: ", 10, 90)
-    if (ds.gff_get_number_of_palettes(gff_file) == -1) then 
-        love.graphics.print("Using Master Palette.", 410, 30)
-    else 
-        love.graphics.print("Palette index: " .. current_palette .. " press p to cycle", 410, 30)
-    end
+    love.graphics.print("Palette index: " .. current_palette .. " press o/p to cycle", 410, 30)
 
     type_displayed = false; -- Lua doesn't have a switch statement =(
     if (type_id == 1313427539 or type_id == 1415071060) then

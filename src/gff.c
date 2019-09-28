@@ -289,12 +289,6 @@ int gff_get_number_of_types(int idx) {
     return get_type_header(idx)->numTypes;
 }
 
-int gff_get_number_of_palettes(int idx) {
-    if (open_files[idx].palettes == NULL) { return -1; }
-
-    return open_files[idx].num_palettes;
-}
-
 int gff_get_type_id(int idx, int type_index) {
     int i;
     gff_type_header_t *type_header = get_type_header(idx);

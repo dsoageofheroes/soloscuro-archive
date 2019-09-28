@@ -45,12 +45,9 @@ gff_palette_t* create_palettes(int gff_index, unsigned int *len) {
         }
 
         num_palettes += *len;
-        //printf("Number of palettes: %d\n", *len);
         for (int i = 0; i < *len; i++) {
             unsigned long tlen;
             unsigned char* raw_pal = (unsigned char*)gff_get_raw_bytes(gff_index, GT_PAL, ids[i], &tlen);
-            //unsigned char* raw_pal = (unsigned char*)gff_get_raw_bytes(gff_index, GT_PAL, ids[i], &tlen);
-            //printf("pal[%d] id = %u, tlen = %lu\n", i, ids[i], tlen);
             for (int j = 0; j < PALETTE_SIZE; j++) {
                 cpal[i].color[j].r = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 0]));
                 cpal[i].color[j].g = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 1]));
@@ -59,7 +56,18 @@ gff_palette_t* create_palettes(int gff_index, unsigned int *len) {
         }
         free(ids);
         return cpal;
-    } 
+    } else {
+        for (int j = 0; j < pal_chunk->chunkCount; j++) {
+            unsigned char *cptr = (unsigned char*)pal_chunk;
+            gff_chunk_header_t *chunk_header = (void*)(cptr + GFFCHUNKLISTHEADERSIZE + (j * GFFCHUNKHEADERSIZE));
+            gff_palette_t* cpal = palettes + num_palettes++;
+            unsigned char* raw_pal = (unsigned char*)((unsigned char*)open_files[gff_index].data) +
+                chunk_header->chunkDataLocation;
+            cpal->color[j].r = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 0]));
+            cpal->color[j].g = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 1]));
+            cpal->color[j].b = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 2]));
+        }
+    }
 
     if (ids == NULL) { goto cp_search_error; }
 
@@ -332,16 +340,18 @@ unsigned char* create_font_rgba(int gff_index, int c, int fg_color, int bg_color
 unsigned char* get_frame_rgba_with_palette(int gff_index, int type_id, int res_id, int frame_id, int palette_id) {
     gff_palette_t *cpal = NULL;
     //printf("master_palette = %p\n", master_palette);
-    if (palette_id < 0 || open_files[gff_index].num_palettes < 1) {
+    //if (palette_id < 0 || open_files[gff_index].num_palettes < 1) {
+    if (palette_id < 0 || palette_id >= num_palettes) {
         cpal = master_palette;
     } else {
-        cpal = open_files[gff_index].palettes + palette_id;
+        //cpal = open_files[gff_index].palettes + palette_id;
+        cpal = palettes + palette_id;
     }
 
     unsigned long len = 0;
     unsigned char* chunk = (unsigned char*)gff_get_raw_bytes(gff_index, type_id, res_id, &len);
     if (len < 11) {
-        fprintf(stderr, "1ERROR: unable to load image (%d), it is too small (%lu.)\n", res_id, len);
+        fprintf(stderr, "ERROR: unable to load image (%d), it is too small (%lu.)\n", res_id, len);
     }
     unsigned int frame_offset = *((unsigned int*)(chunk + 6 + frame_id*4));
     unsigned short width = *(unsigned short*)(chunk + frame_offset);
@@ -401,4 +411,8 @@ unsigned char* get_frame_rgba_with_palette(int gff_index, int type_id, int res_i
         return ret_img;
     }
     return NULL;
+}
+
+int gff_get_number_of_palettes() {
+    return num_palettes;
 }

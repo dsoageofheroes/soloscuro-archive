@@ -99,10 +99,7 @@ int lua_gff_get_number_of_types(lua_State *L) {
 }
 
 int lua_gff_get_number_of_palettes(lua_State *L) {
-    int idx = luaL_checkinteger(L, 1);
-
-    lua_pushinteger(L, gff_get_number_of_palettes(idx));
-
+    lua_pushinteger(L, gff_get_number_of_palettes());
     return 1;
 }
 

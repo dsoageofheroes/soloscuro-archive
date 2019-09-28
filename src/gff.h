@@ -174,7 +174,6 @@ extern const char** gff_list(size_t *len);
 extern void get_gff_type_name(unsigned int gff_type, char *type);
 extern int gff_find_index(char *name);
 extern int gff_get_number_of_types(int idx);
-extern int gff_get_number_of_palettes(int idx);
 extern int gff_get_type_id(int idx, int type_index);
 extern unsigned int gff_get_gff_type_length(int idx, int type_id);
 extern unsigned int* gff_get_id_list(int idx, int type_id);
