@@ -70,8 +70,8 @@ function draw.text(text)
       text.w * scaleFactor, 
       text.align, 
       0, 
-      scaleFactor, --/ aspectCorrection, 
-      scaleFactor --* aspectCorrection
+      scaleFactor,
+      scaleFactor
     )
   else
     love.graphics.print(
@@ -79,8 +79,8 @@ function draw.text(text)
       text.x * scaleFactor, 
       text.y * scaleFactor, 
       0, 
-      scaleFactor, --/ aspectCorrection, 
-      scaleFactor --* aspectCorrection
+      scaleFactor,
+      scaleFactor
     )
   end
 end

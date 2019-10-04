@@ -46,7 +46,7 @@ function create.init(_createAssets, _menu, _font)
 
   create.texts = 
   {
-    Text("PSI DISCIPLINES", _font.black, 226, 114),
+    Text("PSIONIC DISCIPLINES", _font.black, 218, 114),
     Text("TRUE NEUTRAL", _font.white, 86, 171),
     Text("MALE HUMAN", _font.white, 86, 162),
     Text([[ abcdefghijklmnopqrstuvwxyz{@|$}~^]], _font.white, 2, 180),
