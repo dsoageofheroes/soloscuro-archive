@@ -328,7 +328,7 @@ function love.update(dt)
     if (not(scmd == nil)) then
         --print("scmd_len = " .. scmd_len)
         if (scmd_len > 0) then
-            scmd_delay = scmd_delay - 1
+            scmd_delay = scmd_delay - (60 * dt)
             --print("scmd_delay = " .. scmd_delay)
             --print("scmd_idx = " .. scmd_idx)
             if (scmd_delay < 0) then
@@ -437,7 +437,7 @@ function love.draw()
                 scmd_len = ds.scmd_len(scmd)
                 if (scmd_len > 0) then
                     scmd_idx = 0
-                    scmd_delay = 15
+                    scmd_delay = ds.scmd_delay(scmd, scmd_idx)
                 end
             else
                 scmd = nil
