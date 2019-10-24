@@ -56,6 +56,9 @@ function init_current_file()
 
     -- Zero out the font
     font = nil
+
+    -- Current animation script
+    scmd = nil
 end
 
 function get_font() 
@@ -206,6 +209,7 @@ function love.keypressed( key )
         type_id = ds.gff_get_type_id(gff_file, current_type_index)
         current_resource_id_list = ds.gff_get_id_list(gff_file, type_id)
         midi_data = 0
+        scmd = nil
     end
     if key == "up" then
         if (not (music == 0)) then
@@ -218,6 +222,7 @@ function love.keypressed( key )
         type_id = ds.gff_get_type_id(gff_file, current_type_index)
         current_resource_id_list = ds.gff_get_id_list(gff_file, type_id)
         midi_data = 0
+        scmd = nil
     end
     if key == "right" then
         if (not (music == 0)) then
@@ -235,6 +240,7 @@ function love.keypressed( key )
         -- with 0 referenced it would be: current_resource_id_index = (current_resource_id_index + 1) % table.getn(current_resource_id_list)
         cobject = cobject + 1
         cobject = cobject % num_objects
+        scmd = nil
     end
     if key == "left" then
         if (not (music == 0)) then
@@ -250,6 +256,7 @@ function love.keypressed( key )
         midi_data = 0
         cobject = cobject - 1
         cobject = cobject % num_objects
+        scmd = nil
     end
     if key == "f" then
         cframe = cframe + 1
@@ -318,6 +325,25 @@ function love.keypressed( key )
 end
 
 function love.update(dt)
+    if (not(scmd == nil)) then
+        --print("scmd_len = " .. scmd_len)
+        if (scmd_len > 0) then
+            scmd_delay = scmd_delay - 1
+            --print("scmd_delay = " .. scmd_delay)
+            --print("scmd_idx = " .. scmd_idx)
+            if (scmd_delay < 0) then
+                --print("frame_idx = " .. ds.scmd_bmp_idx(scmd, scmd_idx))
+                cframe = ds.scmd_bmp_idx(scmd, scmd_idx);
+                current_image = 0
+                scmd_delay = ds.scmd_delay(scmd, scmd_idx)
+                if (ds.scmd_last(scmd, scmd_idx)) then
+                    scmd = nil
+                else
+                    scmd_idx = scmd_idx + 1
+                end
+            end
+        end
+    end
 end
 
 function love.draw()
@@ -343,7 +369,7 @@ function love.draw()
         love.graphics.print(msg, 10, 110)
         type_displayed = true;
     end
-    if (type_id == 542133570 or type_id == 1313817417 or type_id == 1162627412) then
+    if (type_id == BMP_TYPE or type_id == 1313817417 or type_id == 1162627412) then
         num_frames = ds.get_frame_count(gff_file, type_id, res_id)
         cframe = cframe % num_frames
         width = ds.get_frame_width(gff_file, type_id, res_id, cframe)
@@ -383,23 +409,40 @@ function love.draw()
     end
     if (type_id == ETAB_TYPE) then
         num_objects = ds.map_get_number_of_objects(gff_file, res_id)
+        num_frames = ds.map_get_object_frame_count(gff_file, res_id, cobject)
+        cframe = cframe % num_frames
         love.graphics.print("current object # " .. cobject .. " of " .. num_objects, 10, 110)
         love.graphics.print("use right/left arrows to cycle through", 10, 130)
+        love.graphics.print("Number of Frames: " .. num_frames, 10, 150)
+        love.graphics.print("Frame [" .. cframe .. "]: " .. width .. " x " .. height, 10, 170)
+        love.graphics.print("Press 'f' to cycle through frames if there are more than one.", 10, 190)
         if (current_image == 0) then
-            data, width, height = ds.map_get_object_bmp(gff_file, res_id, cobject)
+            data, width, height = ds.map_get_object_bmp(gff_file, res_id, cobject, cframe)
             if (data ~=  0) then -- always check that it got the image!
                 imageData = love.image.newImageData(width, height, "rgba8", data)
                 current_image = love.graphics.newImage( imageData )
             end
         end
         if (current_image ~= 0) then -- always check the image is available!
-            love.graphics.draw(current_image, 0, 170, 0, 2, 2.4)
+            love.graphics.draw(current_image, 0, 230, 0, 2, 2.4)
         else
-            love.graphics.print("Unable to convert image.  Inform the developer.", 10, 150)
+            love.graphics.print("Unable to convert image.  Inform the developer.", 10, 230)
         end
         x, y, z = ds.map_get_object_location(gff_file, res_id, cobject)
-        love.graphics.print("location (" .. x .. ", " .. y .. ", " .. z ..")", 10, 150)
+        love.graphics.print("location (" .. x .. ", " .. y .. ", " .. z ..")", 10, 210)
         type_displayed = true;
+        if (scmd == nil) then
+            scmd = ds.map_get_object_scmd(gff_file, res_id, cobject, 25)
+            if (not (scmd == 0))  then
+                scmd_len = ds.scmd_len(scmd)
+                if (scmd_len > 0) then
+                    scmd_idx = 0
+                    scmd_delay = 15
+                end
+            else
+                scmd = nil
+            end
+        end
     end
     if (type_id == RDFF_TYPE) then
         object = ds.object_inspect(gff_file, res_id)

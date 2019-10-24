@@ -29,6 +29,7 @@ static void create_table_entry_ss(lua_State *L, const char *key, const char *val
 static void push_ds1_combat(lua_State *L, ds1_combat_t *dc);
 static void push_ds1_monster(lua_State *L, gff_monster_entry_t *me);
 static void push_ds1_item(lua_State *L, ds1_item_t *dc);
+static void push_scmd(lua_State *L, scmd_t *script);
 /* End Helper Functions */
 
 static int lua_gff_init(lua_State *L) {
@@ -363,14 +364,39 @@ int lua_map_get_number_of_objects(lua_State *L) {
     return 1;
 }
 
-int lua_map_get_object_bmp(lua_State *L) {
+int lua_map_get_object_frame_count(lua_State *L) {
     lua_Integer gff_index = luaL_checkinteger (L, 1);
     lua_Integer res_id = luaL_checkinteger (L, 2);
     lua_Integer obj_id = luaL_checkinteger (L, 3);
 
+    lua_pushinteger(L, gff_map_get_object_frame_count(gff_index, res_id, obj_id));
+
+    return 1;
+}
+
+int lua_map_get_object_scmd(lua_State *L) {
+    lua_Integer gff_index = luaL_checkinteger (L, 1);
+    lua_Integer res_id = luaL_checkinteger (L, 2);
+    lua_Integer obj_id = luaL_checkinteger (L, 3);
+    lua_Integer scmd_index = luaL_checkinteger (L, 4);
+
+    scmd_t* script = gff_map_get_object_scmd(gff_index, res_id, obj_id, scmd_index);
+
+    //lua_createtable(L, 0, 0);
+    push_scmd(L, script);
+
+    return 1;
+}
+
+int lua_map_get_object_bmp(lua_State *L) {
+    lua_Integer gff_index = luaL_checkinteger (L, 1);
+    lua_Integer res_id = luaL_checkinteger (L, 2);
+    lua_Integer obj_id = luaL_checkinteger (L, 3);
+    lua_Integer frame_id = luaL_checkinteger (L, 4);
+
     int w, h;
 
-    char *data = (char*)gff_map_get_object_bmp(gff_index, res_id, obj_id, &w, &h);
+    char *data = (char*)gff_map_get_object_bmp(gff_index, res_id, obj_id, &w, &h, frame_id);
 
     if (data == NULL) {
         lua_pushinteger(L, 0);
@@ -478,6 +504,87 @@ int lua_font_count(lua_State *L) {
 
     return 1;
 }
+
+// SCMD Functions
+static int lua_scmd_len(lua_State *L) {
+    int len = 1;
+    scmd_t *cmd = (scmd_t *)lua_touserdata(L, 1);
+    if (!cmd) { 
+        lua_pushnumber(L, 0);
+        return 1;
+    }
+    while (!(cmd->flags & SCMD_LAST)) {
+        cmd++;
+        len++;
+    }
+    lua_pushnumber(L, len);
+    return 1;
+}
+
+static scmd_t* get_cmd(lua_State *L) {
+    scmd_t *cmd = (scmd_t *)lua_touserdata(L, 1);
+    lua_Integer index = luaL_checkinteger(L, 2);
+    luaL_argcheck(L, cmd != NULL, 1, "`scmd' expected");
+    cmd += index;
+    return cmd;
+}
+
+static int lua_scmd_bmp_idx(lua_State *L) {
+    scmd_t *cmd = get_cmd(L);
+    lua_pushnumber(L, cmd->bmp_idx);
+    return 1;
+}
+
+static int lua_scmd_flag(lua_State *L, uint8_t flag) {
+    scmd_t *cmd = get_cmd(L);
+    lua_pushboolean(L, cmd->flags & flag);
+    return 1;
+}
+
+static int lua_scmd_jump(lua_State *L) {return lua_scmd_flag(L, SCMD_JUMP);}
+static int lua_scmd_last(lua_State *L) {return lua_scmd_flag(L, SCMD_LAST);}
+static int lua_scmd_xmirror(lua_State *L) {return lua_scmd_flag(L, SCMD_XMIRROR);}
+static int lua_scmd_ymirror(lua_State *L) {return lua_scmd_flag(L, SCMD_YMIRROR);}
+static int lua_scmd_moving(lua_State *L) {return lua_scmd_flag(L, SCMD_MOVING);}
+static int lua_scmd_combat(lua_State *L) {return lua_scmd_flag(L, SCMD_COMBAT);}
+static int lua_scmd_ok_hot(lua_State *L) {return lua_scmd_flag(L, SCMD_OK_HOT);}
+
+static int lua_scmd_delay(lua_State *L) {
+    scmd_t *cmd = get_cmd(L);
+    lua_pushnumber(L, cmd->delay);
+    return 1;
+}
+
+static int lua_scmd_xoffset(lua_State *L) {
+    scmd_t *cmd = get_cmd(L);
+    lua_pushnumber(L, cmd->xoffset);
+    return 1;
+}
+
+static int lua_scmd_yoffset(lua_State *L) {
+    scmd_t *cmd = get_cmd(L);
+    lua_pushnumber(L, cmd->yoffset);
+    return 1;
+}
+
+static int lua_scmd_xoffsethot(lua_State *L) {
+    scmd_t *cmd = get_cmd(L);
+    lua_pushnumber(L, cmd->xoffsethot);
+    return 1;
+}
+
+static int lua_scmd_yoffsethot(lua_State *L) {
+    scmd_t *cmd = get_cmd(L);
+    lua_pushnumber(L, cmd->yoffsethot);
+    return 1;
+}
+
+static int lua_scmd_sound_idx(lua_State *L) {
+    scmd_t *cmd = get_cmd(L);
+    lua_pushnumber(L, cmd->soundidx);
+    return 1;
+}
+
 /* End Object Functions */
 
 //library to be registered
@@ -516,8 +623,10 @@ static const struct luaL_Reg lslib [] = {
       {"map_is_actor", lua_map_is_actor},
       {"map_is_danger", lua_map_is_danger},
       {"map_get_number_of_objects", lua_map_get_number_of_objects},
+      {"map_get_object_frame_count", lua_map_get_object_frame_count},
       {"map_get_object_bmp", lua_map_get_object_bmp},
       {"map_get_object_location", lua_map_get_object_location},
+      {"map_get_object_scmd", lua_map_get_object_scmd},
 
       // Font functions
       {"font_count", lua_font_count},
@@ -527,6 +636,23 @@ static const struct luaL_Reg lslib [] = {
       {"object_inspect", lua_object_inspect},
       {"load_monster", lua_load_monster},
 
+      // SCMD functions
+      {"scmd_len", lua_scmd_len},
+      {"scmd_bmp_idx", lua_scmd_bmp_idx},
+      {"scmd_delay", lua_scmd_delay},
+      {"scmd_xoffset", lua_scmd_xoffset},
+      {"scmd_yoffset", lua_scmd_yoffset},
+      {"scmd_xoffsethot", lua_scmd_xoffsethot},
+      {"scmd_yoffsethot", lua_scmd_yoffsethot},
+      {"scmd_sound_idx", lua_scmd_sound_idx},
+      {"scmd_jump", lua_scmd_jump},
+      {"scmd_last", lua_scmd_last},
+      {"scmd_xmirror", lua_scmd_xmirror},
+      {"scmd_ymirror", lua_scmd_ymirror},
+      {"scmd_moving", lua_scmd_moving},
+      {"scmd_combat", lua_scmd_combat},
+      {"scmd_ok_hot", lua_scmd_ok_hot},
+
       // The End
       {NULL, NULL}  /* sentinel */
     };
@@ -535,6 +661,18 @@ static const struct luaL_Reg lslib [] = {
 int luaopen_libds (lua_State *L){
     luaL_register(L, "libds", lslib);
     return 1;
+}
+
+static void push_scmd(lua_State *L, scmd_t *script) {
+    scmd_t *cmd = script;
+    int len = 1;
+    if (!script) { return; }
+    while (!(cmd->flags & SCMD_LAST)) {
+        cmd++;
+        len++;
+    }
+    void *lscmd = lua_newuserdata(L, sizeof(scmd_t) * len);
+    memcpy(lscmd, script, sizeof(scmd_t) * len);
 }
 
 static void push_ds1_monster(lua_State *L, gff_monster_entry_t *me) {

@@ -1,6 +1,7 @@
 #include "gff.h"
 #include "gfftypes.h"
 #include "gff-image.h"
+#include "dsl.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -98,6 +99,7 @@ void gff_init() {
 
     master_gff = -1;
     gff_image_init();
+    dsl_init();
 }
 
 static int is_gff_filename(const char *str) {
@@ -266,6 +268,9 @@ int gff_open(const char *pathName) {
     open_files[idx].palettes = create_palettes(idx, &(open_files[idx].num_palettes));
     printf("'%s' loaded as '%s' with id: %d\n", pathName, open_files[idx].filename, idx);
 
+    if (idx == GPLDATA_GFF_INDEX) {
+        dsl_check_for_updates();
+    }
     return idx;
 }
 

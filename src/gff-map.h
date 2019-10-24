@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#include "dsl-scmd.h"
+
 #define MAP_LOS     (0x80) // Runtime flag to determine if block is in sight.
 #define MAP_BLOCK   (0x40) // This tile is blocked (you can't move into it.)
 #define MAP_ACTOR   (0x20) // If there is actor here (and is blocked.)
@@ -47,7 +49,7 @@ typedef struct _gff_map_object_t {
     uint16_t ypos;
     int8_t   zpos;
     uint8_t  flags;
-    int16_t  index;
+    int16_t  index; // bit 15: item is on disk(segobjx.gff), abs(index) = chunk id!
 } gff_map_object_t;
 
 // The small 'n' means next. IE: nbmp_idx = next bitmap index.
@@ -181,7 +183,9 @@ int gff_map_is_actor(int gff_file, int row, int column);
 int gff_map_is_danger(int gff_file, int row, int column);
 int32_t get_tile_id(int gff_file, int row, int column);
 int gff_map_get_num_objects(int gff_index, int res_id);
-unsigned char* gff_map_get_object_bmp(int gff_index, int res_id, int obj_id, int *w, int *h);
+int gff_map_get_object_frame_count(int gff_index, int res_id, int obj_id);
+scmd_t* gff_map_get_object_scmd(int gff_index, int res_id, int obj_id, int scmd_index);
+unsigned char* gff_map_get_object_bmp(int gff_index, int res_id, int obj_id, int *w, int *h, int frame_id);
 void gff_map_get_object_location(int gff_index, int res_id, int obj_id, uint16_t *x, uint16_t *y, uint8_t *z);
 so_object_t* gff_object_inspect(int gff_index, int res_id);
 disk_object_t* gff_get_object(int object_index);
