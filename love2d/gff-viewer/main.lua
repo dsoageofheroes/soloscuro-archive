@@ -59,6 +59,12 @@ function init_current_file()
 
     -- Current animation script
     scmd = nil
+    -- Each script is really a "script file" with 36 internal scripts
+    -- scmd_number will depeict which of the 36 are in use
+    -- 0 is the default script of the script entry/file.
+    scmd_number = 25
+    scmd_flipx = 1 -- If we need to flip along x
+    scmd_flipy = 1 -- if we need to flip along y
 end
 
 function get_font() 
@@ -322,6 +328,20 @@ function love.keypressed( key )
         rmapstartx = rmapstartx + 1
         if (rmapstartx < 0) then rmapstartx = 0 end
     end
+    if key == "a" then
+        get_next_scmd() 
+    end
+end
+
+-- Searches for the next SCMD and set it to execute.
+-- If none is found, default to scmd 0.
+function get_next_scmd() 
+    scmd_number = scmd_number + 1
+    if (scmd_number > 35) then
+        scmd_number = 0
+        scmd = nil
+        return
+    end
 end
 
 function love.update(dt)
@@ -339,6 +359,11 @@ function love.update(dt)
                 if (ds.scmd_last(scmd, scmd_idx)) then
                     scmd = nil
                 else
+                    if (scmd_delay == 0) then
+                        scmd_delay = 16 -- default delay if none is specified in the script.
+                    end
+                    if (ds.scmd_xmirror(scmd, scmd_idx)) then scmd_flipx = -1 else scmd_flipx = 1 end
+                    if (ds.scmd_ymirror(scmd, scmd_idx)) then scmd_flipy = -1 else scmd_flipy = 1 end
                     scmd_idx = scmd_idx + 1
                 end
             end
@@ -414,8 +439,8 @@ function love.draw()
         love.graphics.print("current object # " .. cobject .. " of " .. num_objects, 10, 110)
         love.graphics.print("use right/left arrows to cycle through", 10, 130)
         love.graphics.print("Number of Frames: " .. num_frames, 10, 150)
-        love.graphics.print("Frame [" .. cframe .. "]: " .. width .. " x " .. height, 10, 170)
-        love.graphics.print("Press 'f' to cycle through frames if there are more than one.", 10, 190)
+        love.graphics.print("Frame [" .. cframe .. "]: " .. width .. " x " .. height .. " Animation #" .. scmd_number, 10, 170)
+        love.graphics.print("Press 'f' to cycle through frames if there are more than one.  Press 'a' to cycle through animations", 10, 190)
         if (current_image == 0) then
             data, width, height = ds.map_get_object_bmp(gff_file, res_id, cobject, cframe)
             if (data ~=  0) then -- always check that it got the image!
@@ -424,7 +449,7 @@ function love.draw()
             end
         end
         if (current_image ~= 0) then -- always check the image is available!
-            love.graphics.draw(current_image, 0, 230, 0, 2, 2.4)
+            love.graphics.draw(current_image, 50, 230, 0, scmd_flipx * 2, scmd_flipy * 2.4)
         else
             love.graphics.print("Unable to convert image.  Inform the developer.", 10, 230)
         end
@@ -432,12 +457,15 @@ function love.draw()
         love.graphics.print("location (" .. x .. ", " .. y .. ", " .. z ..")", 10, 210)
         type_displayed = true;
         if (scmd == nil) then
-            scmd = ds.map_get_object_scmd(gff_file, res_id, cobject, 25)
+            scmd = ds.map_get_object_scmd(gff_file, res_id, cobject, scmd_number)
             if (not (scmd == 0))  then
                 scmd_len = ds.scmd_len(scmd)
                 if (scmd_len > 0) then
                     scmd_idx = 0
                     scmd_delay = ds.scmd_delay(scmd, scmd_idx)
+                    if (scmd_delay == 0) then scmd_delay = 16 end
+                    if (ds.scmd_xmirror(scmd, scmd_idx)) then scmd_flipx = -1 else scmd_flipx = 1 end
+                    if (ds.scmd_ymirror(scmd, scmd_idx)) then scmd_flipy = -1 else scmd_flipy = 1 end
                 end
             else
                 scmd = nil
