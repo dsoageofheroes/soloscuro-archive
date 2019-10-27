@@ -65,6 +65,8 @@ function init_current_file()
     scmd_number = 25
     scmd_flipx = 1 -- If we need to flip along x
     scmd_flipy = 1 -- if we need to flip along y
+    scmd_xoffset = 0
+    scmd_yoffset = 0 -- any offsets needed by script.
 end
 
 function get_font() 
@@ -216,6 +218,8 @@ function love.keypressed( key )
         current_resource_id_list = ds.gff_get_id_list(gff_file, type_id)
         midi_data = 0
         scmd = nil
+        scmd_xoffset = 0
+        scmd_yoffset = 0
     end
     if key == "up" then
         if (not (music == 0)) then
@@ -229,6 +233,8 @@ function love.keypressed( key )
         current_resource_id_list = ds.gff_get_id_list(gff_file, type_id)
         midi_data = 0
         scmd = nil
+        scmd_xoffset = 0
+        scmd_yoffset = 0
     end
     if key == "right" then
         if (not (music == 0)) then
@@ -247,6 +253,8 @@ function love.keypressed( key )
         cobject = cobject + 1
         cobject = cobject % num_objects
         scmd = nil
+        scmd_xoffset = 0
+        scmd_yoffset = 0
     end
     if key == "left" then
         if (not (music == 0)) then
@@ -263,6 +271,8 @@ function love.keypressed( key )
         cobject = cobject - 1
         cobject = cobject % num_objects
         scmd = nil
+        scmd_xoffset = 0
+        scmd_yoffset = 0
     end
     if key == "f" then
         cframe = cframe + 1
@@ -364,6 +374,8 @@ function love.update(dt)
                     end
                     if (ds.scmd_xmirror(scmd, scmd_idx)) then scmd_flipx = -1 else scmd_flipx = 1 end
                     if (ds.scmd_ymirror(scmd, scmd_idx)) then scmd_flipy = -1 else scmd_flipy = 1 end
+                    scmd_xoffset = scmd_xoffset + ds.scmd_xoffset(scmd, scmd_idx)
+                    scmd_yoffset = scmd_yoffset + ds.scmd_yoffset(scmd, scmd_idx)
                     scmd_idx = scmd_idx + 1
                 end
             end
@@ -449,7 +461,7 @@ function love.draw()
             end
         end
         if (current_image ~= 0) then -- always check the image is available!
-            love.graphics.draw(current_image, 50, 230, 0, scmd_flipx * 2, scmd_flipy * 2.4)
+            love.graphics.draw(current_image, 50 + scmd_xoffset, 230 + scmd_yoffset, 0, scmd_flipx * 2, scmd_flipy * 2.4)
         else
             love.graphics.print("Unable to convert image.  Inform the developer.", 10, 230)
         end
@@ -457,6 +469,8 @@ function love.draw()
         love.graphics.print("location (" .. x .. ", " .. y .. ", " .. z ..")", 10, 210)
         type_displayed = true;
         if (scmd == nil) then
+            scmd_xoffset = 0
+            scmd_yoffset = 0
             scmd = ds.map_get_object_scmd(gff_file, res_id, cobject, scmd_number)
             if (not (scmd == 0))  then
                 scmd_len = ds.scmd_len(scmd)

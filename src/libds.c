@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "dsl.h"
 #include "gff.h"
 #include "gff-image.h"
 #include "gff-xmi.h"
@@ -529,6 +530,13 @@ static scmd_t* get_cmd(lua_State *L) {
     return cmd;
 }
 
+static int lua_scmd_index_is_default(lua_State *L) {
+    scmd_t *scmd = (scmd_t *)lua_touserdata(L, 1);
+    lua_Integer scmd_index = luaL_checkinteger(L, 2);
+    lua_pushboolean(L, dsl_scmd_is_default(scmd, scmd_index));
+    return 1;
+}
+
 static int lua_scmd_bmp_idx(lua_State *L) {
     scmd_t *cmd = get_cmd(L);
     lua_pushnumber(L, cmd->bmp_idx);
@@ -652,6 +660,7 @@ static const struct luaL_Reg lslib [] = {
       {"scmd_moving", lua_scmd_moving},
       {"scmd_combat", lua_scmd_combat},
       {"scmd_ok_hot", lua_scmd_ok_hot},
+      {"scmd_index_is_default", lua_scmd_index_is_default},
 
       // The End
       {NULL, NULL}  /* sentinel */

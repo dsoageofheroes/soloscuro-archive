@@ -45,6 +45,16 @@ scmd_t* dsl_scmd_get(const int gff_file, const int res_id, const int index) {
     return get_script((unsigned char*) scmd_entry, index);
 }
 
+int dsl_scmd_is_default(const scmd_t *scmd, const int scmd_index) {
+    if (scmd == NULL) { return 0; }
+    if (scmd_index < 0 || scmd_index >= SCMD_MAX_SIZE) {
+        fprintf(stderr, "index for get_script is out of bounds!(%d)\n", scmd_index);
+        return 0;
+    }
+    uint16_t scmd_idx = *((uint16_t*)(((unsigned char *)scmd) + scmd_index));
+    return scmd_idx == 0;
+}
+
 void dsl_scmd_print(int gff_file, int res_id) {
     unsigned long len;
     char *scmd_entry = gff_get_raw_bytes(gff_file, GT_SCMD, res_id, &len);
