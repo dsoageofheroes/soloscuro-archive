@@ -46,11 +46,22 @@ function create.init(_createAssets, _menu, _font)
 
   create.texts = 
   {
+    Text("NAME: Mor'bad Tha Wurst", _font.white, 5, 150),
+    Text("STR:17", _font.white, 11, 162),
+    Text("DEX:16", _font.white, 11, 170),
+    Text("CON:15", _font.white, 10, 178),
+    Text("INT:18", _font.white, 11, 186),
+    Text("WIS:17", _font.white, 12, 194),
+    Text("CHA:12", _font.white, 12, 202),
     Text("PSIONIC DISCIPLINES", _font.black, 218, 114),
-    Text("TRUE NEUTRAL", _font.white, 86, 171),
-    Text("MALE HUMAN", _font.white, 86, 162),
-    Text([[ abcdefghijklmnopqrstuvwxyz{@|$}~^]], _font.white, 2, 180),
-    Text([[ z{@}~|]], _font.white, 25, 205),
+    Text("LAWFUL NEUTRAL", _font.white, 53, 170),
+    Text("MALE HUMAN", _font.white, 53, 162),
+    Text("FIGHTER", _font.white, 53, 178),
+    Text("LEVEL: 2/2/2", _font.white, 135, 162),
+    Text("AC: 10", _font.white, 135, 170),
+    Text("HP: 36/36", _font.white, 135, 178),
+    Text("PSP: 90/90", _font.white, 135, 186),
+    Text("EXP: 4000 (8000)", _font.white, 135, 194),
   }
 
 end
