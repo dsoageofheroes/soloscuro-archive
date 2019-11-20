@@ -12,4 +12,13 @@ void dsl_scmd_print(int gff_file, int res_id);
 scmd_t* dsl_scmd_get(const int gff_file, const int res_id, const int index);
 int dsl_scmd_is_default(const scmd_t *scmd, const int scmd_index);
 
+void mas_print(const int gff_file, const int res_id);
+
+/* Parsing functions */
+uint8_t peek_one_byte();
+uint8_t get_byte();
+/* End Parsing functions */ 
+
+extern uint8_t command_implemented; // Temporary while I figure out each function.
+
 #endif

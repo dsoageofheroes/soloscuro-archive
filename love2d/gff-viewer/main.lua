@@ -11,6 +11,7 @@ RDFF_TYPE = 1179010130
 BMP_TYPE  = 542133570
 MONR_TYPE = 1380863821
 FONT_TYPE = 1414418246
+MAS_TYPE =  542327117
 
 function init_current_file()
     -- Returns how many different types of data are stored in the gff file (EX: image, text music, etc...)
@@ -518,6 +519,9 @@ function love.draw()
                 ypos = ypos + 25
             end
         end
+    end
+    if (type_id == MAS_TYPE) then
+        ds.mas_print(gff_file, res_id)
     end
     if (not type_displayed) then
         love.graphics.print("Unable to display.", 10, 110)
