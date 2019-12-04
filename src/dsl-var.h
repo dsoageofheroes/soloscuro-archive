@@ -74,7 +74,12 @@
 #define MAX_PARENS (8)
 #define EXTENDED_VAR    (0x40)
 #define MAXGFLAGS         (800)
+#define MAXGNUMS          (400)
+#define MAXGBIGNUMS       (40)
+
 #define DSL_GFLAGVAR_SIZE (((MAXGFLAGS*sizeof(uint8_t))/8)+1)
+#define DSL_GBIGNUMVAR_SIZE (MAXGBIGNUMS * sizeof(int32_t))
+#define DSL_GNUMVAR_SIZE (MAXGNUMS * sizeof(int16_t))
 //extern uint8_t gGflagvar[DSL_GFLAGVAR_SIZE];
 extern int32_t gBignum;
 extern int32_t *gBignumptr;
@@ -86,6 +91,10 @@ void read_simple_num_var();
 
 void set_data_ptr(unsigned char *start, unsigned char *cpos);
 unsigned char* get_data_start_ptr();
+unsigned char* get_data_ptr();
+void push_data_ptr(unsigned char *data);
+unsigned char* pop_data_ptr();
+void clear_local_vars();
 
 void set_accumulator(int32_t a);
 int32_t get_accumulator();

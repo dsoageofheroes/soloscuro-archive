@@ -73,7 +73,7 @@ int get_next_idx(char *name) {
 
     if (strcmp(name, "resource.gff") == 0) { return RESOURCE_GFF_INDEX; }
     if (strcmp(name, "segobjex.gff") == 0) { return OBJEX_GFF_INDEX; }
-    if (strcmp(name, "gpldata.gff") == 0) { return GPLDATA_GFF_INDEX; }
+    if (strcmp(name, "gpldata.gff") == 0) { return DSLDATA_GFF_INDEX; }
     if (strcmp(name, "charsave.gff") == 0) { return CHARSAVE_GFF_INDEX; }
     if (strcmp(name, "darksave.gff") == 0) { return DARKSAVE_GFF_INDEX; }
     if (strcmp(name, "cine.gff") == 0) { return CINE_GFF_INDEX; }
@@ -268,7 +268,7 @@ int gff_open(const char *pathName) {
     open_files[idx].palettes = create_palettes(idx, &(open_files[idx].num_palettes));
     printf("'%s' loaded as '%s' with id: %d\n", pathName, open_files[idx].filename, idx);
 
-    if (idx == GPLDATA_GFF_INDEX) {
+    if (idx == DSLDATA_GFF_INDEX) {
         dsl_check_for_updates();
     }
     return idx;

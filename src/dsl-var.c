@@ -11,14 +11,82 @@ static unsigned char* dsl_data;
 static unsigned char* dsl_data_start;
 static int16_t temps16;
 static uint8_t bitmask[8] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80};
+static uint8_t bytemask[8] = {0xFE, 0xFD, 0xFB, 0xF7, 0xEF, 0xDF, 0xBF, 0x7F};
 
 static void load_simple_variable(uint16_t type, uint16_t vnum, int32_t val);
 
+typedef struct _dsl_state_t {
+    unsigned char *dsl_data_start;
+    unsigned char *dsl_data;
+} dsl_state_t;
+
 int32_t gBignum;
 int32_t *gBignumptr;
+int16_t *gGnumvar = 0;
+int32_t *gGbignumvar = 0;
+#define MAX_DSL_STATES     (100)
+static int dsl_state_pos = -1;
+static dsl_state_t states[MAX_DSL_STATES];
+
+static int16_t gFight = 0;  // We in a fight?
+static int16_t gplX = 0;    // Current X
+static int16_t gplY = 0;    // Current Y
+static int16_t gplZ = 0;    // Current Z
+static int16_t gRegion = 0; // Current Region
+static int16_t gPov = 0;
+static int16_t gActive = 0;
+static int16_t gPassive = 0;
+static int16_t gOther = 0;
+static int16_t gOther1 = 0;
+static int16_t gThing = 0;
+static int32_t gTime = 0;
+static int32_t gPartyMoney = 0;
+
+static int16_t* gSimpleVar[] = {
+    &gFight,    // 0x20
+    &gplX,      // 0x21
+    &gplY,      // 0x22
+    &gplZ,      // 0x23
+    &gRegion,   // 0x24
+    &gPov,      // 0x25
+    &gActive,   // 0x26
+    &gPassive,  // 0x27
+    &gOther,    // 0x28
+    (int16_t *) &gTime,  // 0x29
+    (int16_t *) &gPartyMoney,  // 0x2a
+    &gThing,   // 0x2b
+    &gOther1   // 0x2c
+};
+
+#define MAX_PARAM_DEPTH (2)
+int16_t param_depth = 0; // How many commands we can store.
+param_t old_params[MAX_PARAM_DEPTH];
+
+static void push_params() {
+    if (param_depth < MAX_PARAM_DEPTH) {
+        memcpy(&old_params[param_depth], &param, sizeof(param));
+        param_depth++;
+    } else {
+        fprintf(stderr, "push_param ERROR: to many params!\n");
+        exit(1);
+    }
+}
+
+static void pop_params() {
+    if (param_depth > 0) {
+        param_depth--;
+        memcpy(&param, &old_params[param_depth], sizeof(param));
+    } else {
+        fprintf(stderr, "pop_params ERROR: tried to pop empty stack of params!\n");
+    }
+}
 
 void dsl_init_vars() {
     memset(gGflagvar, 0x00, DSL_GFLAGVAR_SIZE);
+    gGbignumvar = malloc(DSL_GBIGNUMVAR_SIZE * sizeof(int32_t));
+    memset(gGbignumvar, 0x00, DSL_GBIGNUMVAR_SIZE * sizeof(int32_t));
+    gGnumvar = malloc(DSL_GNUMVAR_SIZE);
+    memset(gGnumvar, 0x00, DSL_GNUMVAR_SIZE);
 }
 
 void set_data_ptr(unsigned char *start, unsigned char *cpos) {
@@ -28,7 +96,7 @@ void set_data_ptr(unsigned char *start, unsigned char *cpos) {
 
 void set_accumulator(int32_t a) {
     accum = a;
-    printf("accum = %d\n", accum);
+    //printf("accum = %d\n", accum);
 }
 
 int32_t get_accumulator() {
@@ -37,6 +105,40 @@ int32_t get_accumulator() {
 
 unsigned char* get_data_start_ptr() {
     return dsl_data_start;
+}
+
+unsigned char* get_data_ptr() {
+    return dsl_data;
+}
+
+void push_data_ptr(unsigned char *data) {
+    // The first one isn't pushed on the stack.
+    if (dsl_state_pos < 0) {
+        dsl_state_pos = 0;
+        return;
+    }
+
+    states[dsl_state_pos].dsl_data_start = dsl_data_start;
+    states[dsl_state_pos].dsl_data = dsl_data;
+
+    dsl_state_pos++;
+}
+
+void clear_local_vars() {
+    memset(gGflagvar, 0x0, DSL_GFLAGVAR_SIZE);
+}
+
+unsigned char* pop_data_ptr() {
+    dsl_state_pos--;
+
+    if (dsl_state_pos < 0) {
+        return NULL;
+    }
+
+    dsl_data_start = states[dsl_state_pos].dsl_data_start;
+    dsl_data = states[dsl_state_pos].dsl_data;
+
+    return states[dsl_state_pos].dsl_data_start;
 }
 
 uint8_t get_byte() {
@@ -74,10 +176,10 @@ int32_t read_number() {
         found_operator = 0;
         do_next = 0;
         cop = get_byte(); // current operation
-        printf("current operation = 0x%x\n", cop);
+        //printf("current operation = 0x%x\n", cop);
         if (cop < 0x80) {
             cval = cop * 0x100 + get_byte();
-            printf("cval = %d\n", cval);
+            //printf("cval = %d\n", cval);
         } else {
             if (cop < OPERATOR_OFFSET) {
                 if (cop & EXTENDED_VAR) { // variable is > 255
@@ -110,8 +212,10 @@ int32_t read_number() {
                     break;
                 }
                 case DSL_RETVAL|0x80: {
-                    printf("DSL_RETVAL Not implemented\n");
-                    command_implemented = 0;
+                    push_params();
+                    do_dsl_command(get_byte());
+                    pop_params();
+                    cval = accum;
                     break;
                 }
                 //case DSL_HI_RETVAL|0x80:
@@ -158,18 +262,26 @@ int32_t read_number() {
                 case DSL_OP_BAND:
                 case DSL_OP_BOR:
                 case DSL_OP_BCLR: {
-                    printf("DSL OPERATOR NOT IMPLEMENTED\n");
-                    command_implemented = 0;
-                    break;
-                }
-                case DSL_HI_CLOSE_PAREN: {
-                    printf("DSL HI CLOSE PAREN ERROR!\n");
-                    command_implemented = 0;
+                    opstack[paren_level] = cop;
+                    do_next = 1;
+                    found_operator = 1;
                     break;
                 }
                 case DSL_HI_OPEN_PAREN: {
-                    printf("DSL HI OPEN PAREN ERROR!\n");
-                    command_implemented = 0;
+                    if (++paren_level >= MAX_PARENS) {
+                        fprintf(stderr, "ERROR: exceeded max paren level!\n");
+                        exit(1);
+                    }
+                    do_next = 1;
+                    cval = 0;
+                    break;
+                }
+                case DSL_HI_CLOSE_PAREN: {
+                    cval = accums[paren_level];
+                    if (--paren_level < 0) {
+                        fprintf(stderr, "ERROR: paren level is < 0!\n");
+                        exit(1);
+                    }
                     break;
                 }
                 default: {
@@ -181,7 +293,7 @@ int32_t read_number() {
         }
         
         if (!found_operator) {
-            printf("operator not found, opstack[%d] = %d\n", paren_level, opstack[paren_level]);
+            //printf("operator not found, opstack[%d] = %d\n", paren_level, opstack[paren_level]);
             tval = accums[paren_level];
             switch(opstack[paren_level]) {
                 case DSL_PLUS:   tval += cval; break;
@@ -219,7 +331,6 @@ void load_variable() {
         datatype -= EXTENDED_VAR;
     }
     if (datatype < 0x10) { // simple data type
-        printf("Loading a simple variable not implemented!\n");
         varnum = get_byte();
         if (extended == 1) {
             varnum *= 0x100;
@@ -227,7 +338,7 @@ void load_variable() {
         }
         load_simple_variable(datatype, varnum, accum);
     } else {
-        printf("Loading a complex variable not implemented!\n");
+        printf("load_variable: Loading a complex variable not implemented!\n");
         command_implemented = 0;
     }
 }
@@ -235,28 +346,34 @@ void load_variable() {
 static void load_simple_variable(uint16_t type, uint16_t vnum, int32_t val) {
     switch (type) {
         case DSL_GBIGNUM:
-            printf("load_simple_variable: DSL_GBIGNUM not implemented\n");
-            command_implemented = 0;
+            gGbignumvar[vnum] = (int32_t) val;
             break;
         case DSL_LBIGNUM:
             printf("load_simple_variable: DSL_LBIGNUM not implemented\n");
             command_implemented = 0;
             break;
         case DSL_GNUM:
-            printf("load_simple_variable: DSL_GNUM not implemented\n");
-            command_implemented = 0;
+            gGnumvar[vnum] = (int16_t) val;
             break;
         case DSL_LNUM:
             printf("load_simple_variable: DSL_LNUM not implemented\n");
             command_implemented = 0;
             break;
         case DSL_GFLAG:
-            printf("load_simple_variable: DSL_GFLAG not implemented\n");
+            if (val == 0) {
+                gGflagvar[vnum/8] &= bytemask[vnum%8];
+            } else {
+                gGflagvar[vnum/8] |= bitmask[vnum%8];
+            }
+            break;
+        case DSL_LFLAG:
+            printf("load_simple_variable: DSL_LFLAG not implemented\n");
+            command_implemented = 0;
+        default:
+            fprintf(stderr, "ERROR: Unknown simple variable type: 0x%x!\n", type);
             command_implemented = 0;
             break;
     }
-    printf("load_simple_variable not implemented!\n");
-    command_implemented = 0;
 }
 
 void read_simple_num_var() {
@@ -281,8 +398,8 @@ void read_simple_num_var() {
             break;
         }
         case DSL_GNUM: {
-            printf("read_simple_num_var: Unimplemented GNUM\n");
-            command_implemented = 0;
+            gBignumptr = (int32_t*) ((int16_t *)&gGnumvar[temps16]);
+            gBignum = gGnumvar[temps16];
             break;
         }
         case DSL_LNUM: {
@@ -291,8 +408,8 @@ void read_simple_num_var() {
             break;
         }
         case DSL_GBIGNUM: {
-            printf("read_simple_num_var: Unimplemented GBIGNUM\n");
-            command_implemented = 0;
+            gBignumptr = &gGbignumvar[temps16];
+            gBignum = gGbignumvar[temps16];
             break;
         }
         case DSL_LBIGNUM: {
@@ -301,8 +418,17 @@ void read_simple_num_var() {
             break;
         }
         case DSL_GNAME: {
-            printf("read_simple_num_var: Unimplemented GNAME\n");
-            command_implemented = 0;
+            if (temps16 >= 0x20 && temps16 < 0x2F) {
+                gBignumptr = (int32_t*)gSimpleVar[temps16 - 0x20];
+                if (temps16 >= 0x29 && temps16 <= 0x2A) {
+                    gBignum = *((int32_t*)gBignumptr);
+                } else {
+                    gBignum = *((int16_t*)gBignumptr);
+                }
+            } else {
+                printf("ERROR: No variable GNAME!!!\n");
+                exit(1);
+            }
             break;
         }
         case DSL_GSTRING: {
