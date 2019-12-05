@@ -1041,7 +1041,9 @@ void dsl_inloscheck(void) {
 }
 
 void dsl_notinloscheck(void) {
-    command_implemented = 0;
+    get_parameters(4);
+    global_addr_name(&param);
+    set_los_order(DSL_NOT_IN_LOS, new_name, param.val[3]);
 }
 
 static void clear_los_order(int16_t header_num) {
@@ -1181,7 +1183,8 @@ void dsl_give(void) {
 }
 
 void dsl_go(void) {
-    command_implemented = 0;
+    get_parameters(2);
+    set_orders(param.val[1], GO_OBJECT, param.val[0], 0);
 }
 
 void dsl_input_bignum(void) {
@@ -1189,7 +1192,8 @@ void dsl_input_bignum(void) {
 }
 
 void dsl_goxy(void) {
-    command_implemented = 0;
+    get_parameters(3);
+    set_orders(param.val[2], GOXY, param.val[0], param.val[1]);
 }
 
 void dsl_readorders(void) {
@@ -1200,7 +1204,7 @@ void dsl_if(void) {
     get_parameters(1);
     ifptr++;
     if (ifptr > MAX_IFDEPTH) {
-        fprintf(stderr, "ERROR: to many nested if statement in DSL!!!\n");
+        fprintf(stderr, "ERROR: to many nested if statements in DSL!!!\n");
         exit(1);
     }
     ifstate[ifptr] = get_accumulator();
