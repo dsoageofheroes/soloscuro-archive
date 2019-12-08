@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "dsl.h"
 #include "dsl-object.h"
+#include "dsl-narrate.h"
 #include "dsl-scmd.h"
 #include "dsl-string.h"
 #include "dsl-var.h"
@@ -20,6 +21,8 @@
 #define CHOSEN (0x7FFD)
 #define PARTY  (0x7FFE)
 #define ALL    (0x7FFF)
+
+static int take_while = 0; // Debugging variable for forcing a while loop to be taken!
 
 /* MAS */
 
@@ -397,6 +400,41 @@ void mas_print(const int gff_file, const int res_id) {
     printf("%lu of %lu\n", get_data_ptr() - get_data_start_ptr(), len);
 }
 
+void dsl_print(const int gff_file, const int res_id) {
+    unsigned long len;
+    unsigned char *gpl = (unsigned char*)gff_get_raw_bytes(gff_file, GT_GPL, res_id, &len);
+    this_gpl_file = GLOBAL_MAS;
+    this_gpl_type = MASFILE;
+    command_implemented = 1;
+    exit_dsl = 0;
+    printf("------------------------Executing MAS/DSL\n");
+    push_data_ptr(gpl);
+    set_data_ptr(gpl, gpl + 1);
+    printf("command byte = 0x%x (%s)\n", *(gpl), dsl_operations[gpl[0]].name);
+    (*dsl_operations[gpl[0]].func)();
+    int i = 0;
+    while ((get_data_ptr() - get_data_start_ptr()) < len && command_implemented) {
+    //for (int i = 0; i < 2; i++) {
+        while (!exit_dsl && command_implemented) {
+            command_implemented = 1;
+            uint8_t command = get_byte();
+            do_dsl_command(command);
+            if (exit_dsl) {
+                exit_dsl = pop_data_ptr() == NULL;
+                printf("returing from subroutine.\n");
+            }
+        }
+        if (!command_implemented) {
+            printf("last command needs to be implemented!\n");
+        }
+        printf("End of %dth exit_dsl, continuing on...\n", i++);
+        exit_dsl = 0;
+    }
+    pop_data_ptr();
+    printf("---------------------Ending Execution----------------------\n");
+    printf("%lu of %lu\n", get_data_ptr() - get_data_start_ptr(), len);
+}
+
 static void add_save_orders(int16_t los_order, name_t name, int16_t range, int ordertype) {
     if (name.name < 0) {
         printf("add_save_orders (with name < 0) not implemented\n");
@@ -615,6 +653,11 @@ void set_new_order(name_t name) {
     set_any_order(&name, DSL_ORDER, 0, 0);
 }
 
+static int8_t comparePtr = 0;
+#define MAX_COMPAREDEPTH (8)
+int8_t compared[MAX_COMPAREDEPTH + 1];
+int32_t *compareval = NULL;
+
 static void initialize_dsl_stack() {
     ifptr = 0;
     gunused_checks = 0;
@@ -630,6 +673,8 @@ void dsl_init() {
     dsl_init_vars();
     check = (dsl_check_t*) malloc(sizeof(dsl_check_t) * DSL_CHECKS);
     memset(check, 0x0, sizeof(dsl_check_t) * DSL_CHECKS);
+    compareval = malloc(sizeof(int32_t) * MAX_COMPAREDEPTH);
+    memset(compareval, 0x0, sizeof(int32_t) * MAX_COMPAREDEPTH);
     for (int i = 0; i < DSL_CHECKS; i++) {
         check[i].next = i + 1;
     }
@@ -830,7 +875,8 @@ void dsl_zero(void) {
 }
 
 void dsl_long_divide_equal(void) {
-    command_implemented = 0;
+    get_parameters(2);
+    *param.ptr[0] /= param.val[1];
 }
 
 void dsl_byte_dec(void) {
@@ -850,7 +896,8 @@ void dsl_byte_inc(void) {
 }
 
 void dsl_word_inc(void) {
-    command_implemented = 0;
+    get_parameters(1);
+    (*((uint16_t*)param.ptr[0]))++;
 }
 
 void dsl_long_inc(void) {
@@ -998,8 +1045,12 @@ void dsl_jump(void) {
     command_implemented = 0;
 }
 
+void local_sub(uint16_t offset) {
+    printf("local_sub: I need to jump to offset %d of this GPL!\n", offset);
+}
+
 void dsl_local_sub(void) {
-    command_implemented = 0;
+    local_sub(read_number());
 }
 
 void dsl_global_sub(void) {
@@ -1009,7 +1060,7 @@ void dsl_global_sub(void) {
 }
 
 void dsl_local_ret(void) {
-    command_implemented = 0;
+    printf("dsl_local_ret: need to return from local subroutine.\n");
 }
 
 void dsl_load_variable(void) {
@@ -1018,16 +1069,26 @@ void dsl_load_variable(void) {
 }
 
 void dsl_compare(void) {
-    command_implemented = 0;
+    dsl_load_accum();
+    comparePtr++;
+    if (comparePtr >= MAX_COMPAREDEPTH) {
+        fprintf(stderr, "MAX COMPARE DEPTH!\n");
+        exit(1);
+    }
+    compared[comparePtr] = NO;
+    compareval[comparePtr] = get_accumulator();
 }
 
 void dsl_load_accum(void) {
     set_accumulator(read_number());
 }
 
+static void global_ret() {
+    printf("I need to return from this global function/subroutine!\n");
+}
 
 void dsl_global_ret(void) {
-    command_implemented = 0;
+    global_ret();
 }
 
 void dsl_nextto(void) {
@@ -1104,7 +1165,13 @@ void dsl_default(void) {
 }
 
 void dsl_ifis(void) {
-    command_implemented = 0;
+    get_parameters(2);
+    if ((int32_t) compareval[comparePtr] != (int32_t)param.val[0]) {
+        printf("dsl_ifis: taking ifis.\n");
+        move_dsl_ptr(param.val[1]);
+    } else {
+        compared[comparePtr] = YES;
+    }
 }
 
 void dsl_trace_var(void) {
@@ -1112,7 +1179,10 @@ void dsl_trace_var(void) {
 }
 
 void dsl_orelse(void) {
-    command_implemented = 0;
+    int16_t address = read_number();
+    if (compared[comparePtr] == YES) {
+        move_dsl_ptr(address);
+    }
 }
 
 void dsl_clearpic(void) {
@@ -1151,8 +1221,74 @@ void dsl_fetch(void) {
     command_implemented = 0;
 }
 
+#define OBJ_QUALIFIER  (0x53)
+#define OBJ_INTRODUCE  (0x01)
+
+#define LOW_SEARCH     (0)
+#define HIGH_SEARCH    (1)
+#define TOTAL_SEARCH   (2)
+#define COUNT_SEARCH   (3)
+#define EQU_SEARCH     (4)
+#define LT_SEARCH      (5)
+#define GT_SEARCH      (6)
+
+int32_t search() {
+    uint32_t answer = 0L;
+    int16_t object = read_number();
+    int16_t low_field = get_byte();
+    int16_t high_field = get_byte();
+    int16_t field_level = -1, depth = 1;
+    int32_t search_for = 0, temp_for = 0;
+    uint16_t field[16];
+    uint8_t type = 0;
+    int16_t i;
+    do {
+        if (peek_one_byte() == OBJ_QUALIFIER) {
+            get_byte();
+        }
+        field_level++;
+        field[field_level] = get_byte();
+        type = get_byte();
+        if (type >= EQU_SEARCH && type <= GT_SEARCH) {
+            temp_for = read_number();
+            if (field_level > 0) {
+                field[++field_level] = (uint16_t) temp_for;
+            } else {
+                search_for = temp_for;
+            }
+        } else {
+            printf("search: unknown type = %d\n", type);
+            command_implemented = 0;
+            return 0;
+        }
+        depth--;
+    } while ( peek_one_byte() == OBJ_QUALIFIER);
+
+    i = (object == PARTY || object < 0)
+        ? NULL_OBJECT : object;
+
+    /*
+    do {
+        if (type == LOW_SEARCH) {
+            answer = 0x7FFFFFFFL;
+        }
+    } while ( (object == PARTY) && (i != NULL_OBJECT));
+    */
+    printf("I need to find object %d, i = %d, low_field = %d, high_field = %d\n",
+        object, i, low_field, high_field);
+    printf("Field parameters:");
+    for (int idx = 0; idx < depth; idx++) {
+        printf("%d ", field[idx]);
+    }
+    printf("\n");
+    printf("search_for = %d\n", search_for);
+
+    printf("search command to be implemented later...\n");
+    return answer;
+}
+
 void dsl_search(void) {
-    command_implemented = 0;
+    set_accumulator(search());
 }
 
 void dsl_getparty(void) {
@@ -1272,8 +1408,61 @@ void dsl_lockdoor(void) {
     command_implemented = 0;
 }
 
+#define SOURCE_TRACE   (0x23)
+#define VARNAME_TRACE  (0x28)
+#define LINENUM_TRACE  (0x2E)
+#define LOCALSUB_TRACE (0x4B)
+
+void trace_protect() {
+    uint8_t inst;
+
+    inst = peek_one_byte();
+    while ((inst == VARNAME_TRACE)
+        || (inst == SOURCE_TRACE)
+        || (inst == LINENUM_TRACE)
+        || (inst == LOCALSUB_TRACE)
+        ) {
+        printf("*********NEED TO COMPLETE THE trace_protect FUNCTION!!!!\n");
+        command_implemented = 0;
+        return;
+    }
+}
+
+uint16_t menu_functions[12];
+uint8_t menu_bytes[12];
+#define MAXMENU   (24)
+
+void display_menu() {
+    int items = 0;
+    trace_protect();
+    read_number();
+    char *menu = (char*) gBignumptr;
+    narrate_open(NAR_ADD_MENU, menu, 0);
+    while ((peek_one_byte() != 0x4A) && (items <= MAXMENU)) {
+        trace_protect();
+        read_number();
+        menu = (char*) gBignumptr;
+        menu_functions[items] = read_number();
+        menu_bytes[items] = (uint8_t) read_number();
+        if (menu_bytes[items] == 1) {
+            narrate_open(NAR_ADD_MENU, menu, items + 1);
+            items++;
+        } else {
+            printf("Not available at this time: '%s'\n", menu);
+        }
+        trace_protect();
+    }
+    get_byte();  // get rid of the mend...
+    printf("Now wait for user input.\n");
+    for (int i = 0; i < items; i++) {
+        printf("choice %d: goes to local subroutine %d\n", i, menu_functions[i]);
+    }
+    //printf("Need to implement display_menu()\n");
+    //command_implemented = 0;
+}
+
 void dsl_menu(void) {
-    command_implemented = 0;
+    display_menu();
 }
 
 void dsl_setthing(void) {
@@ -1285,7 +1474,10 @@ void dsl_local_sub_trace(void) {
 }
 
 void dsl_print_string(void) {
-    command_implemented = 0;
+    get_parameters(2);
+    printf("param.ptr[1] = %p\n", param.ptr[1]);
+    narrate_open(NAR_SHOW_TEXT, (char *)param.ptr[1], param.val[0]);
+    printf("Now I need to wait for the dialog to close.\n");
 }
 
 void dsl_print_number(void) {
@@ -1300,8 +1492,12 @@ void dsl_rand(void) {
     command_implemented = 0;
 }
 
+void show(int16_t portrait_index) {
+    narrate_open(NAR_PORTRAIT, NULL, portrait_index);
+}
+
 void dsl_showpic(void) {
-    command_implemented = 0;
+    show(read_number());
 }
 
 void dsl_skillroll(void) {
@@ -1367,7 +1563,11 @@ void dsl_music(void) {
 }
 
 void dsl_cmpend(void) {
-    command_implemented = 0;
+    comparePtr--;
+    if (comparePtr < 0) {
+        fprintf(stderr, "dsl_cmpend: ERROR: comparePtr < 0!\n");
+        exit(1);
+    }
 }
 
 void dsl_wait(void) {
@@ -1375,11 +1575,21 @@ void dsl_wait(void) {
 }
 
 void dsl_while(void) {
-    command_implemented = 0;
+    get_parameters(1);
+    if (get_accumulator() == NO) {
+        printf("taking while loop...\n");
+        move_dsl_ptr(param.val[0]);
+    }
+    if (take_while) {
+        printf("dsl_while: debug: Taking while loop on second pass...\n");
+        take_while = 0;
+        move_dsl_ptr(param.val[0]);
+    }
 }
 
 void dsl_wend(void) {
-    command_implemented = 0;
+    take_while = 1; // TODO FIXME: take this out when done implementing!
+    move_dsl_ptr(read_number());
 }
 
 void dsl_attackcheck(void) {

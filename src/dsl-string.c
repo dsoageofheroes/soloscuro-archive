@@ -1,6 +1,7 @@
 #include "dsl-string.h"
 #include "dsl.h"
 #include <stdio.h>
+#include <string.h>
 
 dsl_string_t* gGstringvar = NULL;
 dsl_string_t* gLstringvar = NULL;
@@ -12,12 +13,15 @@ uint8_t fudge;
 #define STRING_COMPRESSED   (0x05)
 
 static char* read_compressed();
+static char* introduce();
 
 char * read_text() {
     switch(peek_one_byte()) {
         case INTRODUCE:
-            printf("read_text: INTRODUCE not implemented!\n");
             get_byte();
+            strcpy((char*)gTextstring, introduce());
+            //printf("INTRODUCE: gTextstring = '%s'\n", gTextstring);
+            return (char*)gTextstring;
             break;
         case STRING_UNCOMPRESSED:
             printf("read_text: STRING_UNCOMPRESSED not implemented!\n");
@@ -26,6 +30,7 @@ char * read_text() {
         case STRING_COMPRESSED:
             get_byte();
             read_compressed();
+            //printf("STRING_COMPRESSED: gTextstring = '%s'\n", gTextstring);
             return (char*)gTextstring;
             break;
     }
@@ -70,4 +75,10 @@ static char* read_compressed() {
     }
 
     return (char*)gTextstring;
+}
+
+static char tempstr[1024];
+static char* introduce() {
+    sprintf(tempstr, "I'm %s\n", "<character name here.>");
+    return tempstr;
 }

@@ -74,12 +74,18 @@
 #define MAX_PARENS (8)
 #define EXTENDED_VAR    (0x40)
 #define MAXGFLAGS         (800)
+#define MAXLFLAGS         (64)
 #define MAXGNUMS          (400)
 #define MAXGBIGNUMS       (40)
+#define MAXLBIGNUMS       (40)
+#define MAXLNUMS          (32)
 
 #define DSL_GFLAGVAR_SIZE (((MAXGFLAGS*sizeof(uint8_t))/8)+1)
+#define DSL_LFLAGVAR_SIZE (((MAXLFLAGS*sizeof(uint8_t))/8)+1)
 #define DSL_GBIGNUMVAR_SIZE (MAXGBIGNUMS * sizeof(int32_t))
 #define DSL_GNUMVAR_SIZE (MAXGNUMS * sizeof(int16_t))
+#define DSL_LBIGNUMVAR_SIZE (MAXLBIGNUMS * sizeof(int32_t))
+#define DSL_LNUMVAR_SIZE (MAXLNUMS * sizeof(int16_t))
 //extern uint8_t gGflagvar[DSL_GFLAGVAR_SIZE];
 extern int32_t gBignum;
 extern int32_t *gBignumptr;

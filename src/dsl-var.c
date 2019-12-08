@@ -4,6 +4,7 @@
 #include <string.h>
 
 static uint8_t gGflagvar[DSL_GFLAGVAR_SIZE];
+static uint8_t gLflagvar[DSL_LFLAGVAR_SIZE];
 static uint8_t datatype;
 static uint16_t varnum;
 static int32_t accum; //, number;
@@ -23,7 +24,9 @@ typedef struct _dsl_state_t {
 int32_t gBignum;
 int32_t *gBignumptr;
 int16_t *gGnumvar = 0;
+int16_t *gLnumvar = 0;
 int32_t *gGbignumvar = 0;
+int32_t *gLbignumvar = 0;
 #define MAX_DSL_STATES     (100)
 static int dsl_state_pos = -1;
 static dsl_state_t states[MAX_DSL_STATES];
@@ -83,10 +86,15 @@ static void pop_params() {
 
 void dsl_init_vars() {
     memset(gGflagvar, 0x00, DSL_GFLAGVAR_SIZE);
+    memset(gLflagvar, 0x00, DSL_LFLAGVAR_SIZE);
     gGbignumvar = malloc(DSL_GBIGNUMVAR_SIZE * sizeof(int32_t));
     memset(gGbignumvar, 0x00, DSL_GBIGNUMVAR_SIZE * sizeof(int32_t));
     gGnumvar = malloc(DSL_GNUMVAR_SIZE);
     memset(gGnumvar, 0x00, DSL_GNUMVAR_SIZE);
+    gLbignumvar = malloc(DSL_LBIGNUMVAR_SIZE * sizeof(int32_t));
+    memset(gLbignumvar, 0x00, DSL_LBIGNUMVAR_SIZE * sizeof(int32_t));
+    gLnumvar = malloc(DSL_LNUMVAR_SIZE);
+    memset(gLnumvar, 0x00, DSL_LNUMVAR_SIZE);
 }
 
 void set_data_ptr(unsigned char *start, unsigned char *cpos) {
@@ -356,8 +364,8 @@ static void load_simple_variable(uint16_t type, uint16_t vnum, int32_t val) {
             gGnumvar[vnum] = (int16_t) val;
             break;
         case DSL_LNUM:
-            printf("load_simple_variable: DSL_LNUM not implemented\n");
-            command_implemented = 0;
+            gBignumptr = (int32_t*) ((int16_t *)&gLnumvar[temps16]);
+            gBignum = gLnumvar[temps16];
             break;
         case DSL_GFLAG:
             if (val == 0) {
@@ -367,8 +375,9 @@ static void load_simple_variable(uint16_t type, uint16_t vnum, int32_t val) {
             }
             break;
         case DSL_LFLAG:
-            printf("load_simple_variable: DSL_LFLAG not implemented\n");
-            command_implemented = 0;
+            gBignumptr = (int32_t*) ((int8_t*) &gLflagvar[temps16/8]);
+            gBignum = gLflagvar[temps16/8] & bitmask[temps16%8];
+            break;
         default:
             fprintf(stderr, "ERROR: Unknown simple variable type: 0x%x!\n", type);
             command_implemented = 0;
@@ -393,8 +402,11 @@ void read_simple_num_var() {
             break;
         }
         case DSL_LFLAG: {
-            printf("read_simple_num_var: Unimplemented LFLAG\n");
-            command_implemented = 0;
+            gBignumptr = (int32_t*)((int8_t*)&gLflagvar[temps16/8]);
+            gBignum = gLflagvar[temps16/8] & bitmask[temps16/8];
+            if (gBignum > 0) {
+                gBignum = 1;
+            }
             break;
         }
         case DSL_GNUM: {
@@ -403,8 +415,8 @@ void read_simple_num_var() {
             break;
         }
         case DSL_LNUM: {
-            printf("read_simple_num_var: Unimplemented LNUM\n");
-            command_implemented = 0;
+            gBignumptr = (int32_t*) ((int16_t *)&gLnumvar[temps16]);
+            gBignum = gLnumvar[temps16];
             break;
         }
         case DSL_GBIGNUM: {

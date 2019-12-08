@@ -39,6 +39,7 @@ scmd_t* dsl_scmd_get(const int gff_file, const int res_id, const int index);
 int dsl_scmd_is_default(const scmd_t *scmd, const int scmd_index);
 
 void mas_print(const int gff_file, const int res_id);
+void dsl_print(const int gff_file, const int res_id);
 
 void do_dsl_command(uint8_t cmd);
 uint32_t dsl_request_impl(int16_t token, int16_t name,
