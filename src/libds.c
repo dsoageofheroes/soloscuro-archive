@@ -593,6 +593,24 @@ static int lua_scmd_sound_idx(lua_State *L) {
     return 1;
 }
 
+static int lua_mas_print(lua_State *L) {
+    lua_Integer gff_idx = luaL_checkinteger (L, 1);
+    lua_Integer res_id = luaL_checkinteger (L, 2);
+
+    mas_print(gff_idx, res_id);
+
+    return 0;
+}
+
+static int lua_gpl_print(lua_State *L) {
+    lua_Integer gff_idx = luaL_checkinteger (L, 1);
+    lua_Integer res_id = luaL_checkinteger (L, 2);
+
+    dsl_print(gff_idx, res_id);
+
+    return 0;
+}
+
 /* End Object Functions */
 
 //library to be registered
@@ -661,6 +679,10 @@ static const struct luaL_Reg lslib [] = {
       {"scmd_combat", lua_scmd_combat},
       {"scmd_ok_hot", lua_scmd_ok_hot},
       {"scmd_index_is_default", lua_scmd_index_is_default},
+
+      // MAS functions
+      {"mas_print", lua_mas_print},
+      {"gpl_print", lua_gpl_print},
 
       // The End
       {NULL, NULL}  /* sentinel */
