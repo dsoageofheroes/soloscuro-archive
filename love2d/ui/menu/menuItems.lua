@@ -19,7 +19,9 @@ function menuItems.init(_items, _menu)
     Graphic(_items.start, 94, 70)
       :setHover(2)
       :setClicked(simpleClicked)
-      :animate(anim),
+      :animate(anim, function()
+        menu.active = false
+      end),
     Graphic(_items.create, 50, 87)
       :setHover(2)
       :setClicked(simpleClicked)

@@ -48,7 +48,7 @@ function draw.graphics(graphic, noAspect)
 end
 
 function draw.collection(graphics)
-  for k,v in pairs(graphics) do
+  for i,v in ipairs(graphics) do
     if type(v) == 'table' then
       draw.graphics(v)
     end
@@ -136,7 +136,8 @@ function draw.debug()
 end
 
 function private.resetWindow()
-  love.window.setMode(320 * scaleFactor, 200 * scaleFactor * aspectCorrection)
+  love.window.setMode(1920, 1080)
+  -- love.window.setMode(320 * scaleFactor, 200 * scaleFactor * aspectCorrection)
 end
 
 return draw

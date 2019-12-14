@@ -2,17 +2,18 @@ require 'util'
 
 Animation = require 'models/Animation'
 Graphic = require 'models/Graphic'
+Region = require 'models/Region'
 Text = require 'models/Text'
 
-local animation = require 'animate'
+local animation = require 'gfx/animate'
 local charInventory = require 'menu/inventory'
 local charNav = require 'menu/nav'
 local charView = require 'menu/view'
 local config = require 'solconfig'
 local createChar = require 'menu/create'
-local draw = require 'io/draw'
+draw = require 'io/draw'
 local ds = require 'libds'
-local font = require 'font'
+local font = require 'gfx/font'
 local fontPatch = require 'patch/font'
 local gff = require 'io/gff'
 local keyboard = require 'io/keyboard'
@@ -22,6 +23,7 @@ local mouse = require 'io/mouse'
 local party = require 'party'
 local popup = require 'menu/popup'
 
+local regionTest
 local devEnabled = false
 
 function love.load()
@@ -39,11 +41,18 @@ function love.load()
   charInventory.init(gff.inventory, menu, charNav)
   createChar.init(gff.createChar, menu, font)
   menu.init(draw, animation, menuItems, charView, charInventory, createChar, popup)
+
+  regionTest = Region(gff, "rgn2a.gff")
 end
 
 function love.draw()
 
-  menu.draw()
+  if menu.active then
+    draw.collection(regionTest.map)
+    menu.draw()
+  else
+    draw.collection(regionTest.map)
+  end
 
   draw.debug()
 
@@ -57,14 +66,34 @@ end
 
 function love.update(dt)
   menu.update(dt)
+
+  if love.keyboard.isDown('right') then
+    regionTest.shiftX(-16 * dt * 16)
+  end
+
+  if love.keyboard.isDown('left') then
+    regionTest.shiftX(16 * dt * 16)
+  end
+
+  if love.keyboard.isDown('up') then
+    regionTest.shiftY(16 * dt * 16)
+  end
+
+  if love.keyboard.isDown('down') then
+    regionTest.shiftY(-16 * dt * 16)
+  end
 end
 
 function love.keypressed( key )
   if key == 'h' then devEnabled = not devEnabled end
   if key == 'm' then mouse.visible = not mouse.visible end
+  if key == 'right' then regionTest.shiftX(-16) end
+  if key == 'left' then regionTest.shiftX(16) end
+  if key == 'up' then regionTest.shiftY(16) end
+  if key == 'down' then regionTest.shiftY(-16) end
 
-  if key == "down" then draw.scaleDown() end
-  if key == "up" then draw.scaleUp() end
+  if key == "d" then draw.scaleDown() end
+  if key == "u" then draw.scaleUp() end
 end
 
 function love.mousepressed(x, y, button, istouch, presses)

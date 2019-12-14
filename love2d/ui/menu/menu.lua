@@ -56,6 +56,7 @@ local menu =
   closePopup = function()
     private.isActivePopupOpen = false
   end,
+  active = true
 }
 
 function menu.init(_draw, _animation, _menuItems, _view, _inventory, _createChar, _popup)

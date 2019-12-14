@@ -1,7 +1,7 @@
 local create = 
 {
   roll = function()
-    return math.ceil(math.random() * 6)
+    return  math.random(6)
   end
 }
 
@@ -54,9 +54,11 @@ function create.init(_createAssets, _menu, _font)
     Text("WIS:17", _font.white, 12, 194),
     Text("CHA:12", _font.white, 12, 202),
     Text("PSIONIC DISCIPLINES", _font.black, 218, 114),
-    Text("LAWFUL NEUTRAL", _font.white, 53, 170),
     Text("MALE HUMAN", _font.white, 53, 162),
+    Text("LAWFUL NEUTRAL", _font.white, 53, 170),
     Text("FIGHTER", _font.white, 53, 178),
+    Text("PSIONICIST", _font.white, 53, 186),
+    Text("PRESERVER", _font.white, 53, 194),
     Text("LEVEL: 2/2/2", _font.white, 135, 162),
     Text("AC: 10", _font.white, 135, 170),
     Text("HP: 36/36", _font.white, 135, 178),

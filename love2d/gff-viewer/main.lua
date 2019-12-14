@@ -92,7 +92,7 @@ end
 
 function get_tiles() 
     tile_id_list = ds.gff_get_id_list(gff_file, TILE_TYPE);
-    for tile_id in pairs(tile_id_list) do
+    for k,tile_id in pairs(tile_id_list) do
         data = ds.get_frame_rgba_with_palette(gff_file, TILE_TYPE, tile_id, 0, current_palette)
         if (data ~=  0) then -- always check that it got the image!
             width = ds.get_frame_width(gff_file, TILE_TYPE, tile_id, 0)

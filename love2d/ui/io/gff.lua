@@ -4,17 +4,29 @@ local gff = {
 }
 local private = {}
 
+PALETTE = 0
+
 local ds
 
 -- GFF file list
 local GFF_RESOURCE = "resource.gff"
+
+-- GFF type list
+local RMAP_TYPE = 1346456914
+local GMAP_TYPE = 1346456903
+local TILE_TYPE = 1162627412
+local ETAB_TYPE = 1111577669
+local RDFF_TYPE = 1179010130
+local BMP_TYPE  = 542133570
+local MONR_TYPE = 1380863821
+local FONT_TYPE = 1414418246
 
 function gff.init(_ds, _config)
   ds = _ds
   ds.gff_init()
   ds.gff_load_directory(_config.ds1Path)
 
-  private.loadAllResources()
+  private.loadMenuResources()
 end
 
 function gff.loadFontChar(i)
@@ -28,7 +40,47 @@ function gff.loadFontChar(i)
   return char
 end
 
-function private.loadAllResources()
+function gff.loadTiles(file) 
+  local file_id = ds.gff_find_index(file)
+  local tile_id_list = ds.gff_get_id_list(file_id, TILE_TYPE);
+  local tiles = {}
+
+  for k,tile_id in pairs(tile_id_list) do
+      local data = ds.get_frame_rgba_with_palette(file_id, TILE_TYPE, tile_id, 0, 41)
+      if (data ~=  0) then -- always check that it got the image!
+          local width = ds.get_frame_width(file_id, TILE_TYPE, tile_id, 0)
+          local height = ds.get_frame_height(file_id, TILE_TYPE, tile_id, 0)
+          local imageData = love.image.newImageData(width, height, "rgba8", data)
+          tiles[tile_id] = love.graphics.newImage( imageData )
+      end
+  end
+
+  return tiles
+end
+
+function gff.loadMap(file, tiles)
+  local file_id = ds.gff_find_index(file)
+  local res_id = ds.gff_get_id_list(file_id, RMAP_TYPE)[1]
+  local rmapstartx = 0
+  local rmapstarty = 0
+  local rmapx = 0
+  local rmapy = 0
+  local map = {}
+
+  local rmap = ds.gff_get_data_as_text(file_id, RMAP_TYPE, res_id)
+  for i=rmapstartx,126 do
+      for j=rmapstarty,96 do -- This may need to be 97!
+          local nextx = rmapx + 16*(i-rmapstartx) -- tiles are 16x16
+          local nexty = rmapy + 16*(j-rmapstarty) -- tiles are 16x16
+          local tile_id = string.byte(rmap, i+j*128+1)
+          table.insert(map, Graphic(tiles[tile_id], nextx, nexty))
+      end
+  end
+
+  return map
+end
+
+function private.loadMenuResources()
 
   -- Load mouse cursor images
   for i=1,10 do
