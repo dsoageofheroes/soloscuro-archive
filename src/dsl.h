@@ -51,6 +51,7 @@ uint8_t get_byte();
 /* End Parsing functions */ 
 
 extern uint8_t command_implemented; // Temporary while I figure out each function.
+int32_t data_field(int16_t header, uint16_t fi);
 
 #define MAX_OBJECTS        (1500)
 #define MAX_OBJECT_ENTRIES (2000)

@@ -80,6 +80,8 @@
 #define MAXLBIGNUMS       (40)
 #define MAXLNUMS          (32)
 
+#define MAX_SEARCH_STACK (32)
+
 #define DSL_GFLAGVAR_SIZE (((MAXGFLAGS*sizeof(uint8_t))/8)+1)
 #define DSL_LFLAGVAR_SIZE (((MAXLFLAGS*sizeof(uint8_t))/8)+1)
 #define DSL_GBIGNUMVAR_SIZE (MAXGBIGNUMS * sizeof(int32_t))
@@ -101,8 +103,11 @@ unsigned char* get_data_ptr();
 void push_data_ptr(unsigned char *data);
 unsigned char* pop_data_ptr();
 void clear_local_vars();
+uint16_t peek_half_word();
 
 void set_accumulator(int32_t a);
 int32_t get_accumulator();
+
+void setrecord();
 
 #endif

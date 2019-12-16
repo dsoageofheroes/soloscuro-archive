@@ -190,6 +190,7 @@ static check_index_t gtalk_to = NULL_CHECK;
 static check_index_t gAttack = NULL_CHECK;
 static check_index_t gPov = NULL_CHECK;
 static check_index_t gPickup = NULL_CHECK;
+static check_index_t gOther = NULL_CHECK;
 static check_index_t gOther1 = NULL_CHECK;
 static check_index_t gMoveTile = NULL_CHECK;
 static check_index_t gLook = NULL_CHECK;
@@ -579,8 +580,7 @@ static int fromgpl = 0;
 
 static void set_the_orders(int16_t header, int16_t order, int16_t data1, int16_t data2, int send) {
     if (order == GOXY && (!data1) && (!data2)) {
-        printf("set_the_order: bug\n");
-        command_implemented = 0;
+        printf("set_the_order: ERROR sending to (0, 0)!  Going on for now since we are debugging...\n");
     }
     switch(order) {
         case FLEE:
@@ -641,8 +641,6 @@ static void set_orders(int16_t header, int16_t order, int16_t data1, int16_t dat
 
 void set_new_order(name_t name) {
     if (!name.file) {
-        printf("name.file != NULL not implemented!\n");
-        command_implemented = 0;
         if (name.name < 0) {
             printf("set_new_order name < 0 not implemented!\n");
             command_implemented = 0;
@@ -663,6 +661,8 @@ static void initialize_dsl_stack() {
     gunused_checks = 0;
     gGstringvar = (dsl_string_t*) malloc(GSTRINGVARSIZE);
     memset(gGstringvar, 0, GSTRINGVARSIZE);
+    gLstringvar = (dsl_string_t*) malloc(LSTRINGVARSIZE);
+    memset(gLstringvar, 0, LSTRINGVARSIZE);
     gTextstring = (uint8_t*)malloc(TEXTSTRINGSIZE);
 }
 
@@ -884,7 +884,8 @@ void dsl_byte_dec(void) {
 }
 
 void dsl_word_dec(void) {
-    command_implemented = 0;
+    get_parameters(1);
+    (*((uint16_t *)param.ptr[0]))--;
 }
 
 void dsl_long_dec(void) {
@@ -1018,7 +1019,8 @@ void dsl_p_damage(void) {
 }
 
 void dsl_changemoney(void) {
-    command_implemented = 0;
+    int32_t amt = read_number();
+    printf("The get %d monies.\n", amt);
 }
 
 void dsl_setvar(void) {
@@ -1029,16 +1031,28 @@ void dsl_toggle_accum(void) {
     command_implemented = 0;
 }
 
+int16_t fgetstatus(int16_t id) {
+    printf("I need to return the character global status of %d\n", id);
+    return 1;
+}
+
 void dsl_getstatus(void) {
-    command_implemented = 0;
+    set_accumulator(fgetstatus(read_number()));
+}
+
+uint8_t los(int16_t obj, int16_t obj1, uint8_t range) {
+    printf("I need to return if there is los from %d to %d is < %d\n", obj, obj1, range);
+    return 1;
 }
 
 void dsl_getlos(void) {
-    command_implemented = 0;
+    get_parameters(3);
+    set_accumulator(los(param.val[0], param.val[1], param.val[2]));
 }
 
 void dsl_long_times_equal(void) {
-    command_implemented = 0;
+    get_parameters(2);
+    *param.ptr[0] *= param.val[1];
 }
 
 void dsl_jump(void) {
@@ -1091,8 +1105,14 @@ void dsl_global_ret(void) {
     global_ret();
 }
 
+uint8_t adj_check(int16_t obj1, int16_t obj2) {
+    printf("I need to return if obj1 and obj2 are adjacent!\n");
+    return 1;
+}
+
 void dsl_nextto(void) {
-    command_implemented = 0;
+    get_parameters(2);
+    set_accumulator(adj_check(param.val[0], param.val[1]));
 }
 
 void dsl_inloscheck(void) {
@@ -1124,11 +1144,33 @@ void dsl_numtoname(void) {
 }
 
 void dsl_bitsnoop(void) {
-    command_implemented = 0;
+    get_parameters(2);
+    if ((param.val[0] & param.val[1]) == param.val[1]) {
+        set_accumulator(1);
+    } else {
+        set_accumulator(0);
+    }
+}
+
+void award(int16_t ctrl, int32_t exp) {
+    if (ctrl == PARTY) {
+        printf(" I need to award %d exp to the party!\n", exp);
+    }
+    printf("I need to evaluate the award functionality...\n");
 }
 
 void dsl_award(void) {
-    command_implemented = 0;
+    get_parameters(2);
+    switch(param.val[0]) {
+        case ALL:
+            break;
+        case PARTY:
+            award(PARTY, param.val[1]);
+            break;
+        default:
+            award(param.val[0], param.val[1]);
+            break;
+    }
 }
 
 void dsl_request(void) {
@@ -1141,7 +1183,8 @@ void dsl_source_trace(void) {
 }
 
 void dsl_shop(void) {
-    command_implemented = 0;
+    int16_t shop_id = read_number();
+    printf("I need to open a shop with id: %d\n", shop_id);
 }
 
 void dsl_clone(void) {
@@ -1186,7 +1229,7 @@ void dsl_orelse(void) {
 }
 
 void dsl_clearpic(void) {
-    command_implemented = 0;
+    narrate_open(NAR_PORTRAIT, NULL, 0);
 }
 
 void dsl_continue(void) {
@@ -1205,8 +1248,23 @@ void dsl_source_line_num(void) {
     command_implemented = 0;
 }
 
+uint8_t drop(int16_t qty, int16_t item, int16_t name) {
+    printf("%d needs to drop %d of %d\n", name, item, qty);
+    return 1;
+}
+
 void dsl_drop(void) {
-    command_implemented = 0;
+    get_parameters(3);
+    switch(param.val[2]) {
+        case PARTY:
+            printf("All party members need to drop %d of %d\n", param.val[0], param.val[1]);
+            break;
+        case ALL:
+            break;
+        default:
+            set_accumulator(drop(param.val[0], param.val[1], param.val[2]));
+            break;
+    }
 }
 
 void dsl_passtime(void) {
@@ -1218,7 +1276,8 @@ void dsl_exit_dsl(void) {
 }
 
 void dsl_fetch(void) {
-    command_implemented = 0;
+    get_parameters(2);
+    set_orders(param.val[1], FETCH, param.val[0], 0);
 }
 
 #define OBJ_QUALIFIER  (0x53)
@@ -1256,10 +1315,6 @@ int32_t search() {
             } else {
                 search_for = temp_for;
             }
-        } else {
-            printf("search: unknown type = %d\n", type);
-            command_implemented = 0;
-            return 0;
         }
         depth--;
     } while ( peek_one_byte() == OBJ_QUALIFIER);
@@ -1291,12 +1346,20 @@ void dsl_search(void) {
     set_accumulator(search());
 }
 
+int32_t get_party_char(int32_t num) {
+    printf("get_party_char: I need to return the party character!\n");
+    return 1;
+}
+
 void dsl_getparty(void) {
-    command_implemented = 0;
+    int32_t tmp = get_party_char(read_number());
+    gOther = tmp;
+    set_accumulator(tmp);
 }
 
 void dsl_fight(void) {
-    command_implemented = 0;
+    printf("I need to enter fight mode!\n");
+    dsl_exit_dsl();
 }
 
 void dsl_flee(void) {
@@ -1310,12 +1373,42 @@ void dsl_follow(void) {
     fromgpl = 0;
 }
 
-void dsl_getyn(void) {
-    command_implemented = 0;
+uint8_t ask_yes_no() {
+    narrate_open(NAR_ADD_MENU, (char*) "Answer Yes or No", 0);
+    narrate_open(NAR_ADD_MENU, (char*) "Yes", 0);
+    narrate_open(NAR_ADD_MENU, (char*) "No", 0);
+    narrate_open(NAR_ADD_MENU, NULL, 0);
+
+    printf("ask_yes_no: I need to get an answer from the user... Assuming Yes...\n");
+
+    return YES;
 }
 
+void dsl_getyn(void) {
+    set_accumulator(ask_yes_no());
+}
+
+#define DSL_NEW_SLOT (-2)
+static int16_t give(int16_t qty, int16_t item, int16_t taker, int16_t giver, int16_t placement) {
+    int16_t given = 0;
+    printf("I need to give %d of %d to %d from %d, into the place %d\n", qty, item, taker, giver, placement);
+    return given;
+}
+
+static int16_t take(int16_t qty, int16_t item, int16_t giver, int16_t receiver) {
+    printf("I need to take %d of type %d from %d to %d\n", qty, item, giver, receiver);
+    return qty;
+}
+
+static int16_t grafted(int16_t global_idx, int16_t id) {
+    printf("I need to check if PC %d's item %d is grafted\n", global_idx, id);
+    return 0;
+}
+
+
 void dsl_give(void) {
-    command_implemented = 0;
+    get_parameters(4);
+    set_accumulator(give(param.val[0], param.val[1], param.val[2], param.val[3], DSL_NEW_SLOT));
 }
 
 void dsl_go(void) {
@@ -1332,8 +1425,13 @@ void dsl_goxy(void) {
     set_orders(param.val[2], GOXY, param.val[0], param.val[1]);
 }
 
+uint8_t read_orders(int16_t order) {
+    printf("I need to read order %d\n", order);
+    return 1;
+}
+
 void dsl_readorders(void) {
-    command_implemented = 0;
+    set_accumulator(read_orders(read_number()));
 }
 
 void dsl_if(void) {
@@ -1365,7 +1463,7 @@ void dsl_else(void) {
 }
 
 void dsl_setrecord(void) {
-    command_implemented = 0;
+    setrecord();
 }
 
 static int32_t id_to_header(int32_t header) {
@@ -1385,7 +1483,11 @@ void dsl_setother(void) {
 }
 
 void dsl_input_string(void) {
-    command_implemented = 0;
+    get_parameters(1);
+    //if (param.ptr[0] != address of accumulator) {
+    printf("I need to ask for a string from the user.\n");
+    // save as dslstring!
+    //}
 }
 
 void dsl_input_number(void) {
@@ -1481,15 +1583,18 @@ void dsl_print_string(void) {
 }
 
 void dsl_print_number(void) {
-    command_implemented = 0;
+    char buff[1024];
+    get_parameters(2);
+    snprintf(buff, 1023, "%d", param.val[1]);
+    narrate_open(NAR_SHOW_TEXT, (char*)buff, param.val[0]);
 }
 
 void dsl_printnl(void) {
-    command_implemented = 0;
+    narrate_open(NAR_SHOW_TEXT, (char*)"\n", 0);
 }
 
 void dsl_rand(void) {
-    command_implemented = 0;
+    set_accumulator((int32_t)rand() % (read_number() + 1));
 }
 
 void show(int16_t portrait_index) {
@@ -1509,21 +1614,17 @@ void dsl_statroll(void) {
 }
 
 void dsl_string_compare(void) {
-    command_implemented = 0;
+    set_accumulator(0);
+    get_parameters(2);
+    //if (niether parameter is equal to the address of accum.) {
+        if (strcmp((void*)param.ptr[0], (void*)param.ptr[1]) == 0) {
+            set_accumulator(0);
+        }
+    //}
 }
 
 void dsl_match_string(void) {
     command_implemented = 0;
-}
-
-static int16_t take(int16_t qty, int16_t item, int16_t giver, int16_t receiver) {
-    printf("I need to take %d of type %d from %d to %d\n", qty, item, giver, receiver);
-    return qty;
-}
-
-static int16_t grafted(int16_t global_idx, int16_t id) {
-    printf("I need to check if PC %d's item %d is grafted\n", global_idx, id);
-    return 0;
 }
 
 void dsl_take(void) {
@@ -1543,8 +1644,13 @@ void dsl_take(void) {
     }
 }
 
+void sound(uint16_t bvoc_id) {
+    printf("I need to play sample #%d\n", bvoc_id);
+}
+
 void dsl_sound(void) {
-    command_implemented = 0;
+    printf("I need to send my sound effect to everyone logged in.\n");
+    sound(read_number());
 }
 
 void dsl_tport(void) {
@@ -1571,7 +1677,7 @@ void dsl_cmpend(void) {
 }
 
 void dsl_wait(void) {
-    command_implemented = 0;
+    set_orders(read_number(), WAIT, 0, 0);
 }
 
 void dsl_while(void) {
@@ -1676,7 +1782,8 @@ void dsl_byte_divide_equal(void) {
 }
 
 void dsl_word_plus_equal(void) {
-    command_implemented = 0;
+    get_parameters(2);
+    *((uint16_t *)param.ptr[0]) += param.val[1];
 }
 
 void dsl_word_minus_equal(void) {

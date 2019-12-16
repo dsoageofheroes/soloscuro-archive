@@ -131,21 +131,29 @@ int req_set_allegiance(int16_t object, long allegiance, long notused2);
 int16_t request_to_do(int16_t name, int16_t rectype, int (*request_proc)(int16_t, long, long), long param1, long
 param2);
 
+#define CAMP_HEAL      (0)
+#define CAMP_RESURRECT (1)
+#define CAMP_TIME      (1000)
+
+void camp(int16_t instr, int16_t hours, int16_t who) {
+    printf("%d camps for %d hours\n", who, hours);
+    if (instr == CAMP_RESURRECT) {
+        printf("Also ressurect the dead, unstone the petrify, revive undead, etc...\n");
+    }
+}
+
 uint32_t dsl_request_impl(int16_t token, int16_t name,
         int32_t num1, int32_t num2) {
     int answer = 0;
     switch (token) {
         case HEALING:
-            printf("request HEALING not implemented\n");
-            command_implemented = 0;
+            camp(CAMP_RESURRECT, num1, num2);
             break;
         case DOOR:
-            printf("request DOOR not implemented\n");
-            command_implemented = 0;
+            printf("I need to do operation %d on door %d\n", num2, num1);
             break;
         case THIEFSKILL:
-            printf("request THIEFSKILL not implemented\n");
-            command_implemented = 0;
+            printf("I need to run a thief skill on %d, skill %d, bonus %d\n", name, num1, num2);
             break;
         case REST:
             printf("request REST not implemented\n");
@@ -159,8 +167,7 @@ uint32_t dsl_request_impl(int16_t token, int16_t name,
             command_implemented = 0;
             break;
         case TRAP:
-            printf("request TRAP not implemented\n");
-            command_implemented = 0;
+            printf("I need to lay a trap of type %d, at %d with %d\n", name, num1, num2);
             break;
         case REQUEST_MONSTER:
             printf("request REQUEST_MONSTER not implemented\n");
@@ -177,8 +184,7 @@ uint32_t dsl_request_impl(int16_t token, int16_t name,
             printf("Need to set the bit flags for map position (%d, %d) to %d & commit!\n", num1, num2, GB_BLOCK);
             break;
         case CLEAR_BLOCK:
-            printf("request CLEAR_BLOCK not implemented\n");
-            command_implemented = 0;
+            printf("I need to clear the block at (%d, %d) with flags %d\n", num1, num2, GB_BLOCK);
             break;
         case SET_LOS:
             printf("request SET_LOS not implemented\n");
@@ -189,12 +195,10 @@ uint32_t dsl_request_impl(int16_t token, int16_t name,
             command_implemented = 0;
             break;
         case REQUEST_BATTLE_DEMO:
-            printf("request REQUEST_BATTLE_DEMO not implemented\n");
-            command_implemented = 0;
+            printf("request REQUEST_BATTLE_DEMO: Need to call lua or something to run the demo!\n");
             break;
         case SET_GAME_MOVE:
-            printf("request SET_GAME_MOVE not implemented\n");
-            command_implemented = 0;
+            printf("I need to set the game back to regular moving around (not combat/look/xfer/target).\n");
             break;
         case BRANCH_MUSIC:
             switch(num2) {
@@ -218,15 +222,13 @@ uint32_t dsl_request_impl(int16_t token, int16_t name,
             }
             break;
         case FLASH_ANIMATION:
-            printf("request FLASH_ANIMATION not implemented\n");
-            command_implemented = 0;
+            printf("I need to flash (-)%d at (%d, %d)\n", name, num1, num2);
             break;
         case SET_ALLEGIANCE:
             request_to_do(name, DO_COMBAT, req_set_allegiance, num1, num2);
             break;
         case END_GAME:
-            printf("request END_GAME not implemented\n");
-            command_implemented = 0;
+            printf("Request END_GAME: end game and start over...\n");
             break;
         case REQUEST_COUNT_COMBAT:
             printf("request REQUEST_COUNT_COMBAT not implemented\n");

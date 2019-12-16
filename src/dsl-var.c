@@ -15,6 +15,7 @@ static uint8_t bitmask[8] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80};
 static uint8_t bytemask[8] = {0xFE, 0xFD, 0xFB, 0xF7, 0xEF, 0xDF, 0xBF, 0x7F};
 
 static void load_simple_variable(uint16_t type, uint16_t vnum, int32_t val);
+static int32_t read_complex(void);
 
 typedef struct _dsl_state_t {
     unsigned char *dsl_data_start;
@@ -155,9 +156,24 @@ uint8_t get_byte() {
     return answer;
 }
 
+static uint16_t get_word() {
+    uint16_t ret;
+    ret = get_byte() * 0x100;
+    ret += get_byte();
+    return ret;
+}
+
 uint8_t peek_one_byte() {
     return *dsl_data;
 }
+
+uint16_t peek_half_word() {
+    uint16_t ret;
+    ret = (*dsl_data) *0x100;
+    ret += *(dsl_data + 1);
+    return ret;
+}
+
 uint16_t get_half_word() {
     uint16_t ret = get_byte() * 0x100;
     ret += get_byte();
@@ -228,8 +244,8 @@ int32_t read_number() {
                 }
                 //case DSL_HI_RETVAL|0x80:
                 case DSL_IMMED_BIGNUM|0x80: {
-                    printf("IMMED_BIGNUM not implemented!\n");
-                    command_implemented = 0;
+                    cval = (int32_t)((int16_t)get_word()) * 655356L 
+                         + (int32_t)((uint16_t)get_word());
                     break;
                 }
                 case DSL_IMMED_BYTE|0x80: {
@@ -246,8 +262,7 @@ int32_t read_number() {
                     break;
                 }
                 case DSL_COMPLEX_VAL|0x80: {
-                    printf("COMPLEX_VAL not implemented!\n");
-                    command_implemented = 0;
+                    cval = read_complex();
                     break;
                 }
                 case DSL_IMMED_STRING|0x80: {
@@ -330,6 +345,82 @@ int32_t read_number() {
     return accums[0];
 }
 
+static uint8_t access_complex(int16_t *header, uint16_t *depth, uint16_t *element) {
+    uint16_t i;
+    int32_t obj_name;
+    
+    obj_name = get_word();
+    if (obj_name < 0x8000) {
+        printf("access_complex: I need to convert from ID to header!\n");
+    } else {
+        printf("access_complex: I need to set the *head to the correct view\n");
+        switch (obj_name & 0x7FFF) {
+            case 0x25: // POV
+            case 0x26: // ACTIVE
+            case 0x27: // PASSIVE
+            case 0x28: // OTHER
+            case 0x2C: // OTHER1
+            case 0x2B: // THING
+                printf("access_complext:valid obj_name, need to set header (but can't yet...)\n");
+                break;
+            default:
+                return 0;
+        }
+    }
+    *depth = get_byte();
+    for (i = 1; i <= *depth; i++) {
+        element[i-1] = get_byte();
+    }
+
+    return 1;
+}
+
+int32_t get_complex_data(int16_t header, uint16_t depth, uint16_t *element) {
+    uint16_t i = 0;
+    int32_t ret;
+
+    ret = header; // start with header.
+
+    do {
+        ret = data_field((int16_t) ret, i);
+        element++;
+        i++;
+    } while (/*(field_error == 0) && */ (i < depth));
+
+    return ret;
+}
+
+static void write_data(int16_t header, uint16_t depth, int32_t data) {
+    printf("I need to write to obj-header %d, depth = %d, the value %d\n", header, depth, data);
+}
+
+static void write_complex_data(int16_t header, uint16_t depth, uint16_t *element, int32_t data) {
+    int32_t chead;
+
+    chead = get_complex_data(header, depth-1, element);
+    if (/*(field_error == 0) && */chead != NULL_OBJECT) {
+        write_data(chead, element[depth-1], data);
+    }
+}
+
+static void smart_write_data(int16_t header, uint16_t depth, uint16_t element[], int32_t data) {
+    if (depth == 1) {
+        write_data(header, element[0], data);
+    } else {
+        write_complex_data(header, depth, element, data);
+    }
+}
+
+static void write_complex_var(int32_t data) {
+    uint16_t depth = 0;
+    int16_t header = 0;
+    uint16_t element[MAX_SEARCH_STACK];
+    memset(element, 0x0, sizeof(uint16_t) * MAX_SEARCH_STACK);
+    if (access_complex(&header, &depth, element) == 1) {
+        smart_write_data(header, depth, element, data);
+    }
+}
+
 void load_variable() {
     int8_t extended = 0;
     datatype = get_byte();
@@ -346,8 +437,7 @@ void load_variable() {
         }
         load_simple_variable(datatype, varnum, accum);
     } else {
-        printf("load_variable: Loading a complex variable not implemented!\n");
-        command_implemented = 0;
+        write_complex_var(accum);
     }
 }
 
@@ -357,8 +447,7 @@ static void load_simple_variable(uint16_t type, uint16_t vnum, int32_t val) {
             gGbignumvar[vnum] = (int32_t) val;
             break;
         case DSL_LBIGNUM:
-            printf("load_simple_variable: DSL_LBIGNUM not implemented\n");
-            command_implemented = 0;
+            gLbignumvar[vnum] = (int32_t) val;
             break;
         case DSL_GNUM:
             gGnumvar[vnum] = (int16_t) val;
@@ -425,8 +514,8 @@ void read_simple_num_var() {
             break;
         }
         case DSL_LBIGNUM: {
-            printf("read_simple_num_var: Unimplemented LBIGNUM\n");
-            command_implemented = 0;
+            gBignumptr = &gLbignumvar[temps16];
+            gBignum = gLbignumvar[temps16];
             break;
         }
         case DSL_GNAME: {
@@ -448,13 +537,54 @@ void read_simple_num_var() {
             break;
         }
         case DSL_LSTRING: {
-            printf("read_simple_num_var: Unimplemented LSTRING\n");
-            command_implemented = 0;
+            gBignumptr = (int32_t*) gLstringvar[temps16];
             break;
         }
         default:
             printf("ERROR: Unknown type in read_simple_num_var.\n");
             command_implemented = 0;
             break;
+    }
+}
+
+static int32_t read_complex(void) {
+    int32_t ret = 0;
+    uint16_t depth = 0;
+    int16_t header = 0;
+    uint16_t element[MAX_SEARCH_STACK];
+    memset(element, 0x0, sizeof(uint16_t) * MAX_SEARCH_STACK);
+
+    if (access_complex(&header, &depth, element) == 1) {
+        ret = get_complex_data(header, depth, element);
+    } else {
+        printf("read_complex: else not implemented!\n");
+        command_implemented = 0;
+    }
+
+    return ret;
+}
+
+void setrecord() {
+    uint16_t depth = 0;
+    int16_t header = 0;
+    uint16_t element[MAX_SEARCH_STACK];
+    uint16_t tmp = peek_half_word();
+
+    if (tmp > 0x8000) {
+        access_complex(&header, &depth, element);
+        accum = read_number();
+        smart_write_data(header, depth, element, accum);
+        return;
+    }
+    if (tmp == 0) {
+        printf("dsl_setrecord: need to implement party...\n");
+        command_implemented = 0;
+        return;
+    }
+    if (tmp < 0x8000) {
+        access_complex(&header, &depth, element);
+        set_accumulator(read_number());
+        printf("I need to write depth/element/accum to list of headers!\n");
+        return;
     }
 }

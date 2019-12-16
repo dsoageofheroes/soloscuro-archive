@@ -19,6 +19,8 @@ extern uint8_t* gTextstring;
 #define COMPSTR          (300)
 #define MAXGSTRINGS      (10)
 #define GSTRINGVARSIZE (MAXGSTRINGS*sizeof(dsl_string_t))
+#define MAXLSTRINGS      (10)
+#define LSTRINGVARSIZE (MAXLSTRINGS*sizeof(dsl_string_t))
 #define TEXTSTRINGSIZE   COMPSTR
 
 char * read_text();
