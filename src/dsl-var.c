@@ -316,13 +316,20 @@ int32_t read_number() {
         }
         
         if (!found_operator) {
-            //printf("operator not found, opstack[%d] = %d\n", paren_level, opstack[paren_level]);
+            //printf("operator not found, opstack[%d] = 0x%x\n", paren_level, opstack[paren_level]);
             tval = accums[paren_level];
             switch(opstack[paren_level]) {
                 case DSL_PLUS:   tval += cval; break;
                 case DSL_MINUS:  tval -= cval; break;
                 case DSL_MULT:   tval *= cval; break;
-                case DSL_DIV:    tval /= cval; break;
+                case DSL_DIV:    
+                    if (cval == 0) {
+                        fprintf(stderr, "ERROR: trying to divide by 0!\n");
+                        tval = 0;
+                    } else {
+                        tval /= cval; 
+                    }
+                    break;
                 case DSL_AND:    tval = (tval && cval); break;
                 case DSL_OR:     tval = (tval || cval); break;
                 case DSL_EQUAL:  tval = (tval == cval); break;

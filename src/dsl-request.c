@@ -163,15 +163,13 @@ uint32_t dsl_request_impl(int16_t token, int16_t name,
             request_to_do(name, DO_TO_ALL, req_animation, num1, num2);
             break;
         case CINEMATIC:
-            printf("request CINEMATIC not implemented\n");
-            command_implemented = 0;
+            printf("I need to play the %d cinematic\n", num1);
             break;
         case TRAP:
             printf("I need to lay a trap of type %d, at %d with %d\n", name, num1, num2);
             break;
         case REQUEST_MONSTER:
-            printf("request REQUEST_MONSTER not implemented\n");
-            command_implemented = 0;
+            printf("I need to request a monster %d, %d\n", num1, num2);// Not helpful, I know...
             break;
         case SWAP:
             if (name > 0) {
@@ -191,8 +189,7 @@ uint32_t dsl_request_impl(int16_t token, int16_t name,
             command_implemented = 0;
             break;
         case CLEAR_LOS:
-            printf("request CLEAR_LOS not implemented\n");
-            command_implemented = 0;
+            printf("I need to CLEAR_LOS, whatever that means...\n");
             break;
         case REQUEST_BATTLE_DEMO:
             printf("request REQUEST_BATTLE_DEMO: Need to call lua or something to run the demo!\n");
@@ -231,8 +228,7 @@ uint32_t dsl_request_impl(int16_t token, int16_t name,
             printf("Request END_GAME: end game and start over...\n");
             break;
         case REQUEST_COUNT_COMBAT:
-            printf("request REQUEST_COUNT_COMBAT not implemented\n");
-            command_implemented = 0;
+            printf("I need to return the number of combatants that have no allegiance to %d\n", num1);
             break;
         case REQUEST_DIFFICULT_LEVEL:
             printf("request REQUEST_DIFFICULT_LEVEL not implemented\n");
