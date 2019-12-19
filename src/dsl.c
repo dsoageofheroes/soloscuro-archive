@@ -399,6 +399,7 @@ void mas_print(const int gff_file, const int res_id) {
     pop_data_ptr();
     printf("---------------------Ending Execution----------------------\n");
     printf("%lu of %lu\n", get_data_ptr() - get_data_start_ptr(), len);
+    //if (len != (get_data_ptr() - get_data_start_ptr())) {exit(1);}
 }
 
 void dsl_print(const int gff_file, const int res_id) {
@@ -880,7 +881,8 @@ void dsl_long_divide_equal(void) {
 }
 
 void dsl_byte_dec(void) {
-    command_implemented = 0;
+    get_parameters(1);
+    ( *((uint8_t *) param.ptr[0]) )--;
 }
 
 void dsl_word_dec(void) {
@@ -1233,7 +1235,10 @@ void dsl_clearpic(void) {
 }
 
 void dsl_continue(void) {
-    command_implemented = 0;
+    narrate_open(NAR_ADD_MENU, (char*) "Press Continue", 0);
+    narrate_open(NAR_ADD_MENU, (char*) "Continue", 0);
+    narrate_open(NAR_SHOW_MENU, NULL, 0);
+    printf("dsl_continue: Now I need to wait for the selection.\n");
 }
 
 void dsl_log(void) {
@@ -1568,7 +1573,8 @@ void dsl_menu(void) {
 }
 
 void dsl_setthing(void) {
-    command_implemented = 0;
+    get_parameters(2);
+    printf("I need move character %d's item of type %d\n", param.val[0], param.val[1]);
 }
 
 void dsl_local_sub_trace(void) {
@@ -1610,7 +1616,13 @@ void dsl_skillroll(void) {
 }
 
 void dsl_statroll(void) {
-    command_implemented = 0;
+    get_parameters(3);
+    set_accumulator(0);
+    if (param.val[0] != PARTY) {
+        printf("dsl_stat roll on %d\n", param.val[0]);
+    } else {
+        printf("dsl_stat roll on PARTY\n");
+    }
 }
 
 void dsl_string_compare(void) {
@@ -1787,23 +1799,28 @@ void dsl_word_plus_equal(void) {
 }
 
 void dsl_word_minus_equal(void) {
-    command_implemented = 0;
+    get_parameters(2);
+    *((uint16_t *)param.ptr[0]) -= param.val[1];
 }
 
 void dsl_word_times_equal(void) {
-    command_implemented = 0;
+    get_parameters(2);
+    *((uint16_t *)param.ptr[0]) *= param.val[1];
 }
 
 void dsl_word_divide_equal(void) {
-    command_implemented = 0;
+    get_parameters(2);
+    *((uint16_t *)param.ptr[0]) /= param.val[1];
 }
 
 void dsl_long_plus_equal(void) {
-    command_implemented = 0;
+    get_parameters(2);
+    *((uint32_t *)param.ptr[0]) += param.val[1];
 }
 
 void dsl_long_minus_equal(void) {
-    command_implemented = 0;
+    get_parameters(2);
+    *((uint32_t *)param.ptr[0]) -= param.val[1];
 }
 
 uint16_t range(int16_t obj0, int16_t obj1) {
