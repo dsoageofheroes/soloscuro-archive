@@ -24,7 +24,7 @@ local FONT_TYPE = 1414418246
 function gff.init(_ds, _config)
   ds = _ds
   ds.gff_init()
-  ds.gff_load_directory(_config.ds1Path)
+  ds.gff_load_directory(_config.env.path.ds1)
 
   private.loadMenuResources()
 end

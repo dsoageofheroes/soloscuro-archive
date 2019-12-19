@@ -11,7 +11,7 @@ local charNav = require 'menu/nav'
 local charView = require 'menu/view'
 local config = require 'solconfig'
 local createChar = require 'menu/create'
-draw = require 'io/draw'
+local draw = require 'io/draw'
 local ds = require 'libds'
 local font = require 'gfx/font'
 local fontPatch = require 'patch/font'
@@ -29,7 +29,7 @@ local devEnabled = false
 function love.load()
   math.randomseed(os.clock())
 
-  draw.init()
+  draw.init(config)
   gff.init(ds, config)
   mouse.init(gff.cursors, draw)
   font.init(gff.loadFontChar, fontPatch)

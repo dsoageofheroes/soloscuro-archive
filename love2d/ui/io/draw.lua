@@ -6,8 +6,13 @@ local private = {}
 
 local scaleFactor = 3
 local aspectCorrection = 1.2
+local resolution
 
-function draw.init()
+function draw.init(_config)
+  resolution = _config.env.resolution
+  scaleFactor = _config.env.resolution.scale
+  aspectCorrection = _config.env.resolution.aspect
+
   love.graphics.setDefaultFilter('nearest', 'nearest')
   private.resetWindow()
 end
@@ -48,7 +53,7 @@ function draw.graphics(graphic, noAspect)
 end
 
 function draw.collection(graphics)
-  for i,v in ipairs(graphics) do
+  for k,v in pairs(graphics) do
     if type(v) == 'table' then
       draw.graphics(v)
     end
@@ -136,8 +141,8 @@ function draw.debug()
 end
 
 function private.resetWindow()
-  love.window.setMode(1920, 1080)
-  -- love.window.setMode(320 * scaleFactor, 200 * scaleFactor * aspectCorrection)
+  -- love.window.setMode(1920, 1080)
+  love.window.setMode(resolution.x, resolution.y) -- * aspectCorrection)
 end
 
 return draw
