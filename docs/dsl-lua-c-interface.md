@@ -32,7 +32,7 @@ The GPL manages the following:
 - NPC Narration/Communication
 
 ## GPL State:
-To fulfill the task of managing the abov the following state is held in the GPL:
+To fulfill the task of managing the above the following state is held in the GPL:
 - Global flags (Flags used throughout the game)
 - Local flags (Flags specific to a local area, EX: have we talked to this NPC?)
 - Objects in the world (PCs, monsters, NPCs, etc...)
@@ -54,7 +54,7 @@ To see the list of functions, please jump to the end.
 When starting the game the following occurs:
 1) Run MAS 99 (master file 99 initializes the GPL Game State.)
 2) If loading from a save file, load the GPL state from there.
-3) When loading an area clear the local state and then load MAS XX (where XX is the region code.) to initialize the area
+3) When loading an area, clear the local state and then load MAS XX (where XX is the region code.) to initialize the area
 states.
 
 #UI and libds Interface
