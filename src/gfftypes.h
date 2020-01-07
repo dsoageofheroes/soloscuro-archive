@@ -50,7 +50,6 @@
 #define GT_ACF GFFTYPE('A','C','F','\x20')    // Cinematic Binary Script File
 #define GT_BMA GFFTYPE('B','M','A','\x20')    // Cinematic Binary File
 
-//oengine
 #define GT_CBMP GFFTYPE('C','B','M','P')     // Color Bit Map
 #define GT_WALL GFFTYPE('W','A','L','L')     // WALL?
 #define GT_OJFF GFFTYPE('O','J','F','F')     // Object data?
@@ -58,16 +57,15 @@
 
 #define GT_FNFO GFFTYPE('F','N','F','O')     // FNFO: Appears to have the object data for the game.
 
-// gplshell:
-#define GT_GPL_INDEX_DATA GFFTYPE('G','P','L','X') // gpl index data
+// DSL/GPL
+#define GT_GPL_INDEX_DATA GFFTYPE('G','P','L','X') // dsl/gpl index data
 #define GT_IT1R GFFTYPE('I','T','1','R')
 #define GT_NAME GFFTYPE('N','A','M','E')
 #define GT_ALL	GFFTYPE('A','L','L',' ')
 
-// fx.c
-#define GT_VECT GFFTYPE('V', 'E', 'C', 'T') // VECT?   rotate vector?  see fx.c
+#define GT_VECT GFFTYPE('V', 'E', 'C', 'T') // VECT?   rotate vector?
 
-// melgff.h (sound!)
+// sound!
 #define GT_MERR GFFTYPE('M','E','R','R')	// text error file
 #define GT_PSEQ GFFTYPE('P','S','E','Q')	// PCSPKR
 #define GT_FSEQ GFFTYPE('F','S','E','Q')	// FM
@@ -75,13 +73,14 @@
 #define GT_GSEQ GFFTYPE('G','S','E','Q')	// GENERAL MIDI
 #define GT_CSEQ GFFTYPE('C','S','E','Q')	// Clock Sequences
 
-// globdef.h  Transition art?
+// Transition art?
 #define GT_CMAT GFFTYPE('C','M','A','T')
 #define GT_CPAL GFFTYPE('C','P','A','L')
 #define GT_PLYL GFFTYPE('P','L','Y','L')
 #define GT_VPLY GFFTYPE('V','P','L','Y')
 
-// intrface.h
 #define GT_SPIN GFFTYPE('S','P','I','N')   // Spell text.
+
+#define GT_PORT GFFTYPE('P','O','R','T')   // Portrait
 
 #endif

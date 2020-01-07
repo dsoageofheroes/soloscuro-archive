@@ -12,8 +12,8 @@ typedef struct _s {
 
 typedef char dsl_string_t[DSLSTRINGLENGTH+2];
 typedef char string20_t[DSLSTRLEN];
-extern dsl_string_t* gGstringvar;
-extern dsl_string_t* gLstringvar;
+extern dsl_string_t* dsl_global_strings;
+extern dsl_string_t* dsl_local_strings;
 extern uint8_t* gTextstring;
 
 #define COMPSTR          (300)

@@ -3,8 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 
-dsl_string_t* gGstringvar = NULL;
-dsl_string_t* gLstringvar = NULL;
+dsl_string_t* dsl_global_strings = NULL;
+dsl_string_t* dsl_local_strings = NULL;
 uint8_t* gTextstring = NULL;
 uint8_t fudge;
 

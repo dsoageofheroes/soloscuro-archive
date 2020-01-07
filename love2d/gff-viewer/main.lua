@@ -1,4 +1,5 @@
 -- This loads the C library and binds is to a 'ds' object
+--require 'dsl/objects'
 ds = require 'libds'
 -- Don't change for now
 gff_filename = "resource.gff"
@@ -13,6 +14,10 @@ MONR_TYPE = 1380863821
 FONT_TYPE = 1414418246
 MAS_TYPE =  542327117
 GPL_TYPE =  541872199
+PORT_TYPE = 1414680400
+
+function narrate_open(action, text, index)
+end
 
 function init_current_file()
     -- Returns how many different types of data are stored in the gff file (EX: image, text music, etc...)
@@ -69,6 +74,29 @@ function init_current_file()
     scmd_flipy = 1 -- if we need to flip along y
     scmd_xoffset = 0
     scmd_yoffset = 0 -- any offsets needed by script.
+
+    --f = DS1Combat()
+    --print ("f.id = " .. f.id)
+    --print ("f.hp = " .. f.hp)
+    --f.hp = 12
+    --gpl_file = ds.gff_find_index("gpldata.gff")
+    --ds.mas_execute(gpl_file, 42)
+    --ds.gpl_execute(gpl_file, 3, 1716)
+    --ds.gpl_execute(gpl_file, 4, 1) -- I never got this in the real game, did you?
+    --ds.gpl_execute(gpl_file, 5, 2348)
+    --LOOK CHECKS
+    --ds.gpl_execute(gpl_file, 5, 6792)
+    --ds.gpl_execute(gpl_file, 5, 6832)
+    --NO WORKY
+    --ds.gpl_execute(gpl_file, 2, 1)
+    --ds.gpl_execute(gpl_file, 5, 54)
+    --ds.gpl_execute(gpl_file, 5, 74)
+    --ds.gpl_execute(gpl_file, 5, 94)
+    --ds.gpl_execute(gpl_file, 5, 114)
+    --ds.gpl_execute(gpl_file, 3, 1854)
+    --ds.gpl_execute(gpl_file, 5, 931)
+    --ds.gpl_execute(gpl_file, 5, 772)
+    --ds.gpl_execute(gpl_file, 5, 6530)
 end
 
 function get_font() 
@@ -521,11 +549,27 @@ function love.draw()
             end
         end
     end
-    if (type_id == MAS_TYPE) then
-        ds.mas_print(gff_file, res_id)
-    end
-    if (type_id == GPL_TYPE) then
-        ds.gpl_print(gff_file, res_id)
+    --if (type_id == MAS_TYPE) then
+        --ds.mas_print(gff_file, res_id)
+    --end
+    --if (type_id == GPL_TYPE) then
+        --ds.gpl_print(gff_file, res_id)
+    --end
+    if (type_id == PORT_TYPE) then
+        if (current_image == 0) then
+            --data = ds.get_frame_rgba_with_palette(gff_file, type_id, res_id, cframe, current_palette)
+            data, width, height = ds.get_portrait(res_id)
+            if (data ~=  0) then -- always check that it got the image!
+                imageData = love.image.newImageData(width, height, "rgba8", data)
+                current_image = love.graphics.newImage( imageData )
+            end
+        end
+        if (current_image ~= 0) then -- always check the image is available!
+            love.graphics.draw(current_image, 0, 170, 0, 2, 2.4)
+        else
+            love.graphics.print("Unable to convert image.  Inform the developer.", 10, 150)
+        end
+        type_displayed = true;
     end
     if (not type_displayed) then
         love.graphics.print("Unable to display.", 10, 110)

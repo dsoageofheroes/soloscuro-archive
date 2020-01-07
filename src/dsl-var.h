@@ -1,6 +1,8 @@
 #ifndef DSL_VAR_H
 #define DSL_VAR_H
 #include <stdint.h>
+#include <lua5.1/lua.h>
+#include "dsl.h"
 
 #define OPERATOR_OFFSET (0xD0)
 #define DSL_OP_ADD      (0xD1)
@@ -88,9 +90,43 @@
 #define DSL_GNUMVAR_SIZE (MAXGNUMS * sizeof(int16_t))
 #define DSL_LBIGNUMVAR_SIZE (MAXLBIGNUMS * sizeof(int32_t))
 #define DSL_LNUMVAR_SIZE (MAXLNUMS * sizeof(int16_t))
-//extern uint8_t gGflagvar[DSL_GFLAGVAR_SIZE];
+
+#define GLOBAL_MAS (99)
+enum {NOFILE, DSLFILE, MASFILE};
+
+#define MAX_DSL_CHECKS (200)
+enum {UNUSED_CHECK_INDEX,
+    TALK_TO_CHECK_INDEX,
+    ATTACK_CHECK_INDEX,
+    POV_CHECK_INDEX,
+    PICKUP_CHECK_INDEX,
+    OTHER_CHECK_INDEX,
+    OTHER1_CHECK_INDEX,
+    MOVE_TILE_CHECK_INDEX,
+    LOOK_CHECK_INDEX,
+    USE_CHECK_INDEX,
+    USE_WITH_CHECK_INDEX,
+    MOVE_BOX_CHECK_INDEX,
+    MAX_CHECK_TYPES
+};
+
+#define DSL_MAX_CALL (2)
+typedef struct _dsl_control_t {
+    int16_t destx;
+    int16_t desty;
+    int16_t cmd[DSL_MAX_CALL];
+    int16_t addr[DSL_MAX_CALL];
+    int16_t file[DSL_MAX_CALL];
+    uint8_t flags;
+} dsl_control_t;
+
+#define MAX_OBJECT_PATH (1000)
+
 extern int32_t gBignum;
 extern int32_t *gBignumptr;
+extern uint16_t this_gpl_file;
+extern uint16_t this_gpl_type;
+extern lua_State *lua_state;
 
 void dsl_init_vars();
 
@@ -104,6 +140,17 @@ void push_data_ptr(unsigned char *data);
 unsigned char* pop_data_ptr();
 void clear_local_vars();
 uint16_t peek_half_word();
+void global_addr_name(param_t *par);
+void generic_name_check(int check_index);
+void name_name_global_addr(param_t *par);
+void global_sub(uint16_t filenum, uint16_t address, int filetype);
+void global_ret();
+void set_any_order(name_t *name, int16_t to, int16_t los_order, int16_t range);
+void generic_tile_check(check_index_t *cindex, tile_t tile);
+void generic_box_check(check_index_t *cindex, box_t box);
+void use_with_check(check_index_t *cindex);
+void set_new_order(name_t name);
+void set_los_order(int16_t los_order, name_t name, int16_t range);
 
 void set_accumulator(int32_t a);
 int32_t get_accumulator();

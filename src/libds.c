@@ -7,6 +7,7 @@
 #include <stdlib.h>
 
 #include "dsl.h"
+#include "dsl-var.h"
 #include "gff.h"
 #include "gff-image.h"
 #include "gff-xmi.h"
@@ -34,6 +35,7 @@ static void push_scmd(lua_State *L, scmd_t *script);
 /* End Helper Functions */
 
 static int lua_gff_init(lua_State *L) {
+    lua_state = L;
     gff_init();
     
     return 0;
@@ -44,6 +46,7 @@ int lua_gff_load_directory(lua_State *L) {
     const char *path = luaL_checklstring(L, 1, &len);
 
     gff_load_directory(path);
+    dsl_init();
 
     return 0;
 }
@@ -239,6 +242,27 @@ int lua_get_frame_rgba(lua_State *L) {
     }
 
     return 1;
+}
+
+int lua_get_portrait(lua_State *L) {
+    lua_Integer res_id = luaL_checkinteger (L, 1);
+    unsigned int w, h;
+    unsigned long len;
+    unsigned char* chunk = (unsigned char*)gff_get_raw_bytes(DSLDATA_GFF_INDEX, GT_PORT, res_id, &len);
+
+    char *data = (char*)get_portrait(chunk, &w, &h);
+    if (data == NULL) {
+        lua_pushinteger(L, 0);
+        lua_pushinteger(L, 0);
+        lua_pushinteger(L, 0);
+    } else {
+        lua_pushlstring(L, data, 4 * w * h);
+        lua_pushinteger(L, w);
+        lua_pushinteger(L, h);
+        free(data);
+    }
+
+    return 3;
 }
 
 int lua_get_frame_rgba_with_palette(lua_State *L) {
@@ -611,6 +635,35 @@ static int lua_gpl_print(lua_State *L) {
     return 0;
 }
 
+static int lua_mas_execute(lua_State *L) {
+    lua_Integer gff_idx = luaL_checkinteger (L, 1);
+    lua_Integer res_id = luaL_checkinteger (L, 2);
+
+    mas_execute(gff_idx, res_id);
+
+    return 0;
+}
+
+static int lua_gpl_execute(lua_State *L) {
+    lua_Integer gff_idx = luaL_checkinteger (L, 1);
+    lua_Integer res_id = luaL_checkinteger (L, 2);
+    printf("lua_gettop(L) = %d\n", lua_gettop(L));
+    if (lua_gettop(L) > 2) {
+        lua_Integer file_id = luaL_checkinteger (L, 3);
+        dsl_execute_function(gff_idx, res_id, file_id);
+    } else {
+        dsl_execute(gff_idx, res_id);
+    }
+
+    return 0;
+}
+
+static int lua_dsl_change_region(lua_State *L) {
+    lua_Integer region_id = luaL_checkinteger (L, 1);
+    dsl_change_region(region_id);
+    return 0;
+}
+
 /* End Object Functions */
 
 //library to be registered
@@ -636,6 +689,7 @@ static const struct luaL_Reg lslib [] = {
       {"get_frame_height", lua_get_frame_height},
       {"get_frame_rgba", lua_get_frame_rgba},
       {"get_frame_rgba_with_palette", lua_get_frame_rgba_with_palette},
+      {"get_portrait", lua_get_portrait},
 
       // Sound Functions
       {"get_chunk_as_midi", lua_get_chunk_as_midi},
@@ -682,7 +736,10 @@ static const struct luaL_Reg lslib [] = {
 
       // MAS functions
       {"mas_print", lua_mas_print},
-      {"gpl_print", lua_gpl_print},
+      {"dsl_print", lua_gpl_print},
+      {"mas_execute", lua_mas_execute},
+      {"dsl_execute", lua_gpl_execute},
+      {"dsl_change_region", lua_dsl_change_region},
 
       // The End
       {NULL, NULL}  /* sentinel */

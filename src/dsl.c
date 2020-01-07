@@ -22,8 +22,6 @@
 #define PARTY  (0x7FFE)
 #define ALL    (0x7FFF)
 
-static int take_while = 0; // Debugging variable for forcing a while loop to be taken!
-
 /* MAS */
 
 void dsl_zero(void);
@@ -156,47 +154,16 @@ void dsl_long_plus_equal(void);
 void dsl_long_minus_equal(void);
 void dsl_get_range(void);
 
-typedef struct _name_t {
-    uint16_t addr; // Address of DSL routine
-    uint16_t file; // file # holding DSL routine
-    uint16_t name; // name header ? negative vale mean name/id
-    uint8_t global; // is global?  If not erase on region change!
-} name_t;
-
-typedef struct _name2_t {
-    uint16_t addr; // Address of DSL routine
-    uint16_t file; // file # holding DSL routine
-    int16_t name1; // name #1
-    int16_t name2; // name #2
-    uint8_t global; // is global?  if not erase on region change!
-} name2_t;
-
 #define DSL_MAX_COMMANDS (0x81)
 
-#define check_index_t uint16_t
-#define NULL_CHECK (0xFFFF)
-typedef struct _dsl_check_s {
-    union {
-        box_t box_check;
-        tile_t tile_check;
-        name_t name_check;
-        name2_t name2_check;
-    } data;
-    uint16_t next;
-} dsl_check_t;
-static dsl_check_t *check;
-static check_index_t gunused_checks;
-static check_index_t gtalk_to = NULL_CHECK;
-static check_index_t gAttack = NULL_CHECK;
 static check_index_t gPov = NULL_CHECK;
-static check_index_t gPickup = NULL_CHECK;
 static check_index_t gOther = NULL_CHECK;
 static check_index_t gOther1 = NULL_CHECK;
 static check_index_t gMoveTile = NULL_CHECK;
-static check_index_t gLook = NULL_CHECK;
-static check_index_t gUse = NULL_CHECK;
 static check_index_t gUseWith = NULL_CHECK;
 static check_index_t gMoveBox = NULL_CHECK;
+static int local_sub_ret = 1;
+static int is_paused = 0;
 
 static uint8_t exit_dsl = 1; // Tell use when the stop reading the DSL.
 
@@ -355,20 +322,12 @@ name2_t new_name2;
 typedef enum {DSL_ERROR = -1, DSL_OK = 1} dsl_status_t;
 dsl_status_t dsl_status = DSL_ERROR;
 
-uint16_t this_gpl_file = 0;
-uint16_t this_gpl_type = 0;
-
-enum {NOFILE, DSLFILE, MASFILE};
-
-#define GLOBAL_MAS (99)
-
 param_t param;
 /* End Globals */
 
 void do_dsl_command(uint8_t cmd) {
-    printf("command byte = 0x%x", cmd);
     fflush(stdout);
-    printf("(%s)\n", dsl_operations[cmd].name);
+    debug("command byte = 0x%x (%s)\n", cmd, dsl_operations[cmd].name);
     (*dsl_operations[cmd].func)();
 }
 
@@ -377,12 +336,16 @@ void mas_print(const int gff_file, const int res_id) {
     unsigned char *mas = (unsigned char*)gff_get_raw_bytes(gff_file, GT_MAS, res_id, &len);
     this_gpl_file = GLOBAL_MAS;
     this_gpl_type = MASFILE;
+    if (is_paused) {
+        error("dsl_print called while dsl execution is paused!  You must resume first!");
+        return;
+    }
     command_implemented = 1;
     exit_dsl = 0;
-    printf("------------------------Executing MAS/DSL\n");
+    debug("------------------------Executing MAS/DSL\n");
     push_data_ptr(mas);
     set_data_ptr(mas, mas + 1);
-    printf("command byte = 0x%x (%s)\n", *(mas), dsl_operations[mas[0]].name);
+    debug("command byte = 0x%x (%s)\n", *(mas), dsl_operations[mas[0]].name);
     (*dsl_operations[mas[0]].func)();
     while (!exit_dsl && command_implemented) {
         command_implemented = 1;
@@ -390,29 +353,138 @@ void mas_print(const int gff_file, const int res_id) {
         do_dsl_command(command);
         if (exit_dsl) {
             exit_dsl = pop_data_ptr() == NULL;
-            printf("returing from subroutine.\n");
+            debug("returing from subroutine.\n");
         }
     }
     if (!command_implemented) {
-        printf("last command needs to be implemented!\n");
+        debug("last command needs to be implemented!\n");
     }
     pop_data_ptr();
-    printf("---------------------Ending Execution----------------------\n");
-    printf("%lu of %lu\n", get_data_ptr() - get_data_start_ptr(), len);
+    debug("---------------------Ending Execution----------------------\n");
+    debug("%lu of %lu\n", get_data_ptr() - get_data_start_ptr(), len);
     //if (len != (get_data_ptr() - get_data_start_ptr())) {exit(1);}
+}
+
+void mas_execute(const int gff_file, const int res_id) {
+    unsigned long len;
+    unsigned char *mas = (unsigned char*)gff_get_raw_bytes(gff_file, GT_MAS, res_id, &len);
+    this_gpl_file = GLOBAL_MAS;
+    this_gpl_type = MASFILE;
+    if (is_paused) {
+        error("dsl_print called while dsl execution is paused!  You must resume first!");
+        return;
+    }
+    command_implemented = 1;
+    exit_dsl = 0;
+    push_data_ptr(mas);
+    set_data_ptr(mas, mas + 1);
+    (*dsl_operations[mas[0]].func)();
+    while (!exit_dsl && command_implemented) {
+        command_implemented = 1;
+        uint8_t command = get_byte();
+        //do_dsl_command(command);
+        (*dsl_operations[command].func)();
+        if (exit_dsl) {
+            exit_dsl = (pop_data_ptr() == NULL);
+            if (!exit_dsl) {
+                debug("returning from subroutine.\n");
+            }
+        }
+        if (is_paused) {
+            debug("pausing execution until resumed.");
+            return;
+        }
+    }
+    if (!command_implemented) {
+        debug("last command needs to be implemented!\n");
+    }
+    pop_data_ptr();
+    debug("Returning from MAS %d\n", res_id);
+}
+
+void dsl_resume() {
+    while (!exit_dsl && command_implemented) {
+        command_implemented = 1;
+        uint8_t command = get_byte();
+        //do_dsl_command(command);
+        (*dsl_operations[command].func)();
+        if (exit_dsl) {
+            exit_dsl = (pop_data_ptr() == NULL);
+            if (!exit_dsl) {
+                debug("returning from subroutine.\n");
+            }
+        }
+        if (is_paused) {
+            debug("pausing execution until resumed.");
+            return;
+        }
+    }
+    if (!command_implemented) {
+        debug("last command needs to be implemented!\n");
+    }
+    pop_data_ptr();
+    //debug("Returning from MAS/DSL %d\n", res_id);
+}
+
+void dsl_execute(const int gff_file, const int res_id) {
+    dsl_print(gff_file, res_id);
+}
+
+void dsl_change_region(const int region_id) {
+    dsl_execute(DSLDATA_GFF_INDEX, region_id);
+}
+
+void dsl_execute_function(const int gff_file, const int res_id, const int function_addr) {
+    debug("***I need to execute function at addr %d\n", function_addr);
+    unsigned long len;
+    unsigned char *gpl = (unsigned char*)gff_get_raw_bytes(gff_file, GT_GPL, res_id, &len);
+    command_implemented = 1;
+    exit_dsl = 0;
+    debug("------------------------Executing DSL %d @ %d, len = %lu\n", res_id, function_addr, len);
+    //gpl += function_addr;
+    push_data_ptr(gpl);
+    set_data_ptr(gpl, gpl + function_addr);
+    debug("command byte = 0x%x (%s)\n", *(gpl), dsl_operations[gpl[0]].name);
+    (*dsl_operations[gpl[0]].func)();
+    //while ((get_data_ptr() - get_data_start_ptr()) < len && command_implemented) {
+    //for (int i = 0; i < 2; i++) {
+        while (!exit_dsl && command_implemented) {
+            command_implemented = 1;
+            uint8_t command = get_byte();
+            do_dsl_command(command);
+            if (exit_dsl) {
+                exit_dsl = pop_data_ptr() == NULL;
+                debug("returing from subroutine.\n");
+            }
+            if (is_paused) {
+                debug("pausing execution until resumed");
+                return;
+            }
+        }
+        if (!command_implemented) {
+            debug("last command needs to be implemented!\n");
+        }
+    //}
+    pop_data_ptr();
+    debug("---------------------Ending Execution----------------------\n");
+    debug("%lu of %lu\n", get_data_ptr() - get_data_start_ptr(), len);
 }
 
 void dsl_print(const int gff_file, const int res_id) {
     unsigned long len;
     unsigned char *gpl = (unsigned char*)gff_get_raw_bytes(gff_file, GT_GPL, res_id, &len);
+    if (is_paused) {
+        error("dsl_print called while dsl execution is paused!  You must resume first!");
+        return;
+    }
     this_gpl_file = GLOBAL_MAS;
     this_gpl_type = MASFILE;
     command_implemented = 1;
     exit_dsl = 0;
-    printf("------------------------Executing MAS/DSL\n");
+    debug("------------------------Executing MAS/DSL\n");
     push_data_ptr(gpl);
     set_data_ptr(gpl, gpl + 1);
-    printf("command byte = 0x%x (%s)\n", *(gpl), dsl_operations[gpl[0]].name);
+    debug("command byte = 0x%x (%s)\n", *(gpl), dsl_operations[gpl[0]].name);
     (*dsl_operations[gpl[0]].func)();
     int i = 0;
     while ((get_data_ptr() - get_data_start_ptr()) < len && command_implemented) {
@@ -423,34 +495,22 @@ void dsl_print(const int gff_file, const int res_id) {
             do_dsl_command(command);
             if (exit_dsl) {
                 exit_dsl = pop_data_ptr() == NULL;
-                printf("returing from subroutine.\n");
+                debug("returing from subroutine.\n");
+            }
+            if (is_paused) {
+                debug("pausing execution until resumed.");
+                return;
             }
         }
         if (!command_implemented) {
-            printf("last command needs to be implemented!\n");
+            debug("last command needs to be implemented!\n");
         }
-        printf("End of %dth exit_dsl, continuing on...\n", i++);
+        debug("End of %dth exit_dsl, continuing on...\n", i++);
         exit_dsl = 0;
     }
     pop_data_ptr();
-    printf("---------------------Ending Execution----------------------\n");
-    printf("%lu of %lu\n", get_data_ptr() - get_data_start_ptr(), len);
-}
-
-static void add_save_orders(int16_t los_order, name_t name, int16_t range, int ordertype) {
-    if (name.name < 0) {
-        printf("add_save_orders (with name < 0) not implemented\n");
-        command_implemented = 0;
-    }
-}
-
-static void set_any_order(name_t *name, int16_t to, int16_t los_order, int16_t range) {
-    printf("set_any_order: lua callback needed: Get all objects with 'name' and set then to to with los_order and in range\n");
-}
-
-void set_los_order(int16_t los_order, name_t name, int16_t range) {
-    add_save_orders(los_order, name, range, DSL_LOS_ORDER);
-    set_any_order(&name, DSL_LOS_ORDER, los_order, range);
+    debug("---------------------Ending Execution----------------------\n");
+    debug("%lu of %lu\n", get_data_ptr() - get_data_start_ptr(), len);
 }
 
 /* SCMD */
@@ -458,7 +518,7 @@ void set_los_order(int16_t los_order, name_t name, int16_t range) {
 static scmd_t* get_script(unsigned char* scmd_entry, const int index) {
     if (scmd_entry == NULL) { return NULL; }
     if (index < 0 || index >= SCMD_MAX_SIZE) {
-        fprintf(stderr, "index for get_script is out of bounds!(%d)\n", index);
+        error("index for get_script is out of bounds!(%d)\n", index);
         return NULL;
     }
     scmd_t *scmds = (scmd_t*)(scmd_entry + (SCMD_MAX_SIZE * 2));
@@ -498,7 +558,7 @@ scmd_t* dsl_scmd_get(const int gff_file, const int res_id, const int index) {
 int dsl_scmd_is_default(const scmd_t *scmd, const int scmd_index) {
     if (scmd == NULL) { return 0; }
     if (scmd_index < 0 || scmd_index >= SCMD_MAX_SIZE) {
-        fprintf(stderr, "index for get_script is out of bounds!(%d)\n", scmd_index);
+        error("index for get_script is out of bounds!(%d)\n", scmd_index);
         return 0;
     }
     uint16_t scmd_idx = *((uint16_t*)(((unsigned char *)scmd) + scmd_index));
@@ -530,38 +590,6 @@ void dsl_scmd_print(int gff_file, int res_id) {
 }
 /* END SCMD */
 
-/*
-static int load_dsl(uint16_t filenum, int filetype) {
-    unsigned long len;
-    char *data = gff_get_raw_bytes(DSLDATA_GFF_INDEX, 
-        (filetype == DSLFILE) ? GT_GPL : GT_MAS,
-        filenum, &len);
-    if (!data) { return 0; }
-    clear_local_vars();
-    push_data_ptr((unsigned char*) data);
-    return 1;
-}
-
-static void local_sub(uint16_t address) {
-    unsigned char *data_start = get_data_start_ptr();
-    set_data_ptr(data_start, data_start + address);
-}
-
-static void global_sub(uint16_t filenum, uint16_t address, int filetype) {
-    if (exit_dsl == 1) { return; }
-    dsl_status = DSL_OK;
-
-    if (load_dsl(filenum, filetype) == 0) {
-        fprintf(stderr, "Unable to load region #%d\n", filenum);
-        exit(1);
-    }
-    if (!exit_dsl) {
-        local_sub(address);
-    }
-    printf("global_sub: jump to file #%d at address %d\n", filenum, address);
-}
-*/
-
 static int fromgpl = 0;
 #define FLEE       (1)
 #define ATTACK     (2)
@@ -581,56 +609,56 @@ static int fromgpl = 0;
 
 static void set_the_orders(int16_t header, int16_t order, int16_t data1, int16_t data2, int send) {
     if (order == GOXY && (!data1) && (!data2)) {
-        printf("set_the_order: ERROR sending to (0, 0)!  Going on for now since we are debugging...\n");
+        error("set_the_order: ERROR sending to (0, 0)!  Going on for now since we are debugging...\n");
     }
     switch(order) {
         case FLEE:
-            printf("set_the_order: FLEE (need to call to lua.)\n");
+            warn("set_the_order: FLEE (need to call to lua.)\n");
             break;
         case ATTACK:
-            printf("set_the_order: ATTACK (need to call to lua.)\n");
+            warn("set_the_order: ATTACK (need to call to lua.)\n");
             break;
         case COVER:
-            printf("set_the_order: COVER (need to call to lua.)\n");
+            warn("set_the_order: COVER (need to call to lua.)\n");
             break;
         case BERSERK:
-            printf("set_the_order: BERSERK (need to call to lua.)\n");
+            warn("set_the_order: BERSERK (need to call to lua.)\n");
             break;
         case NONCOMBAT:
-            printf("set_the_order: NONCOMBAT ???\n");
+            warn("set_the_order: NONCOMBAT ???\n");
             break;
         case COMBAT:
-            printf("set_the_order: COMBAT ???\n");
+            warn("set_the_order: COMBAT ???\n");
             break;
         case FETCH:
-            printf("set_the_order: FETCH item #%d (need to call to lua.)\n", data1);
+            warn("set_the_order: FETCH item #%d (need to call to lua.)\n", data1);
             break;
         case FOLLOW:
-            printf("set_the_order: FOLLOW character #%d (need to call to lua.)\n", data1);
+            warn("set_the_order: FOLLOW character #%d (need to call to lua.)\n", data1);
             break;
         case GIVE:
-            printf("set_the_order: GIVE quantity: %d, item #%d (need to call to lua.)\n", data1, data2);
+            warn("set_the_order: GIVE quantity: %d, item #%d (need to call to lua.)\n", data1, data2);
             break;
         case GO_OBJECT:
-            printf("set_the_order: GO_OBJECT object #%d (need to call to lua.)\n", data1);
+            warn("set_the_order: GO_OBJECT object #%d (need to call to lua.)\n", data1);
             break;
         case GOXY:
-            printf("set_the_order: GO_XY (%d, %d) (need to call to lua.)\n", data1, data2);
+            warn("set_the_order: GO_XY (%d, %d) (need to call to lua.)\n", data1, data2);
             break;
         case TAKE:
-            printf("set_the_order: TAKE quantity: %d, item #%d (need to call to lua.)\n", data1, data2);
+            warn("set_the_order: TAKE quantity: %d, item #%d (need to call to lua.)\n", data1, data2);
             break;
         case WAIT:
-            printf("set_the_order: WAIT (need to call to lua.)\n");
+            warn("set_the_order: WAIT (need to call to lua.)\n");
             break;
         case HUNT:
-            printf("set_the_order: HUNT (need to call to lua.)\n");
+            warn("set_the_order: HUNT (need to call to lua.)\n");
             break;
         case GO_ATTACK:
-            printf("set_the_order: GO_ATTACK (need to call to lua.)\n");
+            warn("set_the_order: GO_ATTACK (need to call to lua.)\n");
             break;
         default:
-            printf("Unknown order: %d\n", order);
+            error("Unknown order: %d\n", order);
             command_implemented = 0;
         break;
     }
@@ -640,18 +668,6 @@ static void set_orders(int16_t header, int16_t order, int16_t data1, int16_t dat
     set_the_orders(header, order, data1, data2, 1);
 }
 
-void set_new_order(name_t name) {
-    if (!name.file) {
-        if (name.name < 0) {
-            printf("set_new_order name < 0 not implemented!\n");
-            command_implemented = 0;
-        }
-    } else {
-        add_save_orders(0, name, 0, DSL_ORDER);
-    }
-    set_any_order(&name, DSL_ORDER, 0, 0);
-}
-
 static int8_t comparePtr = 0;
 #define MAX_COMPAREDEPTH (8)
 int8_t compared[MAX_COMPAREDEPTH + 1];
@@ -659,27 +675,22 @@ int32_t *compareval = NULL;
 
 static void initialize_dsl_stack() {
     ifptr = 0;
-    gunused_checks = 0;
-    gGstringvar = (dsl_string_t*) malloc(GSTRINGVARSIZE);
-    memset(gGstringvar, 0, GSTRINGVARSIZE);
-    gLstringvar = (dsl_string_t*) malloc(LSTRINGVARSIZE);
-    memset(gLstringvar, 0, LSTRINGVARSIZE);
+    dsl_global_strings = (dsl_string_t*) malloc(GSTRINGVARSIZE);
+    memset(dsl_global_strings, 0, GSTRINGVARSIZE);
+    dsl_local_strings = (dsl_string_t*) malloc(LSTRINGVARSIZE);
+    memset(dsl_local_strings, 0, LSTRINGVARSIZE);
     gTextstring = (uint8_t*)malloc(TEXTSTRINGSIZE);
 }
 
-#define DSL_CHECKS (200)
 void dsl_init() {
-    printf("Initalizing DSL.\n");
+    info("Initalizing DSL.\n");
     initialize_dsl_stack();
     dsl_init_vars();
-    check = (dsl_check_t*) malloc(sizeof(dsl_check_t) * DSL_CHECKS);
-    memset(check, 0x0, sizeof(dsl_check_t) * DSL_CHECKS);
+    dsl_object_init();
     compareval = malloc(sizeof(int32_t) * MAX_COMPAREDEPTH);
     memset(compareval, 0x0, sizeof(int32_t) * MAX_COMPAREDEPTH);
-    for (int i = 0; i < DSL_CHECKS; i++) {
-        check[i].next = i + 1;
-    }
-    check[DSL_CHECKS - 1].next = NULL_CHECK;
+    info("Running Master DSL #99.\n");
+    mas_execute(DSLDATA_GFF_INDEX, 99);
 }
 
 
@@ -710,97 +721,6 @@ void get_parameters(int16_t amt) {
     }
 }
 
-static check_index_t get_check_node() {
-    check_index_t node_index;
-    if (gunused_checks == NULL_CHECK) {
-        return NULL_CHECK;
-    }
-    node_index = gunused_checks;
-    gunused_checks = check[node_index].next;
-    check[node_index].next = NULL_CHECK;
-    return node_index;
-}
-
-static void insert_check(check_index_t *cindex) {
-    check_index_t new_head, old_head;
-    if (*cindex == NULL_CHECK) {
-        *cindex = get_check_node();
-        return;
-    }
-    old_head = *cindex;
-    new_head = get_check_node();
-    if (new_head == NULL_CHECK) {
-        return;
-    }
-    check[new_head].next = old_head;
-    *cindex = new_head;
-}
-
-static void generic_name_check(check_index_t *cindex, name_t newname) {
-    while ((*cindex != NULL_CHECK) && (check[*cindex].data.name_check.name < new_name.name)) {
-        generic_name_check(&check[*cindex].next, new_name);
-        return;
-    }
-    if ((*cindex == NULL_CHECK) || (check[*cindex].data.name_check.name != new_name.name)) {
-        insert_check(cindex);
-    }
-    if ((*cindex == NULL_CHECK)) { return; }
-    check[*cindex].data.name_check = newname;
-}
-
-static void use_with_check(check_index_t *cindex, name2_t name) {
-    while ((*cindex != NULL_CHECK) && (check[*cindex].data.name2_check.name1 < name.name1 )) {
-        use_with_check(&check[*cindex].next, name);
-        return;
-    }
-    while ((*cindex != NULL_CHECK) && (check[*cindex].data.name2_check.name2 < name.name2 )) {
-        use_with_check(&check[*cindex].next, name);
-        return;
-    }
-    insert_check(cindex);
-    if (*cindex == NULL_CHECK) {
-        return;
-    }
-    check[*cindex].data.name2_check = name;
-}
-
-static void generic_box_check(check_index_t *cindex, box_t box) {
-    while ((*cindex != NULL_CHECK) && (check[*cindex].data.box_check.x < box.x)) {
-        generic_box_check(&check[*cindex].next, box);
-        return;
-    }
-    while ((*cindex != NULL_CHECK) && (check[*cindex].data.box_check.y < box.y)) {
-        generic_box_check(&check[*cindex].next, box);
-        return;
-    }
-    if ((*cindex == NULL_CHECK) || (check[*cindex].data.box_check.x != box.x) || (check[*cindex].data.box_check.y !=
-        box.y)) {
-        insert_check(cindex);
-    }
-    if (*cindex == NULL_CHECK) {
-        return;
-    }
-    check[*cindex].data.box_check = box;
-}
-
-static void generic_tile_check(check_index_t *cindex, tile_t tile) {
-    while ((*cindex != NULL_CHECK) && (check[*cindex].data.tile_check.x < tile.x)) {
-        generic_tile_check(&check[*cindex].next, tile);
-        return;
-    }
-    while ((*cindex != NULL_CHECK) && (check[*cindex].data.tile_check.y < tile.y)) {
-        generic_tile_check(&check[*cindex].next, tile);
-        return;
-    }
-    if ((*cindex == NULL_CHECK) || (check[*cindex].data.tile_check.x != tile.x)
-        || (check[*cindex].data.tile_check.y != tile.y)) {
-        insert_check(cindex);
-    }
-    if (*cindex == NULL_CHECK) {
-        return;
-    }
-    check[*cindex].data.tile_check = tile;
-}
 
 static box_t get_box(param_t *p) {
     box_t ret;
@@ -828,41 +748,9 @@ static tile_t get_tile(param_t *p) {
     return ret;
 }
 
-/* All those commands... */
-static void global_addr_name(param_t *par) {
-    new_name.addr = par->val[0];
-    new_name.file = par->val[1];
-    new_name.name = par->val[2];
-    new_name.global = 0;
-
-    if (this_gpl_file == GLOBAL_MAS) {
-        if (this_gpl_type == MASFILE) {
-            //printf("GLOBAL!!!!!!!!!!!!!\n");
-            new_name.global = 1;
-        }
-    }
-}
-
-static void name_name_global_addr(param_t *par) {
-    new_name2.name1 = par->val[0];
-    new_name2.name2 = par->val[1];
-    new_name2.addr = par->val[2];
-    new_name2.file = par->val[3];
-    new_name2.global = 0;
-
-    if (this_gpl_file == GLOBAL_MAS) {
-        if (this_gpl_type == MASFILE) {
-            //printf("GLOBAL!!!!!!!!!!!!!\n");
-            new_name2.global = 1;
-        }
-    }
-}
-
 void dsl_in_los_check(void) {
     get_parameters(4);
     global_addr_name(&param);
-    printf("LOS Check ignored: addr = %d, file = %d, name = %d, global = %d\n", new_name.addr,
-        new_name.file, new_name.name, new_name.global);
     set_los_order(DSL_IN_LOS, new_name, param.val[3]);
 }
 
@@ -912,7 +800,7 @@ void dsl_hunt(void) {
 }
 
 int32_t data_field(int16_t header, uint16_t fi) {
-    printf("I need to get the %dth field of object_header[%d]\n", fi, header);
+    warn("I need to get the %dth field of object_header[%d]\n", fi, header);
     return 1;
 }
 
@@ -948,17 +836,17 @@ int16_t match_header(int16_t *num, int16_t header) {
 }
 
 uint16_t real_x(int16_t ctrl) {
-    printf("Need to get the x coordinate of object %d\n", ctrl);
+    warn("Need to get the x coordinate of object %d\n", ctrl);
     return 0;
 }
 
 uint16_t real_y(int16_t ctrl) {
-    printf("Need to get the y coordinate of object %d\n", ctrl);
+    warn("Need to get the y coordinate of object %d\n", ctrl);
     return 0;
 }
 
 uint16_t real_z(int16_t ctrl) {
-    printf("Need to get the z coordinate of object %d\n", ctrl);
+    warn("Need to get the z coordinate of object %d\n", ctrl);
     return 0;
 }
 
@@ -978,38 +866,39 @@ void dsl_getxy(void) {
     get_xyz(read_number());
 }
 
-void dsl_string_copy(void) {
+void dsl_string_copy(void) { // WORKY
     get_parameters(2);
-    printf("string in MAS = %s\n", (char*)param.ptr[1]);
+    // The first parameter is usually either a local or global string.
     strcpy((char*)param.ptr[0], (char*)param.ptr[1]);
+    debug("copying '%s'\n", (char*)param.ptr[1])
 }
 
 void do_damage(int is_percent) {
     get_parameters(2);
     switch (param.val[0]) {
         case ALL:
-            fprintf(stderr, "illegal parameter ALL to do_damage!\n");
+            error("illegal parameter ALL to do_damage!\n");
             exit(1);
             break;
         case PARTY:
             if (is_percent) {
-                printf("need to do <kill-damage> of %d%% to all party members\n", param.val[1]);
+                warn("need to do <kill-damage> of %d%% to all party members\n", param.val[1]);
             } else {
-                printf("need to do <kill-damage> of amt %d to all party members\n", param.val[1]);
+                warn("need to do <kill-damage> of amt %d to all party members\n", param.val[1]);
             }
             break;
         default:
             if (param.val[0] >= 0 ) {
                 if (is_percent) {
-                    printf("need to do <kill-damage> of %d%% to %d.\n", param.val[1], param.val[0]);
+                    warn("need to do <kill-damage> of %d%% to %d.\n", param.val[1], param.val[0]);
                 } else {
-                    printf("need to do <kill-damage> of amt %d to %d.\n", param.val[1], param.val[0]);
+                    warn("need to do <kill-damage> of amt %d to %d.\n", param.val[1], param.val[0]);
                 }
             } else {
                 if (is_percent) {
-                    printf("need to do <kill-damage> of %d%% to all objects with id %d.\n", param.val[1], param.val[0]);
+                    warn("need to do <kill-damage> of %d%% to all objects with id %d.\n", param.val[1], param.val[0]);
                 } else {
-                    printf("need to do <kill-damage> of amt %d to all objects with id %d.\n", param.val[1], param.val[0]);
+                    warn("need to do <kill-damage> of amt %d to all objects with id %d.\n", param.val[1], param.val[0]);
                 }
             }
             break;
@@ -1022,7 +911,7 @@ void dsl_p_damage(void) {
 
 void dsl_changemoney(void) {
     int32_t amt = read_number();
-    printf("The get %d monies.\n", amt);
+    warn("The get %d monies.\n", amt);
 }
 
 void dsl_setvar(void) {
@@ -1034,7 +923,7 @@ void dsl_toggle_accum(void) {
 }
 
 int16_t fgetstatus(int16_t id) {
-    printf("I need to return the character global status of %d\n", id);
+    warn("I need to return the character global status of %d\n", id);
     return 1;
 }
 
@@ -1043,7 +932,7 @@ void dsl_getstatus(void) {
 }
 
 uint8_t los(int16_t obj, int16_t obj1, uint8_t range) {
-    printf("I need to return if there is los from %d to %d is < %d\n", obj, obj1, range);
+    warn("I need to return if there is los from %d to %d is < %d\n", obj, obj1, range);
     return 1;
 }
 
@@ -1062,7 +951,26 @@ void dsl_jump(void) {
 }
 
 void local_sub(uint16_t offset) {
-    printf("local_sub: I need to jump to offset %d of this GPL!\n", offset);
+    warn("local_sub: I need to jump to offset %d of this GPL!\n", offset);
+    
+    push_data_ptr(get_data_start_ptr());
+    set_data_ptr(get_data_start_ptr(), get_data_start_ptr() + offset);
+    local_sub_ret = 0;
+    while (!local_sub_ret && command_implemented) {
+        command_implemented = 1;
+        uint8_t command = get_byte();
+        do_dsl_command(command);
+        //(*dsl_operations[command].func)();
+        if (is_paused) {
+            debug("pausing until resumed.\n");
+            return;
+        }
+    }
+    if (!command_implemented) {
+        debug("last command needs to be implemented!\n");
+    }
+    pop_data_ptr();
+    debug("Returning from local_sub\n");
 }
 
 void dsl_local_sub(void) {
@@ -1071,24 +979,26 @@ void dsl_local_sub(void) {
 
 void dsl_global_sub(void) {
     get_parameters(2);
-//    global_sub(param.val[1], param.val[0], DSLFILE);
-    printf("global subs temporarly disabled.\n");
+    global_sub(param.val[1], param.val[0], DSLFILE);
+    //printf("global subs temporarly disabled.\n");
 }
 
 void dsl_local_ret(void) {
-    printf("dsl_local_ret: need to return from local subroutine.\n");
+    warn("dsl_local_ret: need to return from local subroutine.\n");
+    local_sub_ret = 1;
 }
 
 void dsl_load_variable(void) {
     dsl_load_accum();
     load_variable();
+    debug("end of dsl load variable.\n");
 }
 
 void dsl_compare(void) {
     dsl_load_accum();
     comparePtr++;
     if (comparePtr >= MAX_COMPAREDEPTH) {
-        fprintf(stderr, "MAX COMPARE DEPTH!\n");
+        error("MAX COMPARE DEPTH!\n");
         exit(1);
     }
     compared[comparePtr] = NO;
@@ -1097,10 +1007,7 @@ void dsl_compare(void) {
 
 void dsl_load_accum(void) {
     set_accumulator(read_number());
-}
-
-static void global_ret() {
-    printf("I need to return from this global function/subroutine!\n");
+    debug("accum = %d\n", get_accumulator());
 }
 
 void dsl_global_ret(void) {
@@ -1108,7 +1015,7 @@ void dsl_global_ret(void) {
 }
 
 uint8_t adj_check(int16_t obj1, int16_t obj2) {
-    printf("I need to return if obj1 and obj2 are adjacent!\n");
+    warn("I need to return if obj1 and obj2 are adjacent!\n");
     return 1;
 }
 
@@ -1130,7 +1037,7 @@ void dsl_notinloscheck(void) {
 }
 
 static void clear_los_order(int16_t header_num) {
-    printf("clear_los_order: need to clear #%d\n", header_num);
+    warn("clear_los_order: need to clear #%d\n", header_num);
 }
 
 void dsl_clear_los(void) {
@@ -1156,9 +1063,9 @@ void dsl_bitsnoop(void) {
 
 void award(int16_t ctrl, int32_t exp) {
     if (ctrl == PARTY) {
-        printf(" I need to award %d exp to the party!\n", exp);
+        warn(" I need to award %d exp to the party!\n", exp);
     }
-    printf("I need to evaluate the award functionality...\n");
+    warn("I need to evaluate the award functionality...\n");
 }
 
 void dsl_award(void) {
@@ -1186,13 +1093,13 @@ void dsl_source_trace(void) {
 
 void dsl_shop(void) {
     int16_t shop_id = read_number();
-    printf("I need to open a shop with id: %d\n", shop_id);
+    warn("I need to open a shop with id: %d\n", shop_id);
 }
 
 void dsl_clone(void) {
     get_parameters(6);
     for (int i = 0; i < 6; i++) {
-        printf("param.val[%d] = %d\n", i, param.val[i]);
+        warn("param.val[%d] = %d\n", i, param.val[i]);
     }
     int16_t header_num = param.val[0];
     int16_t qty = param.val[1];
@@ -1200,7 +1107,7 @@ void dsl_clone(void) {
     int16_t y = param.val[3];
     uint8_t priority = param.val[4];
     uint8_t placement = param.val[5];
-    printf("dsl_clone: must create %d of %d objects at (%d, %d) with priority = %d, placement = %d\n",
+    warn("dsl_clone: must create %d of %d objects at (%d, %d) with priority = %d, placement = %d\n",
         header_num, qty, x, y, priority, placement);
     //command_implemented = 0;
 }
@@ -1212,7 +1119,7 @@ void dsl_default(void) {
 void dsl_ifis(void) {
     get_parameters(2);
     if ((int32_t) compareval[comparePtr] != (int32_t)param.val[0]) {
-        printf("dsl_ifis: taking ifis.\n");
+        warn("dsl_ifis: taking ifis.\n");
         move_dsl_ptr(param.val[1]);
     } else {
         compared[comparePtr] = YES;
@@ -1238,7 +1145,7 @@ void dsl_continue(void) {
     narrate_open(NAR_ADD_MENU, (char*) "Press Continue", 0);
     narrate_open(NAR_ADD_MENU, (char*) "Continue", 0);
     narrate_open(NAR_SHOW_MENU, NULL, 0);
-    printf("dsl_continue: Now I need to wait for the selection.\n");
+    warn("dsl_continue: Now I need to wait for the selection.\n");
 }
 
 void dsl_log(void) {
@@ -1254,7 +1161,7 @@ void dsl_source_line_num(void) {
 }
 
 uint8_t drop(int16_t qty, int16_t item, int16_t name) {
-    printf("%d needs to drop %d of %d\n", name, item, qty);
+    warn("%d needs to drop %d of %d\n", name, item, qty);
     return 1;
 }
 
@@ -1262,7 +1169,7 @@ void dsl_drop(void) {
     get_parameters(3);
     switch(param.val[2]) {
         case PARTY:
-            printf("All party members need to drop %d of %d\n", param.val[0], param.val[1]);
+            warn("All party members need to drop %d of %d\n", param.val[0], param.val[1]);
             break;
         case ALL:
             break;
@@ -1334,16 +1241,16 @@ int32_t search() {
         }
     } while ( (object == PARTY) && (i != NULL_OBJECT));
     */
-    printf("I need to find object %d, i = %d, low_field = %d, high_field = %d\n",
+    warn("I need to find object %d, i = %d, low_field = %d, high_field = %d\n",
         object, i, low_field, high_field);
-    printf("Field parameters:");
+    warn("Field parameters:");
     for (int idx = 0; idx < depth; idx++) {
-        printf("%d ", field[idx]);
+        warn("%d ", field[idx]);
     }
-    printf("\n");
-    printf("search_for = %d\n", search_for);
+    warn("\n");
+    warn("search_for = %d\n", search_for);
 
-    printf("search command to be implemented later...\n");
+    warn("search command to be implemented later...\n");
     return answer;
 }
 
@@ -1352,8 +1259,12 @@ void dsl_search(void) {
 }
 
 int32_t get_party_char(int32_t num) {
-    printf("get_party_char: I need to return the party character!\n");
-    return 1;
+    /* WARNING: It is very import that you return the next part member.
+     * It is very common for this to be in a loop to add checks for each party member.
+     * If you don't iterate, then this turns into an infinite loop.
+     */
+    warn("get_party_char: I need to return the NEXT party character, returning 9999!\n");
+    return 9999;
 }
 
 void dsl_getparty(void) {
@@ -1363,7 +1274,7 @@ void dsl_getparty(void) {
 }
 
 void dsl_fight(void) {
-    printf("I need to enter fight mode!\n");
+    warn("I need to enter fight mode!\n");
     dsl_exit_dsl();
 }
 
@@ -1384,7 +1295,7 @@ uint8_t ask_yes_no() {
     narrate_open(NAR_ADD_MENU, (char*) "No", 0);
     narrate_open(NAR_ADD_MENU, NULL, 0);
 
-    printf("ask_yes_no: I need to get an answer from the user... Assuming Yes...\n");
+    warn("ask_yes_no: I need to get an answer from the user... Assuming Yes...\n");
 
     return YES;
 }
@@ -1396,17 +1307,17 @@ void dsl_getyn(void) {
 #define DSL_NEW_SLOT (-2)
 static int16_t give(int16_t qty, int16_t item, int16_t taker, int16_t giver, int16_t placement) {
     int16_t given = 0;
-    printf("I need to give %d of %d to %d from %d, into the place %d\n", qty, item, taker, giver, placement);
+    warn("I need to give %d of %d to %d from %d, into the place %d\n", qty, item, taker, giver, placement);
     return given;
 }
 
 static int16_t take(int16_t qty, int16_t item, int16_t giver, int16_t receiver) {
-    printf("I need to take %d of type %d from %d to %d\n", qty, item, giver, receiver);
+    warn("I need to take %d of type %d from %d to %d\n", qty, item, giver, receiver);
     return qty;
 }
 
 static int16_t grafted(int16_t global_idx, int16_t id) {
-    printf("I need to check if PC %d's item %d is grafted\n", global_idx, id);
+    warn("I need to check if PC %d's item %d is grafted\n", global_idx, id);
     return 0;
 }
 
@@ -1431,7 +1342,7 @@ void dsl_goxy(void) {
 }
 
 uint8_t read_orders(int16_t order) {
-    printf("I need to read order %d\n", order);
+    warn("I need to read order %d\n", order);
     return 1;
 }
 
@@ -1443,12 +1354,17 @@ void dsl_if(void) {
     get_parameters(1);
     ifptr++;
     if (ifptr > MAX_IFDEPTH) {
-        fprintf(stderr, "ERROR: to many nested if statements in DSL!!!\n");
+        error("ERROR: to many nested if statements in DSL!!!\n");
         exit(1);
     }
     ifstate[ifptr] = get_accumulator();
+    printf("get_accumulator = %d\n", get_accumulator());
+    //debug("get_accumulator = %d\n", get_accumulator());
     if (get_accumulator() == NO) {
+        //if (param.val[0] != 956) {
+        printf("moving to else statement @ %d!\n", param.val[0]);
         move_dsl_ptr(param.val[0]);
+        //}
         /*
         printf("************************************\n");
         for (int i = 0; i < 16; i++) {
@@ -1461,8 +1377,9 @@ void dsl_if(void) {
 
 void dsl_else(void) {
     get_parameters(1);
-    if (ifstate[ifptr] == 0) {
+    if (ifstate[ifptr] != 0) {
         // Don't execute the else if the IF part was taken.
+     //   printf("RENABLE THE ELSE JUMP!!!!!\n");
         move_dsl_ptr(param.val[0]);
     }
 }
@@ -1473,7 +1390,7 @@ void dsl_setrecord(void) {
 
 static int32_t id_to_header(int32_t header) {
     // guess: is this to find the actual object header?  I'm just return 1234 for now...
-    printf("id_to_header: guessing 1234\n");
+    warn("id_to_header: guessing 1234\n");
     return 1234;
 }
 void dsl_setother(void) {
@@ -1490,7 +1407,7 @@ void dsl_setother(void) {
 void dsl_input_string(void) {
     get_parameters(1);
     //if (param.ptr[0] != address of accumulator) {
-    printf("I need to ask for a string from the user.\n");
+    warn("I need to ask for a string from the user.\n");
     // save as dslstring!
     //}
 }
@@ -1529,7 +1446,7 @@ void trace_protect() {
         || (inst == LINENUM_TRACE)
         || (inst == LOCALSUB_TRACE)
         ) {
-        printf("*********NEED TO COMPLETE THE trace_protect FUNCTION!!!!\n");
+        warn("*********NEED TO COMPLETE THE trace_protect FUNCTION!!!!\n");
         command_implemented = 0;
         return;
     }
@@ -1555,17 +1472,18 @@ void display_menu() {
             narrate_open(NAR_ADD_MENU, menu, items + 1);
             items++;
         } else {
-            printf("Not available at this time: '%s'\n", menu);
+            warn("Not available at this time: '%s'\n", menu);
         }
         trace_protect();
     }
     get_byte();  // get rid of the mend...
-    printf("Now wait for user input.\n");
+    warn("Now wait for user input.\n");
     for (int i = 0; i < items; i++) {
-        printf("choice %d: goes to local subroutine %d\n", i, menu_functions[i]);
+        warn("choice %d: goes to local subroutine %d\n", i, menu_functions[i]);
     }
     //printf("Need to implement display_menu()\n");
     //command_implemented = 0;
+    is_paused = 1;
 }
 
 void dsl_menu(void) {
@@ -1574,7 +1492,7 @@ void dsl_menu(void) {
 
 void dsl_setthing(void) {
     get_parameters(2);
-    printf("I need move character %d's item of type %d\n", param.val[0], param.val[1]);
+    warn("I need move character %d's item of type %d\n", param.val[0], param.val[1]);
 }
 
 void dsl_local_sub_trace(void) {
@@ -1583,9 +1501,9 @@ void dsl_local_sub_trace(void) {
 
 void dsl_print_string(void) {
     get_parameters(2);
-    printf("param.ptr[1] = %p\n", param.ptr[1]);
+    warn("param.ptr[1] = %p\n", param.ptr[1]);
     narrate_open(NAR_SHOW_TEXT, (char *)param.ptr[1], param.val[0]);
-    printf("Now I need to wait for the dialog to close.\n");
+    warn("Now I need to wait for the dialog to close.\n");
 }
 
 void dsl_print_number(void) {
@@ -1619,9 +1537,9 @@ void dsl_statroll(void) {
     get_parameters(3);
     set_accumulator(0);
     if (param.val[0] != PARTY) {
-        printf("dsl_stat roll on %d\n", param.val[0]);
+        warn("dsl_stat roll on %d\n", param.val[0]);
     } else {
-        printf("dsl_stat roll on PARTY\n");
+        warn("dsl_stat roll on PARTY\n");
     }
 }
 
@@ -1657,21 +1575,21 @@ void dsl_take(void) {
 }
 
 void sound(uint16_t bvoc_id) {
-    printf("I need to play sample #%d\n", bvoc_id);
+    warn("I need to play sample #%d\n", bvoc_id);
 }
 
 void dsl_sound(void) {
-    printf("I need to send my sound effect to everyone logged in.\n");
+    warn("I need to send my sound effect to everyone logged in.\n");
     sound(read_number());
 }
 
 void dsl_tport(void) {
     get_parameters(5);
     if ((param.val[0] != PARTY) && (param.val[0] != IS_POV)) {
-        printf("I need to teleport everything to region %d at (%d, %d) priority: %d, onscreen %d\n",
+        warn("I need to teleport everything to region %d at (%d, %d) priority: %d, onscreen %d\n",
             param.val[1], param.val[2], param.val[3], param.val[4], param.val[5]);
     } else {
-        printf("I need to teleport party to region %d at (%d, %d) priority: %d, onscreen %d\n",
+        warn("I need to teleport party to region %d at (%d, %d) priority: %d, onscreen %d\n",
             param.val[1], param.val[2], param.val[3], param.val[4], param.val[5]);
     }
 }
@@ -1683,7 +1601,7 @@ void dsl_music(void) {
 void dsl_cmpend(void) {
     comparePtr--;
     if (comparePtr < 0) {
-        fprintf(stderr, "dsl_cmpend: ERROR: comparePtr < 0!\n");
+        error("dsl_cmpend: ERROR: comparePtr < 0!\n");
         exit(1);
     }
 }
@@ -1695,36 +1613,33 @@ void dsl_wait(void) {
 void dsl_while(void) {
     get_parameters(1);
     if (get_accumulator() == NO) {
-        printf("taking while loop...\n");
-        move_dsl_ptr(param.val[0]);
-    }
-    if (take_while) {
-        printf("dsl_while: debug: Taking while loop on second pass...\n");
-        take_while = 0;
+        //printf("exiting the while loop...\n");
         move_dsl_ptr(param.val[0]);
     }
 }
 
 void dsl_wend(void) {
-    take_while = 1; // TODO FIXME: take this out when done implementing!
+    //take_while = 1; // TODO FIXME: take this out when done implementing!
     move_dsl_ptr(read_number());
 }
 
 void dsl_attackcheck(void) {
     get_parameters(3);
     global_addr_name(&param);
-    generic_name_check(&gAttack, new_name);
+    //printf("dsl_attackcheck, addr = %d, file = %d, name = %d, global = %d\n",
+        //new_name.addr, new_name.file, new_name.name, new_name.global);
+    generic_name_check(ATTACK_CHECK_INDEX);
 }
 
 void dsl_lookcheck(void) {
     get_parameters(3);
     global_addr_name(&param);
-    generic_name_check(&gLook, new_name);
+    generic_name_check(LOOK_CHECK_INDEX);
 }
 
 void dsl_endif(void) {
     if (--ifptr < 0) {
-        fprintf(stderr, "ERROR: a negativly nested if statement in DSL.\n");
+        error("ERROR: a negativly nested if statement in DSL.\n");
         exit(1);
     }
 }
@@ -1750,22 +1665,23 @@ void dsl_door_boxcheck(void) {
 void dsl_pickup_itemcheck(void) {
     get_parameters(3);
     global_addr_name(&param);
-    generic_name_check(&gPickup, new_name);
+    generic_name_check(PICKUP_CHECK_INDEX);
 }
 
 void dsl_usecheck(void) {
     get_parameters(3);
     global_addr_name(&param);
-    generic_name_check(&gUse, new_name);
+    generic_name_check(USE_CHECK_INDEX);
 }
 
 void dsl_talktocheck(void) {
     get_parameters(3);
     global_addr_name(&param);
-    generic_name_check(&gtalk_to, new_name);
+    generic_name_check(TALK_TO_CHECK_INDEX);
 }
 
 void dsl_noorderscheck(void) {
+    warn("dsl_noorderscheck: ignoring this check, don't know what it does...\n");
     get_parameters(3);
     global_addr_name(&param);
     set_new_order(new_name);
@@ -1774,7 +1690,7 @@ void dsl_noorderscheck(void) {
 void dsl_usewithcheck(void) {
     get_parameters(4);
     name_name_global_addr(&param);
-    use_with_check(&gUseWith, new_name2);
+    use_with_check(&gUseWith);
 }
 
 void dsl_byte_plus_equal(void) {
@@ -1824,7 +1740,7 @@ void dsl_long_minus_equal(void) {
 }
 
 uint16_t range(int16_t obj0, int16_t obj1) {
-    printf("Must compute range from %d to %d\n", obj0, obj1);
+    warn("Must compute range from %d to %d\n", obj0, obj1);
     return 10;//Totally bogus
 }
 

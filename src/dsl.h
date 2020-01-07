@@ -2,9 +2,34 @@
 #ifndef DSL_H
 #define DSL_H
 
+#ifdef DEBUG
+#       define debug(fmt, ...) printf(("[%s:%d] %s: " fmt), __FILE__, __LINE__, __PRETTY_FUNCTION__, ##__VA_ARGS__);
+#else
+#       define debug(...)
+#endif
+
+#define info(fmt, ...) printf((fmt), ##__VA_ARGS__);
+#define warn(fmt, ...) printf(("[%s:%d] %s: " fmt), __FILE__, __LINE__, __PRETTY_FUNCTION__, ##__VA_ARGS__);
+#define error(fmt, ...) fprintf(stderr, ("[%s:%d] %s: " fmt), __FILE__, __LINE__, __PRETTY_FUNCTION__, ##__VA_ARGS__);
+
 #include "gff.h"
 #include "gfftypes.h"
 #include "dsl-scmd.h"
+
+typedef struct _name_t {
+    uint16_t addr; // Address of DSL routine
+    uint16_t file; // file # holding DSL routine
+    uint16_t name; // name header ? negative vale mean name/id
+    uint8_t global; // is global?  If not erase on region change!
+} name_t;
+
+typedef struct _name2_t {
+    uint16_t addr; // Address of DSL routine
+    uint16_t file; // file # holding DSL routine
+    int16_t name1; // name #1
+    int16_t name2; // name #2
+    uint8_t global; // is global?  if not erase on region change!
+} name2_t;
 
 typedef struct _box_t {
     uint16_t addr; // Addr of DSL routine in file
@@ -23,6 +48,18 @@ typedef struct _tile_t {
     uint16_t y;    // y coordinate of the tile
     uint8_t trip;  // Is this PC only, or can anyone trip the event?
 } tile_t;
+#define check_index_t uint16_t
+#define NULL_CHECK (0xFFFF)
+
+typedef struct _dsl_check_s {
+    union {
+        box_t box_check;
+        tile_t tile_check;
+        name_t name_check;
+        name2_t name2_check;
+    } data;
+    uint16_t next;
+} dsl_check_t;
 
 #define MAX_PARAMETERS (8)
 typedef struct _param_t {
@@ -40,6 +77,10 @@ int dsl_scmd_is_default(const scmd_t *scmd, const int scmd_index);
 
 void mas_print(const int gff_file, const int res_id);
 void dsl_print(const int gff_file, const int res_id);
+void mas_execute(const int gff_file, const int res_id);
+void dsl_execute(const int gff_file, const int res_id);
+void dsl_execute_function(const int gff_idx, const int res_id, const int file_id);
+void dsl_change_region(const int region_id);
 
 void do_dsl_command(uint8_t cmd);
 uint32_t dsl_request_impl(int16_t token, int16_t name,

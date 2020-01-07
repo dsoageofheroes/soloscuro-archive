@@ -3,6 +3,7 @@
 #include "gff-image.h"
 #include "gff.h"
 #include "gfftypes.h"
+#include "dsl.h"
 
 #define NUM_PALETTES (256)
 
@@ -411,6 +412,23 @@ unsigned char* get_frame_rgba_with_palette(int gff_index, int type_id, int res_i
         return ret_img;
     }
     return NULL;
+}
+
+unsigned char* get_portrait(unsigned char* bmp_table, unsigned int *width, unsigned int *height) {
+    unsigned char *ret = NULL;
+    unsigned int frame_offset = *((unsigned int*)(bmp_table + 6 ));
+    *width = *(unsigned short*)(bmp_table + frame_offset);
+    *height = *(unsigned short*)(bmp_table + frame_offset + 2);
+    char *frame_type = ((char*)(bmp_table + frame_offset + 5));
+    if (strncmp(frame_type, "PLNR", 4) == 0) {
+        error("get_portrait: PLNR is not supported!\n");
+    } else if (strncmp(frame_type, "PLAN", 4) == 0) {
+        error("get_portrait: PLAN is not supported!\n");
+    } else {
+        //unsigned char* ret_img = create_ds1_rgba(bmp_table, frame_offset + 4, width, height, cpal);
+        ret = create_ds1_rgba(bmp_table, frame_offset + 4, *width, *height, master_palette);
+    }
+    return ret;
 }
 
 int gff_get_number_of_palettes() {

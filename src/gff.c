@@ -99,7 +99,6 @@ void gff_init() {
 
     master_gff = -1;
     gff_image_init();
-    dsl_init();
 }
 
 static int is_gff_filename(const char *str) {
@@ -527,6 +526,7 @@ void get_gff_type_name(unsigned int gff_type, char *type) {
         case GT_PLYL: strcpy(type, "PLYL Data"); break;
         case GT_VPLY: strcpy(type, "VPLY Data"); break;
         case GT_SPIN: strcpy(type, "SPIN Data: The text field of a spell."); break;
+        case GT_PORT: strcpy(type, "PORT Data: The portraits for dialogs."); break;
         default: 
             sprintf(type, "UNKNOWN TYPE: '%c' '%c' '%c' '%c'",
                 (gff_type >> 0) & 0x00FF,

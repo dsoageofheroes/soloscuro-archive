@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include "dsl-scmd.h"
+#include "dsl-object.h"
 
 #define MAP_LOS     (0x80) // Runtime flag to determine if block is in sight.
 #define MAP_BLOCK   (0x40) // This tile is blocked (you can't move into it.)
@@ -101,50 +102,6 @@ enum {
     COMBAT_OBJECT = 2,
     MINI_OBJECT   = 5,
 };
-
-#define COMBAT_NAME_SIZE (18)
-
-typedef struct _ds1_combat_t {
-    int16_t hp; // At byte pos 0, confirmed
-    int16_t psi; // 2, confirmed
-    int16_t char_index; // 4, unconfirmed but looks right.
-    int16_t id;  // 6, yes, but is id *-1
-    int16_t ready_item_index; // 8, to be cleared.
-    int16_t weapon_index; // 10, to be cleared
-    int16_t pack_index;   // 12, to be cleared
-    uint8_t data_block[8]; // just to shift down 8 bytes.
-    uint8_t special_attack; // 22, looks probable.
-    uint8_t special_defense; // 23, looks probable.
-    int16_t icon; // doesn't look right
-    int8_t  ac;   // 26, confirmed
-    uint8_t move; // 27, confirmed
-    uint8_t status;
-    uint8_t allegiance;
-    uint8_t data;
-    int8_t  thac0; // 31, confirmed
-    uint8_t priority;
-    uint8_t flags;
-    uint8_t stats[6]; // 34, confirmed
-    //uint8_t direction;
-    // WARNING: This is actually 16, but we do 18 as a buffer.
-    char    name[COMBAT_NAME_SIZE]; // 40, confirmed
-} ds1_combat_t;
-
-typedef struct _ds1_item_t { // Not confirmed at all...
-    int16_t  id; // 0, confirmed (but is negative...)
-    uint16_t quantity; // ?
-    int16_t  next;  // ?
-    uint16_t value; // 6, look correct.
-    int16_t  pack_index;
-    int16_t  item_index;
-    int16_t  icon;
-    uint16_t charges;
-    uint16_t special;
-    uint8_t  priority;
-    int8_t   slot;
-    uint16_t name_index;
-    int8_t   adds;
-} ds1_item_t;
 
 // Types of Sol Oscuro objects
 enum {

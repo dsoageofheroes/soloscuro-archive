@@ -1,6 +1,8 @@
 #ifndef DSL_OBJECT_H
 #define DSL_OBJECT_H
 
+#include <stdint.h>
+
 #define DSL_OBJECT_ID 0
 #define DSL_OBJECT_QTY 1
 #define DSL_OBJECT_NEXT 2
@@ -99,5 +101,115 @@
 #define DSL_OBJECT_SIDES 95
 #define DSL_OBJECT_DICE 96
 #define DSL_OBJECT_ADDS 97
+
+#define COMBAT_NAME_SIZE (18)
+
+typedef struct _ds1_combat_t {
+    int16_t hp; // At byte pos 0, confirmed
+    int16_t psi; // 2, confirmed
+    int16_t char_index; // 4, unconfirmed but looks right.
+    int16_t id;  // 6, yes, but is id *-1
+    int16_t ready_item_index; // 8, to be cleared.
+    int16_t weapon_index; // 10, to be cleared
+    int16_t pack_index;   // 12, to be cleared
+    uint8_t data_block[8]; // just to shift down 8 bytes.
+    uint8_t special_attack; // 22, looks probable.
+    uint8_t special_defense; // 23, looks probable.
+    int16_t icon; // doesn't look right
+    int8_t  ac;   // 26, confirmed
+    uint8_t move; // 27, confirmed
+    uint8_t status;
+    uint8_t allegiance;
+    uint8_t data;
+    int8_t  thac0; // 31, confirmed
+    uint8_t priority;
+    uint8_t flags;
+    uint8_t stats[6]; // 34, confirmed
+    //uint8_t direction;
+    // WARNING: This is actually 16, but we do 18 as a buffer.
+    char    name[COMBAT_NAME_SIZE]; // 40, confirmed
+} ds1_combat_t;
+
+typedef struct _ds1_item_t { // Not confirmed at all...
+    int16_t  id; // 0, confirmed (but is negative...)
+    uint16_t quantity; // ?
+    int16_t  next;  // ?
+    uint16_t value; // 6, look correct.
+    int16_t  pack_index;
+    int16_t  item_index;
+    int16_t  icon;
+    uint16_t charges;
+    uint16_t special;
+    uint8_t  priority;
+    int8_t   slot;
+    uint16_t name_index;
+    int8_t   adds;
+} ds1_item_t;
+
+typedef struct _ds1_character_t {
+    uint32_t current_exp;
+    uint32_t high_exp;
+    uint16_t base_hp;
+    uint16_t high_hp;
+    uint16_t base_psi;
+    uint16_t id;
+    uint16_t legal_class;
+    uint8_t race;
+    uint8_t gender;
+    uint8_t alignment;
+    uint8_t stats[6];
+    uint8_t class[3];
+    uint8_t level[3];
+    uint8_t base_ac;
+    uint8_t base_move;
+    uint8_t magic_resistence;
+    uint8_t num_blows;
+    uint8_t num_attacks[3];
+    uint8_t num_dice[3];
+    uint8_t num_sides[3];
+    uint8_t num_adds[3];
+    uint8_t saving_throw[5];
+    uint8_t allegiance;
+    uint8_t size;
+    uint8_t spell_group;
+    uint8_t high_level[3];
+    uint16_t sound_fx;
+    uint16_t attack_sound;
+    uint8_t psi_group;
+    uint8_t pallete;
+} ds1_character_t;
+
+typedef struct _item1r_t {
+    uint8_t weapon;
+    uint8_t damage_type;
+    uint8_t wieght;
+    uint8_t base_hp;
+    uint8_t material;
+    uint8_t placement;
+    uint8_t range;
+    uint8_t num_attacks;
+    uint8_t sides;
+    uint8_t dice;
+    int8_t adds;
+    uint8_t flags;
+    uint16_t legal_class;
+    int8_t base_ac;
+} item1r_t;
+
+typedef struct _mini_t {
+    int16_t id;
+    int16_t next;
+    uint8_t priority;
+    char name[16];
+    uint8_t flags;
+    uint8_t data;
+} mini_t;
+
+typedef struct _item_name_t {
+    char name[25];
+} item_name_t;
+
+void dsl_object_init();
+void dsl_object_cleanup();
 
 #endif

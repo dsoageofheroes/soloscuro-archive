@@ -1,10 +1,14 @@
 #include "dsl-var.h"
-#include "dsl.h"
 #include "dsl-string.h"
 #include <string.h>
 
-static uint8_t gGflagvar[DSL_GFLAGVAR_SIZE];
-static uint8_t gLflagvar[DSL_LFLAGVAR_SIZE];
+/* externals first */
+uint16_t this_gpl_file = 0;
+uint16_t this_gpl_type = 0;
+
+/* Now static to file... */
+static uint8_t dsl_global_flags[DSL_GFLAGVAR_SIZE];
+static uint8_t dsl_local_flags[DSL_LFLAGVAR_SIZE];
 static uint8_t datatype;
 static uint16_t varnum;
 static int32_t accum; //, number;
@@ -13,9 +17,39 @@ static unsigned char* dsl_data_start;
 static int16_t temps16;
 static uint8_t bitmask[8] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80};
 static uint8_t bytemask[8] = {0xFE, 0xFD, 0xFB, 0xF7, 0xEF, 0xDF, 0xBF, 0x7F};
+static int16_t *dsl_global_nums = 0;
+static int16_t *dsl_local_nums = 0;
+static int32_t *dsl_global_bnums = 0;
+static int32_t *dsl_local_bnums = 0;
+static dsl_control_t control_table[MAX_OBJECT_PATH];
+static check_index_t gunused_checks;
+
+static dsl_check_t *check;
+lua_State *lua_state = NULL;
+
+// For Debugging
+const char* debug_index_names[] = {
+    "UNSUED CHECK",
+    "TALK CHECK",
+    "ATTACK CHECK",
+    "POV CHECK",
+    "PICKUP CHECK",
+    "OTHER CHECK",
+    "OTHER1 CHECK",
+    "MOVE TILE CHECK",
+    "LOOK CHECK",
+    "USE CHECK",
+    "USE WITH CHECK",
+    "MOVE BOX CHECK",
+};
 
 static void load_simple_variable(uint16_t type, uint16_t vnum, int32_t val);
 static int32_t read_complex(void);
+
+static dsl_check_t checks[MAX_CHECK_TYPES][MAX_DSL_CHECKS];
+static int checks_pos[MAX_CHECK_TYPES];
+static name_t new_name;
+static name2_t new_name2;
 
 typedef struct _dsl_state_t {
     unsigned char *dsl_data_start;
@@ -24,10 +58,6 @@ typedef struct _dsl_state_t {
 
 int32_t gBignum;
 int32_t *gBignumptr;
-int16_t *gGnumvar = 0;
-int16_t *gLnumvar = 0;
-int32_t *gGbignumvar = 0;
-int32_t *gLbignumvar = 0;
 #define MAX_DSL_STATES     (100)
 static int dsl_state_pos = -1;
 static dsl_state_t states[MAX_DSL_STATES];
@@ -85,17 +115,70 @@ static void pop_params() {
     }
 }
 
+/* All those commands... */
+void global_addr_name(param_t *par) {
+    new_name.addr = par->val[0];
+    new_name.file = par->val[1];
+    new_name.name = par->val[2];
+    new_name.global = 0;
+
+    if (this_gpl_file == GLOBAL_MAS) {
+        if (this_gpl_type == MASFILE) {
+            new_name.global = 1;
+        }
+    }
+}
+
+void name_name_global_addr(param_t *par) {
+    new_name2.name1 = par->val[0];
+    new_name2.name2 = par->val[1];
+    new_name2.addr = par->val[2];
+    new_name2.file = par->val[3];
+    new_name2.global = 0;
+    if (this_gpl_file == GLOBAL_MAS) {
+        if (this_gpl_type == MASFILE) {
+            //printf("GLOBAL!!!!!!!!!!!!!\n");
+            new_name2.global = 1;
+        }
+    }
+}
+
+void generic_name_check(int check_index) {
+    int cpos = checks_pos[check_index]; // Where in the list we are.
+    if (cpos > MAX_DSL_CHECKS) {
+        fprintf(stderr, "FATAL ERROR: Max checks reached! ci = %d\n", check_index);
+        exit(1);
+    }
+    checks[check_index][cpos].data.name_check = new_name;
+    checks[check_index][cpos].next = cpos + 1;
+    debug("%s check = {file = %d, addr = %d, name = %d, is_global = %d}\n",
+        debug_index_names[check_index], new_name.file, new_name.addr,
+        new_name.name, new_name.global);
+    checks_pos[check_index]++;
+}
+
+#define DSL_CHECKS (200)
 void dsl_init_vars() {
-    memset(gGflagvar, 0x00, DSL_GFLAGVAR_SIZE);
-    memset(gLflagvar, 0x00, DSL_LFLAGVAR_SIZE);
-    gGbignumvar = malloc(DSL_GBIGNUMVAR_SIZE * sizeof(int32_t));
-    memset(gGbignumvar, 0x00, DSL_GBIGNUMVAR_SIZE * sizeof(int32_t));
-    gGnumvar = malloc(DSL_GNUMVAR_SIZE);
-    memset(gGnumvar, 0x00, DSL_GNUMVAR_SIZE);
-    gLbignumvar = malloc(DSL_LBIGNUMVAR_SIZE * sizeof(int32_t));
-    memset(gLbignumvar, 0x00, DSL_LBIGNUMVAR_SIZE * sizeof(int32_t));
-    gLnumvar = malloc(DSL_LNUMVAR_SIZE);
-    memset(gLnumvar, 0x00, DSL_LNUMVAR_SIZE);
+    memset(dsl_global_flags, 0x00, DSL_GFLAGVAR_SIZE);
+    memset(dsl_local_flags, 0x00, DSL_LFLAGVAR_SIZE);
+    dsl_global_bnums = malloc(DSL_GBIGNUMVAR_SIZE * sizeof(int32_t));
+    memset(dsl_global_bnums, 0x00, DSL_GBIGNUMVAR_SIZE * sizeof(int32_t));
+    dsl_global_nums = malloc(DSL_GNUMVAR_SIZE);
+    memset(dsl_global_nums, 0x00, DSL_GNUMVAR_SIZE);
+    dsl_local_bnums = malloc(DSL_LBIGNUMVAR_SIZE * sizeof(int32_t));
+    memset(dsl_local_bnums, 0x00, DSL_LBIGNUMVAR_SIZE * sizeof(int32_t));
+    dsl_local_nums = malloc(DSL_LNUMVAR_SIZE);
+    memset(dsl_local_nums, 0x00, DSL_LNUMVAR_SIZE);
+    memset(checks, 0x00, sizeof(dsl_check_t) * MAX_CHECK_TYPES * MAX_DSL_CHECKS);
+    memset(checks_pos, 0x00, sizeof(int) * MAX_CHECK_TYPES);
+    memset(control_table, 0x00, sizeof(dsl_control_t) * MAX_OBJECT_PATH);
+    gunused_checks = 0;
+    check = (dsl_check_t*) malloc(sizeof(dsl_check_t) * DSL_CHECKS);
+    memset(check, 0x0, sizeof(dsl_check_t) * DSL_CHECKS);
+    for (int i = 0; i < DSL_CHECKS; i++) {
+        check[i].next = i + 1;
+    }
+    check[DSL_CHECKS - 1].next = NULL_CHECK;
 }
 
 void set_data_ptr(unsigned char *start, unsigned char *cpos) {
@@ -131,10 +214,11 @@ void push_data_ptr(unsigned char *data) {
     states[dsl_state_pos].dsl_data = dsl_data;
 
     dsl_state_pos++;
+    dsl_data_start = data;
 }
 
 void clear_local_vars() {
-    memset(gGflagvar, 0x0, DSL_GFLAGVAR_SIZE);
+    //memset(dsl_global_flags, 0x0, DSL_GFLAGVAR_SIZE);
 }
 
 unsigned char* pop_data_ptr() {
@@ -242,7 +326,6 @@ int32_t read_number() {
                     cval = accum;
                     break;
                 }
-                //case DSL_HI_RETVAL|0x80:
                 case DSL_IMMED_BIGNUM|0x80: {
                     cval = (int32_t)((int16_t)get_word()) * 655356L 
                          + (int32_t)((uint16_t)get_word());
@@ -308,7 +391,7 @@ int32_t read_number() {
                     break;
                 }
                 default: {
-                    printf(" UNKNOWN OP: %d\n", cop);
+                    printf(" UNKNOWN OP: 0x%x or 0x%x\n", cop&0x7F, cop);
                     command_implemented = 0;
                     break;
                 }
@@ -316,8 +399,8 @@ int32_t read_number() {
         }
         
         if (!found_operator) {
-            //printf("operator not found, opstack[%d] = 0x%x\n", paren_level, opstack[paren_level]);
             tval = accums[paren_level];
+            //printf("operator not found, opstack[%d] = 0x%x, tval = %d\n", paren_level, opstack[paren_level], tval);
             switch(opstack[paren_level]) {
                 case DSL_PLUS:   tval += cval; break;
                 case DSL_MINUS:  tval -= cval; break;
@@ -343,12 +426,13 @@ int32_t read_number() {
             }
             accums[paren_level] = tval;
             opstack[paren_level] = 0;
+            //printf("tval = %d, cval = %d\n", tval, cval);
         }
-        //printf("*************Need to put in a loop!*******************\n");
     } while (do_next || 
         (((next_op = preview_byte(0)) > OPERATOR_OFFSET && next_op <= OPERATOR_LAST)
             || (paren_level > 0 && next_op == DSL_HI_CLOSE_PAREN)));
     // We need to look if that above else was executed!
+    //printf("accums[0] = %d\n", accums[0]);
     return accums[0];
 }
 
@@ -444,6 +528,7 @@ void load_variable() {
         }
         load_simple_variable(datatype, varnum, accum);
     } else {
+        warn("------------NEED TO DEBUG WRITE COMPLEX VAR------------\n");
         write_complex_var(accum);
     }
 }
@@ -451,31 +536,39 @@ void load_variable() {
 static void load_simple_variable(uint16_t type, uint16_t vnum, int32_t val) {
     switch (type) {
         case DSL_GBIGNUM:
-            gGbignumvar[vnum] = (int32_t) val;
+            dsl_global_bnums[vnum] = (int32_t) val;
+            debug("dsl_global_bnums[%d] = %d\n", vnum, val);
             break;
         case DSL_LBIGNUM:
-            gLbignumvar[vnum] = (int32_t) val;
+            dsl_local_bnums[vnum] = (int32_t) val;
+            debug("dsl_local_bnums[%d] = %d\n", vnum, val);
             break;
         case DSL_GNUM:
-            gGnumvar[vnum] = (int16_t) val;
+            dsl_global_nums[vnum] = (int16_t) val;
+            debug("dsl_global_nums[%d] = %d\n", vnum, val);
             break;
         case DSL_LNUM:
-            gBignumptr = (int32_t*) ((int16_t *)&gLnumvar[temps16]);
-            gBignum = gLnumvar[temps16];
+            dsl_local_nums[vnum] = (int16_t) val;
+            debug("dsl_local_nums[%d] = %d\n", vnum, val);
             break;
         case DSL_GFLAG:
             if (val == 0) {
-                gGflagvar[vnum/8] &= bytemask[vnum%8];
+                dsl_global_flags[vnum/8] &= bytemask[vnum%8];
             } else {
-                gGflagvar[vnum/8] |= bitmask[vnum%8];
+                dsl_global_flags[vnum/8] |= bitmask[vnum%8];
             }
+            debug("dsl_global_flags bit %d = %d\n", vnum, val);
             break;
         case DSL_LFLAG:
-            gBignumptr = (int32_t*) ((int8_t*) &gLflagvar[temps16/8]);
-            gBignum = gLflagvar[temps16/8] & bitmask[temps16%8];
+            if (val == 0) {
+                dsl_local_flags[vnum/8] &= bytemask[vnum%8];
+            } else {
+                dsl_local_flags[vnum/8] |= bitmask[vnum%8];
+            }
+            debug("dsl_local_flags bit %d = %d\n", vnum, val);
             break;
         default:
-            fprintf(stderr, "ERROR: Unknown simple variable type: 0x%x!\n", type);
+            error("ERROR: Unknown simple variable type: 0x%x!\n", type);
             command_implemented = 0;
             break;
     }
@@ -492,37 +585,38 @@ void read_simple_num_var() {
 
     switch(gBignum) {
         case DSL_GFLAG: {
-            gBignumptr = (int32_t*)((int8_t*)&gGflagvar[temps16/8]);
-            gBignum = gGflagvar[temps16/8] & bitmask[temps16%8];
+            gBignumptr = (int32_t*)((int8_t*)&dsl_global_flags[temps16/8]);
+            gBignum = dsl_global_flags[temps16/8] & bitmask[temps16%8];
             if (gBignum > 0) { gBignum = 0; }
             break;
         }
         case DSL_LFLAG: {
-            gBignumptr = (int32_t*)((int8_t*)&gLflagvar[temps16/8]);
-            gBignum = gLflagvar[temps16/8] & bitmask[temps16/8];
+            //printf("getting LFLAG @ %d\n", temps16);
+            gBignumptr = (int32_t*)((int8_t*)&dsl_local_flags[temps16/8]);
+            gBignum = dsl_local_flags[temps16/8] & bitmask[temps16/8];
             if (gBignum > 0) {
                 gBignum = 1;
             }
             break;
         }
         case DSL_GNUM: {
-            gBignumptr = (int32_t*) ((int16_t *)&gGnumvar[temps16]);
-            gBignum = gGnumvar[temps16];
+            gBignumptr = (int32_t*) ((int16_t *)&dsl_global_nums[temps16]);
+            gBignum = dsl_global_nums[temps16];
             break;
         }
         case DSL_LNUM: {
-            gBignumptr = (int32_t*) ((int16_t *)&gLnumvar[temps16]);
-            gBignum = gLnumvar[temps16];
+            gBignumptr = (int32_t*) ((int16_t *)&dsl_local_nums[temps16]);
+            gBignum = dsl_local_nums[temps16];
             break;
         }
         case DSL_GBIGNUM: {
-            gBignumptr = &gGbignumvar[temps16];
-            gBignum = gGbignumvar[temps16];
+            gBignumptr = &dsl_global_bnums[temps16];
+            gBignum = dsl_global_bnums[temps16];
             break;
         }
         case DSL_LBIGNUM: {
-            gBignumptr = &gLbignumvar[temps16];
-            gBignum = gLbignumvar[temps16];
+            gBignumptr = &dsl_local_bnums[temps16];
+            gBignum = dsl_local_bnums[temps16];
             break;
         }
         case DSL_GNAME: {
@@ -540,11 +634,11 @@ void read_simple_num_var() {
             break;
         }
         case DSL_GSTRING: {
-            gBignumptr = (int32_t*) gGstringvar[temps16];
+            gBignumptr = (int32_t*) dsl_global_strings[temps16];
             break;
         }
         case DSL_LSTRING: {
-            gBignumptr = (int32_t*) gLstringvar[temps16];
+            gBignumptr = (int32_t*) dsl_local_strings[temps16];
             break;
         }
         default:
@@ -595,3 +689,170 @@ void setrecord() {
         return;
     }
 }
+
+void global_ret() {
+    printf("I need to return from this global function/subroutine!\n");
+    pop_data_ptr();
+}
+
+static int load_dsl(uint16_t filenum, int filetype) {
+    unsigned long len;
+    char *data = gff_get_raw_bytes(DSLDATA_GFF_INDEX, 
+        (filetype == DSLFILE) ? GT_GPL : GT_MAS,
+        filenum, &len);
+    if (!data) { return 0; }
+    clear_local_vars();
+    push_data_ptr((unsigned char*) data);
+    return 1;
+}
+
+static void local_sub(uint16_t address) {
+    unsigned char *data_start = get_data_start_ptr();
+    set_data_ptr(data_start, data_start + address);
+}
+
+void global_sub(uint16_t filenum, uint16_t address, int filetype) {
+    if (load_dsl(filenum, filetype) == 0) {
+        fprintf(stderr, "Unable to load region #%d\n", filenum);
+        exit(1);
+    }
+    local_sub(address);
+    printf("global_sub: jump to file #%d at address %d\n", filenum, address);
+}
+
+void set_any_order(name_t *name, int16_t to, int16_t los_order, int16_t range) {
+    warn("set_any_order: lua callback needed: Get all objects with 'name' and set then to to with los_order and in range\n");
+    warn("then set the order!");
+    /*
+    foreach obj_index, where object's name = pName->name
+    control_table[obj_index].addr[to] = name->addr;
+    control_table[obj_index].file[to] = file->addr;
+    if (to == DSL_LOS_ORDER) {
+        control_table[obj_index].command[to] = losOrder;
+        control_table[obj_index].flags &= CF_MOVED;
+        control_table[obj_index].flags |= range;
+    }
+    */
+}
+
+static check_index_t get_check_node() {
+    check_index_t node_index;
+    if (gunused_checks == NULL_CHECK) {
+        return NULL_CHECK;
+    }
+    node_index = gunused_checks;
+    gunused_checks = check[node_index].next;
+    check[node_index].next = NULL_CHECK;
+    return node_index;
+}
+
+static void insert_check(check_index_t *cindex) {
+    check_index_t new_head, old_head;
+    if (*cindex == NULL_CHECK) {
+        *cindex = get_check_node();
+        return;
+    }
+    old_head = *cindex;
+    new_head = get_check_node();
+    if (new_head == NULL_CHECK) {
+        return;
+    }
+    check[new_head].next = old_head;
+    *cindex = new_head;
+}
+
+void use_with_check(check_index_t *cindex) {
+    name2_t name = new_name2;
+    while ((*cindex != NULL_CHECK) && (check[*cindex].data.name2_check.name1 < name.name1 )) {
+        use_with_check(&check[*cindex].next);
+        return;
+    }
+    while ((*cindex != NULL_CHECK) && (check[*cindex].data.name2_check.name2 < name.name2 )) {
+        use_with_check(&check[*cindex].next);
+        return;
+    }
+    insert_check(cindex);
+    if (*cindex == NULL_CHECK) {
+        return;
+    }
+    check[*cindex].data.name2_check = name;
+    debug("insert with check = {file = %d, addr = %d, name1 = %d, name2 = %d, is_global = %d}\n",
+        name.file, name.addr, name.name1,
+        name.name2, name.global);
+}
+
+void generic_box_check(check_index_t *cindex, box_t box) {
+    while ((*cindex != NULL_CHECK) && (check[*cindex].data.box_check.x < box.x)) {
+        generic_box_check(&check[*cindex].next, box);
+        return;
+    }
+    while ((*cindex != NULL_CHECK) && (check[*cindex].data.box_check.y < box.y)) {
+        generic_box_check(&check[*cindex].next, box);
+        return;
+    }
+    if ((*cindex == NULL_CHECK) || (check[*cindex].data.box_check.x != box.x) || (check[*cindex].data.box_check.y !=
+        box.y)) {
+        insert_check(cindex);
+    }
+    if (*cindex == NULL_CHECK) {
+        return;
+    }
+    check[*cindex].data.box_check = box;
+    debug("tile with check = {file = %d, addr = %d, x = %d, y = %d, xd = %d, yd = %d, trip = %d}\n",
+        box.file, box.addr, box.x, box.xd, box.yd,
+        box.y, box.trip);
+}
+
+void generic_tile_check(check_index_t *cindex, tile_t tile) {
+    while ((*cindex != NULL_CHECK) && (check[*cindex].data.tile_check.x < tile.x)) {
+        generic_tile_check(&check[*cindex].next, tile);
+        return;
+    }
+    while ((*cindex != NULL_CHECK) && (check[*cindex].data.tile_check.y < tile.y)) {
+        generic_tile_check(&check[*cindex].next, tile);
+        return;
+    }
+    if ((*cindex == NULL_CHECK) || (check[*cindex].data.tile_check.x != tile.x)
+        || (check[*cindex].data.tile_check.y != tile.y)) {
+        insert_check(cindex);
+    }
+    if (*cindex == NULL_CHECK) {
+        return;
+    }
+    check[*cindex].data.tile_check = tile;
+    debug("tile with check = {file = %d, addr = %d, x = %d, y = %d, trip = %d}\n",
+        tile.file, tile.addr, tile.x,
+        tile.y, tile.trip);
+}
+
+static void add_save_orders(int16_t los_order, name_t name, int16_t range, int ordertype) {
+    if (name.name < 0) {
+        error("add_save_orders (with name < 0) not implemented\n");
+        command_implemented = 0;
+    }
+}
+
+#define DSL_ORDER     (0)
+#define DSL_LOS_ORDER (1)
+
+void set_los_order(int16_t los_order, name_t name, int16_t range) {
+    warn("LOS Check ignored: addr = %d, file = %d, name = %d, global = %d\n", new_name.addr,
+        new_name.file, new_name.name, new_name.global);
+    add_save_orders(los_order, name, range, DSL_LOS_ORDER);
+    set_any_order(&name, DSL_LOS_ORDER, los_order, range);
+}
+
+void set_new_order(name_t name) {
+    warn("new_name->{addr = %d, file = %d, name = %d, global = %d}\n", new_name.addr, new_name.file, new_name.name,
+    new_name.global);
+    if (!name.file) {
+        if (name.name < 0) {
+            error("set_new_order name < 0 not implemented!\n");
+            command_implemented = 0;
+        }
+    } else {
+        add_save_orders(0, name, 0, DSL_ORDER);
+    }
+    set_any_order(&name, DSL_ORDER, 0, 0);
+}
+
