@@ -26,8 +26,9 @@ function narrate_open(action, text, index)
         -- Now portrait_image *should* be the image to display
         -- Also, if text is not empty, then text needs to be displayed as well.
     end
-    if (action == SHOW_TEXT) then
+    if (text) then --(action == SHOW_TEXT) then
         -- Here display the message text to the user
+        _text = text
     end
     if (action == SHOW_MENU) then
         -- Display the menu
@@ -65,7 +66,7 @@ function love.load()
     -- So that once you response the conversation can continue.
     ds.dsl_execute(gpl_file, 5, 2348)
     -- Kinda work...
-    --ds.dsl_execute(gpl_file, 4, 1) -- I never got this in the real game, did you?
+    -- ds.dsl_execute(gpl_file, 4, 1) -- I never got this in the real game, did you?
     --LOOK CHECKS
     --ds.dsl_execute(gpl_file, 5, 6792)
     --ds.dsl_execute(gpl_file, 5, 6832)
@@ -93,4 +94,12 @@ function love.update(dt)
 end
 
 function love.draw()
+    if (portrait_image) then
+        love.graphics.draw(portrait_image, 0, 0, 0, 3, 3.6)
+    end
+
+    if (_text) then
+        love.graphics.print(_text, 50, 300)
+    end
+    love.graphics.print("Hello", 50, 320)
 end
