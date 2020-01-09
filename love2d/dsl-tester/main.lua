@@ -1,5 +1,6 @@
 -- This loads the C library and binds is to a 'ds' object
 ds = require 'libds'
+dsl = {}
 
 ADD_MENU = 0
 PORTRAIT = 1
@@ -11,7 +12,7 @@ EDIT_BOX = 4
 -- It is VERY common for narrate_open to be called with PORTRAIT and no text, then have SHOW_TEXT later
 -- with possibly a menu.
 -- NOTE: SHOW_TEXT may be (and usually is) called multiple times on the same dialog.
-function narrate_open(action, text, index)
+function dsl.narrate_open(action, text, index)
     if (action == ADD_MENU) then
         -- Here you add a menu item (text).
         -- AKA: add an option for the player to select

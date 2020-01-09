@@ -25,7 +25,8 @@ int8_t narrate_open(int16_t action, char *text, int16_t index) {
             error("narrate_open: ERROR unknown action %d\n", action);
             exit(1);
     }
-    lua_getglobal(lua_state, "narrate_open");
+    lua_getglobal(lua_state, "dsl");
+    lua_getfield(lua_state, -1, "narrate_open");
     lua_pushnumber(lua_state, 1);
     lua_pushnumber(lua_state, 2);
     lua_pushnumber(lua_state, 3);
