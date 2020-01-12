@@ -318,8 +318,6 @@ int8_t ifstate[MAX_IFDEPTH+1];
 #define YES (1)
 #define NO (0)
 
-name_t new_name;
-name2_t new_name2;
 typedef enum {DSL_ERROR = -1, DSL_OK = 1} dsl_status_t;
 dsl_status_t dsl_status = DSL_ERROR;
 
@@ -636,7 +634,7 @@ static tile_t get_tile(param_t *p) {
 void dsl_in_los_check(void) {
     get_parameters(4);
     global_addr_name(&param);
-    set_los_order(DSL_IN_LOS, new_name, param.val[3]);
+    set_los_order(DSL_IN_LOS, param.val[3]);
 }
 
 static void move_dsl_ptr(uint16_t dest) {
@@ -912,13 +910,13 @@ void dsl_nextto(void) {
 void dsl_inloscheck(void) {
     get_parameters(4);
     global_addr_name(&param);
-    set_los_order(DSL_IN_LOS, new_name, param.val[3]);
+    set_los_order(DSL_IN_LOS, param.val[3]);
 }
 
 void dsl_notinloscheck(void) {
     get_parameters(4);
     global_addr_name(&param);
-    set_los_order(DSL_NOT_IN_LOS, new_name, param.val[3]);
+    set_los_order(DSL_NOT_IN_LOS, param.val[3]);
 }
 
 static void clear_los_order(int16_t header_num) {
@@ -1511,8 +1509,6 @@ void dsl_wend(void) {
 void dsl_attackcheck(void) {
     get_parameters(3);
     global_addr_name(&param);
-    //printf("dsl_attackcheck, addr = %d, file = %d, name = %d, global = %d\n",
-        //new_name.addr, new_name.file, new_name.name, new_name.global);
     generic_name_check(ATTACK_CHECK_INDEX);
 }
 
@@ -1569,7 +1565,7 @@ void dsl_noorderscheck(void) {
     warn("dsl_noorderscheck: ignoring this check, don't know what it does...\n");
     get_parameters(3);
     global_addr_name(&param);
-    set_new_order(new_name);
+    set_new_order();
 }
 
 void dsl_usewithcheck(void) {

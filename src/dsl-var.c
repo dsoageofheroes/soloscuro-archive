@@ -835,24 +835,25 @@ static void add_save_orders(int16_t los_order, name_t name, int16_t range, int o
 #define DSL_ORDER     (0)
 #define DSL_LOS_ORDER (1)
 
-void set_los_order(int16_t los_order, name_t name, int16_t range) {
+void set_los_order(int16_t los_order, int16_t range) {
     warn("LOS Check ignored: addr = %d, file = %d, name = %d, global = %d\n", new_name.addr,
         new_name.file, new_name.name, new_name.global);
-    add_save_orders(los_order, name, range, DSL_LOS_ORDER);
-    set_any_order(&name, DSL_LOS_ORDER, los_order, range);
+    add_save_orders(los_order, new_name, range, DSL_LOS_ORDER);
+    set_any_order(&new_name, DSL_LOS_ORDER, los_order, range);
 }
 
-void set_new_order(name_t name) {
+// Uses global new_name!
+void set_new_order() {
     warn("new_name->{addr = %d, file = %d, name = %d, global = %d}\n", new_name.addr, new_name.file, new_name.name,
     new_name.global);
-    if (!name.file) {
-        if (name.name < 0) {
+    if (!new_name.file) {
+        if (new_name.name < 0) {
             error("set_new_order name < 0 not implemented!\n");
             command_implemented = 0;
         }
     } else {
-        add_save_orders(0, name, 0, DSL_ORDER);
+        add_save_orders(0, new_name, 0, DSL_ORDER);
     }
-    set_any_order(&name, DSL_ORDER, 0, 0);
+    set_any_order(&new_name, DSL_ORDER, 0, 0);
 }
 

@@ -149,8 +149,8 @@ void set_any_order(name_t *name, int16_t to, int16_t los_order, int16_t range);
 void generic_tile_check(check_index_t *cindex, tile_t tile);
 void generic_box_check(check_index_t *cindex, box_t box);
 void use_with_check(check_index_t *cindex);
-void set_new_order(name_t name);
-void set_los_order(int16_t los_order, name_t name, int16_t range);
+void set_new_order();
+void set_los_order(int16_t los_order, int16_t range);
 
 void set_accumulator(int32_t a);
 int32_t get_accumulator();
