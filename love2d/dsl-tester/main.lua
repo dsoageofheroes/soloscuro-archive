@@ -53,10 +53,8 @@ function love.load()
     print('Initialized, loading directory:' .. arg[2])
     ds.gff_load_directory(arg[2])
 
-    gpl_file = ds.gff_find_index("gpldata.gff")
-
     -- Warning: This currently only works once!  (don't call again for now...)
-    ds.mas_execute(gpl_file, 42) -- Change to the arena region
+    ds.mas_execute(42) -- Change to the arena region
 
     -- When everythin is seetup the following functions are triggered by some event, but that
     -- isn't implemented right now.  Instead we trigger manually by calling
@@ -65,23 +63,23 @@ function love.load()
     -- This one creates the first dialog and then exits (prematurely.)
     -- I need to come up with a scheme of how to continue the gpl/dsl script.
     -- So that once you response the conversation can continue.
-    ds.dsl_execute(gpl_file, 5, 2348)
+    ds.dsl_execute(5, 2348)
     -- Kinda work...
-    -- ds.dsl_execute(gpl_file, 4, 1) -- I never got this in the real game, did you?
+    -- ds.dsl_execute(4, 1) -- I never got this in the real game, did you?
     --LOOK CHECKS
-    --ds.dsl_execute(gpl_file, 5, 6792)
-    --ds.dsl_execute(gpl_file, 5, 6832)
+    --ds.dsl_execute(5, 6792)
+    --ds.dsl_execute(5, 6832)
 
     -- The following don't work, so call at your own risk!
-    --ds.dsl_execute(gpl_file, 2, 1)
-    --ds.dsl_execute(gpl_file, 5, 54)
-    --ds.dsl_execute(gpl_file, 5, 74)
-    --ds.dsl_execute(gpl_file, 5, 94)
-    --ds.dsl_execute(gpl_file, 5, 114)
-    --ds.dsl_execute(gpl_file, 3, 1854)
-    --ds.dsl_execute(gpl_file, 5, 931)
-    --ds.dsl_execute(gpl_file, 5, 772)
-    --ds.dsl_execute(gpl_file, 5, 6530)
+    --ds.dsl_execute(2, 1)
+    --ds.dsl_execute(5, 54)
+    --ds.dsl_execute(5, 74)
+    --ds.dsl_execute(5, 94)
+    --ds.dsl_execute(5, 114)
+    --ds.dsl_execute(3, 1854)
+    --ds.dsl_execute(5, 931)
+    --ds.dsl_execute(5, 772)
+    --ds.dsl_execute(5, 6530)
 end
 
 function love.keypressed( key )

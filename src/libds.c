@@ -7,6 +7,7 @@
 #include <stdlib.h>
 
 #include "dsl.h"
+#include "dsl-execute.h"
 #include "dsl-var.h"
 #include "gff.h"
 #include "gff-image.h"
@@ -618,41 +619,39 @@ static int lua_scmd_sound_idx(lua_State *L) {
 }
 
 static int lua_mas_print(lua_State *L) {
-    lua_Integer gff_idx = luaL_checkinteger (L, 1);
+    //lua_Integer gff_idx = luaL_checkinteger (L, 1);
     lua_Integer res_id = luaL_checkinteger (L, 2);
 
-    mas_print(gff_idx, res_id);
+    dsl_execute_subroutine(res_id, 0, 1);
 
     return 0;
 }
 
 static int lua_gpl_print(lua_State *L) {
-    lua_Integer gff_idx = luaL_checkinteger (L, 1);
+    //lua_Integer gff_idx = luaL_checkinteger (L, 1);
     lua_Integer res_id = luaL_checkinteger (L, 2);
 
-    dsl_print(gff_idx, res_id);
+    dsl_execute_subroutine(res_id, 0, 0);
 
     return 0;
 }
 
 static int lua_mas_execute(lua_State *L) {
-    lua_Integer gff_idx = luaL_checkinteger (L, 1);
-    lua_Integer res_id = luaL_checkinteger (L, 2);
+    lua_Integer res_id = luaL_checkinteger (L, 1);
 
-    mas_execute(gff_idx, res_id);
+    dsl_execute_subroutine(res_id, 0, 1);
 
     return 0;
 }
 
 static int lua_gpl_execute(lua_State *L) {
-    lua_Integer gff_idx = luaL_checkinteger (L, 1);
-    lua_Integer res_id = luaL_checkinteger (L, 2);
+    lua_Integer res_id = luaL_checkinteger (L, 1);
     printf("lua_gettop(L) = %d\n", lua_gettop(L));
-    if (lua_gettop(L) > 2) {
-        lua_Integer file_id = luaL_checkinteger (L, 3);
-        dsl_execute_function(gff_idx, res_id, file_id);
+    if (lua_gettop(L) > 1) {
+        lua_Integer file_id = luaL_checkinteger (L, 2);
+        dsl_execute_subroutine(res_id, file_id, 0);
     } else {
-        dsl_execute(gff_idx, res_id);
+        dsl_execute_subroutine(res_id, 0, 0);
     }
 
     return 0;

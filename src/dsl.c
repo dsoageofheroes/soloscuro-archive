@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "dsl.h"
+#include "dsl-execute.h"
 #include "dsl-object.h"
 #include "dsl-narrate.h"
 #include "dsl-scmd.h"
@@ -325,81 +326,12 @@ dsl_status_t dsl_status = DSL_ERROR;
 param_t param;
 /* End Globals */
 
-void do_dsl_command(uint8_t cmd) {
+int do_dsl_command(uint8_t cmd) {
     fflush(stdout);
     debug("command byte = 0x%x (%s)\n", cmd, dsl_operations[cmd].name);
+    exit_dsl = 0;
     (*dsl_operations[cmd].func)();
-}
-
-void mas_print(const int gff_file, const int res_id) {
-    unsigned long len;
-    unsigned char *mas = (unsigned char*)gff_get_raw_bytes(gff_file, GT_MAS, res_id, &len);
-    this_gpl_file = GLOBAL_MAS;
-    this_gpl_type = MASFILE;
-    if (is_paused) {
-        error("dsl_print called while dsl execution is paused!  You must resume first!");
-        return;
-    }
-    command_implemented = 1;
-    exit_dsl = 0;
-    debug("------------------------Executing MAS/DSL\n");
-    push_data_ptr(mas);
-    set_data_ptr(mas, mas + 1);
-    debug("command byte = 0x%x (%s)\n", *(mas), dsl_operations[mas[0]].name);
-    (*dsl_operations[mas[0]].func)();
-    while (!exit_dsl && command_implemented) {
-        command_implemented = 1;
-        uint8_t command = get_byte();
-        do_dsl_command(command);
-        if (exit_dsl) {
-            exit_dsl = pop_data_ptr() == NULL;
-            debug("returing from subroutine.\n");
-        }
-    }
-    if (!command_implemented) {
-        debug("last command needs to be implemented!\n");
-    }
-    pop_data_ptr();
-    debug("---------------------Ending Execution----------------------\n");
-    debug("%lu of %lu\n", get_data_ptr() - get_data_start_ptr(), len);
-    //if (len != (get_data_ptr() - get_data_start_ptr())) {exit(1);}
-}
-
-void mas_execute(const int gff_file, const int res_id) {
-    unsigned long len;
-    unsigned char *mas = (unsigned char*)gff_get_raw_bytes(gff_file, GT_MAS, res_id, &len);
-    this_gpl_file = GLOBAL_MAS;
-    this_gpl_type = MASFILE;
-    if (is_paused) {
-        error("dsl_print called while dsl execution is paused!  You must resume first!");
-        return;
-    }
-    command_implemented = 1;
-    exit_dsl = 0;
-    push_data_ptr(mas);
-    set_data_ptr(mas, mas + 1);
-    (*dsl_operations[mas[0]].func)();
-    while (!exit_dsl && command_implemented) {
-        command_implemented = 1;
-        uint8_t command = get_byte();
-        //do_dsl_command(command);
-        (*dsl_operations[command].func)();
-        if (exit_dsl) {
-            exit_dsl = (pop_data_ptr() == NULL);
-            if (!exit_dsl) {
-                debug("returning from subroutine.\n");
-            }
-        }
-        if (is_paused) {
-            debug("pausing execution until resumed.");
-            return;
-        }
-    }
-    if (!command_implemented) {
-        debug("last command needs to be implemented!\n");
-    }
-    pop_data_ptr();
-    debug("Returning from MAS %d\n", res_id);
+    return !exit_dsl;
 }
 
 void dsl_resume() {
@@ -426,12 +358,8 @@ void dsl_resume() {
     //debug("Returning from MAS/DSL %d\n", res_id);
 }
 
-void dsl_execute(const int gff_file, const int res_id) {
-    dsl_print(gff_file, res_id);
-}
-
 void dsl_change_region(const int region_id) {
-    dsl_execute(DSLDATA_GFF_INDEX, region_id);
+    dsl_execute_subroutine(region_id, 0, 1);
 }
 
 void dsl_execute_function(const int gff_file, const int res_id, const int function_addr) {
@@ -465,49 +393,6 @@ void dsl_execute_function(const int gff_file, const int res_id, const int functi
             debug("last command needs to be implemented!\n");
         }
     //}
-    pop_data_ptr();
-    debug("---------------------Ending Execution----------------------\n");
-    debug("%lu of %lu\n", get_data_ptr() - get_data_start_ptr(), len);
-}
-
-void dsl_print(const int gff_file, const int res_id) {
-    unsigned long len;
-    unsigned char *gpl = (unsigned char*)gff_get_raw_bytes(gff_file, GT_GPL, res_id, &len);
-    if (is_paused) {
-        error("dsl_print called while dsl execution is paused!  You must resume first!");
-        return;
-    }
-    this_gpl_file = GLOBAL_MAS;
-    this_gpl_type = MASFILE;
-    command_implemented = 1;
-    exit_dsl = 0;
-    debug("------------------------Executing MAS/DSL\n");
-    push_data_ptr(gpl);
-    set_data_ptr(gpl, gpl + 1);
-    debug("command byte = 0x%x (%s)\n", *(gpl), dsl_operations[gpl[0]].name);
-    (*dsl_operations[gpl[0]].func)();
-    int i = 0;
-    while ((get_data_ptr() - get_data_start_ptr()) < len && command_implemented) {
-    //for (int i = 0; i < 2; i++) {
-        while (!exit_dsl && command_implemented) {
-            command_implemented = 1;
-            uint8_t command = get_byte();
-            do_dsl_command(command);
-            if (exit_dsl) {
-                exit_dsl = pop_data_ptr() == NULL;
-                debug("returing from subroutine.\n");
-            }
-            if (is_paused) {
-                debug("pausing execution until resumed.");
-                return;
-            }
-        }
-        if (!command_implemented) {
-            debug("last command needs to be implemented!\n");
-        }
-        debug("End of %dth exit_dsl, continuing on...\n", i++);
-        exit_dsl = 0;
-    }
     pop_data_ptr();
     debug("---------------------Ending Execution----------------------\n");
     debug("%lu of %lu\n", get_data_ptr() - get_data_start_ptr(), len);
@@ -690,7 +575,7 @@ void dsl_init() {
     compareval = malloc(sizeof(int32_t) * MAX_COMPAREDEPTH);
     memset(compareval, 0x0, sizeof(int32_t) * MAX_COMPAREDEPTH);
     info("Running Master DSL #99.\n");
-    mas_execute(DSLDATA_GFF_INDEX, 99);
+    dsl_execute_subroutine(99, 0, 1);
 }
 
 
