@@ -31,35 +31,8 @@ typedef struct _name2_t {
     uint8_t global; // is global?  if not erase on region change!
 } name2_t;
 
-typedef struct _box_t {
-    uint16_t addr; // Addr of DSL routine in file
-    uint16_t file; // the file
-    uint16_t x;    // x coordinate
-    uint16_t y;    // y coordinate
-    uint8_t xd;    // x dimention (width/height)
-    uint8_t yd;    // y dimention (width/height)
-    uint8_t trip;  // Is this a PC only, or can anyone trip this event?
-} box_t;
-
-typedef struct _tile_t {
-    uint16_t addr; // addr of DSL rout in file
-    uint16_t file; // the file
-    uint16_t x;    // x coordinate of the tile
-    uint16_t y;    // y coordinate of the tile
-    uint8_t trip;  // Is this PC only, or can anyone trip the event?
-} tile_t;
 #define check_index_t uint16_t
 #define NULL_CHECK (0xFFFF)
-
-typedef struct _dsl_check_s {
-    union {
-        box_t box_check;
-        tile_t tile_check;
-        name_t name_check;
-        name2_t name2_check;
-    } data;
-    uint16_t next;
-} dsl_check_t;
 
 #define MAX_PARAMETERS (8)
 typedef struct _param_t {
@@ -70,7 +43,6 @@ typedef struct _param_t {
 extern param_t param;
 
 void dsl_init();
-void dsl_check_for_updates();
 void dsl_scmd_print(int gff_file, int res_id);
 scmd_t* dsl_scmd_get(const int gff_file, const int res_id, const int index);
 int dsl_scmd_is_default(const scmd_t *scmd, const int scmd_index);

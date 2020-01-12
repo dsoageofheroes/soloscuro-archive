@@ -110,8 +110,36 @@ enum {UNUSED_CHECK_INDEX,
     MAX_CHECK_TYPES
 };
 
+typedef struct box_s {
+    uint16_t addr; // Addr of DSL routine in file
+    uint16_t file; // the file
+    uint16_t x;    // x coordinate
+    uint16_t y;    // y coordinate
+    uint8_t xd;    // x dimention (width/height)
+    uint8_t yd;    // y dimention (width/height)
+    uint8_t trip;  // Is this a PC only, or can anyone trip this event?
+} box_t;
+
+typedef struct tile_s {
+    uint16_t addr; // addr of DSL rout in file
+    uint16_t file; // the file
+    uint16_t x;    // x coordinate of the tile
+    uint16_t y;    // y coordinate of the tile
+    uint8_t trip;  // Is this PC only, or can anyone trip the event?
+} tile_t;
+
+typedef struct dsl_check_s {
+    union {
+        box_t box_check;
+        tile_t tile_check;
+        name_t name_check;
+        name2_t name2_check;
+    } data;
+    uint16_t next;
+} dsl_check_t;
+
 #define DSL_MAX_CALL (2)
-typedef struct _dsl_control_t {
+typedef struct dsl_control_s {
     int16_t destx;
     int16_t desty;
     int16_t cmd[DSL_MAX_CALL];
@@ -151,6 +179,7 @@ void generic_box_check(check_index_t *cindex, box_t box);
 void use_with_check(check_index_t *cindex);
 void set_new_order();
 void set_los_order(int16_t los_order, int16_t range);
+int32_t read_number();
 
 void set_accumulator(int32_t a);
 int32_t get_accumulator();
