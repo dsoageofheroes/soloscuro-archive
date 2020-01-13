@@ -4,6 +4,19 @@
 
 return
 {
-  ds1Path = './path/to/game/directory',
-  ds2Path = './path/to/game/directory',
+  env = 
+  {
+    path = 
+    {
+      ds1 = '/home/david/Games/DOS/DARKSUN',
+      ds2 = './path/to/game/directory',
+    },
+    resolution =
+    {
+      x = 640,
+      y = 480,
+      scale = 2,
+      aspect = 1.2,
+    },
+  }
 }
