@@ -31,32 +31,35 @@ function draw.clickItemIn(graphics, x, y, button)
   return clicked
 end
 
-function draw.graphics(graphic, noAspect)
+function draw.graphic(graphic, noAspect)
   local a = graphic.anim
   local h = graphic.hover
   local i = get(graphic.active) or 1
 
-  local image = graphic.assets[i]
+  -- Animations take precedence
+  local image = graphic.timer and graphic.assets[a]
 
-  private.drawImage(image, graphic.x, graphic.y, noAspect)
+  if image then
+    private.drawImage(image, graphic.x, graphic.y)
+  else
+    -- Use the base asset
+    image = graphic.assets[i]
+    private.drawImage(image, graphic.x, graphic.y, noAspect)
+    
+    -- If we have a hover graphic, draw over the base
+    if h then
+      local inBox = draw.isMouseInBox(graphic.x, graphic.y, image:getWidth(), image:getHeight())
 
-  if a and graphic.timer then
-    private.drawImage(graphic.assets[a], graphic.x, graphic.y)
-  elseif h then
-    local inBox = draw.isMouseInBox(graphic.x, graphic.y, image:getWidth(), image:getHeight())
-
-    if inBox then
-      private.drawImage(graphic.assets[h], graphic.x, graphic.y)
+      if inBox then
+        private.drawImage(graphic.assets[h], graphic.x, graphic.y)
+      end
     end
   end
-
 end
 
 function draw.collection(graphics)
-  for k,v in pairs(graphics) do
-    if type(v) == 'table' then
-      draw.graphics(v)
-    end
+  for _,graphic in pairs(graphics) do
+    draw.graphic(graphic)
   end
 end
 
@@ -98,8 +101,15 @@ function draw.textCollection(texts)
   end
 end
 
-function private.drawImage(image, x, y, noAspect)
-  love.graphics.draw(image, x * scaleFactor, y * scaleFactor * aspectCorrection, 0, scaleFactor, scaleFactor * (noAspect and 1 or aspectCorrection))
+function private.drawImage(image, x, y, noAspect, xOffset, yOffset)
+  xOffset = xOffset or 0
+  yOffset = yOffset or 0
+
+  local aspect = noAspect and 1 or aspectCorrection
+  local xFinal = x * scaleFactor + xOffset
+  local yFinal = y * scaleFactor * aspect + yOffset
+
+  love.graphics.draw(image, xFinal, yFinal, 0, scaleFactor, scaleFactor * aspect)
 end
 
 function draw.isMouseInBox(x, y, width, height)
