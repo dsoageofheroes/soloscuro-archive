@@ -1,5 +1,6 @@
-#include "dsl-var.h"
+#include "dsl-execute.h"
 #include "dsl-string.h"
+#include "dsl-var.h"
 #include <string.h>
 
 /* externals first */
@@ -693,31 +694,6 @@ void setrecord() {
 void global_ret() {
     printf("I need to return from this global function/subroutine!\n");
     pop_data_ptr();
-}
-
-static int load_dsl(uint16_t filenum, int filetype) {
-    unsigned long len;
-    char *data = gff_get_raw_bytes(DSLDATA_GFF_INDEX, 
-        (filetype == DSLFILE) ? GT_GPL : GT_MAS,
-        filenum, &len);
-    if (!data) { return 0; }
-    clear_local_vars();
-    push_data_ptr((unsigned char*) data);
-    return 1;
-}
-
-static void local_sub(uint16_t address) {
-    unsigned char *data_start = get_data_start_ptr();
-    set_data_ptr(data_start, data_start + address);
-}
-
-void global_sub(uint16_t filenum, uint16_t address, int filetype) {
-    if (load_dsl(filenum, filetype) == 0) {
-        fprintf(stderr, "Unable to load region #%d\n", filenum);
-        exit(1);
-    }
-    local_sub(address);
-    printf("global_sub: jump to file #%d at address %d\n", filenum, address);
 }
 
 void set_any_order(name_t *name, int16_t to, int16_t los_order, int16_t range) {

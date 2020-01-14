@@ -171,7 +171,6 @@ uint16_t peek_half_word();
 void global_addr_name(param_t *par);
 void generic_name_check(int check_index);
 void name_name_global_addr(param_t *par);
-void global_sub(uint16_t filenum, uint16_t address, int filetype);
 void global_ret();
 void set_any_order(name_t *name, int16_t to, int16_t los_order, int16_t range);
 void generic_tile_check(check_index_t *cindex, tile_t tile);

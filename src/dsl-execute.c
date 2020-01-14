@@ -12,13 +12,14 @@
 
 //TODO FIXME: This needs to be moved.
 static int exit_dsl = 0; // Know when to exit the DSL.
+static int is_paused = 0; // Know if DSL is current paused waiting on something.
+// TODO: FIXME: This should be architected out
+static int local_sub_ret = 1;
 
 typedef struct {
     void (*func)(void);
     const char *name;
 } dsl_operation_t;
-
-static int is_paused = 0;
 
 dsl_operation_t dsl_operations[] = {
     { dsl_zero, "dsl zero" }, // 0x0
@@ -160,7 +161,6 @@ int do_dsl_command(uint8_t cmd) {
     return !exit_dsl;
 }
 
-
 void dsl_execute_subroutine(const int file, const int addr, const int is_mas) {
     if (is_paused) {
         error("dsl_print called while dsl execution is paused!  You must resume first!");
@@ -169,7 +169,9 @@ void dsl_execute_subroutine(const int file, const int addr, const int is_mas) {
 
     this_gpl_type = is_mas ? MASFILE : DSLFILE;
     unsigned long len;
-    unsigned char *dsl = (unsigned char*)gff_get_raw_bytes(DSLDATA_GFF_INDEX, is_mas ? GT_MAS : GT_GPL, file, &len);
+    unsigned char *dsl = (file >= 0)
+        ? (unsigned char*)gff_get_raw_bytes(DSLDATA_GFF_INDEX, is_mas ? GT_MAS : GT_GPL, file, &len)
+        : get_data_start_ptr();
 
     command_implemented = 1;
 
@@ -178,8 +180,13 @@ void dsl_execute_subroutine(const int file, const int addr, const int is_mas) {
     push_data_ptr(dsl);
     set_data_ptr(dsl, dsl + addr);
     uint8_t command = get_byte();
-    while (do_dsl_command(command) && command_implemented) {
+    local_sub_ret = 0; // In case this is a local subroutine.
+    while (!local_sub_ret && do_dsl_command(command) && command_implemented) {
         command = get_byte();
+        if (is_paused) {
+            debug("pausing until resumed.\n");
+            return;
+        }
     }
     pop_data_ptr();
 
@@ -190,10 +197,7 @@ void dsl_execute_subroutine(const int file, const int addr, const int is_mas) {
     }
     debug("---------------------Ending Execution----------------------\n");
     debug("%lu of %lu\n", get_data_ptr() - get_data_start_ptr(), len);
-    //if (len != (get_data_ptr() - get_data_start_ptr())) {exit(1);}
 }
-
-
 
 static void get_parameters(int16_t amt) {
     for (int16_t i = 0; i < amt; i++) {
@@ -201,7 +205,6 @@ static void get_parameters(int16_t amt) {
         param.ptr[i] = gBignumptr;
     }
 }
-
 
 /********************DSL DEFINES ***************************************/
 #define DSL_IN_LOS        (1)
@@ -244,8 +247,6 @@ static check_index_t gOther1 = NULL_CHECK;
 static check_index_t gMoveTile = NULL_CHECK;
 static check_index_t gUseWith = NULL_CHECK;
 static check_index_t gMoveBox = NULL_CHECK;
-// TODO: FIXME: This should be architected out
-static int local_sub_ret = 1;
 
 static int8_t comparePtr = 0;
 static int8_t compared[MAX_COMPAREDEPTH + 1];
@@ -254,42 +255,6 @@ static int8_t ifptr = 0;
 static int8_t ifstate[MAX_IFDEPTH+1];
 
 /***********************DSL HELPER FUNCTIONS*******************************/
-void dsl_execute_function(const int gff_file, const int res_id, const int function_addr) {
-    debug("***I need to execute function at addr %d\n", function_addr);
-    unsigned long len;
-    unsigned char *gpl = (unsigned char*)gff_get_raw_bytes(gff_file, GT_GPL, res_id, &len);
-    command_implemented = 1;
-    exit_dsl = 0;
-    debug("------------------------Executing DSL %d @ %d, len = %lu\n", res_id, function_addr, len);
-    //gpl += function_addr;
-    push_data_ptr(gpl);
-    set_data_ptr(gpl, gpl + function_addr);
-    debug("command byte = 0x%x (%s)\n", *(gpl), dsl_operations[gpl[0]].name);
-    (*dsl_operations[gpl[0]].func)();
-    //while ((get_data_ptr() - get_data_start_ptr()) < len && command_implemented) {
-    //for (int i = 0; i < 2; i++) {
-        while (!exit_dsl && command_implemented) {
-            command_implemented = 1;
-            uint8_t command = get_byte();
-            do_dsl_command(command);
-            if (exit_dsl) {
-                exit_dsl = pop_data_ptr() == NULL;
-                debug("returing from subroutine.\n");
-            }
-            if (is_paused) {
-                debug("pausing execution until resumed");
-                return;
-            }
-        }
-        if (!command_implemented) {
-            debug("last command needs to be implemented!\n");
-        }
-    //}
-    pop_data_ptr();
-    debug("---------------------Ending Execution----------------------\n");
-    debug("%lu of %lu\n", get_data_ptr() - get_data_start_ptr(), len);
-}
-
 static void set_the_orders(int16_t header, int16_t order, int16_t data1, int16_t data2, int send) {
     if (order == GOXY && (!data1) && (!data2)) {
         error("set_the_order: ERROR sending to (0, 0)!  Going on for now since we are debugging...\n");
@@ -585,37 +550,13 @@ void dsl_jump(void) {
     command_implemented = 0;
 }
 
-void local_sub(uint16_t offset) {
-    warn("local_sub: I need to jump to offset %d of this GPL!\n", offset);
-    
-    push_data_ptr(get_data_start_ptr());
-    set_data_ptr(get_data_start_ptr(), get_data_start_ptr() + offset);
-    local_sub_ret = 0;
-    while (!local_sub_ret && command_implemented) {
-        command_implemented = 1;
-        uint8_t command = get_byte();
-        do_dsl_command(command);
-        //(*dsl_operations[command].func)();
-        if (is_paused) {
-            debug("pausing until resumed.\n");
-            return;
-        }
-    }
-    if (!command_implemented) {
-        debug("last command needs to be implemented!\n");
-    }
-    pop_data_ptr();
-    debug("Returning from local_sub\n");
-}
-
 void dsl_local_sub(void) {
-    local_sub(read_number());
+    dsl_execute_subroutine(-1, read_number(), 0);
 }
 
 void dsl_global_sub(void) {
     get_parameters(2);
-    global_sub(param.val[1], param.val[0], DSLFILE);
-    //printf("global subs temporarly disabled.\n");
+    dsl_execute_subroutine(param.val[1], param.val[0], 0);
 }
 
 void dsl_local_ret(void) {
