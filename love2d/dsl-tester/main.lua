@@ -56,14 +56,15 @@ function love.load()
     -- Warning: This currently only works once!  (don't call again for now...)
     ds.mas_execute(42) -- Change to the arena region
 
-    -- When everythin is seetup the following functions are triggered by some event, but that
+    -- When everything is setup the following functions are triggered by some event, but that
     -- isn't implemented right now.  Instead we trigger manually by calling
     -- dsl_execute.
 
     -- This one creates the first dialog and then exits (prematurely.)
     -- I need to come up with a scheme of how to continue the gpl/dsl script.
-    -- So that once you response the conversation can continue.
-    ds.dsl_execute(5, 2348)
+    -- So that once the player responds the conversation can continue.
+    ds.dsl_execute(5, 2348) -- execute the dialog/narration
+    ds.select_menu(0);      -- Select menu item #0 (#1, and #2 are available as well.)
     -- Kinda work...
     -- ds.dsl_execute(4, 1) -- I never got this in the real game, did you?
     --LOOK CHECKS

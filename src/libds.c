@@ -663,6 +663,12 @@ static int lua_dsl_change_region(lua_State *L) {
     return 0;
 }
 
+static int lua_select_menu(lua_State *L) {
+    lua_Integer option = luaL_checkinteger (L, 1);
+    dsl_select_menu(option);
+    return 0;
+}
+
 /* End Object Functions */
 
 //library to be registered
@@ -739,6 +745,8 @@ static const struct luaL_Reg lslib [] = {
       {"mas_execute", lua_mas_execute},
       {"dsl_execute", lua_gpl_execute},
       {"dsl_change_region", lua_dsl_change_region},
+
+      {"select_menu", lua_select_menu},
 
       // The End
       {NULL, NULL}  /* sentinel */

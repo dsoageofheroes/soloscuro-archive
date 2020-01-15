@@ -3,6 +3,7 @@
 
 void dsl_execute_subroutine(const int file, const int addr, const int is_mas);
 void dsl_execute_init();
+void dsl_select_menu(int option);
 
 /* All the DSL functions */
 void dsl_zero(void);
