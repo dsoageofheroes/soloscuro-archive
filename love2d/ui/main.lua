@@ -6,6 +6,7 @@ Region = require 'models/Region'
 Text = require 'models/Text'
 
 local animation = require 'gfx/animate'
+local camera = require 'gfx/camera'
 local charInventory = require 'menu/inventory'
 local charNav = require 'menu/nav'
 local charView = require 'menu/view'
@@ -30,6 +31,7 @@ function love.load()
   math.randomseed(os.clock())
 
   draw.init(config)
+  camera.init(draw)
   gff.init(ds, config)
   mouse.init(gff.cursors, draw)
   font.init(gff.loadFontChar, fontPatch)
@@ -48,7 +50,7 @@ end
 function love.draw()
 
   if menu.active then
-    draw.collection(regionTest.map)
+    camera.show(regionTest.map)
     menu.draw()
   else
     draw.collection(regionTest.map)

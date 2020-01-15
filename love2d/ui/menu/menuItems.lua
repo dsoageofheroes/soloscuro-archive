@@ -10,7 +10,7 @@ end
 function menuItems.init(_items, _menu)
   menu = _menu
 
-  local anim = Animation(3, 2, 4, 3, 2, 4):setInterval(.035)
+  local anim = Animation(2,1,4,2,1,4):setInterval(.035)
 
   menuItems.elements =
   {
