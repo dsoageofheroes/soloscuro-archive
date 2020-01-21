@@ -11,18 +11,17 @@ else
     CFLAGS += -fPIC
 endif
 
-
 .PHONY: clean test all
 
-all: $(SRCS) $(EXEC) libds.so
+all: $(EXEC) libds.so
 
-$(EXEC): $(OBJS) $(MAIN) libds.so
+$(EXEC): $(MAIN) libds.so
 	gcc $(CFLAGS) $(OBJS) $(MAIN) -o $@
 
 libds.so: $(OBJS) libxmimidi.so
 	gcc -L./ $(OBJS) -shared -o libds.$(LIB_EXT) -llua5.1 -lxmimidi
 
-libxmimidi.so: $(OBJS) 
+libxmimidi.so:  
 	gcc xmimidi/*.c -shared -o libxmimidi.$(LIB_EXT)
 
 obj/%.o: src/%.c src/%.h obj

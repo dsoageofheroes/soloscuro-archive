@@ -288,7 +288,7 @@ int32_t read_number() {
         //printf("current operation = 0x%x\n", cop);
         if (cop < 0x80) {
             cval = cop * 0x100 + get_byte();
-            //printf("cval = %d\n", cval);
+            debug("immediate = %d\n", cval);
         } else {
             if (cop < OPERATOR_OFFSET) {
                 if (cop & EXTENDED_VAR) { // variable is > 255
@@ -301,6 +301,7 @@ int32_t read_number() {
             switch (cop) {
                 case DSL_ACCM|0x80: {
                     cval = accum;
+                    debug("DSL_ACCUM cval = %d\n", cval);
                     break;
                 }
                 case DSL_LNAME|0x80:
@@ -321,19 +322,23 @@ int32_t read_number() {
                     break;
                 }
                 case DSL_RETVAL|0x80: {
+                    debug("DSL_RETVAL begin:\n");
                     push_params();
                     do_dsl_command(get_byte());
                     pop_params();
                     cval = accum;
+                    debug("DSL_RETVAL end, cval = %d\n", cval);
                     break;
                 }
                 case DSL_IMMED_BIGNUM|0x80: {
                     cval = (int32_t)((int16_t)get_word()) * 655356L 
                          + (int32_t)((uint16_t)get_word());
+                    debug("DSL_IMMED_BIGNUM, cval = %d\n", cval);
                     break;
                 }
                 case DSL_IMMED_BYTE|0x80: {
                     cval = (int32_t)((int8_t)get_byte());
+                    debug("DSL_IMMED_BYTE, cval = %d\n", cval);
                     break;
                 }
                 case DSL_IMMED_WORD|0x80: {
@@ -343,6 +348,7 @@ int32_t read_number() {
                 }
                 case DSL_IMMED_NAME|0x80: {
                     cval = (int32_t)((int16_t)get_half_word() * -1);
+                    debug("DSL_IMMED_NAME, cval = %d\n", cval);
                     break;
                 }
                 case DSL_COMPLEX_VAL|0x80: {
@@ -352,6 +358,7 @@ int32_t read_number() {
                 case DSL_IMMED_STRING|0x80: {
                     cval = 0;
                     gBignumptr = (int32_t*) read_text();
+                    debug("DSL_IMMED_STRING, cval = %d, '%s'\n", cval, (char*) gBignumptr);
                     break;
                 }
                 case DSL_OP_ADD:
@@ -402,6 +409,7 @@ int32_t read_number() {
         if (!found_operator) {
             tval = accums[paren_level];
             //printf("operator not found, opstack[%d] = 0x%x, tval = %d\n", paren_level, opstack[paren_level], tval);
+            debug("operator: %d\n", opstack[paren_level]);
             switch(opstack[paren_level]) {
                 case DSL_PLUS:   tval += cval; break;
                 case DSL_MINUS:  tval -= cval; break;
@@ -509,6 +517,7 @@ static void write_complex_var(int32_t data) {
     uint16_t element[MAX_SEARCH_STACK];
     memset(element, 0x0, sizeof(uint16_t) * MAX_SEARCH_STACK);
     if (access_complex(&header, &depth, element) == 1) {
+        debug("writting header (%d) at depth (%d)\n", header, depth);
         smart_write_data(header, depth, element, data);
     }
 }
@@ -589,6 +598,7 @@ void read_simple_num_var() {
             gBignumptr = (int32_t*)((int8_t*)&dsl_global_flags[temps16/8]);
             gBignum = dsl_global_flags[temps16/8] & bitmask[temps16%8];
             if (gBignum > 0) { gBignum = 0; }
+            debug("reading gflag @ %d is equal to %d\n", temps16, gBignum);
             break;
         }
         case DSL_LFLAG: {
@@ -598,26 +608,31 @@ void read_simple_num_var() {
             if (gBignum > 0) {
                 gBignum = 1;
             }
+            debug("reading lflag @ %d is equal to %d\n", temps16, gBignum);
             break;
         }
         case DSL_GNUM: {
             gBignumptr = (int32_t*) ((int16_t *)&dsl_global_nums[temps16]);
             gBignum = dsl_global_nums[temps16];
+            debug("reading gnum @ %d is equal to %d\n", temps16, gBignum);
             break;
         }
         case DSL_LNUM: {
             gBignumptr = (int32_t*) ((int16_t *)&dsl_local_nums[temps16]);
             gBignum = dsl_local_nums[temps16];
+            debug("reading lnum @ %d is equal to %d\n", temps16, gBignum);
             break;
         }
         case DSL_GBIGNUM: {
             gBignumptr = &dsl_global_bnums[temps16];
             gBignum = dsl_global_bnums[temps16];
+            debug("reading gbignum @ %d is equal to %d\n", temps16, gBignum);
             break;
         }
         case DSL_LBIGNUM: {
             gBignumptr = &dsl_local_bnums[temps16];
             gBignum = dsl_local_bnums[temps16];
+            debug("reading lbignum @ %d is equal to %d\n", temps16, gBignum);
             break;
         }
         case DSL_GNAME: {
@@ -632,14 +647,17 @@ void read_simple_num_var() {
                 printf("ERROR: No variable GNAME!!!\n");
                 exit(1);
             }
+            debug("reading gname @ %d is equal to %d\n", temps16, gBignum);
             break;
         }
         case DSL_GSTRING: {
             gBignumptr = (int32_t*) dsl_global_strings[temps16];
+            debug("reading gstring @ %d is equal to '%s'\n", temps16, (char*)gBignumptr);
             break;
         }
         case DSL_LSTRING: {
             gBignumptr = (int32_t*) dsl_local_strings[temps16];
+            debug("reading lstring @ %d is equal to '%s'\n", temps16, (char*)gBignumptr);
             break;
         }
         default:
@@ -657,6 +675,7 @@ static int32_t read_complex(void) {
     memset(element, 0x0, sizeof(uint16_t) * MAX_SEARCH_STACK);
 
     if (access_complex(&header, &depth, element) == 1) {
+        debug("reading header (%d) at depth (%d)\n", header, depth);
         ret = get_complex_data(header, depth, element);
     } else {
         printf("read_complex: else not implemented!\n");

@@ -940,11 +940,11 @@ void dsl_if(void) {
         exit(1);
     }
     ifstate[ifptr] = get_accumulator();
-    printf("get_accumulator = %d\n", get_accumulator());
+    //printf("get_accumulator = %d\n", get_accumulator());
     //debug("get_accumulator = %d\n", get_accumulator());
     if (get_accumulator() == NO) {
         //if (param.val[0] != 956) {
-        printf("moving to else statement @ %d!\n", param.val[0]);
+        debug("moving to else statement @ %d!\n", param.val[0]);
         move_dsl_ptr(param.val[0]);
         //}
         /*
@@ -1116,9 +1116,7 @@ void dsl_local_sub_trace(void) {
 
 void dsl_print_string(void) {
     get_parameters(2);
-    warn("param.ptr[1] = %p\n", param.ptr[1]);
     narrate_open(NAR_SHOW_TEXT, (char *)param.ptr[1], param.val[0]);
-    warn("Now I need to wait for the dialog to close.\n");
 }
 
 void dsl_print_number(void) {

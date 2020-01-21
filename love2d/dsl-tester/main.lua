@@ -65,22 +65,24 @@ function love.load()
     -- So that once the player responds the conversation can continue.
     ds.dsl_execute(5, 2348) -- execute the dialog/narration
     ds.select_menu(0);      -- Select menu item #0 (#1, and #2 are available as well.)
-    -- Kinda work...
-    -- ds.dsl_execute(4, 1) -- I never got this in the real game, did you?
-    --LOOK CHECKS
+
+    -- These produce dialogs:
+    --ds.dsl_execute(5, 931)
+    --ds.dsl_execute(4, 1) -- I never got this in the real game, did you?
+    --ds.dsl_execute(5, 772)
+
+    --LOOK CHECKS that produce dialogs:
     --ds.dsl_execute(5, 6792)
     --ds.dsl_execute(5, 6832)
 
-    -- The following don't work, so call at your own risk!
+    -- These appear to work, but don't do anything right now.  Some flags/objects probably need to exist first...
     --ds.dsl_execute(2, 1)
-    --ds.dsl_execute(5, 54)
-    --ds.dsl_execute(5, 74)
-    --ds.dsl_execute(5, 94)
-    --ds.dsl_execute(5, 114)
-    --ds.dsl_execute(3, 1854)
-    --ds.dsl_execute(5, 931)
-    --ds.dsl_execute(5, 772)
-    --ds.dsl_execute(5, 6530)
+    --ds.dsl_execute(5, 54) -- lays a trap
+    --ds.dsl_execute(5, 74) -- lays a trap
+    --ds.dsl_execute(5, 94) -- lays a trap
+    --ds.dsl_execute(5, 114) -- lays a trap
+    --ds.dsl_execute(3, 1854) -- Seems the same as (5, 6530)
+    --ds.dsl_execute(5, 6530) -- Seems the same as (3, 1854)
 end
 
 function love.keypressed( key )
