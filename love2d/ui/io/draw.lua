@@ -1,16 +1,17 @@
 local draw = {
+  aspect = 1.2,
+  scale = 3,
   debug1 = '',
   debug2 = ''
 }
 local private = {}
 
-local scaleFactor = 3
 local aspectCorrection = 1.2
 local resolution
 
 function draw.init(_config)
   resolution = _config.env.resolution
-  scaleFactor = _config.env.resolution.scale
+  draw.scale = _config.env.resolution.scale
   aspectCorrection = _config.env.resolution.aspect
 
   love.graphics.setDefaultFilter('nearest', 'nearest')
@@ -31,7 +32,7 @@ function draw.clickItemIn(graphics, x, y, button)
   return clicked
 end
 
-function draw.graphic(graphic, noAspect)
+function draw.graphic(graphic, xOffset, yOffset)
   local a = graphic.anim
   local h = graphic.hover
   local i = get(graphic.active) or 1
@@ -40,18 +41,18 @@ function draw.graphic(graphic, noAspect)
   local image = graphic.timer and graphic.assets[a]
 
   if image then
-    private.drawImage(image, graphic.x, graphic.y)
+    private.drawImage(image, graphic.x, graphic.y, graphic.aspect, xOffset, yOffset)
   else
     -- Use the base asset
     image = graphic.assets[i]
-    private.drawImage(image, graphic.x, graphic.y, noAspect)
+    private.drawImage(image, graphic.x, graphic.y, graphic.aspect, xOffset, yOffset)
     
     -- If we have a hover graphic, draw over the base
     if h then
-      local inBox = draw.isMouseInBox(graphic.x, graphic.y, image:getWidth(), image:getHeight())
+      local inBox = draw.isMouseInBox(graphic.x, graphic.y, image:getWidth(), image:getHeight(), graphic.aspect)
 
       if inBox then
-        private.drawImage(graphic.assets[h], graphic.x, graphic.y)
+        private.drawImage(graphic.assets[h], graphic.x, graphic.y, graphic.aspect, xOffset, yOffset)
       end
     end
   end
@@ -64,7 +65,7 @@ function draw.collection(graphics)
 end
 
 function draw.absolute(image, x, y)
-  love.graphics.draw(image, x, y, 0, scaleFactor, scaleFactor * aspectCorrection)
+  love.graphics.draw(image, x, y, 0, draw.scale, draw.scale * aspectCorrection)
 end
 
 function draw.text(text)
@@ -73,22 +74,22 @@ function draw.text(text)
   if text.w then
     love.graphics.printf(
       get(text.value), 
-      text.x * scaleFactor, 
-      text.y * scaleFactor, 
-      text.w * scaleFactor, 
+      text.x * draw.scale, 
+      text.y * draw.scale, 
+      text.w * draw.scale, 
       text.align, 
       0, 
-      scaleFactor,
-      scaleFactor
+      draw.scale,
+      draw.scale
     )
   else
     love.graphics.print(
       get(text.value), 
-      text.x * scaleFactor, 
-      text.y * scaleFactor, 
+      text.x * draw.scale, 
+      text.y * draw.scale, 
       0, 
-      scaleFactor,
-      scaleFactor
+      draw.scale,
+      draw.scale
     )
   end
 end
@@ -101,58 +102,56 @@ function draw.textCollection(texts)
   end
 end
 
-function private.drawImage(image, x, y, noAspect, xOffset, yOffset)
+function private.drawImage(image, x, y, aspect, xOffset, yOffset)
   xOffset = xOffset or 0
   yOffset = yOffset or 0
 
-  local aspect = noAspect and 1 or aspectCorrection
-  local xFinal = x * scaleFactor + xOffset
-  local yFinal = y * scaleFactor * aspect + yOffset
+  local xFinal = x * draw.scale + xOffset
+  local yFinal = y * draw.scale * aspect + yOffset
 
-  love.graphics.draw(image, xFinal, yFinal, 0, scaleFactor, scaleFactor * aspect)
+  love.graphics.draw(image, xFinal, yFinal, 0, draw.scale, draw.scale * aspect)
 end
 
-function draw.isMouseInBox(x, y, width, height)
+function draw.isMouseInBox(x, y, width, height, aspect)
   local mx = love.mouse.getX()
   local my = love.mouse.getY()
   
-  return private.isInBox(mx, my, x, y, width, height, true)
+  return private.isInBox(mx, my, x, y, width, height, aspect)
 end
 
 function draw.isOverGraphic(graphic, mx, my)
   local act = graphic['active'] or 1
   local w = graphic.assets[act]:getWidth()
   local h = graphic.assets[act]:getHeight()
-  return private.isInBox(mx, my, graphic.x, graphic.y, w, h, true)
+  return private.isInBox(mx, my, graphic.x, graphic.y, w, h, graphic.aspect)
 end
 
-function private.isInBox(testX, testY, boxX, boxY, boxWidth, boxHeight, correctAspect)
-  local westX = boxX * scaleFactor
-  local northY = boxY * scaleFactor * (correctAspect and aspectCorrection or 1)
-  local eastX = (boxX + boxWidth) * scaleFactor
-  local southY = (boxY + boxHeight) * scaleFactor * (correctAspect and aspectCorrection or 1)
+function private.isInBox(testX, testY, boxX, boxY, boxWidth, boxHeight, aspect)
+  local westX = boxX * draw.scale
+  local northY = boxY * draw.scale * aspect
+  local eastX = (boxX + boxWidth) * draw.scale
+  local southY = (boxY + boxHeight) * draw.scale * aspect
 
   return westX < testX and testX <= eastX and northY < testY and testY <= southY
 end
 
 function draw.scaleUp()
-  scaleFactor = scaleFactor > 4 and 5 or scaleFactor + 1
+  draw.scale = draw.scale > 4 and 5 or draw.scale + 1
   private.resetWindow()
 end
 
 function draw.scaleDown()
-  scaleFactor = scaleFactor < 2 and 1 or scaleFactor - 1
+  draw.scale = draw.scale < 2 and 1 or draw.scale - 1
   private.resetWindow()
 end
 
 function draw.debug()
-  love.graphics.print(draw.debug1, 10 * scaleFactor, 185 * scaleFactor * aspectCorrection)
-  love.graphics.print(draw.debug2, 10 * scaleFactor, 190 * scaleFactor * aspectCorrection)
+  love.graphics.print(draw.debug1, 10 * draw.scale, 185 * draw.scale * aspectCorrection)
+  love.graphics.print(draw.debug2, 10 * draw.scale, 190 * draw.scale * aspectCorrection)
 end
 
 function private.resetWindow()
-  -- love.window.setMode(1920, 1080)
-  love.window.setMode(resolution.x, resolution.y) -- * aspectCorrection)
+  love.window.setMode(resolution.x, resolution.y)
 end
 
 return draw
