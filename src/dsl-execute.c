@@ -161,24 +161,8 @@ int do_dsl_command(uint8_t cmd) {
     return !exit_dsl;
 }
 
-void dsl_execute_subroutine(const int file, const int addr, const int is_mas) {
-    if (is_paused) {
-        error("dsl_print called while dsl execution is paused!  You must resume first!");
-        return;
-    }
-
-    this_gpl_type = is_mas ? MASFILE : DSLFILE;
-    unsigned long len;
-    unsigned char *dsl = (file >= 0)
-        ? (unsigned char*)gff_get_raw_bytes(DSLDATA_GFF_INDEX, is_mas ? GT_MAS : GT_GPL, file, &len)
-        : get_data_start_ptr();
-
-    command_implemented = 1;
-
-    debug("Executing %s file #%d @ %d\n", is_mas ? "MAS" : "DSL", file, addr);
-
-    push_data_ptr(dsl);
-    set_data_ptr(dsl, dsl + addr);
+// Execute until you get a return or a command fails.
+static void execute_until_exit() {
     uint8_t command = get_byte();
     local_sub_ret = 0; // In case this is a local subroutine.
     while (!local_sub_ret && do_dsl_command(command) && command_implemented) {
@@ -188,13 +172,36 @@ void dsl_execute_subroutine(const int file, const int addr, const int is_mas) {
             return;
         }
     }
-    pop_data_ptr();
 
     if (!command_implemented) {
         error("last command needs to be implemented!\n");
     } else {
         debug("returing from subroutine.\n");
     }
+}
+
+void dsl_execute_subroutine(const int file, const int addr, const int is_mas) {
+    if (is_paused) {
+        error("dsl_print called while dsl execution is paused!  You must resume first!");
+        return;
+    }
+
+    command_implemented = 1;
+    //TODO FIXME: Global issue here?
+    this_gpl_type = is_mas ? MASFILE : DSLFILE;
+    unsigned long len;
+    unsigned char *dsl = (file >= 0)
+        ? (unsigned char*)gff_get_raw_bytes(DSLDATA_GFF_INDEX, is_mas ? GT_MAS : GT_GPL, file, &len)
+        : get_data_start_ptr();
+
+    debug("Executing %s file #%d @ %d\n", is_mas ? "MAS" : "DSL", file, addr);
+
+    push_data_ptr(dsl);
+    set_data_ptr(dsl, dsl + addr);
+    execute_until_exit();
+    if (is_paused) { return; }
+    pop_data_ptr();
+
     debug("---------------------Ending Execution----------------------\n");
     debug("%lu of %lu\n", get_data_ptr() - get_data_start_ptr(), len);
 }
@@ -519,7 +526,8 @@ void dsl_setvar(void) {
 }
 
 void dsl_toggle_accum(void) {
-    command_implemented = 0;
+    int accum = get_accumulator();
+    set_accumulator(accum == 0 ? 1 : 0);
 }
 
 int16_t fgetstatus(int16_t id) {
@@ -932,11 +940,11 @@ void dsl_if(void) {
         exit(1);
     }
     ifstate[ifptr] = get_accumulator();
-    printf("get_accumulator = %d\n", get_accumulator());
+    //printf("get_accumulator = %d\n", get_accumulator());
     //debug("get_accumulator = %d\n", get_accumulator());
     if (get_accumulator() == NO) {
         //if (param.val[0] != 956) {
-        printf("moving to else statement @ %d!\n", param.val[0]);
+        debug("moving to else statement @ %d!\n", param.val[0]);
         move_dsl_ptr(param.val[0]);
         //}
         /*
@@ -1026,9 +1034,10 @@ void trace_protect() {
     }
 }
 
-uint16_t menu_functions[12];
-uint8_t menu_bytes[12];
+static uint16_t menu_functions[12];
+static uint8_t menu_bytes[12];
 #define MAXMENU   (24)
+static uint8_t menu_count;
 
 void display_menu() {
     int items = 0;
@@ -1036,12 +1045,14 @@ void display_menu() {
     read_number();
     char *menu = (char*) gBignumptr;
     narrate_open(NAR_ADD_MENU, menu, 0);
+    menu_count = 0;
     while ((peek_one_byte() != 0x4A) && (items <= MAXMENU)) {
         trace_protect();
         read_number();
         menu = (char*) gBignumptr;
         menu_functions[items] = read_number();
         menu_bytes[items] = (uint8_t) read_number();
+        menu_count++;
         if (menu_bytes[items] == 1) {
             narrate_open(NAR_ADD_MENU, menu, items + 1);
             items++;
@@ -1064,6 +1075,36 @@ void dsl_menu(void) {
     display_menu();
 }
 
+static void resume_execution() {
+    is_paused = 0;
+    do {
+        execute_until_exit();
+        if (is_paused) {
+            return;
+        }
+    } while (pop_data_ptr());
+}
+
+void dsl_select_menu(int option) {
+    if (option >= menu_count || option < 0) {
+        error("select_menu: Menu option %d selected, but only (0 - %d) available!\n", option, menu_count - 1);
+        return;
+    }
+    menu_count = 0;
+    debug ("option %d selected, which should go to: %d\n", option, menu_functions[option]);
+    set_data_ptr(get_data_start_ptr(), get_data_start_ptr() + menu_functions[option]);
+    resume_execution();
+}
+
+void dsl_resume_dialog() {
+    if (menu_count > 0) {
+        error("resume_dialog: called, but we are waiting for a menu selection!\n");
+        return;
+    }
+    debug ("resuming dialog\n");
+    resume_execution();
+}
+
 void dsl_setthing(void) {
     get_parameters(2);
     warn("I need move character %d's item of type %d\n", param.val[0], param.val[1]);
@@ -1075,9 +1116,7 @@ void dsl_local_sub_trace(void) {
 
 void dsl_print_string(void) {
     get_parameters(2);
-    warn("param.ptr[1] = %p\n", param.ptr[1]);
     narrate_open(NAR_SHOW_TEXT, (char *)param.ptr[1], param.val[0]);
-    warn("Now I need to wait for the dialog to close.\n");
 }
 
 void dsl_print_number(void) {
