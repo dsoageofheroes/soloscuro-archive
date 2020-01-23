@@ -1,19 +1,3 @@
---[[ PUBLIC MEMBERS
-
-.visible 
-
-.init(_cursors, _draw)
-.draw()
-.setSword(withNaySymbol)
-.setArrow(withNaySymbol)
-.setEye(withNaySymbol)
-.setNoMagic()
-.setHourglass()
-
-.clicked(x, y, button, istouch, presses)
-
-]]
-
 local mouse = {
   visible = true
 }
@@ -62,8 +46,6 @@ function mouse.draw()
   if mouse.visible then
     draw.absolute(activeCursor[1], x, y)
   end
-
-  -- draw.debug1 = 'mouse coords: '..x..'x, '..y..'y'
 end
 
 function mouse.clicked(x, y, button, istouch, presses)
