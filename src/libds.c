@@ -669,6 +669,36 @@ static int lua_select_menu(lua_State *L) {
     return 0;
 }
 
+// TODO FIXME: This will be migrated to other files if the design is accepted.
+static int cid = 0;
+static int lua_create_character_id(lua_State *L) {
+    if (cid < 1024) {
+        lua_pushinteger(L, cid++);
+    } else {
+        lua_pushinteger(L, -1);
+    }
+    return 1;
+}
+
+static int hps[1024];
+static int lua_get_hp(lua_State *L) {
+    lua_Integer id = luaL_checkinteger(L, 1);
+    if (id < 0 || id > 1024) {
+        lua_pushinteger(L, -1);
+    } else {
+        lua_pushinteger(L, hps[id]);
+    }
+    return 1;
+}
+static int lua_set_hp(lua_State *L) {
+    lua_Integer id = luaL_checkinteger(L, 1);
+    lua_Integer hp = luaL_checkinteger(L, 2);
+    if (id >= 0 && id < 1024) {
+        hps[id] = hp;
+    }
+    return 0;
+}
+
 /* End Object Functions */
 
 //library to be registered
@@ -747,6 +777,11 @@ static const struct luaL_Reg lslib [] = {
       {"dsl_change_region", lua_dsl_change_region},
 
       {"select_menu", lua_select_menu},
+
+      //Object functions
+      {"create_character_id", lua_create_character_id},
+      {"get_hp", lua_get_hp},
+      {"set_hp", lua_set_hp},
 
       // The End
       {NULL, NULL}  /* sentinel */
