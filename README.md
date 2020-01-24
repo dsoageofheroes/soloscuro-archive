@@ -13,4 +13,4 @@ A Dark Sun Engine
 4. Extract all the src/*.h files (I had to manually selected each one) to the lua5.1 directory.  (C:\Program Files\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0\mingw64\lib\gcc\x86_64-w64-mingw32\8.1.0\include)
 5. Now get the Lua 5.1 dll Library from love2d (https://love2d.org/ use the zipped.)
 6. Extract the liblua.dll file to mingw's lib location (C:\Program Files\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0\mingw64\lib\gcc\x86_64-w64-mingw32\8.1.0)
-7. ... to be continued...
+7. I was able to run by going to the solosocurio directory and typeing '<path to love.exe> love2d\gff-view\ <path to ds1 gff files>'
