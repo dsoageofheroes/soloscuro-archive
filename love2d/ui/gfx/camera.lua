@@ -16,9 +16,9 @@ end
 function camera.show(collection)
   for _,graphic in ipairs(collection) do
     local left = graphic.x * draw.scale
-    local top = graphic.y * draw.scale * draw.aspect
+    local top = graphic.y * draw.scale * graphic.aspect
     local right = left + graphic:getWidth() * draw.scale
-    local bottom = top + graphic:getHeight() * draw.scale * draw.aspect
+    local bottom = top + graphic:getHeight() * draw.scale * graphic.aspect
 
     if ((left + private.xOffset) <= camera.width and (right + private.xOffset) >= 0 and
         (top + private.yOffset) <= camera.height and (bottom + private.yOffset) >= 0

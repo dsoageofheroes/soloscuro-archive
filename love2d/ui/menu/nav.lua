@@ -22,13 +22,13 @@ function nav.init(_navItems, _menu)
 
   baseMenu =
   {
-    Graphic(_navItems.sun, 47),
-    Graphic(_navItems.panel, 0, 9),
+    DsGraphic(_navItems.sun, 47),
+    DsGraphic(_navItems.panel, 0, 9),
   }
 
   charViewNav =
   {
-    Graphic(_navItems.viewTitle, 56, 11),
+    DsGraphic(_navItems.viewTitle, 56, 11),
     private.charView(43, 164, true),
     private.inventory(67, 164),
     private.powers(91, 164),
@@ -81,7 +81,7 @@ function nav.init(_navItems, _menu)
 
   powersNav =
   {
-    Graphic(_navItems.powersTitle, 109, 11),
+    DsGraphic(_navItems.powersTitle, 109, 11),
     private.charView(43, 164),
     private.inventory(67, 164),
     private.powers(91, 164, true),
@@ -108,7 +108,7 @@ function nav.init(_navItems, _menu)
 
   effectsNav =
   {
-    Graphic(_navItems.effectsTitle, 85, 11),
+    DsGraphic(_navItems.effectsTitle, 85, 11),
     private.charView(43, 164),
     private.inventory(67, 164),
     private.powers(91, 164),
@@ -156,7 +156,7 @@ function nav.effects()
 end
 
 function private.charView(_x, _y, selected)
-  local view = Graphic(navItems.viewChar, _x, _y)
+  local view = DsGraphic(navItems.viewChar, _x, _y)
 
   if selected then
     view.active = 4
@@ -172,7 +172,7 @@ function private.charView(_x, _y, selected)
 end
 
 function private.inventory(_x, _y, selected)
-  local inv = Graphic(navItems.viewInv, _x, _y)
+  local inv = DsGraphic(navItems.viewInv, _x, _y)
 
   if selected then
     inv.active = 4
@@ -188,7 +188,7 @@ function private.inventory(_x, _y, selected)
 end
 
 function private.powers(_x, _y, selected)
-  local pow = Graphic(navItems.viewPowers, _x, _y)
+  local pow = DsGraphic(navItems.viewPowers, _x, _y)
 
   if selected then
     pow.active = 4
@@ -204,7 +204,7 @@ function private.powers(_x, _y, selected)
 end
 
 function private.effects(_x, _y, selected)
-  local eff = Graphic(navItems.viewEffects, _x, _y)
+  local eff = DsGraphic(navItems.viewEffects, _x, _y)
 
   if selected then
     eff.active = 4
@@ -221,15 +221,15 @@ end
 
 -- Restored item; unused so far
 function private.spellbook(_x, _y)
-  return Graphic(navItems.spellbook, 138, 164):setHover(2)
+  return DsGraphic(navItems.spellbook, 138, 164):setHover(2)
 end
 
 function private.miniMenu(_x, _y)
-  return Graphic(navItems.miniMenu, _x, _y):setActive(3)
+  return DsGraphic(navItems.miniMenu, _x, _y):setActive(3)
 end
 
 function private.corona(_x, _y)
-  return Graphic(navItems.corona, _x, _y)
+  return DsGraphic(navItems.corona, _x, _y)
           :setHover(2)
           :setClicked(function(self, button)
             menu:open('MainMenu')
@@ -239,7 +239,7 @@ end
 function private.portrait(_x, _y, index)
   local portraitWidth = navItems.portraitBorder[1]:getWidth()
 
-  return Graphic(navItems.portrait, _x, _y)
+  return DsGraphic(navItems.portrait, _x, _y)
           :setActive(2)
           :setClicked(function(self, button)
             menu:selectedChar(index)
@@ -256,18 +256,18 @@ function private.portrait(_x, _y, index)
 end
 
 function private.portraitBorder(_x, _y, index)
-  return Graphic(navItems.portraitBorder, _x, _y)
+  return DsGraphic(navItems.portraitBorder, _x, _y)
           :setActive(function() 
             return menu:selectedChar() == index and 4 or 1 
           end)
 end
 
 function private.leader(_x, _y, index)
-  return Graphic(navItems.leader, _x, _y):setActive(3)
+  return DsGraphic(navItems.leader, _x, _y):setActive(3)
 end
 
 function private.AI(_x, _y)
-  return Graphic(navItems.AI, _x, _y):setActive(3)
+  return DsGraphic(navItems.AI, _x, _y):setActive(3)
 end
 
 return nav

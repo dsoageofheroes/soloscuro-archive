@@ -21,22 +21,22 @@ function popup.createChar(_x, _y)
 
   local elements = 
   {
-    Graphic(popupAssets.createChar, _x, _y),
-    Graphic(popupAssets.text1, _x + 8, _y + 17)
+    DsGraphic(popupAssets.createChar, _x, _y),
+    DsGraphic(popupAssets.text1, _x + 8, _y + 17)
       :setHover(2)
       :setClicked(simpleClicked)
       :animate(anim, function()
         menu:open('CreateChar')
       end),
-    Graphic(popupAssets.text2, _x + 8, _y + 29)
+    DsGraphic(popupAssets.text2, _x + 8, _y + 29)
       :setHover(2)
       :setClicked(simpleClicked)
       :animate(anim),
-    Graphic(popupAssets.text3, _x + 8, _y + 41)
+    DsGraphic(popupAssets.text3, _x + 8, _y + 41)
       :setHover(2)
       :setClicked(simpleClicked)
       :animate(anim, cancel),
-    Graphic(popupAssets.corona, _x + 102, _y + 36)
+    DsGraphic(popupAssets.corona, _x + 102, _y + 36)
       :setHover(2)
       :setClicked(cancel),
   }

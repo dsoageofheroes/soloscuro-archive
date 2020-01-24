@@ -5,6 +5,7 @@ Graphic = require 'models/Graphic'
 Region = require 'models/Region'
 Text = require 'models/Text'
 
+-- For the original DS graphics
 DsGraphic = function(assets, x, y)
   return Graphic(assets, x, y):setAspect(1.2)
 end
@@ -55,7 +56,7 @@ function love.draw()
 
   if menu.active then
     camera.show(regionTest.map)
-    -- menu.draw()
+    menu.draw()
   else
     camera.show(regionTest.map)
   end

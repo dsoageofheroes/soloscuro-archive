@@ -31,6 +31,7 @@ return function(_assetFrames, _x, _y)
 
   function graphic:setAspect(aspect)
     self.aspect = aspect
+    return self
   end
 
   function graphic:setActive(index)

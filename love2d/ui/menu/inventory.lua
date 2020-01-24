@@ -24,13 +24,13 @@ function inventory.init(_inventory, _menu, _nav)
   menuElements =
   {
     -- Main overlay
-    Graphic(_inventory.background),
-    Graphic(_inventory.aside, 233, 4),
-    Graphic(_inventory.charBackground, 75, 36),
+    DsGraphic(_inventory.background),
+    DsGraphic(_inventory.aside, 233, 4),
+    DsGraphic(_inventory.charBackground, 75, 36),
     
-    Graphic(_inventory.textbox, 53, 3):setActive(2),
-    Graphic(_inventory.textbox, 46, 161):setActive(4),
-    Graphic(_inventory.textbox, 57, 183):setActive(1),
+    DsGraphic(_inventory.textbox, 53, 3):setActive(2),
+    DsGraphic(_inventory.textbox, 46, 161):setActive(4),
+    DsGraphic(_inventory.textbox, 57, 183):setActive(1),
   }
 
   addRange(menuElements, nav.inventory())
@@ -81,7 +81,7 @@ function inventory.init(_inventory, _menu, _nav)
 end
 
 function private.slot(_x, _y, assetIndex)
-  return Graphic(invAssets.slot, _x, _y)
+  return DsGraphic(invAssets.slot, _x, _y)
           :setActive(assetIndex)
           :setHover(8)
           :setClicked(private.simpleClicked)

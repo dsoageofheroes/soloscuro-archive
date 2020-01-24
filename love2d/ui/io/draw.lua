@@ -1,18 +1,15 @@
 local draw = {
-  aspect = 1.2,
   scale = 3,
   debug1 = '',
   debug2 = ''
 }
 local private = {}
 
-local aspectCorrection = 1.2
 local resolution
 
 function draw.init(_config)
   resolution = _config.env.resolution
   draw.scale = _config.env.resolution.scale
-  aspectCorrection = _config.env.resolution.aspect
 
   love.graphics.setDefaultFilter('nearest', 'nearest')
   private.resetWindow()
@@ -65,7 +62,7 @@ function draw.collection(graphics)
 end
 
 function draw.absolute(image, x, y)
-  love.graphics.draw(image, x, y, 0, draw.scale, draw.scale * aspectCorrection)
+  love.graphics.draw(image, x, y, 0, draw.scale, draw.scale * 1.2)
 end
 
 function draw.text(text)
@@ -146,8 +143,8 @@ function draw.scaleDown()
 end
 
 function draw.debug()
-  love.graphics.print(draw.debug1, 10 * draw.scale, 185 * draw.scale * aspectCorrection)
-  love.graphics.print(draw.debug2, 10 * draw.scale, 190 * draw.scale * aspectCorrection)
+  love.graphics.print(draw.debug1, 10 * draw.scale, 185 * draw.scale * 1.2)
+  love.graphics.print(draw.debug2, 10 * draw.scale, 190 * draw.scale * 1.2)
 end
 
 function private.resetWindow()

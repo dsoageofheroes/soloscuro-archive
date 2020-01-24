@@ -14,25 +14,25 @@ function menuItems.init(_items, _menu)
 
   menuItems.elements =
   {
-    Graphic(_items.sun, 47, 25),
-    Graphic(_items.stone, 4, 45),
-    Graphic(_items.start, 94, 70)
+    DsGraphic(_items.sun, 47, 25),
+    DsGraphic(_items.stone, 4, 45),
+    DsGraphic(_items.start, 94, 70)
       :setHover(2)
       :setClicked(simpleClicked)
       :animate(anim, function()
         menu.active = false
       end),
-    Graphic(_items.create, 50, 87)
+    DsGraphic(_items.create, 50, 87)
       :setHover(2)
       :setClicked(simpleClicked)
       :animate(anim, function()
         menu:open('CharView')
       end),
-    Graphic(_items.load, 64, 104)
+    DsGraphic(_items.load, 64, 104)
       :setHover(2)
       :setClicked(simpleClicked)
       :animate(anim),
-    Graphic(_items.exit, 92, 120)
+    DsGraphic(_items.exit, 92, 120)
       :setHover(2)
       :setClicked(simpleClicked)
       :animate(anim, function()

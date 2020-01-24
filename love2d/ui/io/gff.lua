@@ -73,7 +73,7 @@ function gff.loadMap(file, tiles)
           local nextx = rmapx + 16*(i-rmapstartx) -- tiles are 16x16
           local nexty = rmapy + 16*(j-rmapstarty) -- tiles are 16x16
           local tile_id = string.byte(rmap, i+j*128+1)
-          table.insert(map, Graphic(tiles[tile_id], nextx, nexty))
+          table.insert(map, DsGraphic(tiles[tile_id], nextx, nexty))
       end
   end
 
