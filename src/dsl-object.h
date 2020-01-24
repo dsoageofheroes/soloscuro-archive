@@ -146,9 +146,26 @@ typedef struct _ds1_item_t { // Not confirmed at all...
     int8_t   adds;
 } ds1_item_t;
 
+typedef struct _ds_stats_t {
+    uint8_t STR;
+    uint8_t DEX;
+    uint8_t CON;
+    uint8_t INT;
+    uint8_t WIS;
+    uint8_t CHA;
+} _ds_stats_t;
+
+typedef struct _ds_saving_throw_t {
+    uint8_t paral;
+    uint8_t wand;
+    uint8_t petr;
+    uint8_t breath;
+    uint8_t spell;
+} _ds_saving_throw_t;
+
 typedef struct _ds1_character_t {
-    uint32_t current_exp;
-    uint32_t high_exp;
+    uint32_t current_xp;
+    uint32_t high_xp;
     uint16_t base_hp;
     uint16_t high_hp;
     uint16_t base_psi;
@@ -157,18 +174,18 @@ typedef struct _ds1_character_t {
     uint8_t race;
     uint8_t gender;
     uint8_t alignment;
-    uint8_t stats[6];
+    _ds_stats_t stats;
     uint8_t class[3];
     uint8_t level[3];
     uint8_t base_ac;
     uint8_t base_move;
-    uint8_t magic_resistence;
+    uint8_t magic_resistance;
     uint8_t num_blows;
     uint8_t num_attacks[3];
     uint8_t num_dice[3];
     uint8_t num_sides[3];
     uint8_t num_adds[3];
-    uint8_t saving_throw[5];
+    _ds_saving_throw_t saving_throw;
     uint8_t allegiance;
     uint8_t size;
     uint8_t spell_group;
@@ -176,7 +193,7 @@ typedef struct _ds1_character_t {
     uint16_t sound_fx;
     uint16_t attack_sound;
     uint8_t psi_group;
-    uint8_t pallete;
+    uint8_t palette;
 } ds1_character_t;
 
 typedef struct _item1r_t {
