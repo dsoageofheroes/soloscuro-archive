@@ -1,5 +1,6 @@
 -- This loads the C library and binds is to a 'ds' object
 ds = require 'libds'
+require 'character'
 dsl = {}
 
 ADD_MENU = 0
@@ -53,6 +54,46 @@ function love.load()
     print('Initialized, loading directory:' .. arg[2])
     ds.gff_load_directory(arg[2])
 
+    dialog_test()
+    object_test()
+end
+
+function object_test()
+    -- Lets create four characters:
+    player1 = Character()
+    player2 = Character()
+    player3 = Character()
+    player4 = Character()
+
+    -- Now print out thier ids:
+    print ("Player 1's id = " .. player1.id)
+    print ("Player 2's id = " .. player2.id)
+    print ("Player 3's id = " .. player3.id)
+    print ("Player 4's id = " .. player4.id)
+
+    -- Now print out thier current HP (could be anything);
+    print ("Player 1's hp = " .. player1.hp)
+    print ("Player 2's hp = " .. player2.hp)
+    print ("Player 3's hp = " .. player3.hp)
+    print ("Player 4's hp = " .. player4.hp)
+
+    -- Now lets set the hps:
+    player1.hp = 30;
+    player2.hp = 35;
+    player3.hp = -35;
+    player4.hp = 1;
+
+    -- Now print thier HPs again:
+    print ("Player 1's hp = " .. player1.hp)
+    print ("Player 2's hp = " .. player2.hp)
+    print ("Player 3's hp = " .. player3.hp)
+    print ("Player 4's hp = " .. player4.hp)
+
+    -- The following causes a LUA error because I haven't defined str yet:
+    --player1.str = 5
+end
+
+function dialog_test()
     -- Warning: This currently only works once!  (don't call again for now...)
     ds.mas_execute(42) -- Change to the arena region
 
