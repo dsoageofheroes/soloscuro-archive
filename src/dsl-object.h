@@ -104,9 +104,26 @@
 
 #define COMBAT_NAME_SIZE (18)
 
-typedef struct _ds1_combat_t {
+typedef struct _ds_stats_t {
+    uint8_t STR;
+    uint8_t DEX;
+    uint8_t CON;
+    uint8_t INT;
+    uint8_t WIS;
+    uint8_t CHA;
+} _ds_stats_t;
+
+typedef struct _ds_saving_throw_t {
+    uint8_t paral;
+    uint8_t wand;
+    uint8_t petr;
+    uint8_t breath;
+    uint8_t spell;
+} _ds_saving_throw_t;
+
+typedef struct _ds_combat_t {
     int16_t hp; // At byte pos 0, confirmed
-    int16_t psi; // 2, confirmed
+    int16_t psp; // 2, confirmed
     int16_t char_index; // 4, unconfirmed but looks right.
     int16_t id;  // 6, yes, but is id *-1
     int16_t ready_item_index; // 8, to be cleared.
@@ -124,7 +141,7 @@ typedef struct _ds1_combat_t {
     int8_t  thac0; // 31, confirmed
     uint8_t priority;
     uint8_t flags;
-    uint8_t stats[6]; // 34, confirmed
+    _ds_stats_t stats; // 34, confirmed
     //uint8_t direction;
     // WARNING: This is actually 16, but we do 18 as a buffer.
     char    name[COMBAT_NAME_SIZE]; // 40, confirmed
@@ -143,32 +160,15 @@ typedef struct _ds1_item_t { // Not confirmed at all...
     uint8_t  priority;
     int8_t   slot;
     uint16_t name_index;
-    int8_t   adds;
+    int8_t   bonus; // positive = bonus, negative = cursed
 } ds1_item_t;
-
-typedef struct _ds_stats_t {
-    uint8_t STR;
-    uint8_t DEX;
-    uint8_t CON;
-    uint8_t INT;
-    uint8_t WIS;
-    uint8_t CHA;
-} _ds_stats_t;
-
-typedef struct _ds_saving_throw_t {
-    uint8_t paral;
-    uint8_t wand;
-    uint8_t petr;
-    uint8_t breath;
-    uint8_t spell;
-} _ds_saving_throw_t;
 
 typedef struct _ds1_character_t {
     uint32_t current_xp;
     uint32_t high_xp;
     uint16_t base_hp;
     uint16_t high_hp;
-    uint16_t base_psi;
+    uint16_t base_psp;
     uint16_t id;
     uint16_t legal_class;
     uint8_t race;
@@ -184,7 +184,7 @@ typedef struct _ds1_character_t {
     uint8_t num_attacks[3];
     uint8_t num_dice[3];
     uint8_t num_sides[3];
-    uint8_t num_adds[3];
+    uint8_t num_bonuses[3];
     _ds_saving_throw_t saving_throw;
     uint8_t allegiance;
     uint8_t size;
@@ -199,7 +199,7 @@ typedef struct _ds1_character_t {
 typedef struct _item1r_t {
     uint8_t weapon;
     uint8_t damage_type;
-    uint8_t wieght;
+    uint8_t weight;
     uint8_t base_hp;
     uint8_t material;
     uint8_t placement;
@@ -207,7 +207,7 @@ typedef struct _item1r_t {
     uint8_t num_attacks;
     uint8_t sides;
     uint8_t dice;
-    int8_t adds;
+    int8_t bonus; // positive = bonus, negative = cursed
     uint8_t flags;
     uint16_t legal_class;
     int8_t base_ac;

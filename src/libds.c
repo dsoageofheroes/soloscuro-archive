@@ -813,17 +813,17 @@ static void push_ds1_monster(lua_State *L, gff_monster_entry_t *me) {
 static void push_ds1_combat(lua_State *L, ds1_combat_t *dc) {
     create_table_entry_si(L, "type", SO_DS1_COMBAT);
     create_table_entry_si(L, "hp", dc->hp);
-    create_table_entry_si(L, "psi", dc->psi);
+    create_table_entry_si(L, "psp", dc->psp);
     create_table_entry_si(L, "id", abs(dc->id));
     create_table_entry_si(L, "ac", dc->ac);
     create_table_entry_si(L, "move", dc->move);
     create_table_entry_si(L, "thac0", dc->thac0);
-    create_table_entry_si(L, "str", dc->stats[0]);
-    create_table_entry_si(L, "dex", dc->stats[1]);
-    create_table_entry_si(L, "con", dc->stats[2]);
-    create_table_entry_si(L, "int", dc->stats[3]);
-    create_table_entry_si(L, "wis", dc->stats[4]);
-    create_table_entry_si(L, "cha", dc->stats[5]);
+    create_table_entry_si(L, "str", dc->stats.STR);
+    create_table_entry_si(L, "dex", dc->stats.DEX);
+    create_table_entry_si(L, "con", dc->stats.CON);
+    create_table_entry_si(L, "int", dc->stats.INT);
+    create_table_entry_si(L, "wis", dc->stats.WIS);
+    create_table_entry_si(L, "cha", dc->stats.CHA);
     create_table_entry_ss(L, "name", dc->name);
 }
 
