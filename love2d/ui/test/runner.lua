@@ -20,6 +20,7 @@ function testRunner.init(args)
     if not (testToRun == nil) then
         print ("Need to run test:" .. testToRun)
         testFunctions[testToRun]()
+        os.exit(0)
     end
 end
 
