@@ -1,7 +1,7 @@
 MAIN   = src/main.c
 SRCS   = $(filter-out $(MAIN), $(wildcard src/*.c))
 OBJS   = $(SRCS:src/%.c=obj/%.o)
-CFLAGS = -g -I src/ -I xmimidi/ -L./ -Werror -Wall -llua5.1 -lxmimidi -O2 -DDEBUG=1
+CFLAGS = -g -I src/ -I ext/ -L./ -Werror -Wall -llua5.1 -lxmimidi -O2 -DDEBUG=1
 EXEC   = mdark
 
 ifdef OS
@@ -22,7 +22,7 @@ libds.so: $(OBJS) libxmimidi.so
 	gcc -L./ $(OBJS) -shared -o libds.$(LIB_EXT) -llua5.1 -lxmimidi
 
 libxmimidi.so:  
-	gcc xmimidi/*.c -shared -o libxmimidi.$(LIB_EXT)
+	gcc ext/xmimidi.c -shared -o libxmimidi.$(LIB_EXT)
 
 obj/%.o: src/%.c src/%.h obj
 	gcc -c $(CFLAGS) $< -o $@
