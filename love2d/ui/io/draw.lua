@@ -149,6 +149,7 @@ end
 
 function private.resetWindow()
   love.window.setMode(resolution.x, resolution.y)
+  love.window.setFullscreen(resolution.fullscreen)
 end
 
 return draw

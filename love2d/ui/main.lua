@@ -74,33 +74,20 @@ end
 function love.update(dt)
   menu.update(dt)
 
-  if love.keyboard.isDown('right') then
-    camera.moveX(-16 * dt * 16)
-  end
-
-  if love.keyboard.isDown('left') then
-    camera.moveX(16 * dt * 16)
-  end
-
-  if love.keyboard.isDown('up') then
-    camera.moveY(16 * dt * 16)
-  end
-
-  if love.keyboard.isDown('down') then
-    camera.moveY(-16 * dt * 16)
-  end
+  camera.update(dt)
 end
 
 function love.keypressed( key )
-  if key == 'h' then devEnabled = not devEnabled end
+  if key == 'h' then 
+    camera.setX(0)
+    camera.setY(0) 
+  end
   if key == 'm' then mouse.visible = not mouse.visible end
-  -- if key == 'right' then regionTest.shiftX(-16) end
-  -- if key == 'left' then regionTest.shiftX(16) end
-  -- if key == 'up' then regionTest.shiftY(16) end
-  -- if key == 'down' then regionTest.shiftY(-16) end
 
   if key == "d" then draw.scaleDown() end
   if key == "u" then draw.scaleUp() end
+
+  if key == "escape" then love.event.quit(0) end
 end
 
 function love.mousepressed(x, y, button, istouch, presses)

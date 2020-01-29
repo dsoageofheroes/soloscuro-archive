@@ -16,6 +16,7 @@ return
       x = 640,
       y = 480,
       scale = 2,
+      fullscreen = false,
     },
   }
 }

@@ -13,6 +13,31 @@ function camera.init(_config, _draw)
   camera.height = _config.env.resolution.y
 end
 
+function camera.update(dt)
+  local x = love.mouse.getX()
+  local y = love.mouse.getY()
+
+  -- Move left
+  if x < 6 * draw.scale then
+    camera.moveX(440 * dt * draw.scale)
+  end
+
+  -- Move right
+  if x > camera.width - (6 * draw.scale) then
+    camera.moveX(-440 * dt * draw.scale)
+  end
+
+  -- Move up
+  if y < 6 * draw.scale then
+    camera.moveY(440 * dt * draw.scale)
+  end
+
+  -- Move down
+  if y > camera.height - (6 * draw.scale) then
+    camera.moveY(-440 * dt * draw.scale)
+  end
+end
+
 function camera.show(collection)
   for _,graphic in ipairs(collection) do
     local left = graphic.x * draw.scale
@@ -42,10 +67,6 @@ end
 
 function camera.setY(_y)
   private.yOffset = _y
-end
-
-function private.isInView(graphic)
-
 end
 
 return camera
