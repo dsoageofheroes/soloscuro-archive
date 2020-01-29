@@ -28,11 +28,12 @@ local menuItems = require 'menu/menuItems'
 local mouse = require 'io/mouse'
 local party = require 'party'
 local popup = require 'menu/popup'
+local tester = require 'test/runner'
 
 local regionTest
 local devEnabled = false
 
-function love.load()
+function love.load(args)
   math.randomseed(os.clock())
 
   draw.init(config)
@@ -48,6 +49,8 @@ function love.load()
   charInventory.init(gff.inventory, menu, charNav)
   createChar.init(gff.createChar, menu, font)
   menu.init(draw, animation, menuItems, charView, charInventory, createChar, popup)
+
+  tester.init(args)
 
   regionTest = Region(gff, "rgn2a.gff")
 end

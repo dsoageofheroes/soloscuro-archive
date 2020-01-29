@@ -111,7 +111,7 @@ typedef struct _ds_stats_t {
     uint8_t INT;
     uint8_t WIS;
     uint8_t CHA;
-} _ds_stats_t;
+} ds_stats_t;
 
 typedef struct _ds_saving_throw_t {
     uint8_t paral;
@@ -119,7 +119,7 @@ typedef struct _ds_saving_throw_t {
     uint8_t petr;
     uint8_t breath;
     uint8_t spell;
-} _ds_saving_throw_t;
+} ds_saving_throw_t;
 
 typedef struct _ds_combat_t {
     int16_t hp; // At byte pos 0, confirmed
@@ -141,7 +141,7 @@ typedef struct _ds_combat_t {
     int8_t  thac0; // 31, confirmed
     uint8_t priority;
     uint8_t flags;
-    _ds_stats_t stats; // 34, confirmed
+    ds_stats_t stats; // 34, confirmed
     //uint8_t direction;
     // WARNING: This is actually 16, but we do 18 as a buffer.
     char    name[COMBAT_NAME_SIZE]; // 40, confirmed
@@ -174,7 +174,7 @@ typedef struct _ds1_character_t {
     uint8_t race;
     uint8_t gender;
     uint8_t alignment;
-    _ds_stats_t stats;
+    ds_stats_t stats;
     uint8_t class[3];
     uint8_t level[3];
     uint8_t base_ac;
@@ -185,7 +185,7 @@ typedef struct _ds1_character_t {
     uint8_t num_dice[3];
     uint8_t num_sides[3];
     uint8_t num_bonuses[3];
-    _ds_saving_throw_t saving_throw;
+    ds_saving_throw_t saving_throw;
     uint8_t allegiance;
     uint8_t size;
     uint8_t spell_group;
