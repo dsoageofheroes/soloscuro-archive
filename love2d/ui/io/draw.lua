@@ -153,3 +153,4 @@ function private.resetWindow()
 end
 
 return draw
+

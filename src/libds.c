@@ -8,6 +8,7 @@
 
 #include "dsl.h"
 #include "dsl-execute.h"
+#include "dsl-object.h"
 #include "dsl-var.h"
 #include "gff.h"
 #include "gff-image.h"
@@ -669,13 +670,10 @@ static int lua_select_menu(lua_State *L) {
     return 0;
 }
 
-// TODO FIXME: This will be migrated to other files, at some point...
-#define MAX_CHARACTERS (4)
-ds1_character_t characters[4];
-static int cid = 0;
-static int lua_create_character_id(lua_State *L) {
-    if (cid < MAX_CHARACTERS) {
-        lua_pushinteger(L, cid++);
+static int lua_valid_character_id(lua_State *L) {
+    lua_Integer id = luaL_checkinteger (L, 1);
+    if (dsl_valid_character_id(id)) {
+        lua_pushinteger(L, 1);
     } else {
         lua_pushinteger(L, -1);
     }
@@ -684,7 +682,7 @@ static int lua_create_character_id(lua_State *L) {
 
 #define LUA_GET_CHARACTER_COMMAND(LUANAME, CHARACTER_FIELD) static int lua_get_ ## LUANAME (lua_State *L) { \
     lua_Integer id = luaL_checkinteger(L, 1); \
-    if (id < 0 || id > MAX_CHARACTERS) { \
+    if (!dsl_valid_character_id(id)) { \
         lua_pushinteger(L, -1); \
     } else { \
         lua_pushinteger(L, CHARACTER_FIELD); \
@@ -695,7 +693,7 @@ static int lua_create_character_id(lua_State *L) {
 #define LUA_SET_CHARACTER_COMMAND(LUANAME, CHARACTER_FIELD) static int lua_set_ ## LUANAME (lua_State *L) { \
     lua_Integer id = luaL_checkinteger(L, 1); \
     lua_Integer val = luaL_checkinteger(L, 2); \
-    if (id >= 0 && id < MAX_CHARACTERS) { \
+    if (dsl_valid_character_id(id)) { \
         CHARACTER_FIELD = val; \
     } \
     return 0; \
@@ -705,58 +703,58 @@ static int lua_create_character_id(lua_State *L) {
     LUA_SET_CHARACTER_COMMAND(LUANAME, CHARACTER_FIELD) \
     LUA_GET_CHARACTER_COMMAND(LUANAME, CHARACTER_FIELD)
 
-CREATE_SET_GET_CHARACTERS_COMMAND(current_xp, characters[id].current_xp)
-CREATE_SET_GET_CHARACTERS_COMMAND(high_xp, characters[id].high_xp)
-CREATE_SET_GET_CHARACTERS_COMMAND(base_hp, characters[id].base_hp)
-CREATE_SET_GET_CHARACTERS_COMMAND(high_hp, characters[id].high_hp)
-CREATE_SET_GET_CHARACTERS_COMMAND(base_psp, characters[id].base_psp)
-CREATE_SET_GET_CHARACTERS_COMMAND(legal_class, characters[id].legal_class)
-CREATE_SET_GET_CHARACTERS_COMMAND(race, characters[id].race)
-CREATE_SET_GET_CHARACTERS_COMMAND(gender, characters[id].gender)
-CREATE_SET_GET_CHARACTERS_COMMAND(alignment, characters[id].alignment)
-CREATE_SET_GET_CHARACTERS_COMMAND(str, characters[id].stats.STR)
-CREATE_SET_GET_CHARACTERS_COMMAND(dex, characters[id].stats.DEX)
-CREATE_SET_GET_CHARACTERS_COMMAND(con, characters[id].stats.CON)
-CREATE_SET_GET_CHARACTERS_COMMAND(int, characters[id].stats.INT)
-CREATE_SET_GET_CHARACTERS_COMMAND(wis, characters[id].stats.WIS)
-CREATE_SET_GET_CHARACTERS_COMMAND(cha, characters[id].stats.CHA)
-CREATE_SET_GET_CHARACTERS_COMMAND(class0, characters[id].class[0])
-CREATE_SET_GET_CHARACTERS_COMMAND(class1, characters[id].class[1])
-CREATE_SET_GET_CHARACTERS_COMMAND(class2, characters[id].class[2])
-CREATE_SET_GET_CHARACTERS_COMMAND(level0, characters[id].level[0])
-CREATE_SET_GET_CHARACTERS_COMMAND(level1, characters[id].level[1])
-CREATE_SET_GET_CHARACTERS_COMMAND(level2, characters[id].level[2])
-CREATE_SET_GET_CHARACTERS_COMMAND(base_ac, characters[id].base_ac)
-CREATE_SET_GET_CHARACTERS_COMMAND(base_move, characters[id].base_move)
-CREATE_SET_GET_CHARACTERS_COMMAND(magic_resistance, characters[id].magic_resistance)
-CREATE_SET_GET_CHARACTERS_COMMAND(num_blows, characters[id].num_blows)
-CREATE_SET_GET_CHARACTERS_COMMAND(num_attacks0, characters[id].num_attacks[0])
-CREATE_SET_GET_CHARACTERS_COMMAND(num_attacks1, characters[id].num_attacks[1])
-CREATE_SET_GET_CHARACTERS_COMMAND(num_attacks2, characters[id].num_attacks[2])
-CREATE_SET_GET_CHARACTERS_COMMAND(num_dice0, characters[id].num_dice[0])
-CREATE_SET_GET_CHARACTERS_COMMAND(num_dice1, characters[id].num_dice[1])
-CREATE_SET_GET_CHARACTERS_COMMAND(num_dice2, characters[id].num_dice[2])
-CREATE_SET_GET_CHARACTERS_COMMAND(num_sides0, characters[id].num_sides[0])
-CREATE_SET_GET_CHARACTERS_COMMAND(num_sides1, characters[id].num_sides[1])
-CREATE_SET_GET_CHARACTERS_COMMAND(num_sides2, characters[id].num_sides[2])
-CREATE_SET_GET_CHARACTERS_COMMAND(num_bonuses0, characters[id].num_bonuses[0])
-CREATE_SET_GET_CHARACTERS_COMMAND(num_bonuses1, characters[id].num_bonuses[1])
-CREATE_SET_GET_CHARACTERS_COMMAND(num_bonuses2, characters[id].num_bonuses[2])
-CREATE_SET_GET_CHARACTERS_COMMAND(paral, characters[id].saving_throw.paral)
-CREATE_SET_GET_CHARACTERS_COMMAND(wand, characters[id].saving_throw.wand)
-CREATE_SET_GET_CHARACTERS_COMMAND(petr, characters[id].saving_throw.petr)
-CREATE_SET_GET_CHARACTERS_COMMAND(breath, characters[id].saving_throw.breath)
-CREATE_SET_GET_CHARACTERS_COMMAND(spell, characters[id].saving_throw.spell)
-CREATE_SET_GET_CHARACTERS_COMMAND(allegiance, characters[id].allegiance)
-CREATE_SET_GET_CHARACTERS_COMMAND(size, characters[id].size)
-CREATE_SET_GET_CHARACTERS_COMMAND(spell_group, characters[id].spell_group)
-CREATE_SET_GET_CHARACTERS_COMMAND(high_level0, characters[id].high_level[0])
-CREATE_SET_GET_CHARACTERS_COMMAND(high_level1, characters[id].high_level[1])
-CREATE_SET_GET_CHARACTERS_COMMAND(high_level2, characters[id].high_level[2])
-CREATE_SET_GET_CHARACTERS_COMMAND(sound_fx, characters[id].sound_fx)
-CREATE_SET_GET_CHARACTERS_COMMAND(attack_sound, characters[id].attack_sound)
-CREATE_SET_GET_CHARACTERS_COMMAND(psi_group, characters[id].psi_group)
-CREATE_SET_GET_CHARACTERS_COMMAND(palette, characters[id].palette)
+CREATE_SET_GET_CHARACTERS_COMMAND(current_xp, dsl_get_character(id)->current_xp)
+CREATE_SET_GET_CHARACTERS_COMMAND(high_xp, dsl_get_character(id)->high_xp)
+CREATE_SET_GET_CHARACTERS_COMMAND(base_hp, dsl_get_character(id)->base_hp)
+CREATE_SET_GET_CHARACTERS_COMMAND(high_hp, dsl_get_character(id)->high_hp)
+CREATE_SET_GET_CHARACTERS_COMMAND(base_psp, dsl_get_character(id)->base_psp)
+CREATE_SET_GET_CHARACTERS_COMMAND(legal_class, dsl_get_character(id)->legal_class)
+CREATE_SET_GET_CHARACTERS_COMMAND(race, dsl_get_character(id)->race)
+CREATE_SET_GET_CHARACTERS_COMMAND(gender, dsl_get_character(id)->gender)
+CREATE_SET_GET_CHARACTERS_COMMAND(alignment, dsl_get_character(id)->alignment)
+CREATE_SET_GET_CHARACTERS_COMMAND(str, dsl_get_character(id)->stats.STR)
+CREATE_SET_GET_CHARACTERS_COMMAND(dex, dsl_get_character(id)->stats.DEX)
+CREATE_SET_GET_CHARACTERS_COMMAND(con, dsl_get_character(id)->stats.CON)
+CREATE_SET_GET_CHARACTERS_COMMAND(int, dsl_get_character(id)->stats.INT)
+CREATE_SET_GET_CHARACTERS_COMMAND(wis, dsl_get_character(id)->stats.WIS)
+CREATE_SET_GET_CHARACTERS_COMMAND(cha, dsl_get_character(id)->stats.CHA)
+CREATE_SET_GET_CHARACTERS_COMMAND(class0, dsl_get_character(id)->class[0])
+CREATE_SET_GET_CHARACTERS_COMMAND(class1, dsl_get_character(id)->class[1])
+CREATE_SET_GET_CHARACTERS_COMMAND(class2, dsl_get_character(id)->class[2])
+CREATE_SET_GET_CHARACTERS_COMMAND(level0, dsl_get_character(id)->level[0])
+CREATE_SET_GET_CHARACTERS_COMMAND(level1, dsl_get_character(id)->level[1])
+CREATE_SET_GET_CHARACTERS_COMMAND(level2, dsl_get_character(id)->level[2])
+CREATE_SET_GET_CHARACTERS_COMMAND(base_ac, dsl_get_character(id)->base_ac)
+CREATE_SET_GET_CHARACTERS_COMMAND(base_move, dsl_get_character(id)->base_move)
+CREATE_SET_GET_CHARACTERS_COMMAND(magic_resistance, dsl_get_character(id)->magic_resistance)
+CREATE_SET_GET_CHARACTERS_COMMAND(num_blows, dsl_get_character(id)->num_blows)
+CREATE_SET_GET_CHARACTERS_COMMAND(num_attacks0, dsl_get_character(id)->num_attacks[0])
+CREATE_SET_GET_CHARACTERS_COMMAND(num_attacks1, dsl_get_character(id)->num_attacks[1])
+CREATE_SET_GET_CHARACTERS_COMMAND(num_attacks2, dsl_get_character(id)->num_attacks[2])
+CREATE_SET_GET_CHARACTERS_COMMAND(num_dice0, dsl_get_character(id)->num_dice[0])
+CREATE_SET_GET_CHARACTERS_COMMAND(num_dice1, dsl_get_character(id)->num_dice[1])
+CREATE_SET_GET_CHARACTERS_COMMAND(num_dice2, dsl_get_character(id)->num_dice[2])
+CREATE_SET_GET_CHARACTERS_COMMAND(num_sides0, dsl_get_character(id)->num_sides[0])
+CREATE_SET_GET_CHARACTERS_COMMAND(num_sides1, dsl_get_character(id)->num_sides[1])
+CREATE_SET_GET_CHARACTERS_COMMAND(num_sides2, dsl_get_character(id)->num_sides[2])
+CREATE_SET_GET_CHARACTERS_COMMAND(num_bonuses0, dsl_get_character(id)->num_bonuses[0])
+CREATE_SET_GET_CHARACTERS_COMMAND(num_bonuses1, dsl_get_character(id)->num_bonuses[1])
+CREATE_SET_GET_CHARACTERS_COMMAND(num_bonuses2, dsl_get_character(id)->num_bonuses[2])
+CREATE_SET_GET_CHARACTERS_COMMAND(paral, dsl_get_character(id)->saving_throw.paral)
+CREATE_SET_GET_CHARACTERS_COMMAND(wand, dsl_get_character(id)->saving_throw.wand)
+CREATE_SET_GET_CHARACTERS_COMMAND(petr, dsl_get_character(id)->saving_throw.petr)
+CREATE_SET_GET_CHARACTERS_COMMAND(breath, dsl_get_character(id)->saving_throw.breath)
+CREATE_SET_GET_CHARACTERS_COMMAND(spell, dsl_get_character(id)->saving_throw.spell)
+CREATE_SET_GET_CHARACTERS_COMMAND(allegiance, dsl_get_character(id)->allegiance)
+CREATE_SET_GET_CHARACTERS_COMMAND(size, dsl_get_character(id)->size)
+CREATE_SET_GET_CHARACTERS_COMMAND(spell_group, dsl_get_character(id)->spell_group)
+CREATE_SET_GET_CHARACTERS_COMMAND(high_level0, dsl_get_character(id)->high_level[0])
+CREATE_SET_GET_CHARACTERS_COMMAND(high_level1, dsl_get_character(id)->high_level[1])
+CREATE_SET_GET_CHARACTERS_COMMAND(high_level2, dsl_get_character(id)->high_level[2])
+CREATE_SET_GET_CHARACTERS_COMMAND(sound_fx, dsl_get_character(id)->sound_fx)
+CREATE_SET_GET_CHARACTERS_COMMAND(attack_sound, dsl_get_character(id)->attack_sound)
+CREATE_SET_GET_CHARACTERS_COMMAND(psi_group, dsl_get_character(id)->psi_group)
+CREATE_SET_GET_CHARACTERS_COMMAND(palette, dsl_get_character(id)->palette)
 
 #define CREATE_SET_GET_CHARACTER_LUA_ENTRIES(NAME) \
     { "get_char_"#NAME, lua_get_ ## NAME }, \
@@ -842,7 +840,7 @@ static const struct luaL_Reg lslib [] = {
       {"select_menu", lua_select_menu},
 
       //Object functions
-      {"create_character_id", lua_create_character_id},
+      {"valid_character_id", lua_valid_character_id},
       CREATE_SET_GET_CHARACTER_LUA_ENTRIES(current_xp),
       CREATE_SET_GET_CHARACTER_LUA_ENTRIES(high_xp),
       CREATE_SET_GET_CHARACTER_LUA_ENTRIES(base_hp),

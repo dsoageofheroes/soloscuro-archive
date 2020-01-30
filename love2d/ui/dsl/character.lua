@@ -128,12 +128,15 @@ function character_get(t, index)
     return character_get_functions[index](t.id)
 end
 
-function Character()
+function Character(id)
+  if (ds.valid_character_id(id) < 1) then
+      return nil;
+  end
   local mt = {}
   mt.__index = function(t, k) return character_get(t, k) end
   mt.__newindex = function(t, j, k) return character_set(t, j, k) end
   local table = {}
-  table.id = ds.create_character_id() -- Needed to start the id.  It should never be changed for the lifetime of the
-                                      -- character.
+  table.id = id -- Needed to start the id.  It should never be changed for the lifetime of the
+                -- character.
   return setmetatable(table, mt)
 end

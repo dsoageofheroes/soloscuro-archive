@@ -6,10 +6,10 @@ dsl = {}
 
 function charTester.run()
     -- Lets create four characters:
-    player1 = Character()
-    player2 = Character()
-    player3 = Character()
-    player4 = Character()
+    player1 = Character(0)
+    player2 = Character(1)
+    player3 = Character(2)
+    player4 = Character(3)
 
     -- Now print out thier ids:
     print ("Player 1's id = " .. player1.id)

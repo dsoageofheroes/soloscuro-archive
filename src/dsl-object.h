@@ -163,7 +163,7 @@ typedef struct _ds1_item_t { // Not confirmed at all...
     int8_t   bonus; // positive = bonus, negative = cursed
 } ds1_item_t;
 
-typedef struct _ds1_character_t {
+typedef struct _ds_character_s {
     uint32_t current_xp;
     uint32_t high_xp;
     uint16_t base_hp;
@@ -194,7 +194,7 @@ typedef struct _ds1_character_t {
     uint16_t attack_sound;
     uint8_t psi_group;
     uint8_t palette;
-} ds1_character_t;
+} ds_character_t;
 
 typedef struct _item1r_t {
     uint8_t weapon;
@@ -228,5 +228,8 @@ typedef struct _item_name_t {
 
 void dsl_object_init();
 void dsl_object_cleanup();
+
+ds_character_t* dsl_get_character(const int id);
+int dsl_valid_character_id(const int id);
 
 #endif
