@@ -1,0 +1,35 @@
+all: obj $(EXEC) libds.so
+
+$(EXEC): $(MAIN) libds.so
+	gcc $(CFLAGS) $(OBJS) $(MAIN) -o $@
+	echo "$(OBJS)"
+
+libds.so: $(OBJS) libxmimidi.so
+	gcc -L./ $(OBJS) -shared -o libds.$(LIB_EXT) -llua5.1 -lxmimidi
+
+libxmimidi.so:  
+	gcc ext/xmi2mid.c -shared -o libxmimidi.$(LIB_EXT)
+
+obj/%.o : src/%.c $(DEPS)
+	gcc -c $(CFLAGS) $< -o $@
+
+obj:
+	mkdir -p obj
+
+tools: gff-inspector
+
+gff-inspector: $(OBJS) tools/gff-inspector.c
+	gcc $(CFLAGS) $(OBJS) tools/gff-inspector.c -o gff-inspector
+
+bin:
+	mkdir -p bin
+
+%test: bin
+	gcc $(CFLAGS) test/$@.c -o bin/$@ -lcunit -lds -llua5.1
+	LD_LIBRARY_PATH=./ bin/$@
+
+%test-lua: bin
+	LD_LIBRARY_PATH=./ lua5.1 test/$@.lua -v
+
+clean:
+	rm -rf $(EXEC) obj gff-inspector libds.$(LIB_EXT) libxmimidi.$(LIB_EXT) bin/
