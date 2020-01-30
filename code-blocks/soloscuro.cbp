@@ -38,6 +38,7 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Unit filename="../makefile.in" />
 		<Unit filename="../makefile.win" />
 		<Unit filename="../src/dsl-execute.c">
 			<Option compilerVar="CC" />
