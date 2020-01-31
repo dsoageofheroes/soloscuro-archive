@@ -158,6 +158,7 @@ typedef struct _gff_file_t {
     char *filename;
     gff_palette_t *palettes;
     unsigned int num_palettes;
+    size_t start_palette_index;
     int num_objects;
     gff_map_object_t *entry_table;
 } gff_file_t;
@@ -182,6 +183,7 @@ extern int gff_write_raw_bytes(int idx, int type_id, int res_id, const char *pat
 extern void gff_print(int idx, FILE *out);
 extern void gff_close (int gff_file);
 extern void gff_cleanup();
+extern size_t gff_get_palette_id(int idx, int palette_num);
 
 // functions for other modules, NOT "public"
 extern gff_chunk_list_t* search_for_chunk_by_name(gff_file_t *file, unsigned long name);

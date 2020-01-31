@@ -6,6 +6,14 @@ local private = {}
 
 PALETTE = 0
 
+-- These the are hardcoded indexes of important GFFs
+RESOURCE_GFF_INDEX = 0
+OBJEX_GFF_INDEX = 1
+DSLDATA_GFF_INDEX = 2
+CHARSAVE_GFF_INDEX = 3
+DARKSAVE_GFF_INDEX = 4
+CINE_GFF_INDEX = 5
+
 local ds
 
 -- GFF file list
@@ -45,8 +53,9 @@ function gff.loadTiles(file)
   local tile_id_list = ds.gff_get_id_list(file_id, TILE_TYPE);
   local tiles = {}
 
+  local paletteId = ds.gff_get_palette_id(DSLDATA_GFF_INDEX, 41)
   for k,tile_id in pairs(tile_id_list) do
-      local data = ds.get_frame_rgba_with_palette(file_id, TILE_TYPE, tile_id, 0, 41)
+      local data = ds.get_frame_rgba_with_palette(file_id, TILE_TYPE, tile_id, 0, paletteId)
       if (data ~=  0) then -- always check that it got the image!
           local width = ds.get_frame_width(file_id, TILE_TYPE, tile_id, 0)
           local height = ds.get_frame_height(file_id, TILE_TYPE, tile_id, 0)

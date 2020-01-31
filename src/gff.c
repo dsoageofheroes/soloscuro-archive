@@ -264,8 +264,9 @@ int gff_open(const char *pathName) {
     if (is_master_name(filename)) { master_gff = idx; }
 
     open_files[idx].filename = filename;
+    open_files[idx].start_palette_index = gff_get_number_of_palettes();
     open_files[idx].palettes = create_palettes(idx, &(open_files[idx].num_palettes));
-    printf("'%s' loaded as '%s' with id: %d\n", pathName, open_files[idx].filename, idx);
+    debug("'%s' loaded as '%s' with id: %d\n", pathName, open_files[idx].filename, idx);
 
     return idx;
 }
@@ -579,6 +580,13 @@ gff_chunk_list_t* get_gffi_header(gff_file_t *file) {
     return file->gffi_data;
 }
 
+size_t gff_get_palette_id(int idx, int palette_num) {
+    if (palette_num < 0 || palette_num >= open_files[idx].num_palettes) {
+        return -1;
+    }
+
+    return open_files[idx].start_palette_index + palette_num;
+}
 
 void gff_print(int idx, FILE *out) {
     gff_file_header_t *header = open_files[idx].data;

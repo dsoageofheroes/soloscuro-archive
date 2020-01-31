@@ -110,6 +110,13 @@ int lua_gff_get_number_of_palettes(lua_State *L) {
     return 1;
 }
 
+int lua_gff_get_palette_id(lua_State *L) {
+    int gff_idx = luaL_checkinteger (L, 1);
+    int palette_num = luaL_checkinteger (L, 2);
+    lua_pushinteger(L, gff_get_palette_id(gff_idx, palette_num));
+    return 1;
+}
+
 int lua_gff_get_type_id(lua_State *L) {
     int idx = luaL_checkinteger(L, 1);
     int type_index = luaL_checkinteger(L, 2);
@@ -773,6 +780,7 @@ static const struct luaL_Reg lslib [] = {
       {"gff_cleanup", lua_gff_cleanup},
       {"gff_get_number_of_types", lua_gff_get_number_of_types},
       {"gff_get_number_of_palettes", lua_gff_get_number_of_palettes},
+      {"gff_get_palette_id", lua_gff_get_palette_id},
       {"gff_get_type_id", lua_gff_get_type_id},
       {"get_gff_type_name", lua_get_gff_type_name},
       {"gff_get_id_list", lua_gff_get_id_list},
