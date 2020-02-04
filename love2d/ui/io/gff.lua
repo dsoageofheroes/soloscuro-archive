@@ -4,15 +4,15 @@ local gff = {
 }
 local private = {}
 
-PALETTE = 0
+local PALETTE = 0
 
 -- These the are hardcoded indexes of important GFFs
-RESOURCE_GFF_INDEX = 0
-OBJEX_GFF_INDEX = 1
-DSLDATA_GFF_INDEX = 2
-CHARSAVE_GFF_INDEX = 3
-DARKSAVE_GFF_INDEX = 4
-CINE_GFF_INDEX = 5
+local RESOURCE_GFF_INDEX = 0
+local OBJEX_GFF_INDEX = 1
+local DSLDATA_GFF_INDEX = 2
+local CHARSAVE_GFF_INDEX = 3
+local DARKSAVE_GFF_INDEX = 4
+local CINE_GFF_INDEX = 5
 
 local ds
 
@@ -214,9 +214,10 @@ function private.getGraphic(gff_filename, res_type, isIcon)
   local fileIndex = ds.gff_find_index(gff_filename)
 
   local frameCount = ds.get_frame_count(fileIndex, isIcon and 1313817417 or 542133570, res_type)
+  local paletteId = ds.gff_get_palette_id(RESOURCE_GFF_INDEX, 0)
 
   for i = 1, frameCount do
-    local imageData = private.getImageData(fileIndex, res_type, isIcon, i - 1)
+    local imageData = private.getImageData(fileIndex, res_type, isIcon, i - 1, paletteId)
     -- graphic['data'..i] = imageData
     graphic[i] = love.graphics.newImage(imageData)
   end

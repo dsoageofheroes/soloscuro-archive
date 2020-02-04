@@ -1,10 +1,12 @@
 # IDE extras
 .vscode/
+*.layout
 
 # Build artifacts
 obj/
 *.so
 *.so.0
+*.dll
 
 # Config
 solconfig.lua

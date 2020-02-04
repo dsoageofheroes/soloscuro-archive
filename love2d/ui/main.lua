@@ -38,7 +38,9 @@ function love.load(args)
 
   draw.init(config)
   camera.init(config, draw)
-  gff.init(ds, config)
+  local status, error = pcall(function () gff.init(ds, config) end)
+  if not status then print(error.code) end
+  
   mouse.init(gff.cursors, draw)
   font.init(gff.loadFontChar, fontPatch)
 
@@ -50,7 +52,7 @@ function love.load(args)
   createChar.init(gff.createChar, menu, font)
   menu.init(draw, animation, menuItems, charView, charInventory, createChar, popup)
 
-  tester.init(args)
+  -- tester.init(args)
 
   regionTest = Region(gff, "rgn2a.gff")
 end
@@ -91,6 +93,8 @@ function love.keypressed( key )
   if key == "u" then draw.scaleUp() end
 
   if key == "escape" then love.event.quit(0) end
+
+  if key == 'p' then love.graphics.captureScreenshot('cool.png') end
 end
 
 function love.mousepressed(x, y, button, istouch, presses)

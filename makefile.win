@@ -1,7 +1,7 @@
 MAIN    = src/main.c
 SRCS    = $(filter-out $(MAIN), $(wildcard src/*.c))
 OBJS    = $(SRCS:src/%.c=obj/%.o)
-CFLAGS  = -g -I src/ -I ext/ -L./ -Wall -llua5.1 -lxmimidi -O2 -DDEBUG=1
+CFLAGS  = -g -I src/ -I ext/ -L./ -Wall -llua5.1 -lxmimidi -O2 -DDEBUG=1 -m32
 EXEC    = mdark
 LIB_EXT = dll
 
