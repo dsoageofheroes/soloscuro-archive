@@ -1,5 +1,5 @@
 -- This represent a Playable Character (PC)
-local ds = require 'libds'
+--local ds = require 'libds'
 
 -- Here are the setters.
 character_set_functions = {

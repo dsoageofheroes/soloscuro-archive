@@ -7,7 +7,7 @@
 
 #define MAX_COMBATS    (1024)
 #define MAX_ITEMS      (1024)
-#define MAX_CHARACTERS (4) // Change laterfor online characters.
+#define MAX_CHARACTERS (4) // Change later for online characters.
 #define MAX_ITEM1R     (1024)
 #define MAX_MINIS      (1024)
 #define MAX_ITEM_NAMES (1024)

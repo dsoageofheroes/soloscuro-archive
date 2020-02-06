@@ -26,12 +26,16 @@ int8_t narrate_open(int16_t action, char *text, int16_t index) {
             exit(1);
     }
     lua_getglobal(lua_state, "dsl");
-    lua_getfield(lua_state, -1, "narrate_open");
+    lua_getfield(lua_state, -1, "narrate_open2");
+    //lua_getglobal(lua_state, "dsl.narrate_open2");
+    //lua_getfield(lua_state, LUA_GLOBALSINDEX, "narrate_open");
     lua_pushnumber(lua_state, 1);
     lua_pushnumber(lua_state, 2);
     lua_pushnumber(lua_state, 3);
     if (lua_pcall(lua_state, 3, 0, 0) != 0) {
-        error("error running function `f': %s", lua_tostring(lua_state, -1));
+        error("error running function `dsl.narrate_open': %s\n", lua_tostring(lua_state, -1));
+    } else {
+        error("NON error running function `dsl.narrate_open': %s\n", lua_tostring(lua_state, -1));
     }
     return 0;
 }

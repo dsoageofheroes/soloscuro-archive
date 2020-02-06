@@ -4,6 +4,12 @@ Animation = require 'models/Animation'
 Graphic = require 'models/Graphic'
 Region = require 'models/Region'
 Text = require 'models/Text'
+dsl = {}
+ds = require 'libds'
+
+dsl.narrate_open = function (action, text, index)
+    print("....")
+end
 
 -- For the original DS graphics
 DsGraphic = function(assets, x, y)

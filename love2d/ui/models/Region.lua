@@ -1,7 +1,11 @@
+DSLDATA_GFF_INDEX = 2
+
 return function(_gff, filename)
   local region = {}
+  -- This needs to be changed via what region it is!
+  paletteId = ds.gff_get_palette_id(DSLDATA_GFF_INDEX, 41)
 
-  region.tiles = _gff.loadTiles(filename)
+  region.tiles = _gff.loadTiles(filename, paletteId)
   region.map = _gff.loadMap(filename, region.tiles)
 
   function region.shiftX(_x)
