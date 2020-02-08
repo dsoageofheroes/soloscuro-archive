@@ -26,4 +26,8 @@ typedef struct _scmd_t {
 #define SCMD_DEFAULT_DELAY (16)
 #define SCMD_TICKS_PER_SECOND (96)
 
+void dsl_scmd_print(int gff_file, int res_id);
+scmd_t* dsl_scmd_get(const int gff_file, const int res_id, const int index);
+int dsl_scmd_is_default(const scmd_t *scmd, const int scmd_index);
+
 #endif

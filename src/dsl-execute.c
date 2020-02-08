@@ -10,6 +10,10 @@
 #include "dsl-string.h"
 #include "dsl-var.h"
 
+#define MAX_OBJECTS        (1500)
+#define MAX_OBJECT_ENTRIES (2000)
+#define MAX_OBJECT_PATH    (1000)
+
 //TODO FIXME: This needs to be moved.
 static int exit_dsl = 0; // Know when to exit the DSL.
 static int is_paused = 0; // Know if DSL is current paused waiting on something.

@@ -110,6 +110,22 @@ enum {UNUSED_CHECK_INDEX,
     MAX_CHECK_TYPES
 };
 
+typedef struct _name_s {
+    uint16_t addr; // Address of DSL routine
+    uint16_t file; // file # holding DSL routine
+    uint16_t name; // name header ? negative vale mean name/id
+    uint8_t global; // is global?  If not erase on region change!
+} name_t;
+
+typedef struct _name2_s {
+    uint16_t addr; // Address of DSL routine
+    uint16_t file; // file # holding DSL routine
+    int16_t name1; // name #1
+    int16_t name2; // name #2
+    uint8_t global; // is global?  if not erase on region change!
+} name2_t;
+
+
 typedef struct box_s {
     uint16_t addr; // Addr of DSL routine in file
     uint16_t file; // the file
