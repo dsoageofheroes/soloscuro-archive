@@ -115,12 +115,11 @@ void gff_load_directory(const char *path) {
     struct dirent *ent;
     char buf[BUF_SIZE];
 
-    printf("Loading GFFs from: %s\n", path);
+    debug("Loading GFFs from: %s\n", path);
     if ((dir = opendir (path)) != NULL) {
         while ((ent = readdir (dir)) != NULL) {
             if (is_gff_filename(ent->d_name)) {
                 snprintf(buf, BUF_SIZE, "%s/%s", path, ent->d_name);
-                //printf("Loading GFF: '%s'\n", buf);
                 gff_open(buf);
             }
         }
@@ -542,6 +541,8 @@ gff_chunk_list_t* search_for_chunk_by_name(gff_file_t *file, unsigned long name)
     gff_chunk_list_t *chunk_list = NULL;
     unsigned char *cptr = file->data;
     int i = 0;
+
+    if (!cptr) { return NULL; }
 
     toc_header = (void*)(cptr + header->tocLocation);
     cptr = (void*)toc_header;

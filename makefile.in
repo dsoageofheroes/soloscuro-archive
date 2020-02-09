@@ -1,10 +1,7 @@
 all: obj $(EXEC) libds.so
 
-$(EXEC): $(MAIN) libds.so
-	gcc $(CFLAGS) $(OBJS) $(MAIN) -o $@
-	echo "$(OBJS)"
-
 libds.so: $(OBJS) libxmimidi.so
+	echo $(SRCS)
 	gcc -L./ $(OBJS) -shared -o libds.$(LIB_EXT) -llua5.1 -lxmimidi
 
 libxmimidi.so:  
