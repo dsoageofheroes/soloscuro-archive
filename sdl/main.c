@@ -85,7 +85,8 @@ int main(int argc, char *argv[]) {
         error( "Unable to init video!\n");
         exit(1);
     }
-    win = SDL_CreateWindow( "SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 800, 600, SDL_WINDOW_SHOWN );
+    win = SDL_CreateWindow( "Dark Sun: Shattered Lands", SDL_WINDOWPOS_UNDEFINED,
+        SDL_WINDOWPOS_UNDEFINED, 800, 600, SDL_WINDOW_SHOWN );
     if( win == NULL ) {
         error( "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
         exit(1);
