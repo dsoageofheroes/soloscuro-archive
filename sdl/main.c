@@ -54,6 +54,8 @@ void handle_input() {
 
 void render() {
     map_render(&cmap, renderer, xmappos, ymappos);
+    //map_blit(&cmap, screen);
+    //SDL_UpdateWindowSurface(win);
 }
 
 // Simple timing for now...
@@ -95,18 +97,11 @@ int main(int argc, char *argv[]) {
     //Get window surface
     screen = SDL_GetWindowSurface( win );
 
-    //Fill the surface white
-    SDL_FillRect( screen, NULL, SDL_MapRGB(screen->format, 0x00, 0x00, 0x00 ) );
-
-    //Update the surface
-    SDL_UpdateWindowSurface( win );
-
     renderer = SDL_CreateRenderer(win, -1, 0);
 
     last_tick = SDL_GetTicks();
 
     int idx = gff_find_index("rgn2a.gff");
-    printf("idx = %d\n", idx);
 
     map_load_region(&cmap, renderer, idx);
 

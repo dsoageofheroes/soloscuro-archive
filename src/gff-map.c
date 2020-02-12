@@ -173,7 +173,8 @@ scmd_t* gff_map_get_object_scmd(int gff_index, int res_id, int obj_id, int scmd_
     return dsl_scmd_get(OBJEX_GFF_INDEX, disk_object->script_id, scmd_index);
 }
 
-unsigned char* gff_map_get_object_bmp(int gff_index, int res_id, int obj_id, int *w, int *h, int frame_id) {
+unsigned char* gff_map_get_object_bmp_pal(int gff_index, int res_id, int obj_id, int *w, int *h, int frame_id,
+        int palette_id) {
     int num_objects = gff_map_get_num_objects(gff_index, res_id);
     if (gff_index < 0 || gff_index >= NUM_FILES || obj_id < 0 || obj_id >= num_objects) {
         return NULL;
@@ -192,7 +193,11 @@ unsigned char* gff_map_get_object_bmp(int gff_index, int res_id, int obj_id, int
     }
     *w = get_frame_width(OBJEX_GFF_INDEX, GT_BMP, disk_object->bmp_id, frame_id);
     *h = get_frame_height(OBJEX_GFF_INDEX, GT_BMP, disk_object->bmp_id, frame_id);
-    return get_frame_rgba_with_palette(OBJEX_GFF_INDEX, GT_BMP, disk_object->bmp_id, frame_id, -1);
+    return get_frame_rgba_with_palette(OBJEX_GFF_INDEX, GT_BMP, disk_object->bmp_id, frame_id, palette_id);
+}
+
+unsigned char* gff_map_get_object_bmp(int gff_index, int res_id, int obj_id, int *w, int *h, int frame_id) {
+    return gff_map_get_object_bmp_pal(gff_index, res_id, obj_id, w, h, frame_id, -1);
 }
 
 void gff_map_get_object_location(int gff_index, int res_id, int obj_id, uint16_t *x, uint16_t *y, uint8_t *z) {

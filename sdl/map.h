@@ -7,6 +7,10 @@ typedef struct map_s {
     SDL_Texture **tiles;
     uint32_t num_tiles;
     uint32_t gff_file;
+    uint32_t map_id;
+    SDL_Texture **objs;
+    SDL_Rect *obj_locs;
+    uint32_t num_objs;
 } map_t;
 
 void map_init(map_t *map);

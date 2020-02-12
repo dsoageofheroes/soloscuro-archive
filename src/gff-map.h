@@ -143,6 +143,8 @@ int gff_map_get_num_objects(int gff_index, int res_id);
 int gff_map_get_object_frame_count(int gff_index, int res_id, int obj_id);
 scmd_t* gff_map_get_object_scmd(int gff_index, int res_id, int obj_id, int scmd_index);
 unsigned char* gff_map_get_object_bmp(int gff_index, int res_id, int obj_id, int *w, int *h, int frame_id);
+unsigned char* gff_map_get_object_bmp_pal(int gff_index, int res_id, int obj_id, int *w, int *h, int frame_id,
+        int palette_id);
 void gff_map_get_object_location(int gff_index, int res_id, int obj_id, uint16_t *x, uint16_t *y, uint8_t *z);
 so_object_t* gff_object_inspect(int gff_index, int res_id);
 disk_object_t* gff_get_object(int object_index);

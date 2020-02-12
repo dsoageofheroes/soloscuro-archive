@@ -46,6 +46,7 @@ gff_palette_t* create_palettes(int gff_index, unsigned int *len) {
         }
 
         num_palettes += *len;
+        //printf("Creating %d palettes, base = %p, offset = %p\n", (int)*len, palettes, cpal);
         for (int i = 0; i < *len; i++) {
             unsigned long tlen;
             unsigned char* raw_pal = (unsigned char*)gff_get_raw_bytes(gff_index, GT_PAL, ids[i], &tlen);
@@ -55,19 +56,32 @@ gff_palette_t* create_palettes(int gff_index, unsigned int *len) {
                 cpal[i].color[j].b = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 2]));
             }
         }
+        debug("loaded %d palettes, total = %d\n", (int)*len, (int)num_palettes);
         free(ids);
         return cpal;
     } else {
-        for (int j = 0; j < pal_chunk->chunkCount; j++) {
+        gff_palette_t *cpal = NULL;
+        if (gff_index == gff_get_master()) { 
+            master_palette = palettes + num_palettes;
+        }
+        for (int i = 0; i < pal_chunk->chunkCount; i++) {
             unsigned char *cptr = (unsigned char*)pal_chunk;
-            gff_chunk_header_t *chunk_header = (void*)(cptr + GFFCHUNKLISTHEADERSIZE + (j * GFFCHUNKHEADERSIZE));
-            gff_palette_t* cpal = palettes + num_palettes++;
+            gff_chunk_header_t *chunk_header = (void*)(cptr + GFFCHUNKLISTHEADERSIZE + (i * GFFCHUNKHEADERSIZE));
+            cpal = palettes + num_palettes++;
+            //cpal = palettes + num_palettes;
             unsigned char* raw_pal = (unsigned char*)((unsigned char*)open_files[gff_index].data) +
                 chunk_header->chunkDataLocation;
-            cpal->color[j].r = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 0]));
-            cpal->color[j].g = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 1]));
-            cpal->color[j].b = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 2]));
+            //cpal->color[j].r = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 0]));
+            //cpal->color[j].g = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 1]));
+            //cpal->color[j].b = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 2]));
+            for (int j = 0; j < PALETTE_SIZE; j++) {
+                cpal[i].color[j].r = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 0]));
+                cpal[i].color[j].g = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 1]));
+                cpal[i].color[j].b = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 2]));
+            }
         }
+        debug("loaded %d palettes, total = %d\n", (int)pal_chunk->chunkCount, (int)num_palettes);
+        return cpal;
     }
 
     if (ids == NULL) { goto cp_search_error; }
@@ -85,12 +99,15 @@ gff_palette_t* create_palettes(int gff_index, unsigned int *len) {
         master_palette = cpal; 
     }
 
+    printf("Number of palettes: %d\n", (int)num_palettes);
+    printf("Creating %d palettes, base = %lu, offset = %lu, diff = %d\n", (int)*len, 
+        (unsigned long)palettes, 
+            (unsigned long)cpal, (int)((cpal-palettes)));
     num_palettes += *len;
-    //printf("Number of palettes: %d\n", *len);
     for (int i = 0; i < *len; i++) {
         unsigned long tlen;
         unsigned char* raw_pal = (unsigned char*)gff_get_raw_bytes(gff_index, GT_PAL, ids[i], &tlen);
-        //printf("pal[%d] id = %u, tlen = %lu\n", i, ids[i], tlen);
+        printf("pal[%d] id = %u, tlen = %lu\n", i, ids[i], tlen);
         for (int j = 0; j < PALETTE_SIZE; j++) {
             cpal[i].color[j].r = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 0]));
             cpal[i].color[j].g = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 1]));
@@ -340,7 +357,7 @@ unsigned char* create_font_rgba(int gff_index, int c, int fg_color, int bg_color
 
 unsigned char* get_frame_rgba_with_palette(int gff_index, int type_id, int res_id, int frame_id, int palette_id) {
     gff_palette_t *cpal = NULL;
-    //printf("master_palette = %p\n", master_palette);
+    //printf("master_palette = %p, palette_id = %d, num_palettes = %ld\n", master_palette, palette_id, num_palettes);
     //if (palette_id < 0 || open_files[gff_index].num_palettes < 1) {
     if (palette_id < 0 || palette_id >= num_palettes) {
         cpal = master_palette;
