@@ -161,6 +161,14 @@ int gff_map_get_object_frame_count(int gff_index, int res_id, int obj_id) {
     return get_frame_count(OBJEX_GFF_INDEX, GT_BMP, disk_object->bmp_id);
 }
 
+gff_map_object_t* get_map_object(int gff_index, int res_id, int obj_id) {
+    int num_objects = gff_map_get_num_objects(gff_index, res_id);
+    if (gff_index < 0 || gff_index >= NUM_FILES || obj_id < 0 || obj_id >= num_objects) {
+        return NULL;
+    }
+    return open_files[gff_index].entry_table;
+}
+
 scmd_t* gff_map_get_object_scmd(int gff_index, int res_id, int obj_id, int scmd_index) {
     int num_objects = gff_map_get_num_objects(gff_index, res_id);
     if (gff_index < 0 || gff_index >= NUM_FILES || obj_id < 0 || obj_id >= num_objects) {
@@ -200,23 +208,27 @@ unsigned char* gff_map_get_object_bmp(int gff_index, int res_id, int obj_id, int
     return gff_map_get_object_bmp_pal(gff_index, res_id, obj_id, w, h, frame_id, -1);
 }
 
-void gff_map_get_object_location(int gff_index, int res_id, int obj_id, uint16_t *x, uint16_t *y, uint8_t *z) {
+uint16_t gff_map_get_object_location(int gff_index, int res_id, int obj_id, uint16_t *x, uint16_t *y, uint8_t *z) {
     int num_objects = gff_map_get_num_objects(gff_index, res_id);
     if (gff_index < 0 || gff_index >= NUM_FILES || obj_id < 0 || obj_id >= num_objects) {
         *x = *y = 0xFFFF;
-        return;
+        return 0;
     }
 
     gff_map_object_t *entry = open_files[gff_index].entry_table;
-    if (entry == NULL) { *x = *y = 0xFFFF; return; }
-    //disk_object_t *disk_object = gff_get_object(entry[obj_id].index);
+    if (entry == NULL) { *x = *y = 0xFFFF; return 0; }
+    disk_object_t *disk_object = gff_get_object(entry[obj_id].index);
     //if (disk_object->script_id > 0) {
         //dsl_scmd_print(OBJEX_GFF_INDEX, disk_object->script_id);
     //}
     entry += obj_id;
     *x = entry->xpos;
     *y = entry->ypos;
+    *x = entry->xpos - disk_object->xoffset;
+    *y = entry->ypos - disk_object->yoffset;
     *z = entry->zpos;
+
+    return disk_object->flags;
 }
 
 so_object_t* gff_create_object(char *data, rdff_disk_object_t *entry, int16_t id) {

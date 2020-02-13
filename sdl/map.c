@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include "map.h"
+#include "../src/dsl-scmd.h"
 #include "../src/dsl.h"
 
 void map_init(map_t *map) {
@@ -57,15 +58,27 @@ void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
     map->num_objs = gff_map_get_num_objects(map->gff_file, map->map_id);
     map->objs = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * map->num_objs);
     map->obj_locs = (SDL_Rect*) malloc(sizeof(SDL_Rect) * map->num_objs);
+    map->flags = (uint16_t*) malloc(sizeof(uint16_t) * map->num_objs);
+    //map->num_objs = 32;
     for (int i = 0; i < map->num_objs; i++) {
         data = gff_map_get_object_bmp_pal(map->gff_file, map->map_id, i, &width, &height, 0, palette_id);
         tile = SDL_CreateRGBSurfaceFrom(data, width, height, 32, 4*width, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
-        map->objs[i] = SDL_CreateTextureFromSurface(renderer, tile);
-        gff_map_get_object_location(map->gff_file, map->map_id, i, &x, &y, &z);
-        map->obj_locs[i].w = width;
-        map->obj_locs[i].h = height;
-        map->obj_locs[i].x = x;
-        map->obj_locs[i].y = y;
+        scmd_t *scmd = gff_map_get_object_scmd(map->gff_file, map->map_id, i, 0);
+        if (!scmd) {
+            map->objs[i] = SDL_CreateTextureFromSurface(renderer, tile);
+            map->flags[i] = gff_map_get_object_location(map->gff_file, map->map_id, i, &x, &y, &z);
+            map->obj_locs[i].w = width;
+            map->obj_locs[i].h = height;
+            map->obj_locs[i].x = x;
+            map->obj_locs[i].y = y;
+        } else {
+            // FIXME:SCMD need to be added...
+            map->objs[i] = NULL;
+            //printf("scmd[%d]: %d, %d\n", i, scmd->xoffset, scmd->yoffset);
+            //printf("scmd[%d]: %d, %d\n", i, scmd->xoffsethot, scmd->yoffsethot);
+            map->obj_locs[i].x -= scmd->xoffsethot;
+            map->obj_locs[i].y -= scmd->yoffsethot;
+        }
         free(data);
     }
 
@@ -94,6 +107,11 @@ void map_render(map_t *map, SDL_Renderer *renderer, const uint32_t xoffset, cons
         tile_loc.y += stretch * 16;
     }
     for (int i = 0; i < map->num_objs; i++) {
+        //gff_map_object_t* mo = get_map_object(map->gff_file, map->map_id, i);
+        //disk_object_t* dobj = gff_get_object(mo->index);
+        //if (dobj && dobj->flags) {
+            //printf("dobj->flags = 0x%x\n", dobj->flags);
+        //}
         memcpy(&obj_loc, map->obj_locs+i, sizeof(SDL_Rect));
         obj_loc.x *= 2;
         obj_loc.x -= xoffset;
@@ -102,6 +120,8 @@ void map_render(map_t *map, SDL_Renderer *renderer, const uint32_t xoffset, cons
         obj_loc.w *= stretch;
         obj_loc.h *= stretch;
         SDL_RenderCopy(renderer, map->objs[i], NULL, &obj_loc);
+        //SDL_RenderCopyEx(renderer, map->objs[i], NULL, &obj_loc, 0.0, NULL, SDL_FLIP_HORIZONTAL);
     }
+
     SDL_RenderPresent(renderer);
 }

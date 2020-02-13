@@ -10,6 +10,7 @@ typedef struct map_s {
     uint32_t map_id;
     SDL_Texture **objs;
     SDL_Rect *obj_locs;
+    uint16_t *flags;
     uint32_t num_objs;
 } map_t;
 
