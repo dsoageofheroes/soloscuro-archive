@@ -1,6 +1,7 @@
 #include <SDL2/SDL.h>
 #include <stdio.h>
 #include "map.h"
+#include "screen-manager.h"
 #include "../src/dsl.h"
 #include "../src/gameloop.h"
 
@@ -11,8 +12,6 @@ static SDL_Window *win = NULL;
 static SDL_Surface *screen = NULL;
 static SDL_Renderer *renderer = NULL;
 static void free_everything();
-
-static map_t cmap; // current map
 
 static int xmappos = 560;
 static int ymappos = 32;
@@ -53,7 +52,8 @@ void handle_input() {
 }
 
 void render() {
-    map_render(&cmap, renderer, xmappos, ymappos);
+    //map_render(&cmap, renderer, xmappos, ymappos);
+    screen_render(renderer, xmappos, ymappos);
     //map_blit(&cmap, screen);
     //SDL_UpdateWindowSurface(win);
 }
@@ -81,8 +81,6 @@ int main(int argc, char *argv[]) {
     gff_load_directory(ds1_gffs);
     dsl_init();
 
-    map_init(&cmap);
-
     if (SDL_Init( SDL_INIT_VIDEO) ) {
         error( "Unable to init video!\n");
         exit(1);
@@ -101,9 +99,7 @@ int main(int argc, char *argv[]) {
 
     last_tick = SDL_GetTicks();
 
-    int idx = gff_find_index("rgn2a.gff");
-
-    map_load_region(&cmap, renderer, idx);
+    screen_init(renderer);
 
     game_loop();
 
@@ -113,7 +109,7 @@ int main(int argc, char *argv[]) {
 }
 
 void free_everything() {
-    map_free(&cmap);
+    screen_free();
 
     //Destroy window
     SDL_DestroyWindow( win );

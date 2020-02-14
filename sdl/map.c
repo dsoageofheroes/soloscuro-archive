@@ -85,11 +85,12 @@ void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
     free(ids);
 }
 
-void map_render(map_t *map, SDL_Renderer *renderer, const uint32_t xoffset, const uint32_t yoffset) {
+void map_render(void *data, SDL_Renderer *renderer, const uint32_t xoffset, const uint32_t yoffset) {
     const int stretch = 2;
     SDL_Rect tile_loc = { -xoffset, -yoffset, stretch * 16, stretch * 16 };
     SDL_Rect obj_loc = { 0, 0, 0, 0 };
     uint32_t tile_id = 0;
+    map_t *map = (map_t*) data;
 
     //SDL_SetRenderDrawColor( renderer, 0xFF, 0xFF, 0xFF, 0xFF );
     SDL_SetRenderDrawColor( renderer, 0x00, 0x00, 0x00, 0xFF );

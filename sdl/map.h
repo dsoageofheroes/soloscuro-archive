@@ -17,6 +17,6 @@ typedef struct map_s {
 void map_init(map_t *map);
 void map_free(map_t *map);
 void map_load_region(map_t *map, SDL_Renderer *renderer, int id);
-void map_render(map_t *map, SDL_Renderer *renderer, const uint32_t xoffset, const uint32_t yoffset);
+void map_render(void *data, SDL_Renderer *renderer, const uint32_t xoffset, const uint32_t yoffset);
 
 #endif
