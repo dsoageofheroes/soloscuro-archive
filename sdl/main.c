@@ -13,8 +13,10 @@ static SDL_Surface *screen = NULL;
 static SDL_Renderer *renderer = NULL;
 static void free_everything();
 
-static int xmappos = 560;
-static int ymappos = 32;
+static uint32_t xmappos, ymappos;
+
+const uint32_t getCameraX() { return xmappos; }
+const uint32_t getCameraY() { return ymappos; }
 
 void parse_args(int argc, char *argv[]) {
     for (int i = 0; i < argc; i++) {
@@ -75,6 +77,9 @@ void tick() {
 
 int main(int argc, char *argv[]) {
     parse_args(argc, argv);
+
+    xmappos = 560;
+    ymappos = 50;
 
     // Order matters.
     gff_init();

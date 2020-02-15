@@ -85,8 +85,10 @@ void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
     free(ids);
 }
 
-void map_render(void *data, SDL_Renderer *renderer, const uint32_t xoffset, const uint32_t yoffset) {
+void map_render(void *data, SDL_Renderer *renderer) {
     const int stretch = 2;
+    const uint32_t xoffset = getCameraX();
+    const uint32_t yoffset = getCameraY();
     SDL_Rect tile_loc = { -xoffset, -yoffset, stretch * 16, stretch * 16 };
     SDL_Rect obj_loc = { 0, 0, 0, 0 };
     uint32_t tile_id = 0;
@@ -123,6 +125,4 @@ void map_render(void *data, SDL_Renderer *renderer, const uint32_t xoffset, cons
         SDL_RenderCopy(renderer, map->objs[i], NULL, &obj_loc);
         //SDL_RenderCopyEx(renderer, map->objs[i], NULL, &obj_loc, 0.0, NULL, SDL_FLIP_HORIZONTAL);
     }
-
-    SDL_RenderPresent(renderer);
 }

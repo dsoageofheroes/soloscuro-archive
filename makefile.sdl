@@ -1,6 +1,7 @@
 SRCS      = $(wildcard src/*.c)
 DEPS      = $(wildcard src/*.h)
 SDL_SRCS  = $(wildcard sdl/*.c)
+SDL_SRCS  += $(wildcard sdl/screens/*.c)
 SDL_DEPS  = $(wildcard sdl/*.h)
 OBJS      = $(SRCS:src/%.c=obj/%.o)
 SDL_OBJS  = $(SDL_SRCS:sdl/%.c=obj/%.o)
@@ -15,5 +16,8 @@ include makefile.in
 obj/%.o : sdl/%.c $(DEPS) $(SDL_DEPS)
 	gcc -c $(SDL_FLAGS) $< -o $@
 
-mdark : obj $(SDL_OBJS) libds.so libxmimidi.so
+mdark : obj/screens $(SDL_OBJS) libds.so libxmimidi.so
 	gcc $(SDL_FLAGS) $(SDL_OBJS) -o $@ -lds -lSDL2
+
+obj/screens: obj
+	mkdir -p obj/screens

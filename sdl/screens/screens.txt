@@ -1,0 +1,8 @@
+map: view a map
+main-menu: the initial menu
+view-character-menu: select a character, view spells, view effect
+chracter-creation-screen: screen to create a character
+inventory-menu: manipulate inventory of characters
+simple-dialog: The "Exit: save game" menu and others.
+load-save-menu: Select to laod or save a game
+in-game-menu: when you hit tab.
