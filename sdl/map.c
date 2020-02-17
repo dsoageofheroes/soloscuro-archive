@@ -3,6 +3,8 @@
 #include "../src/dsl-scmd.h"
 #include "../src/dsl.h"
 
+map_t *cmap = NULL;
+
 void map_init(map_t *map) {
     map->tiles = NULL;
     map->objs = NULL;
@@ -82,6 +84,8 @@ void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
         free(data);
     }
 
+    cmap = map;
+
     free(ids);
 }
 
@@ -112,8 +116,9 @@ void map_render(void *data, SDL_Renderer *renderer) {
     for (int i = 0; i < map->num_objs; i++) {
         //gff_map_object_t* mo = get_map_object(map->gff_file, map->map_id, i);
         //disk_object_t* dobj = gff_get_object(mo->index);
+        //printf("dobj = %p\n", dobj);
         //if (dobj && dobj->flags) {
-            //printf("dobj->flags = 0x%x\n", dobj->flags);
+            //printf("[%d]: dobj->flags = 0x%x\n", i, dobj->flags);
         //}
         memcpy(&obj_loc, map->obj_locs+i, sizeof(SDL_Rect));
         obj_loc.x *= 2;
@@ -125,4 +130,57 @@ void map_render(void *data, SDL_Renderer *renderer) {
         SDL_RenderCopy(renderer, map->objs[i], NULL, &obj_loc);
         //SDL_RenderCopyEx(renderer, map->objs[i], NULL, &obj_loc, 0.0, NULL, SDL_FLIP_HORIZONTAL);
     }
+}
+
+#define CLICKABLE (0x10)
+
+int get_object_at_location(const uint32_t x, const uint32_t y) {
+    const int stretch = 2;
+    uint32_t mx = getCameraX() + x;
+    uint32_t my = getCameraY() + y;
+    uint32_t osx, osy, oex, oey; // object start x, object start y, object end x, object end y
+    if (!cmap) { return 0; }
+
+    // PERFORMANCE FIXME: should only go through needed objects, possibly quad-tree.
+    for (int i = 0; i < cmap->num_objs; i++) {
+        if (cmap->flags[i] & CLICKABLE) {
+            osx = cmap->obj_locs[i].x * stretch;
+            osy = cmap->obj_locs[i].y * stretch;
+            oex = osx + (stretch * cmap->obj_locs[i].w);
+            oey = osy + (stretch * cmap->obj_locs[i].h);
+            //printf("m = (%d, %d) ->  (%d, %d -> %d, %d)\n", mx, my, osx, osy, oex, oey);
+            if (mx >= osx && mx < oex && my >= osy && my < oey) {
+                return i;
+            }
+        }
+    }
+
+    return -1;
+}
+
+int map_handle_mouse(const uint32_t x, const uint32_t y) {
+    int obj_id = -1;
+
+    if (!cmap) { return 0; }
+    obj_id = get_object_at_location(x, y);
+
+    if (obj_id >= 0) {
+        //debug("found @ %d, need to change icon\n", obj_id);
+    }
+
+    // Nothing found...
+
+    return 1; // map always intercepts the mouse...
+}
+
+int map_handle_mouse_click(const uint32_t x, const uint32_t y) {
+    int obj_id = -1;
+
+    if (!cmap) { return 0; }
+    obj_id = get_object_at_location(x, y);
+
+    if (obj_id >= 0) {
+        debug("clicked on object %d, need to run dsl!\n", obj_id);
+    }
+    return 1; // map always intercepts the mouse...
 }

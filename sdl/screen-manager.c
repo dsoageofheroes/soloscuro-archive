@@ -7,6 +7,8 @@
 
 static void (*render_functions[MAX_SCREENS]) (void*, SDL_Renderer*);
 static void *function_data[MAX_SCREENS];
+static int (*handle_mouse[MAX_SCREENS]) (const uint32_t x, const uint32_t y);
+static int (*handle_mouse_click[MAX_SCREENS]) (const uint32_t x, const uint32_t y);
 
 static map_t cmap;
 
@@ -14,11 +16,15 @@ void screen_init(SDL_Renderer *renderer) {
     for (int i = 0; i < MAX_SCREENS; i++) {
         render_functions[i] = NULL;
         function_data[i] = NULL;
+        handle_mouse[i] = NULL;
+        handle_mouse_click[i] = NULL;
     }
     map_init(&cmap);
     map_load_region(&cmap, renderer, gff_find_index("rgn2a.gff"));
     render_functions[0] = &map_render;
     function_data[0] = &cmap;
+    handle_mouse[0] = &map_handle_mouse;
+    handle_mouse_click[0] = &map_handle_mouse_click;
 
     main_init(renderer);
     render_functions[1] = &main_render;
@@ -31,6 +37,22 @@ void screen_render(SDL_Renderer *renderer, const uint32_t xmappos, const uint32_
         }
     }
     SDL_RenderPresent(renderer);
+}
+
+void screen_handle_mouse(const uint32_t x, const uint32_t y) {
+    for (int i = MAX_SCREENS-1; i >= 0; i--) {
+        if (handle_mouse[i] && handle_mouse[i](x, y)) {
+            i = 0; // exit loop, mouse has been handled!
+        }
+    }
+}
+
+void screen_handle_mouse_click(const uint32_t x, const uint32_t y) {
+    for (int i = MAX_SCREENS-1; i >= 0; i--) {
+        if (handle_mouse_click[i] && handle_mouse_click[i](x, y)) {
+            i = 0; // exit loop, mouse has been handled!
+        }
+    }
 }
 
 SDL_Texture* create_texture(SDL_Renderer *renderer, const uint32_t gff_file,

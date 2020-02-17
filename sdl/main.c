@@ -31,26 +31,48 @@ void parse_args(int argc, char *argv[]) {
     }
 }
 
+void handle_mouse_motion() {
+    int x, y;
+
+    SDL_GetMouseState(&x, &y);
+
+    screen_handle_mouse(x, y);
+}
+
+void handle_mouse_click() {
+    int x, y;
+
+    SDL_GetMouseState(&x, &y);
+
+    screen_handle_mouse_click(x, y);
+}
 
 void handle_input() {
     const Uint8 *key_state = SDL_GetKeyboardState(NULL);
     SDL_Event event;
     while (SDL_PollEvent(&event) != 0) {
-        if (event.type == SDL_QUIT) {
-            signal_exit();
-        }
-
-        if (event.type == SDL_KEYDOWN) {
-            if (event.key.keysym.sym == SDLK_ESCAPE) {
+        switch(event.type) {
+            case SDL_QUIT:
                 signal_exit();
-            }
+                break;
+            case SDL_KEYDOWN:
+                if (event.key.keysym.sym == SDLK_ESCAPE) {
+                    signal_exit();
+                }
+                break;
+            case SDL_MOUSEMOTION:
+                handle_mouse_motion();
+                break;
+            case SDL_MOUSEBUTTONDOWN:
+                handle_mouse_click();
+                break;
         }
     }
 
-    if(key_state[SDL_SCANCODE_DOWN])  { ymappos += 2; }
-    if(key_state[SDL_SCANCODE_UP])    { ymappos -= 2; }
-    if(key_state[SDL_SCANCODE_LEFT])  { xmappos -= 2; }
-    if(key_state[SDL_SCANCODE_RIGHT]) { xmappos += 2; }
+    if(key_state[SDL_SCANCODE_DOWN])  { ymappos += 2; handle_mouse_motion(); }
+    if(key_state[SDL_SCANCODE_UP])    { ymappos -= 2; handle_mouse_motion(); }
+    if(key_state[SDL_SCANCODE_LEFT])  { xmappos -= 2; handle_mouse_motion(); }
+    if(key_state[SDL_SCANCODE_RIGHT]) { xmappos += 2; handle_mouse_motion(); }
 }
 
 void render() {

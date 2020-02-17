@@ -5,6 +5,8 @@
 
 void screen_init(SDL_Renderer *renderer);
 void screen_render(SDL_Renderer *renderer, const uint32_t xmappos, const uint32_t ymappos);
+void screen_handle_mouse(const uint32_t x, const uint32_t y);
+void screen_handle_mouse_click(const uint32_t x, const uint32_t y);
 void screen_free();
 
 // Utility function
