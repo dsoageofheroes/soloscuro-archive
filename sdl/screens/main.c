@@ -19,5 +19,15 @@ void main_render(void *data, SDL_Renderer *renderer) {
     //SDL_RenderCopy(renderer, background, NULL, &background_loc);
 }
 
+int main_handle_mouse_movement(const uint32_t x, const uint32_t y) {
+    //return 1; // means I captured the mouse movement
+    return 0; // zero means I did not handle the mouse, so another screen may.
+}
+
+int main_handle_mouse_click(const uint32_t x, const uint32_t y) {
+    //return 1; // means I captured the mouse click
+    return 0; // zero means I did not handle the mouse click, so another screen may.
+}
+
 void main_free() {
 }

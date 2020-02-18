@@ -28,6 +28,8 @@ void screen_init(SDL_Renderer *renderer) {
 
     main_init(renderer);
     render_functions[1] = &main_render;
+    handle_mouse[1] = &main_handle_mouse_movement;
+    handle_mouse_click[1] = &main_handle_mouse_click;
 }
 
 void screen_render(SDL_Renderer *renderer, const uint32_t xmappos, const uint32_t ymappos) {
