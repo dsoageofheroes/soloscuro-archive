@@ -1,7 +1,7 @@
 ﻿using System;
 using SDL2;
 
-namespace first
+namespace Sol
 {
     class Program
     {
@@ -20,7 +20,6 @@ namespace first
                 }
             }
             SDL.SDL_Quit();
-            Console.WriteLine("Hello World!");
         }
     }
 }

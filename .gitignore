@@ -3,6 +3,7 @@
 *.layout
 
 # Build artifacts
+bin/
 obj/
 *.so
 *.so.0
