@@ -152,10 +152,25 @@ void generic_name_check(int check_index) {
     }
     checks[check_index][cpos].data.name_check = new_name;
     checks[check_index][cpos].next = cpos + 1;
+    checks[check_index][cpos].type = check_index;
     debug("%s check = {file = %d, addr = %d, name = %d, is_global = %d}\n",
         debug_index_names[check_index], new_name.file, new_name.addr,
         new_name.name, new_name.global);
     checks_pos[check_index]++;
+}
+
+// This should use a hash table, FIXME/REFACTOR!
+dsl_check_t* dsl_find_check(int32_t type, int32_t id) {
+    if (type < 0 || type >= MAX_CHECK_TYPES) { return NULL; }
+
+    id = abs(id);
+    for (int i = 0; i < checks_pos[type]; i++) {
+        if (abs(checks[type][i].data.name_check.name) == id) {
+            return checks[type]+i;
+        }
+    }
+
+    return NULL;
 }
 
 #define DSL_CHECKS (200)
@@ -822,8 +837,8 @@ void generic_tile_check(check_index_t *cindex, tile_t tile) {
 
 static void add_save_orders(int16_t los_order, name_t name, int16_t range, int ordertype) {
     if (name.name < 0) {
-        error("add_save_orders (with name < 0) not implemented\n");
-        command_implemented = 0;
+        error("*******************add_save_orders (with name < 0) not implemented****************\n");
+        //command_implemented = 0;
     }
 }
 

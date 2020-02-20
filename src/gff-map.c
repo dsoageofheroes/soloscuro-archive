@@ -166,7 +166,7 @@ gff_map_object_t* get_map_object(int gff_index, int res_id, int obj_id) {
     if (gff_index < 0 || gff_index >= NUM_FILES || obj_id < 0 || obj_id >= num_objects) {
         return NULL;
     }
-    return open_files[gff_index].entry_table;
+    return open_files[gff_index].entry_table + obj_id;
 }
 
 scmd_t* gff_map_get_object_scmd(int gff_index, int res_id, int obj_id, int scmd_index) {
@@ -305,29 +305,42 @@ so_object_t* gff_create_object(char *data, rdff_disk_object_t *entry, int16_t id
 so_object_t* gff_object_inspect(int gff_index, int res_id) {
     unsigned long len;
     so_object_t *ret = NULL;
+    gff_index = OBJEX_GFF_INDEX;
     char *data = gff_get_raw_bytes(gff_index, GT_RDFF, res_id, &len);
     rdff_disk_object_t *entry = (rdff_disk_object_t*) data;
-    //printf ("HERE!!!!%d %d, len = %lu, total = %lu\n", gff_index, res_id, len, len / sizeof(rdff_disk_object_t));
-    //printf ("proc = %d, bocknum = %d, type = %d, index = %d, from = %d, len = %d\n",
-        //entry->load_action, entry->blocknum, entry->type, entry->index, entry->from, entry->len);
-    switch(entry->load_action) {
-        case RDFF_OBJECT:
-            //printf("ITEM\n");
-            data += sizeof(rdff_disk_object_t);
-            ret = gff_create_object((char*) data, entry, -1);
-            break;
-        case RDFF_CONTAINER:
-            printf("CONTAINER\n");
-            break;
-        case RDFF_POINTER:
-            printf("POINTER\n");
-            break;
-        case RDFF_NEXT:
-            printf("NEXT\n");
-            break;
-        case RDFF_END:
-            printf("END\n");
-            break;
+    char *tmp = NULL;
+    if (len > 1<<20) { return NULL; }
+    printf ("HERE!!!!%d %d, len = %lu\n", gff_index, res_id, len);
+
+    while (entry->load_action != -1) {
+        printf ("proc = %d, bocknum = %d, type = %d, index = %d, from = %d, len = %d\n",
+                entry->load_action, entry->blocknum, entry->type, entry->index, entry->from, entry->len);
+        switch(entry->load_action) {
+            case RDFF_OBJECT:
+                printf("OBJECT\n");
+                data += sizeof(rdff_disk_object_t);
+                ret = gff_create_object((char*) data, entry, -1);
+                break;
+            case RDFF_CONTAINER:
+                printf("CONTAINER\n");
+                break;
+            case RDFF_POINTER:
+                printf("POINTER\n");
+                break;
+            case RDFF_NEXT:
+                printf("NEXT\n");
+                break;
+            case RDFF_END:
+                printf("END\n");
+                break;
+        }
+    
+        // Iterate to the next object
+        tmp = (char*)entry;
+        tmp += sizeof(rdff_disk_object_t);
+        tmp += entry->len;
+        entry = (rdff_disk_object_t *)tmp;
     }
+
     return ret;
 }

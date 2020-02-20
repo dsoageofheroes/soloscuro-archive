@@ -113,7 +113,7 @@ enum {UNUSED_CHECK_INDEX,
 typedef struct _name_s {
     uint16_t addr; // Address of DSL routine
     uint16_t file; // file # holding DSL routine
-    uint16_t name; // name header ? negative vale mean name/id
+    int16_t name; // name header ? negative vale mean name/id
     uint8_t global; // is global?  If not erase on region change!
 } name_t;
 
@@ -151,6 +151,7 @@ typedef struct dsl_check_s {
         name_t name_check;
         name2_t name2_check;
     } data;
+    uint8_t type;
     uint16_t next;
 } dsl_check_t;
 
@@ -200,5 +201,6 @@ void set_accumulator(int32_t a);
 int32_t get_accumulator();
 
 void setrecord();
+dsl_check_t* dsl_find_check(int32_t type, int32_t id);
 
 #endif

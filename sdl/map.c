@@ -1,7 +1,9 @@
 #include <stdlib.h>
 #include "map.h"
-#include "../src/dsl-scmd.h"
 #include "../src/dsl.h"
+#include "../src/dsl-execute.h"
+#include "../src/dsl-scmd.h"
+#include "../src/dsl-var.h"
 
 map_t *cmap = NULL;
 
@@ -85,6 +87,8 @@ void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
     }
 
     cmap = map;
+
+    dsl_change_region(42);
 
     free(ids);
 }
@@ -179,8 +183,18 @@ int map_handle_mouse_click(const uint32_t x, const uint32_t y) {
     if (!cmap) { return 0; }
     obj_id = get_object_at_location(x, y);
 
+    // Right now we assume all icons are talking, will look at attack later.
     if (obj_id >= 0) {
-        debug("clicked on object %d, need to run dsl!\n", obj_id);
+        gff_map_object_t* mo = get_map_object(cmap->gff_file, cmap->map_id, obj_id);
+        debug("Clicked on object: %d\n", abs(mo->index));
+        dsl_check_t* check = dsl_find_check(TALK_TO_CHECK_INDEX, mo->index);
+        if (check) {
+            debug("Need to execution file = %d, addr = %d, global = %d\n",
+                check->data.name_check.file, check->data.name_check.addr,
+                check->data.name_check.global);
+            dsl_execute_subroutine(check->data.name_check.file,
+                check->data.name_check.addr, 0);
+        }
     }
     return 1; // map always intercepts the mouse...
 }
