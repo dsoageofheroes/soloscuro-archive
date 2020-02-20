@@ -3,6 +3,14 @@
 
 #include <SDL2/SDL.h>
 
+// sops = Screen OPerationS
+typedef struct sops_s{
+    void (*render) (void*, SDL_Renderer*);
+    int (*mouse_movement) (const uint32_t x, const uint32_t y);
+    int (*mouse_click) (const uint32_t x, const uint32_t y);
+    void *data;
+} sops_t;
+
 void screen_init(SDL_Renderer *renderer);
 void screen_render(SDL_Renderer *renderer, const uint32_t xmappos, const uint32_t ymappos);
 void screen_handle_mouse(const uint32_t x, const uint32_t y);

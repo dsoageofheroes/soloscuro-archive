@@ -2,6 +2,7 @@
 #define MAP_H
 
 #include <SDL2/SDL.h>
+#include "screen-manager.h"
 
 typedef struct map_s {
     SDL_Texture **tiles;
@@ -24,5 +25,7 @@ int map_handle_mouse_click(const uint32_t x, const uint32_t y);
 // From main.c
 uint32_t getCameraX();
 uint32_t getCameraY();
+
+extern sops_t map_screen;
 
 #endif

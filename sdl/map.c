@@ -198,3 +198,10 @@ int map_handle_mouse_click(const uint32_t x, const uint32_t y) {
     }
     return 1; // map always intercepts the mouse...
 }
+
+sops_t map_screen = {
+    .render = map_render,
+    .mouse_movement = map_handle_mouse,
+    .mouse_click = map_handle_mouse_click,
+    .data = NULL
+};

@@ -5,37 +5,32 @@
 
 #define MAX_SCREENS (10)
 
-static void (*render_functions[MAX_SCREENS]) (void*, SDL_Renderer*);
-static void *function_data[MAX_SCREENS];
-static int (*handle_mouse[MAX_SCREENS]) (const uint32_t x, const uint32_t y);
-static int (*handle_mouse_click[MAX_SCREENS]) (const uint32_t x, const uint32_t y);
+static sops_t screens[MAX_SCREENS];
 
 static map_t cmap;
 
 void screen_init(SDL_Renderer *renderer) {
     for (int i = 0; i < MAX_SCREENS; i++) {
-        render_functions[i] = NULL;
-        function_data[i] = NULL;
-        handle_mouse[i] = NULL;
-        handle_mouse_click[i] = NULL;
+        screens[i].render = NULL;
+        screens[i].mouse_movement = NULL;
+        screens[i].mouse_click = NULL;
+        screens[i].data = NULL;
     }
+
     map_init(&cmap);
     map_load_region(&cmap, renderer, gff_find_index("rgn2a.gff"));
-    render_functions[0] = &map_render;
-    function_data[0] = &cmap;
-    handle_mouse[0] = &map_handle_mouse;
-    handle_mouse_click[0] = &map_handle_mouse_click;
+
+    screens[0] = map_screen;
+    screens[0].data = &cmap;
+    screens[1] = main_screen;
 
     main_init(renderer);
-    render_functions[1] = &main_render;
-    handle_mouse[1] = &main_handle_mouse_movement;
-    handle_mouse_click[1] = &main_handle_mouse_click;
 }
 
 void screen_render(SDL_Renderer *renderer, const uint32_t xmappos, const uint32_t ymappos) {
     for (int i = 0; i < MAX_SCREENS; i++) {
-        if (render_functions[i]) {
-            render_functions[i](function_data[i], renderer);
+        if (screens[i].render) {
+            screens[i].render(screens[i].data, renderer);
         }
     }
     SDL_RenderPresent(renderer);
@@ -43,7 +38,7 @@ void screen_render(SDL_Renderer *renderer, const uint32_t xmappos, const uint32_
 
 void screen_handle_mouse(const uint32_t x, const uint32_t y) {
     for (int i = MAX_SCREENS-1; i >= 0; i--) {
-        if (handle_mouse[i] && handle_mouse[i](x, y)) {
+        if (screens[i].mouse_movement && screens[i].mouse_movement(x, y)) {
             i = 0; // exit loop, mouse has been handled!
         }
     }
@@ -51,7 +46,7 @@ void screen_handle_mouse(const uint32_t x, const uint32_t y) {
 
 void screen_handle_mouse_click(const uint32_t x, const uint32_t y) {
     for (int i = MAX_SCREENS-1; i >= 0; i--) {
-        if (handle_mouse_click[i] && handle_mouse_click[i](x, y)) {
+        if (screens[i].mouse_click && screens[i].mouse_click(x, y)) {
             i = 0; // exit loop, mouse has been handled!
         }
     }

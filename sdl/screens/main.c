@@ -1,5 +1,4 @@
 #include "main.h"
-#include "../screen-manager.h"
 #include "../../src/gff.h"
 #include "../../src/gfftypes.h"
 
@@ -31,3 +30,10 @@ int main_handle_mouse_click(const uint32_t x, const uint32_t y) {
 
 void main_free() {
 }
+
+sops_t main_screen = {
+    .render = main_render,
+    .mouse_movement = main_handle_mouse_movement,
+    .mouse_click = main_handle_mouse_click,
+    .data = NULL
+};
