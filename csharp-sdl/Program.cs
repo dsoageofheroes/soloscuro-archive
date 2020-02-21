@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using SDL2;
 
 namespace Sol
@@ -7,6 +8,10 @@ namespace Sol
     {
         static void Main(string[] args)
         {
+            var bytes = File.ReadAllBytes("libds.so");
+            Console.WriteLine(Environment.CurrentDirectory);
+            GFF.init();
+
             int wait = 1;
             SDL.SDL_Event ev;
 		    SDL.SDL_Init(SDL.SDL_INIT_EVERYTHING);
@@ -23,3 +28,5 @@ namespace Sol
         }
     }
 }
+
+
