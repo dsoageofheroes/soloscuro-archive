@@ -2,6 +2,7 @@
 #include "map.h"
 #include "../src/dsl.h"
 #include "screens/main.h"
+#include "screens/narrate.h"
 
 #define MAX_SCREENS (10)
 
@@ -17,14 +18,20 @@ void screen_init(SDL_Renderer *renderer) {
         screens[i].data = NULL;
     }
 
+    // Map is a special case.
     map_init(&cmap);
     map_load_region(&cmap, renderer, gff_find_index("rgn2a.gff"));
 
     screens[0] = map_screen;
     screens[0].data = &cmap;
     screens[1] = main_screen;
+    screens[2] = narrate_screen;
 
-    main_init(renderer);
+    for (int i = 0; i < MAX_SCREENS; i++) {
+        if (screens[i].init) {
+            screens[i].init(renderer);
+        }
+    }
 }
 
 void screen_render(SDL_Renderer *renderer, const uint32_t xmappos, const uint32_t ymappos) {

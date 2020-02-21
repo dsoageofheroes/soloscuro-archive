@@ -5,6 +5,7 @@
 
 // sops = Screen OPerationS
 typedef struct sops_s{
+    void (*init) (SDL_Renderer*);
     void (*render) (void*, SDL_Renderer*);
     int (*mouse_movement) (const uint32_t x, const uint32_t y);
     int (*mouse_click) (const uint32_t x, const uint32_t y);

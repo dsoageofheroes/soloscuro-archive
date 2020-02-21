@@ -32,6 +32,7 @@ void main_free() {
 }
 
 sops_t main_screen = {
+    .init = main_init,
     .render = main_render,
     .mouse_movement = main_handle_mouse_movement,
     .mouse_click = main_handle_mouse_click,

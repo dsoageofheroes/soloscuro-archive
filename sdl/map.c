@@ -200,6 +200,7 @@ int map_handle_mouse_click(const uint32_t x, const uint32_t y) {
 }
 
 sops_t map_screen = {
+    .init = NULL,
     .render = map_render,
     .mouse_movement = map_handle_mouse,
     .mouse_click = map_handle_mouse_click,

@@ -1,5 +1,6 @@
+main: the initial menu
 map: view a map
-main-menu: the initial menu
+narrate: screen when talking/selecting actions
 view-character-menu: select a character, view spells, view effect
 chracter-creation-screen: screen to create a character
 inventory-menu: manipulate inventory of characters
