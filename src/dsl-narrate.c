@@ -4,7 +4,10 @@
 #include "dsl.h"
 #include "dsl-var.h"
 
+extern int8_t narrate_open_sdl(int16_t action, char *text, int16_t index);
+
 int8_t narrate_open(int16_t action, char *text, int16_t index) {
+    /*
     switch(action) {
         case NAR_ADD_MENU:
             warn("I need to add_menu with index %d, text = '%s'\n", index, text);
@@ -25,6 +28,8 @@ int8_t narrate_open(int16_t action, char *text, int16_t index) {
             error("narrate_open: ERROR unknown action %d\n", action);
             exit(1);
     }
+    */
+    narrate_open_sdl(action, text, index);
     /*
     lua_getglobal(lua_state, "dsl");
     lua_getfield(lua_state, -1, "narrate_open2");
