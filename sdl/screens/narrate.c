@@ -1,8 +1,9 @@
 #include "narrate.h"
 #include "../../src/dsl.h"
+#include "../../src/dsl-execute.h"
+#include "../../src/dsl-narrate.h"
 #include "../../src/gff.h"
 #include "../../src/gfftypes.h"
-#include "../../src/dsl-narrate.h"
 
 #define STARTX (60)
 #define MAX_CHARS (256)
@@ -28,6 +29,12 @@ static uint32_t portrait_index = 0;
 static char narrate_text[MAX_TEXT];
 static size_t text_pos = 0;
 static char menu_options[MAX_OPTIONS][MAX_LINE];
+
+static void clear() {
+    display = 0;
+    display_menu = 0;
+    text_pos = 0;
+}
 
 void load_portraits(SDL_Renderer *renderer) {
     unsigned long len;
@@ -117,9 +124,10 @@ void print_text(SDL_Renderer *renderer) {
     uint32_t i = 0;
     while (i < text_pos) {
         amt = len;
-        while (amt > 0 && narrate_text[amt - 1] != ' ') { amt--; }
+        while (amt > 0 && narrate_text[i + amt] != ' ') { amt--; }
         print_line_len(renderer, narrate_text + i, 200, y, amt);
         i += amt;
+        while (isspace(narrate_text[i])) { i++; }
         y += 16;
     }
 }
@@ -198,6 +206,25 @@ int narrate_handle_mouse_movement(const uint32_t x, const uint32_t y) {
 }
 
 int narrate_handle_mouse_click(const uint32_t x, const uint32_t y) {
+    int const height = 18;
+    int y_test = 516;
+    if (display_menu) {
+        if (x >= 150 && x <= 600) {
+            for (int i = 0; i < 8; i++) {
+                if (y >= y_test  && y < y_test + height) {
+                    clear();
+                    dsl_select_menu(i);
+                    return 1;
+                }
+                y_test += height;
+            }
+        }
+    }
+    if (display && !display_menu) {
+        clear();
+        dsl_resume_dialog();
+        return 1;
+    }
     return 0; // zero means I did not handle the mouse click, so another screen may.
 }
 
