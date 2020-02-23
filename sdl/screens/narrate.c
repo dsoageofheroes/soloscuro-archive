@@ -124,7 +124,7 @@ void print_text(SDL_Renderer *renderer) {
     uint32_t i = 0;
     while (i < text_pos) {
         amt = len;
-        while (amt > 0 && narrate_text[i + amt] != ' ') { amt--; }
+        while (i + amt < text_pos && amt > 0 && narrate_text[i + amt] != ' ') { amt--; }
         print_line_len(renderer, narrate_text + i, 200, y, amt);
         i += amt;
         while (isspace(narrate_text[i])) { i++; }

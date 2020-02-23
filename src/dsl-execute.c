@@ -1101,6 +1101,10 @@ void dsl_select_menu(int option) {
 }
 
 void dsl_resume_dialog() {
+    if (!is_paused) {
+        error("You are trying to resume a dialog, but there is nothing to resume...\n");
+        return;
+    }
     if (menu_count > 0) {
         error("resume_dialog: called, but we are waiting for a menu selection!\n");
         return;
