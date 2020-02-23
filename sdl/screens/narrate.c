@@ -98,9 +98,9 @@ void narrate_init(SDL_Renderer *renderer) {
     display = 0; // start off as off
 }
 
-void print_line(SDL_Renderer *renderer, const char *text, size_t x, size_t y) {
+static void print_line_len(SDL_Renderer *renderer, const char *text, size_t x, size_t y, const uint32_t len) {
     size_t c;
-    for (int i = 0; text[i]; i++) {
+    for (int i = 0; text[i] && i < len; i++) {
         c = text[i];
         font_locs[c].x = x;
         font_locs[c].y = y;
@@ -111,14 +111,24 @@ void print_line(SDL_Renderer *renderer, const char *text, size_t x, size_t y) {
 }
 
 void print_text(SDL_Renderer *renderer) {
-    print_line(renderer, narrate_text, 200, 16);
+    const uint32_t len = 48;
+    uint32_t amt = 48;
+    size_t y = 16;
+    uint32_t i = 0;
+    while (i < text_pos) {
+        amt = len;
+        while (amt > 0 && narrate_text[amt - 1] != ' ') { amt--; }
+        print_line_len(renderer, narrate_text + i, 200, y, amt);
+        i += amt;
+        y += 16;
+    }
 }
 
 void print_menu(SDL_Renderer *renderer) {
     size_t x = 140, y = 490;
     SDL_RenderCopy(renderer, background, NULL, &menu_loc);
     for (int i = 0; i < MAX_OPTIONS; i++) {
-        print_line(renderer, menu_options[i], x, y);
+        print_line_len(renderer, menu_options[i], x, y, 0x7FFFFFFF);
         y += 20;
     }
 }
