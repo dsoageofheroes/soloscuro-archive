@@ -195,6 +195,12 @@ int map_handle_mouse_click(const uint32_t x, const uint32_t y) {
             dsl_execute_subroutine(check->data.name_check.file,
                 check->data.name_check.addr, 0);
         }
+        //debug("manually calling %d: %d\n", 5, 341);
+            //dsl_execute_subroutine(5, 341, 0);
+        debug("Searching other checks...\n");
+        for (int i = 1; i < MAX_CHECK_TYPES; i++) {
+            debug("check[%d] = %p\n", i, dsl_find_check(i, mo->index));
+        }
     }
     return 1; // map always intercepts the mouse...
 }

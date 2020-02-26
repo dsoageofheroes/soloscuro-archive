@@ -25,6 +25,7 @@ static SDL_Rect portraits_loc[MAX_PORTRAITS];
 
 static int display = 0;
 static int display_menu = 0;
+static int end_received = 0, close_received = 0;
 static uint32_t portrait_index = 0;
 static char narrate_text[MAX_TEXT];
 static size_t text_pos = 0;
@@ -34,6 +35,8 @@ static void clear() {
     display = 0;
     display_menu = 0;
     text_pos = 0;
+    end_received = 0;
+    close_received = 0;
 }
 
 void load_portraits(SDL_Renderer *renderer) {
@@ -155,6 +158,14 @@ void narrate_render(void *data, SDL_Renderer *renderer) {
 
 static void add_text(const char *to_add) {
     if (!to_add) { return; }
+    if (!strcmp(to_add, "END")) {
+        end_received = 1;
+        return;
+    }
+    if (!strcmp(to_add, "CLOSE")) {
+        close_received = 1;
+        return;
+    }
 
     int len = strlen(to_add);
 
@@ -221,8 +232,13 @@ int narrate_handle_mouse_click(const uint32_t x, const uint32_t y) {
         }
     }
     if (display && !display_menu) {
+        int call_resume = !end_received && !close_received;
         clear();
-        dsl_resume_dialog();
+
+        if (call_resume) {
+            dsl_resume_dialog();
+        }
+
         return 1;
     }
     return 0; // zero means I did not handle the mouse click, so another screen may.

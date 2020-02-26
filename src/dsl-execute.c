@@ -159,7 +159,8 @@ dsl_operation_t dsl_operations[] = {
 
 int do_dsl_command(uint8_t cmd) {
     fflush(stdout);
-    debug("command byte = 0x%x (%s)\n", cmd, dsl_operations[cmd].name);
+    debug("[%p:%d]command byte = 0x%x (%s)\n", (void*)get_data_start_ptr(),
+        (int32_t) (get_data_ptr() - get_data_start_ptr()), cmd, dsl_operations[cmd].name);
     exit_dsl = 0;
     (*dsl_operations[cmd].func)();
     return !exit_dsl;
@@ -170,11 +171,11 @@ static void execute_until_exit() {
     uint8_t command = get_byte();
     local_sub_ret = 0; // In case this is a local subroutine.
     while (!local_sub_ret && do_dsl_command(command) && command_implemented) {
-        command = get_byte();
         if (is_paused) {
             debug("pausing until resumed.\n");
             return;
         }
+        command = get_byte();
     }
 
     if (!command_implemented) {
@@ -193,21 +194,24 @@ void dsl_execute_subroutine(const int file, const int addr, const int is_mas) {
     command_implemented = 1;
     //TODO FIXME: Global issue here?
     this_gpl_type = is_mas ? MASFILE : DSLFILE;
-    unsigned long len;
+    unsigned long len = 0;
     unsigned char *dsl = (file >= 0)
         ? (unsigned char*)gff_get_raw_bytes(DSLDATA_GFF_INDEX, is_mas ? GT_MAS : GT_GPL, file, &len)
         : get_data_start_ptr();
 
-    debug("Executing %s file #%d @ %d\n", is_mas ? "MAS" : "DSL", file, addr);
+    debug("Executing %s file #%d @ %d, len = %lu\n", is_mas ? "MAS" : "DSL", file, addr, len);
 
     push_data_ptr(dsl);
     set_data_ptr(dsl, dsl + addr);
     execute_until_exit();
-    if (is_paused) { return; }
+    if (is_paused) { 
+        debug("pause detected returning with stack preserved.\n");
+        return; 
+    }
     pop_data_ptr();
 
-    debug("---------------------Ending Execution----------------------\n");
-    debug("%lu of %lu\n", get_data_ptr() - get_data_start_ptr(), len);
+    debug("---------------------Ending Subroutine Execution----------------------\n");
+    //debug("%lu of %lu\n", get_data_ptr() - get_data_start_ptr(), len);
 }
 
 static void get_parameters(int16_t amt) {
@@ -563,12 +567,17 @@ void dsl_jump(void) {
 }
 
 void dsl_local_sub(void) {
+    debug("------------START LOCAL SUB-----------------\n");
     dsl_execute_subroutine(-1, read_number(), 0);
+    local_sub_ret = 0; // Clear the local sub return so we can continue.
+    debug("------------END LOCAL SUB-------------------\n");
+    exit_dsl = 0;
 }
 
 void dsl_global_sub(void) {
     get_parameters(2);
     dsl_execute_subroutine(param.val[1], param.val[0], 0);
+    exit_dsl = 0;
 }
 
 void dsl_local_ret(void) {
@@ -707,7 +716,7 @@ void dsl_default(void) {
 void dsl_ifis(void) {
     get_parameters(2);
     if ((int32_t) compareval[comparePtr] != (int32_t)param.val[0]) {
-        warn("dsl_ifis: taking ifis.\n");
+        warn("dsl_ifis: taking ifis (%d != %d).\n", compareval[comparePtr], param.val[0]);
         move_dsl_ptr(param.val[1]);
     } else {
         compared[comparePtr] = YES;

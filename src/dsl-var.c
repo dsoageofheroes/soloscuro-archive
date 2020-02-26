@@ -161,14 +161,19 @@ void generic_name_check(int check_index) {
 
 // This should use a hash table, FIXME/REFACTOR!
 dsl_check_t* dsl_find_check(int32_t type, int32_t id) {
+    int pos = -1;
     if (type < 0 || type >= MAX_CHECK_TYPES) { return NULL; }
 
     id = abs(id);
     for (int i = 0; i < checks_pos[type]; i++) {
         if (abs(checks[type][i].data.name_check.name) == id) {
-            return checks[type]+i;
+            pos = i;
+            debug ("find check %d", pos);
+            //return checks[type]+i;
         }
     }
+
+    if (pos >= 0) { return checks[type] + pos; }
 
     return NULL;
 }
@@ -231,6 +236,8 @@ void push_data_ptr(unsigned char *data) {
 
     dsl_state_pos++;
     dsl_data_start = data;
+
+    debug("pushing %p: %p\n", dsl_data_start, dsl_data);
 }
 
 void clear_local_vars() {
@@ -247,6 +254,7 @@ unsigned char* pop_data_ptr() {
     dsl_data_start = states[dsl_state_pos].dsl_data_start;
     dsl_data = states[dsl_state_pos].dsl_data;
 
+    debug("pop %p: %p\n", dsl_data_start, dsl_data);
     return states[dsl_state_pos].dsl_data_start;
 }
 
