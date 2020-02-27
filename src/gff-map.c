@@ -310,14 +310,14 @@ so_object_t* gff_object_inspect(int gff_index, int res_id) {
     rdff_disk_object_t *entry = (rdff_disk_object_t*) data;
     char *tmp = NULL;
     if (len > 1<<20) { return NULL; }
-    printf ("HERE!!!!%d %d, len = %lu\n", gff_index, res_id, len);
+    //printf ("HERE!!!!%d %d, len = %lu\n", gff_index, res_id, len);
 
     while (entry->load_action != -1) {
-        printf ("proc = %d, bocknum = %d, type = %d, index = %d, from = %d, len = %d\n",
-                entry->load_action, entry->blocknum, entry->type, entry->index, entry->from, entry->len);
+        //printf ("proc = %d, bocknum = %d, type = %d, index = %d, from = %d, len = %d\n",
+                //entry->load_action, entry->blocknum, entry->type, entry->index, entry->from, entry->len);
         switch(entry->load_action) {
             case RDFF_OBJECT:
-                printf("OBJECT\n");
+                //printf("OBJECT\n");
                 data += sizeof(rdff_disk_object_t);
                 ret = gff_create_object((char*) data, entry, -1);
                 break;
@@ -325,7 +325,7 @@ so_object_t* gff_object_inspect(int gff_index, int res_id) {
                 printf("CONTAINER\n");
                 break;
             case RDFF_POINTER:
-                printf("POINTER\n");
+                //printf("POINTER\n");
                 break;
             case RDFF_NEXT:
                 printf("NEXT\n");

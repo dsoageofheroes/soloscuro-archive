@@ -144,6 +144,25 @@ void name_name_global_addr(param_t *par) {
     }
 }
 
+static const char* get_so_name(so_object_t *so) {
+    switch(so->type) {
+        case SO_DS1_COMBAT:
+            return so->data.ds1_combat.name;
+            break;
+        case SO_DS1_ITEM:
+            return "<ITEM-need to implement>";
+            break;
+    }
+    return "UNKNOWN";
+}
+
+static void print_name_check(int check_index) {
+    so_object_t *so = gff_object_inspect(OBJEX_GFF_INDEX, abs(new_name.name));
+    debug("When I %s to '%s' (%d) goto file: %d, addr: %d, global = %d\n",
+        debug_index_names[check_index], get_so_name(so), new_name.name,
+        new_name.file, new_name.addr, new_name.global);
+}
+
 void generic_name_check(int check_index) {
     int cpos = checks_pos[check_index]; // Where in the list we are.
     if (cpos > MAX_DSL_CHECKS) {
@@ -153,9 +172,9 @@ void generic_name_check(int check_index) {
     checks[check_index][cpos].data.name_check = new_name;
     checks[check_index][cpos].next = cpos + 1;
     checks[check_index][cpos].type = check_index;
-    debug("%s check = {file = %d, addr = %d, name = %d, is_global = %d}\n",
-        debug_index_names[check_index], new_name.file, new_name.addr,
-        new_name.name, new_name.global);
+
+    print_name_check(check_index);
+
     checks_pos[check_index]++;
 }
 
