@@ -47,6 +47,11 @@ static char* strtolwr(char *str) {
     return str;
 }
 
+void gff_print_something()
+{
+    printf("Why does this not print?");
+}
+
 // Precondition, name is in lowercase!
 int gff_find_index(char *name) {
     if (!name) { return -1; }

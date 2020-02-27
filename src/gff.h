@@ -165,6 +165,7 @@ typedef struct _gff_file_t {
 
 extern gff_file_t open_files[NUM_FILES];
 
+extern void gff_print_something();
 extern void gff_init();
 extern void gff_load_directory(const char *path);
 extern int gff_get_master();
