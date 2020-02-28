@@ -144,13 +144,22 @@ void name_name_global_addr(param_t *par) {
     }
 }
 
+static char buf[1024];
+
 static const char* get_so_name(so_object_t *so) {
+    disk_object_t *dobj = NULL;
     switch(so->type) {
         case SO_DS1_COMBAT:
             return so->data.ds1_combat.name;
             break;
         case SO_DS1_ITEM:
-            return "<ITEM-need to implement>";
+            dobj = gff_get_object(so->data.ds1_item.id);
+            //dobj = gff_get_object(so->data.ds1_item.name_index);
+            //sprintf(buf, "item (index = %d, bmp_id = %d)", so->data.ds1_item.name_index, dobj->bmp_id);
+            sprintf(buf, "item (id = %d, bmp_id = %d, script_id = %d)", so->data.ds1_item.id, dobj->bmp_id,
+            dobj->script_id);
+            //return "<ITEM-need to implement>";
+            return buf;
             break;
     }
     return "UNKNOWN";
@@ -330,7 +339,7 @@ int32_t read_number() {
         //printf("current operation = 0x%x\n", cop);
         if (cop < 0x80) {
             cval = cop * 0x100 + get_byte();
-            debug("immediate = %d\n", cval);
+            //debug("immediate = %d\n", cval);
         } else {
             if (cop < OPERATOR_OFFSET) {
                 if (cop & EXTENDED_VAR) { // variable is > 255
@@ -343,7 +352,7 @@ int32_t read_number() {
             switch (cop) {
                 case DSL_ACCM|0x80: {
                     cval = accum;
-                    debug("DSL_ACCUM cval = %d\n", cval);
+                    //debug("DSL_ACCUM cval = %d\n", cval);
                     break;
                 }
                 case DSL_LNAME|0x80:
@@ -364,23 +373,23 @@ int32_t read_number() {
                     break;
                 }
                 case DSL_RETVAL|0x80: {
-                    debug("DSL_RETVAL begin:\n");
+                    //debug("DSL_RETVAL begin:\n");
                     push_params();
                     do_dsl_command(get_byte());
                     pop_params();
                     cval = accum;
-                    debug("DSL_RETVAL end, cval = %d\n", cval);
+                    //debug("DSL_RETVAL end, cval = %d\n", cval);
                     break;
                 }
                 case DSL_IMMED_BIGNUM|0x80: {
                     cval = (int32_t)((int16_t)get_word()) * 655356L 
                          + (int32_t)((uint16_t)get_word());
-                    debug("DSL_IMMED_BIGNUM, cval = %d\n", cval);
+                    //debug("DSL_IMMED_BIGNUM, cval = %d\n", cval);
                     break;
                 }
                 case DSL_IMMED_BYTE|0x80: {
                     cval = (int32_t)((int8_t)get_byte());
-                    debug("DSL_IMMED_BYTE, cval = %d\n", cval);
+                    //debug("DSL_IMMED_BYTE, cval = %d\n", cval);
                     break;
                 }
                 case DSL_IMMED_WORD|0x80: {
@@ -390,7 +399,7 @@ int32_t read_number() {
                 }
                 case DSL_IMMED_NAME|0x80: {
                     cval = (int32_t)((int16_t)get_half_word() * -1);
-                    debug("DSL_IMMED_NAME, cval = %d\n", cval);
+                    //debug("DSL_IMMED_NAME, cval = %d\n", cval);
                     break;
                 }
                 case DSL_COMPLEX_VAL|0x80: {
@@ -400,7 +409,7 @@ int32_t read_number() {
                 case DSL_IMMED_STRING|0x80: {
                     cval = 0;
                     gBignumptr = (int32_t*) read_text();
-                    debug("DSL_IMMED_STRING, cval = %d, '%s'\n", cval, (char*) gBignumptr);
+                    //debug("DSL_IMMED_STRING, cval = %d, '%s'\n", cval, (char*) gBignumptr);
                     break;
                 }
                 case DSL_OP_ADD:
@@ -451,7 +460,7 @@ int32_t read_number() {
         if (!found_operator) {
             tval = accums[paren_level];
             //printf("operator not found, opstack[%d] = 0x%x, tval = %d\n", paren_level, opstack[paren_level], tval);
-            debug("operator: %d\n", opstack[paren_level]);
+            //debug("operator: %d\n", opstack[paren_level]);
             switch(opstack[paren_level]) {
                 case DSL_PLUS:   tval += cval; break;
                 case DSL_MINUS:  tval -= cval; break;
