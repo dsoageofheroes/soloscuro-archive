@@ -187,6 +187,79 @@ void generic_name_check(int check_index) {
     checks_pos[check_index]++;
 }
 
+void print_all_checks() {
+    box_t box;
+    tile_t tile;
+    name_t name;
+    name2_t name2;
+    for (int i = 0; i < MAX_CHECK_TYPES; i++) {
+        for (int j = 0; j < checks_pos[i]; j++) {
+            box   = checks[i][j].data.box_check;
+            tile  = checks[i][j].data.tile_check;
+            name  = checks[i][j].data.name_check;
+            name2 = checks[i][j].data.name2_check;
+            switch(i) {
+                case UNUSED_CHECK_INDEX:
+                    debug("check['%s'] =\n", debug_index_names[i]);
+                    break;
+                case TALK_TO_CHECK_INDEX:
+                    debug("check['%s']: talk to %d call %d:%d (global = %d)\n",
+                        debug_index_names[i], name.name, name.file, name.addr, name.global);
+                    break;
+                case ATTACK_CHECK_INDEX:
+                    debug("check['%s']: attacks %d call %d:%d (global = %d)\n",
+                        debug_index_names[i], name.name, name.file, name.addr, name.global);
+                    break;
+                case POV_CHECK_INDEX:
+                    debug("check['%s'] =\n", debug_index_names[i]);
+                    break;
+                case PICKUP_CHECK_INDEX:
+                    debug("check['%s'] =\n", debug_index_names[i]);
+                    break;
+                case OTHER_CHECK_INDEX:
+                    debug("check['%s'] =\n", debug_index_names[i]);
+                    break;
+                case OTHER1_CHECK_INDEX:
+                    debug("check['%s'] =\n", debug_index_names[i]);
+                    break;
+                case MOVE_TILE_CHECK_INDEX:
+                    debug("check['%s']: when I move to (%d, %d) call %d:%d (pc-only = %d) \n",
+                        debug_index_names[i], tile.x, tile.y, tile.file, tile.addr, tile.trip);
+                    break;
+                case LOOK_CHECK_INDEX:
+                    debug("check['%s']: look at %d call %d:%d (global = %d)\n",
+                        debug_index_names[i], name.name, name.file, name.addr, name.global);
+                    break;
+                case USE_CHECK_INDEX:
+                    debug("check['%s']: use %d call %d:%d (global = %d)\n",
+                        debug_index_names[i], name.name, name.file, name.addr, name.global);
+                    break;
+                case USE_WITH_CHECK_INDEX:
+                    debug("check['%s']: use %d on %d call %d:%d (global = %d)\n",
+                        debug_index_names[i], name2.name2, name2.name1, name2.file, name2.addr, name2.global);
+                    break;
+                case MOVE_BOX_CHECK_INDEX:
+                    debug("check['%s']: when I move to within (%d, %d) -> (%d, %d) call %d:%d (pc-only = %d) \n",
+                        debug_index_names[i], box.x, box.y, box.x + box.xd,
+                        box.y + box.yd, box.file, box.addr, box.trip);
+                    break;
+            }
+            /*
+typedef struct dsl_check_s {
+    union {
+        box_t box_check;
+        tile_t tile_check;
+        name_t name_check;
+        name2_t name2_check;
+    } data;
+    uint8_t type;
+    uint16_t next;
+} dsl_check_t;
+*/
+        }
+    }
+}
+
 // This should use a hash table, FIXME/REFACTOR!
 dsl_check_t* dsl_find_check(int32_t type, int32_t id) {
     int pos = -1;
@@ -196,7 +269,7 @@ dsl_check_t* dsl_find_check(int32_t type, int32_t id) {
     for (int i = 0; i < checks_pos[type]; i++) {
         if (abs(checks[type][i].data.name_check.name) == id) {
             pos = i;
-            debug ("find check %d", pos);
+            debug ("find check %d\n", pos);
             //return checks[type]+i;
         }
     }
@@ -598,19 +671,19 @@ static void load_simple_variable(uint16_t type, uint16_t vnum, int32_t val) {
     switch (type) {
         case DSL_GBIGNUM:
             dsl_global_bnums[vnum] = (int32_t) val;
-            debug("dsl_global_bnums[%d] = %d\n", vnum, val);
+            debug("setting dsl_global_bnums[%d] = %d\n", vnum, val);
             break;
         case DSL_LBIGNUM:
             dsl_local_bnums[vnum] = (int32_t) val;
-            debug("dsl_local_bnums[%d] = %d\n", vnum, val);
+            debug("setting dsl_local_bnums[%d] = %d\n", vnum, val);
             break;
         case DSL_GNUM:
             dsl_global_nums[vnum] = (int16_t) val;
-            debug("dsl_global_nums[%d] = %d\n", vnum, val);
+            debug("setting dsl_global_nums[%d] = %d\n", vnum, val);
             break;
         case DSL_LNUM:
             dsl_local_nums[vnum] = (int16_t) val;
-            debug("dsl_local_nums[%d] = %d\n", vnum, val);
+            debug("setting dsl_local_nums[%d] = %d\n", vnum, val);
             break;
         case DSL_GFLAG:
             if (val == 0) {
@@ -618,7 +691,7 @@ static void load_simple_variable(uint16_t type, uint16_t vnum, int32_t val) {
             } else {
                 dsl_global_flags[vnum/8] |= bitmask[vnum%8];
             }
-            debug("dsl_global_flags bit %d = %d\n", vnum, val);
+            debug("setting dsl_global_flags bit %d = %d\n", vnum, val);
             break;
         case DSL_LFLAG:
             if (val == 0) {
@@ -626,7 +699,7 @@ static void load_simple_variable(uint16_t type, uint16_t vnum, int32_t val) {
             } else {
                 dsl_local_flags[vnum/8] |= bitmask[vnum%8];
             }
-            debug("dsl_local_flags bit %d = %d\n", vnum, val);
+            debug("setting dsl_local_flags bit %d = %d\n", vnum, val);
             break;
         default:
             error("ERROR: Unknown simple variable type: 0x%x!\n", type);
@@ -776,6 +849,7 @@ void set_any_order(name_t *name, int16_t to, int16_t los_order, int16_t range) {
     */
 }
 
+/*
 static check_index_t get_check_node() {
     check_index_t node_index;
     if (gunused_checks == NULL_CHECK) {
@@ -801,66 +875,59 @@ static void insert_check(check_index_t *cindex) {
     check[new_head].next = old_head;
     *cindex = new_head;
 }
+*/
 
-void use_with_check(check_index_t *cindex) {
+void use_with_check() {
     name2_t name = new_name2;
-    while ((*cindex != NULL_CHECK) && (check[*cindex].data.name2_check.name1 < name.name1 )) {
-        use_with_check(&check[*cindex].next);
-        return;
+    int check_index = USE_WITH_CHECK_INDEX;
+    int cpos = checks_pos[check_index]; // Where in the list we are.
+    if (cpos > MAX_DSL_CHECKS) {
+        fprintf(stderr, "FATAL ERROR: Max checks reached! ci = %d\n", check_index);
+        exit(1);
     }
-    while ((*cindex != NULL_CHECK) && (check[*cindex].data.name2_check.name2 < name.name2 )) {
-        use_with_check(&check[*cindex].next);
-        return;
-    }
-    insert_check(cindex);
-    if (*cindex == NULL_CHECK) {
-        return;
-    }
-    check[*cindex].data.name2_check = name;
+    checks[check_index][cpos].data.name2_check = name;
+    checks[check_index][cpos].next = cpos + 1;
+    checks[check_index][cpos].type = check_index;
+
+    //print_name_check(check_index);
+
+    checks_pos[check_index]++;
     debug("insert with check = {file = %d, addr = %d, name1 = %d, name2 = %d, is_global = %d}\n",
         name.file, name.addr, name.name1,
         name.name2, name.global);
 }
 
-void generic_box_check(check_index_t *cindex, box_t box) {
-    while ((*cindex != NULL_CHECK) && (check[*cindex].data.box_check.x < box.x)) {
-        generic_box_check(&check[*cindex].next, box);
-        return;
+void generic_box_check(int check_index, box_t box) {
+    int cpos = checks_pos[check_index]; // Where in the list we are.
+    if (cpos > MAX_DSL_CHECKS) {
+        fprintf(stderr, "FATAL ERROR: Max checks reached! ci = %d\n", check_index);
+        exit(1);
     }
-    while ((*cindex != NULL_CHECK) && (check[*cindex].data.box_check.y < box.y)) {
-        generic_box_check(&check[*cindex].next, box);
-        return;
-    }
-    if ((*cindex == NULL_CHECK) || (check[*cindex].data.box_check.x != box.x) || (check[*cindex].data.box_check.y !=
-        box.y)) {
-        insert_check(cindex);
-    }
-    if (*cindex == NULL_CHECK) {
-        return;
-    }
-    check[*cindex].data.box_check = box;
+    checks[check_index][cpos].data.box_check = box;
+    checks[check_index][cpos].next = cpos + 1;
+    checks[check_index][cpos].type = check_index;
+
+    //print_name_check(check_index);
+
+    checks_pos[check_index]++;
     debug("tile with check = {file = %d, addr = %d, x = %d, y = %d, xd = %d, yd = %d, trip = %d}\n",
         box.file, box.addr, box.x, box.xd, box.yd,
         box.y, box.trip);
 }
 
-void generic_tile_check(check_index_t *cindex, tile_t tile) {
-    while ((*cindex != NULL_CHECK) && (check[*cindex].data.tile_check.x < tile.x)) {
-        generic_tile_check(&check[*cindex].next, tile);
-        return;
+void generic_tile_check(int check_index, tile_t tile) {
+    int cpos = checks_pos[check_index]; // Where in the list we are.
+    if (cpos > MAX_DSL_CHECKS) {
+        fprintf(stderr, "FATAL ERROR: Max checks reached! ci = %d\n", check_index);
+        exit(1);
     }
-    while ((*cindex != NULL_CHECK) && (check[*cindex].data.tile_check.y < tile.y)) {
-        generic_tile_check(&check[*cindex].next, tile);
-        return;
-    }
-    if ((*cindex == NULL_CHECK) || (check[*cindex].data.tile_check.x != tile.x)
-        || (check[*cindex].data.tile_check.y != tile.y)) {
-        insert_check(cindex);
-    }
-    if (*cindex == NULL_CHECK) {
-        return;
-    }
-    check[*cindex].data.tile_check = tile;
+    checks[check_index][cpos].data.tile_check = tile;
+    checks[check_index][cpos].next = cpos + 1;
+    checks[check_index][cpos].type = check_index;
+
+    //print_name_check(check_index);
+
+    checks_pos[check_index]++;
     debug("tile with check = {file = %d, addr = %d, x = %d, y = %d, trip = %d}\n",
         tile.file, tile.addr, tile.x,
         tile.y, tile.trip);
@@ -898,3 +965,12 @@ void set_new_order() {
     set_any_order(&new_name, DSL_ORDER, 0, 0);
 }
 
+void print_vars(int what) {
+    printf("--------------------------------------print vars------------------\n");
+    if (what == 0) {
+        for (int i = 0; i < DSL_LFLAGVAR_SIZE; i++) {
+            printf("%x, ", dsl_local_flags[i]);
+        }
+        printf("\n");
+    }
+}

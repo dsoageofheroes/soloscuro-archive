@@ -26,7 +26,7 @@ void parse_args(int argc, char *argv[]) {
     }
 
     if (!ds1_gffs) {
-        error("Unable to get the location of the DarkSun 1 GFFs, please pass with '--dsl1 <location>'\n");
+        error("Unable to get the location of the DarkSun 1 GFFs, please pass with '--ds1 <location>'\n");
         exit(1);
     }
 }

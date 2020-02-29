@@ -163,6 +163,7 @@ int do_dsl_command(uint8_t cmd) {
         (int32_t) (get_data_ptr() - get_data_start_ptr()), cmd, dsl_operations[cmd].name);
     exit_dsl = 0;
     (*dsl_operations[cmd].func)();
+    //print_vars(0);
     return !exit_dsl;
 }
 
@@ -184,7 +185,7 @@ static void execute_until_exit() {
     } else {
         debug("returing from subroutine.\n");
     }
-    local_sub_ret = 1;
+    local_sub_ret = 0;
 }
 
 void dsl_execute_subroutine(const int file, const int addr, const int is_mas) {
@@ -263,9 +264,6 @@ static void get_parameters(int16_t amt) {
 static check_index_t gPov = NULL_CHECK;
 static check_index_t gOther = NULL_CHECK;
 static check_index_t gOther1 = NULL_CHECK;
-static check_index_t gMoveTile = NULL_CHECK;
-static check_index_t gUseWith = NULL_CHECK;
-static check_index_t gMoveBox = NULL_CHECK;
 
 static int8_t comparePtr = 0;
 static int8_t compared[MAX_COMPAREDEPTH + 1];
@@ -377,6 +375,8 @@ void dsl_in_los_check(void) {
     global_addr_name(&param);
     set_los_order(DSL_IN_LOS, param.val[3]);
 }
+
+#define debug_p(fmt, ...) if (print_only) { debug (fmt, ##__VA_ARGS__); return; }
 
 void dsl_zero(void) {
     warn("ERROR: zero command encountered!  Moving on!\n");
@@ -997,6 +997,7 @@ static int32_t id_to_header(int32_t header) {
 }
 void dsl_setother(void) {
     int32_t header = 0;
+    debug ("set other\n");
     if ((( header = read_number()) >= 0 && header != NULL_OBJECT)
         || (header = id_to_header(header)) != NULL_OBJECT) {
         gOther1 = header;
@@ -1281,7 +1282,7 @@ void dsl_endif(void) {
 
 void dsl_move_tilecheck(void) {
     get_parameters(5);
-    generic_tile_check(&gMoveTile, get_tile(&param));
+    generic_tile_check(MOVE_TILE_CHECK_INDEX, get_tile(&param));
 }
 
 void dsl_door_tilecheck(void) {
@@ -1290,7 +1291,7 @@ void dsl_door_tilecheck(void) {
 
 void dsl_move_boxcheck(void) {
     get_parameters(7);
-    generic_box_check(&gMoveBox, get_box(&param));
+    generic_box_check(MOVE_BOX_CHECK_INDEX, get_box(&param));
 }
 
 void dsl_door_boxcheck(void) {
@@ -1325,7 +1326,7 @@ void dsl_noorderscheck(void) {
 void dsl_usewithcheck(void) {
     get_parameters(4);
     name_name_global_addr(&param);
-    use_with_check(&gUseWith);
+    use_with_check();
 }
 
 void dsl_byte_plus_equal(void) {

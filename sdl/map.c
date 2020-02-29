@@ -183,13 +183,15 @@ int map_handle_mouse_click(const uint32_t x, const uint32_t y) {
     if (!cmap) { return 0; }
     obj_id = get_object_at_location(x, y);
 
+    print_all_checks();
+
     // Right now we assume all icons are talking, will look at attack later.
     if (obj_id >= 0) {
         gff_map_object_t* mo = get_map_object(cmap->gff_file, cmap->map_id, obj_id);
         debug("Clicked on object: %d\n", abs(mo->index));
         dsl_check_t* check = dsl_find_check(TALK_TO_CHECK_INDEX, mo->index);
         if (check) {
-            debug("Need to execution file = %d, addr = %d, global = %d\n",
+            debug("Need to execute file = %d, addr = %d, global = %d\n",
                 check->data.name_check.file, check->data.name_check.addr,
                 check->data.name_check.global);
             dsl_execute_subroutine(check->data.name_check.file,

@@ -187,11 +187,11 @@ void clear_local_vars();
 uint16_t peek_half_word();
 void global_addr_name(param_t *par);
 void generic_name_check(int check_index);
+void generic_tile_check(int check_index, tile_t tile);
+void generic_box_check(int check_index, box_t box);
 void name_name_global_addr(param_t *par);
 void set_any_order(name_t *name, int16_t to, int16_t los_order, int16_t range);
-void generic_tile_check(check_index_t *cindex, tile_t tile);
-void generic_box_check(check_index_t *cindex, box_t box);
-void use_with_check(check_index_t *cindex);
+void use_with_check();
 void set_new_order();
 void set_los_order(int16_t los_order, int16_t range);
 int32_t read_number();
@@ -201,5 +201,8 @@ int32_t get_accumulator();
 
 void setrecord();
 dsl_check_t* dsl_find_check(int32_t type, int32_t id);
+
+void print_vars(int what);
+void print_all_checks();
 
 #endif

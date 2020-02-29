@@ -29,4 +29,4 @@ bin:
 	LD_LIBRARY_PATH=./ lua5.1 test/$@.lua -v
 
 clean:
-	rm -rf $(EXEC) obj gff-inspector libds.$(LIB_EXT) libxmimidi.$(LIB_EXT) bin/
+	rm -rf $(EXEC) obj gff-inspector libds.$(LIB_EXT) libxmimidi.$(LIB_EXT) bin/ mdark

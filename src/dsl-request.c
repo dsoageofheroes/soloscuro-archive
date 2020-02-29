@@ -147,6 +147,7 @@ uint32_t dsl_request_impl(int16_t token, int16_t name,
     int answer = 0;
     switch (token) {
         case HEALING:
+            debug("Time to camp!\n");
             camp(CAMP_RESURRECT, num1, num2);
             break;
         case DOOR:
