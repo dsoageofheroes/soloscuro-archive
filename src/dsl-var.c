@@ -761,11 +761,6 @@ void setrecord() {
     }
 }
 
-void global_ret() {
-    printf("I need to return from this global function/subroutine!\n");
-    pop_data_ptr();
-}
-
 void set_any_order(name_t *name, int16_t to, int16_t los_order, int16_t range) {
     warn("set_any_order: lua callback needed: Get all objects with 'name' and set then to to with los_order and in range\n");
     warn("then set the order!");

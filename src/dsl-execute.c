@@ -180,9 +180,11 @@ static void execute_until_exit() {
 
     if (!command_implemented) {
         error("last command needs to be implemented!\n");
+        exit(1);
     } else {
         debug("returing from subroutine.\n");
     }
+    local_sub_ret = 1;
 }
 
 void dsl_execute_subroutine(const int file, const int addr, const int is_mas) {
@@ -201,6 +203,7 @@ void dsl_execute_subroutine(const int file, const int addr, const int is_mas) {
 
     debug("Executing %s file #%d @ %d, len = %lu\n", is_mas ? "MAS" : "DSL", file, addr, len);
 
+    debug("---------------------pushing the data ptr!-----------------------------\n");
     push_data_ptr(dsl);
     set_data_ptr(dsl, dsl + addr);
     execute_until_exit();
@@ -208,6 +211,7 @@ void dsl_execute_subroutine(const int file, const int addr, const int is_mas) {
         debug("pause detected returning with stack preserved.\n");
         return; 
     }
+    debug("---------------------poping the data ptr!-----------------------------\n");
     pop_data_ptr();
 
     debug("---------------------Ending Subroutine Execution----------------------\n");
@@ -375,6 +379,7 @@ void dsl_in_los_check(void) {
 }
 
 void dsl_zero(void) {
+    warn("ERROR: zero command encountered!  Moving on!\n");
     command_implemented = 0;
 }
 
@@ -398,7 +403,8 @@ void dsl_long_dec(void) {
 }
 
 void dsl_byte_inc(void) {
-    command_implemented = 0;
+    get_parameters(1);
+    ( *((uint8_t *) param.ptr[0]) )++;
 }
 
 void dsl_word_inc(void) {
@@ -608,7 +614,8 @@ void dsl_compare(void) {
 }
 
 void dsl_global_ret(void) {
-    global_ret();
+    //global routines are now handled as local ones...
+    local_sub_ret = 1;
 }
 
 uint8_t adj_check(int16_t obj1, int16_t obj2) {

@@ -188,7 +188,6 @@ uint16_t peek_half_word();
 void global_addr_name(param_t *par);
 void generic_name_check(int check_index);
 void name_name_global_addr(param_t *par);
-void global_ret();
 void set_any_order(name_t *name, int16_t to, int16_t los_order, int16_t range);
 void generic_tile_check(check_index_t *cindex, tile_t tile);
 void generic_box_check(check_index_t *cindex, box_t box);
