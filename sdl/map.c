@@ -65,10 +65,10 @@ void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
     map->flags = (uint16_t*) malloc(sizeof(uint16_t) * map->num_objs);
     //map->num_objs = 32;
     for (int i = 0; i < map->num_objs; i++) {
-        data = gff_map_get_object_bmp_pal(map->gff_file, map->map_id, i, &width, &height, 0, palette_id);
-        tile = SDL_CreateRGBSurfaceFrom(data, width, height, 32, 4*width, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
         scmd_t *scmd = gff_map_get_object_scmd(map->gff_file, map->map_id, i, 0);
         if (!scmd) {
+            data = gff_map_get_object_bmp_pal(map->gff_file, map->map_id, i, &width, &height, 0, palette_id);
+            tile = SDL_CreateRGBSurfaceFrom(data, width, height, 32, 4*width, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
             map->objs[i] = SDL_CreateTextureFromSurface(renderer, tile);
             map->flags[i] = gff_map_get_object_location(map->gff_file, map->map_id, i, &x, &y, &z);
             map->obj_locs[i].w = width;
@@ -76,12 +76,24 @@ void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
             map->obj_locs[i].x = x;
             map->obj_locs[i].y = y;
         } else {
+            data = gff_map_get_object_bmp_pal(map->gff_file, map->map_id, i, &width, &height, 0, palette_id);
+            tile = SDL_CreateRGBSurfaceFrom(data, width, height, 32, 4*width, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
+            //gff_map_object_t* mo = get_map_object(map->gff_file, map->map_id, i);
+            //disk_object_t* dobj = gff_get_object(mo->index);
+            //dsl_scmd_print(OBJEX_GFF_INDEX, dobj->script_id);
             // FIXME:SCMD need to be added...
             map->objs[i] = NULL;
-            //printf("scmd[%d]: %d, %d\n", i, scmd->xoffset, scmd->yoffset);
-            //printf("scmd[%d]: %d, %d\n", i, scmd->xoffsethot, scmd->yoffsethot);
-            map->obj_locs[i].x -= scmd->xoffsethot;
-            map->obj_locs[i].y -= scmd->yoffsethot;
+            debug("scmd[%d]: %d, %d\n", i, scmd->xoffset, scmd->yoffset);
+            debug("scmd[%d]: %d, %d\n", i, scmd->xoffsethot, scmd->yoffsethot);
+            map->objs[i] = SDL_CreateTextureFromSurface(renderer, tile);
+            map->flags[i] = gff_map_get_object_location(map->gff_file, map->map_id, i, &x, &y, &z);
+            debug("%d: flags = %x\n", i, map->flags[i]);
+            map->obj_locs[i].w = width;
+            map->obj_locs[i].h = height;
+            map->obj_locs[i].x = x;
+            map->obj_locs[i].y = y;
+            //map->obj_locs[i].x += (scmd->xoffsethot);
+            //map->obj_locs[i].y += (scmd->yoffsethot);
         }
         free(data);
     }
@@ -152,7 +164,7 @@ int get_object_at_location(const uint32_t x, const uint32_t y) {
             osy = cmap->obj_locs[i].y * stretch;
             oex = osx + (stretch * cmap->obj_locs[i].w);
             oey = osy + (stretch * cmap->obj_locs[i].h);
-            //printf("m = (%d, %d) ->  (%d, %d -> %d, %d)\n", mx, my, osx, osy, oex, oey);
+            //printf("cmap[%d] = (%d, %d) ->  (%d, %d -> %d, %d)\n", i, mx, my, osx, osy, oex, oey);
             if (mx >= osx && mx < oex && my >= osy && my < oey) {
                 return i;
             }
@@ -191,7 +203,15 @@ int map_handle_mouse_click(const uint32_t x, const uint32_t y) {
         debug("Clicked on object: %d\n", abs(mo->index));
         dsl_check_t* check = dsl_find_check(TALK_TO_CHECK_INDEX, mo->index);
         if (check) {
-            debug("Need to execute file = %d, addr = %d, global = %d\n",
+            debug("TALK CHECK: Need to execute file = %d, addr = %d, global = %d\n",
+                check->data.name_check.file, check->data.name_check.addr,
+                check->data.name_check.global);
+            dsl_execute_subroutine(check->data.name_check.file,
+                check->data.name_check.addr, 0);
+        }
+        check = dsl_find_check(LOOK_CHECK_INDEX, mo->index);
+        if (check) {
+            debug("LOOK CHECK: Need to execute file = %d, addr = %d, global = %d\n",
                 check->data.name_check.file, check->data.name_check.addr,
                 check->data.name_check.global);
             dsl_execute_subroutine(check->data.name_check.file,
