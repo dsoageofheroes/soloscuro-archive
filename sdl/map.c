@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include "map.h"
+#include "animate.h"
 #include "../src/dsl.h"
 #include "../src/dsl-execute.h"
 #include "../src/dsl-scmd.h"
@@ -43,6 +44,7 @@ void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
     tids = NULL;
 
     map_free(map);
+    animate_clear();
     gff_load_map(id);
     map->tiles = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * map->num_tiles);
     map->gff_file = id;
@@ -75,27 +77,17 @@ void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
             map->obj_locs[i].h = height;
             map->obj_locs[i].x = x;
             map->obj_locs[i].y = y;
+            free(data);
         } else {
-            data = gff_map_get_object_bmp_pal(map->gff_file, map->map_id, i, &width, &height, 0, palette_id);
-            tile = SDL_CreateRGBSurfaceFrom(data, width, height, 32, 4*width, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
             //gff_map_object_t* mo = get_map_object(map->gff_file, map->map_id, i);
             //disk_object_t* dobj = gff_get_object(mo->index);
             //dsl_scmd_print(OBJEX_GFF_INDEX, dobj->script_id);
             // FIXME:SCMD need to be added...
             map->objs[i] = NULL;
-            debug("scmd[%d]: %d, %d\n", i, scmd->xoffset, scmd->yoffset);
-            debug("scmd[%d]: %d, %d\n", i, scmd->xoffsethot, scmd->yoffsethot);
-            map->objs[i] = SDL_CreateTextureFromSurface(renderer, tile);
-            map->flags[i] = gff_map_get_object_location(map->gff_file, map->map_id, i, &x, &y, &z);
-            debug("%d: flags = %x\n", i, map->flags[i]);
-            map->obj_locs[i].w = width;
-            map->obj_locs[i].h = height;
-            map->obj_locs[i].x = x;
-            map->obj_locs[i].y = y;
+            animate_add(map, renderer, scmd, i);
             //map->obj_locs[i].x += (scmd->xoffsethot);
             //map->obj_locs[i].y += (scmd->yoffsethot);
         }
-        free(data);
     }
 
     cmap = map;
@@ -146,6 +138,7 @@ void map_render(void *data, SDL_Renderer *renderer) {
         SDL_RenderCopy(renderer, map->objs[i], NULL, &obj_loc);
         //SDL_RenderCopyEx(renderer, map->objs[i], NULL, &obj_loc, 0.0, NULL, SDL_FLIP_HORIZONTAL);
     }
+    animate_render(NULL, renderer);
 }
 
 #define CLICKABLE (0x10)

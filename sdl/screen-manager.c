@@ -1,5 +1,6 @@
 #include "screen-manager.h"
 #include "map.h"
+#include "animate.h"
 #include "../src/dsl.h"
 #include "screens/main.h"
 #include "screens/narrate.h"
@@ -18,6 +19,7 @@ void screen_init(SDL_Renderer *renderer) {
         screens[i].data = NULL;
     }
 
+    animate_init();
     // Map is a special case.
     map_init(&cmap);
     map_load_region(&cmap, renderer, gff_find_index("rgn2a.gff"));
@@ -77,4 +79,5 @@ SDL_Texture* create_texture(SDL_Renderer *renderer, const uint32_t gff_file,
 
 void screen_free() {
     map_free(&cmap);
+    animate_close();
 }
