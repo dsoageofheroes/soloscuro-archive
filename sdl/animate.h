@@ -10,7 +10,9 @@ typedef struct animate_s {
     scmd_t *scmd;
     SDL_Texture **textures;
     SDL_Rect loc;
-    uint32_t len;
+    uint16_t len;
+    uint16_t pos;
+    int16_t ticks_left;
     uint16_t flags;
     struct animate_s *next;
 } animate_t;
