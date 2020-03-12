@@ -39,18 +39,21 @@ void animate_add(map_t *map, SDL_Renderer *renderer, scmd_t *cmd, int id) {
     list = toadd;
 
     toadd->ticks_left = toadd->scmd->delay;
-    while (!(cmd->flags & SCMD_LAST)) {
+    while (!(cmd->flags & (SCMD_LAST | SCMD_JUMP))) {
         cmd++;
         toadd->len++;
     }
+    cmd++;
+    toadd->len++;
 
     toadd->flags = gff_map_get_object_location(map->gff_file, map->map_id, id, &x, &y, &z);
 
     // get all the textures
     toadd->textures = malloc(sizeof(SDL_Surface *) * (toadd->len));
     for (int i = 0; i < toadd->len; i++) {
+        debug("[%d] bmp_idx = %d, i = %d, flags = %d\n", id, (toadd->scmd + i)->bmp_idx, i, (toadd->scmd+i)->flags);
         data = gff_map_get_object_bmp_pal(map->gff_file, map->map_id, id, &width, &height,
-            toadd->scmd->bmp_idx, palette_id);
+            (toadd->scmd + i)->bmp_idx, palette_id);
         surface = SDL_CreateRGBSurfaceFrom(data, width, height, 32, 
                 4*width, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
         toadd->textures[i] = SDL_CreateTextureFromSurface(renderer, surface);
@@ -90,8 +93,13 @@ void animate_render(void *data, SDL_Renderer *renderer) {
             rover->ticks_left--;
             if (rover->ticks_left == 0) {
                 rover->pos++;
-                rover->ticks_left = (rover->scmd+rover->pos)->delay;
-                debug("rover->pos = %d, rover->ticks_left = %d\n", rover->pos, rover->ticks_left);
+                scmd_t *scmd = rover->scmd + rover->pos;
+                if (scmd->flags & SCMD_JUMP) {
+                    scmd = rover->scmd;
+                    rover->pos = 0;
+                }
+                rover->ticks_left = scmd->delay;
+                rover->ticks_left = rover->ticks_left == 0 ? 16 : rover->ticks_left;
             }
         }
         memcpy(&loc, &(rover->loc), sizeof(SDL_Rect));
