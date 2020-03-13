@@ -11,6 +11,7 @@ map_t *cmap = NULL;
 void map_init(map_t *map) {
     map->tiles = NULL;
     map->objs = NULL;
+    map->anims = NULL;
     map->num_tiles = 0;
     map->gff_file = 0;
     map->map_id = 0;
@@ -63,8 +64,11 @@ void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
 
     map->num_objs = gff_map_get_num_objects(map->gff_file, map->map_id);
     map->objs = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * map->num_objs);
+    map->anims = (animate_t**) malloc(sizeof(animate_t*) * map->num_objs);
     map->obj_locs = (SDL_Rect*) malloc(sizeof(SDL_Rect) * map->num_objs);
     map->flags = (uint16_t*) malloc(sizeof(uint16_t) * map->num_objs);
+    memset(map->objs, 0x0, sizeof(SDL_Texture*) * map->num_objs);
+    memset(map->anims, 0x0, sizeof(animate_t*) * map->num_objs);
     //map->num_objs = 32;
     for (int i = 0; i < map->num_objs; i++) {
         scmd_t *scmd = gff_map_get_object_scmd(map->gff_file, map->map_id, i, 0);
@@ -83,8 +87,9 @@ void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
             //disk_object_t* dobj = gff_get_object(mo->index);
             //dsl_scmd_print(OBJEX_GFF_INDEX, dobj->script_id);
             // FIXME:SCMD need to be added...
+            map->flags[i] = gff_map_get_object_location(map->gff_file, map->map_id, i, &x, &y, &z);
             map->objs[i] = NULL;
-            animate_add(map, renderer, scmd, i);
+            map->anims[i] = animate_add(map, renderer, scmd, i);
             //map->obj_locs[i].x += (scmd->xoffsethot);
             //map->obj_locs[i].y += (scmd->yoffsethot);
         }
@@ -106,7 +111,6 @@ void map_render(void *data, SDL_Renderer *renderer) {
     uint32_t tile_id = 0;
     map_t *map = (map_t*) data;
 
-    //SDL_SetRenderDrawColor( renderer, 0xFF, 0xFF, 0xFF, 0xFF );
     SDL_SetRenderDrawColor( renderer, 0x00, 0x00, 0x00, 0xFF );
     SDL_RenderClear(renderer);
 
@@ -148,15 +152,17 @@ int get_object_at_location(const uint32_t x, const uint32_t y) {
     uint32_t mx = getCameraX() + x;
     uint32_t my = getCameraY() + y;
     uint32_t osx, osy, oex, oey; // object start x, object start y, object end x, object end y
+    SDL_Rect *loc = NULL;
     if (!cmap) { return 0; }
 
     // PERFORMANCE FIXME: should only go through needed objects, possibly quad-tree.
     for (int i = 0; i < cmap->num_objs; i++) {
         if (cmap->flags[i] & CLICKABLE) {
-            osx = cmap->obj_locs[i].x * stretch;
-            osy = cmap->obj_locs[i].y * stretch;
-            oex = osx + (stretch * cmap->obj_locs[i].w);
-            oey = osy + (stretch * cmap->obj_locs[i].h);
+            loc = (cmap->anims[i]) ? &(cmap->anims[i]->loc) : cmap->obj_locs + i;
+            osx = loc->x * stretch;
+            osy = loc->y * stretch;
+            oex = osx + (stretch * loc->w);
+            oey = osy + (stretch * loc->h);
             //printf("cmap[%d] = (%d, %d) ->  (%d, %d -> %d, %d)\n", i, mx, my, osx, osy, oex, oey);
             if (mx >= osx && mx < oex && my >= osy && my < oey) {
                 return i;
@@ -188,7 +194,7 @@ int map_handle_mouse_click(const uint32_t x, const uint32_t y) {
     if (!cmap) { return 0; }
     obj_id = get_object_at_location(x, y);
 
-    print_all_checks();
+    //print_all_checks();
 
     // Right now we assume all icons are talking, will look at attack later.
     if (obj_id >= 0) {

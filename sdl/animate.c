@@ -21,7 +21,7 @@ void animate_init() {
     list = NULL;
 }
 
-void animate_add(map_t *map, SDL_Renderer *renderer, scmd_t *cmd, int id) {
+animate_t* animate_add(map_t *map, SDL_Renderer *renderer, scmd_t *cmd, int id) {
     unsigned char *data = NULL;
     int32_t width, height;
     SDL_Surface *surface;
@@ -67,19 +67,7 @@ void animate_add(map_t *map, SDL_Renderer *renderer, scmd_t *cmd, int id) {
         }
     }
 
-    // delay of a zero means no animation.
-    /*
-    if (delay > 0) {
-        // So add it to the correct animation list (for when to change.)
-        size_t aloc = (animate_pos + delay) % MAX_DELAY;
-        debug("adding animate_pos = %ld\n", aloc);
-        animation_delay_t *anim_delay = malloc(sizeof(animation_delay_t));
-        anim_delay->anim = toadd;
-        anim_delay->prev = NULL;
-        anim_delay->next = animations[aloc];
-        animations[aloc] = anim_delay;
-    }
-    */
+    return toadd;
 }
 
 void animate_render(void *data, SDL_Renderer *renderer) {

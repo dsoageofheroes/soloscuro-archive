@@ -2,6 +2,7 @@
 #define MAP_H
 
 #include <SDL2/SDL.h>
+#include "animate.h"
 #include "screen-manager.h"
 
 typedef struct map_s {
@@ -11,6 +12,7 @@ typedef struct map_s {
     uint32_t map_id;
     SDL_Texture **objs;
     SDL_Rect *obj_locs;
+    animate_t **anims;
     uint16_t *flags;
     uint32_t num_objs;
 } map_t;
