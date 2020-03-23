@@ -24,6 +24,10 @@ void map_render(void *data, SDL_Renderer *renderer);
 int map_handle_mouse(const uint32_t x, const uint32_t y);
 int map_handle_mouse_click(const uint32_t x, const uint32_t y);
 
+int cmap_is_block(const int row, const int column);
+int cmap_is_actor(const int row, const int column);
+int cmap_is_danger(const int row, const int column);
+
 // From main.c
 uint32_t getCameraX();
 uint32_t getCameraY();

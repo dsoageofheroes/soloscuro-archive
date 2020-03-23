@@ -27,6 +27,21 @@ void map_free(map_t *map) {
     }
 }
 
+int cmap_is_block(const int row, const int column) {
+    if (!cmap) { return 0; }
+    return gff_map_is_block(cmap->gff_file, row, column);
+}
+
+int cmap_is_actor(const int row, const int column) {
+    if (!cmap) { return 0; }
+    return gff_map_is_actor(cmap->gff_file, row, column);
+}
+
+int cmap_is_danger(const int row, const int column) {
+    if (!cmap) { return 0; }
+    return gff_map_is_danger(cmap->gff_file, row, column);
+}
+
 void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
     SDL_Surface* tile = NULL;
     map->num_tiles = gff_get_gff_type_length(id, GT_TILE);
@@ -132,15 +147,17 @@ void map_render(void *data, SDL_Renderer *renderer) {
         //if (dobj && dobj->flags) {
             //printf("[%d]: dobj->flags = 0x%x\n", i, dobj->flags);
         //}
-        memcpy(&obj_loc, map->obj_locs+i, sizeof(SDL_Rect));
-        obj_loc.x *= 2;
-        obj_loc.x -= xoffset;
-        obj_loc.y *= 2;
-        obj_loc.y -= yoffset;
-        obj_loc.w *= stretch;
-        obj_loc.h *= stretch;
-        SDL_RenderCopy(renderer, map->objs[i], NULL, &obj_loc);
-        //SDL_RenderCopyEx(renderer, map->objs[i], NULL, &obj_loc, 0.0, NULL, SDL_FLIP_HORIZONTAL);
+        if (map->objs[i]) {
+            memcpy(&obj_loc, map->obj_locs+i, sizeof(SDL_Rect));
+            obj_loc.x *= 2;
+            obj_loc.x -= xoffset;
+            obj_loc.y *= 2;
+            obj_loc.y -= yoffset;
+            obj_loc.w *= stretch;
+            obj_loc.h *= stretch;
+            SDL_RenderCopy(renderer, map->objs[i], NULL, &obj_loc);
+            //SDL_RenderCopyEx(renderer, map->objs[i], NULL, &obj_loc, 0.0, NULL, SDL_FLIP_HORIZONTAL);
+        }
     }
     animate_render(NULL, renderer);
 }

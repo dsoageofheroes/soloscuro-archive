@@ -21,6 +21,49 @@ void animate_init() {
     list = NULL;
 }
 
+/*
+static animate_t* animate_create(SDL_Renderer *rend, const uin32_t gff_file, const uint32_t palette_id, scmd_t *cmd) {
+    unsigned char *data = NULL;
+    int32_t width, height;
+    animate_t *toadd = malloc(sizeof(animate_t));
+
+    memset(&(toadd->loc), 0x0, sizeof(SDL_Rect));
+    // add to the list.
+    toadd->scmd = cmd;
+    toadd->textures = NULL;
+    toadd->len = toadd->ticks_left = toadd->pos = 0;
+    toadd->next = list;
+
+    while (!(cmd->flags & (SCMD_LAST | SCMD_JUMP))) {
+        cmd++;
+        toadd->len++;
+    }
+    cmd++;
+    toadd->len++;
+
+    // get all the textures
+    toadd->textures = malloc(sizeof(SDL_Surface *) * (toadd->len));
+    for (int i = 0; i < toadd->len; i++) {
+        //debug("[%d] bmp_idx = %d, i = %d, flags = %d\n", id, (toadd->scmd + i)->bmp_idx, i, (toadd->scmd+i)->flags);
+        data = gff_map_get_object_bmp_pal(map->gff_file, map->map_id, id, &width, &height,
+            (toadd->scmd + i)->bmp_idx, palette_id);
+        surface = SDL_CreateRGBSurfaceFrom(data, width, height, 32, 
+                4*width, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
+        toadd->textures[i] = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_FreeSurface(surface);
+        free(data);
+        if (i == 0) { // Grab the stats for the first one.
+            toadd->loc.w = width;
+            toadd->loc.h = height;
+            toadd->loc.x = x;
+            toadd->loc.y = y;
+        }
+    }
+
+    return toadd;
+}
+*/
+
 animate_t* animate_add(map_t *map, SDL_Renderer *renderer, scmd_t *cmd, int id) {
     unsigned char *data = NULL;
     int32_t width, height;
@@ -51,7 +94,7 @@ animate_t* animate_add(map_t *map, SDL_Renderer *renderer, scmd_t *cmd, int id) 
     // get all the textures
     toadd->textures = malloc(sizeof(SDL_Surface *) * (toadd->len));
     for (int i = 0; i < toadd->len; i++) {
-        debug("[%d] bmp_idx = %d, i = %d, flags = %d\n", id, (toadd->scmd + i)->bmp_idx, i, (toadd->scmd+i)->flags);
+        //debug("[%d] bmp_idx = %d, i = %d, flags = %d\n", id, (toadd->scmd + i)->bmp_idx, i, (toadd->scmd+i)->flags);
         data = gff_map_get_object_bmp_pal(map->gff_file, map->map_id, id, &width, &height,
             (toadd->scmd + i)->bmp_idx, palette_id);
         surface = SDL_CreateRGBSurfaceFrom(data, width, height, 32, 

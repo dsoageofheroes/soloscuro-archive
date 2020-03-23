@@ -1,6 +1,7 @@
 #include "screen-manager.h"
 #include "map.h"
 #include "animate.h"
+#include "player.h"
 #include "../src/dsl.h"
 #include "screens/main.h"
 #include "screens/narrate.h"
@@ -34,6 +35,8 @@ void screen_init(SDL_Renderer *renderer) {
             screens[i].init(renderer);
         }
     }
+    player_init();
+    player_load_graphics(renderer);
 }
 
 void screen_render(SDL_Renderer *renderer, const uint32_t xmappos, const uint32_t ymappos) {
@@ -42,6 +45,7 @@ void screen_render(SDL_Renderer *renderer, const uint32_t xmappos, const uint32_
             screens[i].render(screens[i].data, renderer);
         }
     }
+    player_render(renderer);
     SDL_RenderPresent(renderer);
 }
 

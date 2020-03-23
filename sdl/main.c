@@ -1,6 +1,7 @@
 #include <SDL2/SDL.h>
 #include <stdio.h>
 #include "map.h"
+#include "player.h"
 #include "screen-manager.h"
 #include "../src/dsl.h"
 #include "../src/gameloop.h"
@@ -73,6 +74,10 @@ void handle_input() {
     if(key_state[SDL_SCANCODE_UP])    { ymappos -= 2; handle_mouse_motion(); }
     if(key_state[SDL_SCANCODE_LEFT])  { xmappos -= 2; handle_mouse_motion(); }
     if(key_state[SDL_SCANCODE_RIGHT]) { xmappos += 2; handle_mouse_motion(); }
+    if(key_state[SDL_SCANCODE_D])     { player_move(PLAYER_DOWN); }
+    if(key_state[SDL_SCANCODE_E])     { player_move(PLAYER_UP); }
+    if(key_state[SDL_SCANCODE_S])     { player_move(PLAYER_LEFT); }
+    if(key_state[SDL_SCANCODE_F])     { player_move(PLAYER_RIGHT); }
 }
 
 void render() {
