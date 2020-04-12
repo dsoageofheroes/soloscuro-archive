@@ -3,18 +3,16 @@
 
 #include <SDL2/SDL.h>
 #include "animate.h"
+#include "../src/dsl-region.h"
 #include "screen-manager.h"
 
 typedef struct map_s {
+    dsl_region_t *region;
     SDL_Texture **tiles;
-    uint32_t num_tiles;
-    uint32_t gff_file;
-    uint32_t map_id;
     SDL_Texture **objs;
     SDL_Rect *obj_locs;
     animate_t **anims;
     uint16_t *flags;
-    uint32_t num_objs;
 } map_t;
 
 void map_init(map_t *map);

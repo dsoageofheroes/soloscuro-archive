@@ -422,7 +422,21 @@ void dsl_hunt(void) {
 
 int32_t data_field(int16_t header, uint16_t fi) {
     warn("I need to get the %dth field of object_header[%d]\n", fi, header);
-    return 1;
+    warn("I'm just returning 72 for now...\n");
+    switch (fi) {
+        case DSL_OBJECT_ID:
+            // Note: I need to create all the objects now for this to work!
+            // Make sure you load in the objects on startup!
+            debug("Returning DSL_OBJECT_ID for header %d\n", header);
+            break;
+        default:
+            warn("error: Unable to determine the %d field of an object!.", fi);
+            warn("just returning -1...\n");
+            return -1;
+            break;
+    }
+
+    return -1;
 }
 
 /* Find an object! */
@@ -862,12 +876,20 @@ void dsl_search(void) {
     set_accumulator(search());
 }
 
+static int32_t cchar = 9000; // Lets just make the first player 9000.
+
 int32_t get_party_char(int32_t num) {
     /* WARNING: It is very import that you return the next part member.
      * It is very common for this to be in a loop to add checks for each party member.
      * If you don't iterate, then this turns into an infinite loop.
      */
-    warn("get_party_char: I need to return the NEXT party character, returning 9999!\n");
+    if (cchar == 9003) {
+        cchar = 9000;
+        warn("get_party_char (%d): I need to return the NEXT party character, returning %d!\n", num, 9999);
+        return 9999;
+    }
+    warn("get_party_char (%d): I need to return the NEXT party character, returning %d!\n", num, cchar);
+    //return cchar++;
     return 9999;
 }
 

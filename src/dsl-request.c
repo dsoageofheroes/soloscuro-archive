@@ -136,9 +136,9 @@ param2);
 #define CAMP_TIME      (1000)
 
 void camp(int16_t instr, int16_t hours, int16_t who) {
-    printf("%d camps for %d hours\n", who, hours);
+    debug("%d camps for %d hours\n", who, hours);
     if (instr == CAMP_RESURRECT) {
-        printf("Also ressurect the dead, unstone the petrify, revive undead, etc...\n");
+        debug("Also ressurect the dead, unstone the petrify, revive undead, etc...\n");
     }
 }
 
@@ -151,464 +151,463 @@ uint32_t dsl_request_impl(int16_t token, int16_t name,
             camp(CAMP_RESURRECT, num1, num2);
             break;
         case DOOR:
-            printf("I need to do operation %d on door %d\n", num2, num1);
+            debug("I need to do operation %d on door %d\n", num2, num1);
             break;
         case THIEFSKILL:
-            printf("I need to run a thief skill on %d, skill %d, bonus %d\n", name, num1, num2);
+            debug("I need to run a thief skill on %d, skill %d, bonus %d\n", name, num1, num2);
             break;
         case REST:
-            printf("request REST not implemented\n");
+            debug("request REST not implemented\n");
             command_implemented = 0;
             break;
         case ANIMATION:
             request_to_do(name, DO_TO_ALL, req_animation, num1, num2);
             break;
         case CINEMATIC:
-            printf("I need to play the %d cinematic\n", num1);
+            debug("I need to play the %d cinematic\n", num1);
             break;
         case TRAP:
-            printf("I need to lay a trap of type %d, at %d with %d\n", name, num1, num2);
+            debug("I need to lay a trap of type %d, at %d with %d\n", name, num1, num2);
             break;
         case REQUEST_MONSTER:
-            printf("I need to request a monster %d, %d\n", num1, num2);// Not helpful, I know...
+            debug("I need to request a monster %d, %d\n", num1, num2);// Not helpful, I know...
             break;
         case SWAP:
             if (name > 0) {
-                printf("I need to swap to %d from disk id %d with flags %d\n", name, num1, num2);
+                debug("I need to swap to %d from disk id %d with flags %d\n", name, num1, num2);
             } else {
-                printf("I need to swap to iObjectIx from disk id %d with flags %d\n", num1, num2);
+                debug("I need to swap to iObjectIx from disk id %d with flags %d\n", num1, num2);
             }
             break;
         case SET_BLOCK:
-            printf("Need to set the bit flags for map position (%d, %d) to %d & commit!\n", num1, num2, GB_BLOCK);
+            debug("Need to set the bit flags for map position (%d, %d) to %d & commit!\n", num1, num2, GB_BLOCK);
             break;
         case CLEAR_BLOCK:
-            printf("I need to clear the block at (%d, %d) with flags %d\n", num1, num2, GB_BLOCK);
+            debug("I need to clear the block at (%d, %d) with flags %d\n", num1, num2, GB_BLOCK);
             break;
         case SET_LOS:
-            printf("request SET_LOS not implemented\n");
+            debug("request SET_LOS not implemented\n");
             command_implemented = 0;
             break;
         case CLEAR_LOS:
-            printf("I need to CLEAR_LOS, whatever that means...\n");
+            debug("I need to CLEAR_LOS, whatever that means...\n");
             break;
         case REQUEST_BATTLE_DEMO:
-            printf("request REQUEST_BATTLE_DEMO: Need to call lua or something to run the demo!\n");
+            debug("request REQUEST_BATTLE_DEMO: Need to call lua or something to run the demo!\n");
             break;
         case SET_GAME_MOVE:
-            printf("I need to set the game back to regular moving around (not combat/look/xfer/target).\n");
+            debug("I need to set the game back to regular moving around (not combat/look/xfer/target).\n");
             break;
         case BRANCH_MUSIC:
             switch(num2) {
                 case 0:
-                    printf("I need to stop music and play %d\n", num1);
+                    debug("I need to stop music and play %d\n", num1);
                     break;
                 case 1:
-                    printf("I need to play music %d next\n", num1);
+                    debug("I need to play music %d next\n", num1);
                     break;
                 case 2:
-                    printf("CASE 2 notimplemented\n");
+                    debug("CASE 2 notimplemented\n");
                     command_implemented = 0;
                     break;
                 case 3:
-                    printf("I need to play music %d next\n", num1);
+                    debug("I need to play music %d next\n", num1);
                     break;
                 case 4:
-                    printf("CASE 4 notimplemented\n");
+                    debug("CASE 4 notimplemented\n");
                     command_implemented = 0;
                     break;
             }
             break;
         case FLASH_ANIMATION:
-            printf("I need to flash (-)%d at (%d, %d)\n", name, num1, num2);
+            debug("I need to flash (-)%d at (%d, %d)\n", name, num1, num2);
             break;
         case SET_ALLEGIANCE:
             request_to_do(name, DO_COMBAT, req_set_allegiance, num1, num2);
             break;
         case END_GAME:
-            printf("Request END_GAME: end game and start over...\n");
+            debug("Request END_GAME: end game and start over...\n");
             break;
         case REQUEST_COUNT_COMBAT:
-            printf("I need to return the number of combatants that have no allegiance to %d\n", num1);
+            debug("I need to return the number of combatants that have no allegiance to %d\n", num1);
             break;
         case REQUEST_DIFFICULT_LEVEL:
-            printf("request REQUEST_DIFFICULT_LEVEL not implemented\n");
+            debug("request REQUEST_DIFFICULT_LEVEL not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_END_TURN:
-            printf("request REQUEST_END_TURN not implemented\n");
+            debug("request REQUEST_END_TURN not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_APPLY_CONDITION:
-            printf("request REQUEST_APPLY_CONDITION not implemented\n");
+            debug("request REQUEST_APPLY_CONDITION not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_DETECT_CONDITION:
-            printf("request REQUEST_DETECT_CONDITION not implemented\n");
+            debug("request REQUEST_DETECT_CONDITION not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_SURPRISE_ATTACK:
-            printf("request REQUEST_SURPRISE_ATTACK not implemented\n");
+            debug("request REQUEST_SURPRISE_ATTACK not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_PALETTE_CHANGE:
-            printf("request REQUEST_PALETTE_CHANGE not implemented\n");
+            debug("request REQUEST_PALETTE_CHANGE not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_SHAKE:
-            printf("request REQUEST_SHAKE not implemented\n");
+            debug("request REQUEST_SHAKE not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_SET_EXCHANGE_RATE:
-            printf("request REQUEST_SET_EXCHANGE_RATE not implemented\n");
+            debug("request REQUEST_SET_EXCHANGE_RATE not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_PUSH:
-            printf("request REQUEST_PUSH not implemented\n");
+            debug("request REQUEST_PUSH not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_POP:
-            printf("request REQUEST_POP not implemented\n");
+            debug("request REQUEST_POP not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_SET_DANGER_BIT:
-            printf("request REQUEST_SET_DANGER_BIT not implemented\n");
+            debug("request REQUEST_SET_DANGER_BIT not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_CLEAR_DANGER_BIT:
-            printf("request REQUEST_CLEAR_DANGER_BIT not implemented\n");
+            debug("request REQUEST_CLEAR_DANGER_BIT not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_SET_BORDER:
-            printf("request REQUEST_SET_BORDER not implemented\n");
+            debug("request REQUEST_SET_BORDER not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_SET_OVERHEAD:
-            printf("request REQUEST_SET_OVERHEAD not implemented\n");
+            debug("request REQUEST_SET_OVERHEAD not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_SET_DEATH_SCREEN:
-            printf("request REQUEST_SET_DEATH_SCREEN not implemented\n");
+            debug("request REQUEST_SET_DEATH_SCREEN not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_REDRAW_SCREEN:
-            printf("request REQUEST_REDRAW_SCREEN not implemented\n");
+            debug("request REQUEST_REDRAW_SCREEN not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_FADE_SCREEN:
-            printf("request REQUEST_FADE_SCREEN not implemented\n");
+            debug("request REQUEST_FADE_SCREEN not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_CENTER_XY:
-            printf("request REQUEST_CENTER_XY not implemented\n");
+            debug("request REQUEST_CENTER_XY not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_INTERMISSION:
-            printf("request REQUEST_INTERMISSION not implemented\n");
+            debug("request REQUEST_INTERMISSION not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_REMOVE_CONDITION:
-            printf("request REQUEST_REMOVE_CONDITION not implemented\n");
+            debug("request REQUEST_REMOVE_CONDITION not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_SAVE_VS:
-            printf("request REQUEST_SAVE_VS not implemented\n");
+            debug("request REQUEST_SAVE_VS not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_SET_PLAYLIST:
-            printf("request REQUEST_SET_PLAYLIST not implemented\n");
+            debug("request REQUEST_SET_PLAYLIST not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_CURRENT_PLAYLIST:
-            printf("request REQUEST_CURRENT_PLAYLIST not implemented\n");
+            debug("request REQUEST_CURRENT_PLAYLIST not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_DO_SPEECH:
-            printf("request REQUEST_DO_SPEECH not implemented\n");
+            debug("request REQUEST_DO_SPEECH not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_OBJECT_ANIMATING:
-            printf("request REQUEST_OBJECT_ANIMATING not implemented\n");
+            debug("request REQUEST_OBJECT_ANIMATING not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_CAST_SPELL:
-            printf("request REQUEST_CAST_SPELL not implemented\n");
+            debug("request REQUEST_CAST_SPELL not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_PREPARE_SPELL:
-            printf("request REQUEST_PREPARE_SPELL not implemented\n");
+            debug("request REQUEST_PREPARE_SPELL not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_GET_DATA:
-            printf("request REQUEST_GET_DATA not implemented\n");
+            debug("request REQUEST_GET_DATA not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_SET_DATA:
-            printf("request REQUEST_SET_DATA not implemented\n");
+            debug("request REQUEST_SET_DATA not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_IS_CD:
-            printf("request REQUEST_IS_CD not implemented\n");
+            debug("request REQUEST_IS_CD not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_DEPLOY_PARTY:
-            printf("request REQUEST_DEPLOY_PARTY not implemented\n");
+            debug("request REQUEST_DEPLOY_PARTY not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_SET_PAIN:
-            printf("request REQUEST_SET_PAIN not implemented\n");
+            debug("request REQUEST_SET_PAIN not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_KILL_BRAIN:
-            printf("request REQUEST_KILL_BRAIN not implemented\n");
+            debug("request REQUEST_KILL_BRAIN not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_SET_SHARED_GLOBAL:
-            printf("request REQUEST_SET_SHARED_GLOBAL not implemented\n");
+            debug("request REQUEST_SET_SHARED_GLOBAL not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_SET_SHARED_REGION:
-            printf("request REQUEST_SET_SHARED_REGION not implemented\n");
+            debug("request REQUEST_SET_SHARED_REGION not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_GET_SHARED_GLOBAL:
-            printf("request REQUEST_GET_SHARED_GLOBAL not implemented\n");
+            debug("request REQUEST_GET_SHARED_GLOBAL not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_GET_SHARED_REGION:
-            printf("request REQUEST_GET_SHARED_REGION not implemented\n");
+            debug("request REQUEST_GET_SHARED_REGION not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_GET_SEMAPHORE_GLOBAL:
-            printf("request REQUEST_GET_SEMAPHORE_GLOBAL not implemented\n");
+            debug("request REQUEST_GET_SEMAPHORE_GLOBAL not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_CHECK_SEMAPHORE_GLOBAL:
-            printf("request REQUEST_CHECK_SEMAPHORE_GLOBAL not implemented\n");
+            debug("request REQUEST_CHECK_SEMAPHORE_GLOBAL not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_RELEASE_SEMAPHORE_GLOBAL:
-            printf("request REQUEST_RELEASE_SEMAPHORE_GLOBAL not implemented\n");
+            debug("request REQUEST_RELEASE_SEMAPHORE_GLOBAL not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_GET_SEMAPHORE_REGION:
-            printf("request REQUEST_GET_SEMAPHORE_REGION not implemented\n");
+            debug("request REQUEST_GET_SEMAPHORE_REGION not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_CHECK_SEMAPHORE_REGION:
-            printf("request REQUEST_CHECK_SEMAPHORE_REGION not implemented\n");
+            debug("request REQUEST_CHECK_SEMAPHORE_REGION not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_RELEASE_SEMAPHORE_REGION:
-            printf("request REQUEST_RELEASE_SEMAPHORE_REGION not implemented\n");
+            debug("request REQUEST_RELEASE_SEMAPHORE_REGION not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_GAMETICK:
-            printf("request REQUEST_GAMETICK not implemented\n");
+            debug("request REQUEST_GAMETICK not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_TEXT_SCOPE:
-            printf("request REQUEST_TEXT_SCOPE not implemented\n");
+            debug("request REQUEST_TEXT_SCOPE not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_SOUND_SCOPE:
-            printf("request REQUEST_SOUND_SCOPE not implemented\n");
+            debug("request REQUEST_SOUND_SCOPE not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_WHOISLEADER:
-            printf("request REQUEST_WHOISLEADER not implemented\n");
+            debug("request REQUEST_WHOISLEADER not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_DATE:
-            printf("request REQUEST_DATE not implemented\n");
+            debug("request REQUEST_DATE not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_TIME:
-            printf("request REQUEST_TIME not implemented\n");
+            debug("request REQUEST_TIME not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_PARTY_ID:
-            printf("request REQUEST_PARTY_ID not implemented\n");
+            debug("request REQUEST_PARTY_ID not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_NEAR_ID:
-            printf("request REQUEST_NEAR_ID not implemented\n");
+            debug("request REQUEST_NEAR_ID not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_INFO_SHORT_ID:
-            printf("request REQUEST_INFO_SHORT_ID not implemented\n");
+            debug("request REQUEST_INFO_SHORT_ID not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_INFO_LONG_ID:
-            printf("request REQUEST_INFO_LONG_ID not implemented\n");
+            debug("request REQUEST_INFO_LONG_ID not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_CHAR_INFO:
-            printf("request REQUEST_CHAR_INFO not implemented\n");
+            debug("request REQUEST_CHAR_INFO not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_CHAR_FROM:
-            printf("request REQUEST_CHAR_FROM not implemented\n");
+            debug("request REQUEST_CHAR_FROM not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_CHAR_TO:
-            printf("request REQUEST_CHAR_TO not implemented\n");
+            debug("request REQUEST_CHAR_TO not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_MY_CHAR_FROM:
-            printf("request REQUEST_MY_CHAR_FROM not implemented\n");
+            debug("request REQUEST_MY_CHAR_FROM not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_MY_CHAR_TO:
-            printf("request REQUEST_MY_CHAR_TO not implemented\n");
+            debug("request REQUEST_MY_CHAR_TO not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_SELECTED_ID:
-            printf("request REQUEST_SELECTED_ID not implemented\n");
+            debug("request REQUEST_SELECTED_ID not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_COMBAT_NUM:
-            printf("request REQUEST_COMBAT_NUM not implemented\n");
+            debug("request REQUEST_COMBAT_NUM not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_CLONE_NUM:
-            printf("request REQUEST_CLONE_NUM not implemented\n");
+            debug("request REQUEST_CLONE_NUM not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_GET_CLONE:
-            printf("request REQUEST_GET_CLONE not implemented\n");
+            debug("request REQUEST_GET_CLONE not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_GET_COMBAT_NUM:
-            printf("request REQUEST_GET_COMBAT_NUM not implemented\n");
+            debug("request REQUEST_GET_COMBAT_NUM not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_DETACH:
-            printf("request REQUEST_DETACH not implemented\n");
+            debug("request REQUEST_DETACH not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_R_LIFE:
-            printf("request REQUEST_R_LIFE not implemented\n");
+            debug("request REQUEST_R_LIFE not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_REGIONCLEAR:
-            printf("request REQUEST_REGIONCLEAR not implemented\n");
+            debug("request REQUEST_REGIONCLEAR not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_REGIONCOUNT:
-            printf("request REQUEST_REGIONCOUNT not implemented\n");
+            debug("request REQUEST_REGIONCOUNT not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_NAMEID:
-            printf("request REQUEST_NAMEID not implemented\n");
+            debug("request REQUEST_NAMEID not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_SPELLINFO:
-            printf("request REQUEST_SPELLINFO not implemented\n");
+            debug("request REQUEST_SPELLINFO not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_HIGHSCORE:
-            printf("request REQUEST_HIGHSCORE not implemented\n");
+            debug("request REQUEST_HIGHSCORE not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_QUEST:
-            printf("request REQUEST_QUEST not implemented\n");
+            debug("request REQUEST_QUEST not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_LEADER_XYR:
-            printf("request REQUEST_LEADER_XYR not implemented\n");
+            debug("request REQUEST_LEADER_XYR not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_PRINT_NAME:
-            printf("request REQUEST_PRINT_NAME not implemented\n");
+            debug("request REQUEST_PRINT_NAME not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_ISPLAYER:
-            printf("request REQUEST_ISPLAYER not implemented\n");
+            debug("request REQUEST_ISPLAYER not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_SCROLLWHOLE:
-            printf("request REQUEST_SCROLLWHOLE not implemented\n");
+            debug("request REQUEST_SCROLLWHOLE not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_ISCHEATMODE:
-            printf("request REQUEST_ISCHEATMODE not implemented\n");
+            debug("request REQUEST_ISCHEATMODE not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_ABORTENDGAME:
-            printf("request REQUEST_ABORTENDGAME not implemented\n");
+            debug("request REQUEST_ABORTENDGAME not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_DRAINLEVEL:
-            printf("request REQUEST_DRAINLEVEL not implemented\n");
+            debug("request REQUEST_DRAINLEVEL not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_SECONDS:
-            printf("request REQUEST_SECONDS not implemented\n");
+            debug("request REQUEST_SECONDS not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_L_ANIMATION:
-            printf("request REQUEST_L_ANIMATION not implemented\n");
+            debug("request REQUEST_L_ANIMATION not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_SEARCHITEM:
-            printf("request REQUEST_SEARCHITEM not implemented\n");
+            debug("request REQUEST_SEARCHITEM not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_SPELLALLOW:
-            printf("request REQUEST_SPELLALLOW not implemented\n");
+            debug("request REQUEST_SPELLALLOW not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_REGIONFILLED:
-            printf("request REQUEST_REGIONFILLED not implemented\n");
+            debug("request REQUEST_REGIONFILLED not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_ABORTACTION:
-            printf("request REQUEST_ABORTACTION not implemented\n");
+            debug("request REQUEST_ABORTACTION not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_MONSTERCOUNT:
-            printf("request REQUEST_MONSTERCOUNT not implemented\n");
+            debug("request REQUEST_MONSTERCOUNT not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_NOFLEE:
-            printf("request REQUEST_NOFLEE not implemented\n");
+            debug("request REQUEST_NOFLEE not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_ARRESTREASON:
-            printf("request REQUEST_ARRESTREASON not implemented\n");
+            debug("request REQUEST_ARRESTREASON not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_CHECKNEW:
-            printf("request REQUEST_CHECKNEW not implemented\n");
+            debug("request REQUEST_CHECKNEW not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_IMPERSONATE:
-            printf("request REQUEST_IMPERSONATE not implemented\n");
+            debug("request REQUEST_IMPERSONATE not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_PASSTIME:
-            printf("request REQUEST_PASSTIME not implemented\n");
+            debug("request REQUEST_PASSTIME not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_PROFILE:
-            printf("request REQUEST_PROFILE not implemented\n");
+            debug("request REQUEST_PROFILE not implemented\n");
             command_implemented = 0;
             break;
         case REQUEST_MYSLOT:
-            printf("request REQUEST_MYSLOT not implemented\n");
+            debug("request REQUEST_MYSLOT not implemented\n");
             command_implemented = 0;
             break;
     }
     return answer;
 }
 
-int16_t request_to_do(int16_t name, int16_t rectype, int (*request_proc)(int16_t, long, long), long param1, long param2)
-{
+int16_t request_to_do(int16_t name, int16_t rectype, int (*request_proc)(int16_t, long, long), long param1, long param2) {
     //if (name >= 0 && name < NULL_OBJECT) {
     if (name < NULL_OBJECT) {
         if (rectype == DO_TO_ALL) {
-            printf("Need to add LUA hooks to walk through every object and...");
+            debug("Need to add LUA hooks to walk through every object and...\n");
             request_proc(name, param1, param2);
             return 1;
         } else {
@@ -616,17 +615,17 @@ int16_t request_to_do(int16_t name, int16_t rectype, int (*request_proc)(int16_t
             return 1;
         }
     } 
-    printf("request_to_do: object %d, request %d not implemented\n", name, rectype);
+    debug("request_to_do: object %d, request %d not implemented\n", name, rectype);
     command_implemented = 0;
     return 0;
 }
 
 int req_animation(int16_t object, long notused1, long notused2) {
-    printf("Need to request animation on %d\n", object);
+    debug("Need to request animation on %d\n", object);
     return 0;
 }
 
 int req_set_allegiance(int16_t object, long allegiance, long notused2) {
-    printf("Need to set object %d allegiance to %ld\n", object, allegiance);
+    debug("Need to set object %d allegiance to %ld\n", object, allegiance);
     return 0;
 }

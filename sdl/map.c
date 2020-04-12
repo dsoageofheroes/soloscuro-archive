@@ -3,23 +3,21 @@
 #include "animate.h"
 #include "../src/dsl.h"
 #include "../src/dsl-execute.h"
+#include "../src/dsl-region.h"
 #include "../src/dsl-scmd.h"
 #include "../src/dsl-var.h"
 
-map_t *cmap = NULL;
+static map_t *cmap = NULL;
 
 void map_init(map_t *map) {
     map->tiles = NULL;
     map->objs = NULL;
     map->anims = NULL;
-    map->num_tiles = 0;
-    map->gff_file = 0;
-    map->map_id = 0;
 }
 
 void map_free(map_t *map) {
     if (map->tiles) {
-        for (int i = 0; i < map->num_tiles; i++) {
+        for (int i = 0; i < cmap->region->num_tiles; i++) {
             SDL_DestroyTexture(map->tiles[i]);
         }
         free(map->tiles);
@@ -29,46 +27,43 @@ void map_free(map_t *map) {
 
 int cmap_is_block(const int row, const int column) {
     if (!cmap) { return 0; }
-    return gff_map_is_block(cmap->gff_file, row, column);
+    return dsl_region_is_block(cmap->region, row, column);
 }
 
 int cmap_is_actor(const int row, const int column) {
     if (!cmap) { return 0; }
-    return gff_map_is_actor(cmap->gff_file, row, column);
+    return dsl_region_is_actor(cmap->region, row, column);
 }
 
 int cmap_is_danger(const int row, const int column) {
     if (!cmap) { return 0; }
-    return gff_map_is_danger(cmap->gff_file, row, column);
+    return dsl_region_is_danger(cmap->region, row, column);
 }
 
 void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
     SDL_Surface* tile = NULL;
-    map->num_tiles = gff_get_gff_type_length(id, GT_TILE);
-    uint32_t *ids = gff_get_id_list(id, GT_TILE);
-    uint32_t palette_id = -1;
-    int32_t width, height;
+    //map->num_tiles = gff_get_gff_type_length(id, GT_TILE);
+    uint32_t *ids = NULL;
+    uint32_t width, height;
     uint16_t x, y;
     uint8_t z;
     unsigned char *data;
-    uint32_t *tids = gff_get_id_list(id, GT_ETAB); // temporary to find current id for palette!
 
-    if (!tids) { free(ids); error("Unable to find current id for map\n"); return; }
-    map->map_id = *tids;
-    palette_id = gff_get_palette_id(DSLDATA_GFF_INDEX, map->map_id - 1);
-    free(tids);
-    tids = NULL;
+    map->region = dsl_load_region(id);
+    ids = map->region->ids;
+
+    //debug("map_id = %d\n", map->map_id);
+    //debug("map_id = %d\n", map->region->map_id);
+    //exit(1);
+
+    //map->region->palette_id = gff_get_palette_id(DSLDATA_GFF_INDEX, map->map_id - 1);
 
     map_free(map);
     animate_clear();
-    gff_load_map(id);
-    map->tiles = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * map->num_tiles);
-    map->gff_file = id;
+    map->tiles = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * map->region->num_tiles);
 
-    for (int i = 0; i < map->num_tiles; i++) {
-        width = get_frame_width(map->gff_file, GT_TILE, ids[i], 0);
-        height = get_frame_height(map->gff_file, GT_TILE, ids[i], 0);
-        data = get_frame_rgba_with_palette(map->gff_file, GT_TILE, ids[i], 0, palette_id);
+    for (int i = 0; i < map->region->num_tiles; i++) {
+        dsl_region_get_image(map->region, i, &width, &height, &data);
 
         tile = SDL_CreateRGBSurfaceFrom(data, width, height, 32, 4*width, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
         map->tiles[ids[i]] = SDL_CreateTextureFromSurface(renderer, tile);
@@ -77,21 +72,21 @@ void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
         free(data);
     }
 
-    map->num_objs = gff_map_get_num_objects(map->gff_file, map->map_id);
-    map->objs = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * map->num_objs);
-    map->anims = (animate_t**) malloc(sizeof(animate_t*) * map->num_objs);
-    map->obj_locs = (SDL_Rect*) malloc(sizeof(SDL_Rect) * map->num_objs);
-    map->flags = (uint16_t*) malloc(sizeof(uint16_t) * map->num_objs);
-    memset(map->objs, 0x0, sizeof(SDL_Texture*) * map->num_objs);
-    memset(map->anims, 0x0, sizeof(animate_t*) * map->num_objs);
+    map->objs = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * map->region->num_objs);
+    map->anims = (animate_t**) malloc(sizeof(animate_t*) * map->region->num_objs);
+    map->obj_locs = (SDL_Rect*) malloc(sizeof(SDL_Rect) * map->region->num_objs);
+    map->flags = (uint16_t*) malloc(sizeof(uint16_t) * map->region->num_objs);
+    memset(map->objs, 0x0, sizeof(SDL_Texture*) * map->region->num_objs);
+    memset(map->anims, 0x0, sizeof(animate_t*) * map->region->num_objs);
     //map->num_objs = 32;
-    for (int i = 0; i < map->num_objs; i++) {
-        scmd_t *scmd = gff_map_get_object_scmd(map->gff_file, map->map_id, i, 0);
+    for (int i = 0; i < map->region->num_objs; i++) {
+        scmd_t *scmd = gff_map_get_object_scmd(map->region->gff_file, map->region->map_id, i, 0);
         if (!scmd) {
-            data = gff_map_get_object_bmp_pal(map->gff_file, map->map_id, i, &width, &height, 0, palette_id);
+            data = gff_map_get_object_bmp_pal(map->region->gff_file, map->region->map_id, i, (int32_t*)&width,
+                (int32_t*)&height, 0, map->region->palette_id);
             tile = SDL_CreateRGBSurfaceFrom(data, width, height, 32, 4*width, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
             map->objs[i] = SDL_CreateTextureFromSurface(renderer, tile);
-            map->flags[i] = gff_map_get_object_location(map->gff_file, map->map_id, i, &x, &y, &z);
+            map->flags[i] = gff_map_get_object_location(map->region->gff_file, map->region->map_id, i, &x, &y, &z);
             map->obj_locs[i].w = width;
             map->obj_locs[i].h = height;
             map->obj_locs[i].x = x;
@@ -102,7 +97,7 @@ void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
             //disk_object_t* dobj = gff_get_object(mo->index);
             //dsl_scmd_print(OBJEX_GFF_INDEX, dobj->script_id);
             // FIXME:SCMD need to be added...
-            map->flags[i] = gff_map_get_object_location(map->gff_file, map->map_id, i, &x, &y, &z);
+            map->flags[i] = gff_map_get_object_location(map->region->gff_file, map->region->map_id, i, &x, &y, &z);
             map->objs[i] = NULL;
             map->anims[i] = animate_add(map, renderer, scmd, i);
             //map->obj_locs[i].x += (scmd->xoffsethot);
@@ -113,8 +108,6 @@ void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
     cmap = map;
 
     dsl_change_region(42);
-
-    free(ids);
 }
 
 void map_render(void *data, SDL_Renderer *renderer) {
@@ -124,14 +117,16 @@ void map_render(void *data, SDL_Renderer *renderer) {
     SDL_Rect tile_loc = { -xoffset, -yoffset, stretch * 16, stretch * 16 };
     SDL_Rect obj_loc = { 0, 0, 0, 0 };
     uint32_t tile_id = 0;
-    map_t *map = (map_t*) data;
+    //map_t *map = (map_t*) data;
+    map_t *map = cmap;
 
     SDL_SetRenderDrawColor( renderer, 0x00, 0x00, 0x00, 0xFF );
     SDL_RenderClear(renderer);
 
     for (int x = 0; x < 98; x++) {
         for (int y = 0; y < 128; y++) {
-            tile_id = get_tile_id(map->gff_file, x, y);
+            //tile_id = get_tile_id(map->gff_file, x, y);
+            tile_id = region_tile_id(cmap->region, x, y);
             if (tile_id >= 0) {
                SDL_RenderCopy(renderer, map->tiles[tile_id], NULL, &tile_loc);
                tile_loc.x += stretch * 16;
@@ -140,7 +135,7 @@ void map_render(void *data, SDL_Renderer *renderer) {
         tile_loc.x = -xoffset;
         tile_loc.y += stretch * 16;
     }
-    for (int i = 0; i < map->num_objs; i++) {
+    for (int i = 0; i < map->region->num_objs; i++) {
         //gff_map_object_t* mo = get_map_object(map->gff_file, map->map_id, i);
         //disk_object_t* dobj = gff_get_object(mo->index);
         //printf("dobj = %p\n", dobj);
@@ -173,7 +168,7 @@ int get_object_at_location(const uint32_t x, const uint32_t y) {
     if (!cmap) { return 0; }
 
     // PERFORMANCE FIXME: should only go through needed objects, possibly quad-tree.
-    for (int i = 0; i < cmap->num_objs; i++) {
+    for (int i = 0; i < cmap->region->num_objs; i++) {
         if (cmap->flags[i] & CLICKABLE) {
             loc = (cmap->anims[i]) ? &(cmap->anims[i]->loc) : cmap->obj_locs + i;
             osx = loc->x * stretch;
@@ -215,7 +210,7 @@ int map_handle_mouse_click(const uint32_t x, const uint32_t y) {
 
     // Right now we assume all icons are talking, will look at attack later.
     if (obj_id >= 0) {
-        gff_map_object_t* mo = get_map_object(cmap->gff_file, cmap->map_id, obj_id);
+        gff_map_object_t* mo = get_map_object(cmap->region->gff_file, cmap->region->map_id, obj_id);
         debug("Clicked on object: %d\n", abs(mo->index));
         dsl_check_t* check = dsl_find_check(TALK_TO_CHECK_INDEX, mo->index);
         if (check) {

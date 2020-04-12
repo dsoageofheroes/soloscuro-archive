@@ -132,13 +132,10 @@ enum {
     COMBAT_STATUS_MAX
 };
 
-int gff_load_map_tile_ids(int gff_file, int res_id);
-int gff_load_map_flags(int gff_file, int res_id);
-int gff_load_map(int gff_file);
-int gff_map_is_block(int gff_file, int row, int column);
-int gff_map_is_actor(int gff_file, int row, int column);
-int gff_map_is_danger(int gff_file, int row, int column);
-int32_t get_tile_id(int gff_file, int row, int column);
+//int gff_load_map_tile_ids(int gff_file, int res_id);
+//int gff_load_map_flags(int gff_file, int res_id);
+//int gff_load_map(int gff_file);
+//int32_t get_tile_id(int gff_file, int row, int column);
 int gff_map_get_num_objects(int gff_index, int res_id);
 int gff_map_get_object_frame_count(int gff_index, int res_id, int obj_id);
 scmd_t* gff_map_get_object_scmd(int gff_index, int res_id, int obj_id, int scmd_index);

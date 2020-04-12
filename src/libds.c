@@ -323,6 +323,7 @@ int lua_get_chunk_as_midi(lua_State *L) {
 
 /* Begin Map Functions */
 
+/*
 int lua_load_tile_ids(lua_State *L) {
     lua_Integer gff_index = luaL_checkinteger (L, 1);
     lua_Integer res_id = luaL_checkinteger (L, 2);
@@ -358,7 +359,9 @@ int lua_get_tile_id(lua_State *L) {
 
     return 1;
 }
+*/
 
+/*
 int lua_map_is_block(lua_State *L) {
     lua_Integer gff_index = luaL_checkinteger (L, 1);
     lua_Integer row = luaL_checkinteger (L, 2);
@@ -388,6 +391,7 @@ int lua_map_is_danger(lua_State *L) {
 
     return 1;
 }
+*/
 
 int lua_map_get_number_of_objects(lua_State *L) {
     lua_Integer gff_index = luaL_checkinteger (L, 1);
@@ -799,13 +803,13 @@ static const struct luaL_Reg lslib [] = {
       {"get_chunk_as_midi", lua_get_chunk_as_midi},
 
       // Map Functions
-      {"load_tile_ids", lua_load_tile_ids},
-      {"load_map_flags", lua_load_map_flags},
-      {"load_map", lua_load_map},
-      {"get_tile_id", lua_get_tile_id},
-      {"map_is_block", lua_map_is_block},
-      {"map_is_actor", lua_map_is_actor},
-      {"map_is_danger", lua_map_is_danger},
+      //{"load_tile_ids", lua_load_tile_ids},
+      //{"load_map_flags", lua_load_map_flags},
+      //{"load_map", lua_load_map},
+      //{"get_tile_id", lua_get_tile_id},
+      //{"map_is_block", lua_map_is_block},
+      //{"map_is_actor", lua_map_is_actor},
+      //{"map_is_danger", lua_map_is_danger},
       {"map_get_number_of_objects", lua_map_get_number_of_objects},
       {"map_get_object_frame_count", lua_map_get_object_frame_count},
       {"map_get_object_bmp", lua_map_get_object_bmp},

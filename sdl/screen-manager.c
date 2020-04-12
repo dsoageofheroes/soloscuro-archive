@@ -26,7 +26,7 @@ void screen_init(SDL_Renderer *renderer) {
     map_load_region(&cmap, renderer, gff_find_index("rgn2a.gff"));
 
     screens[0] = map_screen;
-    screens[0].data = &cmap;
+    screens[0].data = NULL;
     screens[1] = main_screen;
     screens[2] = narrate_screen;
 
@@ -82,6 +82,5 @@ SDL_Texture* create_texture(SDL_Renderer *renderer, const uint32_t gff_file,
 }
 
 void screen_free() {
-    map_free(&cmap);
     animate_close();
 }

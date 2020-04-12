@@ -166,6 +166,7 @@ static const char* get_so_name(so_object_t *so) {
 }
 
 static void print_name_check(int check_index) {
+    debug("new_name.name = %d\n", new_name.name);
     so_object_t *so = gff_object_inspect(OBJEX_GFF_INDEX, abs(new_name.name));
     debug("When I %s to '%s' (%d) goto file: %d, addr: %d, global = %d\n",
         debug_index_names[check_index], get_so_name(so), new_name.name,
@@ -275,6 +276,40 @@ dsl_check_t* dsl_find_check(int32_t type, int32_t id) {
     }
 
     if (pos >= 0) { return checks[type] + pos; }
+
+    return NULL;
+}
+
+dsl_check_t* dsl_find_tile_check(const int32_t x, const int32_t y) {
+    const size_t type = MOVE_TILE_CHECK_INDEX;
+    uint16_t tilex, tiley;
+
+    for (int i = 0; i < checks_pos[type]; i++) {
+        tilex = checks[type][i].data.tile_check.x;
+        tiley = checks[type][i].data.tile_check.y;
+        printf("tile = (%d, %d), checking against (%d, %d)\n", tilex, tiley, x, y);
+        if (x == tilex && y == tiley) {
+            return checks[type] + i;
+        }
+    }
+
+    return NULL;
+}
+
+dsl_check_t* dsl_find_box_check(const int32_t x, const int32_t y) {
+    const size_t type = MOVE_BOX_CHECK_INDEX;
+    uint16_t tilex, tiley, tilew, tileh;
+
+    for (int i = 0; i < checks_pos[type]; i++) {
+        tilex = checks[type][i].data.box_check.x;
+        tiley = checks[type][i].data.box_check.y;
+        tilew = checks[type][i].data.box_check.xd;
+        tileh = checks[type][i].data.box_check.yd;
+        printf("box = (%d, %d) -> (%d, %d), checking against (%d, %d)\n", tilex, tiley, tilex + tilew, tiley + tileh, x, y);
+        if (x == tilex && y == tiley) {
+            return checks[type] + i;
+        }
+    }
 
     return NULL;
 }
@@ -574,10 +609,11 @@ static uint8_t access_complex(int16_t *header, uint16_t *depth, uint16_t *elemen
     int32_t obj_name;
     
     obj_name = get_word();
+    debug("header = %d, depth = %d, element = %d, obj_name = %d\n", *header, *depth, *element, obj_name);
     if (obj_name < 0x8000) {
-        printf("access_complex: I need to convert from ID to header!\n");
+        debug("access_complex: I need to convert from ID to header!\n");
     } else {
-        printf("access_complex: I need to set the *head to the correct view\n");
+        debug("access_complex: I need to set the *head to the correct view\n");
         switch (obj_name & 0x7FFF) {
             case 0x25: // POV
             case 0x26: // ACTIVE
@@ -585,15 +621,17 @@ static uint8_t access_complex(int16_t *header, uint16_t *depth, uint16_t *elemen
             case 0x28: // OTHER
             case 0x2C: // OTHER1
             case 0x2B: // THING
-                printf("access_complext:valid obj_name, need to set header (but can't yet...)\n");
+                debug("access_complex:valid obj_name(%d), need to set header (but can't yet...)\n", obj_name & 0x7FFF);
                 break;
             default:
                 return 0;
         }
     }
     *depth = get_byte();
+    debug("depth = %d\n", *depth);
     for (i = 1; i <= *depth; i++) {
         element[i-1] = get_byte();
+        debug("element[%d] = %d\n", i-1, element[i-1]);
     }
 
     return 1;
@@ -801,6 +839,7 @@ static int32_t read_complex(void) {
     if (access_complex(&header, &depth, element) == 1) {
         debug("reading header (%d) at depth (%d)\n", header, depth);
         ret = get_complex_data(header, depth, element);
+        return ret;
     } else {
         printf("read_complex: else not implemented!\n");
         command_implemented = 0;
@@ -935,7 +974,8 @@ void generic_tile_check(int check_index, tile_t tile) {
 
 static void add_save_orders(int16_t los_order, name_t name, int16_t range, int ordertype) {
     if (name.name < 0) {
-        error("*******************add_save_orders (with name < 0) not implemented****************\n");
+        warn("*******************add_save_orders (with name < 0) not implemented****************\n");
+        warn("addr = %d, file = %d, name = %d, global = %d\n", name.addr, name.file, name.name, name.global);
         //command_implemented = 0;
     }
 }
