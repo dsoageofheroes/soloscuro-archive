@@ -10,9 +10,7 @@ typedef struct map_s {
     dsl_region_t *region;
     SDL_Texture **tiles;
     SDL_Texture **objs;
-    SDL_Rect *obj_locs;
     animate_t **anims;
-    uint16_t *flags;
 } map_t;
 
 void map_init(map_t *map);

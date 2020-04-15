@@ -21,67 +21,52 @@ void animate_init() {
     list = NULL;
 }
 
-/*
-static animate_t* animate_create(SDL_Renderer *rend, const uin32_t gff_file, const uint32_t palette_id, scmd_t *cmd) {
-    unsigned char *data = NULL;
-    int32_t width, height;
-    animate_t *toadd = malloc(sizeof(animate_t));
-
-    memset(&(toadd->loc), 0x0, sizeof(SDL_Rect));
-    // add to the list.
-    toadd->scmd = cmd;
-    toadd->textures = NULL;
-    toadd->len = toadd->ticks_left = toadd->pos = 0;
-    toadd->next = list;
-
-    while (!(cmd->flags & (SCMD_LAST | SCMD_JUMP))) {
-        cmd++;
-        toadd->len++;
-    }
-    cmd++;
-    toadd->len++;
-
-    // get all the textures
-    toadd->textures = malloc(sizeof(SDL_Surface *) * (toadd->len));
-    for (int i = 0; i < toadd->len; i++) {
-        //debug("[%d] bmp_idx = %d, i = %d, flags = %d\n", id, (toadd->scmd + i)->bmp_idx, i, (toadd->scmd+i)->flags);
-        data = gff_map_get_object_bmp_pal(map->gff_file, map->map_id, id, &width, &height,
-            (toadd->scmd + i)->bmp_idx, palette_id);
-        surface = SDL_CreateRGBSurfaceFrom(data, width, height, 32, 
-                4*width, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
-        toadd->textures[i] = SDL_CreateTextureFromSurface(renderer, surface);
-        SDL_FreeSurface(surface);
-        free(data);
-        if (i == 0) { // Grab the stats for the first one.
-            toadd->loc.w = width;
-            toadd->loc.h = height;
-            toadd->loc.x = x;
-            toadd->loc.y = y;
+// Sometimes the animation needs to be updated for the render list
+static void shift_anim(animate_t *anim) {
+    animate_t *prev;
+    animate_t *next;
+    while (anim->next && (
+            anim->obj->mapz > anim->next->obj->mapz
+            )) {
+        prev = anim->prev;
+        next = anim->next;
+        if (prev) {
+            prev->next = next;
+        }
+        next->prev = prev;
+        anim->prev = next;
+        anim->next = next->next;
+        next->next = anim;
+        if (anim->next) {
+            anim->next->prev = anim;
+        }
+        if (list == anim) {
+            list = anim->prev;
         }
     }
-
-    return toadd;
 }
-*/
 
-animate_t* animate_add(map_t *map, SDL_Renderer *renderer, scmd_t *cmd, int id) {
+animate_t* animate_add(map_t *map, SDL_Renderer *renderer, dsl_object_t *obj) {
     unsigned char *data = NULL;
     int32_t width, height;
     SDL_Surface *surface;
-    uint16_t x, y;
     uint8_t z;
-    uint32_t palette_id = gff_get_palette_id(DSLDATA_GFF_INDEX, map->region->map_id - 1);
     animate_t *toadd = malloc(sizeof(animate_t));
+    scmd_t *cmd = obj->scmd;
 
-    memset(&(toadd->loc), 0x0, sizeof(SDL_Rect));
     // add to the list.
-    toadd->scmd = cmd;
+    //toadd->scmd = cmd;
+    toadd->obj = obj;
     toadd->textures = NULL;
     toadd->len = toadd->ticks_left = toadd->pos = 0;
     toadd->next = list;
+    toadd->prev = NULL;
+    if (list) {
+        list->prev = toadd;
+    }
     list = toadd;
 
-    toadd->ticks_left = toadd->scmd->delay;
+    toadd->ticks_left = obj->scmd->delay;
     while (!(cmd->flags & (SCMD_LAST | SCMD_JUMP))) {
         cmd++;
         toadd->len++;
@@ -89,26 +74,27 @@ animate_t* animate_add(map_t *map, SDL_Renderer *renderer, scmd_t *cmd, int id) 
     cmd++;
     toadd->len++;
 
-    toadd->flags = gff_map_get_object_location(map->region->gff_file, map->region->map_id, id, &x, &y, &z);
+    gff_map_get_object_location(map->region->gff_file, map->region->map_id, obj->entry_id,
+            &obj->mapx, 
+            &obj->mapy, 
+            &z);
+    obj->mapz = z; // TODO: is z unsigned or signed?
 
     // get all the textures
     toadd->textures = malloc(sizeof(SDL_Surface *) * (toadd->len));
     for (int i = 0; i < toadd->len; i++) {
-        //debug("[%d] bmp_idx = %d, i = %d, flags = %d\n", id, (toadd->scmd + i)->bmp_idx, i, (toadd->scmd+i)->flags);
-        data = gff_map_get_object_bmp_pal(map->region->gff_file, map->region->map_id, id, &width, &height,
-            (toadd->scmd + i)->bmp_idx, palette_id);
-        surface = SDL_CreateRGBSurfaceFrom(data, width, height, 32, 
-                4*width, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
+        data = gff_map_get_object_bmp_pal(map->region->gff_file, map->region->map_id, obj->entry_id, &width, &height,
+            (obj->scmd + i)->bmp_idx, map->region->palette_id);
+        obj->bmp_width = width;
+        obj->bmp_height = height;
+        surface = SDL_CreateRGBSurfaceFrom(data, obj->bmp_width, obj->bmp_height, 32, 
+                4*obj->bmp_width, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
         toadd->textures[i] = SDL_CreateTextureFromSurface(renderer, surface);
         SDL_FreeSurface(surface);
         free(data);
-        if (i == 0) { // Grab the stats for the first one.
-            toadd->loc.w = width;
-            toadd->loc.h = height;
-            toadd->loc.x = x;
-            toadd->loc.y = y;
-        }
     }
+
+    shift_anim(toadd);
 
     return toadd;
 }
@@ -119,21 +105,26 @@ void animate_render(void *data, SDL_Renderer *renderer) {
     const uint32_t yoffset = getCameraY();
     SDL_Rect loc;
 
+    int i = 0;
     for (animate_t *rover = list; rover; rover = rover->next) {
+        printf("rover[%d]\n", i++);
         if (rover->ticks_left > 0) {
             rover->ticks_left--;
             if (rover->ticks_left == 0) {
                 rover->pos++;
-                scmd_t *scmd = rover->scmd + rover->pos;
+                scmd_t *scmd = rover->obj->scmd + rover->pos;
                 if (scmd->flags & SCMD_JUMP) {
-                    scmd = rover->scmd;
+                    scmd = rover->obj->scmd;
                     rover->pos = 0;
                 }
                 rover->ticks_left = scmd->delay;
                 rover->ticks_left = rover->ticks_left == 0 ? 16 : rover->ticks_left;
             }
         }
-        memcpy(&loc, &(rover->loc), sizeof(SDL_Rect));
+        loc.w = rover->obj->bmp_width;
+        loc.h = rover->obj->bmp_height;
+        loc.x = rover->obj->mapx;
+        loc.y = rover->obj->mapy;
         loc.x *= 2;
         loc.x -= xoffset;
         loc.y *= 2;

@@ -4,6 +4,7 @@
 #include "gff.h"
 #include "gfftypes.h"
 #include "dsl.h"
+#include "dsl-region.h"
 
 disk_object_t* gff_get_object(int object_index) {
     unsigned long len;
@@ -80,6 +81,14 @@ scmd_t* gff_map_get_object_scmd(int gff_index, int res_id, int obj_id, int scmd_
     disk_object_t *disk_object = gff_get_object(entry_table[obj_id].index);
     return dsl_scmd_get(OBJEX_GFF_INDEX, disk_object->script_id, scmd_index);
 }
+
+/*
+unsigned char* gff_map_get_obj_bmp_pal(dsl_region_t *region, int res_id, dsl_object_t *obj, int frame_id) {
+    *w = get_frame_width(OBJEX_GFF_INDEX, GT_BMP, disk_object->bmp_id, frame_id);
+    *h = get_frame_height(OBJEX_GFF_INDEX, GT_BMP, disk_object->bmp_id, frame_id);
+    return get_frame_rgba_with_palette(OBJEX_GFF_INDEX, GT_BMP, disk_object->bmp_id, frame_id, palette_id);
+}
+*/
 
 unsigned char* gff_map_get_object_bmp_pal(int gff_index, int res_id, int obj_id, int *w, int *h, int frame_id,
         int palette_id) {

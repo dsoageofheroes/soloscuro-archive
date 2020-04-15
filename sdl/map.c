@@ -42,28 +42,18 @@ int cmap_is_danger(const int row, const int column) {
 
 void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
     SDL_Surface* tile = NULL;
-    //map->num_tiles = gff_get_gff_type_length(id, GT_TILE);
     uint32_t *ids = NULL;
     uint32_t width, height;
-    uint16_t x, y;
-    uint8_t z;
     unsigned char *data;
 
+    map_free(map);
     map->region = dsl_load_region(id);
     ids = map->region->ids;
-
-    //debug("map_id = %d\n", map->map_id);
-    //debug("map_id = %d\n", map->region->map_id);
-    //exit(1);
-
-    //map->region->palette_id = gff_get_palette_id(DSLDATA_GFF_INDEX, map->map_id - 1);
-
-    map_free(map);
     animate_clear();
     map->tiles = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * map->region->num_tiles);
 
     for (int i = 0; i < map->region->num_tiles; i++) {
-        dsl_region_get_image(map->region, i, &width, &height, &data);
+        dsl_region_get_tile(map->region, i, &width, &height, &data);
 
         tile = SDL_CreateRGBSurfaceFrom(data, width, height, 32, 4*width, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
         map->tiles[ids[i]] = SDL_CreateTextureFromSurface(renderer, tile);
@@ -74,34 +64,26 @@ void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
 
     map->objs = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * map->region->num_objs);
     map->anims = (animate_t**) malloc(sizeof(animate_t*) * map->region->num_objs);
-    map->obj_locs = (SDL_Rect*) malloc(sizeof(SDL_Rect) * map->region->num_objs);
-    map->flags = (uint16_t*) malloc(sizeof(uint16_t) * map->region->num_objs);
     memset(map->objs, 0x0, sizeof(SDL_Texture*) * map->region->num_objs);
     memset(map->anims, 0x0, sizeof(animate_t*) * map->region->num_objs);
-    //map->num_objs = 32;
+
     for (int i = 0; i < map->region->num_objs; i++) {
-        scmd_t *scmd = gff_map_get_object_scmd(map->region->gff_file, map->region->map_id, i, 0);
-        if (!scmd) {
-            data = gff_map_get_object_bmp_pal(map->region->gff_file, map->region->map_id, i, (int32_t*)&width,
-                (int32_t*)&height, 0, map->region->palette_id);
+        if (!(map->region->objs[i].scmd)) {
+            data = dsl_load_object_bmp(map->region, i, 0);
+
+            width = map->region->objs[i].bmp_width;
+            height = map->region->objs[i].bmp_height;
+
             tile = SDL_CreateRGBSurfaceFrom(data, width, height, 32, 4*width, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
             map->objs[i] = SDL_CreateTextureFromSurface(renderer, tile);
-            map->flags[i] = gff_map_get_object_location(map->region->gff_file, map->region->map_id, i, &x, &y, &z);
-            map->obj_locs[i].w = width;
-            map->obj_locs[i].h = height;
-            map->obj_locs[i].x = x;
-            map->obj_locs[i].y = y;
             free(data);
         } else {
             //gff_map_object_t* mo = get_map_object(map->gff_file, map->map_id, i);
             //disk_object_t* dobj = gff_get_object(mo->index);
             //dsl_scmd_print(OBJEX_GFF_INDEX, dobj->script_id);
             // FIXME:SCMD need to be added...
-            map->flags[i] = gff_map_get_object_location(map->region->gff_file, map->region->map_id, i, &x, &y, &z);
             map->objs[i] = NULL;
-            map->anims[i] = animate_add(map, renderer, scmd, i);
-            //map->obj_locs[i].x += (scmd->xoffsethot);
-            //map->obj_locs[i].y += (scmd->yoffsethot);
+            map->anims[i] = animate_add(map, renderer, map->region->objs+i);
         }
     }
 
@@ -143,7 +125,10 @@ void map_render(void *data, SDL_Renderer *renderer) {
             //printf("[%d]: dobj->flags = 0x%x\n", i, dobj->flags);
         //}
         if (map->objs[i]) {
-            memcpy(&obj_loc, map->obj_locs+i, sizeof(SDL_Rect));
+            obj_loc.w = map->region->objs[i].bmp_width;
+            obj_loc.h = map->region->objs[i].bmp_height;
+            obj_loc.x = map->region->objs[i].mapx;
+            obj_loc.y = map->region->objs[i].mapy;
             obj_loc.x *= 2;
             obj_loc.x -= xoffset;
             obj_loc.y *= 2;
@@ -164,18 +149,29 @@ int get_object_at_location(const uint32_t x, const uint32_t y) {
     uint32_t mx = getCameraX() + x;
     uint32_t my = getCameraY() + y;
     uint32_t osx, osy, oex, oey; // object start x, object start y, object end x, object end y
-    SDL_Rect *loc = NULL;
+    SDL_Rect loc;
+    dsl_object_t *obj = NULL;
     if (!cmap) { return 0; }
 
     // PERFORMANCE FIXME: should only go through needed objects, possibly quad-tree.
     for (int i = 0; i < cmap->region->num_objs; i++) {
-        if (cmap->flags[i] & CLICKABLE) {
-            loc = (cmap->anims[i]) ? &(cmap->anims[i]->loc) : cmap->obj_locs + i;
-            osx = loc->x * stretch;
-            osy = loc->y * stretch;
-            oex = osx + (stretch * loc->w);
-            oey = osy + (stretch * loc->h);
-            //printf("cmap[%d] = (%d, %d) ->  (%d, %d -> %d, %d)\n", i, mx, my, osx, osy, oex, oey);
+        obj = cmap->region->objs + i;
+        if (obj->flags & CLICKABLE) {
+            if (cmap->anims[i] && cmap->anims[i]->obj) {
+                loc.w = cmap->anims[i]->obj->bmp_width;
+                loc.h = cmap->anims[i]->obj->bmp_height;
+                loc.x = cmap->anims[i]->obj->mapx;
+                loc.y = cmap->anims[i]->obj->mapy;
+                osx = loc.x * stretch;
+                osy = loc.y * stretch;
+                oex = osx + (stretch * loc.w);
+                oey = osy + (stretch * loc.h);
+            } else {
+                osx = obj->mapx * stretch;
+                osy = obj->mapy * stretch;
+                oex = osx + (stretch * obj->bmp_width);
+                oey = osy + (stretch * obj->bmp_height);
+            }
             if (mx >= osx && mx < oex && my >= osy && my < oey) {
                 return i;
             }

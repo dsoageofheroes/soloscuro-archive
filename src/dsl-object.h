@@ -2,6 +2,7 @@
 #define DSL_OBJECT_H
 
 #include <stdint.h>
+#include "dsl-scmd.h"
 
 #define DSL_OBJECT_ID 0
 #define DSL_OBJECT_QTY 1
@@ -103,6 +104,30 @@
 #define DSL_OBJECT_ADDS 97
 
 #define COMBAT_NAME_SIZE (18)
+
+typedef struct dsl_object_s {
+    uint8_t flags;      // flags
+    uint16_t entry_id;  // object entry table index / map id?
+    int16_t bmpx;       // bitmap's x coordinate
+    int16_t bmpy;       // bitmap's y coordinate
+    int8_t xoffset;     // bitmap offset x
+    int16_t yoffset;    // bitmap offset y
+    uint16_t mapx;      // object's x position in the region
+    uint16_t mapy;      // object's y position in the region
+    int8_t mapz;        // object's z position in the region
+    uint8_t ht_idx;     // height table index
+    uint16_t gt_idx;    // graph table index
+    uint8_t bmp_idx;   // current bmp for the script
+    uint8_t bmp_width;  // bitmap width
+    uint8_t bmp_height; // bitmap height
+    uint8_t cdelay;     // init to zero, modified by script handler
+    int16_t st_idx;     // script table index
+    uint8_t sc_idx;     // script command index
+    uint16_t btc_idx;   // bitmap table chunk index
+    int16_t disk_idx;   // disk index
+    int32_t game_time;  // game time for animating
+    scmd_t *scmd;       // the script
+} dsl_object_t;
 
 typedef struct _ds_stats_t {
     uint8_t STR;
