@@ -7,7 +7,9 @@
 #include "../src/gff.h"
 #include "../src/gfftypes.h"
 
-player_t player;
+static player_t player;
+static dsl_object_t dsl_player;
+static animate_t *anim = NULL;
 
 // thri-keen is 291 & 292.
 
@@ -16,13 +18,33 @@ void player_init() {
     player.y = 10;
 }
 
-static SDL_Rect loc;
-SDL_Texture *tex;
-
 void player_load_graphics(SDL_Renderer *rend) {
-    tex = create_texture(rend, OBJEX_GFF_INDEX, GT_BMP, 291, 0, -1, &loc);
-    loc.w *= 2;
-    loc.h *= 2;
+    dsl_player.flags = 0;
+    dsl_player.entry_id = 0;
+    dsl_player.bmpx = 0;
+    dsl_player.bmpy = 0;
+    dsl_player.xoffset = 0;
+    dsl_player.yoffset = 0;
+    dsl_player.mapx = 30;
+    dsl_player.mapy = 10;
+    dsl_player.mapz = 0;
+    dsl_player.ht_idx = 0;
+    dsl_player.gt_idx = 0;
+    dsl_player.bmp_idx = 0;
+    dsl_player.bmp_width = 0;
+    dsl_player.bmp_height = 0;
+    dsl_player.cdelay = 0;
+    dsl_player.st_idx = 0;
+    dsl_player.sc_idx = 0;
+    dsl_player.btc_idx = 291;
+    dsl_player.disk_idx = 0;
+    dsl_player.game_time = 0;
+    dsl_player.scmd = NULL;
+    anim = animate_add_obj(rend, &dsl_player, OBJEX_GFF_INDEX, -1);
+
+    // Set initial location
+    dsl_player.mapx = player.x * 16;
+    dsl_player.mapy = player.y * 16;
 }
 
 #define TICKS_PER_MOVE (5)
@@ -71,13 +93,10 @@ void player_move(const uint8_t direction) {
             dsl_check->data.box_check.addr, 0);
     }
     count = TICKS_PER_MOVE;
+    dsl_player.mapx = player.x * 16;
+    dsl_player.mapy = player.y * 16;
+    shift_anim(anim);
 }
 
 void player_render(SDL_Renderer *rend) {
-    const int stretch = 2;
-    const uint32_t xoffset = getCameraX();
-    const uint32_t yoffset = getCameraY();
-    loc.x = -xoffset + player.x * 16 * stretch;
-    loc.y = -yoffset + player.y * 16 * stretch;
-    SDL_RenderCopy(rend, tex, NULL, &loc);
 }

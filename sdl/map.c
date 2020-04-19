@@ -68,23 +68,8 @@ void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
     memset(map->anims, 0x0, sizeof(animate_t*) * map->region->num_objs);
 
     for (int i = 0; i < map->region->num_objs; i++) {
-        if (!(map->region->objs[i].scmd)) {
-            data = dsl_load_object_bmp(map->region, i, 0);
-
-            width = map->region->objs[i].bmp_width;
-            height = map->region->objs[i].bmp_height;
-
-            tile = SDL_CreateRGBSurfaceFrom(data, width, height, 32, 4*width, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
-            map->objs[i] = SDL_CreateTextureFromSurface(renderer, tile);
-            free(data);
-        } else {
-            //gff_map_object_t* mo = get_map_object(map->gff_file, map->map_id, i);
-            //disk_object_t* dobj = gff_get_object(mo->index);
-            //dsl_scmd_print(OBJEX_GFF_INDEX, dobj->script_id);
-            // FIXME:SCMD need to be added...
-            map->objs[i] = NULL;
-            map->anims[i] = animate_add(map, renderer, map->region->objs+i);
-        }
+        map->objs[i] = NULL;
+        map->anims[i] = animate_add(map, renderer, map->region->objs+i);
     }
 
     cmap = map;

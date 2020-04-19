@@ -7,6 +7,7 @@
 
 //#define MAX_DELAY (256)
 static animate_t *list;
+static scmd_t no_animate;
 //static size_t animate_pos = 0;
 
 //typedef struct animation_delay_s {
@@ -19,14 +20,32 @@ static animate_t *list;
 void animate_init() {
     //memset(animations, 0x0, sizeof(animation_delay_t*) * MAX_DELAY);
     list = NULL;
+    no_animate.bmp_idx = 0;
+    no_animate.delay = 0;
+    no_animate.flags = SCMD_LAST;
+    no_animate.xoffset = 0;
+    no_animate.yoffset = 0;
+    no_animate.xoffsethot = 0;
+    no_animate.yoffsethot = 0;
+    no_animate.soundidx = 0;
 }
 
 // Sometimes the animation needs to be updated for the render list
-static void shift_anim(animate_t *anim) {
+void shift_anim(animate_t *anim) {
     animate_t *prev;
     animate_t *next;
+    const int y = (anim->obj->mapy + anim->obj->bmp_height + 0) / 16;
+    const int z = anim->obj->mapz;
+    int nz = 0, ny = 0, pz = 0, py = 0;
+    if (anim->next) {
+        nz = anim->next->obj->mapz;
+        ny = anim->next->obj->mapy;
+        ny += anim->next->obj->bmp_height;
+        ny /= 16;
+    }
     while (anim->next && (
-            anim->obj->mapz > anim->next->obj->mapz
+            z > nz
+            || (z == nz && y >= ny)
             )) {
         prev = anim->prev;
         next = anim->next;
@@ -43,19 +62,55 @@ static void shift_anim(animate_t *anim) {
         if (list == anim) {
             list = anim->prev;
         }
+        if (anim->next) {
+            nz = anim->next->obj->mapz;
+            ny = anim->next->obj->mapy;
+            ny += anim->next->obj->bmp_height;
+            ny /= 16;
+        }
+    }
+
+    if (anim->prev) {
+        pz = anim->prev->obj->mapz;
+        py = anim->prev->obj->mapy;
+        py += anim->prev->obj->bmp_height;
+        py /= 16;
+    }
+    while (anim->prev && (
+            z < pz
+            || (z == pz && y < py)
+            )) {
+        prev = anim->prev;
+        next = anim->next;
+        if (list == prev) {
+            list = anim;
+        }
+        prev->next = next;
+        if (next) {
+            next->prev = prev;
+        }
+        anim->prev = prev->prev;
+        anim->next = prev;
+        prev->prev = anim;
+        if (anim->prev) {
+            anim->prev->next = anim;
+        }
+        if (anim->prev) {
+            pz = anim->prev->obj->mapz;
+            py = anim->prev->obj->mapy;
+            py += anim->prev->obj->bmp_height;
+            py /= 16;
+        }
     }
 }
 
-animate_t* animate_add(map_t *map, SDL_Renderer *renderer, dsl_object_t *obj) {
-    unsigned char *data = NULL;
-    int32_t width, height;
-    SDL_Surface *surface;
-    uint8_t z;
+animate_t* animate_add_obj(SDL_Renderer *renderer, dsl_object_t *obj, const int gff_file, const int palette_id) {
+    //unsigned char *data = NULL;
+    SDL_Rect loc;
     animate_t *toadd = malloc(sizeof(animate_t));
     scmd_t *cmd = obj->scmd;
 
     // add to the list.
-    //toadd->scmd = cmd;
     toadd->obj = obj;
     toadd->textures = NULL;
     toadd->len = toadd->ticks_left = toadd->pos = 0;
@@ -66,6 +121,59 @@ animate_t* animate_add(map_t *map, SDL_Renderer *renderer, dsl_object_t *obj) {
     }
     list = toadd;
 
+    if (!obj->scmd) {
+        obj->scmd = &no_animate;
+        cmd = obj->scmd;
+    }
+    toadd->ticks_left = obj->scmd->delay;
+    while (!(cmd->flags & (SCMD_LAST | SCMD_JUMP))) {
+        cmd++;
+        toadd->len++;
+    }
+    cmd++;
+    toadd->len++;
+
+    // get all the textures
+    toadd->textures = malloc(sizeof(SDL_Surface *) * (toadd->len));
+    for (int i = 0; i < toadd->len; i++) {
+        toadd->textures[i] = 
+            create_texture(renderer, gff_file, GT_BMP, obj->btc_idx, obj->bmp_idx, palette_id, &loc);
+        obj->bmp_width = loc.w;
+        obj->bmp_height = loc.w;
+
+        //printf("obj->bmp_height = %d\n", obj->bmp_height);
+        //printf("obj->bmp_width = %d\n", obj->bmp_width);
+        //printf("obj->mapx = %d\n", obj->mapx);
+        //printf("obj->mapy = %d\n", obj->mapy);
+    }
+
+    shift_anim(toadd);
+
+    return toadd;
+}
+
+animate_t* animate_add(map_t *map, SDL_Renderer *renderer, dsl_object_t *obj) {
+    unsigned char *data = NULL;
+    SDL_Surface *surface;
+    uint8_t z;
+    animate_t *toadd = malloc(sizeof(animate_t));
+    scmd_t *cmd = obj->scmd;
+
+    // add to the list.
+    toadd->obj = obj;
+    toadd->textures = NULL;
+    toadd->len = toadd->ticks_left = toadd->pos = 0;
+    toadd->next = list;
+    toadd->prev = NULL;
+    if (list) {
+        list->prev = toadd;
+    }
+    list = toadd;
+
+    if (!obj->scmd) {
+        obj->scmd = &no_animate;
+        cmd = obj->scmd;
+    }
     toadd->ticks_left = obj->scmd->delay;
     while (!(cmd->flags & (SCMD_LAST | SCMD_JUMP))) {
         cmd++;
@@ -83,10 +191,8 @@ animate_t* animate_add(map_t *map, SDL_Renderer *renderer, dsl_object_t *obj) {
     // get all the textures
     toadd->textures = malloc(sizeof(SDL_Surface *) * (toadd->len));
     for (int i = 0; i < toadd->len; i++) {
-        data = gff_map_get_object_bmp_pal(map->region->gff_file, map->region->map_id, obj->entry_id, &width, &height,
-            (obj->scmd + i)->bmp_idx, map->region->palette_id);
-        obj->bmp_width = width;
-        obj->bmp_height = height;
+        data = dsl_load_object_bmp(map->region, obj->entry_id, (obj->scmd+i)->bmp_idx);
+
         surface = SDL_CreateRGBSurfaceFrom(data, obj->bmp_width, obj->bmp_height, 32, 
                 4*obj->bmp_width, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
         toadd->textures[i] = SDL_CreateTextureFromSurface(renderer, surface);
@@ -105,9 +211,8 @@ void animate_render(void *data, SDL_Renderer *renderer) {
     const uint32_t yoffset = getCameraY();
     SDL_Rect loc;
 
-    int i = 0;
     for (animate_t *rover = list; rover; rover = rover->next) {
-        printf("rover[%d]\n", i++);
+        //printf("rover[%d]\n", i++);
         if (rover->ticks_left > 0) {
             rover->ticks_left--;
             if (rover->ticks_left == 0) {

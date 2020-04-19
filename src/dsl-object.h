@@ -117,7 +117,7 @@ typedef struct dsl_object_s {
     int8_t mapz;        // object's z position in the region
     uint8_t ht_idx;     // height table index
     uint16_t gt_idx;    // graph table index
-    uint8_t bmp_idx;   // current bmp for the script
+    uint8_t bmp_idx;    // current bmp for the script
     uint8_t bmp_width;  // bitmap width
     uint8_t bmp_height; // bitmap height
     uint8_t cdelay;     // init to zero, modified by script handler
