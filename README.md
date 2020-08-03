@@ -6,6 +6,7 @@ A Dark Sun Engine
    fix any lib issues that come up (keep in mind we use Lua 5.1!)
 
 ### Windows dev setup with Code Blocks:
+This needs to be updated, as we have migrated to C with SDL.
 1. Download mingw (https://sourceforge.net/projects/mingw-w64)  Make sure you select 64-bit when installing (NOT i686!)
 1. Install Code Blocks (just regular: nothing integrated.)  make sure mingw is fully installed before installing code blocks!
 2. Download Lua 5.1.5 tarball (https://www.lua.org/versions.html#5.1)
