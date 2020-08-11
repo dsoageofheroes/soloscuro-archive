@@ -195,6 +195,7 @@ void use_with_check();
 void set_new_order();
 void set_los_order(int16_t los_order, int16_t range);
 int32_t read_number();
+uint8_t preview_byte(uint8_t offset);
 
 void set_accumulator(int32_t a);
 int32_t get_accumulator();

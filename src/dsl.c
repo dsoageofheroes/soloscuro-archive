@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "dsl.h"
 #include "dsl-execute.h"
+#include "dsl-lua.h"
 #include "dsl-string.h"
 #include "dsl-var.h"
 
@@ -43,6 +44,7 @@ void dsl_init() {
     dsl_init_vars();
     dsl_object_init();
     dsl_execute_init();
+    dsl_lua_load_master_gff();
     info("Running Master DSL #99.\n");
     dsl_execute_subroutine(99, 0, 1);
 }

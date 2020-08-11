@@ -3,6 +3,7 @@
  */
 #include <string.h>
 #include "dsl.h"
+#include "dsl-lua.h"
 #include "dsl-execute.h"
 #include "dsl-object.h"
 #include "dsl-narrate.h"
@@ -203,6 +204,7 @@ void dsl_execute_subroutine(const int file, const int addr, const int is_mas) {
         : get_data_start_ptr();
 
     debug("Executing %s file #%d @ %d, len = %lu\n", is_mas ? "MAS" : "DSL", file, addr, len);
+    //dsl_lua_print(dsl, len);
 
     debug("---------------------pushing the data ptr!-----------------------------\n");
     push_data_ptr(dsl);

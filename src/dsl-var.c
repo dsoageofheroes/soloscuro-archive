@@ -424,10 +424,9 @@ uint16_t get_half_word() {
     return ret;
 }
 
-static uint8_t preview_byte(uint8_t offset) {
+uint8_t preview_byte(uint8_t offset) {
     return *(dsl_data + offset);
 }
-
 
 int32_t read_number() {
     int32_t paren_level = 0;
