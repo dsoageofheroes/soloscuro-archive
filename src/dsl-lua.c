@@ -12,7 +12,10 @@ static int in_func = 0;
 static void dsl_lua_load_variable();
 static void dsl_lua_load_simple_variable(uint16_t type, uint16_t vnum);
 static int dsl_lua_read_simple_num_var(char *buf, const size_t buf_size);
+static uint8_t dsl_lua_access_complex(int16_t *header, uint16_t *depth, uint16_t *element);
 static int32_t dsl_lua_read_complex(void);
+static uint16_t dsl_lua_get_word();
+static void validate_number(const char *num, const char *message);
 
 void dsl_lua_byte_dec(void);
 void dsl_lua_word_dec(void);
@@ -20,12 +23,20 @@ void dsl_lua_long_dec(void);
 void dsl_lua_byte_inc(void);
 void dsl_lua_word_inc(void);
 void dsl_lua_long_inc(void);
+void dsl_lua_changemoney(void);
+void dsl_lua_setvar(void);
+void dsl_lua_toggle_accum(void);
+void dsl_lua_getstatus(void);
+void dsl_lua_getlos(void);
+void dsl_lua_long_times_equal(void);
+void dsl_lua_jump(void);
 void dsl_lua_local_sub(void);
 void dsl_lua_global_sub(void);
 void dsl_lua_local_ret(void);
 void dsl_lua_compare(void);
 void dsl_lua_pdamage(void);
 void dsl_lua_cmpend(void);
+void dsl_lua_wait(void);
 void dsl_lua_while(void);
 void dsl_lua_wend(void);
 void dsl_lua_attackcheck(void);
@@ -34,17 +45,24 @@ void dsl_lua_load_accum(void);
 void dsl_lua_global_ret(void);
 void dsl_lua_usecheck(void);
 void dsl_lua_ifis(void);
+void dsl_lua_clearpic(void);
 void dsl_lua_orelse(void);
 void dsl_lua_exit(void);
+void dsl_lua_fetch(void);
+void dsl_lua_search(void);
+void dsl_lua_getparty(void);
 void dsl_lua_fight(void);
 void dsl_lua_flee(void);
 void dsl_lua_follow(void);
+void dsl_lua_getyn(void);
 void dsl_lua_give(void);
 void dsl_lua_go(void);
 void dsl_lua_input_bignum(void);
 void dsl_lua_goxy(void);
+void dsl_lua_readorders(void);
 void dsl_lua_if(void);
 void dsl_lua_else(void);
+void dsl_lua_setrecord(void);
 void dsl_lua_setother(void);
 void dsl_lua_menu(void);
 void dsl_lua_print_string(void);
@@ -52,15 +70,32 @@ void dsl_lua_print_number(void);
 void dsl_lua_printnl(void);
 void dsl_lua_rand(void);
 void dsl_lua_showpic(void);
+void dsl_lua_skillroll(void);
+void dsl_lua_statroll(void);
+void dsl_lua_string_compare(void);
+void dsl_lua_match_string(void);
 void dsl_lua_take(void);
 void dsl_lua_sound(void);
 void dsl_lua_tport(void);
+void dsl_lua_bitsnoop(void);
+void dsl_lua_award(void);
 void dsl_lua_request(void);
 void dsl_lua_hunt(void);
 void dsl_lua_end_control(void);
+void dsl_lua_input_string(void);
+void dsl_lua_input_number(void);
+void dsl_lua_input_money(void);
+void dsl_lua_joinparty(void);
+void dsl_lua_leaveparty(void);
+void dsl_lua_lockdoor(void);
+void dsl_lua_nextto(void);
 void dsl_lua_inloscheck(void);
 void dsl_lua_notinloscheck(void);
 void dsl_lua_move_tilecheck(void);
+void dsl_lua_damage(void);
+void dsl_lua_source_line_num(void);
+void dsl_lua_drop(void);
+void dsl_lua_passtime(void);
 void dsl_lua_door_tilecheck(void);
 void dsl_lua_move_boxcheck(void);
 void dsl_lua_door_boxcheck(void);
@@ -127,6 +162,8 @@ static params_t lparams;
 #define LUA_MAX_SIZE (1<<16)
 static char master_mas[LUA_MAX_SIZE];
 static char master_gpl[LUA_MAX_SIZE];
+static char current_mas[LUA_MAX_SIZE];
+static char current_gpl[LUA_MAX_SIZE];
 static char lua_buf[LUA_MAX_SIZE];
 static size_t lua_pos = 0;
 static int32_t lua_depth = 0; 
@@ -145,7 +182,8 @@ void lua_exit(const char *msg) {
     printf(msg);
     exit(1);
 }
-void validate_number(const char *num, const char *message) {
+
+static void validate_number(const char *num, const char *message) {
     char msg[BUF_SIZE];
     const char *ptr = num;
     while (isdigit(*ptr) || *ptr == '-') {
@@ -186,13 +224,13 @@ dsl_lua_operation_t dsl_lua_operations[] = {
     { dsl_lua_getxy, "dsl getxy" }, // 0x9
     { dsl_lua_string_copy, "dsl string copy" }, // 0xA
     { dsl_lua_pdamage, "dsl p damage" }, // 0xB
-    { NULL, "dsl changemoney" }, // 0xC
-    { NULL, "dsl setvar" }, // 0xD
-    { NULL, "dsl toggle accum" }, // 0xE
-    { NULL, "dsl getstatus" }, // 0xF
-    { NULL, "dsl getlos" }, // 0x10
-    { NULL, "dsl long times equal" }, // 0x11
-    { NULL, "dsl jump" }, // 0x12
+    { dsl_lua_changemoney, "dsl changemoney" }, // 0xC
+    { dsl_lua_setvar, "dsl setvar" }, // 0xD
+    { dsl_lua_toggle_accum, "dsl toggle accum" }, // 0xE
+    { dsl_lua_getstatus, "dsl getstatus" }, // 0xF
+    { dsl_lua_getlos, "dsl getlos" }, // 0x10
+    { dsl_lua_long_times_equal, "dsl long times equal" }, // 0x11
+    { dsl_lua_jump, "dsl jump" }, // 0x12
     { dsl_lua_local_sub, "dsl local sub" }, // 0x13
     { dsl_lua_global_sub, "dsl global sub" }, // 0x14
     { dsl_lua_local_ret, "dsl local ret" }, // 0x15
@@ -200,14 +238,14 @@ dsl_lua_operation_t dsl_lua_operations[] = {
     { dsl_lua_compare, "dsl compare" }, // 0x17
     { dsl_lua_load_accum, "dsl load accum" }, // 0x18
     { dsl_lua_global_ret, "dsl global ret" }, // 0x19
-    { NULL, "dsl nextto" }, // 0x1A
+    { dsl_lua_nextto, "dsl nextto" }, // 0x1A
     { dsl_lua_inloscheck, "dsl inloscheck" }, // 0x1B
     { dsl_lua_notinloscheck, "dsl notinloscheck" }, // 0x1C
     { dsl_lua_clear_los, "dsl clear los" }, // 0x1D
     { dsl_lua_nametonum, "dsl nametonum" }, // 0x1E
     { dsl_lua_numtoname, "dsl numtoname" }, // 0x1F
-    { NULL, "dsl bitsnoop" }, // 0x20
-    { NULL, "dsl award" }, // 0x21
+    { dsl_lua_bitsnoop, "dsl bitsnoop" }, // 0x20
+    { dsl_lua_award, "dsl award" }, // 0x21
     { dsl_lua_request, "dsl request" }, // 0x22
     { NULL, "dsl source trace" }, // 0x23
     { NULL, "dsl shop" }, // 0x24
@@ -216,36 +254,36 @@ dsl_lua_operation_t dsl_lua_operations[] = {
     { dsl_lua_ifis, "dsl ifis" }, // 0x27
     { NULL, "dsl trace var" }, // 0x28
     { dsl_lua_orelse, "dsl orelse" }, // 0x29
-    { NULL, "dsl clearpic" }, // 0x2A
+    { dsl_lua_clearpic, "dsl clearpic" }, // 0x2A
     { NULL, "dsl continue" }, // 0x2B
     { NULL, "dsl log" }, // 0x2C
-    { NULL, "dsl damage" }, // 0x2D
-    { NULL, "dsl source line num" }, // 0x2E
-    { NULL, "dsl drop" }, // 0x2F
-    { NULL, "dsl passtime" }, // 0x30
+    { dsl_lua_damage, "dsl damage" }, // 0x2D
+    { dsl_lua_source_line_num, "dsl source line num" }, // 0x2E
+    { dsl_lua_drop, "dsl drop" }, // 0x2F
+    { dsl_lua_passtime, "dsl passtime" }, // 0x30
     { dsl_lua_exit, "dsl exit dsl" }, // 0x31
-    { NULL, "dsl fetch" }, // 0x32
-    { NULL, "dsl search" }, // 0x33
-    { NULL, "dsl getparty" }, // 0x34
+    { dsl_lua_fetch, "dsl fetch" }, // 0x32
+    { dsl_lua_search, "dsl search" }, // 0x33
+    { dsl_lua_getparty, "dsl getparty" }, // 0x34
     { dsl_lua_fight, "dsl fight" }, // 0x35
     { dsl_lua_flee, "dsl flee" }, // 0x36
     { dsl_lua_follow, "dsl follow" }, // 0x37
-    { NULL, "dsl getyn" }, // 0x38
+    { dsl_lua_getyn, "dsl getyn" }, // 0x38
     { dsl_lua_give, "dsl give" }, // 0x39
     { dsl_lua_go, "dsl go" }, // 0x3A
     { dsl_lua_input_bignum, "dsl input bignum" }, // 0x3B
     { dsl_lua_goxy, "dsl goxy" }, // 0x3C
-    { NULL, "dsl readorders" }, // 0x3D
+    { dsl_lua_readorders, "dsl readorders" }, // 0x3D
     { dsl_lua_if, "dsl if" }, // 0x3E
     { dsl_lua_else, "dsl else" }, // 0x3F
-    { NULL, "dsl setrecord" }, // 0x40
+    { dsl_lua_setrecord, "dsl setrecord" }, // 0x40
     { dsl_lua_setother, "dsl setother" }, // 0x41
-    { NULL, "dsl input string" }, // 0x42
-    { NULL, "dsl input number" }, // 0x43
-    { NULL, "dsl input money" }, // 0x44
-    { NULL, "dsl joinparty" }, // 0x45
-    { NULL, "dsl leaveparty" }, // 0x46
-    { NULL, "dsl lockdoor" }, // 0x47
+    { dsl_lua_input_string, "dsl input string" }, // 0x42
+    { dsl_lua_input_number, "dsl input number" }, // 0x43
+    { dsl_lua_input_money, "dsl input money" }, // 0x44
+    { dsl_lua_joinparty, "dsl joinparty" }, // 0x45
+    { dsl_lua_leaveparty, "dsl leaveparty" }, // 0x46
+    { dsl_lua_lockdoor, "dsl lockdoor" }, // 0x47
     { dsl_lua_menu, "dsl menu" }, // 0x48
     { NULL, "dsl setthing" }, // 0x49
     { NULL, "dsl default" }, // 0x4A
@@ -262,17 +300,17 @@ dsl_lua_operation_t dsl_lua_operations[] = {
     { NULL, "dsl default" }, // 0x55
     { NULL, "dsl default" }, // 0x56
     { NULL, "dsl default" }, // 0x57
-    { NULL, "dsl skillroll" }, // 0x58
-    { NULL, "dsl statroll" }, // 0x59
-    { NULL, "dsl string compare" }, // 0x5A
-    { NULL, "dsl match string" }, // 0x5B
+    { dsl_lua_skillroll, "dsl skillroll" }, // 0x58
+    { dsl_lua_statroll, "dsl statroll" }, // 0x59
+    { dsl_lua_string_compare, "dsl string compare" }, // 0x5A
+    { dsl_lua_match_string, "dsl match string" }, // 0x5B
     { dsl_lua_take, "dsl take" }, // 0x5C
     { dsl_lua_sound, "dsl sound" }, // 0x5D
     { dsl_lua_tport, "dsl tport" }, // 0x5E
     { NULL, "dsl music" }, // 0x5F
     { NULL, "dsl default" }, // 0x60
     { dsl_lua_cmpend, "dsl cmpend" }, // 0x61
-    { NULL, "dsl wait" }, // 0x62
+    { dsl_lua_wait, "dsl wait" }, // 0x62
     { dsl_lua_while, "dsl while" }, // 0x63
     { dsl_lua_wend, "dsl wend" }, // 0x64
     { dsl_lua_attackcheck, "dsl attackcheck" }, // 0x65
@@ -310,7 +348,7 @@ static void do_lua_dsl_command(uint8_t cmd) {
     //debug("[%p:%d]command byte = 0x%x (%s)\n", (void*)get_data_start_ptr(),
         //(int32_t) (get_data_ptr() - get_data_start_ptr()), cmd, dsl_operations[cmd].name);
     //exit_dsl = 0;
-    printf("cmd = 0x%x (do_lua_dsl_command.)\n", cmd);
+    //printf("cmd = 0x%x (do_lua_dsl_command.)\n", cmd);
     (*dsl_lua_operations[cmd].func)();
     //print_vars(0);
 }
@@ -321,6 +359,8 @@ char* dsl_lua_print(unsigned char *dsl, const size_t len) {
     lua_pos = 0;
     lua_depth = 0; 
     lua_buf[0] = '\0';
+    funcnum = 0;
+    in_func = 0;
     push_data_ptr(dsl);
     set_data_ptr(dsl, dsl);
     dsl_lua_start_ptr = (size_t)dsl;
@@ -331,7 +371,7 @@ char* dsl_lua_print(unsigned char *dsl, const size_t len) {
         ;
         diff = (size_t)get_data_ptr() - start;
     }
-    printf("tranversed = %ld, len = %ld\n", (size_t)get_data_ptr() - (size_t)start, len);
+    //printf("tranversed = %ld, len = %ld\n", (size_t)get_data_ptr() - (size_t)start, len);
     pop_data_ptr();
     return lua_buf;
 }
@@ -364,9 +404,34 @@ static void write_lua(const char *path, const char *lua) {
     }
 }
 
-void dsl_lua_load_master_gff() {
+void dsl_lua_load_gff(const uint32_t regionid) {
     size_t len;
     unsigned char *dsl;
+    char buf[1024];
+
+    funcnum = 0;
+    in_func = 0;
+    
+    dsl = (unsigned char*)gff_get_raw_bytes(DSLDATA_GFF_INDEX, GT_MAS, regionid, &len);
+    if (!dsl) { return; }
+    printf("Coverting MAS %d to lua, length = %ld\n", regionid, len);
+    strcpy(current_mas, dsl_lua_print(dsl, len));
+    sprintf(buf, "lua/%d-mas.lua", regionid);
+    write_lua(buf, current_mas);
+    dsl = (unsigned char*)gff_get_raw_bytes(DSLDATA_GFF_INDEX, GT_GPL, regionid, &len);
+    printf("Coverting GPL %d to lua, length = %ld\n", regionid, len);
+    strcpy(current_gpl, dsl_lua_print(dsl, len));
+    sprintf(buf, "lua/%d-gpl.lua", regionid);
+    write_lua(buf, current_gpl);
+}
+
+void dsl_lua_load_scripts() {
+    int i;
+    size_t len;
+    unsigned char *dsl;
+
+    funcnum = 0;
+    in_func = 0;
     
     dsl = (unsigned char*)gff_get_raw_bytes(DSLDATA_GFF_INDEX, GT_MAS, 99, &len);
     strcpy(master_mas, dsl_lua_print(dsl, len));
@@ -374,6 +439,10 @@ void dsl_lua_load_master_gff() {
     strcpy(master_gpl, dsl_lua_print(dsl, len));
     write_lua("master-mas.lua", master_mas);
     write_lua("master-gpl.lua", master_gpl);
+
+    for (i = 0; i < 99; i++) {
+        dsl_lua_load_gff(i);
+    }
 }
 
 static void dsl_lua_string_copy() {
@@ -389,9 +458,15 @@ void dsl_lua_load_accum(void) {
 }
 
 void dsl_lua_global_ret(void) {
-    lprintf("--return\n");
     in_func = 0;
     lua_depth--;
+    lprintf("end --return\n");
+    if (lua_depth < 0) { lua_depth = 0; }
+}
+
+void dsl_lua_nextto(void) {
+    dsl_lua_get_parameters(2);
+    lprintf("accum = dsl.objects_are_adjacent(%s, %s)\n", lparams.params[0], lparams.params[1]);
 }
 
 void dsl_lua_inloscheck(void) {
@@ -411,6 +486,75 @@ void dsl_lua_notinloscheck(void) {
 void dsl_lua_move_tilecheck(void) {
     dsl_lua_get_parameters(5);
     lprintf("--unimplmented move tile check.\n");
+}
+
+static void do_lua_damage(int is_percent) {
+    dsl_lua_get_parameters(2);
+    lprintf("if %s == %d then\n", lparams.params[0], ALL);
+    lua_depth++;
+    lprintf("--illegal parameter ALL to do_damage\n");
+    lua_depth--;
+    lprintf("else if %s == %d then\n", lparams.params[0], PARTY);
+    lua_depth++;
+    if (is_percent) {
+        lprintf("--need to do %s%% to all party members\n", lparams.params[1]);
+    } else {
+        lprintf("--need to do %s amt of damage to all party members\n", lparams.params[1]);
+    }
+    lua_depth--;
+    lprintf("else\n");
+    lua_depth++;
+    lprintf("if %s >= 0 then\n", lparams.params[0]);
+    lua_depth++;
+    if (is_percent) {
+        lprintf("--need to do %s%% to (party members) %s\n", lparams.params[1], lparams.params[0]);
+    } else {
+        lprintf("--need to do %s amt of damage to (party members) %s\n", lparams.params[1], lparams.params[0]);
+    }
+    lua_depth--;
+    lprintf("else\n");
+    lua_depth++;
+    if (is_percent) {
+        lprintf("--need to do %s%% to (object id) %s\n", lparams.params[1], lparams.params[0]);
+    } else {
+        lprintf("--need to do %s amt of damage to (object id) %s\n", lparams.params[1], lparams.params[0]);
+    }
+    lua_depth--;
+    lprintf("end\n");
+    lua_depth--;
+    lprintf("end\n");
+}
+
+void dsl_lua_damage(void) {
+    do_lua_damage(0);
+}
+
+void dsl_lua_source_line_num(void) {
+    command_implemented = 0;
+    lua_exit("source line num not implemented\n");
+}
+
+void dsl_lua_drop(void) {
+    dsl_lua_get_parameters(3);
+    lprintf("if %s == %d then \n", lparams.params[2], PARTY);
+    lua_depth++;
+    lprintf("-- all pary members need to drop %s of %s\n", lparams.params[0], lparams.params[1]);
+    lua_depth--;
+    lprintf("else if %s == %d then\n", lparams.params[2], ALL);
+    lua_depth++;
+    lprintf("--do nothing\n");
+    lua_depth--;
+    lprintf("else\n");
+    lua_depth++;
+    lprintf("accum = dsl.drop(%s, %s, %s) -- %s needs to drop %s of %s\n",
+       lparams.params[0], lparams.params[1], lparams.params[2],
+       lparams.params[0], lparams.params[1], lparams.params[2]);
+    lua_depth--;
+    lprintf("end\n");
+}
+
+void dsl_lua_passtime(void) {
+    lua_exit("dsl_passtime not implemented\n");
 }
 
 void dsl_lua_door_tilecheck(void) {
@@ -437,8 +581,20 @@ void dsl_lua_pickup_itemcheck(void) {
 
 void dsl_lua_talktocheck(void) {
     dsl_lua_get_parameters(3);
+    char *addr = lparams.params[0];
+    char *file = lparams.params[1];
+    char *name = lparams.params[2];
+    int is_global = (this_gpl_file == GLOBAL_MAS) && (this_gpl_type == MASFILE);
+
+    lprintf("dsl.talk_to_check(%s, %s, %s, %d) -- When I talk to %s go to file %s, addr %s, global = %d\n",
+        name, file, addr, is_global,
+        name, file, addr, is_global);
+    //lprintf("When I %s to '%s' (%s) goto file: %s, addr: %s, global = %d\n",
+        //"talk to", name, name, file, addr, is_global);
+    //debug("When I %s to '%s' (%d) goto file: %d, addr: %d, global = %d\n",
+        //"talk to", get_so_name(so), new_name.name,
+        //new_name.file, new_name.addr, new_name.global);
     //global_addr_name(&param);
-    lprintf("--unimplmented talk to check.\n");
 }
 
 void dsl_lua_noorderscheck(void) {
@@ -456,6 +612,12 @@ void dsl_lua_usewithcheck(void) {
 void dsl_lua_cmpend(void) {
     lprintf("--compare end\n");
     lprintf("--compare = NO\n");
+}
+
+void dsl_lua_wait(void) {
+    char buf[BUF_SIZE];
+    dsl_lua_read_number(buf, BUF_SIZE);
+    lprintf("dsl.set_order(%s, WAIT, 0, 0)\n", buf);
 }
 
 void dsl_lua_while(void) {
@@ -492,6 +654,85 @@ void dsl_lua_usecheck(void) {
     lprintf("--*******************use check not finished*************\n");
 }
 
+void dsl_lua_fetch(void) {
+    dsl_lua_get_parameters(2);
+    lprintf("dsl.set_orders(%s, FETCH, %s, 0)\n", lparams.params[1], lparams.params[0]);
+}
+
+#define OBJ_QUALIFIER  (0x53)
+#define OBJ_INTRODUCE  (0x01)
+
+#define LOW_SEARCH     (0)
+#define HIGH_SEARCH    (1)
+#define TOTAL_SEARCH   (2)
+#define COUNT_SEARCH   (3)
+#define EQU_SEARCH     (4)
+#define LT_SEARCH      (5)
+#define GT_SEARCH      (6)
+
+void dsl_lua_search(void) {
+    char object[BUF_SIZE];
+    char buf[BUF_SIZE - 128];
+    //uint32_t answer = 0L;
+    dsl_lua_read_number(object, BUF_SIZE);
+    int16_t low_field = get_byte();
+    int16_t high_field = get_byte();
+    int16_t field_level = -1, depth = 1;
+    int32_t search_for = 0, temp_for = 0;
+    uint16_t field[16];
+    uint8_t type = 0;
+    char *i;
+    do {
+        if (peek_one_byte() == OBJ_QUALIFIER) {
+            get_byte();
+        }
+        field_level++;
+        field[field_level] = get_byte();
+        type = get_byte();
+        if (type >= EQU_SEARCH && type <= GT_SEARCH) {
+            dsl_lua_read_number(buf, BUF_SIZE - 128);
+            validate_number(buf, "dsl_lua_search");
+            //temp_for = read_number();
+            temp_for = atoi(buf);
+            if (field_level > 0) {
+                field[++field_level] = (uint16_t) temp_for;
+            } else {
+                search_for = temp_for;
+            }
+        }
+        depth--;
+    } while ( peek_one_byte() == OBJ_QUALIFIER);
+
+    //i = (object == PARTY || object < 0)
+        //? NULL_OBJECT : object;
+    i = object;
+
+    /*
+    do {
+        if (type == LOW_SEARCH) {
+            answer = 0x7FFFFFFFL;
+        }
+    } while ( (object == PARTY) && (i != NULL_OBJECT));
+    */
+    lprintf("--I need to find object %s, i = %s, low_field = %d, high_field = %d\n",
+        object, i, low_field, high_field);
+    lprintf("--Field parameters:");
+    for (int idx = 0; idx < depth; idx++) {
+        warn("%d ", field[idx]);
+    }
+    lprintf("--search_for = %d\n", search_for);
+
+    lprintf("--search command to be implemented later...\n");
+    lprintf("accum = answer\n");
+}
+
+void dsl_lua_getparty(void) {
+    char buf[BUF_SIZE];
+    dsl_lua_read_number(buf, BUF_SIZE);
+    lprintf("gOther = %s\n", buf);
+    lprintf("accum = %s\n", buf);
+}
+
 void dsl_lua_fight(void) {
     lprintf("--I need to enter fight mode!\n");
     //dsl_exit_dsl();
@@ -508,6 +749,10 @@ void dsl_lua_follow(void) {
     dsl_lua_get_parameters(2);
     lprintf("--I need to follow\n");
     //set_orders(param.val[1], FOLLOW, param.val[0], 0);
+}
+
+void dsl_lua_getyn(void) {
+    lprintf("accum = dsl.ask_yes_no\n");
 }
 
 void dsl_lua_give(void) {
@@ -532,6 +777,12 @@ void dsl_lua_goxy(void) {
     //set_orders(param.val[2], GOXY, param.val[0], param.val[1]);
 }
 
+void dsl_lua_readorders(void) {
+    char buf[BUF_SIZE];
+    dsl_lua_read_number(buf, BUF_SIZE);
+    lprintf("accum = dsl.read_order(%s)\n", buf);
+}
+
 void dsl_lua_if(void) {
     // The paramter is ignored, in the original it probably was the address
     // to jump to if the if was not taken.
@@ -549,64 +800,117 @@ void dsl_lua_else(void) {
     lua_depth++;
 }
 
-static int32_t dsl_lua_id_to_header(int32_t header) {
-    // guess: is this to find the actual object header?  I'm just return 1234 for now...
-    warn("id_to_header: guessing 1234\n");
-    return 1234;
+void dsl_lua_setrecord(void) {
+    uint16_t depth = 0;
+    int16_t header = 0;
+    uint16_t element[MAX_SEARCH_STACK];
+    uint16_t tmp = peek_half_word();
+    char buf[BUF_SIZE];
+
+    if (tmp > 0x8000) {
+        dsl_lua_access_complex(&header, &depth, element);
+        dsl_lua_read_number(buf, BUF_SIZE);
+        lprintf("accum = %s\n", buf);
+        lprintf("--setrecordneed to do a smart write for setrecord.\n");
+        //smart_write_data(header, depth, element, accum);
+        return;
+    }
+    if (tmp == 0) {
+        lua_exit("dsl_setrecord: need to implement party...\n");
+        return;
+    }
+    if (tmp < 0x8000) {
+        dsl_lua_access_complex(&header, &depth, element);
+        dsl_lua_read_number(buf, BUF_SIZE);
+        lprintf("accum = %s\n", buf);
+        lprintf("--setrecord:I need to write depth/element/accum to list of headers!\n");
+        return;
+    }
 }
 
 void dsl_lua_setother(void) {
     char buf[BUF_SIZE];
     int32_t header = 0;
-    debug ("set other\n");
     dsl_lua_read_number(buf, BUF_SIZE);
-    validate_number(buf, "dsl_lua_setother: ");
-    if ((( header = atoi(buf) >= 0 && header != NULL_OBJECT)
-        || (header = dsl_lua_id_to_header(header)) != NULL_OBJECT)) {
-        lprintf("other1 = %d\n", header);
-        lprintf("accum = 1\n");
-    } else {
-        lprintf("accum = 0\n");
-    }
+    lprintf("if ((%s >= 0 && head != NULL_OBJECT) || (%s = dsl.id_to_header(%s)) != NULL_OBJECT", buf, buf, buf);
+    lua_depth++;
+    lprintf("other1 = %d\n", header);
+    lprintf("accum = 1\n");
+    lua_depth--;
+    lprintf("else\n");
+    lua_depth++;
+    lprintf("accum = 0\n");
+    lua_depth--;
+    lprintf("else\n");
 }
 
 void dsl_lua_end_control(void) {
     lua_depth--;
-    lprintf("end\n");
+    lprintf("end --end_control\n");
 }
 
-static uint16_t menu_functions[12];
-static uint8_t menu_bytes[12];
+void dsl_lua_input_string(void) {
+    dsl_lua_get_parameters(1);
+    lprintf("dsl.ask_for_string()\n");
+}
+
+void dsl_lua_input_number(void) {
+    dsl_lua_get_parameters(1);
+    lprintf("dsl.ask_for_number()\n");
+}
+
+void dsl_lua_input_money(void) {
+    dsl_lua_get_parameters(1);
+    lprintf("dsl.ask_for_money()\n");
+}
+
+void dsl_lua_joinparty(void) {
+    lua_exit("join party not implemented\n");
+}
+
+void dsl_lua_leaveparty(void) {
+    lua_exit("leave party not implemented\n");
+}
+
+void dsl_lua_lockdoor(void) {
+    lprintf("dsl.lockdoor(1)\n");
+}
+
 #define MAXMENU   (24)
-static uint8_t menu_count;
 
 void dsl_lua_menu(void) {
     int items = 0;
     char buf[BUF_SIZE];
+    char mfunction[BUF_SIZE];
+    char mbytes[BUF_SIZE];
     dsl_lua_read_number(buf, BUF_SIZE);
-    //char *menu = (char*) gBignumptr;
     char *menu = (char*) buf;
     lprintf("narrate_open(NAR_ADD_MENU, \"%s\", 0)\n", menu);
-    menu_count = 0;
     while ((peek_one_byte() != 0x4A) && (items <= MAXMENU)) {
         dsl_lua_read_number(buf, BUF_SIZE);
         //menu = (char*) gBignumptr;
         menu = (char*) buf;
-        menu_functions[items] = read_number();
-        menu_bytes[items] = (uint8_t) read_number();
-        menu_count++;
-        if (menu_bytes[items] == 1) {
-            lprintf("narrate_open(NAR_ADD_MENU, \"%s\", %d)\n", menu, items - 1);
-            items++;
-        } else {
-            warn("Not available at this time: '%s'\n", menu);
-        }
+        dsl_lua_read_number(mfunction, BUF_SIZE);
+        dsl_lua_read_number(mbytes, BUF_SIZE);
+        //menu_functions[items] = read_number();
+        //menu_bytes[items] = (uint8_t) read_number();
+        //if (menu_bytes[items] == 1) {
+            //lprintf("narrate_open(NAR_ADD_MENU, \"%s\", %d)\n", menu, items - 1);
+        items++;
+        //} else {
+            //warn("Not available at this time: '%s'\n", menu);
+        //}
+        lprintf("if mbytes == 1 then\n");
+        lua_depth++;
+        lprintf("dsl.narrate_choice(%s, %s) -- choice param1 goes to addr param2\n", menu, mfunction);
+        lua_depth--;
+        lprintf("end\n");
     }
     get_byte();  // get rid of the mend...
-    for (int i = 0; i < items; i++) {
-        lprintf("narrate_choice( %d, %d) -- choice param1 goes to addr param2\n", i, menu_functions[i]);
-    }
-    lprintf("--narrate_wait for input\n");
+    //for (int i = 0; i < items; i++) {
+        //lprintf("narrate_choice( %d, %d) -- choice param1 goes to addr param2\n", i, menu_functions[i]);
+    //}
+    lprintf("dsl.show_narrate() --narrate_wait for input\n");
     //printf("Need to implement display_menu()\n");
     //command_implemented = 0;
 }
@@ -640,9 +944,40 @@ void dsl_lua_showpic(void) {
     lprintf("narrate_open(NAR_PORTRAIT, NULL, %s)\n", buf);
 }
 
+void dsl_lua_skillroll(void) {
+    lua_exit("skillroll not implemented\n");
+}
+
+void dsl_lua_statroll(void) {
+    dsl_lua_get_parameters(3);
+    lprintf("accum = 0\n");
+    lprintf("if lparams.params[0] == PARTY then\n");
+    lua_depth++;
+    lprintf("dsl.dsl_stat_roll(%s)\n", lparams.params[0]);
+    lua_depth--;
+    lprintf("else\n");
+    lua_depth++;
+    lprintf("dsl.dsl_stat_roll_party()\n");
+    lua_depth--;
+    lprintf("end\n");
+}
+
+void dsl_lua_string_compare(void) {
+    lprintf("accum = 0\n");
+    dsl_lua_get_parameters(2);
+    lprintf("if %s == %s then\n", lparams.params[0], lparams.params[1]);
+    lua_depth++;
+    lprintf("accum = 1\n");
+    lua_depth--;
+    lprintf("end\n");
+}
+
+void dsl_lua_match_string(void) {
+    lua_exit("match_string not implmeneted\n");
+}
+
 void dsl_lua_take(void) {
     dsl_lua_get_parameters(4);
-    printf("HERE\n");
     int32_t who = atoi(lparams.params[2]);
     int32_t item = atoi(lparams.params[1]);
     if (who == PARTY) {
@@ -689,16 +1024,43 @@ void dsl_lua_tport(void) {
     }
 }
 
+void dsl_lua_bitsnoop(void) {
+    dsl_lua_get_parameters(2);
+    lprintf("if %s & %s == %s then\n", lparams.params[0], lparams.params[1], lparams.params[1]);
+    lua_depth++;
+    lprintf("accum = 1\n");
+    lua_depth--;
+    lprintf("else\n");
+    lua_depth++;
+    lprintf("accum = 0\n");
+    lua_depth--;
+    lprintf("end\n");
+}
+
+void dsl_lua_award(void) {
+    dsl_lua_get_parameters(2);
+    lprintf("if %s == %d then\n", lparams.params[0], ALL);
+    lua_depth++;
+    lprintf("accum = accum\n");
+    lua_depth--;
+    lprintf("else if %s == %d then\n", lparams.params[0], PARTY);
+    lua_depth++;
+    lprintf("dsl.award_party(%s)\n", lparams.params[1]);
+    lua_depth--;
+    lprintf("else\n");
+    lua_depth++;
+    lprintf("dsl.award_object(%s, %s)\n", lparams.params[0], lparams.params[1]);
+    lua_depth--;
+    lprintf("end\n");
+}
+
 void dsl_lua_request(void) {
     dsl_lua_get_parameters(4);
-    dsl_request_impl(
-        atoi(lparams.params[0]),
-        atoi(lparams.params[1]),
-        atoi(lparams.params[2]),
-        atoi(lparams.params[3])
-    );
-    //set_accumulator(dsl_request_impl(param.val[0], param.val[1], param.val[2], param.val[3]));
-    lprintf("--dsl_lua_request not implemented....\n");
+    lprintf("accum = dsl.request(%s, %s, %s, %s)\n",
+        (lparams.params[0]),
+        (lparams.params[1]),
+        (lparams.params[2]),
+        (lparams.params[3]));
 }
 
 void dsl_lua_byte_dec(void) {
@@ -760,6 +1122,42 @@ void dsl_lua_clone(void) {
         //header_num, qty, x, y, priority, placement);
 }
 
+void dsl_lua_changemoney(void) {
+    char buf[BUF_SIZE];
+    dsl_lua_read_number(buf, BUF_SIZE);
+    lprintf("dsl.give_money(%s)\n", buf);
+}
+
+void dsl_lua_setvar(void) {
+    lua_exit("setvar not implemented");
+}
+
+void dsl_lua_toggle_accum(void) {
+    lprintf("accum = !accum\n");
+}
+
+void dsl_lua_getstatus(void) {
+    char buf[BUF_SIZE];
+    dsl_lua_read_number(buf, BUF_SIZE);
+    lprintf("accum = dsl.get_character_status(%s);\n", buf);
+}
+
+void dsl_lua_getlos(void) {
+    dsl_lua_get_parameters(3);
+    lprintf("accum = dsl.los(%s, %s, %s) -- los from %s to %s < %s\n",
+        lparams.params[0], lparams.params[1], lparams.params[2],
+        lparams.params[0], lparams.params[1], lparams.params[2]);
+}
+
+void dsl_lua_long_times_equal(void) {
+    dsl_lua_get_parameters(2);
+    lprintf("--*lparams.params[0] *= lparams.params[1]\n");
+}
+
+void dsl_lua_jump(void) {
+    lua_exit("jump not implemented!\n");
+}
+
 void dsl_lua_local_sub(void) {
     char buf[BUF_SIZE];
     dsl_lua_read_number(buf, BUF_SIZE);
@@ -775,9 +1173,9 @@ void dsl_lua_global_sub(void) {
 }
 
 void dsl_lua_local_ret(void) {
-    lprintf("--return\n");
     in_func = 0;
     lua_depth--;
+    lprintf("end --return\n");
 }
 
 static void do_damage(int is_percent) {
@@ -825,19 +1223,19 @@ void dsl_lua_word_plus_equal(void) {
 
 void dsl_lua_word_minus_equal(void) {
     dsl_lua_get_parameters(2);
-    lua_exit("word -= not implemented\n");
+    lprintf("--*((uint16_t *)lparams.params[0]) -= lparam.params[1];\n");
     //*((uint16_t *)param.ptr[0]) -= param.val[1];
 }
 
 void dsl_lua_word_times_equal(void) {
     dsl_lua_get_parameters(2);
-    lua_exit("word *= not implemented\n");
+    lprintf("--*((uint16_t *)lparams.params[0]) *= lparam.params[1];\n");
     //*((uint16_t *)param.ptr[0]) *= param.val[1];
 }
 
 void dsl_lua_word_divide_equal(void) {
     dsl_lua_get_parameters(2);
-    lua_exit("word /= not implemented\n");
+    lprintf("--*((uint16_t *)lparams.params[0]) /= lparam.params[1];\n");
     //*((uint16_t *)param.ptr[0]) /= param.val[1];
 }
 
@@ -875,6 +1273,17 @@ static void dsl_lua_load_var() {
 }
 
 /********* EXTRA variable functions ********/
+static void dsl_lua_write_complex_var() {
+    uint16_t depth = 0;
+    int16_t header = 0;
+    uint16_t element[MAX_SEARCH_STACK];
+    memset(element, 0x0, sizeof(uint16_t) * MAX_SEARCH_STACK);
+    if (dsl_lua_access_complex(&header, &depth, element) == 1) {
+        lprintf("--complex_write: I need to write 'accum' to header (%d) at depth (%d)\n", header, depth);
+        //smart_write_data(header, depth, element, data);
+    }
+}
+
 static void dsl_lua_load_variable() {
     int8_t extended = 0;
     uint8_t datatype;
@@ -894,10 +1303,8 @@ static void dsl_lua_load_variable() {
         //load_simple_variable(datatype, varnum, 0);
         dsl_lua_load_simple_variable(datatype, varnum);
     } else {
-        warn("------------NEED TO DEBUG WRITE COMPLEX VAR------------\n");
-        warn("write complex_var not implemented!\n");
-        exit(1);
-        //write_complex_var(accum);
+        dsl_lua_write_complex_var();
+        //lua_exit("write complex_var not implemented!\n");
     }
 }
 
@@ -911,6 +1318,10 @@ void dsl_lua_ifis(void) {
     lprintf("--compare = YES\n");
 }
 
+void dsl_lua_clearpic(void) {
+    lprintf("dsl.narrate_open(NAR_PORTRAIT, NULL, 0) -- clearpic\n");
+}
+
 void dsl_lua_orelse(void) {
     char buf[BUF_SIZE];
     dsl_lua_read_number(buf, BUF_SIZE);
@@ -922,9 +1333,10 @@ void dsl_lua_orelse(void) {
 }
 
 void dsl_lua_exit(void) {
-    lua_depth--;
-    lprintf("end\n");
-    in_func = 0;
+    //lua_depth--;
+    lprintf("return --lua_exit\n");
+    //lua_depth--;
+    //in_func = 0;
 }
 
 void dsl_lua_clear_los(void) {
@@ -986,19 +1398,17 @@ static void dsl_lua_load_simple_variable(uint16_t type, uint16_t vnum) {
 
 void dsl_lua_read_number(char *buf, const size_t size) {
     int32_t paren_level = 0;
-    int8_t found_operator = 0; // did we find an operation?
     int8_t do_next;
     int16_t opstack[MAX_PARENS];
     int32_t accums[MAX_PARENS];
     //char taccum[BUF_SIZE];
     int16_t cop, next_op; // current operation
-    int32_t cval = 0, tval = 0; // current value, temporary value
+    int32_t cval = 0; // current value, temporary value
     int buf_pos = 0;
     memset(opstack, 0, sizeof(opstack));
     memset(accums, 0, sizeof(accums));
     do {
      //   taccum[0] = '\0';
-        found_operator = 0;
         do_next = 0;
         //printf("buf_pos = %d\n", buf_pos);
         cop = get_byte(); // current operation
@@ -1006,6 +1416,7 @@ void dsl_lua_read_number(char *buf, const size_t size) {
         if (cop < 0x80) {
             cval = cop * 0x100 + get_byte();
             //debug("immediate = %d\n", cval);
+            buf_pos += snprintf(buf + buf_pos, size - buf_pos, "%d", cval);
         } else {
             if (cop < OPERATOR_OFFSET) {
                 if (cop & EXTENDED_VAR) { // variable is > 255
@@ -1065,8 +1476,9 @@ void dsl_lua_read_number(char *buf, const size_t size) {
                 case DSL_IMMED_BIGNUM|0x80: {
                     //cval = (int32_t)((int16_t)get_word()) * 655356L 
                          //+ (int32_t)((uint16_t)get_word());
-                    lua_exit("DSL_IMMED_BIGNUM not implemented!\n");
-                    //debug("DSL_IMMED_BIGNUM, cval = %d\n", cval);
+                    cval = (int32_t)dsl_lua_get_word() * (int32_t)655356L;
+                    cval += (int32_t)dsl_lua_get_word();
+                    buf_pos += snprintf(buf + buf_pos, size - buf_pos, "%d", cval);
                     break;
                 }
                 case DSL_IMMED_BYTE|0x80: {
@@ -1189,7 +1601,7 @@ void dsl_lua_read_number(char *buf, const size_t size) {
                         //exit(1);
                     //}
                     --paren_level;
-                    printf("CLOSEbuf_pos = %d\n", buf_pos);
+                    //printf("CLOSEbuf_pos = %d\n", buf_pos);
                     buf_pos += snprintf(buf + buf_pos, size - buf_pos, ")");
                     //printf("buf = '%s'\n", buf);
                     break;
@@ -1201,48 +1613,13 @@ void dsl_lua_read_number(char *buf, const size_t size) {
                 }
             }
         }
-        
-        if (!found_operator) {
-            if (opstack[paren_level]) {
-                lua_exit("Operators not implemented!\n");
-            }
-            tval = accums[paren_level];
-            //printf("operator not found, opstack[%d] = 0x%x, tval = %d\n", paren_level, opstack[paren_level], tval);
-            //debug("operator: %d\n", opstack[paren_level]);
-            switch(opstack[paren_level]) {
-                case DSL_PLUS:   tval += cval; break;
-                case DSL_MINUS:  tval -= cval; break;
-                case DSL_MULT:   tval *= cval; break;
-                case DSL_DIV:    
-                    if (cval == 0) {
-                        fprintf(stderr, "ERROR: trying to divide by 0!\n");
-                        tval = 0;
-                    } else {
-                        tval /= cval; 
-                    }
-                    break;
-                case DSL_AND:    tval = (tval && cval); break;
-                case DSL_OR:     tval = (tval || cval); break;
-                case DSL_EQUAL:  tval = (tval == cval); break;
-                case DSL_NEQUAL: tval = (tval != cval); break;
-                case DSL_GT:     tval = (tval > cval); break;
-                case DSL_LT:     tval = (tval < cval); break;
-                case DSL_BAND:   tval = (tval & cval); break;
-                case DSL_BOR:    tval = (tval | cval); break;
-                case DSL_CLR:    tval &= ~cval; break;
-                default:         tval = cval; break;
-            }
-            accums[paren_level] = tval;
-            opstack[paren_level] = 0;
-            //printf("tval = %d, cval = %d\n", tval, cval);
-        }
     } while (do_next || 
         (((next_op = preview_byte(0)) > OPERATOR_OFFSET && next_op <= OPERATOR_LAST)
             || (paren_level > 0 && next_op == DSL_HI_CLOSE_PAREN)));
     // We need to look if that above else was executed!
     //printf("accums[0] = %d\n", accums[0]);
     //return accums[0];
-    printf("exiting with buf_pos = %d, buf = '%s'\n", buf_pos, buf);
+    //printf("exiting with buf_pos = %d, buf = '%s'\n", buf_pos, buf);
     return;
 }
 
@@ -1277,10 +1654,10 @@ static uint8_t dsl_lua_access_complex(int16_t *header, uint16_t *depth, uint16_t
         }
     }
     *depth = get_byte();
-    debug("--access_compledx:depth = %d\n", *depth);
+    //debug("--access_compledx:depth = %d\n", *depth);
     for (i = 1; i <= *depth; i++) {
         element[i-1] = get_byte();
-        debug("--access_complex:element[%d] = %d\n", i-1, element[i-1]);
+        //debug("--access_complex:element[%d] = %d\n", i-1, element[i-1]);
     }
 
     return 1;
@@ -1313,7 +1690,7 @@ static int32_t dsl_lua_read_complex(void) {
     memset(element, 0x0, sizeof(uint16_t) * MAX_SEARCH_STACK);
 
     if (dsl_lua_access_complex(&header, &depth, element) == 1) {
-        printf("--read_complex:reading header (%d) at depth (%d)\n", header, depth);
+        lprintf("--read_complex:reading header (%d) at depth (%d)\n", header, depth);
         ret = dsl_lua_get_complex_data(header, depth, element);
         return ret;
     } else {
@@ -1385,7 +1762,8 @@ int dsl_lua_read_simple_num_var(char *buf, const size_t buf_size) {
             break;
         }
         case DSL_LSTRING: {
-            lua_exit ("DSL_LString not implemented.\n");
+            return snprintf(buf, buf_size, "dsl_local_string[%d]", temps16);
+            //lua_exit ("DSL_LString not implemented.\n");
             /*
             gBignumptr = (int32_t*) dsl_local_strings[temps16];
             debug("reading lstring @ %d is equal to '%s'\n", temps16, (char*)gBignumptr);

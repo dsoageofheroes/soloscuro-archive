@@ -44,7 +44,7 @@ void dsl_init() {
     dsl_init_vars();
     dsl_object_init();
     dsl_execute_init();
-    dsl_lua_load_master_gff();
+    dsl_lua_load_scripts();
     info("Running Master DSL #99.\n");
     dsl_execute_subroutine(99, 0, 1);
 }
