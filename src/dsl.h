@@ -33,6 +33,7 @@ void dsl_change_region(const int region_id);
 int do_dsl_command(uint8_t cmd);
 uint32_t dsl_request_impl(int16_t token, int16_t name,
         int32_t num1, int32_t num2);
+void dsl_cleanup();
 
 /* Parsing functions */
 uint8_t peek_one_byte();

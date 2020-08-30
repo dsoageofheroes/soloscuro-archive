@@ -914,7 +914,8 @@ static const struct luaL_Reg lslib [] = {
 int luaopen_libds (lua_State *L){
     debug("Registering functions...\n");
     fflush(stdout);
-    luaL_register(L, "libds", lslib);
+    printf("lslib = %p\n", lslib);
+    //luaL_register(L, "libds", lslib);
     debug("Functions Registered.\n");
     return 1;
 }

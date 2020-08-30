@@ -6,9 +6,9 @@ SDL_DEPS  = $(wildcard sdl/*.h)
 OBJS      = $(SRCS:src/%.c=obj/%.o)
 SDL_OBJS  = $(SDL_SRCS:sdl/%.c=obj/%.o)
 LIB_EXT   = so
-#CFLAGS    = -g -I src/ -I ext/ -L./ -Werror -Wall -llua5.1 -lxmimidi -O2 -DDEBUG=1 -fPIC
-CFLAGS    = -g -I src/ -I ext/ -L./ -Werror -Wall -llua5.1 -lxmimidi -DDEBUG=1 -fPIC
-SDL_FLAGS = -g -I src/ -I sdl/ -I ext/ -L./ -Werror -Wall -llua5.1 -lxmimidi -O2 -DDEBUG=1 
+#CFLAGS    = -g -I src/ -I ext/ -L./ -Werror -Wall -llua5.3 -lxmimidi -O2 -DDEBUG=1 -fPIC
+CFLAGS    = -g -I src/ -I ext/ -L./ -Werror -Wall -llua5.3 -lxmimidi -DDEBUG=1 -fPIC
+SDL_FLAGS = -g -I src/ -I sdl/ -I ext/ -L./ -Werror -Wall -llua5.3 -lxmimidi -O2 -DDEBUG=1 
 
 .PHONY: clean test all
 

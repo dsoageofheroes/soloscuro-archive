@@ -171,6 +171,7 @@ static void print_name_check(int check_index) {
     debug("When I %s to '%s' (%d) goto file: %d, addr: %d, global = %d\n",
         debug_index_names[check_index], get_so_name(so), new_name.name,
         new_name.file, new_name.addr, new_name.global);
+    free(so);
 }
 
 void generic_name_check(int check_index) {
@@ -336,6 +337,14 @@ void dsl_init_vars() {
         check[i].next = i + 1;
     }
     check[DSL_CHECKS - 1].next = NULL_CHECK;
+}
+
+void dsl_cleanup_vars() {
+    free(dsl_global_bnums);
+    free(dsl_global_nums);
+    free(dsl_local_bnums);
+    free(dsl_local_nums);
+    free(check);
 }
 
 void set_data_ptr(unsigned char *start, unsigned char *cpos) {

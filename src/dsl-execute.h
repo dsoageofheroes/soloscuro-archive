@@ -5,6 +5,7 @@
 
 void dsl_execute_subroutine(const int file, const int addr, const int is_mas);
 void dsl_execute_init();
+void dsl_execute_cleanup();
 void dsl_select_menu(int option);
 void dsl_resume_dialog();
 int32_t data_field(int16_t header, uint16_t fi);

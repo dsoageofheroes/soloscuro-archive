@@ -11,6 +11,7 @@ enum {
     NAR_EDIT_BOX
 };
 
-int8_t narrate_open(int16_t action, char *text, int16_t index);
+int8_t narrate_open(int16_t action, const char *text, int16_t index);
+void narrate_select_menu(int option);
 
 #endif

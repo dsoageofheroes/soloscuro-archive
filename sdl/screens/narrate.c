@@ -29,14 +29,20 @@ static int end_received = 0, close_received = 0;
 static uint32_t portrait_index = 0;
 static char narrate_text[MAX_TEXT];
 static size_t text_pos = 0;
+static int menu_pos = 0;
 static char menu_options[MAX_OPTIONS][MAX_LINE];
 
 static void clear() {
+    int i;
     display = 0;
     display_menu = 0;
     text_pos = 0;
     end_received = 0;
     close_received = 0;
+    menu_pos = 0;
+    for (i = 0; i < MAX_OPTIONS; i++) {
+        menu_options[i][0] = '\0';
+    }
 }
 
 void load_portraits(SDL_Renderer *renderer) {
@@ -144,6 +150,15 @@ void print_menu(SDL_Renderer *renderer) {
     }
 }
 
+void port_narrate_clear() {
+    clear();
+}
+
+void port_narrate_close() {
+    display = 0;
+    clear();
+}
+
 void narrate_render(void *data, SDL_Renderer *renderer) {
     if (display) {
         SDL_RenderCopy(renderer, background, NULL, &background_loc);
@@ -178,18 +193,14 @@ static void add_text(const char *to_add) {
     text_pos += len;
 }
 
-int8_t narrate_open_sdl(int16_t action, char *text, int16_t index) {
+int8_t port_narrate_open(int16_t action, const char *text, int16_t index) {
     display = 1; // start off as off
     switch(action) {
         case NAR_ADD_MENU:
             display_menu = 1;
-            warn("I need to add_menu with index %d, text = '%s'\n", index, text);
-            if (index < 0 || index >= MAX_OPTIONS) {
-                error ("index (%d) is out of bound for menu!\n", index);
-                exit(1);
-            }
-            strncpy(menu_options[index], text, MAX_LINE);
-            menu_options[index][MAX_LINE-1] = '\0'; // guard
+            //warn("I need to add_menu with index %d, text = '%s'\n", index, text);
+            strncpy(menu_options[menu_pos], text, MAX_LINE);
+            menu_options[menu_pos++][MAX_LINE-1] = '\0'; // guard
             break;
         case NAR_PORTRAIT:
             portrait_index = index;
@@ -221,16 +232,16 @@ int narrate_handle_mouse_click(const uint32_t x, const uint32_t y) {
     int y_test = 516;
     if (display_menu) {
         if (x >= 150 && x <= 600) {
-            for (int i = 0; i < 8; i++) {
+            for (int i = 1; i < 8; i++) {
                 if (y >= y_test  && y < y_test + height) {
-                    clear();
-                    dsl_select_menu(i);
+                    narrate_select_menu(i);
                     return 1;
                 }
                 y_test += height;
             }
         }
     }
+    /*
     if (display && !display_menu) {
         int call_resume = !end_received && !close_received;
         clear();
@@ -241,6 +252,7 @@ int narrate_handle_mouse_click(const uint32_t x, const uint32_t y) {
 
         return 1;
     }
+    */
     return 0; // zero means I did not handle the mouse click, so another screen may.
 }
 

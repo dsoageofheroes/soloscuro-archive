@@ -1,26 +1,27 @@
 #include "dsl.h"
+#include "dsl-state.h"
 
 enum requests {
     REQUEST_NONE, //0
-    HEALING, //1
-    DOOR, //2
-    THIEFSKILL, //3
-    REST, //4
-    ANIMATION, //5
-    CINEMATIC, //6
-    TRAP, //7
+    REQUEST_HEALING, //1
+    REQUEST_DOOR, //2
+    REQUEST_THIEFSKILL, //3
+    REQUEST_REST, //4
+    REQUEST_ANIMATION, //5
+    REQUEST_CINEMATIC, //6
+    REQUEST_TRAP, //7
     REQUEST_MONSTER, //8
-    SWAP, //9
-    SET_BLOCK, //10
-    CLEAR_BLOCK, //11
-    SET_LOS, //12
-    CLEAR_LOS, //13
+    REQUEST_SWAP, //9
+    REQUEST_SET_BLOCK, //10
+    REQUEST_CLEAR_BLOCK, //11
+    REQUEST_SET_LOS, //12
+    REQUEST_CLEAR_LOS, //13
     REQUEST_BATTLE_DEMO, //14
-    SET_GAME_MOVE, //15
-    BRANCH_MUSIC, //16
-    FLASH_ANIMATION, //17
-    SET_ALLEGIANCE, //18
-    END_GAME, //19
+    REQUEST_SET_GAME_MOVE, //15
+    REQUEST_BRANCH_MUSIC, //16
+    REQUEST_FLASH_ANIMATION, //17
+    REQUEST_SET_ALLEGIANCE, //18
+    REQUEST_END_GAME, //19
     REQUEST_COUNT_COMBAT, //20
     REQUEST_DIFFICULT_LEVEL, //21
     REQUEST_END_TURN, //22
@@ -144,61 +145,68 @@ void camp(int16_t instr, int16_t hours, int16_t who) {
 
 uint32_t dsl_request_impl(int16_t token, int16_t name,
         int32_t num1, int32_t num2) {
+    unsigned long len;
     int answer = 0;
+    disk_object_t *obj = NULL;
+
     switch (token) {
-        case HEALING:
+        case REQUEST_HEALING:
             debug("Time to camp!\n");
             camp(CAMP_RESURRECT, num1, num2);
             break;
-        case DOOR:
+        case REQUEST_DOOR:
             debug("I need to do operation %d on door %d\n", num2, num1);
             break;
-        case THIEFSKILL:
+        case REQUEST_THIEFSKILL:
             debug("I need to run a thief skill on %d, skill %d, bonus %d\n", name, num1, num2);
             break;
-        case REST:
+        case REQUEST_REST:
             debug("request REST not implemented\n");
             command_implemented = 0;
             break;
-        case ANIMATION:
+        case REQUEST_ANIMATION:
             request_to_do(name, DO_TO_ALL, req_animation, num1, num2);
             break;
-        case CINEMATIC:
+        case REQUEST_CINEMATIC:
             debug("I need to play the %d cinematic\n", num1);
             break;
-        case TRAP:
+        case REQUEST_TRAP:
             debug("I need to lay a trap of type %d, at %d with %d\n", name, num1, num2);
             break;
         case REQUEST_MONSTER:
             debug("I need to request a monster %d, %d\n", num1, num2);// Not helpful, I know...
             break;
-        case SWAP:
+        case REQUEST_SWAP:
+            obj = gff_get_object(num1);
+            if (!obj) { error("Unable to satisfy REQUEST_SWAP, not obj: %d\n", num1); }
+            char *data = gff_get_raw_bytes(OBJEX_GFF_INDEX, GT_BMP, obj->bmp_id, &len);
+            printf("data = %p\n", data);
             if (name > 0) {
                 debug("I need to swap to %d from disk id %d with flags %d\n", name, num1, num2);
             } else {
                 debug("I need to swap to iObjectIx from disk id %d with flags %d\n", num1, num2);
             }
             break;
-        case SET_BLOCK:
+        case REQUEST_SET_BLOCK:
             debug("Need to set the bit flags for map position (%d, %d) to %d & commit!\n", num1, num2, GB_BLOCK);
             break;
-        case CLEAR_BLOCK:
+        case REQUEST_CLEAR_BLOCK:
             debug("I need to clear the block at (%d, %d) with flags %d\n", num1, num2, GB_BLOCK);
             break;
-        case SET_LOS:
+        case REQUEST_SET_LOS:
             debug("request SET_LOS not implemented\n");
             command_implemented = 0;
             break;
-        case CLEAR_LOS:
+        case REQUEST_CLEAR_LOS:
             debug("I need to CLEAR_LOS, whatever that means...\n");
             break;
         case REQUEST_BATTLE_DEMO:
             debug("request REQUEST_BATTLE_DEMO: Need to call lua or something to run the demo!\n");
             break;
-        case SET_GAME_MOVE:
+        case REQUEST_SET_GAME_MOVE:
             debug("I need to set the game back to regular moving around (not combat/look/xfer/target).\n");
             break;
-        case BRANCH_MUSIC:
+        case REQUEST_BRANCH_MUSIC:
             switch(num2) {
                 case 0:
                     debug("I need to stop music and play %d\n", num1);
@@ -219,13 +227,13 @@ uint32_t dsl_request_impl(int16_t token, int16_t name,
                     break;
             }
             break;
-        case FLASH_ANIMATION:
+        case REQUEST_FLASH_ANIMATION:
             debug("I need to flash (-)%d at (%d, %d)\n", name, num1, num2);
             break;
-        case SET_ALLEGIANCE:
+        case REQUEST_SET_ALLEGIANCE:
             request_to_do(name, DO_COMBAT, req_set_allegiance, num1, num2);
             break;
-        case END_GAME:
+        case REQUEST_END_GAME:
             debug("Request END_GAME: end game and start over...\n");
             break;
         case REQUEST_COUNT_COMBAT:

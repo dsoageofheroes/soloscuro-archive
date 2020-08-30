@@ -174,6 +174,7 @@ extern uint16_t this_gpl_type;
 extern lua_State *lua_state;
 
 void dsl_init_vars();
+void dsl_cleanup_vars();
 
 void load_variable();
 void read_simple_num_var();

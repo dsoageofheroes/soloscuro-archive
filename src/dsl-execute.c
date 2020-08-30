@@ -10,6 +10,7 @@
 #include "dsl-scmd.h"
 #include "dsl-string.h"
 #include "dsl-var.h"
+#include "gameloop.h"
 
 #define MAX_OBJECTS        (1500)
 #define MAX_OBJECT_ENTRIES (2000)
@@ -343,6 +344,10 @@ static void move_dsl_ptr(uint16_t dest) {
 void dsl_execute_init() {
     compareval = malloc(sizeof(int32_t) * MAX_COMPAREDEPTH);
     memset(compareval, 0x0, sizeof(int32_t) * MAX_COMPAREDEPTH);
+}
+
+void dsl_execute_cleanup() {
+    free(compareval);
 }
 
 static box_t get_box(param_t *p) {
@@ -1137,8 +1142,9 @@ void dsl_select_menu(int option) {
     }
     menu_count = 0;
     debug ("option %d selected, which should go to: %d\n", option, menu_functions[option]);
-    set_data_ptr(get_data_start_ptr(), get_data_start_ptr() + menu_functions[option]);
-    resume_execution();
+    //set_data_ptr(get_data_start_ptr(), get_data_start_ptr() + menu_functions[option]);
+    //resume_execution();
+    //signal_exit(0);
 }
 
 void dsl_resume_dialog() {

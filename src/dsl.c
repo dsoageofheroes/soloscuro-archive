@@ -3,9 +3,13 @@
 #include <stdlib.h>
 #include "dsl.h"
 #include "dsl-execute.h"
-#include "dsl-lua.h"
+#include "dsl-manager.h"
+#include "dsl-state.h"
 #include "dsl-string.h"
 #include "dsl-var.h"
+#include "gameloop.h"
+#include "replay.h"
+#include "trigger.h"
 
 #define DSL_ORDER     (0)
 #define DSL_LOS_ORDER (1)
@@ -26,7 +30,10 @@ param_t param;
 /* End Globals */
 
 void dsl_change_region(const int region_id) {
-    dsl_execute_subroutine(region_id, 0, 1);
+    //dsl_execute_subroutine(region_id, 0, 1);
+    replay_print("rep.change_region(%lld)\n", region_id);
+    dsl_set_region(region_id);
+    dsl_lua_execute_script(region_id, 0, 1);
 }
 
 static void initialize_dsl_stack() {
@@ -43,9 +50,22 @@ void dsl_init() {
     initialize_dsl_stack();
     dsl_init_vars();
     dsl_object_init();
+    gameloop_init();
+    trigger_init();
     dsl_execute_init();
-    dsl_lua_load_scripts();
+    dsl_manager_init();
     info("Running Master DSL #99.\n");
-    dsl_execute_subroutine(99, 0, 1);
+    //dsl_execute_subroutine(99, 0, 1);
+    dsl_lua_execute_script(99, 0, 1);
 }
 
+void dsl_cleanup() {
+    free(gTextstring);
+    free(dsl_local_strings);
+    free(dsl_global_strings);
+    dsl_object_cleanup();
+    dsl_cleanup_vars();
+    dsl_manager_cleanup();
+    dsl_execute_cleanup();
+    trigger_cleanup();
+}

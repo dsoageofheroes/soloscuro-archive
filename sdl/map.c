@@ -2,7 +2,9 @@
 #include "map.h"
 #include "animate.h"
 #include "../src/dsl.h"
+#include "../src/trigger.h"
 #include "../src/dsl-execute.h"
+#include "../src/dsl-manager.h"
 #include "../src/dsl-region.h"
 #include "../src/dsl-scmd.h"
 #include "../src/dsl-var.h"
@@ -193,28 +195,41 @@ int map_handle_mouse_click(const uint32_t x, const uint32_t y) {
     if (obj_id >= 0) {
         gff_map_object_t* mo = get_map_object(cmap->region->gff_file, cmap->region->map_id, obj_id);
         debug("Clicked on object: %d\n", abs(mo->index));
-        dsl_check_t* check = dsl_find_check(TALK_TO_CHECK_INDEX, mo->index);
-        if (check) {
-            debug("TALK CHECK: Need to execute file = %d, addr = %d, global = %d\n",
-                check->data.name_check.file, check->data.name_check.addr,
-                check->data.name_check.global);
-            dsl_execute_subroutine(check->data.name_check.file,
-                check->data.name_check.addr, 0);
+        talk_click(mo->index);
+        //dsl_check_t* check = dsl_find_check(TALK_TO_CHECK_INDEX, mo->index);
+        /*
+        talkto_trigger_t tt = get_talkto_trigger(mo->index);
+        look_trigger_t lt = get_look_trigger(mo->index);
+        //printf("---------->tt.obj = %d\n", tt.obj);
+        //printf("---------->lt.obj = %d\n", lt.obj);
+        if (tt.obj == mo->index) {
+            dsl_lua_execute_script(tt.file, tt.addr, 0);
         }
-        check = dsl_find_check(LOOK_CHECK_INDEX, mo->index);
-        if (check) {
-            debug("LOOK CHECK: Need to execute file = %d, addr = %d, global = %d\n",
-                check->data.name_check.file, check->data.name_check.addr,
-                check->data.name_check.global);
-            dsl_execute_subroutine(check->data.name_check.file,
-                check->data.name_check.addr, 0);
+        if (lt.obj == mo->index) {
+            dsl_lua_execute_script(lt.file, lt.addr, 0);
         }
+        */
+        //if (check) {
+            //debug("TALK CHECK: Need to execute file = %d, addr = %d, global = %d\n",
+                //check->data.name_check.file, check->data.name_check.addr,
+                //check->data.name_check.global);
+            //dsl_execute_subroutine(check->data.name_check.file,
+                //check->data.name_check.addr, 0);
+        //}
+        //check = dsl_find_check(LOOK_CHECK_INDEX, mo->index);
+        //if (check) {
+            //debug("LOOK CHECK: Need to execute file = %d, addr = %d, global = %d\n",
+                //check->data.name_check.file, check->data.name_check.addr,
+                //check->data.name_check.global);
+            //dsl_execute_subroutine(check->data.name_check.file,
+                //check->data.name_check.addr, 0);
+        //}
         //debug("manually calling %d: %d\n", 5, 341);
             //dsl_execute_subroutine(5, 341, 0);
-        debug("Searching other checks...\n");
-        for (int i = 1; i < MAX_CHECK_TYPES; i++) {
-            debug("check[%d] = %p\n", i, dsl_find_check(i, mo->index));
-        }
+        //debug("Searching other checks...\n");
+        //for (int i = 1; i < MAX_CHECK_TYPES; i++) {
+            //debug("check[%d] = %p\n", i, dsl_find_check(i, mo->index));
+        //}
     }
     return 1; // map always intercepts the mouse...
 }

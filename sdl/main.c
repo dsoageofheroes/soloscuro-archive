@@ -3,34 +3,21 @@
 #include "map.h"
 #include "player.h"
 #include "screen-manager.h"
+#include "../src/port.h"
 #include "../src/dsl.h"
 #include "../src/gameloop.h"
 
-static char *ds1_gffs = NULL;
 static uint32_t last_tick = 0;
 static const uint32_t TICK_AMT = 1000 / TICKS_PER_SEC;// Not fully correct...
 static SDL_Window *win = NULL;
 static SDL_Surface *screen = NULL;
 static SDL_Renderer *renderer = NULL;
-static void free_everything();
 
 static uint32_t xmappos, ymappos;
 
 const uint32_t getCameraX() { return xmappos; }
 const uint32_t getCameraY() { return ymappos; }
 
-void parse_args(int argc, char *argv[]) {
-    for (int i = 0; i < argc; i++) {
-        if (!strcmp(argv[i], "--ds1") && i < (argc-1)) {
-            ds1_gffs = argv[++i];
-        }
-    }
-
-    if (!ds1_gffs) {
-        error("Unable to get the location of the DarkSun 1 GFFs, please pass with '--ds1 <location>'\n");
-        exit(1);
-    }
-}
 
 void handle_mouse_motion() {
     int x, y;
@@ -54,17 +41,20 @@ void handle_input() {
     while (SDL_PollEvent(&event) != 0) {
         switch(event.type) {
             case SDL_QUIT:
-                signal_exit();
+                game_loop_signal(WAIT_FINAL, 0);
                 break;
             case SDL_KEYDOWN:
                 if (event.key.keysym.sym == SDLK_ESCAPE) {
-                    signal_exit();
+                    game_loop_signal(WAIT_FINAL, 0);
                 }
                 break;
             case SDL_MOUSEMOTION:
                 handle_mouse_motion();
                 break;
             case SDL_MOUSEBUTTONDOWN:
+                if (game_loop_is_waiting_for(WAIT_NARRATE_CONTINUE)) {
+                    game_loop_signal(WAIT_NARRATE_CONTINUE, 0);
+                }
                 handle_mouse_click();
                 break;
         }
@@ -102,16 +92,9 @@ void tick() {
     }
 }
 
-int main(int argc, char *argv[]) {
-    parse_args(argc, argv);
-
+void port_init(int args, char *argv[]) {
     xmappos = 560;
     ymappos = 50;
-
-    // Order matters.
-    gff_init();
-    gff_load_directory(ds1_gffs);
-    dsl_init();
 
     if (SDL_Init( SDL_INIT_VIDEO) ) {
         error( "Unable to init video!\n");
@@ -132,15 +115,15 @@ int main(int argc, char *argv[]) {
     last_tick = SDL_GetTicks();
 
     screen_init(renderer);
+}
 
-    game_loop();
-
-    free_everything();
+int main(int argc, char *argv[]) {
+    pmain(argc, argv);
 
     return 0;
 }
 
-void free_everything() {
+void port_cleanup() {
     screen_free();
 
     //Destroy window

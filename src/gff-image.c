@@ -81,6 +81,7 @@ gff_palette_t* create_palettes(int gff_index, unsigned int *len) {
             }
         }
         debug("loaded %d palettes, total = %d\n", (int)pal_chunk->chunkCount, (int)num_palettes);
+        free(ids);
         return cpal;
     }
 

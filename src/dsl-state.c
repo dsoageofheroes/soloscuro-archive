@@ -1,0 +1,465 @@
+#include "dsl.h"
+#include "dsl-manager.h"
+#include "dsl-narrate.h"
+#include "dsl-state.h"
+#include "gameloop.h"
+#include "port.h"
+#include "replay.h"
+#include "trigger.h"
+#include <lua5.3/lualib.h>
+#include <lua5.3/lauxlib.h>
+#include <string.h>
+#include <stdlib.h>
+
+#include "dsl-narrate.h"
+
+#define BUF_SIZE           (1<<12)
+#define MAX_GFLAGS         (800)
+#define MAX_LFLAGS         (64)
+#define MAX_GNUMS          (400)
+#define MAX_GBIGNUMS       (40)
+#define MAX_LBIGNUMS       (40)
+#define MAX_LNUMS          (32)
+#define MAX_GSTRS          (32)
+#define STRING_SIZE        (1024)
+#define MAX_GNAMES         (13)
+
+static int8_t dsl_global_flags[MAX_GFLAGS];
+static int8_t dsl_local_flags[MAX_LFLAGS];
+static int16_t dsl_global_nums[MAX_GNUMS];
+static int16_t dsl_local_nums[MAX_LNUMS];
+static int32_t dsl_global_bnums[MAX_GBIGNUMS];
+static int32_t dsl_local_bnums[MAX_LBIGNUMS];
+static char dsl_global_strs[MAX_GSTRS][STRING_SIZE];
+static int16_t dsl_gnames[MAX_GNAMES];
+static uint32_t dsl_region; // the current region id
+static uint32_t dsl_gff_index; // the current region id
+
+// Standard setters/getters
+void dsl_set_region(const uint32_t region) { 
+    char buf[BUF_SIZE];
+    snprintf(buf, BUF_SIZE, "rgn%x.gff", region);
+    dsl_region = region; 
+    dsl_gff_index = gff_find_index(buf);
+}
+uint32_t dsl_get_region()                  { return dsl_region; }
+uint32_t dsl_get_gff_index()               { return dsl_gff_index; }
+
+void dsl_state_init() {
+    memset(dsl_global_flags, 0x0, sizeof(int8_t) * MAX_GFLAGS);
+    memset(dsl_local_flags, 0x0, sizeof(int8_t) * MAX_LFLAGS);
+    memset(dsl_global_nums, 0x0, sizeof(int16_t) * MAX_GNUMS);
+    memset(dsl_local_nums, 0x0, sizeof(int16_t) * MAX_LNUMS);
+    memset(dsl_global_bnums, 0x0, sizeof(int32_t) * MAX_GBIGNUMS);
+    memset(dsl_local_bnums, 0x0, sizeof(int32_t) * MAX_LBIGNUMS);
+    memset(dsl_global_strs, 0x0, sizeof(char) * MAX_GSTRS * STRING_SIZE);
+    memset(dsl_gnames, 0x0, sizeof(int16_t) * MAX_GNAMES);
+    dsl_region = 0;
+}
+
+void dsl_state_cleanup() {
+}
+
+// Public to C library
+void dsl_set_gname(const int index, const int32_t obj) {
+    if (index < 0 || index > MAX_GNAMES) { return; }
+    dsl_gnames[index] = obj;
+}
+
+// Public to LUA
+static int set_gf(lua_State *l) {
+    lua_Integer id = luaL_checkinteger(l, 1);
+    lua_Integer val = luaL_checkinteger(l, 2);
+    if (id < 0 || id >= MAX_GFLAGS) {
+        printf("ERROR: %lld is out of range for global flags!\n", id);
+        exit(1);
+    }
+    dsl_global_flags[id] = val;
+    return 0;
+}
+
+static int get_gf(lua_State *l) {
+    lua_Integer id = luaL_checkinteger(l, 1);
+    if (id < 0 || id >= MAX_GFLAGS) {
+        printf("ERROR: %lld is out of range for global flags!\n", id);
+        exit(1);
+    }
+    lua_pushinteger(l, dsl_global_flags[id]);
+    return 1;
+}
+
+static int set_lf(lua_State *l) {
+    lua_Integer id = luaL_checkinteger(l, 1);
+    lua_Integer val = luaL_checkinteger(l, 2);
+    if (id < 0 || id >= MAX_LFLAGS) {
+        printf("ERROR: %lld is out of range for local flags!\n", id);
+        exit(1);
+    }
+    //printf("local_flag[%lld] := %lld\n", id, val);
+    dsl_local_flags[id] = val;
+    return 0;
+}
+
+static int get_lf(lua_State *l) {
+    lua_Integer id = luaL_checkinteger(l, 1);
+    if (id < 0 || id >= MAX_LFLAGS) {
+        printf("ERROR: %lld is out of range for local flags!\n", id);
+        exit(1);
+    }
+    //printf("local_flag[%lld] = %d\n", id, dsl_local_flags[id]);
+    lua_pushinteger(l, dsl_local_flags[id]);
+    return 1;
+}
+
+static int set_gn(lua_State *l) {
+    lua_Integer id = luaL_checkinteger(l, 1);
+    lua_Integer val = luaL_checkinteger(l, 2);
+    if (id < 0 || id >= MAX_GNUMS) {
+        printf("ERROR: %lld is out of range for global nums!\n", id);
+        exit(1);
+    }
+    dsl_global_nums[id] = val;
+    return 0;
+}
+
+static int get_gn(lua_State *l) {
+    lua_Integer id = luaL_checkinteger(l, 1);
+    if (id < 0 || id >= MAX_GNUMS) {
+        printf("ERROR: %lld is out of range for global nums!\n", id);
+        exit(1);
+    }
+    lua_pushinteger(l, dsl_global_nums[id]);
+    return 1;
+}
+
+static int set_ln(lua_State *l) {
+    lua_Integer id = luaL_checkinteger(l, 1);
+    lua_Integer val = luaL_checkinteger(l, 2);
+    if (id < 0 || id >= MAX_LNUMS) {
+        printf("ERROR: %lld is out of range for local nums!\n", id);
+        exit(1);
+    }
+    dsl_local_nums[id] = val;
+    return 0;
+}
+
+static int get_ln(lua_State *l) {
+    lua_Integer id = luaL_checkinteger(l, 1);
+    if (id < 0 || id >= MAX_LNUMS) {
+        printf("ERROR: %lld is out of range for local nums!\n", id);
+        exit(1);
+    }
+    lua_pushinteger(l, dsl_local_nums[id]);
+    return 1;
+}
+
+static int set_gbn(lua_State *l) {
+    lua_Integer id = luaL_checkinteger(l, 1);
+    lua_Integer val = luaL_checkinteger(l, 2);
+    if (id < 0 || id >= MAX_GBIGNUMS) {
+        error("ERROR: %lld is out of range for global big nums!\n", id);
+        exit(1);
+    }
+    dsl_global_bnums[id] = val;
+    return 0;
+}
+
+static int get_gbn(lua_State *l) {
+    lua_Integer id = luaL_checkinteger(l, 1);
+    if (id < 0 || id >= MAX_GBIGNUMS) {
+        error("ERROR: %lld is out of range for global big nums!\n", id);
+        exit(1);
+    }
+    lua_pushinteger(l, dsl_global_bnums[id]);
+    return 1;
+}
+
+static int set_lbn(lua_State *l) {
+    lua_Integer id = luaL_checkinteger(l, 1);
+    lua_Integer val = luaL_checkinteger(l, 2);
+    if (id < 0 || id >= MAX_LBIGNUMS) {
+        printf("ERROR: %lld is out of range for local big nums!\n", id);
+        exit(1);
+    }
+    dsl_local_bnums[id] = val;
+    return 0;
+}
+
+static int get_lbn(lua_State *l) {
+    lua_Integer id = luaL_checkinteger(l, 1);
+    if (id < 0 || id >= MAX_LBIGNUMS) {
+        printf("ERROR: %lld is out of range for local big nums!\n", id);
+        exit(1);
+    }
+    lua_pushinteger(l, dsl_local_bnums[id]);
+    return 1;
+}
+
+static int set_gstr(lua_State *l) {
+    lua_Integer id = luaL_checkinteger(l, 1);
+    const char *val = luaL_checkstring(l, 2);
+    if (id < 0 || id >= MAX_GSTRS) {
+        printf("ERROR: %lld is out of range for local big nums!\n", id);
+        exit(1);
+    }
+    strncpy(dsl_global_strs[id], val, STRING_SIZE);
+    return 0;
+}
+
+static int get_gstr(lua_State *l) {
+    lua_Integer id = luaL_checkinteger(l, 1);
+    if (id < 0 || id >= MAX_GSTRS) {
+        printf("ERROR: %lld is out of range for local big nums!\n", id);
+        exit(1);
+    }
+    lua_pushstring(l, dsl_global_strs[id]);
+    return 1;
+}
+
+static int get_gname(lua_State *l) {
+    lua_Integer id = luaL_checkinteger(l, 1);
+    if (id < 0 || id >= MAX_GNAMES) {
+        printf("ERROR: %lld is out of range for local big nums!\n", id);
+        exit(1);
+    }
+    lua_pushnumber(l, dsl_gnames[id]);
+    return 1;
+}
+
+static int read_complex(lua_State *l) {
+    lua_Integer obj = luaL_checkinteger(l, 1);
+    lua_Integer header = luaL_checkinteger(l, 1);
+    lua_Integer depth = luaL_checkinteger(l, 1);
+
+    warn("Need to implement read_complex(%lld, %lld, %lld)\n", obj, header, depth);
+
+    lua_pushinteger(l, 1);
+    return 1;
+}
+
+static int dsl_rand(lua_State *l) {
+    lua_pushinteger(l, rand());
+    return 1;
+}
+
+static int range(lua_State *l) {
+    const char *x = luaL_checkstring(l, 1);
+    const char *y = luaL_checkstring(l, 2);
+
+    printf("Must find range from '%s' to '%s'\n", x, y);
+    lua_pushinteger(l, 0);
+
+    return 1;
+}
+
+static int attack_trigger(lua_State *l) {
+    lua_Integer obj = luaL_checkinteger(l, 1);
+    lua_Integer file = luaL_checkinteger(l, 2);
+    lua_Integer addr = luaL_checkinteger(l, 3);
+
+    add_attack_trigger(obj, file, addr);
+    return 0;
+}
+
+static int attack_trigger_global(lua_State *l) {
+    lua_Integer obj = luaL_checkinteger(l, 1);
+    lua_Integer file = luaL_checkinteger(l, 2);
+    lua_Integer addr = luaL_checkinteger(l, 3);
+
+    add_attack_trigger_global(obj, file, addr);
+    return 0;
+}
+
+static int use_trigger(lua_State *l) {
+    lua_Integer obj = luaL_checkinteger(l, 1);
+    lua_Integer file = luaL_checkinteger(l, 2);
+    lua_Integer addr = luaL_checkinteger(l, 3);
+
+    add_use_trigger(obj, file, addr);
+    return 0;
+}
+
+static int use_trigger_global(lua_State *l) {
+    lua_Integer obj = luaL_checkinteger(l, 1);
+    lua_Integer file = luaL_checkinteger(l, 2);
+    lua_Integer addr = luaL_checkinteger(l, 3);
+
+    add_use_trigger_global(obj, file, addr);
+    return 0;
+}
+
+static int look_trigger(lua_State *l) {
+    lua_Integer obj = luaL_checkinteger(l, 1);
+    lua_Integer file = luaL_checkinteger(l, 2);
+    lua_Integer addr = luaL_checkinteger(l, 3);
+
+    add_look_trigger(obj, file, addr);
+    return 0;
+}
+
+static int look_trigger_global(lua_State *l) {
+    lua_Integer obj = luaL_checkinteger(l, 1);
+    lua_Integer file = luaL_checkinteger(l, 2);
+    lua_Integer addr = luaL_checkinteger(l, 3);
+
+    add_look_trigger_global(obj, file, addr);
+    return 0;
+}
+
+static int noorders_trigger(lua_State *l) {
+    lua_Integer obj = luaL_checkinteger(l, 1);
+    lua_Integer file = luaL_checkinteger(l, 2);
+    lua_Integer addr = luaL_checkinteger(l, 3);
+
+    add_noorders_trigger(obj, file, addr);
+    return 0;
+}
+
+static int talk_to_trigger(lua_State *l) {
+    lua_Integer obj = luaL_checkinteger(l, 1);
+    lua_Integer file = luaL_checkinteger(l, 2);
+    lua_Integer addr = luaL_checkinteger(l, 3);
+
+    add_talkto_trigger(obj, file, addr);
+    return 0;
+}
+
+static int use_with_trigger(lua_State *l) {
+    lua_Integer obj1 = luaL_checkinteger(l, 1);
+    lua_Integer obj2 = luaL_checkinteger(l, 2);
+    lua_Integer file = luaL_checkinteger(l, 3);
+    lua_Integer addr = luaL_checkinteger(l, 4);
+
+    add_usewith_trigger(obj1, obj2, file, addr);
+    return 0;
+}
+
+static int tile_trigger(lua_State *l) {
+    lua_Integer x = luaL_checkinteger(l, 1);
+    lua_Integer y = luaL_checkinteger(l, 2);
+    lua_Integer file = luaL_checkinteger(l, 3);
+    lua_Integer addr = luaL_checkinteger(l, 4);
+    lua_Integer trip = luaL_checkinteger(l, 5);
+
+    add_tile_trigger(x, y, file, addr, trip);
+    return 0;
+}
+
+static int box_trigger(lua_State *l) {
+    lua_Integer x = luaL_checkinteger(l, 1);
+    lua_Integer y = luaL_checkinteger(l, 2);
+    lua_Integer w = luaL_checkinteger(l, 3);
+    lua_Integer h = luaL_checkinteger(l, 4);
+    lua_Integer file = luaL_checkinteger(l, 5);
+    lua_Integer addr = luaL_checkinteger(l, 6);
+    lua_Integer trip = luaL_checkinteger(l, 7);
+
+    add_box_trigger(x, y, w, h, file, addr, trip);
+    return 0;
+}
+
+static int request(lua_State *l) {
+    lua_Integer cmd = luaL_checkinteger(l, 1);
+    const char *obj_type = luaL_checkstring(l, 2);
+    lua_Integer num1 = luaL_checkinteger(l, 3);
+    lua_Integer num2 = luaL_checkinteger(l, 4);
+
+    warn("Need to implement: request: cmd: %lld obj_type: %s num1: %lld num2: %lld\n", cmd, obj_type, num1, num2);
+    dsl_request_impl(cmd, 0, num1, num2);
+    return 0;
+}
+
+static int call_function(lua_State *l) {
+    lua_Integer file = luaL_checkinteger(l, 1);
+    lua_Integer addr = luaL_checkinteger(l, 2);
+
+    debug("*****************calling file: %lld addr: %lld\n", file, addr);
+    //replay_print("dsl.call_function(%lld, %lld)\n", file, addr);
+    dsl_lua_execute_script(file, addr, 0);
+
+    return 0;
+}
+
+static int dsl_exit(lua_State *l) {
+    if (luaL_dostring(l, "return")) {
+        printf("ERORR MUST IMPLEMENT: NEED TO EXIT.\n");
+        exit(1);
+    }
+
+    return 0;
+}
+
+static int lua_narrate_open(lua_State *l) {
+    lua_Integer cmd = luaL_checkinteger(l, 1);
+    const char *text = luaL_checkstring(l, 2);
+    lua_Integer index = luaL_checkinteger(l, 3);
+
+    narrate_open(cmd, text, index);
+    debug("I need to do %lld with text '%s' at index %lld\n", cmd, text, index);
+
+    return 0;
+}
+
+static int lua_narrate_show(lua_State *l) {
+    lua_pushboolean(l, game_loop_wait_for_signal(WAIT_NARRATE_SELECT));
+    return 1;
+}
+
+static const struct luaL_Reg dsl_state_lib[] = {
+    {"set_gf", set_gf},
+    {"get_gf", get_gf},
+    {"set_lf", set_lf},
+    {"get_lf", get_lf},
+    {"set_gn", set_gn},
+    {"get_gn", get_gn},
+    {"set_ln", set_ln},
+    {"get_ln", get_ln},
+    {"set_gbn", set_gbn},
+    {"get_gbn", get_gbn},
+    {"set_ln", set_lbn},
+    {"get_ln", get_lbn},
+    {"set_gstr", set_gstr},
+    {"get_gstr", get_gstr},
+    {"get_gname", get_gname},
+    {"read_complex", read_complex},
+    {"rand", dsl_rand},
+    {"range", range},
+    {"attack_trigger", attack_trigger},
+    {"attack_trigger_global", attack_trigger_global},
+    {"noorders_trigger", noorders_trigger},
+    {"use_trigger", use_trigger},
+    {"use_trigger_global", use_trigger_global},
+    {"look_trigger", look_trigger},
+    {"look_trigger_global", look_trigger_global},
+    {"talk_to_trigger", talk_to_trigger},
+    {"use_with_trigger", use_with_trigger},
+    {"tile_trigger", tile_trigger},
+    {"box_trigger", box_trigger},
+    {"call_function", call_function},
+    {"request", request},
+    {"exit", dsl_exit},
+    {"narrate_open", lua_narrate_open},
+    {"narrate_show", lua_narrate_show},
+    {NULL, NULL}
+} ;
+
+static void set_globals(lua_State *l) {
+    char buf[BUF_SIZE];
+    snprintf(buf, BUF_SIZE, "NAR_ADD_MENU = %d\n", NAR_ADD_MENU);
+    luaL_dostring(l, buf);
+    snprintf(buf, BUF_SIZE, "NAR_PORTRAIT = %d\n", NAR_PORTRAIT);
+    luaL_dostring(l, buf);
+    snprintf(buf, BUF_SIZE, "NAR_SHOW_TEXT = %d\n", NAR_SHOW_TEXT);
+    luaL_dostring(l, buf);
+    snprintf(buf, BUF_SIZE, "NAR_SHOW_MENU = %d\n", NAR_SHOW_MENU);
+    luaL_dostring(l, buf);
+    snprintf(buf, BUF_SIZE, "NAR_EDIT_BOX = %d\n", NAR_EDIT_BOX);
+    luaL_dostring(l, buf);
+}
+
+void dsl_state_register(lua_State *l) {
+    set_globals(l);
+    lua_newtable(l);
+    luaL_setfuncs(l, dsl_state_lib, 0);
+    lua_setglobal(l, "dsl");
+}
