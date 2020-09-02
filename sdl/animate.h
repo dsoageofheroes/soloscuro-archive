@@ -24,6 +24,7 @@ void animate_clear();
 void shift_anim(animate_t *anim);
 animate_t* animate_add(struct map_s *map, SDL_Renderer *renderer, dsl_object_t *obj);
 animate_t* animate_add_obj(SDL_Renderer *renderer, dsl_object_t *obj, const int gff_file, const int pallete_id);
+animate_t* animate_find(dsl_object_t *obj);
 void animate_render(void *data, SDL_Renderer *renderer);
 void animate_close();
 

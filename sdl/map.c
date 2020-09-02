@@ -10,6 +10,7 @@
 #include "../src/dsl-var.h"
 
 static map_t *cmap = NULL;
+static SDL_Renderer *cren = NULL;
 
 void map_init(map_t *map) {
     map->tiles = NULL;
@@ -49,6 +50,7 @@ void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
     unsigned char *data;
 
     map_free(map);
+    cren = renderer;
     map->region = dsl_load_region(id);
     ids = map->region->ids;
     animate_clear();
@@ -127,6 +129,29 @@ void map_render(void *data, SDL_Renderer *renderer) {
         }
     }
     animate_render(NULL, renderer);
+}
+
+void port_swap_objs(int obj_id, int bmp_id) {
+    dsl_object_t *obj = NULL;
+    animate_t *anim = NULL;
+    SDL_Rect loc;
+    // PERFORMANCE FIXME: should only go through needed objects, possibly quad-tree.
+    for (int i = 0; i < cmap->region->num_objs; i++) {
+        obj = cmap->region->objs + i;
+        if (obj->disk_idx == obj_id) {
+            anim = animate_find(obj);
+            if (anim) {
+                obj->btc_idx = bmp_id;
+                SDL_DestroyTexture(anim->textures[0]);
+                anim->textures[0] = 
+                    create_texture(cren, OBJEX_GFF_INDEX, GT_BMP, obj->btc_idx, obj->bmp_idx, cmap->region->palette_id, &loc);
+            } else {
+                error("Unable to find animation for obj_id!\n");
+            }
+            return;
+        }
+    }
+    error("Did not find obj %d to swap with!\n", obj_id);
 }
 
 #define CLICKABLE (0x10)

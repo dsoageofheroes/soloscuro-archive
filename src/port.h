@@ -21,4 +21,7 @@ extern int8_t port_narrate_open(int16_t action, const char *text, int16_t index)
 extern void port_narrate_clear();
 extern void port_narrate_close();
 
+// Object manipulation
+extern void port_swap_objs(int obj_id, int bmp_id);
+
 #endif

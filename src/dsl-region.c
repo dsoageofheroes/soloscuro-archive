@@ -10,6 +10,7 @@
 static void dsl_load_map_tile_ids(dsl_region_t* region);
 static void dsl_load_map_flags(dsl_region_t *region);
 static void dsl_load_map_objects(dsl_region_t *region);
+static dsl_region_t *cregion = NULL;
 
 dsl_region_t* dsl_load_region(const int gff_file) {
     uint32_t *tids = NULL;
@@ -32,8 +33,12 @@ dsl_region_t* dsl_load_region(const int gff_file) {
     dsl_load_map_flags(ret);
     dsl_load_map_objects(ret);
 
+    cregion = ret;
+
     return ret;
 }
+
+dsl_region_t* dsl_region_get_current() { return cregion; }
 
 static void dsl_load_map_tile_ids(dsl_region_t *region) {
     unsigned int *rmap_ids = gff_get_id_list(region->gff_file, GT_RMAP);

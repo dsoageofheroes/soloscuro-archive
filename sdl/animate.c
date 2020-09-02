@@ -30,6 +30,14 @@ void animate_init() {
     no_animate.soundidx = 0;
 }
 
+animate_t* animate_find(dsl_object_t *obj) {
+    for (animate_t *rover = list; rover; rover = rover->next) {
+        if (rover->obj == obj) { return rover; }
+    }
+
+    return NULL;
+}
+
 // Sometimes the animation needs to be updated for the render list
 void shift_anim(animate_t *anim) {
     animate_t *prev;

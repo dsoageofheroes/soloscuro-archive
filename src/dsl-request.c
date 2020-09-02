@@ -1,5 +1,6 @@
 #include "dsl.h"
 #include "dsl-state.h"
+#include "port.h"
 
 enum requests {
     REQUEST_NONE, //0
@@ -145,7 +146,6 @@ void camp(int16_t instr, int16_t hours, int16_t who) {
 
 uint32_t dsl_request_impl(int16_t token, int16_t name,
         int32_t num1, int32_t num2) {
-    unsigned long len;
     int answer = 0;
     disk_object_t *obj = NULL;
 
@@ -179,13 +179,12 @@ uint32_t dsl_request_impl(int16_t token, int16_t name,
         case REQUEST_SWAP:
             obj = gff_get_object(num1);
             if (!obj) { error("Unable to satisfy REQUEST_SWAP, not obj: %d\n", num1); }
-            char *data = gff_get_raw_bytes(OBJEX_GFF_INDEX, GT_BMP, obj->bmp_id, &len);
-            printf("data = %p\n", data);
-            if (name > 0) {
-                debug("I need to swap to %d from disk id %d with flags %d\n", name, num1, num2);
-            } else {
-                debug("I need to swap to iObjectIx from disk id %d with flags %d\n", num1, num2);
-            }
+            port_swap_objs(name, obj->bmp_id);
+            //if (name > 0) {
+                //debug("I need to swap to %d from disk id %d with flags %d\n", name, num1, num2);
+            //} else {
+                //debug("I need to swap to iObjectIx from disk id %d with flags %d\n", num1, num2);
+            //}
             break;
         case REQUEST_SET_BLOCK:
             debug("Need to set the bit flags for map position (%d, %d) to %d & commit!\n", num1, num2, GB_BLOCK);
@@ -607,6 +606,8 @@ uint32_t dsl_request_impl(int16_t token, int16_t name,
             debug("request REQUEST_MYSLOT not implemented\n");
             command_implemented = 0;
             break;
+        default:
+            error("request %d not implemented\n", token);
     }
     return answer;
 }

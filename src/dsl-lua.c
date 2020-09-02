@@ -1157,17 +1157,19 @@ void dsl_lua_shop(void) {
 
 void dsl_lua_clone(void) {
     dsl_lua_get_parameters(6);
-    //for (int i = 0; i < 6; i++) {
-        //warn("param.val[%d] = %d\n", i, param.val[i]);
-    //}
-    int16_t header_num = atoi(lparams.params[0]);
-    int16_t qty = atoi(lparams.params[1]);
-    int16_t x = atoi(lparams.params[2]);
-    int16_t y = atoi(lparams.params[3]);
-    uint8_t priority = atoi(lparams.params[4]);
-    uint8_t placement = atoi(lparams.params[5]);
-    lprintf("-- clone: must create %d of %d objects at (%d, %d) with priority = %d, placement = %d\n",
-        header_num, qty, x, y, priority, placement);
+    //int16_t header_num = atoi(lparams.params[0]);
+    //int16_t qty = atoi(lparams.params[1]);
+    //int16_t x = atoi(lparams.params[2]);
+    //int16_t y = atoi(lparams.params[3]);
+    //uint8_t priority = atoi(lparams.params[4]);
+    //uint8_t placement = atoi(lparams.params[5]);
+    lprintf("dsl.clone(%s, %s, %s, %s, %s, %s)\n",
+        lparams.params[0],
+        lparams.params[1],
+        lparams.params[2],
+        lparams.params[3],
+        lparams.params[4],
+        lparams.params[5]);
     //warn("dsl_clone: must create %d of %d objects at (%d, %d) with priority = %d, placement = %d\n",
         //header_num, qty, x, y, priority, placement);
 }
@@ -1424,7 +1426,10 @@ void dsl_lua_numtoname(void) {
 void dsl_lua_getxy(void) {
     char buf[BUF_SIZE];
     dsl_lua_read_number(buf, BUF_SIZE);
-    lprintf("-- I need to get the xyz of item %s\n", buf);
+    lprintf("-- getxyz\n");
+    lprintf("dsl.set_gname(1, dsl.getX(%s))\n", buf);
+    lprintf("dsl.set_gname(2, dsl.getY(%s))\n", buf);
+    lprintf("dsl.set_gname(3, 0)\n");
     //get_xyz(read_number());
 }
 

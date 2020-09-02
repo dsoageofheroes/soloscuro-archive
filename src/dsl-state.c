@@ -1,6 +1,7 @@
 #include "dsl.h"
 #include "dsl-manager.h"
 #include "dsl-narrate.h"
+#include "dsl-region.h"
 #include "dsl-state.h"
 #include "gameloop.h"
 #include "port.h"
@@ -63,6 +64,7 @@ void dsl_state_cleanup() {
 // Public to C library
 void dsl_set_gname(const int index, const int32_t obj) {
     if (index < 0 || index > MAX_GNAMES) { return; }
+    //printf("GNAME----------------------------------------------------->[%d] = %d\n", index, obj);
     dsl_gnames[index] = obj;
 }
 
@@ -222,7 +224,58 @@ static int get_gname(lua_State *l) {
         printf("ERROR: %lld is out of range for local big nums!\n", id);
         exit(1);
     }
+    //printf("GNAME----------------------------------------------------->[%lld] = %d\n", id, dsl_gnames[id]);
     lua_pushnumber(l, dsl_gnames[id]);
+    return 1;
+}
+
+static int set_gname(lua_State *l) {
+    lua_Integer id = luaL_checkinteger(l, 1);
+    lua_Integer val = luaL_checkinteger(l, 2);
+    if (id < 0 || id >= MAX_GNAMES) {
+        error("%lld is out of range for local big nums!\n", id);
+        exit(1);
+    }
+    if (id != 1 && id != 2 && id != 3) {
+        error("illegal set_gname? id = %lld\n", id);
+    } else {
+        dsl_gnames[id] = val;
+    }
+    //printf("GNAME----------------------------------------------------->[%lld] = %d\n", id, dsl_gnames[id]);
+    return 0;
+}
+
+static int dsl_getX(lua_State *l) {
+    lua_Integer id = luaL_checkinteger(l, 1);
+    dsl_region_t *region = dsl_region_get_current();
+    dsl_object_t *obj = NULL;
+
+    for (int i = 0; i < region->num_objs; i++) {
+        obj = region->objs + i;
+        if (obj->disk_idx == id) {
+            lua_pushnumber(l, obj->bmpx);
+            return 1;
+        }
+    }
+
+    lua_pushnumber(l, -1);
+    return 1;
+}
+
+static int dsl_getY(lua_State *l) {
+    lua_Integer id = luaL_checkinteger(l, 1);
+    dsl_region_t *region = dsl_region_get_current();
+    dsl_object_t *obj = NULL;
+
+    for (int i = 0; i < region->num_objs; i++) {
+        obj = region->objs + i;
+        if (obj->disk_idx == id) {
+            lua_pushnumber(l, obj->bmpy);
+            return 1;
+        }
+    }
+
+    lua_pushnumber(l, -1);
     return 1;
 }
 
@@ -364,8 +417,21 @@ static int request(lua_State *l) {
     lua_Integer num1 = luaL_checkinteger(l, 3);
     lua_Integer num2 = luaL_checkinteger(l, 4);
 
-    warn("Need to implement: request: cmd: %lld obj_type: %s num1: %lld num2: %lld\n", cmd, obj_type, num1, num2);
-    dsl_request_impl(cmd, 0, num1, num2);
+    //warn("Need to implement: request: cmd: %lld obj_type: %s num1: %lld num2: %lld\n", cmd, obj_type, num1, num2);
+    dsl_request_impl(cmd, atol(obj_type), num1, num2);
+    return 0;
+}
+
+static int dsl_clone(lua_State *l) {
+    lua_Integer obj = luaL_checkinteger(l, 1);
+    lua_Integer qty = luaL_checkinteger(l, 2);
+    lua_Integer x = luaL_checkinteger(l, 3);
+    lua_Integer y = luaL_checkinteger(l, 4);
+    lua_Integer priority = luaL_checkinteger(l, 5);
+    lua_Integer placement = luaL_checkinteger(l, 6);
+
+    warn("Need to implement: dsl-clone: obj: %lld, qty: %lld, (%lld, %lld) pri: %lld, pla: %lld\n", obj, qty, x, y,
+        priority, placement);
     return 0;
 }
 
@@ -421,6 +487,9 @@ static const struct luaL_Reg dsl_state_lib[] = {
     {"set_gstr", set_gstr},
     {"get_gstr", get_gstr},
     {"get_gname", get_gname},
+    {"set_gname", set_gname},
+    {"getX", dsl_getX},
+    {"getY", dsl_getY},
     {"read_complex", read_complex},
     {"rand", dsl_rand},
     {"range", range},
@@ -437,6 +506,7 @@ static const struct luaL_Reg dsl_state_lib[] = {
     {"box_trigger", box_trigger},
     {"call_function", call_function},
     {"request", request},
+    {"clone", dsl_clone},
     {"exit", dsl_exit},
     {"narrate_open", lua_narrate_open},
     {"narrate_show", lua_narrate_show},
