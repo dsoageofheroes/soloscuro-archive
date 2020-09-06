@@ -104,8 +104,11 @@
 #define DSL_OBJECT_ADDS 97
 
 #define COMBAT_NAME_SIZE (18)
+#define MAX_REGION_OBJS  (1<<10)
 
-typedef struct dsl_object_s {
+struct animate_s;
+
+typedef struct region_object_s {
     uint8_t flags;      // flags
     uint16_t entry_id;  // object entry table index / map id?
     int16_t bmpx;       // bitmap's x coordinate
@@ -127,7 +130,21 @@ typedef struct dsl_object_s {
     int16_t disk_idx;   // disk index
     int32_t game_time;  // game time for animating
     scmd_t *scmd;       // the script
-} dsl_object_t;
+    struct animate_s *anim;     // animation script, to be defined later...
+} region_object_t;
+
+typedef struct _region_list_s {
+    int pos;
+    region_object_t objs[MAX_REGION_OBJS];
+} region_list_t;
+
+region_object_t* __region_list_get_next(region_list_t *rl, int *i); // private, do not modify/use!
+
+// PERFORMANCE FIXME: should only go through needed objects, possibly quad-tree.
+#define region_list_for_each(rl, obj) \
+    int __RL_I = 0; \
+    for (obj = __region_list_get_next(rl, &__RL_I); obj != NULL;\
+        __RL_I++, obj = __region_list_get_next(rl, &__RL_I))
 
 typedef struct _ds_stats_t {
     uint8_t STR;
@@ -256,5 +273,10 @@ void dsl_object_cleanup();
 
 ds_character_t* dsl_get_character(const int id);
 int dsl_valid_character_id(const int id);
+
+region_list_t* region_list_create();
+void region_list_free(region_list_t *rl);
+void region_list_load_objs(region_list_t *rl, const int gff_file, const int map_id);
+#define region_list_get_object(rl, i) (rl->objs + i)
 
 #endif

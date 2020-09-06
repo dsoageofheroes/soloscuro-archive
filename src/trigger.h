@@ -52,6 +52,7 @@ int add_box_trigger(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t fil
 
 talkto_trigger_t get_talkto_trigger(uint32_t obj);
 look_trigger_t get_look_trigger(uint32_t obj);
+void trigger_object_clear(const uint32_t obj);
 
 void talk_click(uint32_t obj);
 

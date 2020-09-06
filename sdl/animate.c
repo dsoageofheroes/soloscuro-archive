@@ -30,7 +30,7 @@ void animate_init() {
     no_animate.soundidx = 0;
 }
 
-animate_t* animate_find(dsl_object_t *obj) {
+animate_t* animate_find(region_object_t *obj) {
     for (animate_t *rover = list; rover; rover = rover->next) {
         if (rover->obj == obj) { return rover; }
     }
@@ -112,7 +112,7 @@ void shift_anim(animate_t *anim) {
     }
 }
 
-animate_t* animate_add_obj(SDL_Renderer *renderer, dsl_object_t *obj, const int gff_file, const int palette_id) {
+animate_t* animate_add_obj(SDL_Renderer *renderer, region_object_t *obj, const int gff_file, const int palette_id) {
     //unsigned char *data = NULL;
     SDL_Rect loc;
     animate_t *toadd = malloc(sizeof(animate_t));
@@ -160,7 +160,7 @@ animate_t* animate_add_obj(SDL_Renderer *renderer, dsl_object_t *obj, const int 
     return toadd;
 }
 
-animate_t* animate_add(map_t *map, SDL_Renderer *renderer, dsl_object_t *obj) {
+animate_t* animate_add(map_t *map, SDL_Renderer *renderer, region_object_t *obj) {
     unsigned char *data = NULL;
     SDL_Surface *surface;
     uint8_t z;

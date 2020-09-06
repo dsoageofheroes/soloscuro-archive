@@ -59,6 +59,7 @@ void dsl_object_init() {
         memcpy(ds1_item1rs + i, ptr + (15*i), 15);
         //printf("%d\n", ds1_item1rs[i].range);
     }
+    printf("DSL_OBJECT LIST INIT\n");
 }
 
 ds_character_t* dsl_get_character(const int id) {
@@ -83,4 +84,56 @@ void dsl_object_cleanup() {
     ds1_item1rs = NULL;
     minis = NULL;
     item_names = NULL;
+}
+
+region_list_t* region_list_create() {
+    region_list_t *rl = malloc(sizeof(region_list_t));
+    if (!rl) { return rl; }
+    memset(rl, 0x0, sizeof(region_list_t));
+    return rl;
+}
+
+void region_list_free(region_list_t *rl) {
+    free(rl);
+}
+
+static void load_object_from_etab(region_object_t *dsl_object, gff_map_object_t *entry_table, uint32_t id) {
+    const gff_map_object_t *gm = entry_table + id;
+    disk_object_t *disk_object = gff_get_object(gm->index);
+    memset(dsl_object, 0x0, sizeof(region_object_t));
+    dsl_object->disk_idx = gm->index;
+    dsl_object->flags = disk_object->flags;
+    dsl_object->gt_idx = disk_object->object_index;
+    dsl_object->btc_idx = disk_object->bmp_id;
+    dsl_object->bmpx = gm->xpos - disk_object->xoffset;
+    dsl_object->bmpy = gm->ypos - disk_object->yoffset - disk_object->zpos;
+    dsl_object->xoffset = disk_object->xoffset;
+    dsl_object->yoffset = disk_object->yoffset;
+    //dsl_object->mapx = gm->xpos;
+    //dsl_object->mapy = gm->ypos;
+    dsl_object->mapx = gm->xpos - disk_object->xoffset;
+    dsl_object->mapy = gm->ypos - disk_object->yoffset;
+    dsl_object->mapz = gm->zpos;
+    dsl_object->entry_id = id;
+}
+
+region_object_t* __region_list_get_next(region_list_t *rl, int *i) {
+    while (*i < MAX_REGION_OBJS) {
+        if (rl->objs[*i].entry_id) { return rl->objs + *i; }
+        (*i)++;
+    }
+
+    return NULL;
+}
+
+void region_list_load_objs(region_list_t *rl, const int gff_file, const int map_id) {
+    unsigned long len;
+    gff_map_object_t *entry_table = (gff_map_object_t*) gff_get_raw_bytes(gff_file, GT_ETAB, map_id, &len);
+    rl->pos = gff_map_get_num_objects(gff_file, map_id);
+    memset(&rl->objs, 0x0, sizeof(region_object_t) * MAX_REGION_OBJS);
+
+    for (int i = 0; i < rl->pos; i++) {
+        load_object_from_etab(rl->objs + i, entry_table, i);
+        rl->objs[i].scmd = gff_map_get_object_scmd(gff_file, map_id, i, 0);
+    }
 }

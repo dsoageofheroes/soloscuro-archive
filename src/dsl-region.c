@@ -9,7 +9,6 @@
 
 static void dsl_load_map_tile_ids(dsl_region_t* region);
 static void dsl_load_map_flags(dsl_region_t *region);
-static void dsl_load_map_objects(dsl_region_t *region);
 static dsl_region_t *cregion = NULL;
 
 dsl_region_t* dsl_load_region(const int gff_file) {
@@ -18,6 +17,7 @@ dsl_region_t* dsl_load_region(const int gff_file) {
     dsl_region_t *ret = malloc(sizeof(dsl_region_t));
 
     memset(ret, 0x0, sizeof(dsl_region_t));
+    ret->list = region_list_create();
     ret->gff_file = gff_file;
 
     tids = gff_get_id_list(ret->gff_file, GT_ETAB); // temporary to find current id for palette!
@@ -31,7 +31,7 @@ dsl_region_t* dsl_load_region(const int gff_file) {
 
     dsl_load_map_tile_ids(ret);
     dsl_load_map_flags(ret);
-    dsl_load_map_objects(ret);
+    region_list_load_objs(ret->list, ret->gff_file, ret->map_id);
 
     cregion = ret;
 
@@ -58,7 +58,8 @@ static void dsl_load_map_tile_ids(dsl_region_t *region) {
 //}
 
 unsigned char* dsl_load_object_bmp(dsl_region_t *region, const uint32_t id, const uint32_t bmp_id) {
-    dsl_object_t *obj = region->objs + id;
+    //dsl_object_t *obj = region->objs + id;
+    region_object_t *obj = region->list->objs + id;
     return gff_map_get_object_bmp_pal(region->gff_file, region->map_id, id,
             (int32_t*)&(obj->bmp_width), (int32_t*)&(obj->bmp_height), bmp_id, 
             region->palette_id);
@@ -130,38 +131,4 @@ int dsl_region_get_tile(const dsl_region_t *region, const uint32_t image_id,
     if (!data) { return 0; }
 
     return 1;
-}
-
-static void init_dsl_object(dsl_object_t *dsl_object, dsl_region_t *region, uint32_t id) {
-    const gff_map_object_t *gm = region->entry_table + id;
-    disk_object_t *disk_object = gff_get_object(gm->index);
-    memset(dsl_object, 0x0, sizeof(dsl_object_t));
-    dsl_object->disk_idx = gm->index;
-    dsl_object->flags = disk_object->flags;
-    dsl_object->gt_idx = disk_object->object_index;
-    dsl_object->btc_idx = disk_object->bmp_id;
-    dsl_object->bmpx = gm->xpos - disk_object->xoffset;
-    dsl_object->bmpy = gm->ypos - disk_object->yoffset - disk_object->zpos;
-    dsl_object->xoffset = disk_object->xoffset;
-    dsl_object->yoffset = disk_object->yoffset;
-    //dsl_object->mapx = gm->xpos;
-    //dsl_object->mapy = gm->ypos;
-    dsl_object->mapx = gm->xpos - disk_object->xoffset;
-    dsl_object->mapy = gm->ypos - disk_object->yoffset;
-    dsl_object->mapz = gm->zpos;
-    dsl_object->entry_id = id;
-}
-
-//static void dsl_load_initial_image(dsl_object_t *dsl_object, dsl_region_t *region, uint32_t id) {
-//}
-
-static void dsl_load_map_objects(dsl_region_t *region) {
-    region->num_objs = gff_map_get_num_objects(region->gff_file, region->map_id);
-    region->objs = malloc(sizeof(dsl_object_t) * region->num_objs);
-    memset(region->objs, 0x0, sizeof(dsl_object_t) * region->num_objs);
-
-    for (int i = 0; i < region->num_objs; i++) {
-        init_dsl_object(region->objs + i, region, i);
-        region->objs[i].scmd = gff_map_get_object_scmd(region->gff_file, region->map_id, i, 0);
-    }
 }

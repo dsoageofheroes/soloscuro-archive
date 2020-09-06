@@ -8,7 +8,7 @@
 #include "../src/gfftypes.h"
 
 static player_t player;
-static dsl_object_t dsl_player;
+static region_object_t dsl_player;
 static animate_t *anim = NULL;
 
 // thri-keen is 291 & 292.

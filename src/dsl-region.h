@@ -5,20 +5,20 @@
 
 #include <stdint.h>
 #include "../src/gff-map.h"
+#include "dsl-object.h"
 
 typedef struct dsl_region_s {
     gff_map_object_t *entry_table;
-    dsl_object_t *objs;
     uint32_t *ids;
     uint8_t flags[MAP_ROWS][MAP_COLUMNS];
     uint8_t tile_ids[MAP_ROWS][MAP_COLUMNS];
     uint32_t num_tiles;
-    uint32_t num_objs;
     uint32_t entry_size;
     uint32_t palette_id;
     uint32_t flags_size, tile_ids_size;
     uint32_t gff_file;
     uint32_t map_id;
+    region_list_t *list;
 } dsl_region_t;
 
 dsl_region_t* dsl_load_region(const int gff_file);

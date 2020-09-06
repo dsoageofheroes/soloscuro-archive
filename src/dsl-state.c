@@ -248,10 +248,9 @@ static int set_gname(lua_State *l) {
 static int dsl_getX(lua_State *l) {
     lua_Integer id = luaL_checkinteger(l, 1);
     dsl_region_t *region = dsl_region_get_current();
-    dsl_object_t *obj = NULL;
+    region_object_t *obj = NULL;
 
-    for (int i = 0; i < region->num_objs; i++) {
-        obj = region->objs + i;
+    region_list_for_each(region->list, obj) {
         if (obj->disk_idx == id) {
             lua_pushnumber(l, obj->bmpx);
             return 1;
@@ -265,10 +264,9 @@ static int dsl_getX(lua_State *l) {
 static int dsl_getY(lua_State *l) {
     lua_Integer id = luaL_checkinteger(l, 1);
     dsl_region_t *region = dsl_region_get_current();
-    dsl_object_t *obj = NULL;
+    region_object_t *obj = NULL;
 
-    for (int i = 0; i < region->num_objs; i++) {
-        obj = region->objs + i;
+    region_list_for_each(region->list, obj) {
         if (obj->disk_idx == id) {
             lua_pushnumber(l, obj->bmpy);
             return 1;

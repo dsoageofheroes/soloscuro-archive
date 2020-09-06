@@ -1,6 +1,7 @@
 #include "dsl.h"
 #include "dsl-state.h"
 #include "port.h"
+#include "trigger.h"
 
 enum requests {
     REQUEST_NONE, //0
@@ -179,7 +180,9 @@ uint32_t dsl_request_impl(int16_t token, int16_t name,
         case REQUEST_SWAP:
             obj = gff_get_object(num1);
             if (!obj) { error("Unable to satisfy REQUEST_SWAP, not obj: %d\n", num1); }
+            trigger_object_clear(num1);
             port_swap_objs(name, obj->bmp_id);
+
             //if (name > 0) {
                 //debug("I need to swap to %d from disk id %d with flags %d\n", name, num1, num2);
             //} else {
@@ -613,7 +616,6 @@ uint32_t dsl_request_impl(int16_t token, int16_t name,
 }
 
 int16_t request_to_do(int16_t name, int16_t rectype, int (*request_proc)(int16_t, long, long), long param1, long param2) {
-    //if (name >= 0 && name < NULL_OBJECT) {
     if (name < NULL_OBJECT) {
         if (rectype == DO_TO_ALL) {
             debug("Need to add LUA hooks to walk through every object and...\n");

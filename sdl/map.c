@@ -5,6 +5,7 @@
 #include "../src/trigger.h"
 #include "../src/dsl-execute.h"
 #include "../src/dsl-manager.h"
+#include "../src/dsl-object.h"
 #include "../src/dsl-region.h"
 #include "../src/dsl-scmd.h"
 #include "../src/dsl-var.h"
@@ -14,8 +15,6 @@ static SDL_Renderer *cren = NULL;
 
 void map_init(map_t *map) {
     map->tiles = NULL;
-    map->objs = NULL;
-    map->anims = NULL;
 }
 
 void map_free(map_t *map) {
@@ -48,6 +47,7 @@ void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
     uint32_t *ids = NULL;
     uint32_t width, height;
     unsigned char *data;
+    region_object_t *obj;
 
     map_free(map);
     cren = renderer;
@@ -66,14 +66,8 @@ void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
         free(data);
     }
 
-    map->objs = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * map->region->num_objs);
-    map->anims = (animate_t**) malloc(sizeof(animate_t*) * map->region->num_objs);
-    memset(map->objs, 0x0, sizeof(SDL_Texture*) * map->region->num_objs);
-    memset(map->anims, 0x0, sizeof(animate_t*) * map->region->num_objs);
-
-    for (int i = 0; i < map->region->num_objs; i++) {
-        map->objs[i] = NULL;
-        map->anims[i] = animate_add(map, renderer, map->region->objs+i);
+    region_list_for_each(map->region->list, obj) {
+        obj->anim = animate_add(map, renderer, obj);
     }
 
     cmap = map;
@@ -86,7 +80,6 @@ void map_render(void *data, SDL_Renderer *renderer) {
     const uint32_t xoffset = getCameraX();
     const uint32_t yoffset = getCameraY();
     SDL_Rect tile_loc = { -xoffset, -yoffset, stretch * 16, stretch * 16 };
-    SDL_Rect obj_loc = { 0, 0, 0, 0 };
     uint32_t tile_id = 0;
     //map_t *map = (map_t*) data;
     map_t *map = cmap;
@@ -106,38 +99,15 @@ void map_render(void *data, SDL_Renderer *renderer) {
         tile_loc.x = -xoffset;
         tile_loc.y += stretch * 16;
     }
-    for (int i = 0; i < map->region->num_objs; i++) {
-        //gff_map_object_t* mo = get_map_object(map->gff_file, map->map_id, i);
-        //disk_object_t* dobj = gff_get_object(mo->index);
-        //printf("dobj = %p\n", dobj);
-        //if (dobj && dobj->flags) {
-            //printf("[%d]: dobj->flags = 0x%x\n", i, dobj->flags);
-        //}
-        if (map->objs[i]) {
-            obj_loc.w = map->region->objs[i].bmp_width;
-            obj_loc.h = map->region->objs[i].bmp_height;
-            obj_loc.x = map->region->objs[i].mapx;
-            obj_loc.y = map->region->objs[i].mapy;
-            obj_loc.x *= 2;
-            obj_loc.x -= xoffset;
-            obj_loc.y *= 2;
-            obj_loc.y -= yoffset;
-            obj_loc.w *= stretch;
-            obj_loc.h *= stretch;
-            SDL_RenderCopy(renderer, map->objs[i], NULL, &obj_loc);
-            //SDL_RenderCopyEx(renderer, map->objs[i], NULL, &obj_loc, 0.0, NULL, SDL_FLIP_HORIZONTAL);
-        }
-    }
     animate_render(NULL, renderer);
 }
 
 void port_swap_objs(int obj_id, int bmp_id) {
-    dsl_object_t *obj = NULL;
     animate_t *anim = NULL;
     SDL_Rect loc;
-    // PERFORMANCE FIXME: should only go through needed objects, possibly quad-tree.
-    for (int i = 0; i < cmap->region->num_objs; i++) {
-        obj = cmap->region->objs + i;
+    region_object_t *obj;
+
+    region_list_for_each(cmap->region->list, obj) {
         if (obj->disk_idx == obj_id) {
             anim = animate_find(obj);
             if (anim) {
@@ -156,24 +126,23 @@ void port_swap_objs(int obj_id, int bmp_id) {
 
 #define CLICKABLE (0x10)
 
-int get_object_at_location(const uint32_t x, const uint32_t y) {
+region_object_t* get_object_at_location(const uint32_t x, const uint32_t y) {
     const int stretch = 2;
     uint32_t mx = getCameraX() + x;
     uint32_t my = getCameraY() + y;
     uint32_t osx, osy, oex, oey; // object start x, object start y, object end x, object end y
     SDL_Rect loc;
-    dsl_object_t *obj = NULL;
+    region_object_t *obj = NULL;
     if (!cmap) { return 0; }
 
-    // PERFORMANCE FIXME: should only go through needed objects, possibly quad-tree.
-    for (int i = 0; i < cmap->region->num_objs; i++) {
-        obj = cmap->region->objs + i;
+    region_list_for_each(cmap->region->list, obj) {
         if (obj->flags & CLICKABLE) {
-            if (cmap->anims[i] && cmap->anims[i]->obj) {
-                loc.w = cmap->anims[i]->obj->bmp_width;
-                loc.h = cmap->anims[i]->obj->bmp_height;
-                loc.x = cmap->anims[i]->obj->mapx;
-                loc.y = cmap->anims[i]->obj->mapy;
+            animate_t *anim = obj->anim;
+            if (anim && anim->obj) {
+                loc.w = anim->obj->bmp_width;
+                loc.h = anim->obj->bmp_height;
+                loc.x = anim->obj->mapx;
+                loc.y = anim->obj->mapy;
                 osx = loc.x * stretch;
                 osy = loc.y * stretch;
                 oex = osx + (stretch * loc.w);
@@ -185,21 +154,21 @@ int get_object_at_location(const uint32_t x, const uint32_t y) {
                 oey = osy + (stretch * obj->bmp_height);
             }
             if (mx >= osx && mx < oex && my >= osy && my < oey) {
-                return i;
+                return obj;
             }
         }
     }
 
-    return -1;
+    return NULL;
 }
 
 int map_handle_mouse(const uint32_t x, const uint32_t y) {
-    int obj_id = -1;
+    region_object_t *obj = NULL;
 
     if (!cmap) { return 0; }
-    obj_id = get_object_at_location(x, y);
+    obj = get_object_at_location(x, y);
 
-    if (obj_id >= 0) {
+    if (obj) {
         //debug("found @ %d, need to change icon\n", obj_id);
     }
 
@@ -209,16 +178,16 @@ int map_handle_mouse(const uint32_t x, const uint32_t y) {
 }
 
 int map_handle_mouse_click(const uint32_t x, const uint32_t y) {
-    int obj_id = -1;
+    region_object_t *obj = NULL;
 
     if (!cmap) { return 0; }
-    obj_id = get_object_at_location(x, y);
+    obj = get_object_at_location(x, y);
 
     //print_all_checks();
 
     // Right now we assume all icons are talking, will look at attack later.
-    if (obj_id >= 0) {
-        gff_map_object_t* mo = get_map_object(cmap->region->gff_file, cmap->region->map_id, obj_id);
+    if (obj) {
+        gff_map_object_t* mo = get_map_object(cmap->region->gff_file, cmap->region->map_id, obj->entry_id);
         debug("Clicked on object: %d\n", abs(mo->index));
         talk_click(mo->index);
         //dsl_check_t* check = dsl_find_check(TALK_TO_CHECK_INDEX, mo->index);
