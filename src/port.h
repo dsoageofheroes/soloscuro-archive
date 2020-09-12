@@ -5,6 +5,8 @@
 #ifndef PORT_H
 #define PORT_H
 
+#include "dsl-object.h"
+
 extern void port_init(int args, char *argv[]);
 extern void port_cleanup();
 
@@ -22,6 +24,7 @@ extern void port_narrate_clear();
 extern void port_narrate_close();
 
 // Object manipulation
-extern void port_swap_objs(int obj_id, int bmp_id);
+extern void port_swap_objs(int obj_id, region_object_t *obj);
+extern void port_add_obj(region_object_t *obj);
 
 #endif

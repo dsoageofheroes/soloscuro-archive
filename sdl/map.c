@@ -102,26 +102,21 @@ void map_render(void *data, SDL_Renderer *renderer) {
     animate_render(NULL, renderer);
 }
 
-void port_swap_objs(int obj_id, int bmp_id) {
-    animate_t *anim = NULL;
-    SDL_Rect loc;
-    region_object_t *obj;
+void port_add_obj(region_object_t *obj) {
+    obj->anim = animate_add_objex(cmap, cren, obj);
+}
 
-    region_list_for_each(cmap->region->list, obj) {
-        if (obj->disk_idx == obj_id) {
-            anim = animate_find(obj);
-            if (anim) {
-                obj->btc_idx = bmp_id;
-                SDL_DestroyTexture(anim->textures[0]);
-                anim->textures[0] = 
-                    create_texture(cren, OBJEX_GFF_INDEX, GT_BMP, obj->btc_idx, obj->bmp_idx, cmap->region->palette_id, &loc);
-            } else {
-                error("Unable to find animation for obj_id!\n");
-            }
-            return;
-        }
+void port_swap_objs(int obj_id, region_object_t *obj) {
+    animate_t *anim = obj->anim;
+    SDL_Rect loc;
+
+    if (anim) {
+        SDL_DestroyTexture(anim->textures[0]);
+        anim->textures[0] = 
+            create_texture(cren, OBJEX_GFF_INDEX, GT_BMP, obj->btc_idx, obj->bmp_idx, cmap->region->palette_id, &loc);
+    } else {
+        error("Unable to find animation for obj_id!\n");
     }
-    error("Did not find obj %d to swap with!\n", obj_id);
 }
 
 #define CLICKABLE (0x10)
@@ -181,50 +176,11 @@ int map_handle_mouse_click(const uint32_t x, const uint32_t y) {
     region_object_t *obj = NULL;
 
     if (!cmap) { return 0; }
-    obj = get_object_at_location(x, y);
 
-    //print_all_checks();
-
-    // Right now we assume all icons are talking, will look at attack later.
-    if (obj) {
-        gff_map_object_t* mo = get_map_object(cmap->region->gff_file, cmap->region->map_id, obj->entry_id);
-        debug("Clicked on object: %d\n", abs(mo->index));
-        talk_click(mo->index);
-        //dsl_check_t* check = dsl_find_check(TALK_TO_CHECK_INDEX, mo->index);
-        /*
-        talkto_trigger_t tt = get_talkto_trigger(mo->index);
-        look_trigger_t lt = get_look_trigger(mo->index);
-        //printf("---------->tt.obj = %d\n", tt.obj);
-        //printf("---------->lt.obj = %d\n", lt.obj);
-        if (tt.obj == mo->index) {
-            dsl_lua_execute_script(tt.file, tt.addr, 0);
-        }
-        if (lt.obj == mo->index) {
-            dsl_lua_execute_script(lt.file, lt.addr, 0);
-        }
-        */
-        //if (check) {
-            //debug("TALK CHECK: Need to execute file = %d, addr = %d, global = %d\n",
-                //check->data.name_check.file, check->data.name_check.addr,
-                //check->data.name_check.global);
-            //dsl_execute_subroutine(check->data.name_check.file,
-                //check->data.name_check.addr, 0);
-        //}
-        //check = dsl_find_check(LOOK_CHECK_INDEX, mo->index);
-        //if (check) {
-            //debug("LOOK CHECK: Need to execute file = %d, addr = %d, global = %d\n",
-                //check->data.name_check.file, check->data.name_check.addr,
-                //check->data.name_check.global);
-            //dsl_execute_subroutine(check->data.name_check.file,
-                //check->data.name_check.addr, 0);
-        //}
-        //debug("manually calling %d: %d\n", 5, 341);
-            //dsl_execute_subroutine(5, 341, 0);
-        //debug("Searching other checks...\n");
-        //for (int i = 1; i < MAX_CHECK_TYPES; i++) {
-            //debug("check[%d] = %p\n", i, dsl_find_check(i, mo->index));
-        //}
+    if ((obj = get_object_at_location(x, y))) {
+        talk_click(obj->disk_idx);
     }
+
     return 1; // map always intercepts the mouse...
 }
 

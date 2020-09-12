@@ -145,6 +145,5 @@ unsigned char* gff_map_get_object_bmp_pal(int gff_index, int res_id, int obj_id,
 uint16_t gff_map_get_object_location(int gff_index, int res_id, int obj_id, uint16_t *x, uint16_t *y, uint8_t *z);
 so_object_t* gff_object_inspect(int gff_index, int res_id);
 disk_object_t* gff_get_object(int object_index);
-gff_map_object_t* get_map_object(int gff_index, int res_id, int obj_id);
 
 #endif

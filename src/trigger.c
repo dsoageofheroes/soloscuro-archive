@@ -188,25 +188,26 @@ look_trigger_t get_look_trigger(uint32_t obj) {
 
     return ret;
 }
-//static trigger_node_t *attack_list, *noorders_list, *use_list, *look_list, *talkto_list, *usewith_list, *tile_list, *box_list;
 
 static void list_object_clear (trigger_node_t *list, const uint32_t obj, int (*cmp)(const trigger_node_t *, 
         const uint32_t)) {
-    trigger_node_t *rover = look_list;
+    trigger_node_t *rover = list;
     trigger_node_t *prev = NULL;
 
     while (rover) {
-        debug ("obj = %d (?%d)\n", obj, (list->attack.obj));
-        if (cmp (rover, obj)) {
+        while (rover && cmp (rover, obj)) {
             if (!prev) {
                 attack_list = rover->next;
             } else {
-                prev = rover->next;
+                prev->next = rover->next;
             }
             free(rover);
-            return;
+            rover = prev->next;
         }
-        rover = rover->next;
+        if (rover) {
+            prev = rover;
+            rover = rover->next;
+        }
     }
 }
 

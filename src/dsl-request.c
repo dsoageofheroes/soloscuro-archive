@@ -1,4 +1,5 @@
 #include "dsl.h"
+#include "dsl-region.h"
 #include "dsl-state.h"
 #include "port.h"
 #include "trigger.h"
@@ -148,7 +149,7 @@ void camp(int16_t instr, int16_t hours, int16_t who) {
 uint32_t dsl_request_impl(int16_t token, int16_t name,
         int32_t num1, int32_t num2) {
     int answer = 0;
-    disk_object_t *obj = NULL;
+    disk_object_t *dobj = NULL;
 
     switch (token) {
         case REQUEST_HEALING:
@@ -178,10 +179,12 @@ uint32_t dsl_request_impl(int16_t token, int16_t name,
             debug("I need to request a monster %d, %d\n", num1, num2);// Not helpful, I know...
             break;
         case REQUEST_SWAP:
-            obj = gff_get_object(num1);
-            if (!obj) { error("Unable to satisfy REQUEST_SWAP, not obj: %d\n", num1); }
-            trigger_object_clear(num1);
-            port_swap_objs(name, obj->bmp_id);
+            dobj = gff_get_object(num1);
+            region_object_t* robj = dsl_region_find_object(name);
+            if (!dobj) { error("Unable to satisfy REQUEST_SWAP, not obj: %d\n", num1); }
+            robj->btc_idx = dobj->bmp_id;
+            trigger_object_clear(name);
+            port_swap_objs(name, robj);
 
             //if (name > 0) {
                 //debug("I need to swap to %d from disk id %d with flags %d\n", name, num1, num2);

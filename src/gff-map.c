@@ -62,14 +62,6 @@ int gff_map_get_object_frame_count(int gff_index, int res_id, int obj_id) {
     return get_frame_count(OBJEX_GFF_INDEX, GT_BMP, disk_object->bmp_id);
 }
 
-gff_map_object_t* get_map_object(int gff_index, int res_id, int obj_id) {
-    int num_objects = gff_map_get_num_objects(gff_index, res_id);
-    if (gff_index < 0 || gff_index >= NUM_FILES || obj_id < 0 || obj_id >= num_objects) {
-        return NULL;
-    }
-    return open_files[gff_index].entry_table + obj_id;
-}
-
 scmd_t* gff_map_get_object_scmd(int gff_index, int res_id, int obj_id, int scmd_index) {
     int num_objects = gff_map_get_num_objects(gff_index, res_id);
     if (gff_index < 0 || gff_index >= NUM_FILES || obj_id < 0 || obj_id >= num_objects) {

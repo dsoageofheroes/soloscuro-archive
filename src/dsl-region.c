@@ -40,6 +40,16 @@ dsl_region_t* dsl_load_region(const int gff_file) {
 
 dsl_region_t* dsl_region_get_current() { return cregion; }
 
+region_object_t* dsl_region_find_object(const int16_t disk_idx) {
+    region_object_t *obj = NULL;
+
+    region_list_for_each(cregion->list, obj) {
+        if (obj->disk_idx == disk_idx) { return obj; }
+    }
+
+    return NULL;
+}
+
 static void dsl_load_map_tile_ids(dsl_region_t *region) {
     unsigned int *rmap_ids = gff_get_id_list(region->gff_file, GT_RMAP);
     unsigned long len;
@@ -54,11 +64,7 @@ static void dsl_load_map_tile_ids(dsl_region_t *region) {
     free(rmap_ids);
 }
 
-//unsigned char* dsl_get_object_bmp(dsl_region_t *region, dsl_object_t *obj, const uint32_t bmp_id) {
-//}
-
 unsigned char* dsl_load_object_bmp(dsl_region_t *region, const uint32_t id, const uint32_t bmp_id) {
-    //dsl_object_t *obj = region->objs + id;
     region_object_t *obj = region->list->objs + id;
     return gff_map_get_object_bmp_pal(region->gff_file, region->map_id, id,
             (int32_t*)&(obj->bmp_width), (int32_t*)&(obj->bmp_height), bmp_id, 

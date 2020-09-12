@@ -31,4 +31,6 @@ int dsl_region_get_tile(const dsl_region_t *region, const uint32_t image_id,
 unsigned char* dsl_load_object_bmp(dsl_region_t *region, const uint32_t id, const uint32_t bmp_id);
 dsl_region_t* dsl_region_get_current();
 
+region_object_t* dsl_region_find_object(const int16_t entry_id);
+
 #endif

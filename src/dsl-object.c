@@ -1,3 +1,4 @@
+#include "dsl.h"
 #include "dsl-object.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -124,6 +125,39 @@ region_object_t* __region_list_get_next(region_list_t *rl, int *i) {
     }
 
     return NULL;
+}
+
+region_object_t* region_list_create_from_objex(region_list_t *rl, const int id, const int32_t x, const int32_t y) {
+    unsigned long len;
+    region_object_t *robj = NULL;
+    disk_object_t *dobj = (disk_object_t*)gff_get_raw_bytes(OBJEX_GFF_INDEX, GT_OJFF, -1*id, &len);
+
+    if (!dobj) {
+        printf("unable to get obj from id: %d\n", id);
+        return NULL;
+    }
+
+    if (rl->pos >= MAX_REGION_OBJS) {
+        error("Ran out of region objects!\n");
+        exit(1);
+    }
+
+    robj = rl->objs + rl->pos++;
+    memset(robj, 0x0, sizeof(region_object_t));
+    robj->disk_idx = id;
+    robj->flags = dobj->flags;
+    robj->gt_idx = dobj->object_index;
+    robj->btc_idx = dobj->bmp_id;
+    robj->bmpx = x - dobj->xoffset;
+    robj->bmpy = y - dobj->yoffset - dobj->zpos;
+    robj->xoffset = dobj->xoffset;
+    robj->yoffset = dobj->yoffset;
+    robj->mapx = x - dobj->xoffset;
+    robj->mapy = y - dobj->yoffset;
+    //robj->mapz = gm->zpos;
+    robj->mapz = 0;
+    robj->entry_id = -1 * id;
+    return robj;
 }
 
 void region_list_load_objs(region_list_t *rl, const int gff_file, const int map_id) {

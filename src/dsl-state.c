@@ -98,6 +98,7 @@ static int set_lf(lua_State *l) {
         exit(1);
     }
     //printf("local_flag[%lld] := %lld\n", id, val);
+    fflush(stdout);
     dsl_local_flags[id] = val;
     return 0;
 }
@@ -108,7 +109,7 @@ static int get_lf(lua_State *l) {
         printf("ERROR: %lld is out of range for local flags!\n", id);
         exit(1);
     }
-    //printf("local_flag[%lld] = %d\n", id, dsl_local_flags[id]);
+    //printf("local_flag[%lld] = %d (get)\n", id, dsl_local_flags[id]);
     lua_pushinteger(l, dsl_local_flags[id]);
     return 1;
 }
@@ -243,6 +244,19 @@ static int set_gname(lua_State *l) {
     }
     //printf("GNAME----------------------------------------------------->[%lld] = %d\n", id, dsl_gnames[id]);
     return 0;
+}
+
+static int is_true(lua_State *l) {
+    if (lua_isboolean(l, 1)) {
+        lua_pushboolean(l, lua_toboolean(l, 1));
+    } else if (lua_isinteger(l, 1)) {
+        lua_pushboolean(l, lua_tointeger(l, 1) != 0);
+    } else {
+        error("ERROR: did not received a boolean or int for accum testing!\n");
+        lua_pushboolean(l, 0);
+    }
+
+    return 1;
 }
 
 static int dsl_getX(lua_State *l) {
@@ -428,8 +442,12 @@ static int dsl_clone(lua_State *l) {
     lua_Integer priority = luaL_checkinteger(l, 5);
     lua_Integer placement = luaL_checkinteger(l, 6);
 
+    region_object_t* robj = region_list_create_from_objex(dsl_region_get_current()->list, obj, x, y);
     warn("Need to implement: dsl-clone: obj: %lld, qty: %lld, (%lld, %lld) pri: %lld, pla: %lld\n", obj, qty, x, y,
         priority, placement);
+    if (robj) {
+        port_add_obj(robj);
+    }
     return 0;
 }
 
@@ -486,6 +504,7 @@ static const struct luaL_Reg dsl_state_lib[] = {
     {"get_gstr", get_gstr},
     {"get_gname", get_gname},
     {"set_gname", set_gname},
+    {"is_true", is_true},
     {"getX", dsl_getX},
     {"getY", dsl_getY},
     {"read_complex", read_complex},

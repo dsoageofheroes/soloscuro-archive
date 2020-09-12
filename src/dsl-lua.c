@@ -19,6 +19,7 @@ static uint8_t dsl_lua_access_complex(int16_t *header, uint16_t *depth, uint16_t
 static int32_t dsl_lua_read_complex(char *buf, size_t *buf_pos, const size_t size);
 static uint16_t dsl_lua_get_word();
 static void validate_number(const char *num, const char *message);
+static void print_label();
 
 void dsl_lua_byte_dec(void);
 void dsl_lua_word_dec(void);
@@ -171,15 +172,46 @@ static params_t lparams;
 static char lua_buf[LUA_MAX_SIZE];
 static size_t lua_pos = 0;
 static int32_t lua_depth = 0; 
-#define lprintf(...) lua_tab(lua_depth); lua_pos += snprintf(lua_buf + lua_pos, LUA_MAX_SIZE - lua_pos, __VA_ARGS__)
+static size_t dsl_lua_start_ptr = 0;
+
+//#define lprintf(...) lua_tab(lua_depth); lua_pos += snprintf(lua_buf + lua_pos, LUA_MAX_SIZE - lua_pos, __VA_ARGS__)
 #define LUA_TAB_AMT (4)
-void lua_tab(const int amt) {
+static void lua_tab(const int amt) {
     for (int i = 0; i < amt && lua_pos < LUA_MAX_SIZE; i++) {
         for (int j = 0; j < LUA_TAB_AMT && lua_pos < LUA_MAX_SIZE; j++) {
             lua_buf[lua_pos++] = ' ';
         }
     }
     lua_buf[lua_pos >= LUA_MAX_SIZE ? LUA_MAX_SIZE - 1 : lua_pos] = '\0';
+}
+
+static void lprintf(const char *str, ...) {
+    va_list args;
+    va_start(args, str);
+    lua_tab(lua_depth);
+    lua_pos += vsnprintf(lua_buf + lua_pos, LUA_MAX_SIZE - lua_pos, str, args);
+    va_end(args);
+}
+
+static size_t script_id;
+static int is_mas;
+static int collect_labels;
+
+#define MAX_LABELS     (1<<12)
+static uint32_t labels[MAX_LABELS];
+static int label_pos;
+
+static void lua_goto(const char *str) {
+    int64_t num = strtol(str, NULL, 10);
+    if (num == LONG_MIN || num == LONG_MAX) {
+        error("Could not convert label: '%s' to long!\n", str);
+        exit(1);
+    }
+    if (collect_labels == 1) {
+        labels[label_pos++] = num;
+    } else {
+        lprintf("goto label%ld\n", num);
+    }
 }
 
 static void lua_exit(const char *msg) {
@@ -209,6 +241,18 @@ static void dsl_lua_get_parameters(int16_t amt) {
     for (int16_t i = 0; i < amt; i++) {
         dsl_lua_read_number(lparams.params[i], BUF_SIZE);
         //printf("parameter[%d] = %s\n", i, lparams.params[i]);
+    }
+}
+
+static void print_label() {
+    if (collect_labels) { return; }
+
+    uint64_t label = ((size_t)get_data_ptr()) - dsl_lua_start_ptr;
+    for (int i = 0; i < label_pos; i++) {
+        if (labels[i] == label) {
+            lprintf("::label%lu::\n", label);
+            break;
+        }
     }
 }
 
@@ -362,14 +406,42 @@ static void do_lua_dsl_command(uint8_t cmd) {
     //print_vars(0);
 }
 
-static size_t dsl_lua_start_ptr = 0;
-
 /*
  * Warning: This function returns an internal buffer that *does* change
  * with subsequent calls. Make any copies as needed!
  */
-static size_t script_id;
-static int is_mas;
+static void dsl_lua_pass(unsigned char *dsl, const size_t len, const int pass_num) {
+    lua_pos = 0;
+    lua_depth = 0; 
+    lua_buf[0] = '\0';
+    funcnum = 0;
+    in_func = 0;
+    varnum = 0;
+
+    if (pass_num == 0) {
+        collect_labels = 1;
+        label_pos = 0;
+    } else {
+        collect_labels = 0;
+    }
+
+    push_data_ptr(dsl);
+    set_data_ptr(dsl, dsl);
+    dsl_lua_start_ptr = (size_t)dsl;
+    const size_t start = (size_t)get_data_ptr();
+    size_t diff = (size_t)get_data_ptr() - start;
+    is_master_mas = (script_id == 99 && is_mas);
+    //printf("dsl = %p, len = %ld\n", dsl, len);
+    while (diff < len && print_cmd()) {
+        diff = (size_t)get_data_ptr() - start;
+    }
+    while (lua_depth-- > 0) {
+        lprintf("end\n");
+    }
+    //printf("tranversed = %ld, len = %ld\n", (size_t)get_data_ptr() - (size_t)start, len);
+    pop_data_ptr();
+}
+
 char* dsl_lua_print(const size_t _script_id, const int _is_mas, size_t *script_len) {
     size_t len;
     unsigned char *dsl = NULL;
@@ -379,7 +451,7 @@ char* dsl_lua_print(const size_t _script_id, const int _is_mas, size_t *script_l
     dsl = (unsigned char*)gff_get_raw_bytes(DSLDATA_GFF_INDEX, 
         is_mas ? GT_MAS : GT_GPL,
         script_id, &len);
-
+/*
     lua_pos = 0;
     lua_depth = 0; 
     lua_buf[0] = '\0';
@@ -402,6 +474,9 @@ char* dsl_lua_print(const size_t _script_id, const int _is_mas, size_t *script_l
     }
     //printf("tranversed = %ld, len = %ld\n", (size_t)get_data_ptr() - (size_t)start, len);
     pop_data_ptr();
+    */
+    dsl_lua_pass(dsl, len, 0);
+    dsl_lua_pass(dsl, len, 1);
     *script_len = lua_pos - 1;
     lua_buf[lua_pos - 1] = '\0';
     return lua_buf;
@@ -416,6 +491,8 @@ static int print_cmd() {
             //script_id, ((size_t)get_data_ptr()) - dsl_lua_start_ptr);
         lua_depth++;
         in_func = 1;
+    } else {
+        print_label();
     }
     uint8_t command = get_byte();
     if (!dsl_lua_operations[command].func) {
@@ -448,7 +525,7 @@ static void dsl_lua_string_copy() {
 void dsl_lua_load_accum(void) {
     char buf[BUF_SIZE];
     dsl_lua_read_number(buf, BUF_SIZE);
-    lprintf("accum = %s\n", buf);
+    lprintf("accum = %s -- load_accum\n", buf);
 }
 
 void dsl_lua_global_ret(void) {
@@ -635,13 +712,15 @@ void dsl_lua_wait(void) {
 
 void dsl_lua_while(void) {
     dsl_lua_get_parameters(1);
-    lprintf("while accum == true do\n");
+    //lprintf("while accum == true do\n");
+    lprintf("if accum == true then -- \"while\" loop\n");
     lua_depth++;
 }
 
 void dsl_lua_wend(void) {
     char buf[BUF_SIZE];
     dsl_lua_read_number(buf, BUF_SIZE);
+    lua_goto(buf);
     lua_depth--;
     lprintf("end\n");
 }
@@ -808,7 +887,7 @@ void dsl_lua_if(void) {
     // The paramter is ignored, in the original it probably was the address
     // to jump to if the if was not taken.
     dsl_lua_get_parameters(1);
-    lprintf("if accum then \n");
+    lprintf("if dsl.is_true(accum) then \n");
     lua_depth++;
 }
 
@@ -941,7 +1020,8 @@ void dsl_lua_menu(void) {
     //for (int i = 0; i < items; i++) {
         //lprintf("narrate_choice( %d, %d) -- choice param1 goes to addr param2\n", i, menu_functions[i]);
     //}
-    lprintf("accum = dsl.narrate_show() --narrate_wait for input\n");
+    //lprintf("accum = dsl.narrate_show() --narrate_wait for input\n");
+    lprintf("dsl.narrate_show() --narrate_wait for input\n");
     //printf("Need to implement display_menu()\n");
     //command_implemented = 0;
 }

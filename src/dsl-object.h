@@ -277,6 +277,7 @@ int dsl_valid_character_id(const int id);
 region_list_t* region_list_create();
 void region_list_free(region_list_t *rl);
 void region_list_load_objs(region_list_t *rl, const int gff_file, const int map_id);
+region_object_t* region_list_create_from_objex(region_list_t *rl, const int id, const int32_t x, const int32_t y);
 #define region_list_get_object(rl, i) (rl->objs + i)
 
 #endif
