@@ -231,6 +231,7 @@ void talk_click(uint32_t obj) {
 
     replay_print("rep.talk_click(%d)\n", obj);
     dsl_set_gname(GNAME_PASSIVE, obj);
+    dsl_local_clear();
 
     if (tt.obj != 0) {
         dsl_lua_execute_script(tt.file, tt.addr, 0);

@@ -1,4 +1,5 @@
 #include "dsl-lua.h"
+#include "dsl-state.h"
 #include "dsl-string.h"
 #include "dsl-var.h"
 #include "dsl-manager.h"
@@ -1794,12 +1795,23 @@ static uint8_t dsl_lua_access_complex(int16_t *header, uint16_t *depth, uint16_t
         lprintf("--access_complex: I need to set the *head to the correct view\n");
         switch (*obj_name & 0x7FFF) {
             case 0x25: // POV
+                lprintf("--access_complex: get POV, valid obj_name(%d), need to set header\n", *obj_name & 0x7FFF);
+                break;
             case 0x26: // ACTIVE
+                lprintf("--access_complex: get ACTIVE, valid obj_name(%d), need to set header\n", *obj_name & 0x7FFF);
+                break;
             case 0x27: // PASSIVE
+                lprintf("obj = dsl.get_gname(%d) -- passive\n", GNAME_PASSIVE);
+                lprintf("--access_complex: get PASSIVE, valid obj_name(%d), need to set header\n", *obj_name & 0x7FFF);
+                break;
             case 0x28: // OTHER
+                lprintf("--access_complex: get OTHER, valid obj_name(%d), need to set header\n", *obj_name & 0x7FFF);
+                break;
             case 0x2C: // OTHER1
+                lprintf("--access_complex: get OTHER1, valid obj_name(%d), need to set header\n", *obj_name & 0x7FFF);
+                break;
             case 0x2B: // THING
-                lprintf("--access_complex:valid obj_name(%d), need to set header (but can't yet...)\n", *obj_name & 0x7FFF);
+                lprintf("--access_complex: get THING, valid obj_name(%d), need to set header\n", *obj_name & 0x7FFF);
                 break;
             default:
                 return 0;
@@ -1843,7 +1855,20 @@ static int32_t dsl_lua_read_complex(char *buf, size_t *buf_pos, const size_t siz
     memset(element, 0x0, sizeof(uint16_t) * MAX_SEARCH_STACK);
 
     if (dsl_lua_access_complex(&header, &depth, element, &obj_name) == 1) {
-        *buf_pos += snprintf(buf + *buf_pos, size - *buf_pos, "dsl.read_complex(%d, %d, %d)", obj_name, header, depth);
+        // So if depth == 0 then get type, is the type, 1 is the id (like -319)
+        switch (depth) {
+            case 0:
+                //lprintf("dsl.get_type(obj)\n"); 
+                *buf_pos += snprintf(buf + *buf_pos, size - *buf_pos, "dsl.get_type(obj)");
+                break;
+            case 1:
+                //lprintf("dsl.get_id(obj)\n");
+                *buf_pos += snprintf(buf + *buf_pos, size - *buf_pos, "dsl.get_id(obj)");
+                break;
+            default:
+                *buf_pos += snprintf(buf + *buf_pos, size - *buf_pos, "dsl.read_complex(%d, %d, %d)", obj_name, header, depth);
+                break;
+        }
         lprintf("--read_complex:reading header (%d) at depth (%d)\n", header, depth);
         ret = dsl_lua_get_complex_data(header, depth, element);
         return ret;

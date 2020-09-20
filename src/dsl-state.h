@@ -28,5 +28,6 @@ uint32_t dsl_get_region();
 uint32_t dsl_get_gff_index();
 
 void dsl_set_gname(const int index, const int32_t obj);
+void dsl_local_clear();
 
 #endif

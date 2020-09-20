@@ -35,6 +35,7 @@ static char dsl_global_strs[MAX_GSTRS][STRING_SIZE];
 static int16_t dsl_gnames[MAX_GNAMES];
 static uint32_t dsl_region; // the current region id
 static uint32_t dsl_gff_index; // the current region id
+static uint32_t dsl_passive_obj;
 
 // Standard setters/getters
 void dsl_set_region(const uint32_t region) { 
@@ -42,19 +43,18 @@ void dsl_set_region(const uint32_t region) {
     snprintf(buf, BUF_SIZE, "rgn%x.gff", region);
     dsl_region = region; 
     dsl_gff_index = gff_find_index(buf);
+    dsl_passive_obj = 0;
 }
 uint32_t dsl_get_region()                  { return dsl_region; }
 uint32_t dsl_get_gff_index()               { return dsl_gff_index; }
 
 void dsl_state_init() {
     memset(dsl_global_flags, 0x0, sizeof(int8_t) * MAX_GFLAGS);
-    memset(dsl_local_flags, 0x0, sizeof(int8_t) * MAX_LFLAGS);
     memset(dsl_global_nums, 0x0, sizeof(int16_t) * MAX_GNUMS);
-    memset(dsl_local_nums, 0x0, sizeof(int16_t) * MAX_LNUMS);
     memset(dsl_global_bnums, 0x0, sizeof(int32_t) * MAX_GBIGNUMS);
-    memset(dsl_local_bnums, 0x0, sizeof(int32_t) * MAX_LBIGNUMS);
     memset(dsl_global_strs, 0x0, sizeof(char) * MAX_GSTRS * STRING_SIZE);
     memset(dsl_gnames, 0x0, sizeof(int16_t) * MAX_GNAMES);
+    dsl_local_clear();
     dsl_region = 0;
 }
 
@@ -246,9 +246,35 @@ static int set_gname(lua_State *l) {
     return 0;
 }
 
+static int get_type(lua_State *l) {
+    //lua_Integer id = luaL_checkinteger(l, 1);
+    printf("!!!!!!!!!!dsl.get_type: not implemented returning -1!\n");
+    //lua_pushnumber(l, dsl_gnames[id]);
+    lua_pushnumber(l, -1);
+    return 1;
+}
+
+static int get_id(lua_State *l) {
+    lua_Integer obj = luaL_checkinteger(l, 1);
+    //printf("!!!!!!!!!!dsl.get_name: not implemented returning -1!\n");
+    //printf("-------->returning %lld\n", obj);
+    lua_pushnumber(l, obj);
+    //lua_pushnumber(l, -1);
+    return 1;
+}
+
+static int get_party(lua_State *l) {
+    lua_Integer member = luaL_checkinteger(l, 1);
+    printf("!!!!!!!!!!dsl.get_party: not implemented returning -9999 for member: %llu!\n", member);
+    //lua_pushnumber(l, dsl_gnames[id]);
+    lua_pushnumber(l, 9999);
+    return 1;
+}
+
 static int is_true(lua_State *l) {
     if (lua_isboolean(l, 1)) {
-        lua_pushboolean(l, lua_toboolean(l, 1));
+        //printf("------------>boolean = %d\n", lua_toboolean(l, 1));
+        lua_pushboolean(l, lua_toboolean(l, 1) == 1);
     } else if (lua_isinteger(l, 1)) {
         lua_pushboolean(l, lua_tointeger(l, 1) != 0);
     } else {
@@ -504,6 +530,9 @@ static const struct luaL_Reg dsl_state_lib[] = {
     {"get_gstr", get_gstr},
     {"get_gname", get_gname},
     {"set_gname", set_gname},
+    {"get_type", get_type},
+    {"get_id", get_id},
+    {"get_party", get_party},
     {"is_true", is_true},
     {"getX", dsl_getX},
     {"getY", dsl_getY},
@@ -549,4 +578,11 @@ void dsl_state_register(lua_State *l) {
     lua_newtable(l);
     luaL_setfuncs(l, dsl_state_lib, 0);
     lua_setglobal(l, "dsl");
+}
+
+void dsl_local_clear() {
+    memset(dsl_local_flags, 0x0, sizeof(int8_t) * MAX_LFLAGS);
+    memset(dsl_local_nums, 0x0, sizeof(int16_t) * MAX_LNUMS);
+    memset(dsl_local_bnums, 0x0, sizeof(int32_t) * MAX_LBIGNUMS);
+    //memset(dsl_local_bnums, 0x0, sizeof(int32_t) * MAX_LBIGNUMS); string!
 }
