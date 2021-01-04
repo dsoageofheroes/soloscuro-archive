@@ -51,7 +51,7 @@ void load_portraits(SDL_Renderer *renderer) {
     unsigned int w, h, id;
     SDL_Surface *surface = NULL;
     unsigned int *ids = gff_get_id_list(DSLDATA_GFF_INDEX, GT_PORT);
-    unsigned int num_ids = gff_get_gff_type_length(DSLDATA_GFF_INDEX, GT_PORT);
+    unsigned int num_ids = gff_get_resource_length(DSLDATA_GFF_INDEX, GT_PORT);
     memset(portraits_loc, 0x0, sizeof(SDL_Rect) * MAX_PORTRAITS);
     memset(portraits, 0x0, sizeof(SDL_Texture*) * MAX_PORTRAITS);
     memset(font_table, 0x0, sizeof(SDL_Texture*) * MAX_CHARS);
@@ -116,6 +116,7 @@ void narrate_init(SDL_Renderer *renderer) {
 
 void print_line_len(SDL_Renderer *renderer, const char *text, size_t x, size_t y, const uint32_t len) {
     size_t c;
+    if (text == NULL) { return; }
     for (int i = 0; text[i] && i < len; i++) {
         c = text[i];
         font_locs[c].x = x;

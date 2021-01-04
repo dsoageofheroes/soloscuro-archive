@@ -58,7 +58,7 @@ static void dsl_load_map_tile_ids(dsl_region_t *region) {
     if (!data) { return ; }
 
     region->tile_ids_size = len;
-    region->num_tiles = gff_get_gff_type_length(region->gff_file, GT_TILE);
+    region->num_tiles = gff_get_resource_length(region->gff_file, GT_TILE);
     memcpy(region->tile_ids, data, len);
 
     free(rmap_ids);

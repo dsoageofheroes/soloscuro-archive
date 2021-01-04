@@ -143,7 +143,7 @@ int lua_gff_get_id_list(lua_State *L) {
 
     lua_createtable(L, 0, 0);
 
-    unsigned int num_ids = gff_get_gff_type_length(idx, type_id);
+    unsigned int num_ids = gff_get_resource_length(idx, type_id);
     unsigned int *ids = gff_get_id_list(idx, type_id);
 
     for (unsigned int i = 0; i < num_ids; i++) {

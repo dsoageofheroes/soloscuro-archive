@@ -393,7 +393,7 @@ int gff_write_raw_bytes(int idx, int type_id, int res_id, const char *path) {
 /*
  * Return the number of ids within a certain file (idx) and type (type_id).
  */
-unsigned int gff_get_gff_type_length(int idx, int type_id) {
+unsigned int gff_get_resource_length(int idx, int type_id) {
     unsigned int sum = 0;
     gff_seg_header_t  *seg_header;
     gff_chunk_list_t* chunk_list = search_for_chunk_by_name(open_files + idx, type_id);
@@ -413,12 +413,49 @@ unsigned int gff_get_gff_type_length(int idx, int type_id) {
 }
 
 /*
+ * Copies a list of ids into buf.
+ * The caller MUST allocate the correct amount before calling.
+ * use gff_get_resource_length to know the amt!
+ * returns -1 if there is an error, otherwise returns the number of ids copied in.
+ */
+size_t gff_get_resource_ids(int idx, int type_id, unsigned int *ids) {
+    int pos = 0, len = gff_get_resource_length(idx, type_id);
+    unsigned char *cptr;
+    gff_chunk_list_t* chunk_list;
+    gff_seg_header_t  *seg_header;
+    gff_chunk_header_t *chunk_header;
+
+    if (len == 0) { return 0; }
+
+    chunk_list = search_for_chunk_by_name(open_files + idx, type_id);
+    if (chunk_list == NULL) { return -1; }
+    if (ids == NULL) { return -1; }
+
+    if (chunk_list->chunkCount & GFFSEGFLAGMASK) {
+        seg_header = (gff_seg_header_t*)&chunk_list->chunks[0];
+        for (int j = 0; j < seg_header->segRef.numEntries; j++) {
+            for (int id_offset = 0; id_offset < seg_header->segRef.entries[j].consecChunks; id_offset++) {
+                ids[pos++] = seg_header->segRef.entries[j].firstId + id_offset;
+            }
+        }
+    } else {
+        cptr = (void*)chunk_list;
+        for (int j = 0; j < chunk_list->chunkCount; j++) {
+            chunk_header = (void*)(cptr + GFFCHUNKLISTHEADERSIZE + (j * GFFCHUNKHEADERSIZE));
+            ids[pos++] = chunk_header->chunkId;
+        }
+    }
+
+    return pos;
+}
+
+/*
  * Returns a list of ALL ids associated with file(idx) and type_id.
- * To know the length, please use gff_get_gff_type_length.
+ * To know the length, please use gff_get_resource_length.
  */
 extern unsigned int* gff_get_id_list(int idx, int type_id) {
     unsigned int *ids = NULL;
-    int pos = 0, len = gff_get_gff_type_length(idx, type_id);
+    int pos = 0, len = gff_get_resource_length(idx, type_id);
     unsigned char *cptr;
     gff_chunk_list_t* chunk_list;
     gff_seg_header_t  *seg_header;
