@@ -455,39 +455,13 @@ size_t gff_get_resource_ids(int idx, int type_id, unsigned int *ids) {
  */
 extern unsigned int* gff_get_id_list(int idx, int type_id) {
     unsigned int *ids = NULL;
-    int pos = 0, len = gff_get_resource_length(idx, type_id);
-    unsigned char *cptr;
-    gff_chunk_list_t* chunk_list;
-    gff_seg_header_t  *seg_header;
-    gff_chunk_header_t *chunk_header;
+    unsigned int len = gff_get_resource_length(idx, type_id);
 
-    if (len == 0) { return ids; }
-
-    chunk_list = search_for_chunk_by_name(open_files + idx, type_id);
-    if (chunk_list == NULL) { return NULL; }
     ids = malloc(sizeof(unsigned int) * len);
+
     if (ids == NULL) { return NULL; }
 
-    if (chunk_list->chunkCount & GFFSEGFLAGMASK) {
-        seg_header = (gff_seg_header_t*)&chunk_list->chunks[0];
-        for (int j = 0; j < seg_header->segRef.numEntries; j++) {
-            for (int id_offset = 0; id_offset < seg_header->segRef.entries[j].consecChunks; id_offset++) {
-                ids[pos++] = seg_header->segRef.entries[j].firstId + id_offset;
-            }
-        }
-    } else {
-        cptr = (void*)chunk_list;
-        for (int j = 0; j < chunk_list->chunkCount; j++) {
-            chunk_header = (void*)(cptr + GFFCHUNKLISTHEADERSIZE + (j * GFFCHUNKHEADERSIZE));
-            ids[pos++] = chunk_header->chunkId;
-        }
-    }
-
-    // If we fail to find any, we fail to find all.
-    if (pos < len) {
-        free(ids);
-        return NULL;
-    }
+    gff_get_resource_ids(idx, type_id, ids);
 
     return ids;
 }
