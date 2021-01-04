@@ -543,9 +543,14 @@ void dsl_lua_nextto(void) {
 
 void dsl_lua_inlostrigger(void) {
     dsl_lua_get_parameters(4);
+    uint32_t addr = atoi(lparams.params[0]);
+    uint32_t file = atoi(lparams.params[1]);
+    uint32_t name = atoi(lparams.params[2]);
+    //uint32_t global = in_mas ? 1 : 0;
     //global_addr_name(&param);
     //set_los_order(DSL_IN_LOS, param.val[3]);
-    lprintf("-- need to set line of sight order on %d\n", param.val[3]);
+    //lprintf("-- need to set line of sight order on %d\n", param.val[3]);
+    lprintf("-- If in line of sight of %d goto file %d:%d (?: %s)\n", name, file, addr, lparams.params[3]);
 }
 
 void dsl_lua_notinlostrigger(void) {

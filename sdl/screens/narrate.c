@@ -114,7 +114,7 @@ void narrate_init(SDL_Renderer *renderer) {
     display = 0; // start off as off
 }
 
-static void print_line_len(SDL_Renderer *renderer, const char *text, size_t x, size_t y, const uint32_t len) {
+void print_line_len(SDL_Renderer *renderer, const char *text, size_t x, size_t y, const uint32_t len) {
     size_t c;
     for (int i = 0; text[i] && i < len; i++) {
         c = text[i];
