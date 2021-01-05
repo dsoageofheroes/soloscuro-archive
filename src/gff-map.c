@@ -221,6 +221,7 @@ so_object_t* gff_object_inspect(int gff_index, int res_id) {
                 //printf("OBJECT\n");
                 data += sizeof(rdff_disk_object_t);
                 ret = gff_create_object((char*) data, entry, -1);
+                return ret;
                 break;
             case RDFF_CONTAINER:
                 printf("CONTAINER\n");

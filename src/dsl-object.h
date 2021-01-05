@@ -187,7 +187,8 @@ typedef struct _ds_combat_t {
     //uint8_t direction;
     // WARNING: This is actually 16, but we do 18 as a buffer.
     char    name[COMBAT_NAME_SIZE]; // 40, confirmed
-} ds1_combat_t;
+//} ds1_combat_t;
+} __attribute__ ((__packed__)) ds1_combat_t;
 
 typedef struct _ds1_item_t { // Not confirmed at all...
     int16_t  id; // 0, confirmed (but is negative...)

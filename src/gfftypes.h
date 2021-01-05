@@ -32,6 +32,7 @@
 #define GT_MAS  GFFTYPE('M','A','S','\x20') // Compiled MAS (GPL master) files
 #define GT_MENU GFFTYPE('M','E','N','U')    // Menu resource
 #define GT_MONR GFFTYPE('M','O','N','R')    // monsters by region ids and level (used in request.c DARKSUN)
+#define GFF_MONR GFFTYPE('M','O','N','R')    // monsters by region ids and level (used in request.c DARKSUN)
 #define GT_MGTL GFFTYPE('M','G','T','L')    // Global timbre library
 #define GT_MSEQ GFFTYPE('M','S','E','Q')    // XMIDI sequence files (.XMI)
 #define GT_OMAP GFFTYPE('O','M','A','P')    // Opacity map (GIL bitmap table, 1 bitmap)
@@ -55,6 +56,7 @@
 #define GT_WALL GFFTYPE('W','A','L','L')     // WALL?
 #define GT_OJFF GFFTYPE('O','J','F','F')     // Object data?
 #define GT_RDFF GFFTYPE('R','D','F','F')     // RDFF?
+#define GFF_RDFF GFFTYPE('R','D','F','F')     // RDFF?
 
 #define GT_FNFO GFFTYPE('F','N','F','O')     // FNFO: Appears to have the object data for the game.
 
