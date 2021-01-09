@@ -199,7 +199,9 @@ typedef struct _ds1_item_t { // Not confirmed at all...
     int16_t  item_index;
     int16_t  icon;
     uint16_t charges;
+    //uint8_t charges;
     uint16_t special;
+    //uint8_t special;
     uint8_t  priority;
     int8_t   slot;
     uint16_t name_index;

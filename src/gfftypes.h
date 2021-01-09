@@ -6,6 +6,7 @@
 
 #define GT_FORM GFFTYPE('F','O','R','M')    // GFF internal chunk
 #define GT_GFFI GFFTYPE('G','F','F','I')  // GFFI internal chunk
+#define GFF_GFFI GFFTYPE('G','F','F','I')  // GFFI internal chunk
 #define GT_GFRE GFFTYPE('G','F','R','E')    // GFF internal chunk
 #define GT_GTOC GFFTYPE('G','T','O','C')    // GFF internal chunk
 #define GT_ACCL GFFTYPE('A','C','C','L')    // Accelertor resource
@@ -24,6 +25,7 @@
 #define GT_EBOX GFFTYPE('E','B','O','X')        // Edit box resource
 #define GT_ETAB GFFTYPE('E','T','A','B')    // Object entry table
 #define GT_FONT GFFTYPE('F','O','N','T')    // Font (GIL font)
+#define GFF_FONT GFFTYPE('F','O','N','T')    // Font (GIL font)
 #define GT_FVOC GFFTYPE('F','V','O','C')    // Foreground play samples
 #define GT_GMAP GFFTYPE('G','M','A','P')        // Region map flags
 #define GT_GPL  GFFTYPE('G','P','L','\x20') // Compiled GPL files
@@ -60,10 +62,14 @@
 
 #define GT_FNFO GFFTYPE('F','N','F','O')     // FNFO: Appears to have the object data for the game.
 
+#define GFF_RDAT GFFTYPE('R','D','A','T') // Names?
+
 // DSL/GPL
 #define GT_GPL_INDEX_DATA GFFTYPE('G','P','L','X') // dsl/gpl index data
 #define GT_IT1R GFFTYPE('I','T','1','R')
+#define GFF_IT1R GFFTYPE('I','T','1','R')
 #define GT_NAME GFFTYPE('N','A','M','E')
+#define GFF_NAME GFFTYPE('N','A','M','E')
 #define GT_ALL	GFFTYPE('A','L','L',' ')
 
 #define GT_VECT GFFTYPE('V', 'E', 'C', 'T') // VECT?   rotate vector?

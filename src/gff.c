@@ -220,6 +220,102 @@ static int is_master_name(const char *name) {
     return 0;
 }
 
+static void gff_read_headers(gff_file_t *gff) {
+    fseek(gff->file, 0, SEEK_SET);
+    if (fread(&(gff->header), 1, sizeof(gff_file_header_t), gff->file)
+            != sizeof(gff_file_header_t)) {
+        fatal("Unable to read header!\n");
+    }
+
+    fseek(gff->file, gff->header.tocLocation, SEEK_SET);
+    if (fread(&(gff->toc), 1, sizeof(gff_toc_header_t), gff->file)
+            != sizeof(gff_toc_header_t)) {
+        fatal("Unable to read Table of Contents!\n");
+    }
+
+    fseek(gff->file, gff->header.tocLocation + gff->toc.typesOffset, SEEK_SET);
+    if (fread(&(gff->types), 1, sizeof(gff_type_header_t), gff->file)
+            != sizeof(gff_type_header_t)) {
+        fatal("Unable to read types header!\n");
+    }
+    gff_chunk_list_t *chunk_list = NULL;
+    unsigned char *cptr = gff->data;
+    int i = 0;
+
+    if (!cptr) { return; }
+
+    cptr = (void*)(gff->data + gff->header.tocLocation + gff->toc.typesOffset);
+    chunk_list = (void*)(cptr + 2L);
+    cptr = (void*)chunk_list;
+    //unsigned char *sptr = cptr;
+
+    //chunk_entry_t **chunks = malloc(sizeof(chunk_entry_t*) * gff->types.numTypes);
+    gff->chunks = malloc(sizeof(gff_chunk_entry_t*) * gff->types.numTypes);
+/*
+    */
+    gff_chunk_list_header_t chunk_header;
+    fseek(gff->file, gff->header.tocLocation + gff->toc.typesOffset + 2L, SEEK_SET);
+    //gff_seg_header_t seg_header;
+    seg_header_t seg_header;
+    //fread(&(chunk_header), 1, sizeof(gff_chunk_list_t), gff->file);
+    for (i = 0; i < gff->types.numTypes; i++) {
+        //printf("chunk: amt = %d, ?= %ld\n", amt, cptr - sptr);
+        //if ((chunk_list->chunkType & GFFMAXCHUNKMASK) == name) {
+            //return chunk_list;
+        //}
+        fread(&(chunk_header), 1, sizeof(gff_chunk_list_header_t), gff->file);
+        //amt += sizeof(gff_chunk_list_header_t);
+        if (chunk_header.chunkType != chunk_list->chunkType) { fatal ("chunktype DNE.\n"); }
+        if (chunk_header.chunkCount != chunk_list->chunkCount) { fatal ("chunkCount DNE.\n"); }
+        //printf("chunk: type: %d ?= %d\n", chunk_header.chunkType, chunk_list->chunkType);
+        //printf("chunk: count: %d ?= %d\n", chunk_header.chunkCount, chunk_list->chunkCount);
+        gff_chunk_entry_t *chunk = NULL;
+        if (chunk_list->chunkCount & GFFSEGFLAGMASK) {
+            cptr += GFFCHUNKLISTHEADERSIZE;
+            //amt += GFFCHUNKLISTHEADERSIZE;
+            //printf("chunk: SEG1 amt = %d, ?= %ld\n", amt, cptr - sptr);
+            //fseek(gff->file, GFFCHUNKLISTHEADERSIZE, SEEK_CUR);
+            //amt += ((gff_seg_header_t*)(cptr))->segRef.numEntries * GFFSEGREFENTRYSIZE;
+            fread(&(seg_header), 1, sizeof(seg_header_t), gff->file);
+
+            chunk = malloc(8L + sizeof(gff_seg_t) + seg_header.num_entries * sizeof(gff_seg_entry_t));
+            chunk->chunkType = chunk_header.chunkType;
+            chunk->chunkCount = chunk_header.chunkCount;
+            chunk->segs.header = seg_header;
+
+            //fseek(gff->file, ((gff_seg_header_t*)(cptr))->segRef.numEntries * GFFSEGREFENTRYSIZE, SEEK_CUR);
+            //fseek(gff->file, seg_header.numEntries * GFFSEGREFENTRYSIZE, SEEK_CUR);
+            //fread(&(seg->segs), 1, seg_header.numEntries * GFFSEGREFENTRYSIZE, gff->file);
+            fread(&(chunk->segs.segs), 1, seg_header.num_entries * sizeof(gff_seg_entry_t), gff->file);
+            cptr += ((gff_seg_header_t*)(cptr))->segRef.numEntries * GFFSEGREFENTRYSIZE;
+            //printf("chunk: SEG2 amt = %d, ?= %ld\n", amt, cptr - sptr);
+            //fseek(gff->file, 12L, SEEK_CUR);
+            cptr += 12L;
+            //amt += 12L;
+            //printf("chunk: SEG3 amt = %d, ?= %ld\n", amt, cptr - sptr);
+            //printf("chunk: SEG (%d)\n", ((gff_seg_header_t*)(cptr))->segRef.numEntries);
+            //printf("chunk: SEG %d\n", ((gff_seg_header_t*)(cptr))->segRef.numEntries * GFFSEGREFENTRYSIZE);
+            gff->chunks[i] = chunk;
+        } else {
+            cptr += GFFCHUNKLISTHEADERSIZE;
+            chunk = malloc(8L + sizeof(gff_chunk_header_t) * chunk_header.chunkCount);
+            chunk->chunkType = chunk_header.chunkType;
+            chunk->chunkCount = chunk_header.chunkCount;
+            fread(&(chunk->chunks), 1, sizeof(gff_chunk_header_t) * chunk_header.chunkCount, gff->file);
+            gff->chunks[i] = chunk;
+
+            //fseek(gff->file, ((uint32_t)(chunk_header.chunkCount & GFFMAXCHUNKMASK) * GFFCHUNKHEADERSIZE), SEEK_CUR);
+            cptr += ((uint32_t)(chunk_list->chunkCount & GFFMAXCHUNKMASK) * GFFCHUNKHEADERSIZE);
+            //amt += ((uint32_t)(chunk_list->chunkCount & GFFMAXCHUNKMASK) * GFFCHUNKHEADERSIZE);
+            //printf("chunk: CHUNK\n");
+        }
+        if (chunk && ((chunk->chunkType & GFFMAXCHUNKMASK) == GFF_GFFI)) {
+            gff->gffi = chunk;
+        }
+        chunk_list = (void*) cptr;
+    }
+}
+
 int gff_open(const char *pathName) {
     int idx, len;
     ssize_t read_amt;
@@ -248,8 +344,12 @@ int gff_open(const char *pathName) {
     open_files[idx].num_palettes = 0;
     open_files[idx].num_objects = -1;
     open_files[idx].entry_table = NULL;
+    open_files[idx].file = file;
 
+    fseek(file, 0L, SEEK_SET);
     read_amt = fread(open_files[idx].data, 1, open_files[idx].len, file);
+
+    gff_read_headers(open_files + idx);
 
     if (read_amt < open_files[idx].len) {
         fprintf(stderr, "ERROR: unable to read the entire file '%s'\n", filename);
@@ -259,7 +359,7 @@ int gff_open(const char *pathName) {
         return -1;
     }
 
-    fclose(file);
+    //fclose(file);
     if (is_master_name(filename)) { master_gff = idx; }
 
     open_files[idx].filename = filename;
@@ -318,6 +418,79 @@ int gff_get_type_id(int idx, int type_index) {
     return chunk_list->chunkType & GFFMAXCHUNKMASK;
 }
 
+gff_chunk_header_t gff_find_chunk_header(int idx, int type_id, int res_id) {
+    gff_file_t *gff = open_files + idx;
+    gff_chunk_entry_t *entry = NULL;
+    gff_seg_loc_entry_t seg;
+    gff_chunk_header_t *gffi_chunk_header = NULL;
+    gff_chunk_header_t ret = {0, 0, 0};
+
+    for (int i = 0; !entry && i < gff->types.numTypes; i++) {
+        //printf("gff->chunks[%d]->chunkType & GFFMAXCHUNKMASK = %ld\n", i, gff->chunks[i]->chunkType & GFFMAXCHUNKMASK);
+        if ((gff->chunks[i]->chunkType & GFFMAXCHUNKMASK) == type_id) {
+            entry = gff->chunks[i];
+        }
+    }
+    
+    if (!entry) {
+        error("Can't find type %d in gff %d\n", type_id, idx);
+        return ret;
+    }
+
+    if (entry->chunkCount & GFFSEGFLAGMASK) {
+        //printf("READ: SEG!\n");
+        int32_t chunk_offset = 0;
+        gffi_chunk_header = gff->gffi->chunks + entry->segs.header.segLocId;
+        for (int j = 0; j < entry->segs.header.num_entries; j++) {
+            int32_t first_id = entry->segs.segs[j].first_id;
+            //printf("READ:first_id = %d, gff->gffi = %p\n", first_id, gff->gffi);
+            //printf("READ: chunk_count = %d\n", gff->gffi->chunkCount);
+            //printf("READ: entry->segs.segs[j].segLocId = %d\n", entry->segs.header.segLocId);
+            if (res_id >= first_id && res_id <= (first_id + entry->segs.segs[j].num_chunks)) {
+                int offset = 4L + (GFFSEGLOCENTRYSIZE * chunk_offset);
+                fseek(gff->file, gffi_chunk_header->location + offset + (res_id - first_id)*GFFSEGLOCENTRYSIZE, SEEK_SET);
+                fread(&seg, 1, sizeof(gff_seg_loc_entry_t), gff->file);
+
+                ret.id = res_id;
+                ret.location = seg.segOffset;
+                ret.length = seg.segLength;
+
+                return ret;
+            }
+            chunk_offset += entry->segs.segs[j].num_chunks;
+        }
+    } else {
+        for (int j = 0; j < entry->chunkCount; j++) {
+            if (entry->chunks[j].id == res_id) {
+                ret.id = res_id;
+                ret.location = entry->chunks[j].location;
+                ret.length = entry->chunks[j].length;
+                return ret;
+            }
+        }
+    }
+
+    return ret;
+}
+
+size_t gff_read_chunk_length(int idx, int type_id, int res_id, void *read_buf, const size_t len) {
+    gff_chunk_header_t chunk = gff_find_chunk_header(idx, type_id, res_id);
+    return chunk.length;
+}
+
+extern size_t gff_read_chunk(int idx, gff_chunk_header_t *chunk, void *read_buf, const size_t len) {
+    if (chunk->length > len) {
+        return -1;
+    }
+
+    fseek(open_files[idx].file, chunk->location, SEEK_SET);
+    return fread(read_buf, 1, chunk->length, open_files[idx].file);
+}
+
+size_t gff_read_raw_bytes(int idx, int type_id, int res_id, void *read_buf, const size_t len) {
+    gff_chunk_header_t chunk = gff_find_chunk_header(idx, type_id, res_id);
+    return gff_read_chunk(idx, &chunk, read_buf, len);
+}
 /*
  * Finds and returns a pointer to the part that represents the data.
  * len is set to the number of bytes.
@@ -341,7 +514,7 @@ char* gff_get_raw_bytes(int idx, int type_id, int res_id, unsigned long *len) {
         gff_chunk_header_t *gffi_chunk_header = (gff_chunk_header_t*)(seg_ptr + GFFCHUNKLISTHEADERSIZE +
             (seg_header->segLocId*GFFCHUNKHEADERSIZE));
         seg_ptr = (unsigned char*)open_files[idx].data; 
-        seg_ptr += gffi_chunk_header->chunkDataLocation;// Maybe where the seg pointer is!
+        seg_ptr += gffi_chunk_header->location;// Maybe where the seg pointer is!
         cptr += GFFCHUNKLISTHEADERSIZE;
         int ndx = 0;
         for (int j = 0; j < seg_header->segRef.numEntries; j++) {
@@ -360,10 +533,10 @@ char* gff_get_raw_bytes(int idx, int type_id, int res_id, unsigned long *len) {
         cptr = (void*)chunk_list;
         for (int j = 0; j < chunk_list->chunkCount; j++) {
             chunk_header = (void*)(cptr + GFFCHUNKLISTHEADERSIZE + (j * GFFCHUNKHEADERSIZE));
-            if (chunk_header->chunkId == res_id) {
-                *len = chunk_header->chunkLength;
+            if (chunk_header->id == res_id) {
+                *len = chunk_header->length;
                 cptr = open_files[idx].data;
-                return (void*) (cptr + chunk_header->chunkDataLocation);
+                return (void*) (cptr + chunk_header->location);
             }
         }
     }
@@ -442,7 +615,7 @@ size_t gff_get_resource_ids(int idx, int type_id, unsigned int *ids) {
         cptr = (void*)chunk_list;
         for (int j = 0; j < chunk_list->chunkCount; j++) {
             chunk_header = (void*)(cptr + GFFCHUNKLISTHEADERSIZE + (j * GFFCHUNKHEADERSIZE));
-            ids[pos++] = chunk_header->chunkId;
+            ids[pos++] = chunk_header->id;
         }
     }
 
@@ -546,24 +719,17 @@ void get_gff_type_name(unsigned int gff_type, char *type) {
 }
 
 gff_chunk_list_t* search_for_chunk_by_name(gff_file_t *file, unsigned long name) {
-    gff_file_header_t *header = file->data;
-    gff_toc_header_t *toc_header = NULL;
-    gff_type_header_t *type_header = NULL;
     gff_chunk_list_t *chunk_list = NULL;
     unsigned char *cptr = file->data;
     int i = 0;
 
     if (!cptr) { return NULL; }
 
-    toc_header = (void*)(cptr + header->tocLocation);
-    cptr = (void*)toc_header;
-
-    type_header = (void*)(cptr + toc_header->typesOffset);
-    cptr = (void*)type_header;
-
+    cptr = (void*)(file->data + file->header.tocLocation + file->toc.typesOffset);
     chunk_list = (void*)(cptr + 2L);
     cptr = (void*)chunk_list;
-    for (i = 0; i < type_header->numTypes; i++) {
+    //for (i = 0; i < type_header->numTypes; i++) {
+    for (i = 0; i < file->types.numTypes; i++) {
         if ((chunk_list->chunkType & GFFMAXCHUNKMASK) == name) {
             return chunk_list;
         }
@@ -643,7 +809,7 @@ void gff_print(int idx, FILE *out) {
             gff_chunk_header_t *gffi_chunk_header = (gff_chunk_header_t*)(seg_ptr + GFFCHUNKLISTHEADERSIZE +
                 (seg_header->segLocId*GFFCHUNKHEADERSIZE));
             seg_ptr = (unsigned char*)open_files[idx].data; 
-            seg_ptr += gffi_chunk_header->chunkDataLocation;// Maybe where the seg pointer is!
+            seg_ptr += gffi_chunk_header->location;// Maybe where the seg pointer is!
             cptr += GFFCHUNKLISTHEADERSIZE;
             fprintf(out, "  segCount = %d, segLocId = %d, numEntries = %d\n", seg_header->segCount,
                     seg_header->segLocId, seg_header->segRef.numEntries);
@@ -674,7 +840,7 @@ void gff_print(int idx, FILE *out) {
             fprintf(out, "  %d regular chunks detected.\n", chunk_list->chunkCount);
             for (int j = 0; j < chunk_list->chunkCount; j++) {
                 chunk_header = (void*)(cptr + GFFCHUNKLISTHEADERSIZE + (j * GFFCHUNKHEADERSIZE));
-                fprintf(out, "  [%d]: length = %d\n", chunk_header->chunkId, chunk_header->chunkLength);
+                fprintf(out, "  [%d]: length = %d\n", chunk_header->id, chunk_header->length);
             }
 
             cptr += GFFCHUNKLISTHEADERSIZE;

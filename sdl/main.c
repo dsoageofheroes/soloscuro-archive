@@ -7,7 +7,7 @@
 #include "../src/dsl.h"
 #include "../src/gameloop.h"
 
-void browse_loop(SDL_Renderer *rend);
+void browse_loop(SDL_Surface*, SDL_Renderer *rend);
 
 static uint32_t last_tick = 0;
 static const uint32_t TICK_AMT = 1000 / TICKS_PER_SEC;// Not fully correct...
@@ -121,7 +121,7 @@ void port_init(int args, char *argv[]) {
     for (int i = 0; i < args; i++) {
         if (!strcmp(argv[i], "--browse") && i < (args)) {
             printf("Entering browsing mode!\n");
-            browse_loop(renderer);
+            browse_loop(screen, renderer);
             exit(1);
         }
     }

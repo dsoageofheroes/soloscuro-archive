@@ -70,7 +70,7 @@ gff_palette_t* create_palettes(int gff_index, unsigned int *len) {
             cpal = palettes + num_palettes++;
             //cpal = palettes + num_palettes;
             unsigned char* raw_pal = (unsigned char*)((unsigned char*)open_files[gff_index].data) +
-                chunk_header->chunkDataLocation;
+                chunk_header->location;
             //cpal->color[j].r = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 0]));
             //cpal->color[j].g = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 1]));
             //cpal->color[j].b = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 2]));
@@ -314,10 +314,18 @@ int int_byte_swap(const int val) {
     return ret;
 }
 
-unsigned char* create_font_rgba(int gff_index, int c, int fg_color, int bg_color) {
-    unsigned long len;
+//TODO: PERFORMANCE: we don't *need* to read the chunk every time, just the first.
+#define FONT_NUM (1<<8)
+unsigned char* create_font_rgba(int gff_idx, int c, int fg_color, int bg_color) {
     uint8_t *pixel_idx = NULL;
-    ds_font_t *font = (ds_font_t*) gff_get_raw_bytes(gff_index, GT_FONT, 100, &len);
+    ds_font_t font[FONT_NUM]; // a hack, we need extra data to store the fonts!
+    gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_FONT, 100);
+
+    if ((sizeof(ds_font_t) * FONT_NUM) < chunk.length) {
+        error("ERROR font length > font buf, need to fix!");
+        return NULL;
+    }
+    gff_read_chunk(gff_idx, &chunk, font, chunk.length);
 
     if (!master_palette || c < 0 || c >= font->num) {return NULL;}
 

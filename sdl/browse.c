@@ -8,11 +8,13 @@
 
 #define BUF_MAX (1<<12)
 #define RES_MAX (1<<12)
+#define NAME_MAX (1<<14)
 
 static int done = 0;
 static uint32_t last_tick = 0;
 static const uint32_t TICK_AMT = 1000 / TICKS_PER_SEC;// Not fully correct...
 static SDL_Renderer *renderer = NULL;
+static SDL_Surface *surface = NULL;
 static int gff_idx = 0, row_selected = 0, row_max = 0, entry_idx = 0, entry_max, res_idx = 0, res_max = 0;
 static uint32_t res_ids[RES_MAX];
 
@@ -23,6 +25,7 @@ static void move_gff_cursor(int amt);
 static void print_gff_entries();
 static void render_entry();
 static void move_entry_cursor(int amt);
+static void write_blob();
 
 static void browse_handle_input() {
     //const Uint8 *key_state = SDL_GetKeyboardState(NULL);
@@ -41,6 +44,7 @@ static void browse_handle_input() {
                     case SDLK_UP: move_entry_cursor(-1); break;
                     case SDLK_RIGHT: res_idx = (res_idx + 1) % res_max; break;
                     case SDLK_LEFT: res_idx = (res_max + res_idx - 1) % res_max; break;
+                    case SDLK_w: write_blob(); break;
                 }
                 break;
             case SDL_MOUSEMOTION:
@@ -82,6 +86,8 @@ static void move_entry_cursor(int amt) {
         exit(1);
     }
     gff_get_resource_ids(gff_idx, type, res_ids);
+
+    res_idx = res_max ? res_idx % res_max : 0;
 }
 
 static void move_gff_cursor(int amt) {
@@ -106,6 +112,7 @@ static void move_gff_cursor(int amt) {
             exit(1);
         }
     }
+    move_entry_cursor(0); // update entry res points.
 }
 
 static void print_menu() {
@@ -128,6 +135,16 @@ static void print_menu() {
     rect.h = 20;
     rect.w = 20 + strlen(open_files[gff_idx].filename) * 10;
     SDL_RenderDrawRect(renderer, &rect);
+}
+
+#define BLOB_MAX (1<<16)
+static void write_blob() {
+    char buf[BLOB_MAX];
+    gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, gff_get_type_id(gff_idx, entry_idx), res_ids[res_idx]);
+    gff_read_chunk(gff_idx, &chunk, buf, BLOB_MAX);
+    FILE *file = fopen("out.dat", "wb");
+    fwrite(buf, 1, chunk.length, file);
+    fclose(file);
 }
 
 static void print_gff_entries() {
@@ -176,12 +193,18 @@ static void browse_tick() {
     }
 }
 
-void browse_loop(SDL_Renderer *rend) {
+void browse_loop(SDL_Surface *surface, SDL_Renderer *rend) {
     renderer = rend;
     browse_render();
-    move_gff_cursor(1);
+    //move_gff_cursor(1);
     move_entry_cursor(1);
-    res_idx = 272;
+    move_entry_cursor(1);
+    move_entry_cursor(1);
+    move_entry_cursor(1);
+    move_entry_cursor(1);
+    move_entry_cursor(1);
+    move_entry_cursor(1);
+    res_idx = 0;
     while (!done) {
         browse_handle_input();
         //Logic here...
@@ -201,26 +224,70 @@ static void render_entry_header();
 static void render_entry_text();
 static void render_entry_monr();
 static void render_entry_rdff();
+static void render_entry_name();
+//static void render_entry_rdat();
+static void render_entry_font();
 
 static void render_entry() {
     switch(gff_get_type_id(gff_idx, entry_idx)) {
         case GFF_TEXT: render_entry_text(); break;
         case GFF_MONR: render_entry_monr(); break;
         case GFF_RDFF: render_entry_rdff(); break;
+        case GFF_NAME: render_entry_name(); break;
+        //case GFF_RDAT: render_entry_rdat(); break;
+        case GFF_FONT: render_entry_font(); break;
+        default:
+            render_entry_header();
+            print_line_len(renderer, "Need to implement", 320, 40, 128);
     }
 }
 
 static void render_entry_header() {
     char buf[BUF_MAX];
-    snprintf(buf, BUF_MAX, "RESOURCE %d of %d (id: %d)\n", res_idx, res_max - 1, res_ids[res_idx]);
+    int32_t type = gff_get_type_id(gff_idx, entry_idx);
+    snprintf(buf, BUF_MAX, "RESOURCE %d of %d (id: %d) %c%c%c%c\n", res_idx, res_max - 1, res_ids[res_idx],
+        (type >> 0) & 0x000000FF,
+        (type >> 8) & 0x000000FF,
+        (type >> 16) & 0x000000FF,
+        (type >> 24) & 0x000000FF
+        );
     print_line_len(renderer, buf, 320, 20, BUF_MAX);
 }
 
 static void render_entry_text() {
-    unsigned long len = 0;
-    char *text = gff_get_raw_bytes(gff_idx, GFF_TEXT, res_ids[res_idx], &len);
+    char buf[1024];
+    gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_TEXT, res_ids[res_idx]);
+    gff_read_chunk(gff_idx, &chunk, buf, 1024);
     render_entry_header();
-    print_line_len(renderer, text, 320, 40, len);
+    if (chunk.length) {
+        print_line_len(renderer, buf, 320, 40, chunk.length);
+    }
+}
+
+/*
+static void render_entry_rdat() {
+    static char buf[BUF_MAX];
+    snprintf(buf, BUF_MAX, "RESOURCE %d of %d \n", res_idx, res_max - 1);
+    print_line_len(renderer, buf, 320, 20, BUF_MAX);
+    gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_RDAT, res_ids[res_idx]);
+    gff_read_chunk(gff_idx, &chunk, buf, BUF_MAX);
+    print_line_len(renderer, buf, 320, 40, chunk.length);
+}
+*/
+
+static void render_entry_name() {
+    static char buf[BUF_MAX];
+    static char names[NAME_MAX];
+
+    if (res_max < 2) {
+        gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_NAME, 1);
+        res_max = chunk.length / 25;
+        gff_read_chunk(gff_idx, &chunk, names, NAME_MAX);
+    }
+
+    snprintf(buf, BUF_MAX, "RESOURCE %d of %d \n", res_idx, res_max - 1);
+    print_line_len(renderer, buf, 320, 20, BUF_MAX);
+    print_line_len(renderer, names + 25*res_idx, 320, 40, BUF_MAX);
 }
 
 static void render_entry_monr() {
@@ -288,9 +355,40 @@ static void print_combat(ds1_combat_t combat, int pos) {
     snprintf(buf, BUF_MAX, "int: %d, wis: %d\n, cha: %d",
        combat.stats.INT, combat.stats.WIS, combat.stats.CHA);
     print_line_len(renderer, buf, 320, pos, 128); pos += 20;
-    //snprintf(buf, BUF_MAX, "direction: %d\n", combat.direction);
-    //print_line_len(renderer, buf, 320, pos, 128); pos += 20;
     print_line_len(renderer, "Not Shown: weapon, packed, character id", 320, pos, 128); pos += 20;
+}
+
+static void print_item(ds1_item_t item, int pos) {
+    char buf[BUF_MAX];
+    snprintf(buf, BUF_MAX, "id: %d\n", item.id);
+    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    snprintf(buf, BUF_MAX, "quantity: %d\n", item.quantity);
+    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    snprintf(buf, BUF_MAX, "next: %d\n", item.next);
+    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    snprintf(buf, BUF_MAX, "value: %d\n", item.value);
+    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    snprintf(buf, BUF_MAX, "pack index: %d\n", item.pack_index);
+    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    snprintf(buf, BUF_MAX, "item index: %d\n", item.item_index);
+    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    snprintf(buf, BUF_MAX, "Icon: %d\n", item.icon);
+    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    snprintf(buf, BUF_MAX, "charges: %d\n", item.charges);
+    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    snprintf(buf, BUF_MAX, "special: %d\n", item.special);
+    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    snprintf(buf, BUF_MAX, "priority: %d\n", item.priority);
+    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    snprintf(buf, BUF_MAX, "slot: %d\n", item.slot);
+    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    snprintf(buf, BUF_MAX, "name_index: %d\n", item.name_index);
+    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    snprintf(buf, BUF_MAX, "bonus: %d\n", item.bonus);
+    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    /*
+    print_line_len(renderer, "Not Shown: weapon, packed, character id", 320, pos, 128); pos += 20;
+    */
 }
 
 static void render_entry_rdff() {
@@ -325,6 +423,7 @@ static void render_entry_rdff() {
             snprintf(buf, BUF_MAX, "type: %s\n", so_object_names[so->type]);
             print_line_len(renderer, buf, 320, 220, 128);
             if (so->type == SO_DS1_COMBAT) { print_combat(so->data.ds1_combat, 240); }
+            if (so->type == SO_DS1_ITEM) { print_item(so->data.ds1_item, 240); }
             break;
         default:
             snprintf(buf, BUF_MAX, "unknown type: %d\n", rdff->type);
@@ -340,4 +439,38 @@ static void render_entry_rdff() {
         pos += 20;
     }
     */
+}
+
+#define FONT_NUM (1<<8)
+static void render_entry_font() {
+    char buf[BUF_MAX];
+    ds_font_t font[FONT_NUM];
+    SDL_Rect loc;
+    gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_FONT, res_ids[res_idx]);
+    if ((sizeof(ds_font_t) * FONT_NUM) < chunk.length) {
+        print_line_len(renderer, "ERROR font length > font buf, need to fix!", 340, 20, BUF_MAX);
+        return;
+    }
+    gff_read_chunk(gff_idx, &chunk, font, chunk.length);
+    snprintf(buf, BUF_MAX, "RESOURCE %d of %d \n", res_idx, res_max - 1);
+    print_line_len(renderer, buf, 320, 20, BUF_MAX);
+    for (int c = 0; c < 255; c++) {
+        ds_char_t *ds_char = (ds_char_t*)(((uint8_t*)font) + font->char_offset[c]);
+        if (ds_char->width) {
+            char *data = (char*)create_font_rgba(gff_idx, c, 0xFFFF00FF, 0x000000FF);
+            loc.w = ds_char->width;
+            loc.h = font->height;
+            surface = SDL_CreateRGBSurfaceFrom(data, loc.w, loc.h, 32, 4*loc.w,
+                    0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
+            SDL_Texture *tex = SDL_CreateTextureFromSurface(renderer, surface);
+            loc.x = 320 + 12 * (c % 32);
+            loc.y = 40  + 20 * (c / 32);
+            loc.w *= 2;
+            loc.h *= 2;
+            SDL_FreeSurface(surface);
+            SDL_RenderCopy( renderer, tex, NULL, &loc);
+            free(data);
+            SDL_DestroyTexture(tex);
+        }
+    }
 }

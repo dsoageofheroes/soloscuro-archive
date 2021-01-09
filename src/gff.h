@@ -40,9 +40,9 @@ typedef struct {
 
 typedef struct {
 
-  int32_t	  chunkId;
-  uint32_t 	  chunkDataLocation;
-  uint32_t 	  chunkLength;
+  int32_t	  id;
+  uint32_t 	  location;
+  uint32_t 	  length;
 
 } gff_chunk_header_t;
 
@@ -150,6 +150,31 @@ typedef struct {
 
 } gff_seg_header_t;
 
+typedef struct seg_header_s {
+    int32_t segCount;
+    int32_t segLocId;
+    int32_t num_entries;
+} seg_header_t;
+
+typedef struct gff_seg_entry_s {
+    int32_t first_id;
+    int32_t num_chunks;
+} gff_seg_entry_t;
+
+typedef struct gff_seg_s {
+    seg_header_t header;
+    gff_seg_entry_t segs[];
+} gff_seg_t;
+
+typedef struct gff_chunk_entry_s {
+    uint32_t chunkType;
+    uint32_t chunkCount;
+    union {
+        gff_chunk_header_t chunks[1];
+        gff_seg_t segs;
+    };
+} gff_chunk_entry_t;
+
 typedef struct _gff_file_t {
     void *data;
     gff_chunk_list_t *gffi_data;
@@ -161,6 +186,14 @@ typedef struct _gff_file_t {
     size_t start_palette_index;
     int num_objects;
     gff_map_object_t *entry_table;
+
+    // New work for loading only the headers.
+    FILE *file;
+    gff_file_header_t header;
+    gff_toc_header_t toc;
+    gff_type_header_t types;
+    gff_chunk_entry_t **chunks;
+    gff_chunk_entry_t *gffi;
 } gff_file_t;
 
 extern gff_file_t open_files[NUM_FILES];
@@ -180,6 +213,9 @@ extern unsigned int gff_get_resource_length(int idx, int type_id);
 extern size_t gff_get_resource_ids(int idx, int type_id, unsigned int *ids);
 extern unsigned int* gff_get_id_list(int idx, int type_id);
 extern char* gff_get_raw_bytes(int idx, int type_id, int res_id, unsigned long *len);
+extern size_t gff_read_raw_bytes(int idx, int type_id, int res_id, void *buf, const size_t len);
+extern gff_chunk_header_t gff_find_chunk_header(int idx, int type_id, int res_id);
+extern size_t gff_read_chunk(int idx, gff_chunk_header_t *chunk, void *buf, const size_t len);
 extern int gff_write_raw_bytes(int idx, int type_id, int res_id, const char *path);
 extern void gff_print(int idx, FILE *out);
 extern void gff_close (int gff_file);
@@ -210,7 +246,7 @@ typedef struct _ds_font_t {
     uint16_t background_color;
     uint16_t flags;
     uint8_t  colors[256];
-    uint16_t char_offset[1];
+    uint16_t char_offset[];
 } ds_font_t;
 
 typedef struct _ds_char_t {
