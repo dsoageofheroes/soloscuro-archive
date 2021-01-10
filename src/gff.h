@@ -194,6 +194,7 @@ typedef struct _gff_file_t {
     gff_type_header_t types;
     gff_chunk_entry_t **chunks;
     gff_chunk_entry_t *gffi;
+    gff_palettes_t *pals;
 } gff_file_t;
 
 extern gff_file_t open_files[NUM_FILES];

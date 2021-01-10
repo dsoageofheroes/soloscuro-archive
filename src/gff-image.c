@@ -1,9 +1,11 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include "gff-image.h"
 #include "gff.h"
 #include "gfftypes.h"
 #include "dsl.h"
+
 
 #define NUM_PALETTES (256)
 
@@ -22,7 +24,49 @@ void gff_image_init() {
     memset(palettes, 0, sizeof(gff_palette_t) * NUM_PALETTES);
 }
 
+#define RES_COUNT (256)
+#define PAL_MAX   (1<<12)
+gff_palettes_t* read_palettes_type(int idx, int type_id) {
+    //gff_chunk_header_t *header = gff_find_chunk_header(
+    char pal[PAL_MAX];
+    uint32_t res_ids[RES_COUNT];
+    uint32_t len = gff_get_resource_length(idx, type_id);
+    uint32_t mem_amt = sizeof(gff_palettes_t) + len * sizeof(gff_palette_t);
+
+    gff_palettes_t *ret = malloc(sizeof(gff_palettes_t) + mem_amt);
+    memset(ret, 0x0, mem_amt);
+    ret->len = len;
+
+    if (len > RES_COUNT) {
+        error ("Need to increase res_ids buffer in read_palettes_type\n");
+        exit(1);
+    }
+
+    gff_get_resource_ids(idx, type_id, res_ids);
+
+    for (int i = 0; i < ret->len; i++) {
+        gff_chunk_header_t chunk = gff_find_chunk_header(idx, type_id, res_ids[i]);
+        size_t pal_len = gff_read_chunk(idx, &chunk, pal, PAL_MAX);
+        if (pal_len != PALETTE_SIZE * 3) {
+            error("Encountered an incorrectly size palette!\n");
+            exit(1);
+        }
+        for (int j = 0; j < PALETTE_SIZE; j++) {
+            ret->palettes[i].color[j].r = intensity_multiplier * ((unsigned char)(pal[j * 3 + 0]));
+            ret->palettes[i].color[j].g = intensity_multiplier * ((unsigned char)(pal[j * 3 + 1]));
+            ret->palettes[i].color[j].b = intensity_multiplier * ((unsigned char)(pal[j * 3 + 2]));
+        }
+    }
+
+    return ret;
+}
+
+gff_palettes_t* read_palettes(int idx) {
+    return read_palettes_type(idx, GFF_PAL);
+}
+
 gff_palette_t* create_palettes(int gff_index, unsigned int *len) {
+    open_files[gff_index].pals = read_palettes(gff_index);
     gff_chunk_list_t* pal_chunk = search_for_chunk_by_name(open_files+gff_index, GT_PAL);
     if (pal_chunk == NULL) { goto cp_search_error; }
 

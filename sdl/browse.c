@@ -5,6 +5,7 @@
 #include "../src/dsl.h"
 #include "../src/gff.h"
 #include "../src/gff-map.h"
+#include "../src/gff-image.h"
 
 #define BUF_MAX (1<<12)
 #define RES_MAX (1<<12)
@@ -236,6 +237,7 @@ static void render_entry_name();
 //static void render_entry_rdat();
 static void render_entry_font();
 static void render_entry_spin();
+static void render_entry_pal();
 
 static void render_entry() {
     switch(gff_get_type_id(gff_idx, entry_idx)) {
@@ -246,6 +248,7 @@ static void render_entry() {
         //case GFF_RDAT: render_entry_rdat(); break;
         case GFF_FONT: render_entry_font(); break;
         case GFF_SPIN: render_entry_spin(); break;
+        case GFF_PAL: render_entry_pal(); break;
         default:
             render_entry_header();
             print_line_len(renderer, "Need to implement", 320, 40, 128);
@@ -308,6 +311,29 @@ static void render_entry_name() {
     snprintf(buf, BUF_MAX, "RESOURCE %d of %d \n", res_idx, res_max - 1);
     print_line_len(renderer, buf, 320, 20, BUF_MAX);
     print_line_len(renderer, names + 25*res_idx, 320, 40, BUF_MAX);
+}
+
+static void render_entry_pal() {
+    render_entry_header();
+    gff_palettes_t *pals = read_palettes_type(gff_idx, GFF_PAL);
+    const int pal_break = 64;
+
+    for (int i = 0; i < PALETTE_SIZE; i++) {
+        SDL_SetRenderDrawColor(renderer,
+                pals->palettes[res_idx].color[i].r,
+                pals->palettes[res_idx].color[i].g,
+                pals->palettes[res_idx].color[i].b,
+                0xFF);
+        int x = ((2*i)%pal_break) + 300;
+        int y = 40 + 2 * i / pal_break;
+        SDL_RenderDrawPoint(renderer, x, y);
+        SDL_RenderDrawPoint(renderer, x + 1, y);
+        SDL_RenderDrawPoint(renderer, x, y + 1);
+        SDL_RenderDrawPoint(renderer, x + 1, y + 1);
+    }
+    SDL_RenderDrawPoint(renderer, 400, 300);
+
+    free(pals);
 }
 
 static void render_entry_monr() {

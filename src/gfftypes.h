@@ -39,6 +39,7 @@
 #define GT_MSEQ GFFTYPE('M','S','E','Q')    // XMIDI sequence files (.XMI)
 #define GT_OMAP GFFTYPE('O','M','A','P')    // Opacity map (GIL bitmap table, 1 bitmap)
 #define GT_PAL  GFFTYPE('P','A','L','\x20') // VGA 256 color palette
+#define GFF_PAL  GFFTYPE('P','A','L','\x20') // VGA 256 color palette
 #define GT_POBJ GFFTYPE('P','O','B','J')    // PolyMesh object database
 #define GT_RMAP GFFTYPE('R','M','A','P')        // Region tile map
 #define GT_SCMD GFFTYPE('S','C','M','D')    // Animation script command table
