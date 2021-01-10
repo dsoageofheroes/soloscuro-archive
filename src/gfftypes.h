@@ -89,6 +89,7 @@
 #define GT_VPLY GFFTYPE('V','P','L','Y')
 
 #define GT_SPIN GFFTYPE('S','P','I','N')   // Spell text.
+#define GFF_SPIN GFFTYPE('S','P','I','N')   // Spell text.
 
 #define GT_PORT GFFTYPE('P','O','R','T')   // Portrait
 

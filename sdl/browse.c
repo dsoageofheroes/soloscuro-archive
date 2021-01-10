@@ -220,6 +220,14 @@ void browse_loop(SDL_Surface *surface, SDL_Renderer *rend) {
     }
 }
 
+static void print_para_len(SDL_Renderer *renderer, const char *str,
+        const int x, const int y, const int w, const int len) {
+    for (int s = 0; s < len; s += w) {
+        print_line_len(renderer, str + s, x, y + (20 * s/w),
+                s + w < len ? w : len - s - 1);
+    }
+}
+
 static void render_entry_header();
 static void render_entry_text();
 static void render_entry_monr();
@@ -227,6 +235,7 @@ static void render_entry_rdff();
 static void render_entry_name();
 //static void render_entry_rdat();
 static void render_entry_font();
+static void render_entry_spin();
 
 static void render_entry() {
     switch(gff_get_type_id(gff_idx, entry_idx)) {
@@ -236,6 +245,7 @@ static void render_entry() {
         case GFF_NAME: render_entry_name(); break;
         //case GFF_RDAT: render_entry_rdat(); break;
         case GFF_FONT: render_entry_font(); break;
+        case GFF_SPIN: render_entry_spin(); break;
         default:
             render_entry_header();
             print_line_len(renderer, "Need to implement", 320, 40, 128);
@@ -261,6 +271,16 @@ static void render_entry_text() {
     render_entry_header();
     if (chunk.length) {
         print_line_len(renderer, buf, 320, 40, chunk.length);
+    }
+}
+
+static void render_entry_spin() {
+    char buf[1024];
+    gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_SPIN, res_ids[res_idx]);
+    gff_read_chunk(gff_idx, &chunk, buf, 1024);
+    render_entry_header();
+    if (chunk.length) {
+        print_para_len(renderer, buf, 320, 40, 40, chunk.length);
     }
 }
 
