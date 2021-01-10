@@ -77,6 +77,7 @@
 
 // sound!
 #define GT_MERR GFFTYPE('M','E','R','R')	// text error file
+#define GFF_MERR GFFTYPE('M','E','R','R')	// text error file
 #define GT_PSEQ GFFTYPE('P','S','E','Q')	// PCSPKR
 #define GT_FSEQ GFFTYPE('F','S','E','Q')	// FM
 #define GT_LSEQ GFFTYPE('L','S','E','Q')	// LAPC
@@ -86,6 +87,7 @@
 // Transition art?
 #define GT_CMAT GFFTYPE('C','M','A','T')
 #define GT_CPAL GFFTYPE('C','P','A','L')
+#define GFF_CPAL GFFTYPE('C','P','A','L')
 #define GT_PLYL GFFTYPE('P','L','Y','L')
 #define GT_VPLY GFFTYPE('V','P','L','Y')
 

@@ -238,6 +238,8 @@ static void render_entry_name();
 static void render_entry_font();
 static void render_entry_spin();
 static void render_entry_pal();
+static void render_entry_cpal();
+static void render_entry_merr();
 
 static void render_entry() {
     switch(gff_get_type_id(gff_idx, entry_idx)) {
@@ -249,6 +251,8 @@ static void render_entry() {
         case GFF_FONT: render_entry_font(); break;
         case GFF_SPIN: render_entry_spin(); break;
         case GFF_PAL: render_entry_pal(); break;
+        case GFF_CPAL: render_entry_cpal(); break;
+        case GFF_MERR: render_entry_merr(); break;
         default:
             render_entry_header();
             print_line_len(renderer, "Need to implement", 320, 40, 128);
@@ -267,24 +271,26 @@ static void render_entry_header() {
     print_line_len(renderer, buf, 320, 20, BUF_MAX);
 }
 
-static void render_entry_text() {
+static void render_entry_as_text(const int type_id) {
     char buf[1024];
-    gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_TEXT, res_ids[res_idx]);
-    gff_read_chunk(gff_idx, &chunk, buf, 1024);
-    render_entry_header();
-    if (chunk.length) {
-        print_line_len(renderer, buf, 320, 40, chunk.length);
-    }
-}
-
-static void render_entry_spin() {
-    char buf[1024];
-    gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_SPIN, res_ids[res_idx]);
+    gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, type_id, res_ids[res_idx]);
     gff_read_chunk(gff_idx, &chunk, buf, 1024);
     render_entry_header();
     if (chunk.length) {
         print_para_len(renderer, buf, 320, 40, 40, chunk.length);
     }
+}
+
+static void render_entry_text() {
+    render_entry_as_text(GFF_TEXT);
+}
+
+static void render_entry_spin() {
+    render_entry_as_text(GFF_SPIN);
+}
+
+static void render_entry_merr() {
+    render_entry_as_text(GFF_MERR);
 }
 
 /*
@@ -313,9 +319,9 @@ static void render_entry_name() {
     print_line_len(renderer, names + 25*res_idx, 320, 40, BUF_MAX);
 }
 
-static void render_entry_pal() {
+static void render_entry_as_pal(const int type_id) {
     render_entry_header();
-    gff_palettes_t *pals = read_palettes_type(gff_idx, GFF_PAL);
+    gff_palettes_t *pals = read_palettes_type(gff_idx, type_id);
     const int pal_break = 64;
 
     for (int i = 0; i < PALETTE_SIZE; i++) {
@@ -334,6 +340,14 @@ static void render_entry_pal() {
     SDL_RenderDrawPoint(renderer, 400, 300);
 
     free(pals);
+}
+
+static void render_entry_pal() {
+    render_entry_as_pal(GFF_PAL);
+}
+
+static void render_entry_cpal() {
+    render_entry_as_pal(GFF_CPAL);
 }
 
 static void render_entry_monr() {
