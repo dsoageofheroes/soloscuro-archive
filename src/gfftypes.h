@@ -14,6 +14,7 @@
 #define GT_APFM GFFTYPE('A','P','F','M')    // Application frame resource
 #define GT_BMAP GFFTYPE('B','M','A','P')    // 3DX Bump map (GIL bitmap table, 1 bitmap)
 #define GT_BMP  GFFTYPE('B','M','P','\x20') // Bitmap (GIL bitmap table, 1+ bitmaps)
+#define GFF_BMP  GFFTYPE('B','M','P','\x20') // Bitmap (GIL bitmap table, 1+ bitmaps)
 #define GT_BVOC GFFTYPE('B','V','O','C')    // Background play samples
 #define GT_BUTN GFFTYPE('B','U','T','N')    // Button resource
 #define GT_CMAP GFFTYPE('C','M','A','P')    // Color map table

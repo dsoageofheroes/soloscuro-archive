@@ -240,6 +240,7 @@ static void render_entry_spin();
 static void render_entry_pal();
 static void render_entry_cpal();
 static void render_entry_merr();
+static void render_entry_bmp();
 
 static void render_entry() {
     switch(gff_get_type_id(gff_idx, entry_idx)) {
@@ -253,6 +254,7 @@ static void render_entry() {
         case GFF_PAL: render_entry_pal(); break;
         case GFF_CPAL: render_entry_cpal(); break;
         case GFF_MERR: render_entry_merr(); break;
+        case GFF_BMP: render_entry_bmp(); break;
         default:
             render_entry_header();
             print_line_len(renderer, "Need to implement", 320, 40, 128);
@@ -291,6 +293,23 @@ static void render_entry_spin() {
 
 static void render_entry_merr() {
     render_entry_as_text(GFF_MERR);
+}
+
+static void render_entry_bmp() {
+    render_entry_header();
+    SDL_Rect loc;
+
+    unsigned char* data = get_frame_rgba_with_palette(gff_idx, GFF_BMP, res_ids[res_idx], 0, 0);
+    loc.w = get_frame_width(gff_idx, GT_BMP, res_ids[res_idx], 0);
+    loc.h = get_frame_height(gff_idx, GT_BMP, res_ids[res_idx], 0);
+    SDL_Surface *surface = SDL_CreateRGBSurfaceFrom(data, loc.w, loc.h, 32, 
+            4*loc.w, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
+    SDL_Texture *tex = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    loc.x = 320;
+    loc.y = 40;
+    SDL_RenderCopy( renderer, tex, NULL, &loc);
+    free(data);
 }
 
 /*
