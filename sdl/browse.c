@@ -198,13 +198,13 @@ void browse_loop(SDL_Surface *surface, SDL_Renderer *rend) {
     renderer = rend;
     browse_render();
     //move_gff_cursor(1);
-    move_entry_cursor(1);
-    move_entry_cursor(1);
-    move_entry_cursor(1);
-    move_entry_cursor(1);
-    move_entry_cursor(1);
-    move_entry_cursor(1);
-    move_entry_cursor(1);
+    //move_entry_cursor(1);
+    //move_entry_cursor(1);
+    //move_entry_cursor(1);
+    //move_entry_cursor(1);
+    //move_entry_cursor(1);
+    //move_entry_cursor(1);
+    //move_entry_cursor(1);
     res_idx = 0;
     while (!done) {
         browse_handle_input();
@@ -297,9 +297,16 @@ static void render_entry_merr() {
 
 static void render_entry_bmp() {
     render_entry_header();
+    gff_image_entry_t *img;
     SDL_Rect loc;
 
-    unsigned char* data = get_frame_rgba_with_palette(gff_idx, GFF_BMP, res_ids[res_idx], 0, 0);
+    gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_BMP, res_ids[res_idx]);
+    img = (gff_image_entry_t*) malloc(sizeof(gff_image_entry_t*) * chunk.length);
+    gff_read_chunk(gff_idx, &chunk, &(img->data), chunk.length);
+    img->data_len = chunk.length;
+    img->frame_num = *(uint16_t*)(img->data + 4);
+    unsigned char* data = get_frame_rgba_palette_img(img, 0, open_files[gff_idx].pals->palettes);
+    //unsigned char* data = get_frame_rgba_with_palette(gff_idx, GFF_BMP, res_ids[res_idx], 0, 0);
     loc.w = get_frame_width(gff_idx, GT_BMP, res_ids[res_idx], 0);
     loc.h = get_frame_height(gff_idx, GT_BMP, res_ids[res_idx], 0);
     SDL_Surface *surface = SDL_CreateRGBSurfaceFrom(data, loc.w, loc.h, 32, 
@@ -310,6 +317,7 @@ static void render_entry_bmp() {
     loc.y = 40;
     SDL_RenderCopy( renderer, tex, NULL, &loc);
     free(data);
+    free(img);
 }
 
 /*

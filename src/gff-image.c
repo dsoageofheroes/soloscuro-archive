@@ -408,46 +408,45 @@ unsigned char* create_font_rgba(int gff_idx, int c, int fg_color, int bg_color) 
     return img;
 }
 
-unsigned char* get_frame_rgba_with_palette(int gff_index, int type_id, int res_id, int frame_id, int palette_id) {
-    gff_palette_t *cpal = NULL;
-    //printf("master_palette = %p, palette_id = %d, num_palettes = %ld\n", master_palette, palette_id, num_palettes);
-    //if (palette_id < 0 || open_files[gff_index].num_palettes < 1) {
-    if (palette_id < 0 || palette_id >= num_palettes) {
-        cpal = master_palette;
-    } else {
-        //cpal = open_files[gff_index].palettes + palette_id;
-        cpal = palettes + palette_id;
-    }
+unsigned char* get_frame_rgba_palette_img(gff_image_entry_t *img, int frame_id, gff_palette_t *pal) {
+    uint16_t width, height;
+    uint32_t frame_offset;
+    char *frame_type;
 
-    unsigned long len = 0;
-    unsigned char* chunk = (unsigned char*)gff_get_raw_bytes(gff_index, type_id, res_id, &len);
-    if (len < 11) {
-        fprintf(stderr, "ERROR: unable to load image (%d), it is too small (%lu.)\n", res_id, len);
-    }
-    unsigned int frame_offset = *((unsigned int*)(chunk + 6 + frame_id*4));
-    unsigned short width = *(unsigned short*)(chunk + frame_offset);
-    unsigned short height = *(unsigned short*)(chunk + frame_offset + 2);
-
-    //printf("offset = %d, width = %d, height = %d\n", frame_offset, width, height);
-    char *frame_type = ((char*)(chunk + frame_offset + 5));
-    if (cpal == NULL) {
+    if (pal == NULL) {
         printf("palette is NULL! returning no image.\n");
         return NULL;
     }
+
+    if (frame_id < 0 && frame_id >= img->frame_num) {
+        printf("frame_id outside of bounds: %d\n", frame_id);
+        return NULL;
+    }
+
+    frame_offset = *(uint32_t*)(img->data + 6 + frame_id * 4);
+    width = *(uint16_t*)(img->data + frame_offset);
+    height = *(uint16_t*)(img->data + frame_offset + 2);
+    frame_type = (img->data + frame_offset + 5);
+
+    //printf("w = %d, h = %d, frame_num = %d, frame_type = '%s'\n", width, height, img->frame_num, frame_type);
     if (strncmp(frame_type, "PLNR", 4) == 0) {
         printf("PLNR: Not fully implemented!\n");
-        int bits_per_symbol = *(chunk + frame_offset + 9);
+        //int bits_per_symbol = *(chunk + frame_offset + 9);
+        int bits_per_symbol = *(img->data + frame_offset + 9);
         int dictionary_size = 1 << bits_per_symbol;
-        if (len < frame_offset + 10 + dictionary_size) {
-            fprintf(stderr, "2ERROR: unable to load image (%d), it is too small (%lu.)\n", res_id, len);
+        //if (len < frame_offset + 10 + dictionary_size) {
+        if (img->data_len < frame_offset + 10 + dictionary_size) {
+            fprintf(stderr, "2ERROR: unable to load frame (%d),  it is too small (%u.)\n", frame_id, img->data_len);
         }
         unsigned char *pixel_value_dictionary = malloc(dictionary_size);
         for (int i = 0; i < dictionary_size; i++) {
-            pixel_value_dictionary[i] = *(unsigned char*)(chunk + frame_offset + 10 + i);
+            //pixel_value_dictionary[i] = *(unsigned char*)(chunk + frame_offset + 10 + i);
+            pixel_value_dictionary[i] = *(unsigned char*)(img->data + frame_offset + 10 + i);
             //printf("pvd[%d] = %d\n", i, pixel_value_dictionary[i]);
         }
         int codestart = frame_offset + 10 + dictionary_size;
-        unsigned char *data = chunk + codestart;
+        //unsigned char *data = chunk + codestart;
+        unsigned char *data = (unsigned char*)img->data + codestart;
         plnr_last_value = 0;
         plnr_remaining = 0;
         plnr_num_bits_read = 0;
@@ -457,7 +456,7 @@ unsigned char* get_frame_rgba_with_palette(int gff_index, int type_id, int res_i
             int row_offset = j * 4 * width;
             for (int k = 0; k < width; k++) {
                 int palette_index = plnr_get_next(data, bits_per_symbol);
-                gff_color_t color = cpal->color[pixel_value_dictionary[palette_index]];
+                gff_color_t color = pal->color[pixel_value_dictionary[palette_index]];
                 *(img + row_offset + 4*(k) + 0) = color.r;
                 *(img + row_offset + 4*(k) + 1) = color.g;
                 *(img + row_offset + 4*(k) + 2) = color.b;
@@ -469,19 +468,49 @@ unsigned char* get_frame_rgba_with_palette(int gff_index, int type_id, int res_i
             }
         }
         return img;
-
+        /*
+    */
     //int image_start = frame_offset + 10 + dictionary_size;
     } else if (strncmp(frame_type, "PLAN", 4) == 0) {
-        printf("PLAN\n");
+        printf("PLAN not implemented!\n");
     } else {
         //printf("DS1 frame detected.\n");
-        unsigned char* ret_img = create_ds1_rgba(chunk, frame_offset + 4, width, height, cpal);
+        unsigned char* ret_img = create_ds1_rgba((unsigned char*)img->data, frame_offset + 4, width, height, pal);
         if (ret_img == NULL) {
-            fprintf(stderr, "Error creating image: %d\n", res_id);
+            fprintf(stderr, "Error creating frame: %d\n", frame_id);
         }
         return ret_img;
     }
     return NULL;
+}
+
+unsigned char* get_frame_rgba_palette(int gff_idx, int type_id, int res_id, int frame_id, gff_palette_t *pal) {
+    gff_image_entry_t *img;
+    unsigned char *data;
+
+    gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, type_id, res_id);
+    img = (gff_image_entry_t*) malloc(sizeof(gff_image_entry_t*) * chunk.length);
+    gff_read_chunk(gff_idx, &chunk, &(img->data), chunk.length);
+    img->data_len = chunk.length;
+    img->frame_num = *(uint16_t*)(img->data + 4);
+
+    data = (unsigned char*)get_frame_rgba_palette_img(img, frame_id, pal);
+    free(img);
+    return data;
+}
+
+unsigned char* get_frame_rgba_with_palette(int gff_index, int type_id, int res_id, int frame_id, int palette_id) {
+    gff_palette_t *cpal = NULL;
+    //printf("master_palette = %p, palette_id = %d, num_palettes = %ld\n", master_palette, palette_id, num_palettes);
+    //if (palette_id < 0 || open_files[gff_index].num_palettes < 1) {
+    if (palette_id < 0 || palette_id >= num_palettes) {
+        cpal = master_palette;
+    } else {
+        //cpal = open_files[gff_index].palettes + palette_id;
+        cpal = palettes + palette_id;
+    }
+
+    return get_frame_rgba_palette(gff_index, type_id, res_id, frame_id, cpal);
 }
 
 unsigned char* get_portrait(unsigned char* bmp_table, unsigned int *width, unsigned int *height) {

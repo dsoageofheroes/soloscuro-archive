@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include "gff-common.h"
 #include "gff-image.h"
 #include "gff-map.h"
 
@@ -37,16 +38,6 @@ typedef struct {
   uint32_t 	  reserve1;
 
 } gff_file_header_t;
-
-typedef struct {
-
-  int32_t	  id;
-  uint32_t 	  location;
-  uint32_t 	  length;
-
-} gff_chunk_header_t;
-
-#define GFFCHUNKHEADERSIZE ((uint32_t)sizeof(gff_chunk_header_t))
 
 typedef struct {
 
