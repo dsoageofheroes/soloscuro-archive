@@ -32,6 +32,7 @@
 #define GT_GPL  GFFTYPE('G','P','L','\x20') // Compiled GPL files
 #define GT_GPLX GFFTYPE('G','P','L','X')    // GPL index file (GPLSHELL)
 #define GT_ICON GFFTYPE('I','C','O','N')    // Icon resource (GIL bitmap table, 1-4 bitmaps)
+#define GFF_ICON GFFTYPE('I','C','O','N')    // Icon resource (GIL bitmap table, 1-4 bitmaps)
 #define GT_MAS  GFFTYPE('M','A','S','\x20') // Compiled MAS (GPL master) files
 #define GT_MENU GFFTYPE('M','E','N','U')    // Menu resource
 #define GT_MONR GFFTYPE('M','O','N','R')    // monsters by region ids and level (used in request.c DARKSUN)

@@ -18,6 +18,8 @@ static SDL_Renderer *renderer = NULL;
 static SDL_Surface *surface = NULL;
 static int gff_idx = 0, row_selected = 0, row_max = 0, entry_idx = 0, entry_max, res_idx = 0, res_max = 0;
 static uint32_t res_ids[RES_MAX];
+static gff_image_entry_t *cimg = NULL;
+static int cframe = 0;
 
 static void browse_tick();
 static void browse_handle_input();
@@ -27,6 +29,8 @@ static void print_gff_entries();
 static void render_entry();
 static void move_entry_cursor(int amt);
 static void write_blob();
+static void move_res_cursor(int amt);
+static void move_frame_cursor(int amt);
 
 static void browse_handle_input() {
     //const Uint8 *key_state = SDL_GetKeyboardState(NULL);
@@ -43,9 +47,10 @@ static void browse_handle_input() {
                     case SDLK_PAGEUP: move_gff_cursor(-1); break;
                     case SDLK_DOWN: move_entry_cursor(1); break;
                     case SDLK_UP: move_entry_cursor(-1); break;
-                    case SDLK_RIGHT: res_idx = (res_idx + 1) % res_max; break;
-                    case SDLK_LEFT: res_idx = (res_max + res_idx - 1) % res_max; break;
+                    case SDLK_RIGHT: move_res_cursor(1); break;
+                    case SDLK_LEFT: move_res_cursor(-1); break;
                     case SDLK_w: write_blob(); break;
+                    case SDLK_f: move_frame_cursor(1); break;
                 }
                 break;
             case SDL_MOUSEMOTION:
@@ -71,8 +76,31 @@ static void browse_handle_input() {
     //if(key_state[SDL_SCANCODE_F])     { player_move(PLAYER_RIGHT); }
 }
 
+static void clear_state() {
+    if (cimg) {
+        free(cimg);
+        cimg = NULL;
+    }
+    cframe = 0;
+}
+
+static void move_frame_cursor(int amt) {
+    if (!cimg) { return; }
+
+    cframe = (cimg->frame_num + cframe + amt) % cimg->frame_num;
+}
+
+static void move_res_cursor(int amt) {
+    clear_state();
+
+    if (res_max > 0) {
+        res_idx = (res_max + res_idx + amt) % res_max;
+    }
+}
+
 static void move_entry_cursor(int amt) {
     uint32_t type = 0;
+
     if (entry_max < 1) { return; } // avoid infinite loop.
 
     if (amt < -1 || amt > 1) {
@@ -89,6 +117,8 @@ static void move_entry_cursor(int amt) {
     gff_get_resource_ids(gff_idx, type, res_ids);
 
     res_idx = res_max ? res_idx % res_max : 0;
+
+    move_res_cursor(0);
 }
 
 static void move_gff_cursor(int amt) {
@@ -113,6 +143,9 @@ static void move_gff_cursor(int amt) {
             exit(1);
         }
     }
+
+    entry_max = gff_get_number_of_types(gff_idx);
+
     move_entry_cursor(0); // update entry res points.
 }
 
@@ -241,6 +274,7 @@ static void render_entry_pal();
 static void render_entry_cpal();
 static void render_entry_merr();
 static void render_entry_bmp();
+static void render_entry_icon();
 
 static void render_entry() {
     switch(gff_get_type_id(gff_idx, entry_idx)) {
@@ -255,6 +289,7 @@ static void render_entry() {
         case GFF_CPAL: render_entry_cpal(); break;
         case GFF_MERR: render_entry_merr(); break;
         case GFF_BMP: render_entry_bmp(); break;
+        case GFF_ICON: render_entry_icon(); break;
         default:
             render_entry_header();
             print_line_len(renderer, "Need to implement", 320, 40, 128);
@@ -295,29 +330,40 @@ static void render_entry_merr() {
     render_entry_as_text(GFF_MERR);
 }
 
-static void render_entry_bmp() {
+static void render_entry_as_image(const int type_id, gff_palette_t *pal) {
     render_entry_header();
-    gff_image_entry_t *img;
     SDL_Rect loc;
+    char buf[BUF_MAX];
 
-    gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_BMP, res_ids[res_idx]);
-    img = (gff_image_entry_t*) malloc(sizeof(gff_image_entry_t*) * chunk.length);
-    gff_read_chunk(gff_idx, &chunk, &(img->data), chunk.length);
-    img->data_len = chunk.length;
-    img->frame_num = *(uint16_t*)(img->data + 4);
-    unsigned char* data = get_frame_rgba_palette_img(img, 0, open_files[gff_idx].pals->palettes);
-    //unsigned char* data = get_frame_rgba_with_palette(gff_idx, GFF_BMP, res_ids[res_idx], 0, 0);
-    loc.w = get_frame_width(gff_idx, GT_BMP, res_ids[res_idx], 0);
-    loc.h = get_frame_height(gff_idx, GT_BMP, res_ids[res_idx], 0);
+    if (!cimg) {
+        gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, type_id, res_ids[res_idx]);
+        cimg = (gff_image_entry_t*) malloc(sizeof(gff_image_entry_t*) * chunk.length);
+        gff_read_chunk(gff_idx, &chunk, &(cimg->data), chunk.length);
+        cimg->data_len = chunk.length;
+        cimg->frame_num = *(uint16_t*)(cimg->data + 4);
+    }
+
+    snprintf(buf, BUF_MAX-1, "current frame: %d, total frames: %d\n", cframe, cimg->frame_num);
+    print_line_len(renderer, buf, 320, 40, BUF_MAX);
+    unsigned char* data = get_frame_rgba_palette_img(cimg, cframe, pal);
+    loc.w = get_frame_width(gff_idx, type_id, res_ids[res_idx], cframe);
+    loc.h = get_frame_height(gff_idx, type_id, res_ids[res_idx], cframe);
     SDL_Surface *surface = SDL_CreateRGBSurfaceFrom(data, loc.w, loc.h, 32, 
             4*loc.w, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
     SDL_Texture *tex = SDL_CreateTextureFromSurface(renderer, surface);
     SDL_FreeSurface(surface);
-    loc.x = 320;
-    loc.y = 40;
+    loc.x = 340;
+    loc.y = 60;
     SDL_RenderCopy( renderer, tex, NULL, &loc);
     free(data);
-    free(img);
+}
+
+static void render_entry_bmp() {
+    render_entry_as_image(GFF_BMP, open_files[RESOURCE_GFF_INDEX].pals->palettes);
+}
+
+static void render_entry_icon() {
+    render_entry_as_image(GFF_ICON, open_files[RESOURCE_GFF_INDEX].pals->palettes);
 }
 
 /*
