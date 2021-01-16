@@ -31,6 +31,7 @@ dsl_region_t* dsl_load_region(const int gff_file) {
 
     dsl_load_map_tile_ids(ret);
     dsl_load_map_flags(ret);
+
     region_list_load_objs(ret->list, ret->gff_file, ret->map_id);
 
     cregion = ret;

@@ -27,7 +27,7 @@
 #define OBJECT_REDRAW        (0x40)
 #define OBJECT_XMIRROR       (0x80) // Need to flip x axis.
 
-typedef struct _disk_object_t {
+typedef struct _disk_object_s {
     uint16_t flags;
     int16_t  xoffset;
     int16_t  yoffset;

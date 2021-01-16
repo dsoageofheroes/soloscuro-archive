@@ -44,6 +44,7 @@
 #define GFF_PAL  GFFTYPE('P','A','L','\x20') // VGA 256 color palette
 #define GT_POBJ GFFTYPE('P','O','B','J')    // PolyMesh object database
 #define GT_RMAP GFFTYPE('R','M','A','P')        // Region tile map
+#define GFF_RMAP GFFTYPE('R','M','A','P')        // Region tile map
 #define GT_SCMD GFFTYPE('S','C','M','D')    // Animation script command table
 #define GT_SBAR GFFTYPE('S','B','A','R')    // Scroll-bar resource
 #define GT_SINF GFFTYPE('S','I','N','F')    // Sound card info
@@ -51,6 +52,7 @@
 #define GT_TEXT GFFTYPE('T','E','X','T')    // Text resource
 #define GFF_TEXT GFFTYPE('T','E','X','T')    // Text resource
 #define GT_TILE GFFTYPE('T','I','L','E')    // Tile graphic (GIL bitmap table, 1 bitmap)
+#define GFF_TILE GFFTYPE('T','I','L','E')    // Tile graphic (GIL bitmap table, 1 bitmap)
 #define GT_TMAP GFFTYPE('T','M','A','P')    // Texture map (GIL bitmap table, 1 bitmap)
 #define GT_TXRF GFFTYPE('T','X','R','F')        // Texture map (GIL bitmap table, 1 bitmap)
 #define GT_WIND GFFTYPE('W','I','N','D')    // Window resource
@@ -60,6 +62,7 @@
 #define GT_CBMP GFFTYPE('C','B','M','P')     // Color Bit Map
 #define GT_WALL GFFTYPE('W','A','L','L')     // WALL?
 #define GT_OJFF GFFTYPE('O','J','F','F')     // Object data?
+#define GFF_OJFF GFFTYPE('O','J','F','F')     // Object data?
 #define GT_RDFF GFFTYPE('R','D','F','F')     // RDFF?
 #define GFF_RDFF GFFTYPE('R','D','F','F')     // RDFF?
 
@@ -97,5 +100,6 @@
 #define GFF_SPIN GFFTYPE('S','P','I','N')   // Spell text.
 
 #define GT_PORT GFFTYPE('P','O','R','T')   // Portrait
+#define GFF_PORT GFFTYPE('P','O','R','T')   // Portrait
 
 #endif

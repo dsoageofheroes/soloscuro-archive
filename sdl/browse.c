@@ -1,8 +1,10 @@
 #include <SDL2/SDL.h>
 #include <stdio.h>
+#include "map.h"
 #include "screens/narrate.h"
 #include "../src/gameloop.h"
 #include "../src/dsl.h"
+#include "../src/dsl-region.h"
 #include "../src/gff.h"
 #include "../src/gff-map.h"
 #include "../src/gff-image.h"
@@ -20,6 +22,7 @@ static int gff_idx = 0, row_selected = 0, row_max = 0, entry_idx = 0, entry_max,
 static uint32_t res_ids[RES_MAX];
 static gff_image_entry_t *cimg = NULL;
 static int cframe = 0;
+static double zoom = 1.0;
 
 static void browse_tick();
 static void browse_handle_input();
@@ -51,6 +54,8 @@ static void browse_handle_input() {
                     case SDLK_LEFT: move_res_cursor(-1); break;
                     case SDLK_w: write_blob(); break;
                     case SDLK_f: move_frame_cursor(1); break;
+                    case SDLK_KP_MINUS: if (zoom > 1.0) {zoom -= 0.25;} break;
+                    case SDLK_KP_PLUS: zoom += 0.25; break;
                 }
                 break;
             case SDL_MOUSEMOTION:
@@ -230,8 +235,14 @@ static void browse_tick() {
 void browse_loop(SDL_Surface *surface, SDL_Renderer *rend) {
     renderer = rend;
     browse_render();
-    //move_gff_cursor(1);
-    //move_entry_cursor(1);
+    move_gff_cursor(1);
+    move_gff_cursor(1);
+    move_gff_cursor(1);
+    move_gff_cursor(1);
+    move_gff_cursor(1);
+    move_gff_cursor(1);
+    move_gff_cursor(1);
+    move_entry_cursor(-1);
     //move_entry_cursor(1);
     //move_entry_cursor(1);
     //move_entry_cursor(1);
@@ -275,6 +286,10 @@ static void render_entry_cpal();
 static void render_entry_merr();
 static void render_entry_bmp();
 static void render_entry_icon();
+static void render_entry_port();
+static void render_entry_ojff();
+static void render_entry_tile();
+static void render_entry_rmap();
 
 static void render_entry() {
     switch(gff_get_type_id(gff_idx, entry_idx)) {
@@ -290,6 +305,10 @@ static void render_entry() {
         case GFF_MERR: render_entry_merr(); break;
         case GFF_BMP: render_entry_bmp(); break;
         case GFF_ICON: render_entry_icon(); break;
+        case GFF_PORT: render_entry_port(); break;
+        case GFF_OJFF: render_entry_ojff(); break;
+        case GFF_TILE: render_entry_tile(); break;
+        case GFF_RMAP: render_entry_rmap(); break;
         default:
             render_entry_header();
             print_line_len(renderer, "Need to implement", 320, 40, 128);
@@ -354,16 +373,41 @@ static void render_entry_as_image(const int type_id, gff_palette_t *pal) {
     SDL_FreeSurface(surface);
     loc.x = 340;
     loc.y = 60;
+    loc.w *= zoom;
+    loc.h *= zoom;
     SDL_RenderCopy( renderer, tex, NULL, &loc);
+    SDL_DestroyTexture(tex);
     free(data);
 }
 
 static void render_entry_bmp() {
-    render_entry_as_image(GFF_BMP, open_files[RESOURCE_GFF_INDEX].pals->palettes);
+    gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes;
+
+    if (open_files[gff_idx].pals->len) {
+        pal = open_files[gff_idx].pals->palettes;
+    }
+
+    render_entry_as_image(GFF_BMP, pal);
 }
 
 static void render_entry_icon() {
     render_entry_as_image(GFF_ICON, open_files[RESOURCE_GFF_INDEX].pals->palettes);
+}
+
+static void render_entry_port() {
+    render_entry_as_image(GFF_PORT, open_files[RESOURCE_GFF_INDEX].pals->palettes);
+}
+
+static void render_entry_tile() {
+    int num;
+    gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes;
+    
+    sscanf(open_files[gff_idx].filename, "rgn%x.gff", &num);
+    num--;
+    if (num < open_files[DSLDATA_GFF_INDEX].len) {
+        pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + num;
+    }
+    render_entry_as_image(GFF_TILE, pal);
 }
 
 /*
@@ -390,6 +434,29 @@ static void render_entry_name() {
     snprintf(buf, BUF_MAX, "RESOURCE %d of %d \n", res_idx, res_max - 1);
     print_line_len(renderer, buf, 320, 20, BUF_MAX);
     print_line_len(renderer, names + 25*res_idx, 320, 40, BUF_MAX);
+}
+
+static void render_entry_ojff() {
+    disk_object_t disk_obj;
+    gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_OJFF, res_ids[res_idx]);
+    char buf[BUF_MAX];
+
+    render_entry_header();
+
+    gff_read_chunk(gff_idx, &chunk, &disk_obj, chunk.length);
+    print_line_len(renderer, "Disk Object:", 320, 40, BUF_MAX);
+    snprintf(buf, BUF_MAX, "offset = (%d, %d)", disk_obj.xoffset, disk_obj.yoffset);
+    print_line_len(renderer, buf, 320, 60, BUF_MAX);
+    snprintf(buf, BUF_MAX, "pos = (%d, %d, %d)", disk_obj.xpos, disk_obj.ypos, disk_obj.zpos);
+    print_line_len(renderer, buf, 320, 80, BUF_MAX);
+    snprintf(buf, BUF_MAX, "flags = 0x%x", disk_obj.flags);
+    print_line_len(renderer, buf, 320, 100, BUF_MAX);
+    snprintf(buf, BUF_MAX, "object_index = %d", disk_obj.object_index);
+    print_line_len(renderer, buf, 320, 120, BUF_MAX);
+    snprintf(buf, BUF_MAX, "bmp_id = %d", disk_obj.bmp_id);
+    print_line_len(renderer, buf, 320, 140, BUF_MAX);
+    snprintf(buf, BUF_MAX, "script_id = %d", disk_obj.script_id);
+    print_line_len(renderer, buf, 320, 160, BUF_MAX);
 }
 
 static void render_entry_as_pal(const int type_id) {
@@ -606,4 +673,69 @@ static void render_entry_font() {
             SDL_DestroyTexture(tex);
         }
     }
+}
+
+static void render_entry_rmap() {
+    render_entry_header();
+    static dsl_region_t *region;
+    static char *cfile = NULL;
+    static int tiles_len;
+    static SDL_Texture **tiles = NULL;
+    uint32_t width, height;
+    unsigned char *data;
+    SDL_Surface* tile = NULL;
+    SDL_Rect loc;
+
+    if (cfile && cfile != open_files[gff_idx].filename) {
+        printf("Need to clean dsl_region_t!\n");
+        //SDL_DestroyTexture(tiles[0]);
+        //for (int i = 0; i < tiles_len; i++) {
+            //SDL_DestroyTexture(tiles[i]);
+        //}
+        //tiles_len = 0;
+        //if (tiles) {
+            //free(tiles);
+            //tiles = NULL;
+        //}
+        cfile = NULL;
+    }
+
+    if (!cfile) {
+        cfile = open_files[gff_idx].filename;
+        region = dsl_load_region(gff_idx);
+        tiles_len = region->num_tiles;
+        tiles = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * region->num_tiles);
+        printf("tiles_len = %d\n", tiles_len);
+        for (int i = 0; i < region->num_tiles; i++) {
+            dsl_region_get_tile(region, i, &width, &height, &data);
+
+            tile = SDL_CreateRGBSurfaceFrom(data, width, height, 32, 4*width, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
+            //tiles[ids[i]] = SDL_CreateTextureFromSurface(renderer, tile);
+            //tiles[i] = SDL_CreateTextureFromSurface(renderer, tile);
+            tiles[region->ids[i]] = SDL_CreateTextureFromSurface(renderer, tile);
+            printf("%d, ", region->ids[i]);
+            SDL_FreeSurface(tile);
+
+            free(data);
+        }
+        printf("\n");
+
+    }
+
+    loc.x = 340;
+    loc.y = 60;
+    loc.w = 16 * zoom;
+    loc.h = 16 * zoom;
+    for (int i = 0; i < MAP_ROWS; i++) {
+        for (int j = 0; j < MAP_COLUMNS; j++) {
+            //printf("%d,", region->tile_ids[i][j]);
+            SDL_RenderCopy(renderer, tiles[region->tile_ids[i][j]], NULL, &loc);
+            loc.x += loc.w;
+        }
+        loc.y += loc.h;
+        loc.x = 340;
+        //printf("\n");
+    }
+
+    print_line_len(renderer, "Working on it...", 320, 40, BUF_MAX);
 }
