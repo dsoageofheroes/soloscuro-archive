@@ -23,9 +23,17 @@ int gff_map_get_num_objects(int gff_idx, int res_id) {
         return open_files[gff_idx].num_objects;
     }
 
-    unsigned long len;
+    if (!open_files[gff_idx].entry_table) {
+        gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_ETAB, res_id);
+        open_files[gff_idx].entry_table = malloc(chunk.length);
+        if (!open_files[gff_idx].entry_table) {
+            error ("unable to malloc for entry table!\n");
+            exit(1);
+        }
+        gff_read_chunk(gff_idx, &chunk, open_files[gff_idx].entry_table, chunk.length);
+    }
     unsigned int num_entries, i, j;
-    gff_map_object_t *entry_table = (gff_map_object_t*) gff_get_raw_bytes(gff_idx, GT_ETAB, res_id, &len);
+    gff_map_object_t *entry_table = open_files[gff_idx].entry_table;
     gff_map_object_t *centry = entry_table;
 
     if (entry_table) {
@@ -212,15 +220,24 @@ so_object_t* gff_create_object(char *data, rdff_disk_object_t *entry, int16_t id
     return obj;
 }
 
-so_object_t* gff_object_inspect(int gff_index, int res_id) {
-    unsigned long len;
+#define RDFF_MAX (1<<12)
+so_object_t* gff_object_inspect(int gff_idx, int res_id) {
     so_object_t *ret = NULL;
-    gff_index = OBJEX_GFF_INDEX;
-    char *data = gff_get_raw_bytes(gff_index, GT_RDFF, res_id, &len);
-    rdff_disk_object_t *entry = (rdff_disk_object_t*) data;
+    gff_idx = OBJEX_GFF_INDEX;
     char *tmp = NULL;
-    if (len > 1<<20) { return NULL; }
-    //printf ("HERE!!!!%d %d, len = %lu\n", gff_index, res_id, len);
+    rdff_disk_object_t rdff_buf[RDFF_MAX];
+
+    rdff_disk_object_t *rdff = rdff_buf;
+    gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_RDFF, res_id);
+
+    if (chunk.length > RDFF_MAX * sizeof(rdff_disk_object_t)) {
+        error ("chunk.length (%d) greater than max (%d)!\n", chunk.length, RDFF_MAX);
+        exit(1);
+    }
+
+    gff_read_chunk(gff_idx, &chunk, rdff, chunk.length);
+    rdff_disk_object_t *entry = rdff;
+    char *data = (char*)entry;
 
     while (entry->load_action != -1) {
         //printf ("proc = %d, bocknum = %d, type = %d, index = %d, from = %d, len = %d\n",

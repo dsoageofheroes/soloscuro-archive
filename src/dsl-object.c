@@ -161,20 +161,22 @@ region_object_t* region_list_create_from_objex(region_list_t *rl, const int id, 
     return robj;
 }
 
-void region_list_load_objs(region_list_t *rl, const int gff_file, const int map_id) {
-    unsigned long len;
-    gff_map_object_t *entry_table = (gff_map_object_t*) gff_get_raw_bytes(gff_file, GT_ETAB, map_id, &len);
-    //gff_map_object_t entry_table;
-    //gff_chunk_header_t chunk = gff_find_chunk_header(OBJEX_GFF_INDEX, GFF_OJFF, map_id);
-    //if (!gff_read_chunk(OBJEX_GFF_INDEX, &chunk, &(entry_table), sizeof(gff_map_object_t))) {
-        //error ("unable to load ETAB.\n");
-        //return;
-    //}
-    rl->pos = gff_map_get_num_objects(gff_file, map_id);
+void region_list_load_objs(region_list_t *rl, const int gff_idx, const int map_id) {
+    if (!open_files[gff_idx].entry_table) {
+        gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_ETAB, map_id);
+        open_files[gff_idx].entry_table = malloc(chunk.length);
+        if (!open_files[gff_idx].entry_table) {
+            error ("unable to malloc for entry table!\n");
+            exit(1);
+        }
+        gff_read_chunk(gff_idx, &chunk, open_files[gff_idx].entry_table, chunk.length);
+    }
+    gff_map_object_t *entry_table = open_files[gff_idx].entry_table;
+    rl->pos = gff_map_get_num_objects(gff_idx, map_id);
     memset(&rl->objs, 0x0, sizeof(region_object_t) * MAX_REGION_OBJS);
 
     for (int i = 0; i < rl->pos; i++) {
         load_object_from_etab(rl->objs + i, entry_table, i);
-        rl->objs[i].scmd = gff_map_get_object_scmd(gff_file, map_id, i, 0);
+        rl->objs[i].scmd = gff_map_get_object_scmd(gff_idx, map_id, i, 0);
     }
 }

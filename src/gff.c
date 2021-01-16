@@ -30,7 +30,6 @@ typedef struct {
   // --- End of Empty TOC   ---
 } gff_empty_file_t;
 
-static gff_chunk_list_t* get_gffi_header(gff_file_t *file);
 static gff_type_header_t* get_type_header(int idx);
 static int get_next_idx(char *name);
 
@@ -491,59 +490,6 @@ size_t gff_read_raw_bytes(int idx, int type_id, int res_id, void *read_buf, cons
     gff_chunk_header_t chunk = gff_find_chunk_header(idx, type_id, res_id);
     return gff_read_chunk(idx, &chunk, read_buf, len);
 }
-/*
- * Finds and returns a pointer to the part that represents the data.
- * len is set to the number of bytes.
- * WARNING WARNING WARNING DANGER DANGER DANGER:
- * Data segments are next to each other, if you go out of bounds, all sorts
- * of strange things will happen.  Be careful of the bounds of the returned pointer!
- */
-char* gff_get_raw_bytes(int idx, int type_id, int res_id, unsigned long *len) {
-    gff_seg_header_t  *seg_header;
-    gff_chunk_header_t *chunk_header;
-    gff_chunk_list_t* chunk_list;
-    unsigned char *cptr, *seg_ptr;
-
-    chunk_list = search_for_chunk_by_name(open_files + idx, type_id);
-    if (chunk_list == NULL) { return NULL; }
-
-    cptr = (void*)chunk_list;
-    if (chunk_list->chunkCount & GFFSEGFLAGMASK) {
-        seg_header = (gff_seg_header_t*)&(chunk_list->chunks[0]);
-        seg_ptr = (unsigned char*)get_gffi_header(open_files + idx);// Right now seg_ptr is a tmp.
-        gff_chunk_header_t *gffi_chunk_header = (gff_chunk_header_t*)(seg_ptr + GFFCHUNKLISTHEADERSIZE +
-            (seg_header->segLocId*GFFCHUNKHEADERSIZE));
-        seg_ptr = (unsigned char*)open_files[idx].data; 
-        seg_ptr += gffi_chunk_header->location;// Maybe where the seg pointer is!
-        cptr += GFFCHUNKLISTHEADERSIZE;
-        int ndx = 0;
-        for (int j = 0; j < seg_header->segRef.numEntries; j++) {
-            int tmpId = (seg_header->segRef.entries[j].firstId);
-            int offset = 4L + (GFFSEGLOCENTRYSIZE * ndx);
-            if (res_id >= tmpId && res_id <= (tmpId + seg_header->segRef.entries[j].consecChunks)) {
-                gff_seg_loc_entry_t * seg_loc = (gff_seg_loc_entry_t*)(seg_ptr + offset +
-                    (res_id-tmpId)*GFFSEGLOCENTRYSIZE);
-                *len = seg_loc->segLength;
-                cptr = open_files[idx].data;
-                return (void*) (cptr + seg_loc->segOffset);
-            }
-            ndx += seg_header->segRef.entries[j].consecChunks;
-        }
-    } else {
-        cptr = (void*)chunk_list;
-        for (int j = 0; j < chunk_list->chunkCount; j++) {
-            chunk_header = (void*)(cptr + GFFCHUNKLISTHEADERSIZE + (j * GFFCHUNKHEADERSIZE));
-            if (chunk_header->id == res_id) {
-                *len = chunk_header->length;
-                cptr = open_files[idx].data;
-                return (void*) (cptr + chunk_header->location);
-            }
-        }
-    }
-
-    // didn't find...
-    return NULL;
-}
 
 int gff_write_raw_bytes(int idx, int type_id, int res_id, const char *path) {
     int amt = 0;
@@ -749,16 +695,6 @@ gff_chunk_list_t* search_for_chunk_by_name(gff_file_t *file, unsigned long name)
     return NULL;
 }
 
-gff_chunk_list_t* get_gffi_header(gff_file_t *file) {
-    if (!file) { return NULL;}
-
-    if (!file->gffi_data) {
-        file->gffi_data = search_for_chunk_by_name(file, GT_GFFI);
-    }
-
-    return file->gffi_data;
-}
-
 size_t gff_get_palette_id(int idx, int palette_num) {
     if (palette_num < 0 || palette_num >= open_files[idx].num_palettes) {
         return -1;
@@ -814,6 +750,7 @@ void gff_close (int gff_file) {
 }
 
 
+/*
 gff_monster_entry_t* gff_load_monster(int region_id, int monster_id) {
     if (monster_id < 0 || monster_id > MAX_MONSTERS_PER_REGION) { return NULL; }
     unsigned long len;
@@ -832,3 +769,4 @@ gff_monster_entry_t* gff_load_monster(int region_id, int monster_id) {
     }
     return NULL;
 }
+*/

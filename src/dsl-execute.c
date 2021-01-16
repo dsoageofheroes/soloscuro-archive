@@ -196,30 +196,7 @@ void dsl_execute_subroutine(const int file, const int addr, const int is_mas) {
         return;
     }
 
-    command_implemented = 1;
-    //TODO FIXME: Global issue here?
-    this_gpl_type = is_mas ? MASFILE : DSLFILE;
-    unsigned long len = 0;
-    unsigned char *dsl = (file >= 0)
-        ? (unsigned char*)gff_get_raw_bytes(DSLDATA_GFF_INDEX, is_mas ? GT_MAS : GT_GPL, file, &len)
-        : get_data_start_ptr();
-
-    debug("Executing %s file #%d @ %d, len = %lu\n", is_mas ? "MAS" : "DSL", file, addr, len);
-    //dsl_lua_print(dsl, len);
-
-    debug("---------------------pushing the data ptr!-----------------------------\n");
-    push_data_ptr(dsl);
-    set_data_ptr(dsl, dsl + addr);
-    execute_until_exit();
-    if (is_paused) { 
-        debug("pause detected returning with stack preserved.\n");
-        return; 
-    }
-    debug("---------------------poping the data ptr!-----------------------------\n");
-    pop_data_ptr();
-
-    debug("---------------------Ending Subroutine Execution----------------------\n");
-    //debug("%lu of %lu\n", get_data_ptr() - get_data_start_ptr(), len);
+    exit(1);
 }
 
 static void get_parameters(int16_t amt) {

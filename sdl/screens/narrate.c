@@ -45,9 +45,10 @@ static void clear() {
     }
 }
 
+#define PORT_MAX (1<<14)
 void load_portraits(SDL_Renderer *renderer) {
-    unsigned long len;
     unsigned char *data;
+    unsigned char buf[PORT_MAX];
     unsigned int w, h, id;
     SDL_Surface *surface = NULL;
     unsigned int *ids = gff_get_id_list(DSLDATA_GFF_INDEX, GT_PORT);
@@ -61,8 +62,13 @@ void load_portraits(SDL_Renderer *renderer) {
 
     for (int i = 0; i < num_ids; i++) {
         id = ids[i];
-        data = (unsigned char*)gff_get_raw_bytes(DSLDATA_GFF_INDEX, GT_PORT, id, &len);
-        data = get_portrait(data, &w, &h);
+        gff_chunk_header_t chunk = gff_find_chunk_header(DSLDATA_GFF_INDEX, GFF_PORT, id);
+        if (chunk.length > PORT_MAX) {
+            error ("chunk.length (%d) is greater than PORT_MAX (%d)\n", chunk.length, PORT_MAX);
+            exit (1);
+        }
+        gff_read_chunk(DSLDATA_GFF_INDEX, &chunk, buf, chunk.length);
+        data = get_portrait(buf, &w, &h);
         surface = SDL_CreateRGBSurfaceFrom(data, w, h, 32,
             4*w, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
         portraits[id] = SDL_CreateTextureFromSurface(renderer, surface);
@@ -77,13 +83,20 @@ void load_portraits(SDL_Renderer *renderer) {
 }
 
 static void create_font(SDL_Renderer *renderer) {
-    unsigned long len;
+    char *data = NULL;
+    SDL_Surface *surface = NULL;
     ds_char_t *ds_char = NULL;
     uint32_t fg_color = 0xFFFF00FF;
     uint32_t bg_color = 0x000000FF;
-    ds_font_t *dsfont = (ds_font_t*) gff_get_raw_bytes(RESOURCE_GFF_INDEX, GT_FONT, 100, &len);
-    char *data = NULL;
-    SDL_Surface *surface = NULL;
+    gff_chunk_header_t chunk = gff_find_chunk_header(RESOURCE_GFF_INDEX, GFF_FONT, 100);
+    ds_font_t *dsfont = malloc(chunk.length);
+
+    if (!dsfont) {
+        error ("unable to malloc for font!\n");
+        exit(1);
+    }
+
+    gff_read_chunk(RESOURCE_GFF_INDEX, &chunk, dsfont, chunk.length);
     for (int c = 0; c < MAX_CHARS; c++ ) {
         ds_char = (ds_char_t*)(((uint8_t*)dsfont) + dsfont->char_offset[c]);
         data = (char*)create_font_rgba(RESOURCE_GFF_INDEX, c, fg_color, bg_color);
@@ -96,6 +109,7 @@ static void create_font(SDL_Renderer *renderer) {
         font_locs[c].h *= 2;
         SDL_FreeSurface(surface);
     }
+    free(dsfont);
 }
 
 void narrate_init(SDL_Renderer *renderer) {

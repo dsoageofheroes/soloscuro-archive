@@ -204,7 +204,7 @@ extern int gff_get_type_id(int idx, int type_index);
 extern unsigned int gff_get_resource_length(int idx, int type_id);
 extern size_t gff_get_resource_ids(int idx, int type_id, unsigned int *ids);
 extern unsigned int* gff_get_id_list(int idx, int type_id);
-extern char* gff_get_raw_bytes(int idx, int type_id, int res_id, unsigned long *len);
+//extern char* gff_get_raw_bytes(int idx, int type_id, int res_id, unsigned long *len);
 extern size_t gff_read_raw_bytes(int idx, int type_id, int res_id, void *buf, const size_t len);
 extern gff_chunk_header_t gff_find_chunk_header(int idx, int type_id, int res_id);
 extern size_t gff_read_chunk(int idx, gff_chunk_header_t *chunk, void *buf, const size_t len);

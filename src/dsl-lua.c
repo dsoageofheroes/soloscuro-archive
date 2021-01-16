@@ -444,14 +444,21 @@ static void dsl_lua_pass(unsigned char *dsl, const size_t len, const int pass_nu
 }
 
 char* dsl_lua_print(const size_t _script_id, const int _is_mas, size_t *script_len) {
-    size_t len;
+    //size_t len;
     unsigned char *dsl = NULL;
-    
     script_id = _script_id;
     is_mas = _is_mas;
-    dsl = (unsigned char*)gff_get_raw_bytes(DSLDATA_GFF_INDEX, 
-        is_mas ? GT_MAS : GT_GPL,
-        script_id, &len);
+
+    gff_chunk_header_t chunk = gff_find_chunk_header(DSLDATA_GFF_INDEX,
+        is_mas ? GFF_MAS : GFF_GPL,
+        script_id);
+    dsl = malloc(chunk.length);
+    if (!dsl) {
+        error ("Unable to alloc for dsl script!\n");
+        exit(1);
+    }
+    gff_read_chunk(DSLDATA_GFF_INDEX, &chunk, dsl, chunk.length);
+    
 /*
     lua_pos = 0;
     lua_depth = 0; 
@@ -476,10 +483,13 @@ char* dsl_lua_print(const size_t _script_id, const int _is_mas, size_t *script_l
     //printf("tranversed = %ld, len = %ld\n", (size_t)get_data_ptr() - (size_t)start, len);
     pop_data_ptr();
     */
-    dsl_lua_pass(dsl, len, 0);
-    dsl_lua_pass(dsl, len, 1);
+    //dsl_lua_pass(dsl, len, 0);
+    //dsl_lua_pass(dsl, len, 1);
+    dsl_lua_pass(dsl, chunk.length, 0);
+    dsl_lua_pass(dsl, chunk.length, 1);
     *script_len = lua_pos - 1;
     lua_buf[lua_pos - 1] = '\0';
+    free(dsl);
     return lua_buf;
 }
 

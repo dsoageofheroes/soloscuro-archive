@@ -65,12 +65,12 @@ gff_palettes_t* read_palettes(int idx) {
     return read_palettes_type(idx, GFF_PAL);
 }
 
-gff_palette_t* create_palettes(int gff_index, unsigned int *len) {
-    open_files[gff_index].pals = read_palettes(gff_index);
-    gff_chunk_list_t* pal_chunk = search_for_chunk_by_name(open_files+gff_index, GT_PAL);
+gff_palette_t* create_palettes(int gff_idx, unsigned int *len) {
+    open_files[gff_idx].pals = read_palettes(gff_idx);
+    gff_chunk_list_t* pal_chunk = search_for_chunk_by_name(open_files+gff_idx, GT_PAL);
     if (pal_chunk == NULL) { goto cp_search_error; }
 
-    unsigned int* ids = gff_get_id_list(gff_index, GT_PAL);
+    unsigned int* ids = gff_get_id_list(gff_idx, GT_PAL);
     if (pal_chunk->chunkCount & GFFSEGFLAGMASK) {
         gff_seg_header_t  *seg_header = (gff_seg_header_t*)&pal_chunk->chunks[0];
         int num_entries = 0;
@@ -85,15 +85,20 @@ gff_palette_t* create_palettes(int gff_index, unsigned int *len) {
         }
 
         gff_palette_t* cpal = palettes + num_palettes;
-        if (gff_index == gff_get_master()) { 
+        if (gff_idx == gff_get_master()) { 
             master_palette = cpal; 
         }
 
         num_palettes += *len;
         //printf("Creating %d palettes, base = %p, offset = %p\n", (int)*len, palettes, cpal);
         for (int i = 0; i < *len; i++) {
-            unsigned long tlen;
-            unsigned char* raw_pal = (unsigned char*)gff_get_raw_bytes(gff_index, GT_PAL, ids[i], &tlen);
+            gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GT_PAL, ids[i]);
+            unsigned char raw_pal[PAL_MAX];
+            if (chunk.length > PAL_MAX) {
+                error ("chunk.length (%d) is bigger than PAL_MAX (%d)\n", chunk.length, PAL_MAX);
+                exit(1);
+            }
+            gff_read_chunk(gff_idx, &chunk, raw_pal, chunk.length);
             for (int j = 0; j < PALETTE_SIZE; j++) {
                 cpal[i].color[j].r = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 0]));
                 cpal[i].color[j].g = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 1]));
@@ -105,7 +110,7 @@ gff_palette_t* create_palettes(int gff_index, unsigned int *len) {
         return cpal;
     } else {
         gff_palette_t *cpal = NULL;
-        if (gff_index == gff_get_master()) { 
+        if (gff_idx == gff_get_master()) { 
             master_palette = palettes + num_palettes;
         }
         for (int i = 0; i < pal_chunk->chunkCount; i++) {
@@ -113,7 +118,7 @@ gff_palette_t* create_palettes(int gff_index, unsigned int *len) {
             gff_chunk_header_t *chunk_header = (void*)(cptr + GFFCHUNKLISTHEADERSIZE + (i * GFFCHUNKHEADERSIZE));
             cpal = palettes + num_palettes++;
             //cpal = palettes + num_palettes;
-            unsigned char* raw_pal = (unsigned char*)((unsigned char*)open_files[gff_index].data) +
+            unsigned char* raw_pal = (unsigned char*)((unsigned char*)open_files[gff_idx].data) +
                 chunk_header->location;
             //cpal->color[j].r = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 0]));
             //cpal->color[j].g = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 1]));
@@ -140,7 +145,7 @@ gff_palette_t* create_palettes(int gff_index, unsigned int *len) {
     }
 
     gff_palette_t* cpal = palettes + num_palettes;
-    if (gff_index == gff_get_master()) { 
+    if (gff_idx == gff_get_master()) { 
         master_palette = cpal; 
     }
 
@@ -150,9 +155,14 @@ gff_palette_t* create_palettes(int gff_index, unsigned int *len) {
             (unsigned long)cpal, (int)((cpal-palettes)));
     num_palettes += *len;
     for (int i = 0; i < *len; i++) {
-        unsigned long tlen;
-        unsigned char* raw_pal = (unsigned char*)gff_get_raw_bytes(gff_index, GT_PAL, ids[i], &tlen);
-        printf("pal[%d] id = %u, tlen = %lu\n", i, ids[i], tlen);
+        gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_PAL, ids[i]);
+        unsigned char raw_pal[PAL_MAX];
+        if (chunk.length > PAL_MAX) {
+            error ("chunk.length (%d) is larger than PAL_MAX (%d)\n", chunk.length, PAL_MAX);
+            exit(1);
+        }
+        gff_read_chunk(gff_idx, &chunk, raw_pal, chunk.length);
+        printf("pal[%d] id = %u, tlen = %u\n", i, ids[i], chunk.length);
         for (int j = 0; j < PALETTE_SIZE; j++) {
             cpal[i].color[j].r = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 0]));
             cpal[i].color[j].g = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 1]));
@@ -167,37 +177,38 @@ cp_search_error:
     return NULL;
 }
 
-int get_frame_count(int gff_index, int type_id, int res_id) {
-    unsigned long len = 0;
-    unsigned char* chunk = (unsigned char*)gff_get_raw_bytes(gff_index, type_id, res_id, &len);
-    short num_frames = *((unsigned short*)(chunk + 4));
+int get_frame_count(int gff_idx, int type_id, int res_id) {
+    char buf[1<<14];
+    gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, type_id, res_id);
+    gff_read_chunk(gff_idx, &chunk, buf, 1<<14);
+    short num_frames = *((unsigned short*)(buf + 4));
     return num_frames;
 }
 
 #define get_distance_to_chunk(a, b) ((unsigned long)a - (unsigned long)b)
 
-int get_frame_width(int gff_index, int type_id, int res_id, int frame_id) {
-    unsigned long len = 0;
-    unsigned char* chunk = (unsigned char*)gff_get_raw_bytes(gff_index, type_id, res_id, &len);
-    unsigned int frame_offset = *((unsigned int*)(chunk + 6 + frame_id*4));
-    // bounds check
-    if (get_distance_to_chunk(chunk, open_files[gff_index].data) + frame_offset > open_files[gff_index].len) {
+int get_frame_width(int gff_idx, int type_id, int res_id, int frame_id) {
+    unsigned char buf[1<<16];
+    gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, type_id, res_id);
+    gff_read_chunk(gff_idx, &chunk, buf, 1<<16);
+    unsigned int frame_offset = *((unsigned int*)(buf + 6 + frame_id*4));
+    if (chunk.location + frame_offset > open_files[gff_idx].len) {
         return -1;
     }
-    unsigned short width = *(unsigned short*)(chunk + frame_offset);
+    unsigned short width = *(unsigned short*)(buf + frame_offset);
     return width;
 }
 
-int get_frame_height(int gff_index, int type_id, int res_id, int frame_id) {
-    unsigned long len = 0;
-    unsigned char* chunk = (unsigned char*)gff_get_raw_bytes(gff_index, type_id, res_id, &len);
-    unsigned int frame_offset = *((unsigned int*)(chunk + 6 + frame_id*4));
-    // bounds check
-    if (get_distance_to_chunk(chunk, open_files[gff_index].data) + frame_offset > open_files[gff_index].len) {
+int get_frame_height(int gff_idx, int type_id, int res_id, int frame_id) {
+    unsigned char buf[1<<16];
+    gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, type_id, res_id);
+    gff_read_chunk(gff_idx, &chunk, buf, 1<<16);
+    unsigned int frame_offset = *((unsigned int*)(buf + 6 + frame_id*4));
+    if (chunk.location + frame_offset > open_files[gff_idx].len) {
         return -1;
     }
-    unsigned short hieght = *(unsigned short*)(chunk + frame_offset + 2);
-    return hieght;
+    unsigned short height = *(unsigned short*)(buf + frame_offset + 2);
+    return height;
 }
 
 static unsigned char* create_initialized_image_rgb(const unsigned int w, const unsigned h) {

@@ -491,8 +491,6 @@ static void render_entry_cpal() {
 }
 
 static void render_entry_monr() {
-    //unsigned long len = 0;
-    //char *text = gff_get_raw_bytes(gff_idx, GFF_TEXT, res_ids[res_idx], &len);
     render_entry_header();
     print_line_len(renderer, "Need to implement", 320, 40, 128);
 }
@@ -591,12 +589,21 @@ static void print_item(ds1_item_t item, int pos) {
     */
 }
 
+#define RDFF_MAX (1<<12)
 static void render_entry_rdff() {
     char buf[BUF_MAX];
     render_entry_header();
-    unsigned long len;
     so_object_t *so = NULL;
-    rdff_disk_object_t *rdff = (rdff_disk_object_t*) gff_get_raw_bytes(gff_idx, GFF_RDFF, res_ids[res_idx], &len);
+    rdff_disk_object_t rdff_buf[RDFF_MAX];
+    rdff_disk_object_t *rdff = rdff_buf;
+    gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_RDFF, res_ids[res_idx]);
+
+    if (chunk.length > RDFF_MAX * sizeof(rdff_disk_object_t)) {
+        error ("chunk.length (%d) greater than max (%d)!\n", chunk.length, RDFF_MAX);
+        exit(1);
+    }
+
+    gff_read_chunk(gff_idx, &chunk, rdff, chunk.length);
     //printf("res_ids[%d] = %d\n", res_idx, res_ids[res_idx]);
     snprintf(buf, BUF_MAX, "load action: %d\n", rdff->load_action);
     print_line_len(renderer, buf, 320, 40, 128);

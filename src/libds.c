@@ -31,7 +31,7 @@ static void create_table_entry_ss(lua_State *L, const char *key, const char *val
 }
 
 static void push_ds1_combat(lua_State *L, ds1_combat_t *dc);
-static void push_ds1_monster(lua_State *L, gff_monster_entry_t *me);
+//static void push_ds1_monster(lua_State *L, gff_monster_entry_t *me);
 static void push_ds1_item(lua_State *L, ds1_item_t *dc);
 static void push_scmd(lua_State *L, scmd_t *script);
 /* End Helper Functions */
@@ -157,15 +157,18 @@ int lua_gff_get_id_list(lua_State *L) {
     return 1;
 }
 
+#define BUF_MAX (1<<12)
+
 int lua_gff_get_data_as_text(lua_State *L) {
     int idx = luaL_checkinteger(L, 1);
     int type_id = luaL_checkinteger(L, 2) & GFFMAXCHUNKMASK;
     int res_id = luaL_checkinteger(L, 3);
-    unsigned long len;
+    char buf[BUF_MAX];
+    gff_chunk_header_t chunk = gff_find_chunk_header(idx, type_id, res_id);
+    gff_read_chunk(idx, &chunk, buf, BUF_MAX);
 
-    char* msg = gff_get_raw_bytes(idx, type_id, res_id, &len);
-    msg[len-1] = '\0';
-    lua_pushstring(L, msg);
+    buf[chunk.length - 1] = '\0';
+    lua_pushstring(L, buf);
 
     return 1;
 }
@@ -179,10 +182,6 @@ int lua_gff_write_raw_bytes(lua_State *L) {
     lua_pushinteger(L, gff_write_raw_bytes(idx, type_id, res_id, path));
 
     return 1;
-}
-
-char* lua_gff_get_raw_bytes(int idx, int type_id, int res_id, unsigned long *len) {
-    return NULL;
 }
 
 int lua_gff_close (lua_State *L) {
@@ -256,10 +255,11 @@ int lua_get_frame_rgba(lua_State *L) {
 int lua_get_portrait(lua_State *L) {
     lua_Integer res_id = luaL_checkinteger (L, 1);
     unsigned int w, h;
-    unsigned long len;
-    unsigned char* chunk = (unsigned char*)gff_get_raw_bytes(DSLDATA_GFF_INDEX, GT_PORT, res_id, &len);
+    unsigned char buf[BUF_MAX];
+    gff_chunk_header_t chunk = gff_find_chunk_header(DSLDATA_GFF_INDEX, GFF_PORT, res_id);
+    gff_read_chunk(DSLDATA_GFF_INDEX, &chunk, buf, BUF_MAX);
 
-    char *data = (char*)get_portrait(chunk, &w, &h);
+    char *data = (char*)get_portrait(buf, &w, &h);
     if (data == NULL) {
         lua_pushinteger(L, 0);
         lua_pushinteger(L, 0);
@@ -298,14 +298,16 @@ int lua_get_frame_rgba_with_palette(lua_State *L) {
 
 /* Sound Functions */
 int lua_get_chunk_as_midi(lua_State *L) {
-    lua_Integer gff_index = luaL_checkinteger (L, 1);
+    lua_Integer gff_idx = luaL_checkinteger (L, 1);
     lua_Integer type_id = luaL_checkinteger (L, 2);
     lua_Integer res_id = luaL_checkinteger (L, 3);
     unsigned long xmi_len = 0;
     unsigned int midi_len = 0;
+    char buf[BUF_MAX];
+    gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, type_id, res_id);
+    gff_read_chunk(gff_idx, &chunk, buf, BUF_MAX);
 
-    char* xmi_data = gff_get_raw_bytes(gff_index, type_id, res_id, &xmi_len);
-    unsigned char* midi_data = xmi_to_midi((unsigned char*)xmi_data, xmi_len, &midi_len);
+    unsigned char* midi_data = xmi_to_midi((unsigned char*)buf, xmi_len, &midi_len);
     FILE *tmp = fopen("t.mid", "wb+");
     fwrite(midi_data, 1, midi_len, tmp);
     fclose(tmp);
@@ -494,7 +496,7 @@ int lua_object_inspect(lua_State *L) {
     return 1;
 }
 
-int lua_load_monster(lua_State *L) {
+/*int lua_load_monster(lua_State *L) {
     lua_Integer region_id = luaL_checkinteger (L, 1);
     lua_Integer monster_id = luaL_checkinteger (L, 2);
 
@@ -505,15 +507,18 @@ int lua_load_monster(lua_State *L) {
 
     return 1;
 }
+*/
 
 int lua_create_font_img(lua_State *L) {
     lua_Integer gff_idx = luaL_checkinteger (L, 1);
     lua_Integer c = luaL_checkinteger (L, 2);
     lua_Integer fg_color = luaL_checkinteger (L, 3);
     lua_Integer bg_color = luaL_checkinteger (L, 4);
-    unsigned long len;
+    char buf[BUF_MAX];
+    gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_FONT, 100);
+    gff_read_chunk(gff_idx, &chunk, buf, BUF_MAX);
 
-    ds_font_t *font = (ds_font_t*) gff_get_raw_bytes(gff_idx, GT_FONT, 100, &len);
+    ds_font_t *font = (ds_font_t*)buf;
     ds_char_t *ds_char = (ds_char_t*)(((uint8_t*)font) + font->char_offset[c]);
     char *data = (char*)create_font_rgba(gff_idx, c, fg_color, bg_color);
 
@@ -532,9 +537,11 @@ int lua_create_font_img(lua_State *L) {
 
 int lua_font_count(lua_State *L) {
     lua_Integer gff_idx = luaL_checkinteger (L, 1);
-    unsigned long len;
+    char buf[BUF_MAX];
+    gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_FONT, 100);
+    gff_read_chunk(gff_idx, &chunk, buf, BUF_MAX);
 
-    ds_font_t *font = (ds_font_t*) gff_get_raw_bytes(gff_idx, GT_FONT, 100, &len);
+    ds_font_t *font = (ds_font_t*)buf;
 
 //    create_font_rgba(gff_idx, 65);
 
@@ -822,7 +829,7 @@ static const struct luaL_Reg lslib [] = {
 
       // Object Functions
       {"object_inspect", lua_object_inspect},
-      {"load_monster", lua_load_monster},
+      //{"load_monster", lua_load_monster},
 
       // SCMD functions
       {"scmd_len", lua_scmd_len},
@@ -932,10 +939,12 @@ static void push_scmd(lua_State *L, scmd_t *script) {
     memcpy(lscmd, script, sizeof(scmd_t) * len);
 }
 
+/*
 static void push_ds1_monster(lua_State *L, gff_monster_entry_t *me) {
     create_table_entry_si(L, "id", me->id);
     create_table_entry_si(L, "level", me->level);
 }
+*/
 
 static void push_ds1_combat(lua_State *L, ds1_combat_t *dc) {
     create_table_entry_si(L, "type", SO_DS1_COMBAT);
