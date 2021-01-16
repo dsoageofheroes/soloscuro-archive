@@ -35,8 +35,8 @@ static int item_names_pos = 0;
  * OT_NAMEIX <-- may not be needed
  */
 void dsl_object_init() {
-    unsigned long len;
-    char *ptr;
+    //unsigned long len;
+    //char *ptr;
     ds1_combats = malloc(sizeof(ds1_combat_t) * MAX_COMBATS);
     ds1_items = malloc(sizeof(ds1_item_t) * MAX_ITEMS);
     ds_characters = malloc(sizeof(ds_character_t) * MAX_CHARACTERS);
@@ -55,11 +55,11 @@ void dsl_object_init() {
     memset(ds1_item1rs, 0x00, sizeof(item1r_t) * MAX_ITEM1R);
     memset(minis, 0x00, sizeof(mini_t) * MAX_MINIS);
     // TODO FIXME WARNING, this may not be correct!
-    ptr = gff_get_raw_bytes(DSLDATA_GFF_INDEX, GT_IT1R, 1, &len);
-    for (int i = 0; i < len/15; i++) {
-        memcpy(ds1_item1rs + i, ptr + (15*i), 15);
-        //printf("%d\n", ds1_item1rs[i].range);
-    }
+    //ptr = gff_get_raw_bytes(DSLDATA_GFF_INDEX, GT_IT1R, 1, &len);
+    //for (int i = 0; i < len/15; i++) {
+        //memcpy(ds1_item1rs + i, ptr + (15*i), 15);
+        ////printf("%d\n", ds1_item1rs[i].range);
+    //}
     printf("DSL_OBJECT LIST INIT\n");
 }
 
@@ -129,11 +129,11 @@ region_object_t* __region_list_get_next(region_list_t *rl, int *i) {
 }
 
 region_object_t* region_list_create_from_objex(region_list_t *rl, const int id, const int32_t x, const int32_t y) {
-    unsigned long len;
     region_object_t *robj = NULL;
-    disk_object_t *dobj = (disk_object_t*)gff_get_raw_bytes(OBJEX_GFF_INDEX, GT_OJFF, -1*id, &len);
+    disk_object_t dobj;
 
-    if (!dobj) {
+    gff_chunk_header_t chunk = gff_find_chunk_header(OBJEX_GFF_INDEX, GFF_OJFF, -1 * id);
+    if (!gff_read_chunk(OBJEX_GFF_INDEX, &chunk, &(dobj), sizeof(disk_object_t))) {
         printf("unable to get obj from id: %d\n", id);
         return NULL;
     }
@@ -146,15 +146,15 @@ region_object_t* region_list_create_from_objex(region_list_t *rl, const int id, 
     robj = rl->objs + rl->pos++;
     memset(robj, 0x0, sizeof(region_object_t));
     robj->disk_idx = id;
-    robj->flags = dobj->flags;
-    robj->gt_idx = dobj->object_index;
-    robj->btc_idx = dobj->bmp_id;
-    robj->bmpx = x - dobj->xoffset;
-    robj->bmpy = y - dobj->yoffset - dobj->zpos;
-    robj->xoffset = dobj->xoffset;
-    robj->yoffset = dobj->yoffset;
-    robj->mapx = x - dobj->xoffset;
-    robj->mapy = y - dobj->yoffset;
+    robj->flags = dobj.flags;
+    robj->gt_idx = dobj.object_index;
+    robj->btc_idx = dobj.bmp_id;
+    robj->bmpx = x - dobj.xoffset;
+    robj->bmpy = y - dobj.yoffset - dobj.zpos;
+    robj->xoffset = dobj.xoffset;
+    robj->yoffset = dobj.yoffset;
+    robj->mapx = x - dobj.xoffset;
+    robj->mapy = y - dobj.yoffset;
     //robj->mapz = gm->zpos;
     robj->mapz = 0;
     robj->entry_id = -1 * id;
@@ -164,6 +164,12 @@ region_object_t* region_list_create_from_objex(region_list_t *rl, const int id, 
 void region_list_load_objs(region_list_t *rl, const int gff_file, const int map_id) {
     unsigned long len;
     gff_map_object_t *entry_table = (gff_map_object_t*) gff_get_raw_bytes(gff_file, GT_ETAB, map_id, &len);
+    //gff_map_object_t entry_table;
+    //gff_chunk_header_t chunk = gff_find_chunk_header(OBJEX_GFF_INDEX, GFF_OJFF, map_id);
+    //if (!gff_read_chunk(OBJEX_GFF_INDEX, &chunk, &(entry_table), sizeof(gff_map_object_t))) {
+        //error ("unable to load ETAB.\n");
+        //return;
+    //}
     rl->pos = gff_map_get_num_objects(gff_file, map_id);
     memset(&rl->objs, 0x0, sizeof(region_object_t) * MAX_REGION_OBJS);
 

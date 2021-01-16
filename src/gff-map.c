@@ -18,18 +18,18 @@ int gff_read_object(int object_index, disk_object_t *disk_obj) {
     return gff_read_chunk(OBJEX_GFF_INDEX, &chunk, disk_obj, sizeof(disk_object_t));
 }
 
-int gff_map_get_num_objects(int gff_index, int res_id) {
-    if (open_files[gff_index].num_objects >= 0) {
-        return open_files[gff_index].num_objects;
+int gff_map_get_num_objects(int gff_idx, int res_id) {
+    if (open_files[gff_idx].num_objects >= 0) {
+        return open_files[gff_idx].num_objects;
     }
 
     unsigned long len;
     unsigned int num_entries, i, j;
-    gff_map_object_t *entry_table = (gff_map_object_t*) gff_get_raw_bytes(gff_index, GT_ETAB, res_id, &len);
+    gff_map_object_t *entry_table = (gff_map_object_t*) gff_get_raw_bytes(gff_idx, GT_ETAB, res_id, &len);
     gff_map_object_t *centry = entry_table;
 
     if (entry_table) {
-        open_files[gff_index].entry_table = entry_table;
+        open_files[gff_idx].entry_table = entry_table;
         for (num_entries = 0; centry->index && num_entries < MAX_MAP_OBJECTS; centry++, num_entries++) {
             // centry->index = (centry->index > 0) ? -centry->index : centry->index; //TODO: Only needed if using disk?
             centry->flags |= OBJECT_EXISTS;
@@ -44,7 +44,7 @@ int gff_map_get_num_objects(int gff_index, int res_id) {
                 }
             }
         }
-        open_files[gff_index].num_objects = num_entries;
+        open_files[gff_idx].num_objects = num_entries;
         return num_entries;
     }
     return 0;

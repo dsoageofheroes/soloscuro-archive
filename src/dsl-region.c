@@ -13,7 +13,6 @@ static dsl_region_t *cregion = NULL;
 
 dsl_region_t* dsl_load_region(const int gff_file) {
     uint32_t *tids = NULL;
-    unsigned long len;
     dsl_region_t *ret = malloc(sizeof(dsl_region_t));
 
     memset(ret, 0x0, sizeof(dsl_region_t));
@@ -25,7 +24,13 @@ dsl_region_t* dsl_load_region(const int gff_file) {
     ret->map_id = *tids;
     free(tids);
 
-    ret->entry_table = (gff_map_object_t*) gff_get_raw_bytes(ret->gff_file, GT_ETAB, ret->map_id, &len);
+    gff_chunk_header_t chunk = gff_find_chunk_header(ret->gff_file, GFF_ETAB, ret->map_id);
+    ret->entry_table = malloc(chunk.length);
+    if (!ret->entry_table) {
+        error("Unable to malloc entry table for region!\n");
+        exit(1);
+    }
+    gff_read_chunk(ret->gff_file, &chunk, ret->entry_table, chunk.length);
     ret->palette_id = gff_get_palette_id(DSLDATA_GFF_INDEX, ret->map_id - 1);
     ret->ids = gff_get_id_list(ret->gff_file, GT_TILE);
 
@@ -51,16 +56,24 @@ region_object_t* dsl_region_find_object(const int16_t disk_idx) {
     return NULL;
 }
 
+#define RMAP_MAX (1<<14)
 static void dsl_load_map_tile_ids(dsl_region_t *region) {
     unsigned int *rmap_ids = gff_get_id_list(region->gff_file, GT_RMAP);
-    unsigned long len;
-    char* data = gff_get_raw_bytes(region->gff_file, GT_RMAP, rmap_ids[0], &len);
+    unsigned char data[RMAP_MAX];
+    
+    gff_chunk_header_t chunk = gff_find_chunk_header(region->gff_file, GFF_RMAP, rmap_ids[0]);
+    if (chunk.length > RMAP_MAX) {
+        error ("RMAP data length (%d) is larger than RMAP_MAX (%d)\n", chunk.length, RMAP_MAX);
+        exit(1);
+    }
+    if (!gff_read_chunk(region->gff_file, &chunk, data, chunk.length)) {
+        error ("Unable to read RMAP!\n");
+        return;
+    }
 
-    if (!data) { return ; }
-
-    region->tile_ids_size = len;
+    region->tile_ids_size = chunk.length;
     region->num_tiles = gff_get_resource_length(region->gff_file, GT_TILE);
-    memcpy(region->tile_ids, data, len);
+    memcpy(region->tile_ids, data, chunk.length);
 
     free(rmap_ids);
 }
@@ -72,14 +85,24 @@ unsigned char* dsl_load_object_bmp(dsl_region_t *region, const uint32_t id, cons
             region->palette_id);
 }
 
+#define GMAP_MAX (1<<14)
+
 static void dsl_load_map_flags(dsl_region_t *region) {
-    unsigned long len;
     unsigned int *gmap_ids = gff_get_id_list(region->gff_file, GT_GMAP);
-    char* data = gff_get_raw_bytes(region->gff_file, GT_GMAP, gmap_ids[0], &len);
+    char data[GMAP_MAX];
+    gff_chunk_header_t chunk = gff_find_chunk_header(region->gff_file, GFF_GMAP, gmap_ids[0]);
 
-    if (!data) { return ; }
+    if (chunk.length > GMAP_MAX) {
+        error ("chunk.length (%d) is grater that GMAP_MAX(%d)\n", chunk.length, GMAP_MAX);
+        exit(1);
+    }
 
-    region->flags_size = len;
+    if (!gff_read_chunk(region->gff_file, &chunk, data, chunk.length)) {
+        error ("Unable to read GFF_GMAP chunk!\n");
+        return;
+    }
+
+    region->flags_size = chunk.length;
     memcpy(region->flags, data, region->flags_size);
 
     free(gmap_ids);

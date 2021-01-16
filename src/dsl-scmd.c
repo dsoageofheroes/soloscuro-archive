@@ -1,5 +1,6 @@
 #include "dsl.h"
 #include "dsl-scmd.h"
+#include <stdlib.h>
 
 static scmd_t* get_script(unsigned char* scmd_entry, const int index) {
     if (scmd_entry == NULL) { return NULL; }
@@ -12,6 +13,7 @@ static scmd_t* get_script(unsigned char* scmd_entry, const int index) {
     return scmds + scmd_idx;
 }
 
+/*
 static void print_scmd(scmd_t *scmd) {
     printf("bmp_idx = %d, delay = %d, flags = 0x%x, xoffset = %d, yoffset = %d, "
         "xoffsethot = %d, yoffsethot = %d, soundidx = %d\n",
@@ -25,20 +27,31 @@ static void print_scmd(scmd_t *scmd) {
         scmd->soundidx
     );
 }
+*/
 
-static void print_script(scmd_t *script) {
-    if (script == NULL) { return; }
-    while((script->flags & SCMD_LAST) == 0) {
-        print_scmd(script);
-        script++;
+static unsigned char scmds[SCMD_MAX][SCMD_MAX];
+static scmd_t empty_scmd = {
+    .bmp_idx = 0,
+    .delay = 0,
+    .flags = SCMD_LAST,
+    .xoffset = 0,
+    .yoffset = 0,
+    .xoffsethot = 0,
+    .yoffsethot = 0,
+    .soundidx = 0
+};
+
+scmd_t* dsl_scmd_get(const int gff_idx, const int res_id, const int index) {
+    if (res_id > 0) {
+        gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_SCMD, res_id);
+        if (chunk.length > SCMD_MAX) {
+            error("chunk length (%d) is larger than SCMD_MAX (%d)\n", chunk.length, SCMD_MAX);
+            exit(1);
+        }
+        gff_read_chunk(gff_idx, &chunk, scmds[res_id], SCMD_MAX);
+        return get_script(scmds[res_id], index);
     }
-    print_scmd(script);
-}
-
-scmd_t* dsl_scmd_get(const int gff_file, const int res_id, const int index) {
-    unsigned long len;
-    char *scmd_entry = gff_get_raw_bytes(gff_file, GT_SCMD, res_id, &len);
-    return get_script((unsigned char*) scmd_entry, index);
+    return &empty_scmd;
 }
 
 int dsl_scmd_is_default(const scmd_t *scmd, const int scmd_index) {
@@ -49,28 +62,4 @@ int dsl_scmd_is_default(const scmd_t *scmd, const int scmd_index) {
     }
     uint16_t scmd_idx = *((uint16_t*)(((unsigned char *)scmd) + scmd_index));
     return scmd_idx == 0;
-}
-
-void dsl_scmd_print(int gff_file, int res_id) {
-    unsigned long len;
-    char *scmd_entry = gff_get_raw_bytes(gff_file, GT_SCMD, res_id, &len);
-    if (scmd_entry == NULL) { return; }
-    int script_size = len - (SCMD_MAX_SIZE * 2);
-    int script_cmds = script_size / sizeof(scmd_t);
-    printf("-------------------------PRINTING SCMD ENTRY----------------------\n");
-    printf("len = %lu, script_size = %d, script_cmds = %d\n", len, script_size, script_cmds);
-    printf("Default Script (#0):\n");
-    print_script(get_script((unsigned char*) scmd_entry, 0));
-    uint16_t *scmd_idx = (uint16_t*)scmd_entry;
-
-    int script_count = 1;
-    for (int i = 0; i < SCMD_MAX_SIZE; i++) {
-        if (scmd_idx[i] > 0) {
-            script_count++;
-            printf("Script #%d jumps to %d, entry is:\n", i, scmd_idx[i]);
-            print_script(get_script((unsigned char*) scmd_entry, i));
-        }
-    }
-
-    printf("Detected %d scripts\n", script_count);
 }

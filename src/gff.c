@@ -546,18 +546,19 @@ char* gff_get_raw_bytes(int idx, int type_id, int res_id, unsigned long *len) {
 }
 
 int gff_write_raw_bytes(int idx, int type_id, int res_id, const char *path) {
-    unsigned long len = 0;
     int amt = 0;
     char *data;
     FILE *file;
 
-    data = gff_get_raw_bytes(idx, type_id, res_id, &len);
-    if (len < 1 || data == NULL) { return 0; }
+    gff_chunk_header_t chunk = gff_find_chunk_header(idx, type_id, res_id);
+    data = malloc(chunk.length);
+
+    if (!gff_read_chunk(idx, &chunk, data, chunk.length) ) { return 0; }
 
     file = fopen(path, "w+");
     if (!file) { return 0; }
 
-    amt = fwrite(data, 1, len, file);
+    amt = fwrite(data, 1, chunk.length, file);
 
     fclose (file);
     return amt;

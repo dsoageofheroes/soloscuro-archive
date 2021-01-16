@@ -38,20 +38,24 @@ static void write_lua(const char *path, const char *lua, const size_t len) {
     }
 }
 
+#define DSL_MAX (1<<14)
 void dsl_lua_load_script(const uint32_t script_id, const uint8_t is_mas) {
-    size_t len, script_len;
-    unsigned char *dsl;
+    size_t script_len;
+    unsigned char dsl[DSL_MAX];
     char buf[1024];
     char **script = is_mas ? mas_scripts : gpl_scripts;
     char *script_ptr;
 
-    dsl = (unsigned char*)gff_get_raw_bytes(DSLDATA_GFF_INDEX, 
-        is_mas ? GT_MAS : GT_GPL,
-        script_id, &len);
-    if (!dsl) { return; }
-    printf("Coverting %s %d to lua, length = %ld\n",
+    gff_chunk_header_t chunk = gff_find_chunk_header(DSLDATA_GFF_INDEX,
+        is_mas ? GFF_MAS : GFF_GPL, script_id);
+    if (chunk.length > DSL_MAX) {
+        error("DSL chunk size %d is larger than max (%d)\n", chunk.length, DSL_MAX);
+    }
+    if (!gff_read_chunk(DSLDATA_GFF_INDEX, &chunk, dsl, chunk.length)) { return; }
+
+    printf("Coverting %s %d to lua, length = %d\n",
         is_mas ? "MAS" : "GPL",
-        script_id, len);
+        script_id, chunk.length);
     //script_ptr = dsl_lua_print(dsl, len, is_master_mas, &script_len);
     script_ptr = dsl_lua_print(script_id, is_mas, &script_len);
     script[script_id] = malloc(sizeof(char) * (script_len + 1)); // (A)
