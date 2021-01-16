@@ -6,15 +6,16 @@
 #include "dsl.h"
 #include "dsl-region.h"
 
-disk_object_t* gff_get_object(int object_index) {
-    unsigned long len;
-    if (!open_files[OBJEX_GFF_INDEX].data) {
-        return NULL;
+int gff_read_object(int object_index, disk_object_t *disk_obj) {
+
+    if (!disk_obj || !open_files[OBJEX_GFF_INDEX].data) {
+        return 0;
     }
 
     if (object_index < 0) { object_index *= -1; }
 
-    return (disk_object_t*)gff_get_raw_bytes(OBJEX_GFF_INDEX, GT_OJFF, object_index, &len);
+    gff_chunk_header_t chunk = gff_find_chunk_header(OBJEX_GFF_INDEX, GT_OJFF, object_index);
+    return gff_read_chunk(OBJEX_GFF_INDEX, &chunk, disk_obj, sizeof(disk_object_t));
 }
 
 int gff_map_get_num_objects(int gff_index, int res_id) {
@@ -51,27 +52,31 @@ int gff_map_get_num_objects(int gff_index, int res_id) {
 
 int gff_map_get_object_frame_count(int gff_index, int res_id, int obj_id) {
     int num_objects = gff_map_get_num_objects(gff_index, res_id);
+    disk_object_t disk_object;
+
     if (gff_index < 0 || gff_index >= NUM_FILES || obj_id < 0 || obj_id >= num_objects) {
         return -1;
     }
 
     gff_map_object_t *entry_table = open_files[gff_index].entry_table;
     if (entry_table == NULL) { return -1; }
-    disk_object_t *disk_object = gff_get_object(entry_table[obj_id].index);
+    gff_read_object(entry_table[obj_id].index, &disk_object);
 
-    return get_frame_count(OBJEX_GFF_INDEX, GT_BMP, disk_object->bmp_id);
+    return get_frame_count(OBJEX_GFF_INDEX, GT_BMP, disk_object.bmp_id);
 }
 
 scmd_t* gff_map_get_object_scmd(int gff_index, int res_id, int obj_id, int scmd_index) {
     int num_objects = gff_map_get_num_objects(gff_index, res_id);
+    disk_object_t disk_object;
+
     if (gff_index < 0 || gff_index >= NUM_FILES || obj_id < 0 || obj_id >= num_objects) {
         return NULL;
     }
 
     gff_map_object_t *entry_table = open_files[gff_index].entry_table;
     if (entry_table == NULL) { return NULL; }
-    disk_object_t *disk_object = gff_get_object(entry_table[obj_id].index);
-    return dsl_scmd_get(OBJEX_GFF_INDEX, disk_object->script_id, scmd_index);
+    gff_read_object(entry_table[obj_id].index, &disk_object);
+    return dsl_scmd_get(OBJEX_GFF_INDEX, disk_object.script_id, scmd_index);
 }
 
 /*
@@ -85,24 +90,26 @@ unsigned char* gff_map_get_obj_bmp_pal(dsl_region_t *region, int res_id, dsl_obj
 unsigned char* gff_map_get_object_bmp_pal(int gff_index, int res_id, int obj_id, int *w, int *h, int frame_id,
         int palette_id) {
     int num_objects = gff_map_get_num_objects(gff_index, res_id);
+    disk_object_t disk_object;
+
     if (gff_index < 0 || gff_index >= NUM_FILES || obj_id < 0 || obj_id >= num_objects) {
         return NULL;
     }
 
     gff_map_object_t *entry_table = open_files[gff_index].entry_table;
     if (entry_table == NULL) { return NULL; }
-    disk_object_t *disk_object = gff_get_object(entry_table[obj_id].index);
+    gff_read_object(entry_table[obj_id].index, &disk_object);
 
-    int num_frames = get_frame_count(OBJEX_GFF_INDEX, GT_BMP, disk_object->bmp_id);
+    int num_frames = get_frame_count(OBJEX_GFF_INDEX, GT_BMP, disk_object.bmp_id);
     //printf("num_frames = %d\n", num_frames);
     //printf("frame_id = %d\n", frame_id);
     if (frame_id >= num_frames) {
         printf("ERROR: requesting a frame that out of range!\n");
         return NULL;
     }
-    *w = get_frame_width(OBJEX_GFF_INDEX, GT_BMP, disk_object->bmp_id, frame_id);
-    *h = get_frame_height(OBJEX_GFF_INDEX, GT_BMP, disk_object->bmp_id, frame_id);
-    return get_frame_rgba_with_palette(OBJEX_GFF_INDEX, GT_BMP, disk_object->bmp_id, frame_id, palette_id);
+    *w = get_frame_width(OBJEX_GFF_INDEX, GT_BMP, disk_object.bmp_id, frame_id);
+    *h = get_frame_height(OBJEX_GFF_INDEX, GT_BMP, disk_object.bmp_id, frame_id);
+    return get_frame_rgba_with_palette(OBJEX_GFF_INDEX, GT_BMP, disk_object.bmp_id, frame_id, palette_id);
 }
 
 unsigned char* gff_map_get_object_bmp(int gff_index, int res_id, int obj_id, int *w, int *h, int frame_id) {
@@ -111,6 +118,8 @@ unsigned char* gff_map_get_object_bmp(int gff_index, int res_id, int obj_id, int
 
 uint16_t gff_map_get_object_location(int gff_index, int res_id, int obj_id, uint16_t *x, uint16_t *y, uint8_t *z) {
     int num_objects = gff_map_get_num_objects(gff_index, res_id);
+    disk_object_t disk_object;
+
     if (gff_index < 0 || gff_index >= NUM_FILES || obj_id < 0 || obj_id >= num_objects) {
         *x = *y = 0xFFFF;
         return 0;
@@ -118,18 +127,18 @@ uint16_t gff_map_get_object_location(int gff_index, int res_id, int obj_id, uint
 
     gff_map_object_t *entry = open_files[gff_index].entry_table;
     if (entry == NULL) { *x = *y = 0xFFFF; return 0; }
-    disk_object_t *disk_object = gff_get_object(entry[obj_id].index);
+    gff_read_object(entry[obj_id].index, &disk_object);
     //if (disk_object->script_id > 0) {
         //dsl_scmd_print(OBJEX_GFF_INDEX, disk_object->script_id);
     //}
     entry += obj_id;
     *x = entry->xpos;
     *y = entry->ypos;
-    *x = entry->xpos - disk_object->xoffset;
-    *y = entry->ypos - disk_object->yoffset;
+    *x = entry->xpos - disk_object.xoffset;
+    *y = entry->ypos - disk_object.yoffset;
     *z = entry->zpos;
 
-    return disk_object->flags;
+    return disk_object.flags;
 }
 
 so_object_t* gff_create_object(char *data, rdff_disk_object_t *entry, int16_t id) {

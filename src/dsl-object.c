@@ -100,20 +100,21 @@ void region_list_free(region_list_t *rl) {
 
 static void load_object_from_etab(region_object_t *dsl_object, gff_map_object_t *entry_table, uint32_t id) {
     const gff_map_object_t *gm = entry_table + id;
-    disk_object_t *disk_object = gff_get_object(gm->index);
+    disk_object_t disk_object;
+    gff_read_object(gm->index, &disk_object);
     memset(dsl_object, 0x0, sizeof(region_object_t));
     dsl_object->disk_idx = gm->index;
-    dsl_object->flags = disk_object->flags;
-    dsl_object->gt_idx = disk_object->object_index;
-    dsl_object->btc_idx = disk_object->bmp_id;
-    dsl_object->bmpx = gm->xpos - disk_object->xoffset;
-    dsl_object->bmpy = gm->ypos - disk_object->yoffset - disk_object->zpos;
-    dsl_object->xoffset = disk_object->xoffset;
-    dsl_object->yoffset = disk_object->yoffset;
+    dsl_object->flags = disk_object.flags;
+    dsl_object->gt_idx = disk_object.object_index;
+    dsl_object->btc_idx = disk_object.bmp_id;
+    dsl_object->bmpx = gm->xpos - disk_object.xoffset;
+    dsl_object->bmpy = gm->ypos - disk_object.yoffset - disk_object.zpos;
+    dsl_object->xoffset = disk_object.xoffset;
+    dsl_object->yoffset = disk_object.yoffset;
     //dsl_object->mapx = gm->xpos;
     //dsl_object->mapy = gm->ypos;
-    dsl_object->mapx = gm->xpos - disk_object->xoffset;
-    dsl_object->mapy = gm->ypos - disk_object->yoffset;
+    dsl_object->mapx = gm->xpos - disk_object.xoffset;
+    dsl_object->mapy = gm->ypos - disk_object.yoffset;
     dsl_object->mapz = gm->zpos;
     dsl_object->entry_id = id;
 }

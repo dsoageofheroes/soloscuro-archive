@@ -249,8 +249,8 @@ static void gff_read_headers(gff_file_t *gff) {
     cptr = (void*)chunk_list;
     //unsigned char *sptr = cptr;
 
-    //chunk_entry_t **chunks = malloc(sizeof(chunk_entry_t*) * gff->types.numTypes);
     gff->chunks = malloc(sizeof(gff_chunk_entry_t*) * gff->types.numTypes);
+    memset(gff->chunks, 0x0, sizeof(gff_chunk_entry_t*) * gff->types.numTypes);
 /*
     */
     gff_chunk_list_header_t chunk_header;
@@ -766,114 +766,50 @@ size_t gff_get_palette_id(int idx, int palette_num) {
     return open_files[idx].start_palette_index + palette_num;
 }
 
-void gff_print(int idx, FILE *out) {
-    gff_file_header_t *header = open_files[idx].data;
-    gff_toc_header_t *toc_header = NULL;
-    gff_type_header_t *type_header = NULL;
-    gff_chunk_list_t *chunk_list = NULL;
-    gff_chunk_header_t *chunk_header = NULL;
-    gff_seg_header_t  *seg_header = NULL;
-    unsigned long gff_type;
-    char name_buff[1<<10];
-    unsigned char *cptr = open_files[idx].data;
-    int i = 0;
-
-    fprintf(out, "Size = %d\n", open_files[idx].len);
-    fprintf(out, "identity = 0x%x\n", header->identity);
-    fprintf(out, "dataLocation = 0x%x\n", header->dataLocation);
-    fprintf(out, "tocLocation = 0x%x\n", header->tocLocation);
-    fprintf(out, "tocLength = %d\n", header->tocLength);
-    fprintf(out, "fileFlags = 0x%x\n", header->fileFlags);
-    fprintf(out, "reserve1 = 0x%x\n", header->reserve1);
-
-    toc_header = (void*)(cptr + header->tocLocation);
-    fprintf(out, "toc.typesOffset = %u\n", toc_header->typesOffset);
-    fprintf(out, "toc.freeListOffset = %u\n", toc_header->freeListOffset);
-
-    cptr = (void*)toc_header;
-    type_header = (void*)(cptr + toc_header->typesOffset);
-    fprintf(out, "type_header.numTypes = %d\n", type_header->numTypes);
-
-    cptr = (void*)type_header;
-    chunk_list = (void*)(cptr + 2L);
-    cptr = (void*)chunk_list;
-    for (i = 0; i < type_header->numTypes; i++) {
-        gff_type = chunk_list->chunkType & GFFMAXCHUNKMASK;
-        get_gff_type_name(gff_type, name_buff);
-        fprintf(out, "[%d] : chunkType = %d->%s\n", i, chunk_list->chunkType, name_buff);
-        cptr = (void*)chunk_list;
-
-        if (chunk_list->chunkCount & GFFSEGFLAGMASK) {
-            seg_header = (gff_seg_header_t*)&chunk_list->chunks[0];
-            unsigned char *seg_ptr = (unsigned char*)get_gffi_header(open_files+idx);// Right now seg_ptr is a tmp.
-            gff_chunk_header_t *gffi_chunk_header = (gff_chunk_header_t*)(seg_ptr + GFFCHUNKLISTHEADERSIZE +
-                (seg_header->segLocId*GFFCHUNKHEADERSIZE));
-            seg_ptr = (unsigned char*)open_files[idx].data; 
-            seg_ptr += gffi_chunk_header->location;// Maybe where the seg pointer is!
-            cptr += GFFCHUNKLISTHEADERSIZE;
-            fprintf(out, "  segCount = %d, segLocId = %d, numEntries = %d\n", seg_header->segCount,
-                    seg_header->segLocId, seg_header->segRef.numEntries);
-            int ndx = 0;
-            // I need to review g30main.c line 652 for more details.
-            for (int j = 0; j < seg_header->segRef.numEntries; j++) {
-                int tmpId = (seg_header->segRef.entries[j].firstId);
-                int offset = 4L + (GFFSEGLOCENTRYSIZE * ndx);
-                fprintf(out, "  [%d]: id = %d, SegLocOffset = %d, consecChunks = %d\n", j, tmpId, offset,
-                    seg_header->segRef.entries[j].consecChunks);
-                for (int k = 0; k < seg_header->segRef.entries[j].consecChunks; k++) {
-                    unsigned long len = 0;
-                    gff_get_raw_bytes(idx, gff_type, tmpId + k, &len);
-                    gff_seg_loc_entry_t * seg_loc = (gff_seg_loc_entry_t*)(seg_ptr + offset + k*GFFSEGLOCENTRYSIZE);
-                    fprintf(out, "    offset = %u, length = %lu\n", seg_loc->segOffset, len);
-                    /*
-                    if (gff_type == GT_SPIN) {
-                        fprintf(stderr, "text: '%s'\n", (char*)data);
-                    }
-                    */
-                }
-                ndx += seg_header->segRef.entries[j].consecChunks;
-            }
-
-            cptr += ((gff_seg_header_t*)(cptr))->segRef.numEntries * GFFSEGREFENTRYSIZE;
-            cptr += 12L;
-        } else {
-            fprintf(out, "  %d regular chunks detected.\n", chunk_list->chunkCount);
-            for (int j = 0; j < chunk_list->chunkCount; j++) {
-                chunk_header = (void*)(cptr + GFFCHUNKLISTHEADERSIZE + (j * GFFCHUNKHEADERSIZE));
-                fprintf(out, "  [%d]: length = %d\n", chunk_header->id, chunk_header->length);
-            }
-
-            cptr += GFFCHUNKLISTHEADERSIZE;
-            cptr += ((uint32_t)(chunk_list->chunkCount & GFFMAXCHUNKMASK) * GFFCHUNKHEADERSIZE);
-        }
-        chunk_list = (void*) cptr;
-    }
-}
-
 void gff_cleanup() {
     for (int i = 0; i < NUM_FILES; i++) {
         gff_close(i);
     }
 }
 
-void gff_close (int gff_file) {
-    if (gff_file < 0 || gff_file >= NUM_FILES) { return; }
+static void gff_close_file(gff_file_t *gff) {
+    if (gff->data) {
+        free(gff->data);
+    }
+    if (gff->filename) {
+        free(gff->filename);
+    }
+    if (gff->map) {
+        free(gff->map);
+    }
+    if (gff->chunks) {
+        for (int i = 0; i < gff->types.numTypes; i++) {
+            if (gff->chunks[i]) {
+                free(gff->chunks[i]);
+            }
+        }
+        free(gff->chunks);
+    }
+    if (gff->file) {
+        fclose(gff->file);
+    }
+    if (gff->pals) {
+        free(gff->pals);
+    }
+    gff->file = NULL;
+    gff->filename = NULL;
+    gff->data = NULL;
+    gff->map = NULL;
+    gff->palettes = NULL;
+    gff->gffi_data = NULL;
+    gff->len = 0;
+}
 
-    if (open_files[gff_file].data) {
-        free(open_files[gff_file].data);
-    }
-    if (open_files[gff_file].filename) {
-        free(open_files[gff_file].filename);
-    }
-    if (open_files[gff_file].map) {
-        free(open_files[gff_file].map);
-    }
-    open_files[gff_file].filename = NULL;
-    open_files[gff_file].data = NULL;
-    open_files[gff_file].map = NULL;
-    open_files[gff_file].palettes = NULL;
-    open_files[gff_file].gffi_data = NULL;
-    open_files[gff_file].len = 0;
+void gff_close (int gff_file) {
+    if (gff_file < 0 || gff_file > NUM_FILES) { return; }
+
+    gff_close_file(open_files + gff_file );
+
 }
 
 

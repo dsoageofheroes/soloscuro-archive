@@ -964,7 +964,9 @@ static void push_ds1_item(lua_State *L, ds1_item_t *di) {
     create_table_entry_si(L, "special", di->special);
     create_table_entry_si(L, "slot", di->slot);
     create_table_entry_si(L, "name_index", di->name_index);
-    disk_object_t* diskobject = gff_get_object(di->id);
-    create_table_entry_si(L, "bmp_id", diskobject->bmp_id);
-    create_table_entry_si(L, "script_id", diskobject->script_id);
+    //disk_object_t* diskobject = gff_get_object(di->id);
+    disk_object_t diskobject;
+    gff_read_object(di->id, &diskobject);
+    create_table_entry_si(L, "bmp_id", diskobject.bmp_id);
+    create_table_entry_si(L, "script_id", diskobject.script_id);
 }

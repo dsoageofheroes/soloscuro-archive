@@ -1,67 +1,26 @@
-#include <CUnit/CUnit.h>
-#include <CUnit/Basic.h>
-#include "gff.h"
+#include "unity.h"
+#include "../src/gff.h"
+#include "../src/dsl.h"
 
-#define SUITE_NAME "Suite"
-
-void test1(void) {
-    gff_load_directory("DOESNOTEXIST");
-    CU_ASSERT(gff_get_master() < 0);
-}
-
-void test2(void) {
-    gff_load_directory("ds1");
-    CU_ASSERT(gff_get_master() > -1);
-}
-
-/* The suite initialization function.
- * Put any init functionality here.
- */
-int init_suite1(void) {
+void setUp() {
     gff_init();
-    return 0; // 0 is SUCCESS
+    gff_load_directory("/home/pwest/dosbox/DARKSUN");
+    //dsl_init();
 }
 
-/* The suite cleanup function.
- * Any cleanup goes here
- */
-int clean_suite1(void) {
+void tearDown() {
+    //dsl_cleanup();
     gff_cleanup();
-    return 0; // 0 is SUCCESS
 }
 
-/* The main() function for setting up and running the tests.
- * Returns a CUE_SUCCESS on successful running, another
- * CUnit error code on failure.
- */
-int main(int argc, char *argv[]) {
-   CU_pSuite pSuite = NULL;
+int func() { return 40; }
 
-   /* initialize the CUnit test registry */
-   if (CUE_SUCCESS != CU_initialize_registry()) {
-      return CU_get_error();
-   }
+void test_start_close(void) {
+    TEST_ASSERT_EQUAL_HEX8(40, func());
+}
 
-   /* add a suite to the registry */
-   pSuite = CU_add_suite(SUITE_NAME, init_suite1, clean_suite1);
-   if (NULL == pSuite) {
-      CU_cleanup_registry();
-      return CU_get_error();
-   }
-
-   /* add the tests to the suite */
-   /* NOTE - ORDER IS IMPORTANT - MUST TEST fread() AFTER fprintf() */
-   if (
-       (NULL == CU_add_test(pSuite, "test of test1()", test1)) ||
-       (NULL == CU_add_test(pSuite, "test of test2()", test2)))
-       {
-      CU_cleanup_registry();
-      return CU_get_error();
-   }
-
-   /* Run all tests using the CUnit Basic interface */
-   CU_basic_set_mode(CU_BRM_VERBOSE);
-   CU_basic_run_tests();
-   CU_cleanup_registry();
-   return CU_get_error();
+int main(void) {
+    UNITY_BEGIN();
+    RUN_TEST(test_start_close);
+    return UNITY_END();
 }

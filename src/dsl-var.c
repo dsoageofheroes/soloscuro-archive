@@ -147,17 +147,17 @@ void name_name_global_addr(param_t *par) {
 static char buf[1024];
 
 static const char* get_so_name(so_object_t *so) {
-    disk_object_t *dobj = NULL;
+    disk_object_t dobj;
     switch(so->type) {
         case SO_DS1_COMBAT:
             return so->data.ds1_combat.name;
             break;
         case SO_DS1_ITEM:
-            dobj = gff_get_object(so->data.ds1_item.id);
+            gff_read_object(so->data.ds1_item.id, &dobj);
             //dobj = gff_get_object(so->data.ds1_item.name_index);
             //sprintf(buf, "item (index = %d, bmp_id = %d)", so->data.ds1_item.name_index, dobj->bmp_id);
-            sprintf(buf, "item (id = %d, bmp_id = %d, script_id = %d)", so->data.ds1_item.id, dobj->bmp_id,
-            dobj->script_id);
+            sprintf(buf, "item (id = %d, bmp_id = %d, script_id = %d)", so->data.ds1_item.id, dobj.bmp_id,
+            dobj.script_id);
             //return "<ITEM-need to implement>";
             return buf;
             break;
