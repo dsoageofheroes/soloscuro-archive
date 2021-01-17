@@ -8,7 +8,7 @@
 
 int gff_read_object(int object_index, disk_object_t *disk_obj) {
 
-    if (!disk_obj || !open_files[OBJEX_GFF_INDEX].data) {
+    if (!disk_obj) {
         return 0;
     }
 

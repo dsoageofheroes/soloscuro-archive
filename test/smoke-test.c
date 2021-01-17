@@ -5,11 +5,11 @@
 void setUp() {
     gff_init();
     gff_load_directory("/home/pwest/dosbox/DARKSUN");
-    //dsl_init();
+    dsl_init();
 }
 
 void tearDown() {
-    //dsl_cleanup();
+    dsl_cleanup();
     gff_cleanup();
 }
 

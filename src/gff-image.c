@@ -67,113 +67,23 @@ gff_palettes_t* read_palettes(int idx) {
 
 gff_palette_t* create_palettes(int gff_idx, unsigned int *len) {
     open_files[gff_idx].pals = read_palettes(gff_idx);
-    gff_chunk_list_t* pal_chunk = search_for_chunk_by_name(open_files+gff_idx, GT_PAL);
-    if (pal_chunk == NULL) { goto cp_search_error; }
 
-    unsigned int* ids = gff_get_id_list(gff_idx, GT_PAL);
-    if (pal_chunk->chunkCount & GFFSEGFLAGMASK) {
-        gff_seg_header_t  *seg_header = (gff_seg_header_t*)&pal_chunk->chunks[0];
-        int num_entries = 0;
-        for (int j = 0; j < seg_header->segRef.numEntries; j++) {
-            num_entries += seg_header->segRef.entries[j].consecChunks;
-        }
-        *len = num_entries;
-        if (num_palettes + *len >= NUM_PALETTES) { // We are out of space!
-            fprintf(stderr, "Ran out of palettes!\n");
-            *len = 0;
-            return NULL;
-        }
-
-        gff_palette_t* cpal = palettes + num_palettes;
-        if (gff_idx == gff_get_master()) { 
-            master_palette = cpal; 
-        }
-
-        num_palettes += *len;
-        //printf("Creating %d palettes, base = %p, offset = %p\n", (int)*len, palettes, cpal);
-        for (int i = 0; i < *len; i++) {
-            gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GT_PAL, ids[i]);
-            unsigned char raw_pal[PAL_MAX];
-            if (chunk.length > PAL_MAX) {
-                error ("chunk.length (%d) is bigger than PAL_MAX (%d)\n", chunk.length, PAL_MAX);
-                exit(1);
-            }
-            gff_read_chunk(gff_idx, &chunk, raw_pal, chunk.length);
-            for (int j = 0; j < PALETTE_SIZE; j++) {
-                cpal[i].color[j].r = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 0]));
-                cpal[i].color[j].g = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 1]));
-                cpal[i].color[j].b = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 2]));
-            }
-        }
-        debug("loaded %d palettes, total = %d\n", (int)*len, (int)num_palettes);
-        free(ids);
-        return cpal;
-    } else {
-        gff_palette_t *cpal = NULL;
-        if (gff_idx == gff_get_master()) { 
-            master_palette = palettes + num_palettes;
-        }
-        for (int i = 0; i < pal_chunk->chunkCount; i++) {
-            unsigned char *cptr = (unsigned char*)pal_chunk;
-            gff_chunk_header_t *chunk_header = (void*)(cptr + GFFCHUNKLISTHEADERSIZE + (i * GFFCHUNKHEADERSIZE));
-            cpal = palettes + num_palettes++;
-            //cpal = palettes + num_palettes;
-            unsigned char* raw_pal = (unsigned char*)((unsigned char*)open_files[gff_idx].data) +
-                chunk_header->location;
-            //cpal->color[j].r = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 0]));
-            //cpal->color[j].g = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 1]));
-            //cpal->color[j].b = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 2]));
-            for (int j = 0; j < PALETTE_SIZE; j++) {
-                cpal[i].color[j].r = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 0]));
-                cpal[i].color[j].g = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 1]));
-                cpal[i].color[j].b = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 2]));
-            }
-        }
-        debug("loaded %d palettes, total = %d\n", (int)pal_chunk->chunkCount, (int)num_palettes);
-        free(ids);
-        return cpal;
-    }
-
-    if (ids == NULL) { goto cp_search_error; }
-
-    *len = pal_chunk->chunkCount;
-
-    if (num_palettes + *len >= NUM_PALETTES) { // We are out of space!
-        fprintf(stderr, "Ran out of palettes!\n");
-        *len = 0;
-        return NULL;
-    }
-
-    gff_palette_t* cpal = palettes + num_palettes;
-    if (gff_idx == gff_get_master()) { 
-        master_palette = cpal; 
-    }
-
-    printf("Number of palettes: %d\n", (int)num_palettes);
-    printf("Creating %d palettes, base = %lu, offset = %lu, diff = %d\n", (int)*len, 
-        (unsigned long)palettes, 
-            (unsigned long)cpal, (int)((cpal-palettes)));
-    num_palettes += *len;
-    for (int i = 0; i < *len; i++) {
-        gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_PAL, ids[i]);
-        unsigned char raw_pal[PAL_MAX];
-        if (chunk.length > PAL_MAX) {
-            error ("chunk.length (%d) is larger than PAL_MAX (%d)\n", chunk.length, PAL_MAX);
-            exit(1);
-        }
-        gff_read_chunk(gff_idx, &chunk, raw_pal, chunk.length);
-        printf("pal[%d] id = %u, tlen = %u\n", i, ids[i], chunk.length);
+    for (int i = 0; i < open_files[gff_idx].pals->len; i++) {
+        //palettes[num_palettes] = open_files[gff_idx].pals->palettes[i];
         for (int j = 0; j < PALETTE_SIZE; j++) {
-            cpal[i].color[j].r = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 0]));
-            cpal[i].color[j].g = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 1]));
-            cpal[i].color[j].b = intensity_multiplier * ((unsigned char)(raw_pal[j * 3 + 2]));
+            palettes[num_palettes].color[j].r = open_files[gff_idx].pals->palettes[i].color[j].r;
+            palettes[num_palettes].color[j].g = open_files[gff_idx].pals->palettes[i].color[j].g;
+            palettes[num_palettes].color[j].b = open_files[gff_idx].pals->palettes[i].color[j].b;
         }
+        num_palettes++;
     }
 
-    free(ids);
-    return cpal;
+    *len = open_files[gff_idx].pals->len;
 
-cp_search_error:
+    if (gff_idx == gff_get_master()) { 
+        master_palette = open_files[gff_idx].pals->palettes;
+    }
+
     return NULL;
 }
 
@@ -192,9 +102,9 @@ int get_frame_width(int gff_idx, int type_id, int res_id, int frame_id) {
     gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, type_id, res_id);
     gff_read_chunk(gff_idx, &chunk, buf, 1<<16);
     unsigned int frame_offset = *((unsigned int*)(buf + 6 + frame_id*4));
-    if (chunk.location + frame_offset > open_files[gff_idx].len) {
-        return -1;
-    }
+    //if (chunk.location + frame_offset > open_files[gff_idx].len) {
+        //return -1;
+    //}
     unsigned short width = *(unsigned short*)(buf + frame_offset);
     return width;
 }
@@ -204,9 +114,9 @@ int get_frame_height(int gff_idx, int type_id, int res_id, int frame_id) {
     gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, type_id, res_id);
     gff_read_chunk(gff_idx, &chunk, buf, 1<<16);
     unsigned int frame_offset = *((unsigned int*)(buf + 6 + frame_id*4));
-    if (chunk.location + frame_offset > open_files[gff_idx].len) {
-        return -1;
-    }
+    //if (chunk.location + frame_offset > open_files[gff_idx].len) {
+        //return -1;
+    //}
     unsigned short height = *(unsigned short*)(buf + frame_offset + 2);
     return height;
 }
@@ -512,12 +422,10 @@ unsigned char* get_frame_rgba_palette(int gff_idx, int type_id, int res_id, int 
 
 unsigned char* get_frame_rgba_with_palette(int gff_index, int type_id, int res_id, int frame_id, int palette_id) {
     gff_palette_t *cpal = NULL;
-    //printf("master_palette = %p, palette_id = %d, num_palettes = %ld\n", master_palette, palette_id, num_palettes);
-    //if (palette_id < 0 || open_files[gff_index].num_palettes < 1) {
     if (palette_id < 0 || palette_id >= num_palettes) {
         cpal = master_palette;
     } else {
-        //cpal = open_files[gff_index].palettes + palette_id;
+        //cpal = open_files[gff_index].pals->palettes + palette_id;
         cpal = palettes + palette_id;
     }
 

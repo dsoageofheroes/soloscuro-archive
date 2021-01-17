@@ -77,9 +77,6 @@ void dsl_lua_load_scripts() {
     mas_max++;
     mas_scripts = malloc(sizeof(char*) * mas_max);
     memset(mas_scripts, 0x0, sizeof(char*) * mas_max);
-    for (i = 0; i < amt; i++) {
-        dsl_lua_load_script(ids[i], 1);
-    }
     free(ids);
 
     ids = gff_get_id_list(DSLDATA_GFF_INDEX, GT_GPL);
@@ -89,9 +86,6 @@ void dsl_lua_load_scripts() {
     gpl_max++;
     gpl_scripts = malloc(sizeof(char*) * gpl_max);
     memset(gpl_scripts, 0x0, sizeof(char*) * gpl_max);
-    for (i = 0; i < amt; i++) {
-        dsl_lua_load_script(ids[i], 0);
-    }
     free(ids);
 }
 

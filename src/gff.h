@@ -167,12 +167,8 @@ typedef struct gff_chunk_entry_s {
 } gff_chunk_entry_t;
 
 typedef struct _gff_file_t {
-    void *data;
-    gff_chunk_list_t *gffi_data;
     gff_map_t *map;
-    int len;
     char *filename;
-    gff_palette_t *palettes;
     unsigned int num_palettes;
     size_t start_palette_index;
     int num_objects;
@@ -215,7 +211,7 @@ extern void gff_cleanup();
 extern size_t gff_get_palette_id(int idx, int palette_num);
 
 // functions for other modules, NOT "public"
-extern gff_chunk_list_t* search_for_chunk_by_name(gff_file_t *file, unsigned long name);
+//extern gff_chunk_list_t* search_for_chunk_by_name(gff_file_t *file, unsigned long name);
 
 // Need to find location for these:
 #define MAX_MONSTERS_PER_REGION (10)

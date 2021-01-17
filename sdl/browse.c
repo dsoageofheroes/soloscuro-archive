@@ -404,7 +404,7 @@ static void render_entry_tile() {
     
     sscanf(open_files[gff_idx].filename, "rgn%x.gff", &num);
     num--;
-    if (num < open_files[DSLDATA_GFF_INDEX].len) {
+    if (num < open_files[DSLDATA_GFF_INDEX].pals->len) {
         pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + num;
     }
     render_entry_as_image(GFF_TILE, pal);
