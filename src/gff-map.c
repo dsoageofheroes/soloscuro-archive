@@ -31,11 +31,11 @@ int gff_map_get_num_objects(int gff_idx, int res_id) {
             exit(1);
         }
         gff_read_chunk(gff_idx, &chunk, open_files[gff_idx].entry_table, chunk.length);
+        open_files[gff_idx].num_objects = chunk.length / sizeof(gff_map_object_t);
     }
-    unsigned int num_entries, i, j;
-    gff_map_object_t *entry_table = open_files[gff_idx].entry_table;
-    gff_map_object_t *centry = entry_table;
 
+    return open_files[gff_idx].num_objects;
+    /*
     if (entry_table) {
         open_files[gff_idx].entry_table = entry_table;
         for (num_entries = 0; centry->index && num_entries < MAX_MAP_OBJECTS; centry++, num_entries++) {
@@ -52,10 +52,12 @@ int gff_map_get_num_objects(int gff_idx, int res_id) {
                 }
             }
         }
+        printf("MAP: num_entries = %d, open_files[gff_idx].num_objects = %d\n", num_entries,
+        open_files[gff_idx].num_objects);
         open_files[gff_idx].num_objects = num_entries;
         return num_entries;
     }
-    return 0;
+    */
 }
 
 int gff_map_get_object_frame_count(int gff_index, int res_id, int obj_id) {

@@ -1,7 +1,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "animate.h"
-#include "../src/gameloop.h"
+#include "gameloop.h"
 #include "../src/dsl.h"
 #include "../src/dsl-scmd.h"
 

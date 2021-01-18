@@ -1,21 +1,6 @@
 #include <stdint.h>
 #include "dsl-region.h"
 
-void port_init(int args, char *argv[]) {
-}
-
-void port_cleanup() {
-}
-
-void tick() {
-}
-
-void handle_input() {
-}
-
-void render() {
-}
-
 int8_t port_narrate_open(int16_t action, const char *text, int16_t index) {
     return 0;
 }

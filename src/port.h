@@ -7,17 +7,6 @@
 
 #include "dsl-object.h"
 
-extern void port_init(int args, char *argv[]);
-extern void port_cleanup();
-
-// standard main, this should be called first!
-extern int pmain(int argc, char *argv[]);
-
-// top level function
-extern void handle_input();
-extern void render();
-extern void tick();
-
 // Narrate functions
 extern int8_t port_narrate_open(int16_t action, const char *text, int16_t index);
 extern void port_narrate_clear();

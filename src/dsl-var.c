@@ -1,4 +1,3 @@
-#include "dsl-execute.h"
 #include "dsl-string.h"
 #include "dsl-var.h"
 #include <string.h>
@@ -10,14 +9,9 @@ uint16_t this_gpl_type = 0;
 /* Now static to file... */
 static uint8_t dsl_global_flags[DSL_GFLAGVAR_SIZE];
 static uint8_t dsl_local_flags[DSL_LFLAGVAR_SIZE];
-static uint8_t datatype;
-static uint16_t varnum;
 static int32_t accum; //, number;
 static unsigned char* dsl_data;
 static unsigned char* dsl_data_start;
-static int16_t temps16;
-static uint8_t bitmask[8] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80};
-static uint8_t bytemask[8] = {0xFE, 0xFD, 0xFB, 0xF7, 0xEF, 0xDF, 0xBF, 0x7F};
 static int16_t *dsl_global_nums = 0;
 static int16_t *dsl_local_nums = 0;
 static int32_t *dsl_global_bnums = 0;
@@ -44,9 +38,6 @@ const char* debug_index_names[] = {
     "MOVE BOX CHECK",
 };
 
-static void load_simple_variable(uint16_t type, uint16_t vnum, int32_t val);
-static int32_t read_complex(void);
-
 static dsl_check_t checks[MAX_CHECK_TYPES][MAX_DSL_CHECKS];
 static int checks_pos[MAX_CHECK_TYPES];
 static name_t new_name;
@@ -63,40 +54,11 @@ int32_t *gBignumptr;
 static int dsl_state_pos = -1;
 static dsl_state_t states[MAX_DSL_STATES];
 
-static int16_t gFight = 0;  // We in a fight?
-static int16_t gplX = 0;    // Current X
-static int16_t gplY = 0;    // Current Y
-static int16_t gplZ = 0;    // Current Z
-static int16_t gRegion = 0; // Current Region
-static int16_t gPov = 0;
-static int16_t gActive = 0;
-static int16_t gPassive = 0;
-static int16_t gOther = 0;
-static int16_t gOther1 = 0;
-static int16_t gThing = 0;
-static int32_t gTime = 0;
-static int32_t gPartyMoney = 0;
-
-static int16_t* gSimpleVar[] = {
-    &gFight,    // 0x20
-    &gplX,      // 0x21
-    &gplY,      // 0x22
-    &gplZ,      // 0x23
-    &gRegion,   // 0x24
-    &gPov,      // 0x25
-    &gActive,   // 0x26
-    &gPassive,  // 0x27
-    &gOther,    // 0x28
-    (int16_t *) &gTime,  // 0x29
-    (int16_t *) &gPartyMoney,  // 0x2a
-    &gThing,   // 0x2b
-    &gOther1   // 0x2c
-};
-
 #define MAX_PARAM_DEPTH (2)
 int16_t param_depth = 0; // How many commands we can store.
 param_t old_params[MAX_PARAM_DEPTH];
 
+/*
 static void push_params() {
     if (param_depth < MAX_PARAM_DEPTH) {
         memcpy(&old_params[param_depth], &param, sizeof(param));
@@ -115,6 +77,7 @@ static void pop_params() {
         fprintf(stderr, "pop_params ERROR: tried to pop empty stack of params!\n");
     }
 }
+*/
 
 /* All those commands... */
 void global_addr_name(param_t *par) {
@@ -437,6 +400,7 @@ uint8_t preview_byte(uint8_t offset) {
     return *(dsl_data + offset);
 }
 
+/*
 int32_t read_number() {
     int32_t paren_level = 0;
     int8_t found_operator = 0; // did we find an operation?
@@ -611,6 +575,7 @@ int32_t read_number() {
     //printf("accums[0] = %d\n", accums[0]);
     return accums[0];
 }
+*/
 
 static uint8_t access_complex(int16_t *header, uint16_t *depth, uint16_t *element) {
     uint16_t i;
@@ -645,198 +610,8 @@ static uint8_t access_complex(int16_t *header, uint16_t *depth, uint16_t *elemen
     return 1;
 }
 
-int32_t get_complex_data(int16_t header, uint16_t depth, uint16_t *element) {
-    uint16_t i = 0;
-    int32_t ret;
 
-    ret = header; // start with header.
-
-    do {
-        ret = data_field((int16_t) ret, i);
-        element++;
-        i++;
-    } while (/*(field_error == 0) && */ (i < depth));
-
-    return ret;
-}
-
-static void write_data(int16_t header, uint16_t depth, int32_t data) {
-    printf("I need to write to obj-header %d, depth = %d, the value %d\n", header, depth, data);
-}
-
-static void write_complex_data(int16_t header, uint16_t depth, uint16_t *element, int32_t data) {
-    int32_t chead;
-
-    chead = get_complex_data(header, depth-1, element);
-    if (/*(field_error == 0) && */chead != NULL_OBJECT) {
-        write_data(chead, element[depth-1], data);
-    }
-}
-
-static void smart_write_data(int16_t header, uint16_t depth, uint16_t element[], int32_t data) {
-    if (depth == 1) {
-        write_data(header, element[0], data);
-    } else {
-        write_complex_data(header, depth, element, data);
-    }
-}
-
-static void write_complex_var(int32_t data) {
-    uint16_t depth = 0;
-    int16_t header = 0;
-    uint16_t element[MAX_SEARCH_STACK];
-    memset(element, 0x0, sizeof(uint16_t) * MAX_SEARCH_STACK);
-    if (access_complex(&header, &depth, element) == 1) {
-        debug("writting header (%d) at depth (%d)\n", header, depth);
-        smart_write_data(header, depth, element, data);
-    }
-}
-
-void load_variable() {
-    int8_t extended = 0;
-    datatype = get_byte();
-    datatype &= 0x7F;
-    if ((datatype & EXTENDED_VAR) != 0) {
-        extended = 1;
-        datatype -= EXTENDED_VAR;
-    }
-    if (datatype < 0x10) { // simple data type
-        varnum = get_byte();
-        if (extended == 1) {
-            varnum *= 0x100;
-            varnum += get_byte();
-        }
-        load_simple_variable(datatype, varnum, accum);
-    } else {
-        warn("------------NEED TO DEBUG WRITE COMPLEX VAR------------\n");
-        write_complex_var(accum);
-    }
-}
-
-static void load_simple_variable(uint16_t type, uint16_t vnum, int32_t val) {
-    switch (type) {
-        case DSL_GBIGNUM:
-            dsl_global_bnums[vnum] = (int32_t) val;
-            debug("setting dsl_global_bnums[%d] = %d\n", vnum, val);
-            break;
-        case DSL_LBIGNUM:
-            dsl_local_bnums[vnum] = (int32_t) val;
-            debug("setting dsl_local_bnums[%d] = %d\n", vnum, val);
-            break;
-        case DSL_GNUM:
-            dsl_global_nums[vnum] = (int16_t) val;
-            debug("setting dsl_global_nums[%d] = %d\n", vnum, val);
-            break;
-        case DSL_LNUM:
-            dsl_local_nums[vnum] = (int16_t) val;
-            debug("setting dsl_local_nums[%d] = %d\n", vnum, val);
-            break;
-        case DSL_GFLAG:
-            if (val == 0) {
-                dsl_global_flags[vnum/8] &= bytemask[vnum%8];
-            } else {
-                dsl_global_flags[vnum/8] |= bitmask[vnum%8];
-            }
-            debug("setting dsl_global_flags bit %d = %d\n", vnum, val);
-            break;
-        case DSL_LFLAG:
-            if (val == 0) {
-                dsl_local_flags[vnum/8] &= bytemask[vnum%8];
-            } else {
-                dsl_local_flags[vnum/8] |= bitmask[vnum%8];
-            }
-            debug("setting dsl_local_flags bit %d = %d\n", vnum, val);
-            break;
-        default:
-            error("ERROR: Unknown simple variable type: 0x%x!\n", type);
-            command_implemented = 0;
-            break;
-    }
-}
-
-void read_simple_num_var() {
-    temps16 = get_byte();
-
-    if ((gBignum & EXTENDED_VAR) != 0) {
-        temps16 *= 0x100;
-        temps16 += get_byte();
-        gBignum &= 0x3F;
-    }
-
-    switch(gBignum) {
-        case DSL_GFLAG: {
-            gBignumptr = (int32_t*)((int8_t*)&dsl_global_flags[temps16/8]);
-            gBignum = dsl_global_flags[temps16/8] & bitmask[temps16%8];
-            if (gBignum > 0) { gBignum = 0; }
-            debug("reading gflag @ %d is equal to %d\n", temps16, gBignum);
-            break;
-        }
-        case DSL_LFLAG: {
-            //printf("getting LFLAG @ %d\n", temps16);
-            gBignumptr = (int32_t*)((int8_t*)&dsl_local_flags[temps16/8]);
-            gBignum = dsl_local_flags[temps16/8] & bitmask[temps16/8];
-            if (gBignum > 0) {
-                gBignum = 1;
-            }
-            debug("reading lflag @ %d is equal to %d\n", temps16, gBignum);
-            break;
-        }
-        case DSL_GNUM: {
-            gBignumptr = (int32_t*) ((int16_t *)&dsl_global_nums[temps16]);
-            gBignum = dsl_global_nums[temps16];
-            debug("reading gnum @ %d is equal to %d\n", temps16, gBignum);
-            break;
-        }
-        case DSL_LNUM: {
-            gBignumptr = (int32_t*) ((int16_t *)&dsl_local_nums[temps16]);
-            gBignum = dsl_local_nums[temps16];
-            debug("reading lnum @ %d is equal to %d\n", temps16, gBignum);
-            break;
-        }
-        case DSL_GBIGNUM: {
-            gBignumptr = &dsl_global_bnums[temps16];
-            gBignum = dsl_global_bnums[temps16];
-            debug("reading gbignum @ %d is equal to %d\n", temps16, gBignum);
-            break;
-        }
-        case DSL_LBIGNUM: {
-            gBignumptr = &dsl_local_bnums[temps16];
-            gBignum = dsl_local_bnums[temps16];
-            debug("reading lbignum @ %d is equal to %d\n", temps16, gBignum);
-            break;
-        }
-        case DSL_GNAME: {
-            if (temps16 >= 0x20 && temps16 < 0x2F) {
-                gBignumptr = (int32_t*)gSimpleVar[temps16 - 0x20];
-                if (temps16 >= 0x29 && temps16 <= 0x2A) {
-                    gBignum = *((int32_t*)gBignumptr);
-                } else {
-                    gBignum = *((int16_t*)gBignumptr);
-                }
-            } else {
-                printf("ERROR: No variable GNAME!!!\n");
-                exit(1);
-            }
-            debug("reading gname @ %d is equal to %d\n", temps16, gBignum);
-            break;
-        }
-        case DSL_GSTRING: {
-            gBignumptr = (int32_t*) dsl_global_strings[temps16];
-            debug("reading gstring @ %d is equal to '%s'\n", temps16, (char*)gBignumptr);
-            break;
-        }
-        case DSL_LSTRING: {
-            gBignumptr = (int32_t*) dsl_local_strings[temps16];
-            debug("reading lstring @ %d is equal to '%s'\n", temps16, (char*)gBignumptr);
-            break;
-        }
-        default:
-            printf("ERROR: Unknown type in read_simple_num_var.\n");
-            command_implemented = 0;
-            break;
-    }
-}
-
+/*
 static int32_t read_complex(void) {
     int32_t ret = 0;
     uint16_t depth = 0;
@@ -855,6 +630,7 @@ static int32_t read_complex(void) {
 
     return ret;
 }
+*/
 
 void setrecord() {
     uint16_t depth = 0;
@@ -864,8 +640,8 @@ void setrecord() {
 
     if (tmp > 0x8000) {
         access_complex(&header, &depth, element);
-        accum = read_number();
-        smart_write_data(header, depth, element, accum);
+        //accum = read_number();
+        //smart_write_data(header, depth, element, accum);
         return;
     }
     if (tmp == 0) {
@@ -875,7 +651,7 @@ void setrecord() {
     }
     if (tmp < 0x8000) {
         access_complex(&header, &depth, element);
-        set_accumulator(read_number());
+        //set_accumulator(read_number());
         printf("I need to write depth/element/accum to list of headers!\n");
         return;
     }

@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "map.h"
 #include "screens/narrate.h"
-#include "../src/gameloop.h"
+#include "gameloop.h"
 #include "../src/dsl.h"
 #include "../src/dsl-region.h"
 #include "../src/gff.h"
@@ -242,7 +242,7 @@ void browse_loop(SDL_Surface *surface, SDL_Renderer *rend) {
     move_gff_cursor(1);
     move_gff_cursor(1);
     move_gff_cursor(1);
-    move_entry_cursor(-1);
+    //move_entry_cursor(-1);
     //move_entry_cursor(1);
     //move_entry_cursor(1);
     //move_entry_cursor(1);

@@ -21,7 +21,8 @@ typedef struct _scmd_t {
 #define SCMD_MOVING (0x10) // is moving?
 #define SCMD_COMBAT (0x20) // load combat image.
 #define SCMD_OK_HOT (0x40) // Don't change the hot
-#define SCMD_MAX      (256)
+//#define SCMD_MAX      (256)
+#define SCMD_MAX      (1<<10)
 #define SCMD_MAX_SIZE (36)
 #define SCMD_DEFAULT_DELAY (16)
 #define SCMD_TICKS_PER_SECOND (96)

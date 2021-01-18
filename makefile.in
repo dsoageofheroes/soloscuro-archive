@@ -1,10 +1,10 @@
 all: obj $(EXEC) libds.so
 
-libds.so: $(OBJS) libxmimidi.so
+libds.so: obj $(OBJS) libxmimidi.so
 	echo $(SRCS)
 	gcc -L./ $(OBJS) -shared -o libds.$(LIB_EXT) -llua5.3 -lxmimidi
 
-libxmimidi.so: 
+libxmimidi.so:
 	gcc ext/xmi2mid.c -shared -o libxmimidi.$(LIB_EXT)
 
 obj/%.o : src/%.c $(DEPS)
@@ -24,7 +24,7 @@ bin:
 lua-test: libds.so bin
 	gcc $(CFLAGS) test/lua-test.c -o bin/lua-test -lds -llua5.3
 
-%test: bin libds.so
+%test: bin libds.so libxmimidi.so
 	gcc $(CFLAGS) test/$@.c test/unity.c test/base.c -o bin/$@ -lds -llua5.3
 	LD_LIBRARY_PATH=./ bin/$@
 

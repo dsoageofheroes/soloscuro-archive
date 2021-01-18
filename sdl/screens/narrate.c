@@ -1,9 +1,9 @@
 #include "narrate.h"
 #include "../../src/dsl.h"
-#include "../../src/dsl-execute.h"
 #include "../../src/dsl-narrate.h"
 #include "../../src/gff.h"
 #include "../../src/gfftypes.h"
+#include "../gameloop.h"
 
 #define STARTX (60)
 #define MAX_CHARS (256)
@@ -245,11 +245,15 @@ int narrate_handle_mouse_movement(const uint32_t x, const uint32_t y) {
 int narrate_handle_mouse_click(const uint32_t x, const uint32_t y) {
     int const height = 18;
     int y_test = 516;
+    int option;
     if (display_menu) {
         if (x >= 150 && x <= 600) {
             for (int i = 1; i < 8; i++) {
                 if (y >= y_test  && y < y_test + height) {
-                    narrate_select_menu(i);
+                    option = narrate_select_menu(i);
+                    if (option >= 0) {
+                        game_loop_signal(WAIT_NARRATE_SELECT, option);
+                    }
                     return 1;
                 }
                 y_test += height;

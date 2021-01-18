@@ -2,12 +2,11 @@
 #include <string.h>
 #include <stdlib.h>
 #include "dsl.h"
-#include "dsl-execute.h"
 #include "dsl-manager.h"
 #include "dsl-state.h"
 #include "dsl-string.h"
 #include "dsl-var.h"
-#include "gameloop.h"
+//#include "gameloop.h"
 #include "replay.h"
 #include "trigger.h"
 
@@ -50,9 +49,7 @@ void dsl_init() {
     initialize_dsl_stack();
     dsl_init_vars();
     dsl_object_init();
-    gameloop_init();
     trigger_init();
-    dsl_execute_init();
     dsl_manager_init();
     info("Running Master DSL #99.\n");
     //dsl_execute_subroutine(99, 0, 1);
@@ -66,6 +63,5 @@ void dsl_cleanup() {
     dsl_object_cleanup();
     dsl_cleanup_vars();
     dsl_manager_cleanup();
-    dsl_execute_cleanup();
     trigger_cleanup();
 }

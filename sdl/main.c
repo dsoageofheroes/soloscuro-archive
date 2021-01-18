@@ -3,9 +3,9 @@
 #include "map.h"
 #include "player.h"
 #include "screen-manager.h"
-#include "../src/port.h"
+#include "gameloop.h"
 #include "../src/dsl.h"
-#include "../src/gameloop.h"
+#include "../src/replay.h"
 
 void browse_loop(SDL_Surface*, SDL_Renderer *rend);
 
@@ -94,7 +94,13 @@ void tick() {
     }
 }
 
-void port_init(int args, char *argv[]) {
+void port_init(int argc, char *argv[]) {
+}
+
+void port_cleanup() {
+}
+
+static void init(int args, char *argv[]) {
     xmappos = 560;
     ymappos = 50;
 
@@ -117,6 +123,7 @@ void port_init(int args, char *argv[]) {
     last_tick = SDL_GetTicks();
 
     screen_init(renderer);
+    gameloop_init();
 
     for (int i = 0; i < args; i++) {
         if (!strcmp(argv[i], "--browse") && i < (args)) {
@@ -127,13 +134,7 @@ void port_init(int args, char *argv[]) {
     }
 }
 
-int main(int argc, char *argv[]) {
-    pmain(argc, argv);
-
-    return 0;
-}
-
-void port_cleanup() {
+static void cleanup() {
     screen_free();
 
     //Destroy window
@@ -142,4 +143,118 @@ void port_cleanup() {
     //Quit SDL subsystems
     SDL_Quit();
 
+}
+
+static char *ds1_gffs = NULL;
+static char *replay = NULL;
+
+void parse_args(int argc, char *argv[]) {
+    for (int i = 0; i < argc; i++) {
+        if (!strcmp(argv[i], "--ds1") && i < (argc-1)) {
+            ds1_gffs = argv[++i];
+        }
+        if (!strcmp(argv[i], "--replay") && i < (argc-1)) {
+            replay = argv[++i];
+        }
+    }
+
+    if (!ds1_gffs) {
+        error("Unable to get the location of the DarkSun 1 GFFs, please pass with '--ds1 <location>'\n");
+        exit(1);
+    }
+    replay_init("replay.lua");
+}
+
+int main(int argc, char *argv[]) {
+    parse_args(argc, argv);
+
+    // Order matters.
+    gff_init();
+    gff_load_directory(ds1_gffs);
+    dsl_init();
+
+    init(argc, argv);
+
+    if (replay) {
+        replay_game(replay);
+    }
+
+    game_loop();
+
+    cleanup();
+    replay_cleanup();
+
+    return 0;
+
+    return 0;
+}
+
+static int done = 0;
+static int accum = 0;
+static uint8_t wait_flags[WAIT_MAX_SIGNALS];
+
+typedef struct animation_s {
+    struct animation_s *next;
+} animation_t;
+
+void gameloop_init() {
+    memset(wait_flags, 0x0, sizeof(uint8_t) * WAIT_MAX_SIGNALS);
+    wait_flags[WAIT_FINAL] = 1;
+}
+
+//static animation_t *animations[TICKS_PER_SEC];
+int game_loop_is_waiting_for(int signal) {
+    if (signal < 0 || signal >= WAIT_MAX_SIGNALS) {
+        error("Received signal %d!\n", signal);
+        return 0;
+    }
+
+    return wait_flags[signal];
+}
+
+void game_loop_signal(int signal, int _accum) {
+    if (signal < 0 || signal >= WAIT_MAX_SIGNALS) {
+        error("Received signal %d!\n", signal);
+        return;
+    }
+    replay_print("rep.signal(%d, %d)\n", signal, _accum);
+    if (wait_flags[signal]) {
+        wait_flags[signal]--;
+        accum = _accum;
+        done = 1;
+    } else {
+        warn("signal %d received, but not waiting on it...\n", signal);
+    }
+}
+
+int game_loop_wait_for_signal(int signal) {
+    if (signal < 0 || signal >= WAIT_MAX_SIGNALS) {
+        error("Received signal %d!\n", signal);
+        return 0 ;
+    }
+    wait_flags[signal]++;
+    while (wait_flags[signal]) {
+        handle_input();
+        //Logic here...
+        render();
+        tick();
+    }
+    done = 0;
+    return accum;
+}
+
+void game_loop() {
+    int rep_times = 0;
+
+    while (!done) {
+        handle_input();
+        //Logic here...
+        render();
+        tick();
+        rep_times++;
+        if (in_replay_mode() && rep_times > 10) {
+            replay_next();
+            rep_times = 0;
+        }
+    }
 }

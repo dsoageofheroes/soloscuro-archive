@@ -11,7 +11,24 @@ static void dsl_load_map_tile_ids(dsl_region_t* region);
 static void dsl_load_map_flags(dsl_region_t *region);
 static dsl_region_t *cregion = NULL;
 
+static int is_region(const int gff_idx) {
+    int has_rmap = 0, has_gmap = 0, has_tile = 0, has_etab = 0;
+
+    if (gff_idx < 0 || gff_idx >= NUM_FILES) { return 0; }
+    if (!open_files[gff_idx].file) { return 0; }
+
+    for (int i = 0; i < open_files[gff_idx].types.num_types; i++) {
+        if ((open_files[gff_idx].chunks[i]->chunk_type & GFFMAXCHUNKMASK) == GFF_RMAP) { has_rmap = 1;}
+        if ((open_files[gff_idx].chunks[i]->chunk_type & GFFMAXCHUNKMASK) == GFF_GMAP) { has_gmap = 1;}
+        if ((open_files[gff_idx].chunks[i]->chunk_type & GFFMAXCHUNKMASK) == GFF_TILE) { has_tile = 1;}
+        if ((open_files[gff_idx].chunks[i]->chunk_type & GFFMAXCHUNKMASK) == GFF_ETAB) { has_etab = 1;}
+    }
+
+    return has_rmap && has_gmap && has_tile && has_etab;
+}
+
 dsl_region_t* dsl_load_region(const int gff_file) {
+    if (!is_region(gff_file)) { return NULL; } // guard
     uint32_t *tids = NULL;
     dsl_region_t *ret = malloc(sizeof(dsl_region_t));
 
@@ -31,6 +48,7 @@ dsl_region_t* dsl_load_region(const int gff_file) {
         exit(1);
     }
     gff_read_chunk(ret->gff_file, &chunk, ret->entry_table, chunk.length);
+    open_files[ret->gff_file].num_objects = chunk.length / sizeof(gff_map_object_t);
     ret->palette_id = gff_get_palette_id(DSLDATA_GFF_INDEX, ret->map_id - 1);
     ret->ids = gff_get_id_list(ret->gff_file, GT_TILE);
 
@@ -42,6 +60,27 @@ dsl_region_t* dsl_load_region(const int gff_file) {
     cregion = ret;
 
     return ret;
+}
+
+void dsl_region_free(dsl_region_t *region) {
+    if (!region) { return; }
+    if (region->list) {
+        free(region->list);
+        region->list = NULL;
+    }
+    if (region->entry_table) {
+        free(region->entry_table);
+        region->entry_table = NULL;
+    }
+    if (region->ids) {
+        free(region->ids);
+        region->ids = NULL;
+    }
+    if (open_files[region->gff_file].entry_table) {
+        free(open_files[region->gff_file].entry_table);
+        open_files[region->gff_file].entry_table = NULL;
+    }
+    free(region);
 }
 
 dsl_region_t* dsl_region_get_current() { return cregion; }
@@ -68,13 +107,14 @@ static void dsl_load_map_tile_ids(dsl_region_t *region) {
     }
     if (!gff_read_chunk(region->gff_file, &chunk, data, chunk.length)) {
         error ("Unable to read RMAP!\n");
-        return;
+        goto out;
     }
 
     region->tile_ids_size = chunk.length;
     region->num_tiles = gff_get_resource_length(region->gff_file, GT_TILE);
     memcpy(region->tile_ids, data, chunk.length);
 
+out:
     free(rmap_ids);
 }
 
@@ -99,12 +139,13 @@ static void dsl_load_map_flags(dsl_region_t *region) {
 
     if (!gff_read_chunk(region->gff_file, &chunk, data, chunk.length)) {
         error ("Unable to read GFF_GMAP chunk!\n");
-        return;
+        goto out;
     }
 
     region->flags_size = chunk.length;
     memcpy(region->flags, data, region->flags_size);
 
+out:
     free(gmap_ids);
 }
 

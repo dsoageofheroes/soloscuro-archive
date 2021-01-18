@@ -12,6 +12,7 @@ static int varnum = 0;
 static int funcnum = 0;
 static int in_func = 0;
 static int in_compare = 0;
+static size_t cfunc_num = 0;
 static char is_master_mas = 0;
 static void dsl_lua_load_variable();
 static void dsl_lua_load_simple_variable(uint16_t type, uint16_t vnum);
@@ -496,7 +497,8 @@ char* dsl_lua_print(const size_t _script_id, const int _is_mas, size_t *script_l
 static int print_cmd() {
     if (!in_func) {
         //lprintf("function func%d (accum) -- address %ld\n", funcnum++, ((size_t)get_data_ptr()) - dsl_lua_start_ptr);
-        lprintf("function func%ld ()\n", ((size_t)get_data_ptr()) - dsl_lua_start_ptr);
+        cfunc_num = ((size_t)get_data_ptr()) - dsl_lua_start_ptr;
+        lprintf("function func%ld ()\n", cfunc_num);
         //lprintf("function %c%ldfunc%ld ()\n", 
             //is_mas ? 'm' : 'g',
             //script_id, ((size_t)get_data_ptr()) - dsl_lua_start_ptr);

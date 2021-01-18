@@ -58,7 +58,7 @@ typedef struct {
 
 typedef struct {
 
-  uint16_t 	  numTypes;
+  uint16_t 	  num_types;
   gff_chunk_list_t   chunks;
 
 } gff_type_header_t;
@@ -158,8 +158,8 @@ typedef struct gff_seg_s {
 } gff_seg_t;
 
 typedef struct gff_chunk_entry_s {
-    uint32_t chunkType;
-    uint32_t chunkCount;
+    uint32_t chunk_type;
+    uint32_t chunk_count;
     union {
         gff_chunk_header_t chunks[1];
         gff_seg_t segs;

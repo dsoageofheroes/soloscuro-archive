@@ -1,6 +1,5 @@
 #include "player.h"
 #include "../src/dsl.h"
-#include "../src/dsl-execute.h"
 #include "../src/dsl-var.h"
 #include "../src/gff-map.h"
 #include "../src/gff-image.h"
@@ -81,16 +80,16 @@ void player_move(const uint8_t direction) {
         debug("TILE CHECK: Need to execute file = %d, addr = %d, trip = %d\n",
             dsl_check->data.tile_check.file, dsl_check->data.tile_check.addr,
             dsl_check->data.tile_check.trip);
-        dsl_execute_subroutine(dsl_check->data.tile_check.file,
-            dsl_check->data.tile_check.addr, 0);
+        //dsl_execute_subroutine(dsl_check->data.tile_check.file,
+            //dsl_check->data.tile_check.addr, 0);
     }
     dsl_check = dsl_find_box_check(player.x, player.y);
     if (dsl_check) {
         debug("BOX CHECK: Need to execute file = %d, addr = %d, trip = %d\n",
             dsl_check->data.box_check.file, dsl_check->data.box_check.addr,
             dsl_check->data.box_check.trip);
-        dsl_execute_subroutine(dsl_check->data.box_check.file,
-            dsl_check->data.box_check.addr, 0);
+        //dsl_execute_subroutine(dsl_check->data.box_check.file,
+            //dsl_check->data.box_check.addr, 0);
     }
     count = TICKS_PER_MOVE;
     dsl_player.mapx = player.x * 16;

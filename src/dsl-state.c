@@ -3,7 +3,7 @@
 #include "dsl-narrate.h"
 #include "dsl-region.h"
 #include "dsl-state.h"
-#include "gameloop.h"
+#include "../sdl/gameloop.h"
 #include "port.h"
 #include "replay.h"
 #include "trigger.h"
@@ -59,6 +59,13 @@ void dsl_state_init() {
 }
 
 void dsl_state_cleanup() {
+}
+
+static int set_while_callback(lua_State *l) {
+    const char *val = luaL_checkstring(l, 2);
+    printf("------------------>%s\n", val);
+    //lua_Integer state = luaL_checkinteger(l, 1);
+    return 0;
 }
 
 // Public to C library
@@ -514,6 +521,7 @@ static int lua_narrate_show(lua_State *l) {
 }
 
 static const struct luaL_Reg dsl_state_lib[] = {
+    {"set_while_callback", set_while_callback},
     {"set_gf", set_gf},
     {"get_gf", get_gf},
     {"set_lf", set_lf},

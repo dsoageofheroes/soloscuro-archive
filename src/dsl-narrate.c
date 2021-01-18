@@ -5,7 +5,7 @@
 #include "dsl-narrate.h"
 #include "dsl.h"
 #include "dsl-var.h"
-#include "gameloop.h"
+#include "../sdl/gameloop.h"
 #include "port.h"
 #include "replay.h"
 
@@ -78,18 +78,19 @@ static int option_is_exit(const int option) {
     return 0;
 }
 
-void narrate_select_menu(int option) {
+int narrate_select_menu(int option) {
     int accum = !option_is_exit(option);
     char buf[1024];
 
     replay_print("rep.select_menu(%d)\n", option);
     if (option >= menu_pos || option < 0) {
         error("select_menu: Menu option %d selected, but only (0 - %ld) available!\n", option, menu_pos - 1);
-        return;
+        return -1;
     }
     menu_pos = 0;
     port_narrate_clear();
     snprintf(buf, 1024, "func%d()\n", menu_addrs[option]);
     dsl_execute_string(buf);
-    game_loop_signal(WAIT_NARRATE_SELECT, accum);
+    //game_loop_signal(WAIT_NARRATE_SELECT, accum);
+    return accum;
 }

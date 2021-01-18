@@ -243,15 +243,15 @@ static void gff_read_headers(gff_file_t *gff) {
         fatal("Unable to read types header!\n");
     }
 
-    gff->chunks = malloc(sizeof(gff_chunk_entry_t*) * gff->types.numTypes);
-    memset(gff->chunks, 0x0, sizeof(gff_chunk_entry_t*) * gff->types.numTypes);
+    gff->chunks = malloc(sizeof(gff_chunk_entry_t*) * gff->types.num_types);
+    memset(gff->chunks, 0x0, sizeof(gff_chunk_entry_t*) * gff->types.num_types);
 
     int i = 0;
 
     gff_chunk_list_header_t chunk_header;
     fseek(gff->file, gff->header.tocLocation + gff->toc.typesOffset + 2L, SEEK_SET);
     seg_header_t seg_header;
-    for (i = 0; i < gff->types.numTypes; i++) {
+    for (i = 0; i < gff->types.num_types; i++) {
         fread(&(chunk_header), 1, sizeof(gff_chunk_list_header_t), gff->file);
         gff_chunk_entry_t *chunk = NULL;
 
@@ -259,21 +259,21 @@ static void gff_read_headers(gff_file_t *gff) {
             fread(&(seg_header), 1, sizeof(seg_header_t), gff->file);
 
             chunk = malloc(8L + sizeof(gff_seg_t) + seg_header.num_entries * sizeof(gff_seg_entry_t));
-            chunk->chunkType = chunk_header.chunkType;
-            chunk->chunkCount = chunk_header.chunkCount;
+            chunk->chunk_type = chunk_header.chunkType;
+            chunk->chunk_count = chunk_header.chunkCount;
             chunk->segs.header = seg_header;
 
             fread(&(chunk->segs.segs), 1, seg_header.num_entries * sizeof(gff_seg_entry_t), gff->file);
             gff->chunks[i] = chunk;
         } else {
             chunk = malloc(8L + sizeof(gff_chunk_header_t) * chunk_header.chunkCount);
-            chunk->chunkType = chunk_header.chunkType;
-            chunk->chunkCount = chunk_header.chunkCount;
+            chunk->chunk_type = chunk_header.chunkType;
+            chunk->chunk_count = chunk_header.chunkCount;
             fread(&(chunk->chunks), 1, sizeof(gff_chunk_header_t) * chunk_header.chunkCount, gff->file);
             gff->chunks[i] = chunk;
         }
 
-        if (chunk && ((chunk->chunkType & GFFMAXCHUNKMASK) == GFF_GFFI)) {
+        if (chunk && ((chunk->chunk_type & GFFMAXCHUNKMASK) == GFF_GFFI)) {
             gff->gffi = chunk;
         }
     }
@@ -321,35 +321,18 @@ static gff_type_header_t* get_type_header(int idx) {
 int gff_get_number_of_types(int idx) {
     if (open_files[idx].file == NULL) { return -1; }
 
-    return get_type_header(idx)->numTypes;
+    return get_type_header(idx)->num_types;
 }
 
 int gff_get_type_id(int idx, int type_index) {
-    int i;
     gff_type_header_t *type_header = get_type_header(idx);
-    unsigned char *cptr = (void*) type_header;
-    gff_chunk_list_t *chunk_list = (void*)(cptr + 2L);
 
     if (open_files[idx].file == NULL || type_index < 0 
-            || type_index >= type_header->numTypes) { 
+            || type_index >= type_header->num_types) { 
         return -1;  // failure.
     }
 
-    // Go to the index.
-    cptr = (void*)chunk_list;
-    for (i = 0; i < type_index; i++) {
-        if (chunk_list->chunkCount & GFFSEGFLAGMASK) {
-            cptr += GFFCHUNKLISTHEADERSIZE;
-            cptr += ((gff_seg_header_t*)(cptr))->segRef.numEntries * GFFSEGREFENTRYSIZE;
-            cptr += 12L;
-        } else {
-            cptr += GFFCHUNKLISTHEADERSIZE;
-            cptr += ((uint32_t)(chunk_list->chunkCount & GFFMAXCHUNKMASK) * GFFCHUNKHEADERSIZE);
-        }
-        chunk_list = (void*) cptr;
-    }
-    
-    return chunk_list->chunkType & GFFMAXCHUNKMASK;
+    return open_files[idx].chunks[type_index]->chunk_type & GFFMAXCHUNKMASK;
 }
 
 gff_chunk_header_t gff_find_chunk_header(int idx, int type_id, int res_id) {
@@ -359,8 +342,8 @@ gff_chunk_header_t gff_find_chunk_header(int idx, int type_id, int res_id) {
     gff_chunk_header_t *gffi_chunk_header = NULL;
     gff_chunk_header_t ret = {0, 0, 0};
 
-    for (int i = 0; !entry && i < gff->types.numTypes; i++) {
-        if ((gff->chunks[i]->chunkType & GFFMAXCHUNKMASK) == type_id) {
+    for (int i = 0; !entry && i < gff->types.num_types; i++) {
+        if ((gff->chunks[i]->chunk_type & GFFMAXCHUNKMASK) == type_id) {
             entry = gff->chunks[i];
         }
     }
@@ -370,7 +353,7 @@ gff_chunk_header_t gff_find_chunk_header(int idx, int type_id, int res_id) {
         return ret;
     }
 
-    if (entry->chunkCount & GFFSEGFLAGMASK) {
+    if (entry->chunk_count & GFFSEGFLAGMASK) {
         //printf("READ: SEG!\n");
         int32_t chunk_offset = 0;
         gffi_chunk_header = gff->gffi->chunks + entry->segs.header.segLocId;
@@ -393,7 +376,7 @@ gff_chunk_header_t gff_find_chunk_header(int idx, int type_id, int res_id) {
             chunk_offset += entry->segs.segs[j].num_chunks;
         }
     } else {
-        for (int j = 0; j < entry->chunkCount; j++) {
+        for (int j = 0; j < entry->chunk_count; j++) {
             if (entry->chunks[j].id == res_id) {
                 ret.id = res_id;
                 ret.location = entry->chunks[j].location;
@@ -451,15 +434,15 @@ unsigned int gff_get_resource_length(int idx, int type_id) {
     unsigned int sum = 0;
     gff_seg_header_t  *seg_header;
 
-    for (int i = 0; i < open_files[idx].types.numTypes; i++) {
-        if ((open_files[idx].chunks[i]->chunkType & GFFMAXCHUNKMASK) != type_id) { continue; }
-        if ((open_files[idx].chunks[i]->chunkCount) & GFFSEGFLAGMASK) {
+    for (int i = 0; i < open_files[idx].types.num_types; i++) {
+        if ((open_files[idx].chunks[i]->chunk_type & GFFMAXCHUNKMASK) != type_id) { continue; }
+        if ((open_files[idx].chunks[i]->chunk_count) & GFFSEGFLAGMASK) {
             seg_header = (gff_seg_header_t*)&(open_files[idx].chunks[i]->chunks[0]);
             for (int j = 0; j < seg_header->segRef.numEntries; j++) {
                 sum += seg_header->segRef.entries[j].consecChunks;
             }
         } else {
-            sum = open_files[idx].chunks[i]->chunkCount;
+            sum = open_files[idx].chunks[i]->chunk_count;
         }
     }
 
@@ -478,9 +461,9 @@ size_t gff_get_resource_ids(int idx, int type_id, unsigned int *ids) {
     gff_seg_header_t  *seg_header;
     gff_chunk_header_t *chunk_header;
     
-    for (int i = 0; i < open_files[idx].types.numTypes; i++) {
-        if ((open_files[idx].chunks[i]->chunkType & GFFMAXCHUNKMASK) != type_id) { continue; }
-        if (open_files[idx].chunks[i]->chunkCount & GFFSEGFLAGMASK) {
+    for (int i = 0; i < open_files[idx].types.num_types; i++) {
+        if ((open_files[idx].chunks[i]->chunk_type & GFFMAXCHUNKMASK) != type_id) { continue; }
+        if (open_files[idx].chunks[i]->chunk_count & GFFSEGFLAGMASK) {
             seg_header = (gff_seg_header_t*)&(open_files[idx].chunks[i]->chunks[0]);
             for (int j = 0; j < seg_header->segRef.numEntries; j++) {
                 for (int id_offset = 0; id_offset < seg_header->segRef.entries[j].consecChunks; id_offset++) {
@@ -490,7 +473,7 @@ size_t gff_get_resource_ids(int idx, int type_id, unsigned int *ids) {
         } else {
             //TODO: migrate the cpt to the proper structs.
             cptr = (void*)open_files[idx].chunks[i];
-            for (int j = 0; j < open_files[idx].chunks[i]->chunkCount; j++) {
+            for (int j = 0; j < open_files[idx].chunks[i]->chunk_count; j++) {
                 chunk_header = (void*)(cptr + GFFCHUNKLISTHEADERSIZE + (j * GFFCHUNKHEADERSIZE));
                 ids[pos++] = chunk_header->id;
             }
@@ -618,7 +601,7 @@ static void gff_close_file(gff_file_t *gff) {
         free(gff->map);
     }
     if (gff->chunks) {
-        for (int i = 0; i < gff->types.numTypes; i++) {
+        for (int i = 0; i < gff->types.num_types; i++) {
             if (gff->chunks[i]) {
                 free(gff->chunks[i]);
             }

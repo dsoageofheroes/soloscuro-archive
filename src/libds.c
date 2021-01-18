@@ -7,7 +7,6 @@
 #include <stdlib.h>
 
 #include "dsl.h"
-#include "dsl-execute.h"
 #include "dsl-object.h"
 #include "dsl-var.h"
 #include "gff.h"
@@ -630,54 +629,9 @@ static int lua_scmd_sound_idx(lua_State *L) {
     return 1;
 }
 
-static int lua_mas_print(lua_State *L) {
-    //lua_Integer gff_idx = luaL_checkinteger (L, 1);
-    lua_Integer res_id = luaL_checkinteger (L, 2);
-
-    dsl_execute_subroutine(res_id, 0, 1);
-
-    return 0;
-}
-
-static int lua_gpl_print(lua_State *L) {
-    //lua_Integer gff_idx = luaL_checkinteger (L, 1);
-    lua_Integer res_id = luaL_checkinteger (L, 2);
-
-    dsl_execute_subroutine(res_id, 0, 0);
-
-    return 0;
-}
-
-static int lua_mas_execute(lua_State *L) {
-    lua_Integer res_id = luaL_checkinteger (L, 1);
-
-    dsl_execute_subroutine(res_id, 0, 1);
-
-    return 0;
-}
-
-static int lua_gpl_execute(lua_State *L) {
-    lua_Integer res_id = luaL_checkinteger (L, 1);
-    printf("lua_gettop(L) = %d\n", lua_gettop(L));
-    if (lua_gettop(L) > 1) {
-        lua_Integer file_id = luaL_checkinteger (L, 2);
-        dsl_execute_subroutine(res_id, file_id, 0);
-    } else {
-        dsl_execute_subroutine(res_id, 0, 0);
-    }
-
-    return 0;
-}
-
 static int lua_dsl_change_region(lua_State *L) {
     lua_Integer region_id = luaL_checkinteger (L, 1);
     dsl_change_region(region_id);
-    return 0;
-}
-
-static int lua_select_menu(lua_State *L) {
-    lua_Integer option = luaL_checkinteger (L, 1);
-    dsl_select_menu(option);
     return 0;
 }
 
@@ -843,13 +797,7 @@ static const struct luaL_Reg lslib [] = {
       {"scmd_index_is_default", lua_scmd_index_is_default},
 
       // MAS functions
-      {"mas_print", lua_mas_print},
-      {"dsl_print", lua_gpl_print},
-      {"mas_execute", lua_mas_execute},
-      {"dsl_execute", lua_gpl_execute},
       {"dsl_change_region", lua_dsl_change_region},
-
-      {"select_menu", lua_select_menu},
 
       //Object functions
       {"valid_character_id", lua_valid_character_id},

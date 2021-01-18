@@ -33,4 +33,6 @@ dsl_region_t* dsl_region_get_current();
 
 region_object_t* dsl_region_find_object(const int16_t entry_id);
 
+void dsl_region_free(dsl_region_t *region);
+
 #endif

@@ -7,9 +7,9 @@
 #include <unistd.h>
 #include "dsl-narrate.h"
 #include "replay.h"
-#include "gameloop.h"
+#include "../sdl/gameloop.h"
 #include "trigger.h"
-#include "port.h"
+//#include "port.h"
 
 static FILE *replay = NULL; // to write to
 static FILE *replay_file = NULL; // to read from
@@ -64,7 +64,8 @@ static int replay_signal(lua_State *l) {
 
     printf("REPLAY: signal: %lld, %lld\n", signal, _accum);
     fflush(stdout);
-    game_loop_signal(signal, _accum);
+    printf("NEED TO GET game_loop_signal back!\n");
+    //game_loop_signal(signal, _accum);
 
     return 0;
 }
