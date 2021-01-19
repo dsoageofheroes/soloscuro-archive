@@ -129,7 +129,6 @@ unsigned char* dsl_load_object_bmp(dsl_region_t *region, const uint32_t id, cons
 
 static void dsl_load_map_flags(dsl_region_t *region) {
     unsigned int *gmap_ids = gff_get_id_list(region->gff_file, GFF_GMAP);
-    char data[GMAP_MAX];
     gff_chunk_header_t chunk = gff_find_chunk_header(region->gff_file, GFF_GMAP, gmap_ids[0]);
 
     if (chunk.length > GMAP_MAX) {
@@ -137,14 +136,12 @@ static void dsl_load_map_flags(dsl_region_t *region) {
         exit(1);
     }
 
-    if (!gff_read_chunk(region->gff_file, &chunk, data, chunk.length)) {
+    if (!gff_read_chunk(region->gff_file, &chunk, region->flags, chunk.length)) {
         error ("Unable to read GFF_GMAP chunk!\n");
         goto out;
     }
 
     region->flags_size = chunk.length;
-    memcpy(region->flags, data, region->flags_size);
-
 out:
     free(gmap_ids);
 }

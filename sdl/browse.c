@@ -295,6 +295,7 @@ static void render_entry_port();
 static void render_entry_ojff();
 static void render_entry_tile();
 static void render_entry_rmap();
+static void render_entry_gmap();
 
 static void render_entry() {
     switch(gff_get_type_id(gff_idx, entry_idx)) {
@@ -314,6 +315,7 @@ static void render_entry() {
         case GFF_OJFF: render_entry_ojff(); break;
         case GFF_TILE: render_entry_tile(); break;
         case GFF_RMAP: render_entry_rmap(); break;
+        case GFF_GMAP: render_entry_gmap(); break;
         default:
             render_entry_header();
             print_line_len(renderer, "Need to implement", 320, 40, 128);
@@ -687,9 +689,9 @@ static void render_entry_font() {
     }
 }
 
+static dsl_region_t *region;
 static void render_entry_rmap() {
     render_entry_header();
-    static dsl_region_t *region;
     static char *cfile = NULL;
     static int tiles_len;
     static SDL_Texture **tiles = NULL;
@@ -725,7 +727,6 @@ static void render_entry_rmap() {
         tiles_len = region->num_tiles + 1;
         tiles = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * (tiles_len));
         memset(tiles, 0x0, sizeof(SDL_Texture*) * tiles_len);
-        printf("tiles_len = %d, tiles = %p\n", tiles_len, tiles);
         for (int i = 0; i < region->num_tiles; i++) {
             dsl_region_get_tile(region, i, &width, &height, &data);
 
@@ -739,8 +740,15 @@ static void render_entry_rmap() {
 
             free(data);
         }
-        printf("\n");
+        unsigned int *gmap_ids = gff_get_id_list(region->gff_file, GFF_GMAP);
+        gff_chunk_header_t chunk = gff_find_chunk_header(region->gff_file, GFF_GMAP, gmap_ids[0]);
+        if (!gff_read_chunk(region->gff_file, &chunk, region->flags, chunk.length)) {
+            error ("Unable to read GFF_GMAP chunk!\n");
+            exit(1);
+        }
 
+        region->flags_size = chunk.length;
+        free(gmap_ids);
     }
 
     loc.x = 320;
@@ -753,14 +761,38 @@ static void render_entry_rmap() {
     if (mapy >= MAP_COLUMNS) { mapy = MAP_COLUMNS; }
     for (int i = mapx; i < MAP_ROWS; i++) {
         for (int j = mapy; j < MAP_COLUMNS; j++) {
-            //printf("%d,", region->tile_ids[i][j]);
             SDL_RenderCopy(renderer, tiles[region->tile_ids[i][j]], NULL, &loc);
             loc.x += loc.w;
         }
         loc.y += loc.h;
         loc.x = 320;
-        //printf("\n");
     }
+}
 
-    //print_line_len(renderer, "Working on it...", 320, 40, BUF_MAX);
+#define GMAP_MAX (1<<14)
+static void render_entry_gmap() {
+    render_entry_rmap();
+    SDL_Point points[5];
+
+    for (int i = mapx; i < MAP_ROWS; i++) {
+        for (int j = mapy; j < MAP_COLUMNS; j++) {
+            if (dsl_region_is_block(region, i, j)) {
+                //printf("(%d, %d)\n, ", i, j);
+                SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, SDL_ALPHA_OPAQUE);
+            } else if (dsl_region_is_actor(region, i, j)) {
+                SDL_SetRenderDrawColor(renderer, 0x00, 0xFF, 0x00, SDL_ALPHA_OPAQUE);
+            } else { continue; }
+            points[0].x = 320 + (j - mapy) * 16 * zoom;
+            points[0].y = 40  + (i - mapx) * 16 * zoom;
+            points[1].x = 320 + (j - mapy + 1) * 16 * zoom;
+            points[1].y = 40  + (i - mapx) * 16 * zoom;
+            points[2].x = 320 + (j - mapy + 1) * 16 * zoom;
+            points[2].y = 40  + (i - mapx + 1) * 16 * zoom;
+            points[3].x = 320 + (j - mapy) * 16 * zoom;
+            points[3].y = 40  + (i - mapx + 1) * 16 * zoom;
+            points[4].x = 320 + (j - mapy) * 16 * zoom;
+            points[4].y = 40  + (i - mapx) * 16 * zoom;
+            SDL_RenderDrawLines(renderer, points, 5);
+        }
+    }
 }
