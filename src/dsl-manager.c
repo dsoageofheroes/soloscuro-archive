@@ -20,8 +20,6 @@ static void dsl_lua_load_scripts();
 
 void dsl_manager_init() {
     dsl_state_init();
-    //lua = luaL_newstate();
-    //luaL_openlibs(lua);
 
     mas_scripts = gpl_scripts = NULL;
 
@@ -70,8 +68,8 @@ void dsl_lua_load_scripts() {
     unsigned int *ids;
     size_t i, amt;
 
-    ids = gff_get_id_list(DSLDATA_GFF_INDEX, GT_MAS);
-    amt = gff_get_resource_length(DSLDATA_GFF_INDEX, GT_MAS);
+    ids = gff_get_id_list(DSLDATA_GFF_INDEX, GFF_MAS);
+    amt = gff_get_resource_length(DSLDATA_GFF_INDEX, GFF_MAS);
     printf("Detected %ld master GPL files.\n", amt);
     for (i = 0; i < amt; i++) { mas_max = mas_max > ids[i] ? mas_max : ids[i]; }
     mas_max++;
@@ -79,8 +77,8 @@ void dsl_lua_load_scripts() {
     memset(mas_scripts, 0x0, sizeof(char*) * mas_max);
     free(ids);
 
-    ids = gff_get_id_list(DSLDATA_GFF_INDEX, GT_GPL);
-    amt = gff_get_resource_length(DSLDATA_GFF_INDEX, GT_GPL);
+    ids = gff_get_id_list(DSLDATA_GFF_INDEX, GFF_GPL);
+    amt = gff_get_resource_length(DSLDATA_GFF_INDEX, GFF_GPL);
     printf("Detected %ld standard GPL files.\n", amt);
     for (i = 0; i < amt; i++) { gpl_max = gpl_max > ids[i] ? gpl_max : ids[i]; }
     gpl_max++;

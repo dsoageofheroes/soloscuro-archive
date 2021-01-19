@@ -1,6 +1,10 @@
 #include <stdint.h>
 #include "dsl-region.h"
 
+int game_loop_wait_for_signal(int signal) {
+    return 0;
+}
+
 int8_t port_narrate_open(int16_t action, const char *text, int16_t index) {
     return 0;
 }

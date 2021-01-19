@@ -112,7 +112,7 @@ void port_swap_objs(int obj_id, region_object_t *obj) {
     if (anim) {
         SDL_DestroyTexture(anim->textures[0]);
         anim->textures[0] = 
-            create_texture(cren, OBJEX_GFF_INDEX, GT_BMP, obj->btc_idx, obj->bmp_idx, cmap->region->palette_id, &loc);
+            create_texture(cren, OBJEX_GFF_INDEX, GFF_BMP, obj->btc_idx, obj->bmp_idx, cmap->region->palette_id, &loc);
     } else {
         error("Unable to find animation for obj_id!\n");
     }

@@ -51,8 +51,8 @@ void load_portraits(SDL_Renderer *renderer) {
     unsigned char buf[PORT_MAX];
     unsigned int w, h, id;
     SDL_Surface *surface = NULL;
-    unsigned int *ids = gff_get_id_list(DSLDATA_GFF_INDEX, GT_PORT);
-    unsigned int num_ids = gff_get_resource_length(DSLDATA_GFF_INDEX, GT_PORT);
+    unsigned int *ids = gff_get_id_list(DSLDATA_GFF_INDEX, GFF_PORT);
+    unsigned int num_ids = gff_get_resource_length(DSLDATA_GFF_INDEX, GFF_PORT);
     memset(portraits_loc, 0x0, sizeof(SDL_Rect) * MAX_PORTRAITS);
     memset(portraits, 0x0, sizeof(SDL_Texture*) * MAX_PORTRAITS);
     memset(font_table, 0x0, sizeof(SDL_Texture*) * MAX_CHARS);
@@ -114,8 +114,8 @@ static void create_font(SDL_Renderer *renderer) {
 
 void narrate_init(SDL_Renderer *renderer) {
     uint32_t palette_id = gff_get_palette_id(RESOURCE_GFF_INDEX, 0);
-    background = create_texture(renderer, RESOURCE_GFF_INDEX, GT_BMP, 3007, 0, palette_id, &background_loc);
-    border = create_texture(renderer, RESOURCE_GFF_INDEX, GT_BMP, 12000, 0, palette_id, &border_loc);
+    background = create_texture(renderer, RESOURCE_GFF_INDEX, GFF_BMP, 3007, 0, palette_id, &background_loc);
+    border = create_texture(renderer, RESOURCE_GFF_INDEX, GFF_BMP, 12000, 0, palette_id, &border_loc);
     background_loc.w *= 2;
     background_loc.h *= 2;
     menu_loc.w = background_loc.w;

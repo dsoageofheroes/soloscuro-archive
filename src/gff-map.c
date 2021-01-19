@@ -14,7 +14,7 @@ int gff_read_object(int object_index, disk_object_t *disk_obj) {
 
     if (object_index < 0) { object_index *= -1; }
 
-    gff_chunk_header_t chunk = gff_find_chunk_header(OBJEX_GFF_INDEX, GT_OJFF, object_index);
+    gff_chunk_header_t chunk = gff_find_chunk_header(OBJEX_GFF_INDEX, GFF_OJFF, object_index);
     return gff_read_chunk(OBJEX_GFF_INDEX, &chunk, disk_obj, sizeof(disk_object_t));
 }
 
@@ -72,7 +72,7 @@ int gff_map_get_object_frame_count(int gff_index, int res_id, int obj_id) {
     if (entry_table == NULL) { return -1; }
     gff_read_object(entry_table[obj_id].index, &disk_object);
 
-    return get_frame_count(OBJEX_GFF_INDEX, GT_BMP, disk_object.bmp_id);
+    return get_frame_count(OBJEX_GFF_INDEX, GFF_BMP, disk_object.bmp_id);
 }
 
 scmd_t* gff_map_get_object_scmd(int gff_index, int res_id, int obj_id, int scmd_index) {
@@ -91,9 +91,9 @@ scmd_t* gff_map_get_object_scmd(int gff_index, int res_id, int obj_id, int scmd_
 
 /*
 unsigned char* gff_map_get_obj_bmp_pal(dsl_region_t *region, int res_id, dsl_object_t *obj, int frame_id) {
-    *w = get_frame_width(OBJEX_GFF_INDEX, GT_BMP, disk_object->bmp_id, frame_id);
-    *h = get_frame_height(OBJEX_GFF_INDEX, GT_BMP, disk_object->bmp_id, frame_id);
-    return get_frame_rgba_with_palette(OBJEX_GFF_INDEX, GT_BMP, disk_object->bmp_id, frame_id, palette_id);
+    *w = get_frame_width(OBJEX_GFF_INDEX, GFF_BMP, disk_object->bmp_id, frame_id);
+    *h = get_frame_height(OBJEX_GFF_INDEX, GFF_BMP, disk_object->bmp_id, frame_id);
+    return get_frame_rgba_with_palette(OBJEX_GFF_INDEX, GFF_BMP, disk_object->bmp_id, frame_id, palette_id);
 }
 */
 
@@ -110,16 +110,16 @@ unsigned char* gff_map_get_object_bmp_pal(int gff_index, int res_id, int obj_id,
     if (entry_table == NULL) { return NULL; }
     gff_read_object(entry_table[obj_id].index, &disk_object);
 
-    int num_frames = get_frame_count(OBJEX_GFF_INDEX, GT_BMP, disk_object.bmp_id);
+    int num_frames = get_frame_count(OBJEX_GFF_INDEX, GFF_BMP, disk_object.bmp_id);
     //printf("num_frames = %d\n", num_frames);
     //printf("frame_id = %d\n", frame_id);
     if (frame_id >= num_frames) {
         printf("ERROR: requesting a frame that out of range!\n");
         return NULL;
     }
-    *w = get_frame_width(OBJEX_GFF_INDEX, GT_BMP, disk_object.bmp_id, frame_id);
-    *h = get_frame_height(OBJEX_GFF_INDEX, GT_BMP, disk_object.bmp_id, frame_id);
-    return get_frame_rgba_with_palette(OBJEX_GFF_INDEX, GT_BMP, disk_object.bmp_id, frame_id, palette_id);
+    *w = get_frame_width(OBJEX_GFF_INDEX, GFF_BMP, disk_object.bmp_id, frame_id);
+    *h = get_frame_height(OBJEX_GFF_INDEX, GFF_BMP, disk_object.bmp_id, frame_id);
+    return get_frame_rgba_with_palette(OBJEX_GFF_INDEX, GFF_BMP, disk_object.bmp_id, frame_id, palette_id);
 }
 
 unsigned char* gff_map_get_object_bmp(int gff_index, int res_id, int obj_id, int *w, int *h, int frame_id) {

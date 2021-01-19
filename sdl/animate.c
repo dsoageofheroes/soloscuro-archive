@@ -145,7 +145,7 @@ animate_t* animate_add_obj(SDL_Renderer *renderer, region_object_t *obj, const i
     toadd->textures = malloc(sizeof(SDL_Surface *) * (toadd->len));
     for (int i = 0; i < toadd->len; i++) {
         toadd->textures[i] = 
-            create_texture(renderer, gff_file, GT_BMP, obj->btc_idx, obj->bmp_idx, palette_id, &loc);
+            create_texture(renderer, gff_file, GFF_BMP, obj->btc_idx, obj->bmp_idx, palette_id, &loc);
         obj->bmp_width = loc.w;
         obj->bmp_height = loc.w;
 
@@ -193,9 +193,9 @@ animate_t* animate_add_objex(map_t *map, SDL_Renderer *renderer, region_object_t
     // get all the textures
     toadd->textures = malloc(sizeof(SDL_Surface *) * (toadd->len));
     for (int i = 0; i < toadd->len; i++) {
-        data = get_frame_rgba_with_palette(OBJEX_GFF_INDEX, GT_BMP, obj->btc_idx, i, -1);
-        obj->bmp_width = get_frame_width(OBJEX_GFF_INDEX, GT_BMP, obj->btc_idx, i);
-        obj->bmp_height = get_frame_height(OBJEX_GFF_INDEX, GT_BMP, obj->btc_idx, i);
+        data = get_frame_rgba_with_palette(OBJEX_GFF_INDEX, GFF_BMP, obj->btc_idx, i, -1);
+        obj->bmp_width = get_frame_width(OBJEX_GFF_INDEX, GFF_BMP, obj->btc_idx, i);
+        obj->bmp_height = get_frame_height(OBJEX_GFF_INDEX, GFF_BMP, obj->btc_idx, i);
 
         surface = SDL_CreateRGBSurfaceFrom(data, obj->bmp_width, obj->bmp_height, 32, 
                 4*obj->bmp_width, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);

@@ -54,31 +54,6 @@ int32_t *gBignumptr;
 static int dsl_state_pos = -1;
 static dsl_state_t states[MAX_DSL_STATES];
 
-#define MAX_PARAM_DEPTH (2)
-int16_t param_depth = 0; // How many commands we can store.
-param_t old_params[MAX_PARAM_DEPTH];
-
-/*
-static void push_params() {
-    if (param_depth < MAX_PARAM_DEPTH) {
-        memcpy(&old_params[param_depth], &param, sizeof(param));
-        param_depth++;
-    } else {
-        fprintf(stderr, "push_param ERROR: to many params!\n");
-        exit(1);
-    }
-}
-
-static void pop_params() {
-    if (param_depth > 0) {
-        param_depth--;
-        memcpy(&param, &old_params[param_depth], sizeof(param));
-    } else {
-        fprintf(stderr, "pop_params ERROR: tried to pop empty stack of params!\n");
-    }
-}
-*/
-
 /* All those commands... */
 void global_addr_name(param_t *par) {
     new_name.addr = par->val[0];

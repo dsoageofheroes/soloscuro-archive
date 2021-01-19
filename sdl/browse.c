@@ -23,6 +23,7 @@ static uint32_t res_ids[RES_MAX];
 static gff_image_entry_t *cimg = NULL;
 static int cframe = 0;
 static double zoom = 1.0;
+static int mapx = 0, mapy = 0;
 
 static void browse_tick();
 static void browse_handle_input();
@@ -53,7 +54,10 @@ static void browse_handle_input() {
                     case SDLK_RIGHT: move_res_cursor(1); break;
                     case SDLK_LEFT: move_res_cursor(-1); break;
                     case SDLK_w: write_blob(); break;
-                    case SDLK_f: move_frame_cursor(1); break;
+                    case SDLK_f: move_frame_cursor(1); mapy += 1;break;
+                    case SDLK_d: mapx += 1; break;
+                    case SDLK_s: mapy -= 1; break;
+                    case SDLK_e: mapx -= 1; break;
                     case SDLK_KP_MINUS: if (zoom > 1.0) {zoom -= 0.25;} break;
                     case SDLK_KP_PLUS: zoom += 0.25; break;
                 }
@@ -86,6 +90,7 @@ static void clear_state() {
         free(cimg);
         cimg = NULL;
     }
+    mapx = mapy = 0;
     cframe = 0;
 }
 
@@ -696,31 +701,40 @@ static void render_entry_rmap() {
     if (cfile && cfile != open_files[gff_idx].filename) {
         printf("Need to clean dsl_region_t!\n");
         //SDL_DestroyTexture(tiles[0]);
-        //for (int i = 0; i < tiles_len; i++) {
-            //SDL_DestroyTexture(tiles[i]);
-        //}
-        //tiles_len = 0;
-        //if (tiles) {
-            //free(tiles);
-            //tiles = NULL;
-        //}
+        for (int i = 0; i < tiles_len; i++) {
+            if (tiles[i]) {
+                SDL_DestroyTexture(tiles[i]);
+            }
+            tiles[i] = NULL;
+        }
+        tiles_len = 0;
+        if (tiles) {
+            free(tiles);
+            tiles = NULL;
+        }
         cfile = NULL;
     }
 
     if (!cfile) {
         cfile = open_files[gff_idx].filename;
+        if (!cfile) {
+            error("cfile is null!\n");
+            exit(1);
+        }
         region = dsl_load_region(gff_idx);
-        tiles_len = region->num_tiles;
-        tiles = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * region->num_tiles);
-        printf("tiles_len = %d\n", tiles_len);
+        tiles_len = region->num_tiles + 1;
+        tiles = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * (tiles_len));
+        memset(tiles, 0x0, sizeof(SDL_Texture*) * tiles_len);
+        printf("tiles_len = %d, tiles = %p\n", tiles_len, tiles);
         for (int i = 0; i < region->num_tiles; i++) {
             dsl_region_get_tile(region, i, &width, &height, &data);
 
             tile = SDL_CreateRGBSurfaceFrom(data, width, height, 32, 4*width, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
-            //tiles[ids[i]] = SDL_CreateTextureFromSurface(renderer, tile);
-            //tiles[i] = SDL_CreateTextureFromSurface(renderer, tile);
+            if (region->ids[i] > (tiles_len)) {
+                error ("region->ids[%d] is out of bounds!\n", i);
+                exit(1);
+            }
             tiles[region->ids[i]] = SDL_CreateTextureFromSurface(renderer, tile);
-            printf("%d, ", region->ids[i]);
             SDL_FreeSurface(tile);
 
             free(data);
@@ -729,20 +743,24 @@ static void render_entry_rmap() {
 
     }
 
-    loc.x = 340;
-    loc.y = 60;
+    loc.x = 320;
+    loc.y = 40;
     loc.w = 16 * zoom;
     loc.h = 16 * zoom;
-    for (int i = 0; i < MAP_ROWS; i++) {
-        for (int j = 0; j < MAP_COLUMNS; j++) {
+    if (mapx < 0) { mapx = 0; }
+    if (mapy < 0) { mapy = 0; }
+    if (mapx >= MAP_ROWS) { mapx = MAP_ROWS; }
+    if (mapy >= MAP_COLUMNS) { mapy = MAP_COLUMNS; }
+    for (int i = mapx; i < MAP_ROWS; i++) {
+        for (int j = mapy; j < MAP_COLUMNS; j++) {
             //printf("%d,", region->tile_ids[i][j]);
             SDL_RenderCopy(renderer, tiles[region->tile_ids[i][j]], NULL, &loc);
             loc.x += loc.w;
         }
         loc.y += loc.h;
-        loc.x = 340;
+        loc.x = 320;
         //printf("\n");
     }
 
-    print_line_len(renderer, "Working on it...", 320, 40, BUF_MAX);
+    //print_line_len(renderer, "Working on it...", 320, 40, BUF_MAX);
 }

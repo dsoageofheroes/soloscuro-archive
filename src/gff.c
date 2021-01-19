@@ -159,7 +159,7 @@ int gff_create(const char *pathName) {
 	// Write the empty file struct with known offset
 	// values. This is the whole file structure of
 	// an "empty" file.
-	emptyFile.identity	    = GT_GFFI;
+	emptyFile.identity	    = GFF_GFFI;
 	emptyFile.version	    = GFFVERSION;
 	emptyFile.dataLocation	= 28L;
 	emptyFile.tocLocation	= 28L;
@@ -502,73 +502,73 @@ extern unsigned int* gff_get_id_list(int idx, int type_id) {
 
 void get_gff_type_name(unsigned int gff_type, char *type) {
     switch(gff_type) {
-        case GT_FORM: strcpy(type, "FORM: Internal Format"); break;
-        case GT_GFFI: strcpy(type, "GFFI: Internal Format"); break; 
-        case GT_GFRE: strcpy(type, "GFRE: Internal Format"); break; 
-        case GT_GTOC: strcpy(type, "GTOC: Internal Format"); break; 
-        case GT_ACCL: strcpy(type, "ACCL: Accelerator resource"); break; 
-        case GT_ADV : strcpy(type, "ADV: AIL Audio Driver"); break; 
-        case GT_APFM: strcpy(type, "APFM: Application Frame Resource "); break; 
-        case GT_BMAP: strcpy(type, "BMAP: 3Dx Bump map (GIL bimap table, 1 bitmap) "); break; 
-        case GT_BMP : strcpy(type, "BMP: Bitmap (GIL bitmap table, 1+ bitmaps)"); break; 
-        case GT_CBMP: strcpy(type, "CBMP: Color Bitmap "); break; 
-        case GT_BVOC: strcpy(type, "BVOC: Background play samples"); break; 
-        case GT_BUTN: strcpy(type, "BUtn: Button resource"); break; 
-        case GT_CMAP: strcpy(type, "CMAP: Color map table"); break; 
-        case GT_DADV: strcpy(type, "DADV: AIL and .COM drivers"); break; 
-        case GT_DATA: strcpy(type, "DATA: Looks like a table for what class combos are allowed"); break; 
-        case GT_DBOX: strcpy(type, "DBOX: Dialog box resource"); break; 
-        case GT_DRV : strcpy(type, "DRV: Run-time loadable code/data module"); break; 
-        case GT_EDAT: strcpy(type, "EDAT: 3DX Environment database"); break; 
-        case GT_EBOX: strcpy(type, "EBOX: Edit Box resource"); break; 
-        case GT_ETAB: strcpy(type, "ETAB: Object entry table"); break; 
-        case GT_FONT: strcpy(type, "FONT: Font (GIL font)"); break; 
-        case GT_FVOC: strcpy(type, "FVOC: Foreground play samples"); break; 
-        case GT_GMAP: strcpy(type, "GMAP: Region map Flags"); break; 
-        case GT_GPL : strcpy(type, "GPL: Compile GPL files"); break; 
-        case GT_GPLX: strcpy(type, "GPLX: GPL index file (GPLSHELL)"); break; 
-        case GT_ICON: strcpy(type, "ICON: Icon resource (GIL bitmap table, 1-4 bitmaps)"); break; 
-        case GT_MAS : strcpy(type, "MAX: Compiled MAS (GPL master) files)"); break; 
-        case GT_MENU: strcpy(type, "MENU: Menu resource"); break; 
-        case GT_MONR: strcpy(type, "MONR: MONR data: monsters by region ids and level (used in request.c DARKSUN)"); break; 
-        case GT_MGTL: strcpy(type, "MGTL: Global timbre library"); break; 
-        case GT_MSEQ: strcpy(type, "MSEQ: XMIDI sequence Files (.XMI)"); break; 
-        case GT_OMAP: strcpy(type, "OMAP: Opacty map (GIL bitmap table, 1 bitmap)"); break; 
-        case GT_PAL : strcpy(type, "PAL: VGA 256 color palette"); break; 
-        case GT_POBJ: strcpy(type, "POBJ: PolyMesh object database"); break; 
-        case GT_RMAP: strcpy(type, "RMAP: Region tile map"); break; 
-        case GT_SCMD: strcpy(type, "SCMD: Animation script command table"); break; 
-        case GT_SBAR: strcpy(type, "SBAR: Scoll-bar resource"); break; 
-        case GT_SINF: strcpy(type, "SINF: Sound card info"); break; 
-        case GT_SJMP: strcpy(type, "SJMP: OENGINE animation script jump table"); break; 
-        case GT_TEXT: strcpy(type, "TEXT: Text resource"); break; 
-        case GT_TILE: strcpy(type, "TILE: Tile graphic (GIL bitmap table, 1 bitmap)"); break; 
-        case GT_TMAP: strcpy(type, "TMAP: Texture map (GIL bitmap table, 1 bitmap)"); break; 
-        case GT_TXRF: strcpy(type, "TXRF: Texture map (GIL bitmap table, 1 bitmap)"); break; 
-        case GT_WIND: strcpy(type, "WIND: Windows resource"); break; 
-        case GT_ACF: strcpy(type, "ACF: Cinematic Binary Script File"); break; 
-        case GT_BMA: strcpy(type, "BMA: Cinematic Binary File"); break; 
-        case GT_WALL: strcpy(type, "WALL: Wall data"); break;
-        case GT_OJFF: strcpy(type, "OJFF: Object?  data?  (unsure.)"); break;
-        case GT_RDFF: strcpy(type, "RDFF data"); break;
-        case GT_FNFO: strcpy(type, "FNFO: appears to have the object data for the game (items, creatures, etc...)");
+        case GFF_FORM: strcpy(type, "FORM: Internal Format"); break;
+        case GFF_GFFI: strcpy(type, "GFFI: Internal Format"); break; 
+        case GFF_GFRE: strcpy(type, "GFRE: Internal Format"); break; 
+        case GFF_GFFOC: strcpy(type, "GFFOC: Internal Format"); break; 
+        case GFF_ACCL: strcpy(type, "ACCL: Accelerator resource"); break; 
+        case GFF_ADV : strcpy(type, "ADV: AIL Audio Driver"); break; 
+        case GFF_APFM: strcpy(type, "APFM: Application Frame Resource "); break; 
+        case GFF_BMAP: strcpy(type, "BMAP: 3Dx Bump map (GIL bimap table, 1 bitmap) "); break; 
+        case GFF_BMP : strcpy(type, "BMP: Bitmap (GIL bitmap table, 1+ bitmaps)"); break; 
+        case GFF_CBMP: strcpy(type, "CBMP: Color Bitmap "); break; 
+        case GFF_BVOC: strcpy(type, "BVOC: Background play samples"); break; 
+        case GFF_BUTN: strcpy(type, "BUtn: Button resource"); break; 
+        case GFF_CMAP: strcpy(type, "CMAP: Color map table"); break; 
+        case GFF_DADV: strcpy(type, "DADV: AIL and .COM drivers"); break; 
+        case GFF_DATA: strcpy(type, "DATA: Looks like a table for what class combos are allowed"); break; 
+        case GFF_DBOX: strcpy(type, "DBOX: Dialog box resource"); break; 
+        case GFF_DRV : strcpy(type, "DRV: Run-time loadable code/data module"); break; 
+        case GFF_EDAT: strcpy(type, "EDAT: 3DX Environment database"); break; 
+        case GFF_EBOX: strcpy(type, "EBOX: Edit Box resource"); break; 
+        case GFF_ETAB: strcpy(type, "ETAB: Object entry table"); break; 
+        case GFF_FONT: strcpy(type, "FONT: Font (GIL font)"); break; 
+        case GFF_FVOC: strcpy(type, "FVOC: Foreground play samples"); break; 
+        case GFF_GMAP: strcpy(type, "GMAP: Region map Flags"); break; 
+        case GFF_GPL : strcpy(type, "GPL: Compile GPL files"); break; 
+        case GFF_GPLX: strcpy(type, "GPLX: GPL index file (GPLSHELL)"); break; 
+        case GFF_ICON: strcpy(type, "ICON: Icon resource (GIL bitmap table, 1-4 bitmaps)"); break; 
+        case GFF_MAS : strcpy(type, "MAX: Compiled MAS (GPL master) files)"); break; 
+        case GFF_MENU: strcpy(type, "MENU: Menu resource"); break; 
+        case GFF_MONR: strcpy(type, "MONR: MONR data: monsters by region ids and level (used in request.c DARKSUN)"); break; 
+        case GFF_MGFFL: strcpy(type, "MGFFL: Global timbre library"); break; 
+        case GFF_MSEQ: strcpy(type, "MSEQ: XMIDI sequence Files (.XMI)"); break; 
+        case GFF_OMAP: strcpy(type, "OMAP: Opacty map (GIL bitmap table, 1 bitmap)"); break; 
+        case GFF_PAL : strcpy(type, "PAL: VGA 256 color palette"); break; 
+        case GFF_POBJ: strcpy(type, "POBJ: PolyMesh object database"); break; 
+        case GFF_RMAP: strcpy(type, "RMAP: Region tile map"); break; 
+        case GFF_SCMD: strcpy(type, "SCMD: Animation script command table"); break; 
+        case GFF_SBAR: strcpy(type, "SBAR: Scoll-bar resource"); break; 
+        case GFF_SINF: strcpy(type, "SINF: Sound card info"); break; 
+        case GFF_SJMP: strcpy(type, "SJMP: OENGINE animation script jump table"); break; 
+        case GFF_TEXT: strcpy(type, "TEXT: Text resource"); break; 
+        case GFF_TILE: strcpy(type, "TILE: Tile graphic (GIL bitmap table, 1 bitmap)"); break; 
+        case GFF_TMAP: strcpy(type, "TMAP: Texture map (GIL bitmap table, 1 bitmap)"); break; 
+        case GFF_TXRF: strcpy(type, "TXRF: Texture map (GIL bitmap table, 1 bitmap)"); break; 
+        case GFF_WIND: strcpy(type, "WIND: Windows resource"); break; 
+        case GFF_ACF: strcpy(type, "ACF: Cinematic Binary Script File"); break; 
+        case GFF_BMA: strcpy(type, "BMA: Cinematic Binary File"); break; 
+        case GFF_WALL: strcpy(type, "WALL: Wall data"); break;
+        case GFF_OJFF: strcpy(type, "OJFF: Object?  data?  (unsure.)"); break;
+        case GFF_RDFF: strcpy(type, "RDFF data"); break;
+        case GFF_FNFO: strcpy(type, "FNFO: appears to have the object data for the game (items, creatures, etc...)");
                 break;
-        case GT_IT1R: strcpy(type, "IT1R data"); break;
-        case GT_NAME: strcpy(type, "NAME data"); break;
-        case GT_ALL: strcpy(type, "ALL data(ALL the game data?)"); break;
-        case GT_VECT: strcpy(type, "VECT Data"); break;
-        case GT_MERR: strcpy(type, "MERR Data: text error file"); break;
-        case GT_PSEQ: strcpy(type, "PSEQ Data: PCSPKR"); break;
-        case GT_FSEQ: strcpy(type, "FSEQ Data: FM"); break;
-        case GT_LSEQ: strcpy(type, "LSEQ Data: LAPC"); break;
-        case GT_GSEQ: strcpy(type, "GSEQ Data: General MIDI"); break;
-        case GT_CSEQ: strcpy(type, "CSEQ Data: Clock sequences"); break;
-        case GT_CMAT: strcpy(type, "CMAT Data"); break;
-        case GT_CPAL: strcpy(type, "CPAL Data"); break;
-        case GT_PLYL: strcpy(type, "PLYL Data"); break;
-        case GT_VPLY: strcpy(type, "VPLY Data"); break;
-        case GT_SPIN: strcpy(type, "SPIN Data: The text field of a spell."); break;
-        case GT_PORT: strcpy(type, "PORT Data: The portraits for dialogs."); break;
+        case GFF_IT1R: strcpy(type, "IT1R data"); break;
+        case GFF_NAME: strcpy(type, "NAME data"); break;
+        case GFF_ALL: strcpy(type, "ALL data(ALL the game data?)"); break;
+        case GFF_VECT: strcpy(type, "VECT Data"); break;
+        case GFF_MERR: strcpy(type, "MERR Data: text error file"); break;
+        case GFF_PSEQ: strcpy(type, "PSEQ Data: PCSPKR"); break;
+        case GFF_FSEQ: strcpy(type, "FSEQ Data: FM"); break;
+        case GFF_LSEQ: strcpy(type, "LSEQ Data: LAPC"); break;
+        case GFF_GSEQ: strcpy(type, "GSEQ Data: General MIDI"); break;
+        case GFF_CSEQ: strcpy(type, "CSEQ Data: Clock sequences"); break;
+        case GFF_CMAT: strcpy(type, "CMAT Data"); break;
+        case GFF_CPAL: strcpy(type, "CPAL Data"); break;
+        case GFF_PLYL: strcpy(type, "PLYL Data"); break;
+        case GFF_VPLY: strcpy(type, "VPLY Data"); break;
+        case GFF_SPIN: strcpy(type, "SPIN Data: The text field of a spell."); break;
+        case GFF_PORT: strcpy(type, "PORT Data: The portraits for dialogs."); break;
         default: 
             sprintf(type, "UNKNOWN TYPE: '%c' '%c' '%c' '%c'",
                 (gff_type >> 0) & 0x00FF,
@@ -626,12 +626,11 @@ void gff_close (int gff_file) {
 
 }
 
-
 /*
 gff_monster_entry_t* gff_load_monster(int region_id, int monster_id) {
     if (monster_id < 0 || monster_id > MAX_MONSTERS_PER_REGION) { return NULL; }
     unsigned long len;
-    gff_monster_region_t *mr = (gff_monster_region_t*)gff_get_raw_bytes(RESOURCE_GFF_INDEX, GT_MONR, 1, &len);
+    gff_monster_region_t *mr = (gff_monster_region_t*)gff_get_raw_bytes(RESOURCE_GFF_INDEX, GFF_MONR, 1, &len);
     if (!mr) {return NULL;}
 
     for (int i = 0; i < len/sizeof(gff_monster_entry_t); i++) {

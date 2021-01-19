@@ -36,7 +36,7 @@ dsl_region_t* dsl_load_region(const int gff_file) {
     ret->list = region_list_create();
     ret->gff_file = gff_file;
 
-    tids = gff_get_id_list(ret->gff_file, GT_ETAB); // temporary to find current id for palette!
+    tids = gff_get_id_list(ret->gff_file, GFF_ETAB); // temporary to find current id for palette!
     if (!tids) { error("Unable to find current id for map\n"); return NULL; }
     ret->map_id = *tids;
     free(tids);
@@ -50,7 +50,7 @@ dsl_region_t* dsl_load_region(const int gff_file) {
     gff_read_chunk(ret->gff_file, &chunk, ret->entry_table, chunk.length);
     open_files[ret->gff_file].num_objects = chunk.length / sizeof(gff_map_object_t);
     ret->palette_id = gff_get_palette_id(DSLDATA_GFF_INDEX, ret->map_id - 1);
-    ret->ids = gff_get_id_list(ret->gff_file, GT_TILE);
+    ret->ids = gff_get_id_list(ret->gff_file, GFF_TILE);
 
     dsl_load_map_tile_ids(ret);
     dsl_load_map_flags(ret);
@@ -97,7 +97,7 @@ region_object_t* dsl_region_find_object(const int16_t disk_idx) {
 
 #define RMAP_MAX (1<<14)
 static void dsl_load_map_tile_ids(dsl_region_t *region) {
-    unsigned int *rmap_ids = gff_get_id_list(region->gff_file, GT_RMAP);
+    unsigned int *rmap_ids = gff_get_id_list(region->gff_file, GFF_RMAP);
     unsigned char data[RMAP_MAX];
     
     gff_chunk_header_t chunk = gff_find_chunk_header(region->gff_file, GFF_RMAP, rmap_ids[0]);
@@ -111,7 +111,7 @@ static void dsl_load_map_tile_ids(dsl_region_t *region) {
     }
 
     region->tile_ids_size = chunk.length;
-    region->num_tiles = gff_get_resource_length(region->gff_file, GT_TILE);
+    region->num_tiles = gff_get_resource_length(region->gff_file, GFF_TILE);
     memcpy(region->tile_ids, data, chunk.length);
 
 out:
@@ -128,7 +128,7 @@ unsigned char* dsl_load_object_bmp(dsl_region_t *region, const uint32_t id, cons
 #define GMAP_MAX (1<<14)
 
 static void dsl_load_map_flags(dsl_region_t *region) {
-    unsigned int *gmap_ids = gff_get_id_list(region->gff_file, GT_GMAP);
+    unsigned int *gmap_ids = gff_get_id_list(region->gff_file, GFF_GMAP);
     char data[GMAP_MAX];
     gff_chunk_header_t chunk = gff_find_chunk_header(region->gff_file, GFF_GMAP, gmap_ids[0]);
 
@@ -196,9 +196,9 @@ int32_t region_tile_id(dsl_region_t *region, int row, int column) {
 int dsl_region_get_tile(const dsl_region_t *region, const uint32_t image_id,
         uint32_t *w, uint32_t *h, unsigned char **data) {
     if (!data) { return 0; }
-    *w = get_frame_width(region->gff_file, GT_TILE, region->ids[image_id], 0);
-    *h = get_frame_height(region->gff_file, GT_TILE, region->ids[image_id], 0);
-    *data = get_frame_rgba_with_palette(region->gff_file, GT_TILE, region->ids[image_id], 0, region->palette_id);
+    *w = get_frame_width(region->gff_file, GFF_TILE, region->ids[image_id], 0);
+    *h = get_frame_height(region->gff_file, GFF_TILE, region->ids[image_id], 0);
+    *data = get_frame_rgba_with_palette(region->gff_file, GFF_TILE, region->ids[image_id], 0, region->palette_id);
     if (!data) { return 0; }
 
     return 1;
