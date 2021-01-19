@@ -24,6 +24,7 @@ static gff_image_entry_t *cimg = NULL;
 static int cframe = 0;
 static double zoom = 1.0;
 static int mapx = 0, mapy = 0;
+static int cobj = 0, max_objs = 0;
 
 static void browse_tick();
 static void browse_handle_input();
@@ -54,9 +55,9 @@ static void browse_handle_input() {
                     case SDLK_RIGHT: move_res_cursor(1); break;
                     case SDLK_LEFT: move_res_cursor(-1); break;
                     case SDLK_w: write_blob(); break;
-                    case SDLK_f: move_frame_cursor(1); mapy += 1;break;
+                    case SDLK_f: move_frame_cursor(1); mapy += 1; cobj++;break;
                     case SDLK_d: mapx += 1; break;
-                    case SDLK_s: mapy -= 1; break;
+                    case SDLK_s: mapy -= 1; cobj--; break;
                     case SDLK_e: mapx -= 1; break;
                     case SDLK_KP_MINUS: if (zoom > 1.0) {zoom -= 0.25;} break;
                     case SDLK_KP_PLUS: zoom += 0.25; break;
@@ -92,6 +93,7 @@ static void clear_state() {
     }
     mapx = mapy = 0;
     cframe = 0;
+    cobj = max_objs = 0;
 }
 
 static void move_frame_cursor(int amt) {
@@ -239,6 +241,9 @@ static void browse_tick() {
 
 void browse_loop(SDL_Surface *surface, SDL_Renderer *rend) {
     renderer = rend;
+
+    narrate_init(renderer); // to setup print_line
+
     browse_render();
     move_gff_cursor(1);
     move_gff_cursor(1);
@@ -296,6 +301,7 @@ static void render_entry_ojff();
 static void render_entry_tile();
 static void render_entry_rmap();
 static void render_entry_gmap();
+static void render_entry_etab();
 
 static void render_entry() {
     switch(gff_get_type_id(gff_idx, entry_idx)) {
@@ -316,6 +322,7 @@ static void render_entry() {
         case GFF_TILE: render_entry_tile(); break;
         case GFF_RMAP: render_entry_rmap(); break;
         case GFF_GMAP: render_entry_gmap(); break;
+        case GFF_ETAB: render_entry_etab(); break;
         default:
             render_entry_header();
             print_line_len(renderer, "Need to implement", 320, 40, 128);
@@ -356,13 +363,14 @@ static void render_entry_merr() {
     render_entry_as_text(GFF_MERR);
 }
 
-static void render_entry_as_image(const int type_id, gff_palette_t *pal) {
+static void render_entry_as_image(const int gff_idx, const int type_id, const int res_id,
+        gff_palette_t *pal, const int x, const int y) {
     render_entry_header();
     SDL_Rect loc;
     char buf[BUF_MAX];
 
     if (!cimg) {
-        gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, type_id, res_ids[res_idx]);
+        gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, type_id, res_id);
         cimg = (gff_image_entry_t*) malloc(sizeof(gff_image_entry_t*) * chunk.length);
         gff_read_chunk(gff_idx, &chunk, &(cimg->data), chunk.length);
         cimg->data_len = chunk.length;
@@ -370,16 +378,16 @@ static void render_entry_as_image(const int type_id, gff_palette_t *pal) {
     }
 
     snprintf(buf, BUF_MAX-1, "current frame: %d, total frames: %d\n", cframe, cimg->frame_num);
-    print_line_len(renderer, buf, 320, 40, BUF_MAX);
+    print_line_len(renderer, buf, x, y, BUF_MAX);
     unsigned char* data = get_frame_rgba_palette_img(cimg, cframe, pal);
-    loc.w = get_frame_width(gff_idx, type_id, res_ids[res_idx], cframe);
-    loc.h = get_frame_height(gff_idx, type_id, res_ids[res_idx], cframe);
+    loc.w = get_frame_width(gff_idx, type_id, res_id, cframe);
+    loc.h = get_frame_height(gff_idx, type_id, res_id, cframe);
     SDL_Surface *surface = SDL_CreateRGBSurfaceFrom(data, loc.w, loc.h, 32, 
             4*loc.w, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
     SDL_Texture *tex = SDL_CreateTextureFromSurface(renderer, surface);
     SDL_FreeSurface(surface);
-    loc.x = 340;
-    loc.y = 60;
+    loc.x = x;
+    loc.y = y + 20;
     loc.w *= zoom;
     loc.h *= zoom;
     SDL_RenderCopy( renderer, tex, NULL, &loc);
@@ -394,15 +402,15 @@ static void render_entry_bmp() {
         pal = open_files[gff_idx].pals->palettes;
     }
 
-    render_entry_as_image(GFF_BMP, pal);
+    render_entry_as_image(gff_idx, GFF_BMP, res_ids[res_idx], pal, 320, 40);
 }
 
 static void render_entry_icon() {
-    render_entry_as_image(GFF_ICON, open_files[RESOURCE_GFF_INDEX].pals->palettes);
+    render_entry_as_image(gff_idx, GFF_ICON, res_ids[res_idx], open_files[RESOURCE_GFF_INDEX].pals->palettes, 320, 40);
 }
 
 static void render_entry_port() {
-    render_entry_as_image(GFF_PORT, open_files[RESOURCE_GFF_INDEX].pals->palettes);
+    render_entry_as_image(gff_idx, GFF_PORT, res_ids[res_idx], open_files[RESOURCE_GFF_INDEX].pals->palettes, 320, 40);
 }
 
 static void render_entry_tile() {
@@ -414,7 +422,7 @@ static void render_entry_tile() {
     if (num < open_files[DSLDATA_GFF_INDEX].pals->len) {
         pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + num;
     }
-    render_entry_as_image(GFF_TILE, pal);
+    render_entry_as_image(gff_idx, GFF_TILE, res_ids[res_idx], pal, 320, 40);
 }
 
 /*
@@ -769,7 +777,6 @@ static void render_entry_rmap() {
     }
 }
 
-#define GMAP_MAX (1<<14)
 static void render_entry_gmap() {
     render_entry_rmap();
     SDL_Point points[5];
@@ -795,4 +802,49 @@ static void render_entry_gmap() {
             SDL_RenderDrawLines(renderer, points, 5);
         }
     }
+}
+
+static void render_entry_etab() {
+    static int lobj = -1;
+    char buf[BUF_MAX];
+    max_objs = gff_map_get_num_objects(gff_idx, res_ids[res_idx]);
+    disk_object_t dobj;
+    gff_map_object_t *obj = NULL;
+
+    if (cobj < 0) { cobj = max_objs - 1; }
+    if (cobj >= max_objs) { cobj = 0; }
+    if (lobj != cobj) {
+        free(cimg);
+        cframe = 0;
+        cimg = NULL;
+        lobj = cobj;
+    }
+    render_entry_header();
+    obj = open_files[gff_idx].entry_table + cobj;
+    snprintf(buf, BUF_MAX, "%d of %d etab objects\n", cobj, max_objs);
+    print_line_len(renderer, buf, 320, 40, BUF_MAX);
+    snprintf(buf, BUF_MAX, "pos: (%d, %d, %d)\n", obj->xpos, obj->ypos, obj->zpos);
+    print_line_len(renderer, buf, 320, 60, BUF_MAX);
+    snprintf(buf, BUF_MAX, "flags: 0x%x\n", obj->flags);
+    print_line_len(renderer, buf, 320, 80, BUF_MAX);
+
+    if (!gff_read_object(obj->index, &dobj)) {
+        snprintf(buf, BUF_MAX, "Unable to read obj: %d\n", obj->index);
+        print_line_len(renderer, buf, 320, 80, BUF_MAX);
+        return;
+    }
+    snprintf(buf, BUF_MAX, "disk object[%d]: (object_index not displayed.)\n", obj->index);
+    print_line_len(renderer, buf, 320, 100, BUF_MAX);
+    snprintf(buf, BUF_MAX, "    .flags = 0x%x\n", dobj.flags);
+    print_line_len(renderer, buf, 320, 120, BUF_MAX);
+    snprintf(buf, BUF_MAX, "    .offset = (%d, %d)\n", dobj.xoffset, dobj.yoffset);
+    print_line_len(renderer, buf, 320, 140, BUF_MAX);
+    snprintf(buf, BUF_MAX, "    .pos = (%d, %d, %d)\n", dobj.xpos, dobj.ypos, dobj.zpos);
+    print_line_len(renderer, buf, 320, 160, BUF_MAX);
+    snprintf(buf, BUF_MAX, "    .script_id = %d\n", dobj.script_id);
+    print_line_len(renderer, buf, 320, 180, BUF_MAX);
+    snprintf(buf, BUF_MAX, "    .bmp_id = %d\n", dobj.bmp_id);
+    print_line_len(renderer, buf, 320, 200, BUF_MAX);
+    gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes;
+    render_entry_as_image(OBJEX_GFF_INDEX, GFF_BMP, dobj.bmp_id, pal, 340, 220);
 }

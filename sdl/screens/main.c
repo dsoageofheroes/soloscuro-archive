@@ -15,7 +15,7 @@ void main_init(SDL_Renderer *renderer) {
 
 void main_render(void *data, SDL_Renderer *renderer) {
     // Uncomment to see...
-    //SDL_RenderCopy(renderer, background, NULL, &background_loc);
+    SDL_RenderCopy(renderer, background, NULL, &background_loc);
 }
 
 int main_handle_mouse_movement(const uint32_t x, const uint32_t y) {

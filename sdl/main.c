@@ -4,10 +4,12 @@
 #include "player.h"
 #include "screen-manager.h"
 #include "gameloop.h"
+#include "screens/narrate.h"
 #include "../src/dsl.h"
 #include "../src/replay.h"
 
 void browse_loop(SDL_Surface*, SDL_Renderer *rend);
+void screen_loop(SDL_Surface *sur, SDL_Renderer *rend, const char *arg);
 
 static uint32_t last_tick = 0;
 static const uint32_t TICK_AMT = 1000 / TICKS_PER_SEC;// Not fully correct...
@@ -122,8 +124,9 @@ static void init(int args, char *argv[]) {
 
     last_tick = SDL_GetTicks();
 
-    screen_init(renderer);
     gameloop_init();
+
+    screen_init(renderer);
 
     for (int i = 0; i < args; i++) {
         if (!strcmp(argv[i], "--browse") && i < (args)) {
@@ -131,7 +134,19 @@ static void init(int args, char *argv[]) {
             browse_loop(screen, renderer);
             exit(1);
         }
+        if (!strcmp(argv[i], "--screen") && i < (args - 1)) {
+            printf("Entering screen mode!\n");
+            screen_loop(screen, renderer, argv[i + 1]);
+            exit(1);
+        }
     }
+
+    // Start the main game.
+    screen_load_screen(renderer, 2, &narrate_screen);
+    screen_load_region(renderer);
+
+    player_init();
+    player_load_graphics(renderer);
 }
 
 static void cleanup() {

@@ -3,8 +3,6 @@
 #include "animate.h"
 #include "player.h"
 #include "../src/dsl.h"
-#include "screens/main.h"
-#include "screens/narrate.h"
 
 #define MAX_SCREENS (10)
 
@@ -21,22 +19,35 @@ void screen_init(SDL_Renderer *renderer) {
     }
 
     animate_init();
+}
+
+void screen_load_screen(SDL_Renderer *renderer, int layer, sops_t *screen) {
+    if (layer < 0 || layer > MAX_SCREENS) { return; }
+
+    if (screens[layer].render) {
+        // cleanup?
+    }
+
+    screens[layer].render = NULL;
+    screens[layer].mouse_movement = NULL;
+    screens[layer].mouse_click = NULL;
+    screens[layer].mouse_click = NULL;
+
+    screens[layer] = *screen;
+
+    if (screens[layer].init) {
+        screens[layer].init(renderer);
+    }
+}
+
+void screen_load_region(SDL_Renderer *renderer) {
     // Map is a special case.
     map_init(&cmap);
     map_load_region(&cmap, renderer, gff_find_index("rgn2a.gff"));
 
     screens[0] = map_screen;
     screens[0].data = NULL;
-    screens[1] = main_screen;
-    screens[2] = narrate_screen;
-
-    for (int i = 0; i < MAX_SCREENS; i++) {
-        if (screens[i].init) {
-            screens[i].init(renderer);
-        }
-    }
-    player_init();
-    player_load_graphics(renderer);
+    //screens[0].init(renderer);
 }
 
 void screen_render(SDL_Renderer *renderer, const uint32_t xmappos, const uint32_t ymappos) {
