@@ -9,7 +9,7 @@
 #include "../src/replay.h"
 
 void browse_loop(SDL_Surface*, SDL_Renderer *rend);
-void screen_loop(SDL_Surface *sur, SDL_Renderer *rend, const char *arg);
+void screen_debug_init(SDL_Surface *sur, SDL_Renderer *rend, const char *arg);
 
 static uint32_t last_tick = 0;
 static const uint32_t TICK_AMT = 1000 / TICKS_PER_SEC;// Not fully correct...
@@ -136,8 +136,10 @@ static void init(int args, char *argv[]) {
         }
         if (!strcmp(argv[i], "--screen") && i < (args - 1)) {
             printf("Entering screen mode!\n");
-            screen_loop(screen, renderer, argv[i + 1]);
-            exit(1);
+            screen_debug_init(screen, renderer, argv[i + 1]);
+            //screen_loop();
+            //exit(1);
+            return;
         }
     }
 
