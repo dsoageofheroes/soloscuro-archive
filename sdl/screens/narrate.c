@@ -73,6 +73,7 @@ void load_portraits(SDL_Renderer *renderer) {
             4*w, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
         portraits[id] = SDL_CreateTextureFromSurface(renderer, surface);
         SDL_FreeSurface(surface);
+        free(data);
         portraits_loc[id].w = 2 * w;
         portraits_loc[id].h = 2 * h;
         portraits_loc[id].x = STARTX + 26;
@@ -108,6 +109,7 @@ static void create_font(SDL_Renderer *renderer) {
         font_locs[c].w *= 2;
         font_locs[c].h *= 2;
         SDL_FreeSurface(surface);
+        free(data);
     }
     free(dsfont);
 }
@@ -242,7 +244,7 @@ int narrate_handle_mouse_movement(const uint32_t x, const uint32_t y) {
     return 0; // zero means I did not handle the mouse, so another screen may.
 }
 
-int narrate_handle_mouse_click(const uint32_t x, const uint32_t y) {
+int narrate_handle_mouse_down(const uint32_t x, const uint32_t y) {
     int const height = 18;
     int y_test = 516;
     int option;
@@ -276,12 +278,22 @@ int narrate_handle_mouse_click(const uint32_t x, const uint32_t y) {
 }
 
 void narrate_free() {
+    SDL_DestroyTexture(background);
+    SDL_DestroyTexture(border);
+    for (int i = 0; i < MAX_CHARS; i++) {
+        SDL_DestroyTexture(font_table[i]);
+    }
+    for (int i = 0; i < MAX_PORTRAITS; i++) {
+        SDL_DestroyTexture(portraits[i]);
+    }
 }
 
 sops_t narrate_screen = {
     .init = narrate_init,
+    .cleanup = narrate_free,
     .render = narrate_render,
     .mouse_movement = narrate_handle_mouse_movement,
-    .mouse_click = narrate_handle_mouse_click,
+    .mouse_down = narrate_handle_mouse_down,
+    .mouse_up = NULL,
     .data = NULL
 };

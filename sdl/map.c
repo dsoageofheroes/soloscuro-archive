@@ -16,6 +16,11 @@ void map_init(map_t *map) {
     map->tiles = NULL;
 }
 
+void map_cleanup() {
+    map_free(cmap);
+    cmap = NULL;
+}
+
 void map_free(map_t *map) {
     if (map->tiles) {
         for (int i = 0; i < cmap->region->num_tiles; i++) {
@@ -24,6 +29,7 @@ void map_free(map_t *map) {
         free(map->tiles);
         map->tiles = NULL;
     }
+    dsl_region_free(map->region);
 }
 
 int cmap_is_block(const int row, const int column) {
@@ -171,7 +177,7 @@ int map_handle_mouse(const uint32_t x, const uint32_t y) {
     return 1; // map always intercepts the mouse...
 }
 
-int map_handle_mouse_click(const uint32_t x, const uint32_t y) {
+int map_handle_mouse_down(const uint32_t x, const uint32_t y) {
     region_object_t *obj = NULL;
 
     if (!cmap) { return 0; }
@@ -185,8 +191,10 @@ int map_handle_mouse_click(const uint32_t x, const uint32_t y) {
 
 sops_t map_screen = {
     .init = NULL,
+    .cleanup = map_cleanup,
     .render = map_render,
     .mouse_movement = map_handle_mouse,
-    .mouse_click = map_handle_mouse_click,
+    .mouse_down = map_handle_mouse_down,
+    .mouse_up = NULL,
     .data = NULL
 };

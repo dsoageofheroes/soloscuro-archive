@@ -113,6 +113,7 @@ uint8_t dsl_lua_execute_script(size_t file, size_t addr, uint8_t is_mas) {
             is_mas ? "MAS" : "GPL",
             file, addr);
         printf("error: %s\n", lua_tostring(l, -1));
+        lua_close(l);
         return 0;
     }
     lua_getglobal(l, func);

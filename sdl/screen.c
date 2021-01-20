@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include "gameloop.h"
 #include "screen-manager.h"
-#include "screens/main.h"
+#include "screens/screen-main.h"
 #include "../src/dsl.h"
 
 static SDL_Renderer *renderer = NULL;

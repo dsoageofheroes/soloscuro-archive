@@ -31,12 +31,20 @@ void handle_mouse_motion() {
     screen_handle_mouse(x, y);
 }
 
-void handle_mouse_click() {
+void handle_mouse_down() {
     int x, y;
 
     SDL_GetMouseState(&x, &y);
 
-    screen_handle_mouse_click(x, y);
+    screen_handle_mouse_down(x, y);
+}
+
+void handle_mouse_up() {
+    int x, y;
+
+    SDL_GetMouseState(&x, &y);
+
+    screen_handle_mouse_up(x, y);
 }
 
 void handle_input() {
@@ -59,7 +67,13 @@ void handle_input() {
                 if (game_loop_is_waiting_for(WAIT_NARRATE_CONTINUE)) {
                     game_loop_signal(WAIT_NARRATE_CONTINUE, 0);
                 }
-                handle_mouse_click();
+                handle_mouse_down();
+                break;
+            case SDL_MOUSEBUTTONUP:
+                //if (game_loop_is_waiting_for(WAIT_NARRATE_CONTINUE)) {
+                    //game_loop_signal(WAIT_NARRATE_CONTINUE, 0);
+                //}
+                handle_mouse_up();
                 break;
         }
     }
@@ -102,11 +116,15 @@ void port_init(int argc, char *argv[]) {
 void port_cleanup() {
 }
 
+static int sdl_init(const int what) {
+    return SDL_Init(what);
+}
+
 static void init(int args, char *argv[]) {
     xmappos = 560;
     ymappos = 50;
 
-    if (SDL_Init( SDL_INIT_VIDEO) ) {
+    if (sdl_init( SDL_INIT_VIDEO) ) {
         error( "Unable to init video!\n");
         exit(1);
     }
@@ -154,12 +172,15 @@ static void init(int args, char *argv[]) {
 static void cleanup() {
     screen_free();
 
-    //Destroy window
+    dsl_cleanup();
+    gff_cleanup();
+
+    SDL_DestroyRenderer(renderer);
+    //SDL_DestroySurface(screen);
     SDL_DestroyWindow( win );
 
     //Quit SDL subsystems
     SDL_Quit();
-
 }
 
 static char *ds1_gffs = NULL;
@@ -200,8 +221,6 @@ int main(int argc, char *argv[]) {
 
     cleanup();
     replay_cleanup();
-
-    return 0;
 
     return 0;
 }
@@ -274,4 +293,10 @@ void game_loop() {
             rep_times = 0;
         }
     }
+}
+
+void main_exit_system() {
+    /*
+    */
+    game_loop_signal(WAIT_FINAL, 0);
 }

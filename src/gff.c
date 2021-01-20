@@ -291,7 +291,7 @@ int gff_open(const char *pathName) {
     }
 
     file = fopen(pathName, "rb+");
-    if (!file) { return -1; }
+    if (!file) { free(filename); return -1; }
     fseek(file, 0L, SEEK_SET);
 
     //printf("Detected file size of '%s': %d\n", filename, len);
@@ -306,6 +306,7 @@ int gff_open(const char *pathName) {
     //fclose(file);
     if (is_master_name(filename)) { master_gff = idx; }
 
+    printf("Using %s\n", filename);
     open_files[idx].filename = filename;
     open_files[idx].start_palette_index = gff_get_number_of_palettes();
     create_palettes(idx, &(open_files[idx].num_palettes));
@@ -596,6 +597,7 @@ void gff_cleanup() {
 static void gff_close_file(gff_file_t *gff) {
     if (gff->filename) {
         free(gff->filename);
+        gff->filename = NULL;
     }
     if (gff->map) {
         free(gff->map);

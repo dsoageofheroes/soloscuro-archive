@@ -1,4 +1,5 @@
-#include "main.h"
+#include "screen-main.h"
+#include "../main.h"
 #include "../../src/gff.h"
 #include "../../src/gfftypes.h"
 
@@ -16,6 +17,8 @@ static SDL_Rect load_save_loc =  { 70, 80, 0, 0 };
 static SDL_Rect exit_loc =       { 100, 100, 0, 0 };
 
 static int mousex = 0, mousey = 0;
+static int mouse_down = 0;
+static int count_down = 0;
 
 static void set_zoom(SDL_Rect *loc, float zoom) {
     loc->x *= zoom;
@@ -45,13 +48,34 @@ void main_init(SDL_Renderer *renderer) {
     set_zoom(&exit_loc, 2.0);
 }
 
+static int is_in_rect(SDL_Rect *rect) {
+    return (mousex >= rect->x && mousex <= (rect->x + rect->w)
+        && mousey >= rect->y && mousey <= (rect->y + rect->h));
+}
+
+static void clicked(SDL_Renderer *renderer) {
+    if (is_in_rect(&exit_loc)) {
+        main_exit_system();
+    }
+}
+
 static void render(SDL_Renderer *renderer, SDL_Texture *tex[4], SDL_Rect *rect) {
-    if (mousex >= rect->x && mousex <= (rect->x + rect->w)
-        && mousey >= rect->y && mousey <= (rect->y + rect->h)) {
-        SDL_RenderCopy(renderer, tex[1], NULL, rect);
+    //if (mousex >= rect->x && mousex <= (rect->x + rect->w)
+        //&& mousey >= rect->y && mousey <= (rect->y + rect->h)) {
+    if (is_in_rect(rect)) {
+        if (mouse_down) {
+            SDL_RenderCopy(renderer, tex[3], NULL, rect);
+        } else {
+            if (count_down > 0 && ((count_down / 4) % 2) ) {
+                SDL_RenderCopy(renderer, tex[3], NULL, rect);
+            } else {
+                SDL_RenderCopy(renderer, tex[1], NULL, rect);
+            }
+        }
     } else {
         SDL_RenderCopy(renderer, tex[0], NULL, rect);
     }
+    
 }
 
 void main_render(void *data, SDL_Renderer *renderer) {
@@ -61,6 +85,12 @@ void main_render(void *data, SDL_Renderer *renderer) {
     render(renderer, create_characters, &create_loc);
     render(renderer, load_save, &load_save_loc);
     render(renderer, exit_dos, &exit_loc);
+
+    if (count_down == 1) {
+        clicked(renderer);
+    }
+
+    if (count_down > 0) { count_down--; }
 }
 
 int main_handle_mouse_movement(const uint32_t x, const uint32_t y) {
@@ -69,18 +99,37 @@ int main_handle_mouse_movement(const uint32_t x, const uint32_t y) {
     //return 0; // zero means I did not handle the mouse, so another screen may.
 }
 
-int main_handle_mouse_click(const uint32_t x, const uint32_t y) {
-    //return 1; // means I captured the mouse click
-    return 0; // zero means I did not handle the mouse click, so another screen may.
+int main_handle_mouse_down(const uint32_t x, const uint32_t y) {
+    mouse_down = 1;
+    return 1; // means I captured the mouse click
+    //return 0; // zero means I did not handle the mouse click, so another screen may.
+}
+
+int main_handle_mouse_up(const uint32_t x, const uint32_t y) {
+    mouse_down = 0;
+    count_down = 32;
+    return 1; // means I captured the mouse click
+    //return 0; // zero means I did not handle the mouse click, so another screen may.
 }
 
 void main_free() {
+    SDL_DestroyTexture(sun);
+    SDL_DestroyTexture(background);
+
+    for (int i = 0; i < 4; i++) {
+        SDL_DestroyTexture(start[i]);
+        SDL_DestroyTexture(create_characters[i]);
+        SDL_DestroyTexture(load_save[i]);
+        SDL_DestroyTexture(exit_dos[i]);
+    }
 }
 
 sops_t main_screen = {
     .init = main_init,
+    .cleanup = main_free,
     .render = main_render,
     .mouse_movement = main_handle_mouse_movement,
-    .mouse_click = main_handle_mouse_click,
+    .mouse_down = main_handle_mouse_down,
+    .mouse_up = main_handle_mouse_up,
     .data = NULL
 };

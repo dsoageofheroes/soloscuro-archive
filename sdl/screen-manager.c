@@ -14,7 +14,8 @@ void screen_init(SDL_Renderer *renderer) {
     for (int i = 0; i < MAX_SCREENS; i++) {
         screens[i].render = NULL;
         screens[i].mouse_movement = NULL;
-        screens[i].mouse_click = NULL;
+        screens[i].mouse_down = NULL;
+        screens[i].mouse_up = NULL;
         screens[i].data = NULL;
     }
 
@@ -30,8 +31,8 @@ void screen_load_screen(SDL_Renderer *renderer, int layer, sops_t *screen) {
 
     screens[layer].render = NULL;
     screens[layer].mouse_movement = NULL;
-    screens[layer].mouse_click = NULL;
-    screens[layer].mouse_click = NULL;
+    screens[layer].mouse_up = NULL;
+    screens[layer].mouse_down = NULL;
 
     screens[layer] = *screen;
 
@@ -68,9 +69,17 @@ void screen_handle_mouse(const uint32_t x, const uint32_t y) {
     }
 }
 
-void screen_handle_mouse_click(const uint32_t x, const uint32_t y) {
+void screen_handle_mouse_down(const uint32_t x, const uint32_t y) {
     for (int i = MAX_SCREENS-1; i >= 0; i--) {
-        if (screens[i].mouse_click && screens[i].mouse_click(x, y)) {
+        if (screens[i].mouse_down && screens[i].mouse_down(x, y)) {
+            i = 0; // exit loop, mouse has been handled!
+        }
+    }
+}
+
+void screen_handle_mouse_up(const uint32_t x, const uint32_t y) {
+    for (int i = MAX_SCREENS-1; i >= 0; i--) {
+        if (screens[i].mouse_up && screens[i].mouse_up(x, y)) {
             i = 0; // exit loop, mouse has been handled!
         }
     }
@@ -89,9 +98,15 @@ SDL_Texture* create_texture(SDL_Renderer *renderer, const uint32_t gff_file,
             0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
     ret = SDL_CreateTextureFromSurface(renderer, surface);
     SDL_FreeSurface(surface);
+    free(data);
     return ret;
 }
 
 void screen_free() {
+    for (int i = 0; i < MAX_SCREENS; i++) {
+        if (screens[i].cleanup) {
+            screens[i].cleanup();
+        }
+    }
     animate_close();
 }
