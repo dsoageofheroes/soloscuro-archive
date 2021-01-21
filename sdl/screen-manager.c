@@ -22,7 +22,7 @@ void screen_init(SDL_Renderer *renderer) {
     animate_init();
 }
 
-void screen_load_screen(SDL_Renderer *renderer, int layer, sops_t *screen) {
+void screen_load_screen(SDL_Renderer *renderer, int layer, sops_t *screen, const uint32_t x, const uint32_t y) {
     if (layer < 0 || layer > MAX_SCREENS) { return; }
 
     if (screens[layer].render) {
@@ -37,7 +37,7 @@ void screen_load_screen(SDL_Renderer *renderer, int layer, sops_t *screen) {
     screens[layer] = *screen;
 
     if (screens[layer].init) {
-        screens[layer].init(renderer);
+        screens[layer].init(renderer, x, y, 2.0);
     }
 }
 

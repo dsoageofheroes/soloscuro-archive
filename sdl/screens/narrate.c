@@ -114,7 +114,7 @@ static void create_font(SDL_Renderer *renderer) {
     free(dsfont);
 }
 
-void narrate_init(SDL_Renderer *renderer) {
+void narrate_init(SDL_Renderer *renderer, const uint32_t x, const uint32_t y, const float zoom) {
     uint32_t palette_id = gff_get_palette_id(RESOURCE_GFF_INDEX, 0);
     background = create_texture(renderer, RESOURCE_GFF_INDEX, GFF_BMP, 3007, 0, palette_id, &background_loc);
     border = create_texture(renderer, RESOURCE_GFF_INDEX, GFF_BMP, 12000, 0, palette_id, &border_loc);

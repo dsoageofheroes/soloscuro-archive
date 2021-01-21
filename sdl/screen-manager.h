@@ -5,7 +5,7 @@
 
 // sops = Screen OPerationS
 typedef struct sops_s{
-    void (*init) (SDL_Renderer*);
+    void (*init) (SDL_Renderer*, const uint32_t x, const uint32_t y, const float zoom);
     void (*cleanup) ();
     void (*render) (void*, SDL_Renderer*);
     int (*mouse_movement) (const uint32_t x, const uint32_t y);
@@ -16,7 +16,7 @@ typedef struct sops_s{
 
 void screen_init(SDL_Renderer *renderer);
 void screen_render(SDL_Renderer *renderer, const uint32_t xmappos, const uint32_t ymappos);
-void screen_load_screen(SDL_Renderer *renderer, int layer, sops_t *screen);
+void screen_load_screen(SDL_Renderer *renderer, int layer, sops_t *screen, const uint32_t x, const uint32_t y);
 void screen_handle_mouse(const uint32_t x, const uint32_t y);
 void screen_handle_mouse_down(const uint32_t x, const uint32_t y);
 void screen_handle_mouse_up(const uint32_t x, const uint32_t y);

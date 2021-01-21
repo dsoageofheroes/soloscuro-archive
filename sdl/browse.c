@@ -242,7 +242,7 @@ static void browse_tick() {
 void browse_loop(SDL_Surface *surface, SDL_Renderer *rend) {
     renderer = rend;
 
-    narrate_init(renderer); // to setup print_line
+    narrate_init(renderer, 0, 0, 2.0); // to setup print_line
 
     browse_render();
     move_gff_cursor(1);

@@ -9,12 +9,16 @@ static SDL_Texture* start[4] = {NULL, NULL, NULL, NULL};
 static SDL_Texture* create_characters[4] = {NULL, NULL, NULL, NULL};
 static SDL_Texture* load_save[4] = {NULL, NULL, NULL, NULL};
 static SDL_Texture* exit_dos[4] = {NULL, NULL, NULL, NULL};
-static SDL_Rect sun_loc =        { 55, 0, 0, 0 };
-static SDL_Rect background_loc = { 10, 20, 0, 0 };
-static SDL_Rect start_loc =      { 100, 45, 0, 0 };
-static SDL_Rect create_loc =     { 55, 62, 0, 0 };
-static SDL_Rect load_save_loc =  { 70, 80, 0, 0 };
-static SDL_Rect exit_loc =       { 100, 100, 0, 0 };
+
+static SDL_Rect initial_locs[] = {{ 45, 0, 0, 0 }, // sun
+                                  { 0, 20, 0, 0 }, // background
+                                  { 90, 45, 0, 0 }, // start
+                                  { 45, 62, 0, 0 }, // create
+                                  { 60, 80, 0, 0 }, // load save
+                                  { 90, 100, 0, 0 }, // exit
+};
+
+static SDL_Rect sun_loc, background_loc, start_loc, create_loc, load_save_loc, exit_loc;
 
 static int mousex = 0, mousey = 0;
 static int mouse_down = 0;
@@ -27,8 +31,22 @@ static void set_zoom(SDL_Rect *loc, float zoom) {
     loc->h *= zoom;
 }
 
-void main_init(SDL_Renderer *renderer) {
+static SDL_Rect apply_params(const SDL_Rect rect, const uint32_t x, const uint32_t y) {
+    SDL_Rect ret = {rect.x + x, rect.y + y, rect.w, rect.h};
+    return ret;
+}
+
+void main_init(SDL_Renderer *renderer, const uint32_t x, const uint32_t y, const float zoom) {
     uint32_t palette_id = gff_get_palette_id(RESOURCE_GFF_INDEX, 0);
+
+    printf("-------------x = %d------------\n", x);
+
+    sun_loc = apply_params(initial_locs[0], x, y);
+    background_loc = apply_params(initial_locs[1], x, y);
+    start_loc = apply_params(initial_locs[2], x, y);
+    create_loc = apply_params(initial_locs[3], x, y);
+    load_save_loc = apply_params(initial_locs[4], x, y);
+    exit_loc = apply_params(initial_locs[5], x, y);
 
     sun = create_texture(renderer, RESOURCE_GFF_INDEX, GFF_BMP, 20028, 0, palette_id, &sun_loc);
     background = create_texture(renderer, RESOURCE_GFF_INDEX, GFF_BMP, 20029, 0, palette_id, &background_loc);
@@ -40,12 +58,12 @@ void main_init(SDL_Renderer *renderer) {
         exit_dos[i] = create_texture(renderer, RESOURCE_GFF_INDEX, GFF_ICON, 2051, i, palette_id, &exit_loc);
     }
 
-    set_zoom(&sun_loc, 2.0);
-    set_zoom(&background_loc, 2.0);
-    set_zoom(&start_loc, 2.0);
-    set_zoom(&create_loc, 2.0);
-    set_zoom(&load_save_loc, 2.0);
-    set_zoom(&exit_loc, 2.0);
+    set_zoom(&sun_loc, zoom);
+    set_zoom(&background_loc, zoom);
+    set_zoom(&start_loc, zoom);
+    set_zoom(&create_loc, zoom);
+    set_zoom(&load_save_loc, zoom);
+    set_zoom(&exit_loc, zoom);
 }
 
 static int is_in_rect(SDL_Rect *rect) {

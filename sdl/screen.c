@@ -11,7 +11,7 @@ static SDL_Surface *surface = NULL;
 
 void load_screen(const char *arg) {
     if (!strcmp(arg, "main")) {
-        screen_load_screen(renderer, 1, &main_screen);
+        screen_load_screen(renderer, 1, &main_screen, 10, 10);
     }
 }
 

@@ -129,6 +129,7 @@ static void init(int args, char *argv[]) {
         exit(1);
     }
     win = SDL_CreateWindow( "Dark Sun: Shattered Lands", SDL_WINDOWPOS_UNDEFINED,
+        //SDL_WINDOWPOS_UNDEFINED, 2*320, 2*200, SDL_WINDOW_SHOWN );
         SDL_WINDOWPOS_UNDEFINED, 800, 600, SDL_WINDOW_SHOWN );
     if( win == NULL ) {
         error( "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
@@ -162,7 +163,7 @@ static void init(int args, char *argv[]) {
     }
 
     // Start the main game.
-    screen_load_screen(renderer, 2, &narrate_screen);
+    screen_load_screen(renderer, 2, &narrate_screen, 0, 0);
     screen_load_region(renderer);
 
     player_init();
