@@ -3,6 +3,7 @@
 #include "animate.h"
 #include "player.h"
 #include "sprite.h"
+#include "font.h"
 #include "../src/dsl.h"
 
 #define MAX_SCREENS (10)
@@ -13,6 +14,8 @@ static uint32_t screen_pos = 0;
 static map_t cmap;
 
 void screen_init(SDL_Renderer *renderer) {
+    font_init(renderer);
+
     sprite_init();
 
     for (int i = 0; i < MAX_SCREENS; i++) {

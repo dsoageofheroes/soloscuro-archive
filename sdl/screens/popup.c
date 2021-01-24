@@ -1,12 +1,14 @@
 #include "popup.h"
 #include "narrate.h"
 #include "../sprite.h"
+#include "../font.h"
 #include "../../src/gff.h"
 #include "../../src/gfftypes.h"
 
 static uint16_t background, popup_return, option[3];
 static char main_text[32], option_text[3][32];
 static uint8_t selection = POPUP_NOTHING;
+static font_t option_font[3];
 
 SDL_Rect main_loc, option_loc[3];
 
@@ -60,6 +62,10 @@ void popup_init(SDL_Renderer *renderer, const uint32_t x, const uint32_t y, cons
     option_loc[1] = setup_loc(initial_locs[2], x, y, zoom);
     option_loc[2] = setup_loc(initial_locs[3], x, y, zoom);
 
+    option_font[0] = FONT_BLACK;
+    option_font[1] = FONT_BLACK;
+    option_font[2] = FONT_BLACK;
+
     selection = POPUP_NOTHING;
 }
 
@@ -70,10 +76,10 @@ void popup_render(void *data, SDL_Renderer *renderer) {
     sprite_render(renderer, option[1]);
     sprite_render(renderer, option[2]);
 
-    print_line_len(renderer, main_text, main_loc.x, main_loc.y, sizeof(main_text));
-    print_line_len(renderer, option_text[0], option_loc[0].x, option_loc[0].y, sizeof(option_text[0]));
-    print_line_len(renderer, option_text[1], option_loc[1].x, option_loc[1].y, sizeof(option_text[1]));
-    print_line_len(renderer, option_text[2], option_loc[2].x, option_loc[2].y, sizeof(option_text[2]));
+    print_line_len(renderer, FONT_GREY, main_text, main_loc.x, main_loc.y, sizeof(main_text));
+    print_line_len(renderer, option_font[0], option_text[0], option_loc[0].x, option_loc[0].y, sizeof(option_text[0]));
+    print_line_len(renderer, option_font[1], option_text[1], option_loc[1].x, option_loc[1].y, sizeof(option_text[1]));
+    print_line_len(renderer, option_font[2], option_text[2], option_loc[2].x, option_loc[2].y, sizeof(option_text[2]));
 }
 
 static int get_sprite_mouse_is_on(const uint32_t x, const uint32_t y) {
@@ -91,9 +97,15 @@ int popup_handle_mouse_movement(const uint32_t x, const uint32_t y) {
     uint16_t cur_sprite = get_sprite_mouse_is_on(x, y);
 
     if (last_sprite != cur_sprite) {
+        if (cur_sprite == option[0]) { option_font[0] = FONT_RED; }
+        if (cur_sprite == option[1]) { option_font[1] = FONT_RED; }
+        if (cur_sprite == option[2]) { option_font[2] = FONT_RED; }
         sprite_set_frame(cur_sprite, sprite_get_frame(cur_sprite) + 1);
         if (last_sprite != SPRITE_ERROR) {
             sprite_set_frame(last_sprite, sprite_get_frame(last_sprite) - 1);
+            if (last_sprite == option[0]) { option_font[0] = FONT_BLACK; }
+            if (last_sprite == option[1]) { option_font[1] = FONT_BLACK; }
+            if (last_sprite == option[2]) { option_font[2] = FONT_BLACK; }
         }
     }
     

@@ -4,6 +4,7 @@
 #include "../../src/gff.h"
 #include "../../src/gfftypes.h"
 #include "../gameloop.h"
+#include "../font.h"
 
 #define STARTX (60)
 #define MAX_CHARS (256)
@@ -17,8 +18,6 @@ static SDL_Rect background_loc = { STARTX + 0, 0, 0, 0 };
 static SDL_Rect menu_loc =       { STARTX + 0, 480, 0, 0 };
 static SDL_Texture *border = NULL;
 static SDL_Rect border_loc = { STARTX + 10, 10, 0, 0 };
-static SDL_Texture *font_table[MAX_CHARS];
-static SDL_Rect font_locs[MAX_CHARS];
 
 static SDL_Texture *portraits[MAX_PORTRAITS];
 static SDL_Rect portraits_loc[MAX_PORTRAITS];
@@ -55,8 +54,6 @@ void load_portraits(SDL_Renderer *renderer) {
     unsigned int num_ids = gff_get_resource_length(DSLDATA_GFF_INDEX, GFF_PORT);
     memset(portraits_loc, 0x0, sizeof(SDL_Rect) * MAX_PORTRAITS);
     memset(portraits, 0x0, sizeof(SDL_Texture*) * MAX_PORTRAITS);
-    memset(font_table, 0x0, sizeof(SDL_Texture*) * MAX_CHARS);
-    memset(font_locs, 0x0, sizeof(SDL_Rect) * MAX_CHARS);
     memset(narrate_text, 0x0, sizeof(char) * MAX_TEXT);
     memset(menu_options, 0x0, sizeof(char) * MAX_LINE * MAX_OPTIONS);
 
@@ -83,37 +80,6 @@ void load_portraits(SDL_Renderer *renderer) {
     if (ids) { free(ids); }
 }
 
-static void create_font(SDL_Renderer *renderer) {
-    char *data = NULL;
-    SDL_Surface *surface = NULL;
-    ds_char_t *ds_char = NULL;
-    uint32_t fg_color = 0xFFFF00FF;
-    uint32_t bg_color = 0x000000FF;
-    gff_chunk_header_t chunk = gff_find_chunk_header(RESOURCE_GFF_INDEX, GFF_FONT, 100);
-    ds_font_t *dsfont = malloc(chunk.length);
-
-    if (!dsfont) {
-        error ("unable to malloc for font!\n");
-        exit(1);
-    }
-
-    gff_read_chunk(RESOURCE_GFF_INDEX, &chunk, dsfont, chunk.length);
-    for (int c = 0; c < MAX_CHARS; c++ ) {
-        ds_char = (ds_char_t*)(((uint8_t*)dsfont) + dsfont->char_offset[c]);
-        data = (char*)create_font_rgba(RESOURCE_GFF_INDEX, c, fg_color, bg_color);
-        font_locs[c].w = ds_char->width;
-        font_locs[c].h = dsfont->height;
-        surface = SDL_CreateRGBSurfaceFrom(data, font_locs[c].w, font_locs[c].h, 32, 4*font_locs[c].w,
-                0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
-        font_table[c] = SDL_CreateTextureFromSurface(renderer, surface);
-        font_locs[c].w *= 2;
-        font_locs[c].h *= 2;
-        SDL_FreeSurface(surface);
-        free(data);
-    }
-    free(dsfont);
-}
-
 void narrate_init(SDL_Renderer *renderer, const uint32_t x, const uint32_t y, const float zoom) {
     uint32_t palette_id = gff_get_palette_id(RESOURCE_GFF_INDEX, 0);
     background = create_texture(renderer, RESOURCE_GFF_INDEX, GFF_BMP, 3007, 0, palette_id, &background_loc);
@@ -125,22 +91,8 @@ void narrate_init(SDL_Renderer *renderer, const uint32_t x, const uint32_t y, co
     border_loc.w *= 2;
     border_loc.h *= 2;
     load_portraits(renderer);
-    create_font(renderer);
     SDL_SetTextureAlphaMod( background, 192 );
     display = 0; // start off as off
-}
-
-void print_line_len(SDL_Renderer *renderer, const char *text, size_t x, size_t y, const uint32_t len) {
-    size_t c;
-    if (text == NULL) { return; }
-    for (int i = 0; text[i] && i < len; i++) {
-        c = text[i];
-        font_locs[c].x = x;
-        font_locs[c].y = y;
-        SDL_RenderCopy(renderer, font_table[c], NULL, &font_locs[c]);
-        x += font_locs[c].w;
-        //debug("Need to print '%c'\n", i);
-    }
 }
 
 void print_text(SDL_Renderer *renderer) {
@@ -151,7 +103,7 @@ void print_text(SDL_Renderer *renderer) {
     while (i < text_pos) {
         amt = len;
         while (i + amt < text_pos && amt > 0 && narrate_text[i + amt] != ' ') { amt--; }
-        print_line_len(renderer, narrate_text + i, 200, y, amt);
+        print_line_len(renderer, 0, narrate_text + i, 200, y, amt);
         i += amt;
         while (isspace(narrate_text[i])) { i++; }
         y += 16;
@@ -162,7 +114,7 @@ void print_menu(SDL_Renderer *renderer) {
     size_t x = 140, y = 490;
     SDL_RenderCopy(renderer, background, NULL, &menu_loc);
     for (int i = 0; i < MAX_OPTIONS; i++) {
-        print_line_len(renderer, menu_options[i], x, y, 0x7FFFFFFF);
+        print_line_len(renderer, 0, menu_options[i], x, y, 0x7FFFFFFF);
         y += 20;
     }
 }
@@ -280,9 +232,6 @@ int narrate_handle_mouse_down(const uint32_t button, const uint32_t x, const uin
 void narrate_free() {
     SDL_DestroyTexture(background);
     SDL_DestroyTexture(border);
-    for (int i = 0; i < MAX_CHARS; i++) {
-        SDL_DestroyTexture(font_table[i]);
-    }
     for (int i = 0; i < MAX_PORTRAITS; i++) {
         SDL_DestroyTexture(portraits[i]);
     }

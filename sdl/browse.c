@@ -1,6 +1,7 @@
 #include <SDL2/SDL.h>
 #include <stdio.h>
 #include "map.h"
+#include "font.h"
 #include "screens/narrate.h"
 #include "gameloop.h"
 #include "../src/dsl.h"
@@ -165,12 +166,12 @@ static void print_menu() {
     int row = 0;
     SDL_Rect rect;
 
-    print_line_len(renderer, "GFFs:", 20, 20, 1<<12);
+    print_line_len(renderer, 0, "GFFs:", 20, 20, 1<<12);
 
     row_max = 0;
     for (int i = 0; i < NUM_FILES; i++) {
         if (open_files[i].filename) {
-            print_line_len(renderer, open_files[i].filename, 20, 40 + row++ * 20, 1<<12);
+            print_line_len(renderer, 0, open_files[i].filename, 20, 40 + row++ * 20, 1<<12);
             row_max++;
         }
     }
@@ -201,11 +202,11 @@ static void print_gff_entries() {
     if (entry_idx >= entry_max) { entry_idx = entry_max - 1; }
 
     snprintf(buf, BUF_MAX, "ENTRIES:");
-    print_line_len(renderer, buf, 220, 20, BUF_MAX);
+    print_line_len(renderer, 0, buf, 220, 20, BUF_MAX);
     for (int i = 0; i < entry_max; i++) {
         get_gff_type_name(gff_get_type_id(gff_idx, i), buf);
         buf[4] = '\0';
-        print_line_len(renderer, buf, 220, 40 + 20 * i, BUF_MAX);
+        print_line_len(renderer, 0, buf, 220, 40 + 20 * i, BUF_MAX);
     }
 
     SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0x00, SDL_ALPHA_OPAQUE);
@@ -278,7 +279,7 @@ void browse_loop(SDL_Surface *surface, SDL_Renderer *rend) {
 static void print_para_len(SDL_Renderer *renderer, const char *str,
         const int x, const int y, const int w, const int len) {
     for (int s = 0; s < len; s += w) {
-        print_line_len(renderer, str + s, x, y + (20 * s/w),
+        print_line_len(renderer, 0, str + s, x, y + (20 * s/w),
                 s + w < len ? w : len - s - 1);
     }
 }
@@ -325,7 +326,7 @@ static void render_entry() {
         case GFF_ETAB: render_entry_etab(); break;
         default:
             render_entry_header();
-            print_line_len(renderer, "Need to implement", 320, 40, 128);
+            print_line_len(renderer, 0, "Need to implement", 320, 40, 128);
     }
 }
 
@@ -338,7 +339,7 @@ static void render_entry_header() {
         (type >> 16) & 0x000000FF,
         (type >> 24) & 0x000000FF
         );
-    print_line_len(renderer, buf, 320, 20, BUF_MAX);
+    print_line_len(renderer, 0, buf, 320, 20, BUF_MAX);
 }
 
 static void render_entry_as_text(const int type_id) {
@@ -378,7 +379,7 @@ static void render_entry_as_image(const int gff_idx, const int type_id, const in
     }
 
     snprintf(buf, BUF_MAX-1, "current frame: %d, total frames: %d\n", cframe, cimg->frame_num);
-    print_line_len(renderer, buf, x, y, BUF_MAX);
+    print_line_len(renderer, 0, buf, x, y, BUF_MAX);
     unsigned char* data = get_frame_rgba_palette_img(cimg, cframe, pal);
     loc.w = get_frame_width(gff_idx, type_id, res_id, cframe);
     loc.h = get_frame_height(gff_idx, type_id, res_id, cframe);
@@ -429,10 +430,10 @@ static void render_entry_tile() {
 static void render_entry_rdat() {
     static char buf[BUF_MAX];
     snprintf(buf, BUF_MAX, "RESOURCE %d of %d \n", res_idx, res_max - 1);
-    print_line_len(renderer, buf, 320, 20, BUF_MAX);
+    print_line_len(renderer, 0, buf, 320, 20, BUF_MAX);
     gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_RDAT, res_ids[res_idx]);
     gff_read_chunk(gff_idx, &chunk, buf, BUF_MAX);
-    print_line_len(renderer, buf, 320, 40, chunk.length);
+    print_line_len(renderer, 0, buf, 320, 40, chunk.length);
 }
 */
 
@@ -447,8 +448,8 @@ static void render_entry_name() {
     }
 
     snprintf(buf, BUF_MAX, "RESOURCE %d of %d \n", res_idx, res_max - 1);
-    print_line_len(renderer, buf, 320, 20, BUF_MAX);
-    print_line_len(renderer, names + 25*res_idx, 320, 40, BUF_MAX);
+    print_line_len(renderer, 0, buf, 320, 20, BUF_MAX);
+    print_line_len(renderer, 0, names + 25*res_idx, 320, 40, BUF_MAX);
 }
 
 static void render_entry_ojff() {
@@ -459,19 +460,19 @@ static void render_entry_ojff() {
     render_entry_header();
 
     gff_read_chunk(gff_idx, &chunk, &disk_obj, chunk.length);
-    print_line_len(renderer, "Disk Object:", 320, 40, BUF_MAX);
+    print_line_len(renderer, 0, "Disk Object:", 320, 40, BUF_MAX);
     snprintf(buf, BUF_MAX, "offset = (%d, %d)", disk_obj.xoffset, disk_obj.yoffset);
-    print_line_len(renderer, buf, 320, 60, BUF_MAX);
+    print_line_len(renderer, 0, buf, 320, 60, BUF_MAX);
     snprintf(buf, BUF_MAX, "pos = (%d, %d, %d)", disk_obj.xpos, disk_obj.ypos, disk_obj.zpos);
-    print_line_len(renderer, buf, 320, 80, BUF_MAX);
+    print_line_len(renderer, 0, buf, 320, 80, BUF_MAX);
     snprintf(buf, BUF_MAX, "flags = 0x%x", disk_obj.flags);
-    print_line_len(renderer, buf, 320, 100, BUF_MAX);
+    print_line_len(renderer, 0, buf, 320, 100, BUF_MAX);
     snprintf(buf, BUF_MAX, "object_index = %d", disk_obj.object_index);
-    print_line_len(renderer, buf, 320, 120, BUF_MAX);
+    print_line_len(renderer, 0, buf, 320, 120, BUF_MAX);
     snprintf(buf, BUF_MAX, "bmp_id = %d", disk_obj.bmp_id);
-    print_line_len(renderer, buf, 320, 140, BUF_MAX);
+    print_line_len(renderer, 0, buf, 320, 140, BUF_MAX);
     snprintf(buf, BUF_MAX, "script_id = %d", disk_obj.script_id);
-    print_line_len(renderer, buf, 320, 160, BUF_MAX);
+    print_line_len(renderer, 0, buf, 320, 160, BUF_MAX);
 }
 
 static void render_entry_as_pal(const int type_id) {
@@ -507,7 +508,7 @@ static void render_entry_cpal() {
 
 static void render_entry_monr() {
     render_entry_header();
-    print_line_len(renderer, "Need to implement", 320, 40, 128);
+    print_line_len(renderer, 0, "Need to implement", 320, 40, 128);
 }
 
 const char* rdff_type_names[] = {
@@ -529,78 +530,78 @@ const char *so_object_names[] = {
 static void print_combat(ds1_combat_t combat, int pos) {
     char buf[BUF_MAX];
     snprintf(buf, BUF_MAX, "Name: %s\n", combat.name);
-    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     snprintf(buf, BUF_MAX, "HP: %d\n", combat.hp);
-    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     snprintf(buf, BUF_MAX, "PSP: %d\n", combat.psp);
-    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     //snprintf(buf, BUF_MAX, "Character Index: %d\n", combat.char_index);
-    //print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    //print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     snprintf(buf, BUF_MAX, "ID: %d\n", combat.id);
-    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     //snprintf(buf, BUF_MAX, "Weapon: %d\n", combat.weapon_index);
-    //print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    //print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     //snprintf(buf, BUF_MAX, "Packed: %d\n", combat.pack_index);
-    //print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    //print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     snprintf(buf, BUF_MAX, "Special Attack: %d\n", combat.special_attack);
-    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     snprintf(buf, BUF_MAX, "Special Defense: %d\n", combat.special_defense);
-    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     snprintf(buf, BUF_MAX, "Icon: %d\n", combat.icon);
-    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     snprintf(buf, BUF_MAX, "AC: %d\n", combat.ac);
-    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     snprintf(buf, BUF_MAX, "move: %d\n", combat.move);
-    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     snprintf(buf, BUF_MAX, "status: %d\n", combat.status);
-    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     snprintf(buf, BUF_MAX, "allegiance: %d\n", combat.allegiance);
-    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     snprintf(buf, BUF_MAX, "data: %d\n", combat.data);
-    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     snprintf(buf, BUF_MAX, "thac0: %d\n", combat.thac0);
-    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     snprintf(buf, BUF_MAX, "priority: %d\n", combat.priority);
-    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     snprintf(buf, BUF_MAX, "str: %d, dex: %d\n, con: %d",
        combat.stats.STR, combat.stats.DEX, combat.stats.CON);
-    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     snprintf(buf, BUF_MAX, "int: %d, wis: %d\n, cha: %d",
        combat.stats.INT, combat.stats.WIS, combat.stats.CHA);
-    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
-    print_line_len(renderer, "Not Shown: weapon, packed, character id", 320, pos, 128); pos += 20;
+    print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
+    print_line_len(renderer, 0, "Not Shown: weapon, packed, character id", 320, pos, 128); pos += 20;
 }
 
 static void print_item(ds1_item_t item, int pos) {
     char buf[BUF_MAX];
     snprintf(buf, BUF_MAX, "id: %d\n", item.id);
-    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     snprintf(buf, BUF_MAX, "quantity: %d\n", item.quantity);
-    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     snprintf(buf, BUF_MAX, "next: %d\n", item.next);
-    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     snprintf(buf, BUF_MAX, "value: %d\n", item.value);
-    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     snprintf(buf, BUF_MAX, "pack index: %d\n", item.pack_index);
-    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     snprintf(buf, BUF_MAX, "item index: %d\n", item.item_index);
-    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     snprintf(buf, BUF_MAX, "Icon: %d\n", item.icon);
-    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     snprintf(buf, BUF_MAX, "charges: %d\n", item.charges);
-    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     snprintf(buf, BUF_MAX, "special: %d\n", item.special);
-    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     snprintf(buf, BUF_MAX, "priority: %d\n", item.priority);
-    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     snprintf(buf, BUF_MAX, "slot: %d\n", item.slot);
-    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     snprintf(buf, BUF_MAX, "name_index: %d\n", item.name_index);
-    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     snprintf(buf, BUF_MAX, "bonus: %d\n", item.bonus);
-    print_line_len(renderer, buf, 320, pos, 128); pos += 20;
+    print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     /*
-    print_line_len(renderer, "Not Shown: weapon, packed, character id", 320, pos, 128); pos += 20;
+    print_line_len(renderer, 0, "Not Shown: weapon, packed, character id", 320, pos, 128); pos += 20;
     */
 }
 
@@ -621,19 +622,19 @@ static void render_entry_rdff() {
     gff_read_chunk(gff_idx, &chunk, rdff, chunk.length);
     //printf("res_ids[%d] = %d\n", res_idx, res_ids[res_idx]);
     snprintf(buf, BUF_MAX, "load action: %d\n", rdff->load_action);
-    print_line_len(renderer, buf, 320, 40, 128);
+    print_line_len(renderer, 0, buf, 320, 40, 128);
     snprintf(buf, BUF_MAX, "blocknum: %d\n", rdff->blocknum);
-    print_line_len(renderer, buf, 320, 60, 128);
+    print_line_len(renderer, 0, buf, 320, 60, 128);
     snprintf(buf, BUF_MAX, "type: %s\n", rdff_type_names[rdff->type]);
-    print_line_len(renderer, buf, 320, 80, 128);
+    print_line_len(renderer, 0, buf, 320, 80, 128);
     snprintf(buf, BUF_MAX, "index: %d\n", rdff->index);
-    print_line_len(renderer, buf, 320, 100, 128);
+    print_line_len(renderer, 0, buf, 320, 100, 128);
     snprintf(buf, BUF_MAX, "from: %d\n", rdff->index);
-    print_line_len(renderer, buf, 320, 120, 128);
+    print_line_len(renderer, 0, buf, 320, 120, 128);
     snprintf(buf, BUF_MAX, "len: %d\n", rdff->len);
-    print_line_len(renderer, buf, 320, 140, 128);
-    print_line_len(renderer, "-----------------------", 320, 160, 128);
-    print_line_len(renderer, "Jumping to entry:", 320, 180, 128);
+    print_line_len(renderer, 0, buf, 320, 140, 128);
+    print_line_len(renderer, 0, "-----------------------", 320, 160, 128);
+    print_line_len(renderer, 0, "Jumping to entry:", 320, 180, 128);
 
     switch(rdff->type) {
         case RDFF_OBJECT:
@@ -641,22 +642,22 @@ static void render_entry_rdff() {
             rdff++;
             so = gff_create_object((char*)rdff, rdff - 1, -1);
             snprintf(buf, BUF_MAX, "index: %d\n", rdff->index);
-            print_line_len(renderer, buf, 320, 200, 128);
+            print_line_len(renderer, 0, buf, 320, 200, 128);
             snprintf(buf, BUF_MAX, "type: %s\n", so_object_names[so->type]);
-            print_line_len(renderer, buf, 320, 220, 128);
+            print_line_len(renderer, 0, buf, 320, 220, 128);
             if (so->type == SO_DS1_COMBAT) { print_combat(so->data.ds1_combat, 240); }
             if (so->type == SO_DS1_ITEM) { print_item(so->data.ds1_item, 240); }
             break;
         default:
             snprintf(buf, BUF_MAX, "unknown type: %d\n", rdff->type);
-            print_line_len(renderer, buf, 320, 220, 128);
+            print_line_len(renderer, 0, buf, 320, 220, 128);
             break;
     }
     /*
     rdff++;
     while (rdff->load_action != -1 && rdff->load_action < 5) {
         snprintf(buf, BUF_MAX, "load action: %d\n", rdff->load_action);
-        print_line_len(renderer, buf, 320, pos, 128);
+        print_line_len(renderer, 0, buf, 320, pos, 128);
         rdff++;
         pos += 20;
     }
@@ -670,12 +671,12 @@ static void render_entry_font() {
     SDL_Rect loc;
     gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_FONT, res_ids[res_idx]);
     if ((sizeof(ds_font_t) * FONT_NUM) < chunk.length) {
-        print_line_len(renderer, "ERROR font length > font buf, need to fix!", 340, 20, BUF_MAX);
+        print_line_len(renderer, 0, "ERROR font length > font buf, need to fix!", 340, 20, BUF_MAX);
         return;
     }
     gff_read_chunk(gff_idx, &chunk, font, chunk.length);
     snprintf(buf, BUF_MAX, "RESOURCE %d of %d \n", res_idx, res_max - 1);
-    print_line_len(renderer, buf, 320, 20, BUF_MAX);
+    print_line_len(renderer, 0, buf, 320, 20, BUF_MAX);
     for (int c = 0; c < 255; c++) {
         ds_char_t *ds_char = (ds_char_t*)(((uint8_t*)font) + font->char_offset[c]);
         if (ds_char->width) {
@@ -822,29 +823,29 @@ static void render_entry_etab() {
     render_entry_header();
     obj = open_files[gff_idx].entry_table + cobj;
     snprintf(buf, BUF_MAX, "%d of %d etab objects\n", cobj, max_objs);
-    print_line_len(renderer, buf, 320, 40, BUF_MAX);
+    print_line_len(renderer, 0, buf, 320, 40, BUF_MAX);
     snprintf(buf, BUF_MAX, "pos: (%d, %d, %d)\n", obj->xpos, obj->ypos, obj->zpos);
-    print_line_len(renderer, buf, 320, 60, BUF_MAX);
+    print_line_len(renderer, 0, buf, 320, 60, BUF_MAX);
     snprintf(buf, BUF_MAX, "flags: 0x%x\n", obj->flags);
-    print_line_len(renderer, buf, 320, 80, BUF_MAX);
+    print_line_len(renderer, 0, buf, 320, 80, BUF_MAX);
 
     if (!gff_read_object(obj->index, &dobj)) {
         snprintf(buf, BUF_MAX, "Unable to read obj: %d\n", obj->index);
-        print_line_len(renderer, buf, 320, 80, BUF_MAX);
+        print_line_len(renderer, 0, buf, 320, 80, BUF_MAX);
         return;
     }
     snprintf(buf, BUF_MAX, "disk object[%d]: (object_index not displayed.)\n", obj->index);
-    print_line_len(renderer, buf, 320, 100, BUF_MAX);
+    print_line_len(renderer, 0, buf, 320, 100, BUF_MAX);
     snprintf(buf, BUF_MAX, "    .flags = 0x%x\n", dobj.flags);
-    print_line_len(renderer, buf, 320, 120, BUF_MAX);
+    print_line_len(renderer, 0, buf, 320, 120, BUF_MAX);
     snprintf(buf, BUF_MAX, "    .offset = (%d, %d)\n", dobj.xoffset, dobj.yoffset);
-    print_line_len(renderer, buf, 320, 140, BUF_MAX);
+    print_line_len(renderer, 0, buf, 320, 140, BUF_MAX);
     snprintf(buf, BUF_MAX, "    .pos = (%d, %d, %d)\n", dobj.xpos, dobj.ypos, dobj.zpos);
-    print_line_len(renderer, buf, 320, 160, BUF_MAX);
+    print_line_len(renderer, 0, buf, 320, 160, BUF_MAX);
     snprintf(buf, BUF_MAX, "    .script_id = %d\n", dobj.script_id);
-    print_line_len(renderer, buf, 320, 180, BUF_MAX);
+    print_line_len(renderer, 0, buf, 320, 180, BUF_MAX);
     snprintf(buf, BUF_MAX, "    .bmp_id = %d\n", dobj.bmp_id);
-    print_line_len(renderer, buf, 320, 200, BUF_MAX);
+    print_line_len(renderer, 0, buf, 320, 200, BUF_MAX);
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes;
     render_entry_as_image(OBJEX_GFF_INDEX, GFF_BMP, dobj.bmp_id, pal, 340, 220);
 }

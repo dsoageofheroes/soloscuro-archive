@@ -4,6 +4,7 @@
 #include "../../src/gfftypes.h"
 #include "narrate.h"
 #include "popup.h"
+#include "../font.h"
 #include "../sprite.h"
 
 // Sprites
@@ -106,8 +107,8 @@ void view_character_render(void *data, SDL_Renderer *renderer) {
         sprite_render(renderer, ports[i]);
     }
 
-    print_line_len(renderer, description, description_loc.x, description_loc.y, sizeof(description));
-    print_line_len(renderer, message, message_loc.x, message_loc.y, sizeof(message));
+    print_line_len(renderer, FONT_YELLOW, description, description_loc.x, description_loc.y, sizeof(description));
+    print_line_len(renderer, FONT_GREY, message, message_loc.x, message_loc.y, sizeof(message));
 }
 
 static int get_sprite_mouse_is_on(const uint32_t x, const uint32_t y) {
