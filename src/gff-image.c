@@ -128,7 +128,7 @@ static unsigned char* create_initialized_image_rgb(const unsigned int w, const u
     return img;
 }
 
-unsigned char* create_ds1_rgba(unsigned char *chunk, int cpos, const int width, const int height, gff_palette_t *cpal) {
+unsigned char* create_ds1_rgba(unsigned char *chunk, int cpos, const int width, const int height, const gff_palette_t *cpal) {
     int num_rows = 0;
     unsigned char* img = create_initialized_image_rgb(width, height);
     while (num_rows < height) {
@@ -329,7 +329,7 @@ unsigned char* create_font_rgba(int gff_idx, int c, int fg_color, int bg_color) 
     return img;
 }
 
-unsigned char* get_frame_rgba_palette_img(gff_image_entry_t *img, int frame_id, gff_palette_t *pal) {
+unsigned char* get_frame_rgba_palette_img(gff_image_entry_t *img, int frame_id, const gff_palette_t *pal) {
     uint16_t width, height;
     uint32_t frame_offset;
     char *frame_type;
@@ -405,7 +405,7 @@ unsigned char* get_frame_rgba_palette_img(gff_image_entry_t *img, int frame_id, 
     return NULL;
 }
 
-unsigned char* get_frame_rgba_palette(int gff_idx, int type_id, int res_id, int frame_id, gff_palette_t *pal) {
+unsigned char* get_frame_rgba_palette(int gff_idx, int type_id, int res_id, int frame_id, const gff_palette_t *pal) {
     gff_image_entry_t *img;
     unsigned char *data;
 

@@ -244,7 +244,7 @@ int narrate_handle_mouse_movement(const uint32_t x, const uint32_t y) {
     return 0; // zero means I did not handle the mouse, so another screen may.
 }
 
-int narrate_handle_mouse_down(const uint32_t x, const uint32_t y) {
+int narrate_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
     int const height = 18;
     int y_test = 516;
     int option;

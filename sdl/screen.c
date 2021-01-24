@@ -3,7 +3,10 @@
 #include <stdio.h>
 #include "gameloop.h"
 #include "screen-manager.h"
+#include "screens/narrate.h"
 #include "screens/screen-main.h"
+#include "screens/view-character.h"
+#include "screens/popup.h"
 #include "../src/dsl.h"
 
 static SDL_Renderer *renderer = NULL;
@@ -11,7 +14,19 @@ static SDL_Surface *surface = NULL;
 
 void load_screen(const char *arg) {
     if (!strcmp(arg, "main")) {
-        screen_load_screen(renderer, 1, &main_screen, 10, 10);
+        screen_push_screen(renderer, &main_screen, 10, 10);
+    }
+    if (!strcmp(arg, "view")) {
+        screen_push_screen(renderer, &view_character_screen, 10, 10);
+        narrate_init(renderer, 0, 0, 2.0); // to setup print_line
+    }
+    if (!strcmp(arg, "popup")) {
+        narrate_init(renderer, 0, 0, 2.0); // to setup print_line
+        screen_push_screen(renderer, &popup_screen, 10, 10);
+        popup_set_message("Exit game?");
+        popup_set_option(0, "Save");
+        popup_set_option(1, "Load");
+        popup_set_option(2, "Exit");
     }
 }
 

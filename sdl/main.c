@@ -31,20 +31,20 @@ void handle_mouse_motion() {
     screen_handle_mouse(x, y);
 }
 
-void handle_mouse_down() {
+void handle_mouse_down(uint32_t button) {
     int x, y;
 
     SDL_GetMouseState(&x, &y);
 
-    screen_handle_mouse_down(x, y);
+    screen_handle_mouse_down(button, x, y);
 }
 
-void handle_mouse_up() {
+void handle_mouse_up(uint32_t button) {
     int x, y;
 
     SDL_GetMouseState(&x, &y);
 
-    screen_handle_mouse_up(x, y);
+    screen_handle_mouse_up(button, x, y);
 }
 
 void handle_input() {
@@ -67,13 +67,13 @@ void handle_input() {
                 if (game_loop_is_waiting_for(WAIT_NARRATE_CONTINUE)) {
                     game_loop_signal(WAIT_NARRATE_CONTINUE, 0);
                 }
-                handle_mouse_down();
+                handle_mouse_down(event.button.button);
                 break;
             case SDL_MOUSEBUTTONUP:
                 //if (game_loop_is_waiting_for(WAIT_NARRATE_CONTINUE)) {
                     //game_loop_signal(WAIT_NARRATE_CONTINUE, 0);
                 //}
-                handle_mouse_up();
+                handle_mouse_up(event.button.button);
                 break;
         }
     }

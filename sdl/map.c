@@ -177,7 +177,7 @@ int map_handle_mouse(const uint32_t x, const uint32_t y) {
     return 1; // map always intercepts the mouse...
 }
 
-int map_handle_mouse_down(const uint32_t x, const uint32_t y) {
+int map_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
     region_object_t *obj = NULL;
 
     if (!cmap) { return 0; }

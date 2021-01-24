@@ -306,7 +306,6 @@ int gff_open(const char *pathName) {
     //fclose(file);
     if (is_master_name(filename)) { master_gff = idx; }
 
-    printf("Using %s\n", filename);
     open_files[idx].filename = filename;
     open_files[idx].start_palette_index = gff_get_number_of_palettes();
     create_palettes(idx, &(open_files[idx].num_palettes));

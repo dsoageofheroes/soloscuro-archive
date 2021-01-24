@@ -117,13 +117,13 @@ int main_handle_mouse_movement(const uint32_t x, const uint32_t y) {
     //return 0; // zero means I did not handle the mouse, so another screen may.
 }
 
-int main_handle_mouse_down(const uint32_t x, const uint32_t y) {
+int main_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
     mouse_down = 1;
     return 1; // means I captured the mouse click
     //return 0; // zero means I did not handle the mouse click, so another screen may.
 }
 
-int main_handle_mouse_up(const uint32_t x, const uint32_t y) {
+int main_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
     mouse_down = 0;
     count_down = 32;
     return 1; // means I captured the mouse click
