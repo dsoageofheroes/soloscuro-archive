@@ -24,7 +24,9 @@ void map_cleanup() {
 void map_free(map_t *map) {
     if (map->tiles) {
         for (int i = 0; i < cmap->region->num_tiles; i++) {
-            SDL_DestroyTexture(map->tiles[i]);
+            if (map->tiles[i]) {
+                SDL_DestroyTexture(map->tiles[i]);
+            }
         }
         free(map->tiles);
         map->tiles = NULL;
@@ -60,6 +62,7 @@ void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
     ids = map->region->ids;
     animate_clear();
     map->tiles = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * map->region->num_tiles);
+    memset(map->tiles, 0x0, sizeof(SDL_Texture*) * map->region->num_tiles);
 
     for (int i = 0; i < map->region->num_tiles; i++) {
         dsl_region_get_tile(map->region, i, &width, &height, &data);
