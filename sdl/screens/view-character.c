@@ -11,6 +11,7 @@
 static uint16_t ai[4];
 static uint16_t leader[4];
 static uint16_t ports[4];
+//static uint16_t port_background[4];
 static uint16_t effects, view_char, use, panel;
 static uint16_t character, inv, magic, status;
 static uint16_t game_menu, game_return;
@@ -75,9 +76,14 @@ void view_character_init(SDL_Renderer *renderer, const uint32_t x, const uint32_
     ports[1] = view_sprite_create(renderer, pal, 55 + x, 90 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11100);
     ports[2] = view_sprite_create(renderer, pal, 105 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11100);
     ports[3] = view_sprite_create(renderer, pal, 105 + x, 90 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11100);
+    //port_background[0] = view_sprite_create(renderer, pal, 55 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6041);
+    //port_background[1] = view_sprite_create(renderer, pal, 55 + x, 90 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6041);
+    //port_background[2] = view_sprite_create(renderer, pal, 105 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6041);
+    //port_background[3] = view_sprite_create(renderer, pal, 105 + x, 90 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6041);
 
     for (int i = 0; i < 4; i++) {
         sprite_set_frame(ports[i], 2);
+        //sprite_set_frame(port_background[i], 3);
     }
 
     description_loc = apply_params(initial_locs[0], x, y);
@@ -104,6 +110,7 @@ void view_character_render(void *data, SDL_Renderer *renderer) {
     for (int i = 0; i < 4; i++) {
         sprite_render(renderer, ai[i]);
         sprite_render(renderer, leader[i]);
+        //sprite_render(renderer, port_background[i]);
         sprite_render(renderer, ports[i]);
     }
 
@@ -123,6 +130,7 @@ static int get_sprite_mouse_is_on(const uint32_t x, const uint32_t y) {
     for (int i = 0; i < 4; i++) {
         if (sprite_in_rect(ai[i], x, y)) { return ai[i]; }
         if (sprite_in_rect(leader[i], x, y)) { return leader[i]; }
+        //if (sprite_in_rect(port_background[i], x, y)) { return port_background[i]; }
         if (sprite_in_rect(ports[i], x, y)) { return ports[i]; }
     }
 
@@ -148,7 +156,7 @@ int view_character_handle_mouse_movement(const uint32_t x, const uint32_t y) {
     //status = view_sprite_create(renderer, pal, 120 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11104);
     //game_return = view_sprite_create(renderer, pal, 252 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 10108);
     //game_menu = view_sprite_create(renderer, pal, 222 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11101);
-    return 1;// did not handle
+    return 1;// handle
 }
 
 int view_character_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {

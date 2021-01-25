@@ -7,6 +7,7 @@
 #include "screens/screen-main.h"
 #include "screens/view-character.h"
 #include "screens/popup.h"
+#include "screens/new-character.h"
 #include "../src/dsl.h"
 
 static SDL_Renderer *renderer = NULL;
@@ -19,6 +20,9 @@ void load_screen(const char *arg) {
     if (!strcmp(arg, "view")) {
         screen_push_screen(renderer, &view_character_screen, 10, 10);
         narrate_init(renderer, 0, 0, 2.0); // to setup print_line
+    }
+    if (!strcmp(arg, "new")) {
+        screen_push_screen(renderer, &new_character_screen, 0, 0);
     }
     if (!strcmp(arg, "popup")) {
         narrate_init(renderer, 0, 0, 2.0); // to setup print_line
