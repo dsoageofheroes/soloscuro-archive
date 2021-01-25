@@ -569,6 +569,8 @@ void get_gff_type_name(unsigned int gff_type, char *type) {
         case GFF_VPLY: strcpy(type, "VPLY Data"); break;
         case GFF_SPIN: strcpy(type, "SPIN Data: The text field of a spell."); break;
         case GFF_PORT: strcpy(type, "PORT Data: The portraits for dialogs."); break;
+        case GFF_SPST: strcpy(type, "SPST Data: The spell list."); break;
+        case GFF_PSST: strcpy(type, "PSST Data: The psionic list."); break;
         default: 
             sprintf(type, "UNKNOWN TYPE: '%c' '%c' '%c' '%c'",
                 (gff_type >> 0) & 0x00FF,

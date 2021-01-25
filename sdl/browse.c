@@ -303,6 +303,8 @@ static void render_entry_tile();
 static void render_entry_rmap();
 static void render_entry_gmap();
 static void render_entry_etab();
+static void render_entry_spst();
+static void render_entry_psst();
 
 static void render_entry() {
     switch(gff_get_type_id(gff_idx, entry_idx)) {
@@ -324,6 +326,8 @@ static void render_entry() {
         case GFF_RMAP: render_entry_rmap(); break;
         case GFF_GMAP: render_entry_gmap(); break;
         case GFF_ETAB: render_entry_etab(); break;
+        case GFF_SPST: render_entry_spst(); break;
+        case GFF_PSST: render_entry_psst(); break;
         default:
             render_entry_header();
             print_line_len(renderer, 0, "Need to implement", 320, 40, 128);
@@ -848,4 +852,77 @@ static void render_entry_etab() {
     print_line_len(renderer, 0, buf, 320, 200, BUF_MAX);
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes;
     render_entry_as_image(OBJEX_GFF_INDEX, GFF_BMP, dobj.bmp_id, pal, 340, 220);
+}
+
+static void render_entry_spst() {
+    //char buf[1024];
+    spell_list_t spells;
+    gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_SPST, res_ids[res_idx]);
+    gff_read_chunk(gff_idx, &chunk, &spells, sizeof(spells));
+    render_entry_header();
+    //int spell = 7;
+    //int spell = 7;
+    //printf("GREASE_byte = %d\n", spell>>3);
+    //printf("GREASE_bit = %d\n", ((spell)&7));
+    //printf("GREASE1/8 = %d\n", ((1<<((spell)&7)))/8);
+    //printf("GREASE = %d\n", ((spell)>>3) | (1<<((spell)&7)));
+    //for (int i = 0; i < MAX_SPELLS; i++) {
+        //[(spell)>>3] |=(1<<((spell)&7)
+        //if ((spells.spells[i/8] >> (i % 8)) & 0x01) {
+            //printf("Has %d\n", i - 49);
+        //}
+    //}
+    //if (chunk.length) {
+        //print_para_len(renderer, buf, 320, 40, 40, chunk.length);
+    //}
+}
+
+enum {
+    PSIONIC_DETONATE,
+    PSIONIC_DESINTEGRAT,
+    PSIONIC_PROJECT_FORCE,
+    PSIONIC_BALLISTIC_ATTACK,
+    PSIONIC_CONTROL_BODY,
+    PSIONIC_INTERTIAL_BARRIER,
+    PSIONIC_ANIMAL_AFFINITY,
+    PSIONIC_ENERGE_CONTROL,
+    PSIONIC_LIFE_DRAIN,
+    PSIONIC_ABSORB_DISEASE,
+    PSIONIC_ADRENALIN_CONTROL,
+    PSIONIC_BIOFEEDBACK,
+    PSIONIC_BODY_WEAPONRY,
+    PSIONIC_CELLULAR_ADJUSTMENT,
+    PSIONIC_DISPLACEMENT,
+    PSIONIC_ENHANCED_STRENGTH,
+    PSIONIC_FLESH_ARMOR,
+    PSIONIC_GRAFT_WEAPON,
+    PSIONIC_LEND_HEALTH,
+    PSIONIC_SHARE_STRENGTH,
+    PSIONIC_DOMINATION,
+    PSIONIC_MASS_DOMINATION,
+    PSIONIC_PSYCHIC_CRUSH,
+    PSIONIC_SUPERIOR_INVISIBILITY,
+    PSIONIC_TOWER_OF_IRON_WILL,
+    PSIONIC_EGO_WHIP,
+    PSIONIC_ID_INSINUATION,
+    PSIONIC_MENTAL_BARRIER,
+    PSIONIC_MIND_BAR,
+    PSIONIC_MIND_BLANK,
+    PSIONIC_BLAST,
+    PSIONIC_SYNAPTIC_STATIC,
+    PSIONIC_THOUGHT_SHIELD,
+};
+
+static void render_entry_psst() {
+    uint8_t psionics[34];
+    gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_PSST, res_ids[res_idx]);
+    gff_read_chunk(gff_idx, &chunk, &psionics, sizeof(psionics));
+    render_entry_header();
+    printf("has ");
+    for (int i = 0; i < 34; i++) {
+        if (psionics[i]) {
+            printf("%d, ", i);
+        }
+    }
+    printf("\n");
 }

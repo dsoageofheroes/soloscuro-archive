@@ -104,4 +104,7 @@
 
 #define GFF_PORT GFFTYPE('P','O','R','T')   // Portrait
 
+#define GFF_SPST GFFTYPE('S','P','S','T') // spell list bit-mask
+#define GFF_PSST GFFTYPE('P','S','S','T') // psionc list bytes
+
 #endif
