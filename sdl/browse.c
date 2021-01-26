@@ -9,6 +9,7 @@
 #include "../src/gff.h"
 #include "../src/gff-map.h"
 #include "../src/gff-image.h"
+#include "../src/spells.h"
 
 #define BUF_MAX (1<<12)
 #define RES_MAX (1<<12)
@@ -855,74 +856,45 @@ static void render_entry_etab() {
 }
 
 static void render_entry_spst() {
-    //char buf[1024];
+    char name[32];
+    char buf[BUF_MAX];
+    size_t pos;
     spell_list_t spells;
     gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_SPST, res_ids[res_idx]);
     gff_read_chunk(gff_idx, &chunk, &spells, sizeof(spells));
     render_entry_header();
-    //int spell = 7;
-    //int spell = 7;
-    //printf("GREASE_byte = %d\n", spell>>3);
-    //printf("GREASE_bit = %d\n", ((spell)&7));
-    //printf("GREASE1/8 = %d\n", ((1<<((spell)&7)))/8);
-    //printf("GREASE = %d\n", ((spell)>>3) | (1<<((spell)&7)));
-    //for (int i = 0; i < MAX_SPELLS; i++) {
-        //[(spell)>>3] |=(1<<((spell)&7)
-        //if ((spells.spells[i/8] >> (i % 8)) & 0x01) {
-            //printf("Has %d\n", i - 49);
-        //}
-    //}
-    //if (chunk.length) {
-        //print_para_len(renderer, buf, 320, 40, 40, chunk.length);
-    //}
+    pos = snprintf(buf, BUF_MAX, "Character Wizard/Cleric abilities: ");
+    for (int i = 0; i < WIZ_MAX; i++) {
+        if (spells.spells[i]) {
+            spell_get_wizard_name(i, name);
+            pos += snprintf(buf + pos, BUF_MAX - pos, "%s, ", name);
+        }
+    }
+    for (int i = 0; i < CLERIC_MAX; i++) {
+        if (spells.spells[68 + i]) {
+            spell_get_cleric_name(i, name);
+            pos += snprintf(buf + pos, BUF_MAX - pos, "%s, ", name);
+        }
+    }
+    print_para_len(renderer, buf, 320, 40, 40, pos);
 }
-
-enum {
-    PSIONIC_DETONATE,
-    PSIONIC_DESINTEGRAT,
-    PSIONIC_PROJECT_FORCE,
-    PSIONIC_BALLISTIC_ATTACK,
-    PSIONIC_CONTROL_BODY,
-    PSIONIC_INTERTIAL_BARRIER,
-    PSIONIC_ANIMAL_AFFINITY,
-    PSIONIC_ENERGE_CONTROL,
-    PSIONIC_LIFE_DRAIN,
-    PSIONIC_ABSORB_DISEASE,
-    PSIONIC_ADRENALIN_CONTROL,
-    PSIONIC_BIOFEEDBACK,
-    PSIONIC_BODY_WEAPONRY,
-    PSIONIC_CELLULAR_ADJUSTMENT,
-    PSIONIC_DISPLACEMENT,
-    PSIONIC_ENHANCED_STRENGTH,
-    PSIONIC_FLESH_ARMOR,
-    PSIONIC_GRAFT_WEAPON,
-    PSIONIC_LEND_HEALTH,
-    PSIONIC_SHARE_STRENGTH,
-    PSIONIC_DOMINATION,
-    PSIONIC_MASS_DOMINATION,
-    PSIONIC_PSYCHIC_CRUSH,
-    PSIONIC_SUPERIOR_INVISIBILITY,
-    PSIONIC_TOWER_OF_IRON_WILL,
-    PSIONIC_EGO_WHIP,
-    PSIONIC_ID_INSINUATION,
-    PSIONIC_MENTAL_BARRIER,
-    PSIONIC_MIND_BAR,
-    PSIONIC_MIND_BLANK,
-    PSIONIC_BLAST,
-    PSIONIC_SYNAPTIC_STATIC,
-    PSIONIC_THOUGHT_SHIELD,
-};
 
 static void render_entry_psst() {
     uint8_t psionics[34];
+    char name[32];
+    char buf[BUF_MAX];
+    size_t pos;
+
     gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_PSST, res_ids[res_idx]);
     gff_read_chunk(gff_idx, &chunk, &psionics, sizeof(psionics));
     render_entry_header();
-    printf("has ");
+    pos = snprintf(buf, BUF_MAX, "Character Psionic abilities: ");
     for (int i = 0; i < 34; i++) {
         if (psionics[i]) {
-            printf("%d, ", i);
+            spell_get_psionic_name(i, name);
+            pos += snprintf(buf + pos, BUF_MAX - pos, "%s, ", name);
         }
     }
-    printf("\n");
+    pos += snprintf(buf + pos, BUF_MAX - pos, "\n");
+    print_para_len(renderer, buf, 320, 40, 40, pos);
 }
