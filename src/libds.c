@@ -677,15 +677,15 @@ CREATE_SET_GET_CHARACTERS_COMMAND(legal_class, dsl_get_character(id)->legal_clas
 CREATE_SET_GET_CHARACTERS_COMMAND(race, dsl_get_character(id)->race)
 CREATE_SET_GET_CHARACTERS_COMMAND(gender, dsl_get_character(id)->gender)
 CREATE_SET_GET_CHARACTERS_COMMAND(alignment, dsl_get_character(id)->alignment)
-CREATE_SET_GET_CHARACTERS_COMMAND(str, dsl_get_character(id)->stats.STR)
-CREATE_SET_GET_CHARACTERS_COMMAND(dex, dsl_get_character(id)->stats.DEX)
-CREATE_SET_GET_CHARACTERS_COMMAND(con, dsl_get_character(id)->stats.CON)
-CREATE_SET_GET_CHARACTERS_COMMAND(int, dsl_get_character(id)->stats.INT)
-CREATE_SET_GET_CHARACTERS_COMMAND(wis, dsl_get_character(id)->stats.WIS)
-CREATE_SET_GET_CHARACTERS_COMMAND(cha, dsl_get_character(id)->stats.CHA)
-CREATE_SET_GET_CHARACTERS_COMMAND(class0, dsl_get_character(id)->class[0])
-CREATE_SET_GET_CHARACTERS_COMMAND(class1, dsl_get_character(id)->class[1])
-CREATE_SET_GET_CHARACTERS_COMMAND(class2, dsl_get_character(id)->class[2])
+CREATE_SET_GET_CHARACTERS_COMMAND(str, dsl_get_character(id)->stats.str)
+CREATE_SET_GET_CHARACTERS_COMMAND(dex, dsl_get_character(id)->stats.dex)
+CREATE_SET_GET_CHARACTERS_COMMAND(con, dsl_get_character(id)->stats.con)
+CREATE_SET_GET_CHARACTERS_COMMAND(int, dsl_get_character(id)->stats.intel)
+CREATE_SET_GET_CHARACTERS_COMMAND(wis, dsl_get_character(id)->stats.wis)
+CREATE_SET_GET_CHARACTERS_COMMAND(cha, dsl_get_character(id)->stats.cha)
+CREATE_SET_GET_CHARACTERS_COMMAND(class0, dsl_get_character(id)->real_class[0])
+CREATE_SET_GET_CHARACTERS_COMMAND(class1, dsl_get_character(id)->real_class[1])
+CREATE_SET_GET_CHARACTERS_COMMAND(class2, dsl_get_character(id)->real_class[2])
 CREATE_SET_GET_CHARACTERS_COMMAND(level0, dsl_get_character(id)->level[0])
 CREATE_SET_GET_CHARACTERS_COMMAND(level1, dsl_get_character(id)->level[1])
 CREATE_SET_GET_CHARACTERS_COMMAND(level2, dsl_get_character(id)->level[2])
@@ -895,12 +895,12 @@ static void push_ds1_combat(lua_State *L, ds1_combat_t *dc) {
     create_table_entry_si(L, "ac", dc->ac);
     create_table_entry_si(L, "move", dc->move);
     create_table_entry_si(L, "thac0", dc->thac0);
-    create_table_entry_si(L, "str", dc->stats.STR);
-    create_table_entry_si(L, "dex", dc->stats.DEX);
-    create_table_entry_si(L, "con", dc->stats.CON);
-    create_table_entry_si(L, "int", dc->stats.INT);
-    create_table_entry_si(L, "wis", dc->stats.WIS);
-    create_table_entry_si(L, "cha", dc->stats.CHA);
+    create_table_entry_si(L, "str", dc->stats.str);
+    create_table_entry_si(L, "dex", dc->stats.dex);
+    create_table_entry_si(L, "con", dc->stats.con);
+    create_table_entry_si(L, "int", dc->stats.intel);
+    create_table_entry_si(L, "wis", dc->stats.wis);
+    create_table_entry_si(L, "cha", dc->stats.cha);
     create_table_entry_ss(L, "name", dc->name);
 }
 

@@ -147,12 +147,12 @@ region_object_t* __region_list_get_next(region_list_t *rl, int *i); // private, 
         __RL_I++, obj = __region_list_get_next(rl, &__RL_I))
 
 typedef struct _ds_stats_t {
-    uint8_t STR;
-    uint8_t DEX;
-    uint8_t CON;
-    uint8_t INT;
-    uint8_t WIS;
-    uint8_t CHA;
+    uint8_t str;
+    uint8_t dex;
+    uint8_t con;
+    uint8_t intel;
+    uint8_t wis;
+    uint8_t cha;
 } ds_stats_t;
 
 typedef struct _ds_saving_throw_t {
@@ -209,19 +209,21 @@ typedef struct _ds1_item_t { // Not confirmed at all...
 } ds1_item_t;
 
 typedef struct _ds_character_s {
-    uint32_t current_xp;
-    uint32_t high_xp;
-    uint16_t base_hp;
-    uint16_t high_hp;
-    uint16_t base_psp;
-    uint16_t id;
-    uint16_t legal_class;
-    uint8_t race;
-    uint8_t gender;
-    uint8_t alignment;
-    ds_stats_t stats;
-    uint8_t class[3];
-    uint8_t level[3];
+    uint32_t current_xp; // confirmed
+    uint32_t high_xp;    // probable: repsents how many more exp to go to next level?
+    uint16_t base_hp;    // confirmed, natural top hp
+    uint16_t high_hp;    // probable: maybe highest hp?
+    uint16_t base_psp;   // confirmed
+    uint16_t id;         // ? seems to be 1000 or 2000
+    uint8_t data1[2];    // ? second byte is always 128 (maybe a negative?)
+    uint16_t legal_class;// confirmed
+    uint8_t data2[4];    //always 0....
+    uint8_t race;        // confirmed
+    uint8_t gender;      // confirmed
+    uint8_t alignment;   // confirmed
+    ds_stats_t stats;    // confirmed
+    uint8_t real_class[3]; // confirmed
+    uint8_t level[3];      // confirmed
     uint8_t base_ac;
     uint8_t base_move;
     uint8_t magic_resistance;

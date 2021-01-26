@@ -1,3 +1,4 @@
+#include <string.h>
 #include "spells.h"
 #include "gff.h"
 #include "gfftypes.h"
@@ -32,4 +33,32 @@ void spell_get_wizard_name(uint8_t spell, char name[32]) {
 
 void spell_get_cleric_name(uint8_t spell, char name[32]) {
     load_name_from_gff(spell, 68, CLERIC_MAX, name);
+}
+
+void spell_get_psin_name(uint8_t psin, char name[32]) {
+    switch(psin) {
+        case PSIONIC_PSYHCHOKINETIC:
+            strcpy(name, "Psyhchokinetic");
+            break;
+        case PSIONIC_PSYCHOMETABOLISM:
+            strcpy(name, "Psychometabolism");
+            break;
+        case PSIONIC_TELEPATH:
+            strcpy(name, "Telepathy");
+            break;
+        case SPHERE_AIR:
+            strcpy(name, "Air");
+            break;
+        case SPHERE_EARTH:
+            strcpy(name, "Earth");
+            break;
+        case SPHERE_FIRE:
+            strcpy(name, "Fire");
+            break;
+        case SPHERE_WATER:
+            strcpy(name, "Water");
+            break;
+        default:
+            strcpy(name, "UNKNOWN");
+    }
 }

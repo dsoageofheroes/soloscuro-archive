@@ -4,6 +4,17 @@
 #include <stdint.h>
 
 enum {
+    PSIONIC_PSYHCHOKINETIC,
+    PSIONIC_PSYCHOMETABOLISM,
+    PSIONIC_TELEPATH,
+    SPHERE_AIR,
+    SPHERE_EARTH,
+    SPHERE_FIRE,
+    SPHERE_WATER,
+    PSIN_MAX,
+};
+
+enum {
     WIZ_ARMOR,
     WIZ_BURNING_HANDS,
     WIZ_CHARM_PERSON,
@@ -197,8 +208,13 @@ enum {
     UNKNOWN_INCREASE_CHARISMA,
 };
 
+typedef struct psin_s {
+    uint8_t types[7];
+} psin_t;
+
 void spell_get_psionic_name(uint8_t psi, char name[32]);
 void spell_get_wizard_name(uint8_t spell, char name[32]);
 void spell_get_cleric_name(uint8_t spell, char name[32]);
+void spell_get_psin_name(uint8_t psin, char name[32]);
 
 #endif
