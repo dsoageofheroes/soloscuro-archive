@@ -247,18 +247,18 @@ void browse_loop(SDL_Surface *surface, SDL_Renderer *rend) {
     narrate_init(renderer, 0, 0, 2.0); // to setup print_line
 
     browse_render();
-    //move_gff_cursor(1);
-    //move_gff_cursor(1);
-    //move_gff_cursor(1);
+    move_gff_cursor(1);
+    move_gff_cursor(1);
+    move_gff_cursor(1);
     //move_gff_cursor(1);
     //move_gff_cursor(1);
     //move_gff_cursor(1);
     //move_gff_cursor(1);
     //move_entry_cursor(-1);
-    //move_entry_cursor(1);
-    //move_entry_cursor(1);
-    //move_entry_cursor(1);
-    //move_entry_cursor(1);
+    move_entry_cursor(1);
+    move_entry_cursor(1);
+    move_entry_cursor(1);
+    move_entry_cursor(1);
     //move_entry_cursor(1);
     //move_entry_cursor(1);
     res_idx = 0;
@@ -306,6 +306,7 @@ static void render_entry_gmap();
 static void render_entry_etab();
 static void render_entry_spst();
 static void render_entry_psst();
+static void render_entry_char();
 
 static void render_entry() {
     switch(gff_get_type_id(gff_idx, entry_idx)) {
@@ -329,6 +330,7 @@ static void render_entry() {
         case GFF_ETAB: render_entry_etab(); break;
         case GFF_SPST: render_entry_spst(); break;
         case GFF_PSST: render_entry_psst(); break;
+        case GFF_CHAR: render_entry_char(); break;
         default:
             render_entry_header();
             print_line_len(renderer, 0, "Need to implement", 320, 40, 128);
@@ -897,4 +899,17 @@ static void render_entry_psst() {
     }
     pos += snprintf(buf + pos, BUF_MAX - pos, "\n");
     print_para_len(renderer, buf, 320, 40, 40, pos);
+}
+
+static void render_entry_char() {
+    char buf[BUF_MAX];
+    gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_CHAR, res_ids[res_idx]);
+    gff_read_chunk(gff_idx, &chunk, &buf, sizeof(buf));
+    ds1_combat_t *combat = (ds1_combat_t*)(buf + 10);
+   // printf("combat->hp = %d\n", combat->hp);
+    print_combat(*combat, 40);
+    ds_character_t *character = (ds_character_t*)(buf + 0x4E);
+    printf("exp = %d\n", character->current_xp);
+
+    render_entry_header();
 }

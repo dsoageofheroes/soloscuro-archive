@@ -106,5 +106,6 @@
 
 #define GFF_SPST GFFTYPE('S','P','S','T') // spell list bit-mask
 #define GFF_PSST GFFTYPE('P','S','S','T') // psionc list bytes
+#define GFF_CHAR GFFTYPE('C','H','A','R') // saved character slot.
 
 #endif

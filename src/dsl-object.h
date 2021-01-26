@@ -239,7 +239,7 @@ typedef struct _ds_character_s {
     uint16_t attack_sound;
     uint8_t psi_group;
     uint8_t palette;
-} ds_character_t;
+} __attribute__ ((__packed__)) ds_character_t;
 
 typedef struct _item1r_t {
     uint8_t weapon;
