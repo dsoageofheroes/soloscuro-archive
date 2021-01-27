@@ -308,6 +308,7 @@ static void render_entry_spst();
 static void render_entry_psst();
 static void render_entry_char();
 static void render_entry_psin();
+static void render_entry_it1r();
 
 static void render_entry() {
     switch(gff_get_type_id(gff_idx, entry_idx)) {
@@ -333,6 +334,7 @@ static void render_entry() {
         case GFF_PSST: render_entry_psst(); break;
         case GFF_CHAR: render_entry_char(); break;
         case GFF_PSIN: render_entry_psin(); break;
+        case GFF_IT1R: render_entry_it1r(); break;
         default:
             render_entry_header();
             print_line_len(renderer, 0, "Need to implement", 320, 40, 128);
@@ -920,7 +922,6 @@ enum {
     CLASS_ALL_CLERIC  = (1<<13),
 };
 
-/*
 static const char *class_names[] = {
     "AIR CLERIC",
     "EARTH CLERIC",
@@ -936,6 +937,7 @@ static const char *class_names[] = {
     "DEFILER",
     "TEMPLAR",
 };
+/*
 
 enum {
     RACE_MONSTER,
@@ -1221,4 +1223,182 @@ static void render_entry_psin() {
     }
     pos += snprintf(buf + pos, BUF_MAX - pos, "\n");
     print_para_len(renderer, buf, 320, 40, 40, pos);
+}
+
+typedef struct ds1_it1r_s {
+    uint8_t weapon_type;
+    uint8_t data0; // always 0, probably structure alignment byte.
+    uint16_t damage_type;
+    uint8_t weight;
+    uint16_t data1;
+    uint8_t base_hp;
+    uint8_t material;
+    uint8_t placement;
+    uint8_t range;// Need to confirm
+    uint8_t num_attacks;
+    uint8_t sides;
+    uint8_t dice;
+    int8_t mod;
+    uint8_t flags;
+    uint16_t legal_class;
+    int8_t base_AC;
+    uint8_t data2;
+        // weapon_type, damage tyep (2 bytes), weight (2 bytes), 
+        // (?),(?), base_hp, material, placement, (range?), num_attacks, sides, dice, add
+        // flags, legalClass (2bytes), baseAc?, baseAc
+} __attribute__ ((__packed__)) ds1_it1r_t;
+
+const char *weapon_names[] = {
+    "NONE",
+    "MELEE",
+    "MISSILE",
+    "SHIELD",
+    "USES AMMO",
+    "THROWN",
+};
+
+const char *damage_types[] = {
+    "POISON",
+    "MAGIC_FIRE",
+    "COLD",
+    "BLUNT",
+    "CUTTING",
+    "POINTED",
+    "ACID",
+    "ELECTRIC",
+    "DRAINING",
+    "MAGIC",
+    "MENTAL",
+    "DEATH",
+    "PLUS1",
+    "PLUS2",
+};
+
+const char *material_types[] = {
+    "WOOD",
+    "BONE",
+    "STONE",
+    "OBSIDIAN",
+    "METAL",
+    "LEATHER",
+    "BULKY",
+    "IMMOBILE",
+};
+
+const char *placement_types[] = {
+    "BACKPACK",
+    "CHEST",
+    "WAIST",
+    "ARM",
+    "FOOT",
+    "HAND",
+    "HEAD",
+    "NECK",
+    "CLOAK",
+    "FINGER",
+    "LEGS",
+    "AMMO",
+    "MISSILE",
+};
+
+const char *it1r_flags[] = {
+    "TOGGLE",
+    "BUNDLE",
+    "BLOCKING",
+    "CONTAINER",
+    "USEABLE",
+    "DOOR",
+    "TWO HANDED",
+    "ARMOR",
+};
+
+static void render_entry_it1r() {
+    char buf[BUF_MAX];
+    char it1rs[1<<14];
+    size_t pos = 0;
+    //rdff_header_t *rdff;
+    //size_t offset = 0;
+    gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_IT1R, res_ids[res_idx]);
+    size_t amt = gff_read_chunk(gff_idx, &chunk, &it1rs, sizeof(it1rs));
+    if (mapy < 0) {
+        mapy = amt / sizeof(ds1_it1r_t) - 1;
+    }
+    if (mapy >= amt / sizeof(ds1_it1r_t)) {
+        mapy = 0;
+    }
+    //rdff = (rdff_disk_object_t*) (buf);
+    //printf("action = %d(%s),", rdff->load_action, rdff_actions[rdff->load_action]);
+    //printf("blocknum = %d,", rdff->blocknum);
+    //printf("type = %d(%s),", rdff->type, rdff_types[rdff->type]);
+    //printf("index = %d,", rdff->index);
+    //printf("from = %d,", rdff->from);
+    //printf("len = %d\n", rdff->len);
+    if (mapy >= 0) {
+        ds1_it1r_t *it1r = (ds1_it1r_t*)(it1rs + (mapy * sizeof(ds1_it1r_t)));
+        render_entry_header();
+
+        snprintf(buf, BUF_MAX, "entry %d of %ld", mapy, amt/sizeof(ds1_it1r_t));
+        print_line_len(renderer, 0, buf, 320, 40, BUF_MAX);
+
+        pos = snprintf(buf, BUF_MAX, "Weapon and damage: ");
+        for (int i = 1; i < 6; i++) {
+            if (it1r->weapon_type & (1 << (i-1))) {
+                pos += snprintf(buf + pos, BUF_MAX - pos, "%s, ", weapon_names[i]);
+            }
+        }
+        for (int i = 0; i < 14; i++) {
+            if (it1r->damage_type & (1 << (i))) {
+                pos += snprintf(buf + pos, BUF_MAX - pos, "%s, ", damage_types[i]);
+            }
+        }
+        print_line_len(renderer, 0, buf, 320, 60, BUF_MAX);
+
+        pos = snprintf(buf, BUF_MAX, "weight: %d, base_hp: %d",
+                it1r->weight, it1r->base_hp);
+        print_line_len(renderer, 0, buf, 320, 80, BUF_MAX);
+
+        pos = snprintf(buf, BUF_MAX, "Material:");
+        pos += snprintf(buf + pos, BUF_MAX - pos, "%s %s %s ", material_types[it1r->material & 0x0F],
+                it1r->material & 0x40 ? "NO Material" : "",
+                it1r->material & 0x80 ? "NO Effect" : ""
+                );
+        print_line_len(renderer, 0, buf, 320, 100, BUF_MAX);
+
+        pos = snprintf(buf, BUF_MAX, "Placement: %s", placement_types[it1r->placement]);
+        print_line_len(renderer, 0, buf, 320, 120, BUF_MAX);
+
+        snprintf(buf, BUF_MAX, "%d%s x %dD%d + %d\n",
+                (it1r->num_attacks >> 1),
+                (it1r->num_attacks & 0x01) ? ".5" : "",
+                it1r->dice,
+                it1r->sides,
+                it1r->mod);
+        print_line_len(renderer, 0, buf, 320, 140, BUF_MAX);
+
+        pos = snprintf(buf, BUF_MAX, "Flags:");
+        for (int i = 0; i < 9; i++) {
+            if (it1r->flags & (1 << (i))) {
+                pos += snprintf(buf + pos, BUF_MAX - pos, "%s, ", it1r_flags[i]);
+            }
+        }
+        print_line_len(renderer, 0, buf, 320, 160, BUF_MAX);
+
+        pos = snprintf(buf, BUF_MAX, "Legal Classes:");
+        for (int i = 0; i < 13; i++) {
+            if (it1r->legal_class & (1 << (i))) {
+                pos += snprintf(buf + pos, BUF_MAX - pos, "%s, ", class_names[i]);
+            }
+        }
+        print_line_len(renderer, 0, buf, 320, 180, BUF_MAX);
+
+        pos = snprintf(buf, BUF_MAX, "base AC: %d", (int32_t)it1r->base_AC);
+        print_line_len(renderer, 0, buf, 320, 200, BUF_MAX);
+
+        //pos = snprintf(buf, BUF_MAX, "data0: %d", it1r->data0);
+        //print_line_len(renderer, 0, buf, 320, 220, BUF_MAX);
+        pos = snprintf(buf, BUF_MAX, "data1: %d (0x%x)", it1r->data1, it1r->data1);
+        print_line_len(renderer, 0, buf, 320, 220, BUF_MAX);
+        pos = snprintf(buf, BUF_MAX, "data2: %d", it1r->data2);
+        print_line_len(renderer, 0, buf, 320, 240, BUF_MAX);
+    }
 }
