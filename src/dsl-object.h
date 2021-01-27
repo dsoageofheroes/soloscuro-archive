@@ -191,19 +191,20 @@ typedef struct _ds_combat_t {
 } __attribute__ ((__packed__)) ds1_combat_t;
 
 typedef struct _ds1_item_t { // Not confirmed at all...
-    int16_t  id; // 0, confirmed (but is negative...)
+    int16_t  id; // 0, confirmed (but is negative...), is the OJFF entry
     uint16_t quantity; // confirmed, 0 mean no need.
-    int16_t  next;  // ?
-    uint16_t value; // 6, look correct.
+    int16_t  next;  // 4, for some internal book keeping.
+    uint16_t value; // 6, confirmed
     int16_t  pack_index;
-    int16_t  item_index;
+    int16_t  item_index; // Correct, maps into it1r.
     int16_t  icon;
     uint16_t charges;
-    uint16_t special;
+    uint8_t  data0;
+    uint8_t  slot;     // confirmed
     uint8_t  name_idx; //confirmed
     int8_t   bonus;
     uint16_t priority;
-    int8_t   slot; // confirmed
+    int8_t   special;
 } __attribute__ ((__packed__)) ds1_item_t;
 
 typedef struct _ds_character_s {
@@ -234,7 +235,7 @@ typedef struct _ds_character_s {
     uint8_t allegiance;    // ? always 1
     uint8_t size;          // ? always 0
     uint8_t spell_group;   // ? always 0
-    uint8_t high_level[3]; // confirmed, hight possible level (for level drain.)
+    uint8_t high_level[3]; // confirmed, highest possible level (for level drain.)
     uint16_t sound_fx;     // ? always 0
     uint16_t attack_sound;     // ? always 0
     uint8_t psi_group;     // ? always 0
@@ -270,6 +271,25 @@ typedef struct _mini_t {
 typedef struct _item_name_t {
     char name[25];
 } item_name_t;
+
+enum {
+    RACE_MONSTER,
+    RACE_HUMAN,
+    RACE_DWARF,
+    RACE_ELF,
+    RACE_HALFELF,
+    RACE_HALFGIANT,
+    RACE_HALFLING,
+    RACE_MUL,
+    RACE_TRIKEEN,
+    RACE_MAX
+};
+
+enum {
+    GENDER_NONE,
+    GENDER_MALE,
+    GENDER_FEMALE,
+};
 
 void dsl_object_init();
 void dsl_object_cleanup();

@@ -20,6 +20,8 @@ static uint16_t races[14];
 static int die_pos = 0;
 static int die_countdown = 0;
 
+static ds_character_t pc; // the character we are creating.
+
 static uint16_t new_sprite_create(SDL_Renderer *renderer, gff_palette_t *pal,
         const int offsetx, const int offsety, const float zoom,
         const int gff_idx, const int type_id, const int res_id) {
@@ -27,9 +29,16 @@ static uint16_t new_sprite_create(SDL_Renderer *renderer, gff_palette_t *pal,
     return sprite_create(renderer, &tmp, pal, 0, 0, zoom, gff_idx, type_id, res_id);
 }
 
+static void init_pc() {
+    memset(&pc, 0x0, sizeof(ds_character_t));
+    pc.race = RACE_HUMAN;
+    pc.gender = GENDER_MALE;
+}
+
 static void new_character_init(SDL_Renderer *renderer, const uint32_t x, const uint32_t y, const float zoom) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
 
+    init_pc();
     background = new_sprite_create(renderer, pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 13001);
     parchment[0] = new_sprite_create(renderer, pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20084);
     parchment[1] = new_sprite_create(renderer, pal, 135 + x, 20 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20083);
@@ -81,6 +90,11 @@ static void update_die_countdown() {
     }
 }
 
+static int get_race_id() { // for the large portrait
+    if (pc.race < RACE_MUL) { return 2 * (pc.race - 1) + (pc.gender - 1); }
+    return 12 + (pc.race - RACE_MUL);
+}
+
 void new_character_render(void *data, SDL_Renderer *renderer) {
     sprite_render(renderer, background);
     for (int i = 0; i < 5; i++) {
@@ -99,7 +113,7 @@ void new_character_render(void *data, SDL_Renderer *renderer) {
     }
     update_die_countdown();
     sprite_render(renderer, die[die_pos]);
-    sprite_render(renderer, races[0]);
+    sprite_render(renderer, races[get_race_id()]);
 }
 
 int new_character_handle_mouse_movement(const uint32_t x, const uint32_t y) {
@@ -110,9 +124,37 @@ int new_character_handle_mouse_down(const uint32_t button, const uint32_t x, con
     return 1;// handle
 }
 
+static void fix_race_gender() { // move the race/gender to the appropiate spot
+    if (pc.gender > GENDER_FEMALE) {
+        pc.gender = GENDER_MALE;
+        pc.race++;
+    } else if (pc.gender < GENDER_MALE) {
+        pc.gender = GENDER_FEMALE;
+        pc.race--;
+    }
+    if (pc.race < RACE_HUMAN) { pc.race = RACE_TRIKEEN; }
+    if (pc.race > RACE_TRIKEEN) { pc.race = RACE_HUMAN; }
+
+    if (pc.race == RACE_MUL && pc.gender == GENDER_FEMALE) {
+        pc.race = RACE_TRIKEEN;
+    }
+
+    if (pc.race == RACE_TRIKEEN && pc.gender == GENDER_MALE) {
+        pc.race = RACE_MUL;
+    }
+}
+
 int new_character_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
     if (sprite_in_rect(die[die_pos], x, y)) {
         die_countdown = 40;
+    }
+    if (sprite_in_rect(races[pc.race], x, y)) {
+        if (button == SDL_BUTTON_LEFT) {
+            pc.gender++;
+        } else {
+            pc.gender--;
+        }
+        fix_race_gender();
     }
     return 1;// handle
 }

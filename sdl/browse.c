@@ -39,6 +39,90 @@ static void write_blob();
 static void move_res_cursor(int amt);
 static void move_frame_cursor(int amt);
 
+typedef struct ds1_it1r_s {
+    uint8_t weapon_type;
+    uint8_t data0; // always 0, probably structure alignment byte.
+    uint16_t damage_type;
+    uint8_t weight;
+    uint16_t data1;
+    uint8_t base_hp;
+    uint8_t material;
+    uint8_t placement;
+    uint8_t range;// Need to confirm
+    uint8_t num_attacks;
+    uint8_t sides;
+    uint8_t dice;
+    int8_t mod;
+    uint8_t flags;
+    uint16_t legal_class;
+    int8_t base_AC;
+    uint8_t data2; // always 0, 1, or 2
+} __attribute__ ((__packed__)) ds1_it1r_t;
+
+const char *weapon_names[] = {
+    "NONE",
+    "MELEE",
+    "MISSILE",
+    "SHIELD",
+    "USES AMMO",
+    "THROWN",
+};
+
+const char *damage_types[] = {
+    "POISON",
+    "MAGIC_FIRE",
+    "COLD",
+    "BLUNT",
+    "CUTTING",
+    "POINTED",
+    "ACID",
+    "ELECTRIC",
+    "DRAINING",
+    "MAGIC",
+    "MENTAL",
+    "DEATH",
+    "PLUS1",
+    "PLUS2",
+};
+
+const char *material_types[] = {
+    "WOOD",
+    "BONE",
+    "STONE",
+    "OBSIDIAN",
+    "METAL",
+    "LEATHER",
+    "BULKY",
+    "IMMOBILE",
+};
+
+const char *placement_types[] = {
+    "BACKPACK",
+    "CHEST",
+    "WAIST",
+    "ARM",
+    "FOOT",
+    "HAND",
+    "HEAD",
+    "NECK",
+    "CLOAK",
+    "FINGER",
+    "LEGS",
+    "AMMO",
+    "MISSILE",
+};
+
+const char *it1r_flags[] = {
+    "TOGGLE",
+    "BUNDLE",
+    "BLOCKING",
+    "CONTAINER",
+    "USEABLE",
+    "DOOR",
+    "TWO HANDED",
+    "ARMOR",
+};
+
 static void browse_handle_input() {
     //const Uint8 *key_state = SDL_GetKeyboardState(NULL);
     SDL_Event event;
@@ -939,19 +1023,6 @@ static const char *class_names[] = {
 };
 /*
 
-enum {
-    RACE_MONSTER,
-    RACE_HUMAN,
-    RACE_DWARF,
-    RACE_ELF,
-    RACE_HALFELF,
-    RACE_HALFGIANT,
-    RACE_HALFLING,
-    RACE_MUL,
-    RACE_TRIKEEN,
-    RACE_MAX
-};
-
 static const char *race_names[] = {
     "MONSTER",
     "HUMAN",
@@ -1114,7 +1185,6 @@ static void render_entry_char() {
     printf("from = %d,", rdff->from);
     printf("len = %d\n", rdff->len);
     ds_character_t *character = (ds_character_t*)(buf + 0x4E);
-    //ds_character_t *character = (ds_character_t*)(buf + 0x5E);
     //printf("exp = %d, %d\n", character->current_xp, character->high_xp);
     printf("hp = base = %d, high = %d\n", character->base_hp, character->high_hp);
     //printf("base_psp = %d, id = %d\n", character->base_psp, character->id);
@@ -1126,7 +1196,7 @@ static void render_entry_char() {
     //}
     //printf("\n");
     //printf("data1[0] = %d, data1[1] = %d\n", character->data1[0], character->data1[1]);
-    //printf("%s\n", (character->gender == 1) ? "MALE" : "FEMALE");
+    printf("%s\n", (character->gender == 1) ? "MALE" : "FEMALE");
     //printf("%s\n", race_names[character->race]);
     //printf("%s\n", alignment_names[character->alignment]);
     //printf("stats = %d, %d, %d, %d, %d, %d\n",
@@ -1192,9 +1262,9 @@ static void render_entry_char() {
             ds1_item_t *item = (ds1_item_t*)(((char*)(rdff)) + 10);
             printf("id = %d, qty = %d, next = %d,", item->id, item->quantity, item->next);
             printf("value = %d, pack = %d, item = %d,", item->value, item->pack_index, item->item_index);
-            printf("icon = %d, charges = %d, special = %d,", item->icon, item->charges, item->special);
-            printf("priority = %d, slot = %d(%s), name_index = %d,", item->priority, item->slot, slot_names[item->slot], item->name_idx);
-            printf("bonus = %d", item->bonus);
+            printf("icon = %d, charges = %d, special = 0x%x,", item->icon, item->charges, item->special);
+            printf("priority = 0x%x, slot = %d(%s), name_index = %d,", item->priority, item->slot, slot_names[item->slot], item->name_idx);
+            printf("bonus = %d, data0 = %d", item->bonus, item->data0);
             printf("\n");
         }
         offset += 10 + rdff->len;
@@ -1225,92 +1295,6 @@ static void render_entry_psin() {
     print_para_len(renderer, buf, 320, 40, 40, pos);
 }
 
-typedef struct ds1_it1r_s {
-    uint8_t weapon_type;
-    uint8_t data0; // always 0, probably structure alignment byte.
-    uint16_t damage_type;
-    uint8_t weight;
-    uint16_t data1;
-    uint8_t base_hp;
-    uint8_t material;
-    uint8_t placement;
-    uint8_t range;// Need to confirm
-    uint8_t num_attacks;
-    uint8_t sides;
-    uint8_t dice;
-    int8_t mod;
-    uint8_t flags;
-    uint16_t legal_class;
-    int8_t base_AC;
-    uint8_t data2;
-        // weapon_type, damage tyep (2 bytes), weight (2 bytes), 
-        // (?),(?), base_hp, material, placement, (range?), num_attacks, sides, dice, add
-        // flags, legalClass (2bytes), baseAc?, baseAc
-} __attribute__ ((__packed__)) ds1_it1r_t;
-
-const char *weapon_names[] = {
-    "NONE",
-    "MELEE",
-    "MISSILE",
-    "SHIELD",
-    "USES AMMO",
-    "THROWN",
-};
-
-const char *damage_types[] = {
-    "POISON",
-    "MAGIC_FIRE",
-    "COLD",
-    "BLUNT",
-    "CUTTING",
-    "POINTED",
-    "ACID",
-    "ELECTRIC",
-    "DRAINING",
-    "MAGIC",
-    "MENTAL",
-    "DEATH",
-    "PLUS1",
-    "PLUS2",
-};
-
-const char *material_types[] = {
-    "WOOD",
-    "BONE",
-    "STONE",
-    "OBSIDIAN",
-    "METAL",
-    "LEATHER",
-    "BULKY",
-    "IMMOBILE",
-};
-
-const char *placement_types[] = {
-    "BACKPACK",
-    "CHEST",
-    "WAIST",
-    "ARM",
-    "FOOT",
-    "HAND",
-    "HEAD",
-    "NECK",
-    "CLOAK",
-    "FINGER",
-    "LEGS",
-    "AMMO",
-    "MISSILE",
-};
-
-const char *it1r_flags[] = {
-    "TOGGLE",
-    "BUNDLE",
-    "BLOCKING",
-    "CONTAINER",
-    "USEABLE",
-    "DOOR",
-    "TWO HANDED",
-    "ARMOR",
-};
 
 static void render_entry_it1r() {
     char buf[BUF_MAX];
