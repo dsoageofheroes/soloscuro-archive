@@ -605,7 +605,7 @@ static void print_item(ds1_item_t item, int pos) {
     print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     snprintf(buf, BUF_MAX, "slot: %d\n", item.slot);
     print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
-    snprintf(buf, BUF_MAX, "name_index: %d\n", item.name_index);
+    snprintf(buf, BUF_MAX, "name_index: %d\n", item.name_idx);
     print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     snprintf(buf, BUF_MAX, "bonus: %d\n", item.bonus);
     print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
@@ -985,7 +985,6 @@ static const char *alignment_names[] = {
     "CHAOTIC NEUTRAL",
     "CHAOTIC EVIL",
 };
-*/
 
 enum {
     REAL_CLASS_NONE,
@@ -1033,18 +1032,89 @@ static const char *real_class_names[] = {
     "DEFILER",
     "TEMPLAR",
 };
+*/
+
+const char *rdff_actions[] = {
+    "NOTHING",
+    "OBJECT",
+    "CONTIANER",
+    "DATA",
+    "NEXT",
+};
+
+const char *rdff_types[] = {
+    "NOTHING",
+    "OBJECT",
+    "COMBAT",
+    "CHARREC",
+    "ITEM1R",
+    "MINI",
+};
+
+const char *slot_names[] = {
+    "ARM",
+    "AMMO",
+    "MISSLE",
+    "HAND1",
+    "FINGER",
+    "WAIST",
+    "LEGS",
+    "HEAD",
+    "NECK",
+    "CHEST",
+    "HAND2",
+    "FINGER1",
+    "CLOAK",
+    "FOOT",
+    "B00",
+    "B01",
+    "B02",
+    "B03",
+    "B04",
+    "B05",
+    "B07",
+    "B08",
+    "B09",
+    "B12",
+    "B13",
+    "B14",
+};
 
 static void render_entry_char() {
     char buf[BUF_MAX];
+    rdff_header_t *rdff;
+    size_t offset = 0;
     gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_CHAR, res_ids[res_idx]);
     gff_read_chunk(gff_idx, &chunk, &buf, sizeof(buf));
+    rdff = (rdff_disk_object_t*) (buf);
+    //int8_t  load_action;
+    //int8_t  blocknum;
+    //int16_t type;
+    //int16_t index;
+    //int16_t from;
+    //int16_t len;
+
+    printf("action = %d(%s),", rdff->load_action, rdff_actions[rdff->load_action]);
+    printf("blocknum = %d,", rdff->blocknum);
+    printf("type = %d(%s),", rdff->type, rdff_types[rdff->type]);
+    printf("index = %d,", rdff->index);
+    printf("from = %d,", rdff->from);
+    printf("len = %d\n", rdff->len);
     ds1_combat_t *combat = (ds1_combat_t*)(buf + 10);
    // printf("combat->hp = %d\n", combat->hp);
     print_combat(*combat, 40);
+    offset += 10 + rdff->len;
+    rdff = (rdff_disk_object_t*)(((char*)(rdff)) + 10 + rdff->len);
+    printf("action = %d(%s),", rdff->load_action, rdff_actions[rdff->load_action]);
+    printf("blocknum = %d,", rdff->blocknum);
+    printf("type = %d(%s),", rdff->type, rdff_types[rdff->type]);
+    printf("index = %d,", rdff->index);
+    printf("from = %d,", rdff->from);
+    printf("len = %d\n", rdff->len);
     ds_character_t *character = (ds_character_t*)(buf + 0x4E);
     //ds_character_t *character = (ds_character_t*)(buf + 0x5E);
     //printf("exp = %d, %d\n", character->current_xp, character->high_xp);
-    //printf("hp = base = %d, high = %d\n", character->base_hp, character->high_hp);
+    printf("hp = base = %d, high = %d\n", character->base_hp, character->high_hp);
     //printf("base_psp = %d, id = %d\n", character->base_psp, character->id);
     //for (int i = 0; i < 12; i++) {
         //if ((character->legal_class >> (i)) & 0x0001) {
@@ -1068,12 +1138,68 @@ static void render_entry_char() {
     //printf("classes = {%d, %d, %d}\n", character->real_class[0],
             //character->real_class[1],
             //character->real_class[2]);
-    printf("classes = {%s, %s, %s}\n", real_class_names[character->real_class[0]],
-            real_class_names[character->real_class[1]],
-            real_class_names[character->real_class[2]]);
-    printf("level = {%d, %d, %d}\n", character->level[0], character->level[1], character->level[2]);
+    //printf("classes = {%s, %s, %s}\n", real_class_names[character->real_class[0]],
+            //real_class_names[character->real_class[1]],
+            //real_class_names[character->real_class[2]]);
+    //printf("level = {%d, %d, %d}\n", character->level[0], character->level[1], character->level[2]);
+    //printf("base_ac = %d, base_move = %d, magic_res = %d\n", character->base_ac, character->base_move,
+    //character->magic_resistance);
+    //printf("num_blows = %d\n", character->num_blows);
+    //printf("num_attacks = {%d, %d, %d}\n", character->num_attacks[0], character->num_attacks[1],
+    //character->num_attacks[2]);
+    //printf("num_dice = {%d, %d, %d}\n", character->num_dice[0], character->num_dice[1],
+    //character->num_dice[2]);
+    //printf("num_sides = {%d, %d, %d}\n", character->num_sides[0], character->num_sides[1],
+    //character->num_sides[2]);
+    //printf("num_bonuses = {%d, %d, %d}\n", character->num_bonuses[0], character->num_bonuses[1],
+    //character->num_bonuses[2]);
+    //printf("saving throws: %d %d %d %d %d\n",
+        //character->saving_throw.paral,
+        //character->saving_throw.wand,
+        //character->saving_throw.petr,
+        //character->saving_throw.breath,
+        //character->saving_throw.spell);
+    //printf("allegiance = %d, size = %d, spell_group = %d\n",
+        //character->allegiance, character->size, character->spell_group);
+    //printf("high_level = {%d, %d, %d}\n",
+        //character->high_level[0], character->high_level[1], character->high_level[2]);
+    //printf("sound = %d, attack_sound = %d, psi_group = %d, palette = %d\n",
+        //character->sound_fx,character->attack_sound,character->psi_group,character->palette);
 
+/*
+    offset += 10 + rdff->len;
+    rdff = (rdff_disk_object_t*)(((char*)(rdff)) + 10 + rdff->len);
+    printf("action = %d(%s),", rdff->load_action, rdff_actions[rdff->load_action]);
+    printf("blocknum = %d,", rdff->blocknum);
+    printf("type = %d(%s),", rdff->type, rdff_types[rdff->type]);
+    printf("index = %d,", rdff->index);
+    printf("from = %d,", rdff->from);
+    printf("len = %d\n", rdff->len);
+    ds1_item_t *item = (ds1_item_t*)(((char*)(rdff)) + 10);
+    printf("id = %d, qty = %d, next = %d,", item->id, item->quantity, item->next);
+    printf("value = %d, pack = %d, item = %d,", item->value, item->pack_index, item->item_index);
+    printf("icon = %d, charges = %d, special = %d,", item->icon, item->charges, item->special);
+    printf("priority = %d, slot = %d, name_index = %d,", item->priority, item->slot, item->name_idx);
+    printf("bonus = %d", item->bonus);
+    printf("\n");
+    */
+    offset += 10 + rdff->len;
+    while (offset < chunk.length) {
+        rdff = (rdff_disk_object_t*)(((char*)(rdff)) + 10 + rdff->len);
+        if (rdff->type == 1) {
+            ds1_item_t *item = (ds1_item_t*)(((char*)(rdff)) + 10);
+            printf("id = %d, qty = %d, next = %d,", item->id, item->quantity, item->next);
+            printf("value = %d, pack = %d, item = %d,", item->value, item->pack_index, item->item_index);
+            printf("icon = %d, charges = %d, special = %d,", item->icon, item->charges, item->special);
+            printf("priority = %d, slot = %d(%s), name_index = %d,", item->priority, item->slot, slot_names[item->slot], item->name_idx);
+            printf("bonus = %d", item->bonus);
+            printf("\n");
+        }
+        offset += 10 + rdff->len;
+    }
     render_entry_header();
+    printf("offset = %ld\n", offset);
+    printf("------------------------------------\n");
 }
 
 static void render_entry_psin() {

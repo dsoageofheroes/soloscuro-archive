@@ -913,7 +913,7 @@ static void push_ds1_item(lua_State *L, ds1_item_t *di) {
     create_table_entry_si(L, "charges", di->charges);
     create_table_entry_si(L, "special", di->special);
     create_table_entry_si(L, "slot", di->slot);
-    create_table_entry_si(L, "name_index", di->name_index);
+    create_table_entry_si(L, "name_index", di->name_idx);
     //disk_object_t* diskobject = gff_get_object(di->id);
     disk_object_t diskobject;
     gff_read_object(di->id, &diskobject);

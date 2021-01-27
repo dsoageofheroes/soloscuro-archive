@@ -89,6 +89,8 @@ typedef struct _rdff_disk_object_t {
     int16_t len;
 } rdff_disk_object_t;
 
+typedef rdff_disk_object_t rdff_header_t;
+
 enum {
     RDFF_OBJECT    = 1,
     RDFF_CONTAINER = 2,
