@@ -34,6 +34,28 @@ static uint16_t spr;// sprite of the character on screen
 //2097/2098, trikeen
 //2099/2100, female human or half-elf
 
+uint8_t classes_allowed[][8] = {
+    {1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 0, 1, 1, 0, 1, 0, 1},
+    {1, 0, 1, 1, 1, 1, 1, 1},
+    {1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 0, 1, 1, 0, 1, 1, 0},
+    {1, 1, 1, 1, 0, 1, 1, 1},
+    {1, 1, 1, 1, 0, 1, 0, 1},
+    {1, 1, 1, 1, 0, 1, 1, 0},
+};
+
+uint8_t races_allowed[][8] = {
+    {1, 1, 1, 1, 1, 1, 1, 1}, //Cleric
+    {1, 0, 0, 1, 0, 1, 1, 1}, //Druid
+    {1, 1, 1, 1, 1, 1, 1, 1}, //Fighter
+    {1, 1, 1, 1, 1, 1, 1, 1}, //Gladiator
+    {1, 0, 1, 1, 0, 0, 0, 0}, //Preserver
+    {1, 1, 1, 1, 1, 1, 1, 1}, //Psionicist
+    {1, 0, 1, 1, 1, 1, 0, 1}, //Ranger
+    {1, 0, 1, 1, 1, 1, 0, 1}, //Thief
+};
+
 static int die_pos = 0;
 static int die_countdown = 0;
 
@@ -41,6 +63,29 @@ static int offsetx, offsety;
 static float zoom;
 static SDL_Renderer *renderer;
 static ds_character_t pc; // the character we are creating.
+
+/*static int get_class_idx(const uint8_t class) {
+    if (class < 1) { return -1; }
+    if (class < 5) { return 1; } // Cleric
+    if (class < 9) { return 2; } // Druid
+    if (class < 13) { return class - 6; } // Fighter - Psionicist
+    if (class < 17) { return 6; } // Ranger
+    if (class < 18) { return 7; } // Thief
+
+    return -1; // UNKNOWN CLASS
+}*/
+
+static int is_class_allowed(const uint8_t race, const int8_t classes[3]) {
+    if (classes[0] == -1) { return 0; }
+
+    printf("race = %d (%d, %d, %d)\n", race, classes[0], classes[1], classes[2]);
+    if (classes[2] == -1 && classes[1] == -1) {
+        printf("HERE! race = %d, ac[0] = %d, returning = %d\n", race, classes[0], races_allowed[race-1][classes[0]]);
+        return races_allowed[race - 1][classes[0]];
+    }
+
+    return 0;
+}
 
 static uint16_t new_sprite_create(SDL_Renderer *renderer, gff_palette_t *pal,
         const int offsetx, const int offsety, const float zoom,
@@ -111,6 +156,7 @@ static void new_character_init(SDL_Renderer *_renderer, const uint32_t x, const 
     parchment[3] = new_sprite_create(renderer, pal, 210 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20086);
     parchment[4] = new_sprite_create(renderer, pal, 210 + x, 90 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20087);
     done = new_sprite_create(renderer, pal, 250 + x, 160 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2000);
+
     for (int i = 0; i < 8; i++) {
         classes[i] = new_sprite_create(renderer, pal, 220 + x, 10 + y + (i*8),
                 zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2002 + i);
@@ -162,18 +208,19 @@ static int get_race_id() { // for the large portrait
 }
 
 void new_character_render(void *data, SDL_Renderer *renderer) {
+    int8_t class_sel[3];
+    class_sel[0] = class_sel[1] = class_sel[2] = -1;
     sprite_render(renderer, background);
     for (int i = 0; i < 5; i++) {
         sprite_render(renderer, parchment[i]);
     }
     for (int i = 0; i < 8; i++) {
+        class_sel[0] = i;
+        sprite_set_frame(classes[i], 
+             (is_class_allowed(pc.race, class_sel))
+             ? 0 : 2);
         sprite_render(renderer, classes[i]);
     }
-    /*
-    for (int i = 0; i < 3; i++) {
-        sprite_render(renderer, psionics[i]);
-    }
-    */
     for (int i = 0; i < 4; i++) {
         sprite_render(renderer, spheres[i]);
     }
