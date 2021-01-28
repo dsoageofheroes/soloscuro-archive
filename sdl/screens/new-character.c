@@ -16,10 +16,30 @@ static uint16_t psionics[3];
 static uint16_t spheres[4];
 static uint16_t die[11];
 static uint16_t races[14];
+static uint16_t spr;// sprite of the character on screen
+
+//trikeen 750/751, GFF_BMP segobjex
+//1052, female something.
+//1169/1170, male somthing
+//2053/2054, dwarf (male?)
+//2055/2056, dwarf (female?)
+//2059/2060, elf (female?)
+//2061/2062, elf (male?)
+//2068/2069, halfling male
+//2070/2071, halfling female
+//2072/2073, half-giant male
+//2074/2075, half-giant female
+//2093/2094, mul
+//2095/2096, male human or half-elf
+//2097/2098, trikeen
+//2099/2100, female human or half-elf
 
 static int die_pos = 0;
 static int die_countdown = 0;
 
+static int offsetx, offsety;
+static float zoom;
+static SDL_Renderer *renderer;
 static ds_character_t pc; // the character we are creating.
 
 static uint16_t new_sprite_create(SDL_Renderer *renderer, gff_palette_t *pal,
@@ -29,16 +49,61 @@ static uint16_t new_sprite_create(SDL_Renderer *renderer, gff_palette_t *pal,
     return sprite_create(renderer, &tmp, pal, 0, 0, zoom, gff_idx, type_id, res_id);
 }
 
+static void load_character_sprite() {
+    gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
+
+    if (spr != SPRITE_ERROR) {
+        sprite_free(spr);
+        spr = SPRITE_ERROR;
+    }
+    switch(pc.race) {
+        case RACE_HALFELF:
+        case RACE_HUMAN:
+            spr = new_sprite_create(renderer, pal, 150 + offsetx, 28 + offsetx,
+                zoom, OBJEX_GFF_INDEX, GFF_BMP, (pc.gender == GENDER_MALE) ? 2095 : 2099);
+            break;
+        case RACE_DWARF:
+            spr = new_sprite_create(renderer, pal, 150 + offsetx, 28 + offsetx,
+                zoom, OBJEX_GFF_INDEX, GFF_BMP, (pc.gender == GENDER_MALE) ? 2055 : 2053);
+            break;
+        case RACE_ELF:
+            spr = new_sprite_create(renderer, pal, 150 + offsetx, 28 + offsetx,
+                zoom, OBJEX_GFF_INDEX, GFF_BMP, (pc.gender == GENDER_MALE) ? 2061 : 2059);
+            break;
+        case RACE_HALFGIANT:
+            spr = new_sprite_create(renderer, pal, 150 + offsetx, 28 + offsetx,
+                zoom, OBJEX_GFF_INDEX, GFF_BMP, (pc.gender == GENDER_MALE) ? 2072 : 2074);
+            break;
+        case RACE_HALFLING:
+            spr = new_sprite_create(renderer, pal, 150 + offsetx, 28 + offsetx,
+                zoom, OBJEX_GFF_INDEX, GFF_BMP, (pc.gender == GENDER_MALE) ? 2068 : 2070);
+            break;
+        case RACE_MUL:
+            spr = new_sprite_create(renderer, pal, 150 + offsetx, 28 + offsetx,
+                zoom, OBJEX_GFF_INDEX, GFF_BMP, 2093);
+            break;
+        case RACE_TRIKEEN:
+            spr = new_sprite_create(renderer, pal, 150 + offsetx, 28 + offsetx,
+                zoom, OBJEX_GFF_INDEX, GFF_BMP, 2097);
+            break;
+    }
+}
+
 static void init_pc() {
     memset(&pc, 0x0, sizeof(ds_character_t));
     pc.race = RACE_HUMAN;
     pc.gender = GENDER_MALE;
 }
 
-static void new_character_init(SDL_Renderer *renderer, const uint32_t x, const uint32_t y, const float zoom) {
+static void new_character_init(SDL_Renderer *_renderer, const uint32_t x, const uint32_t y, const float _zoom) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
+    offsetx = x; offsety = y;
+    zoom = _zoom;
+    renderer = _renderer;
 
     init_pc();
+    spr = SPRITE_ERROR;
+    //load_character_sprite(renderer);
     background = new_sprite_create(renderer, pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 13001);
     parchment[0] = new_sprite_create(renderer, pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20084);
     parchment[1] = new_sprite_create(renderer, pal, 135 + x, 20 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20083);
@@ -71,6 +136,7 @@ static void new_character_init(SDL_Renderer *renderer, const uint32_t x, const u
     }
 
     srand(time(NULL));
+    load_character_sprite(renderer);
 }
 
 static void update_die_countdown() {
@@ -111,6 +177,7 @@ void new_character_render(void *data, SDL_Renderer *renderer) {
     for (int i = 0; i < 4; i++) {
         sprite_render(renderer, spheres[i]);
     }
+    sprite_render(renderer, spr);
     update_die_countdown();
     sprite_render(renderer, die[die_pos]);
     sprite_render(renderer, races[get_race_id()]);
@@ -142,6 +209,7 @@ static void fix_race_gender() { // move the race/gender to the appropiate spot
     if (pc.race == RACE_TRIKEEN && pc.gender == GENDER_MALE) {
         pc.race = RACE_MUL;
     }
+    load_character_sprite(); // go ahead and get the new sprite
 }
 
 int new_character_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {

@@ -102,6 +102,7 @@ void sprite_set_frame(const uint16_t id, const uint16_t frame) {
 }
 
 void sprite_render(SDL_Renderer *renderer, const uint16_t sprite_id) {
+    if (sprite_id == (uint16_t)SPRITE_ERROR) { return; }
     sprite_t *sprite = sprites + sprite_id;
     SDL_RenderCopy(renderer, sprite->tex[sprite->pos], NULL, &(sprite->loc));
 }

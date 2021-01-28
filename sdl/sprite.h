@@ -12,7 +12,7 @@ typedef struct sprite_s {
     uint8_t in_use;
 } sprite_t;
 
-#define SPRITE_ERROR (-1)
+#define SPRITE_ERROR (0xFFFF)
 
 // Needed to intialize the sprite lists.
 void sprite_init();

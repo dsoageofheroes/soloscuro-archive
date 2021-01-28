@@ -101,10 +101,12 @@ int get_frame_width(int gff_idx, int type_id, int res_id, int frame_id) {
     unsigned char buf[1<<16];
     gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, type_id, res_id);
     gff_read_chunk(gff_idx, &chunk, buf, 1<<16);
+    if (chunk.length < (6 + 4 + frame_id*4)) { return -1;}
     unsigned int frame_offset = *((unsigned int*)(buf + 6 + frame_id*4));
     //if (chunk.location + frame_offset > open_files[gff_idx].len) {
         //return -1;
     //}
+    if (chunk.length <= (frame_offset + 2)) { return -1; }
     unsigned short width = *(unsigned short*)(buf + frame_offset);
     return width;
 }
@@ -113,10 +115,12 @@ int get_frame_height(int gff_idx, int type_id, int res_id, int frame_id) {
     unsigned char buf[1<<16];
     gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, type_id, res_id);
     gff_read_chunk(gff_idx, &chunk, buf, 1<<16);
+    if (chunk.length < (6 + 4 + frame_id*4)) { return -1;}
     unsigned int frame_offset = *((unsigned int*)(buf + 6 + frame_id*4));
     //if (chunk.location + frame_offset > open_files[gff_idx].len) {
         //return -1;
     //}
+    if (chunk.length <= (frame_offset + 4)) { return -1; }
     unsigned short height = *(unsigned short*)(buf + frame_offset + 2);
     return height;
 }
@@ -345,6 +349,7 @@ unsigned char* get_frame_rgba_palette_img(gff_image_entry_t *img, int frame_id, 
     }
 
     frame_offset = *(uint32_t*)(img->data + 6 + frame_id * 4);
+    if (frame_offset > img->data_len) { return NULL; }
     width = *(uint16_t*)(img->data + frame_offset);
     height = *(uint16_t*)(img->data + frame_offset + 2);
     frame_type = (img->data + frame_offset + 5);
