@@ -37,7 +37,7 @@ void spell_get_cleric_name(uint8_t spell, char name[32]) {
 
 void spell_get_psin_name(uint8_t psin, char name[32]) {
     switch(psin) {
-        case PSIONIC_PSYHCHOKINETIC:
+        case PSIONIC_PSYCHOKINETIC:
             strcpy(name, "Psyhchokinetic");
             break;
         case PSIONIC_PSYCHOMETABOLISM:
@@ -60,5 +60,35 @@ void spell_get_psin_name(uint8_t psin, char name[32]) {
             break;
         default:
             strcpy(name, "UNKNOWN");
+    }
+}
+
+int spell_has_psin(psin_t *psin, const uint8_t psi) {
+    switch (psi) {
+        case PSIONIC_PSYCHOKINETIC:
+            return psin->types[0];
+            break;
+        case PSIONIC_PSYCHOMETABOLISM:
+            return psin->types[2];
+            break;
+        case PSIONIC_TELEPATH:
+            return psin->types[4];
+            break;
+    }
+
+    return 0;
+}
+
+void spell_set_psin(psin_t *psin, const uint8_t psi, const int on) {
+    switch (psi) {
+        case PSIONIC_PSYCHOKINETIC:
+            psin->types[0] = (on) ? 1 : 0;
+            break;
+        case PSIONIC_PSYCHOMETABOLISM:
+            psin->types[2] = (on) ? 1 : 0;
+            break;
+        case PSIONIC_TELEPATH:
+            psin->types[4] = (on) ? 1 : 0;
+            break;
     }
 }

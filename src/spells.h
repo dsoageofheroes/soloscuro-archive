@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 enum {
-    PSIONIC_PSYHCHOKINETIC,
+    PSIONIC_PSYCHOKINETIC,
     PSIONIC_PSYCHOMETABOLISM,
     PSIONIC_TELEPATH,
     SPHERE_AIR,
@@ -216,5 +216,7 @@ void spell_get_psionic_name(uint8_t psi, char name[32]);
 void spell_get_wizard_name(uint8_t spell, char name[32]);
 void spell_get_cleric_name(uint8_t spell, char name[32]);
 void spell_get_psin_name(uint8_t psin, char name[32]);
+void spell_set_psin(psin_t *psin, const uint8_t psi, const int on);
+int spell_has_psin(psin_t *psin, const uint8_t psi);
 
 #endif

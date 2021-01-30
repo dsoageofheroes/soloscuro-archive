@@ -33,3 +33,6 @@ lua-test: libds.so bin
 
 clean:
 	rm -rf $(EXEC) obj gff-inspector libds.$(LIB_EXT) libxmimidi.$(LIB_EXT) bin/ mdark
+
+flip:
+	ls imgs/ | xargs -I {} convert imgs/{} -flip imgs/{}
