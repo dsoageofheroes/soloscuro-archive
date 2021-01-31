@@ -2,6 +2,7 @@
 #include "../main.h"
 #include "../../src/gff.h"
 #include "../../src/gfftypes.h"
+#include "../../src/rules.h"
 #include "narrate.h"
 #include "popup.h"
 #include "../font.h"
@@ -25,104 +26,6 @@ static uint16_t sphere_label; // 2046
 
 static uint8_t show_psionic_label = 1;
 static int8_t sphere_selection = -1;
-
-enum {
-    A_END = 0x0, // End of Allowed Classes
-    A_C = 0x1, // Allowed Cleric
-    A_D = 0x2, // Allowed Druid
-    A_F = 0x4, // Allowed Fighter
-    A_G = 0x8, // Allowed Gladiator
-    A_P = 0x10, // Allowed Preserver
-    A_S = 0x20, // Allowed pSionicist
-    A_R = 0x40, // Allowed Ranger
-    A_T = 0x80, // Allowed Thief
-};
-
-const uint16_t human_classes[] = {
-    A_C, A_D, A_F, A_G, A_P, A_S, A_R, A_T, A_END
-};
-const uint16_t dwarf_classes[] = {
-    A_C, A_F, A_G, A_S, A_T, A_C | A_F, A_C | A_S, A_F | A_S, A_F | A_T, A_S | A_T, 0x0
-};
-const uint16_t elf_classes[] = {
-    A_C, A_F, A_G, A_P, A_S, A_R, A_T, 
-    A_C | A_F, A_C | A_P, A_C | A_S, A_C | A_R, A_S | A_T, A_C | A_T,
-    A_C | A_F | A_P, A_C | A_F | A_S, A_C | A_F | A_T,
-    A_C | A_P | A_S, A_C | A_P | A_R, A_C | A_P | A_T,
-    A_C | A_S | A_R, A_C | A_S | A_T,
-    A_C | A_R | A_T,
-    A_F | A_P, A_F | A_S, A_F | A_T,
-    A_F | A_P | A_S, A_F | A_P | A_T,
-    A_F | A_S | A_T,
-    A_P | A_S, A_P | A_R, A_P | A_T,
-    A_P | A_S | A_R, A_P | A_S | A_T,
-    A_S | A_R, A_S | A_T,
-    A_S | A_R | A_T,
-    A_R | A_T,
-    A_END
-};
-const uint16_t half_elf_classes[] = {
-    A_C, A_D, A_F, A_G, A_P, A_S, A_R, A_T, 
-    A_C | A_F, A_C | A_P, A_C | A_S, A_C | A_R, A_S | A_T, A_C | A_T,
-    A_C | A_F | A_P, A_C | A_F | A_S, A_C | A_F | A_T,
-    A_C | A_P | A_S, A_C | A_P | A_R, A_C | A_P | A_T,
-    A_C | A_S | A_R, A_C | A_S | A_T,
-    A_C | A_R | A_T,
-    A_D | A_F, A_D | A_P, A_D | A_S, A_D | A_T,
-    A_D | A_F | A_P, A_D | A_F | A_S, A_D | A_F | A_T,
-    A_D | A_P | A_S, A_D | A_P | A_T,
-    A_D | A_S | A_T,
-    A_F | A_P, A_F | A_S, A_F | A_T,
-    A_F | A_P | A_S, A_F | A_P | A_T,
-    A_F | A_S | A_T,
-    A_P | A_S, A_P | A_R, A_P | A_T, A_P | A_R,
-    A_P | A_S | A_R, A_P | A_S | A_T, A_P | A_S | A_R, A_P | A_R | A_T,
-    A_S | A_R, A_S | A_T, A_S | A_R,
-    A_S | A_R | A_T,
-    A_R | A_T,
-    A_END
-};
-const uint16_t half_giant_classes[] = {
-    A_C, A_F, A_G, A_S, A_R,
-    A_C | A_F, A_C | A_S, A_C | A_R,
-    A_F | A_S,
-    A_S | A_R,
-    A_END
-};
-
-const uint16_t halfling_classes[] = {
-    A_C, A_D, A_F, A_G, A_S, A_R, A_T, 
-    A_C | A_F, A_C | A_S, A_C | A_R, A_C | A_T,
-    A_D | A_F, A_D | A_S, A_D | A_R, A_D | A_T,
-    A_F | A_S, A_F | A_T,
-    A_F | A_S | A_T,
-    A_S | A_R, A_S | A_T,
-    A_S | A_R | A_T,
-    A_R | A_T,
-    A_END
-};
-const uint16_t mul_classes[] = {
-    A_C, A_D, A_F, A_G, A_S, A_R, A_T, 
-    A_C | A_F, A_C | A_S, A_C | A_T,
-    A_C | A_F | A_T,
-    A_D | A_F, A_D | A_S, A_D | A_T,
-    A_D | A_F | A_T,
-    A_F | A_S, A_F | A_T,
-    A_F | A_S | A_T,
-    A_S | A_T,
-    A_END
-};
-const uint16_t trikeen_classes[] = {
-    A_C, A_D, A_F, A_G, A_S, A_R,
-    A_C | A_F, A_C | A_S, A_C | A_R,
-    A_C | A_F | A_S,
-    A_C | A_S | A_R,
-    A_D | A_F, A_D | A_S,
-    A_D | A_F | A_S,
-    A_F | A_S,
-    A_S | A_R,
-    A_END
-};
 
 static int die_pos = 0;
 static int die_countdown = 0;
@@ -151,63 +54,6 @@ static int convert_to_actual_class(const uint8_t class) {
     return 0; // UNKNOWN CLASS
 }
 
-static int convert_to_class_sel(const uint8_t class) {
-    switch (class) {
-        case REAL_CLASS_AIR_CLERIC:
-        case REAL_CLASS_EARTH_CLERIC:
-        case REAL_CLASS_FIRE_CLERIC:
-        case REAL_CLASS_WATER_CLERIC:
-            return 0;
-        case REAL_CLASS_AIR_DRUID:
-        case REAL_CLASS_EARTH_DRUID:
-        case REAL_CLASS_FIRE_DRUID:
-        case REAL_CLASS_WATER_DRUID:
-            return 1;
-        case REAL_CLASS_FIGHTER: return 2;
-        case REAL_CLASS_GLADIATOR: return 3;
-        case REAL_CLASS_PRESERVER: return 4;
-        case REAL_CLASS_PSIONICIST: return 5;
-        case REAL_CLASS_AIR_RANGER: return 6;
-        case REAL_CLASS_THIEF: return 7;
-    }
-
-    return 0; // UNKNOWN CLASS
-}
-
-static int is_class_allowed(const uint8_t race, const int8_t classes[3]) {
-    uint16_t class = 1 << convert_to_class_sel(classes[0]);
-    const uint16_t *allowed = NULL;
-    if (classes[0] == -1) { return 0; }
-
-    //printf("race = %d (%d, %d, %d)\n", race, classes[0], classes[1], classes[2]);
-    if (classes[1] != -1) {
-        // NO DUPS.
-        if (classes[0] == classes[1] || classes[1] == classes[2]
-            || classes[0] == classes[2]) { return 0; }
-        class |= 1 << convert_to_class_sel(classes[1]);
-        if (classes[2] != -1) {
-            class |= 1 << convert_to_class_sel(classes[2]);
-        }
-    }
-
-    switch(race) {
-        case RACE_HUMAN: allowed = human_classes; break;
-        case RACE_DWARF: allowed = dwarf_classes; break;
-        case RACE_ELF: allowed = elf_classes; break;
-        case RACE_HALFELF: allowed = half_elf_classes; break;
-        case RACE_HALFGIANT: allowed = half_giant_classes; break;
-        case RACE_HALFLING: allowed = halfling_classes; break;
-        case RACE_MUL: allowed = mul_classes; break;
-        case RACE_TRIKEEN: allowed = trikeen_classes; break;
-    }
-
-    while (allowed && *allowed) {
-        if (*allowed == class) { return 1; }
-        allowed++;
-    }
-    return 0;
-}
-
 static int has_class(const uint16_t class) {
     for (int i = 0; i < 3; i++) {
         if (pc.real_class[i] == class) { return 1; }
@@ -226,7 +72,7 @@ static void set_class_frames() {
         pc.real_class[next_class] = convert_to_actual_class(i);
         if (sprite_get_frame(class_sel[i]) != 1) {
             sprite_set_frame(classes[i], 
-                (next_class < 3 && is_class_allowed(pc.race, pc.real_class))
+                (next_class < 3 && dnd2e_is_class_allowed(pc.race, pc.real_class))
                 ? 0 : 2);
         }
     }
@@ -339,10 +185,12 @@ static void new_character_init(SDL_Renderer *_renderer, const uint32_t x, const 
 
     srand(time(NULL));
     load_character_sprite(renderer);
+    dnd2e_randomize_stats_pc(&pc);
     set_class_frames(); // go ahead and setup the new class frames
 }
 
 static void update_die_countdown() {
+    static int last_die_pos = -1;
     if (die_countdown) {
         die_countdown--;
         if (die_countdown > 30) {
@@ -356,6 +204,10 @@ static void update_die_countdown() {
         } else {
             die_pos = 5 + (rand() % 6);
         }
+        if (die_pos != last_die_pos) {
+            dnd2e_randomize_stats_pc(&pc);
+        }
+        last_die_pos = die_pos;
     }
 }
 
@@ -364,7 +216,67 @@ static int get_race_id() { // for the large portrait
     return 12 + (pc.race - RACE_MUL);
 }
 
+static const char* get_race_as_string() {
+    switch(pc.race) {
+        case RACE_HUMAN: return "HUMAN";
+        case RACE_DWARF: return "DWARF";
+        case RACE_ELF: return "ELF";
+        case RACE_HALFELF: return "HALF-ELF";
+        case RACE_HALFGIANT: return "HALF-GIANT";
+        case RACE_HALFLING: return "HALFLING";
+        case RACE_MUL: return "MUL";
+        case RACE_TRIKEEN: return "TRIKEEN";
+    }
+    return "UNKNOWN";
+}
+
+static const char* get_alignment_as_string() {
+    switch(pc.alignment) {
+        case LAWFUL_GOOD: return "LAWFUL GOOD";
+        case LAWFUL_NEUTRAL: return "LAWFUL NEUTRAL";
+        case LAWFUL_EVIL: return "LAWFUL EVIL";
+        case NEUTRAL_GOOD: return "NEUTRAL GOOD";
+        case TRUE_NEUTRAL: return "TRUE NEUTRAL";
+        case NEUTRAL_EVIL: return "NEUTRAL EVIL";
+        case CHAOTIC_GOOD: return "CHAOTIC GOOD";
+        case CHAOTIC_NEUTRAL: return "CHAOTIC NEUTRAL";
+        case CHAOTIC_EVIL: return "CHAOTIC EVIL";
+    }
+    return "UNKNOWN";
+}
+
+static const char* get_class_name(const uint8_t class) {
+    switch (class) {
+        case REAL_CLASS_AIR_CLERIC:
+        case REAL_CLASS_EARTH_CLERIC:
+        case REAL_CLASS_FIRE_CLERIC:
+        case REAL_CLASS_WATER_CLERIC:
+            return "CLERIC";
+        case REAL_CLASS_AIR_DRUID:
+        case REAL_CLASS_EARTH_DRUID:
+        case REAL_CLASS_FIRE_DRUID:
+        case REAL_CLASS_WATER_DRUID:
+            return "DRUID";
+        case REAL_CLASS_FIGHTER: return "FIGHTER";
+        case REAL_CLASS_GLADIATOR: return "GLADIATOR";
+        case REAL_CLASS_PRESERVER: return "PRESERVER";
+        case REAL_CLASS_PSIONICIST: return "PSIONICIST";
+        case REAL_CLASS_AIR_RANGER:
+        case REAL_CLASS_EARTH_RANGER:
+        case REAL_CLASS_FIRE_RANGER:
+        case REAL_CLASS_WATER_RANGER:
+            return "RANGER";
+        case REAL_CLASS_THIEF: return "THIEF";
+    }
+
+    return 0; // UNKNOWN CLASS
+}
+
+#define BUF_MAX (1<<10)
+
 void new_character_render(void *data, SDL_Renderer *renderer) {
+    char buf[BUF_MAX];
+    int pos;
     sprite_render(renderer, background);
     for (int i = 0; i < 5; i++) {
         sprite_render(renderer, parchment[i]);
@@ -390,6 +302,41 @@ void new_character_render(void *data, SDL_Renderer *renderer) {
     }
 
     sprite_render(renderer, show_psionic_label ? sphere_label : psionic_label);
+    snprintf(buf, BUF_MAX, "STR: %d", pc.stats.str);
+    print_line_len(renderer, FONT_GREY, buf, 20, 270, BUF_MAX);
+    snprintf(buf, BUF_MAX, "DEX: %d", pc.stats.dex);
+    print_line_len(renderer, FONT_GREY, buf, 20, 285, BUF_MAX);
+    snprintf(buf, BUF_MAX, "CON: %d", pc.stats.con);
+    print_line_len(renderer, FONT_GREY, buf, 20, 300, BUF_MAX);
+    snprintf(buf, BUF_MAX, "INT: %d", pc.stats.intel);
+    print_line_len(renderer, FONT_GREY, buf, 20, 315, BUF_MAX);
+    snprintf(buf, BUF_MAX, "WIS: %d", pc.stats.wis);
+    print_line_len(renderer, FONT_GREY, buf, 20, 330, BUF_MAX);
+    snprintf(buf, BUF_MAX, "CHA: %d", pc.stats.cha);
+    print_line_len(renderer, FONT_GREY, buf, 20, 345, BUF_MAX);
+    snprintf(buf, BUF_MAX, "%s %s", pc.gender == GENDER_MALE ? "MALE" : "FEMALE", get_race_as_string());
+    print_line_len(renderer, FONT_GREY, buf, 175, 270, BUF_MAX);
+    print_line_len(renderer, FONT_GREY, get_alignment_as_string(), 175, 285, BUF_MAX);
+    pos = 0;
+    for (int i = 0; i < 3; i++) {
+        if (pc.real_class[i] >= 0) {
+            pos += snprintf(buf + pos, BUF_MAX - pos, "%s%s", i > 0 ? "/" : "", get_class_name(pc.real_class[i]));
+        }
+    }
+    buf[pos] = '\0';
+    print_line_len(renderer, FONT_GREY, buf, 175, 300, BUF_MAX);
+    pos = 0;
+    for (int i = 0; i < 3; i++) {
+        if (pc.real_class[i] >= 0) {
+            pos += snprintf(buf + pos, BUF_MAX - pos, "%s%d", i > 0 ? "/" : "", pc.level[i]);
+        }
+    }
+    buf[pos] = '\0';
+    print_line_len(renderer, FONT_GREY, buf, 175, 315, BUF_MAX);
+    if (pc.real_class[0] > -1) {
+        snprintf(buf, BUF_MAX, "EXP: %d (%d)", pc.current_xp, dnd2e_exp_to_next_level_up(&pc));
+        print_line_len(renderer, FONT_GREY, buf, 245, 315, BUF_MAX);
+    }
 }
 
 int new_character_handle_mouse_movement(const uint32_t x, const uint32_t y) {
@@ -466,6 +413,7 @@ static void fix_race_gender() { // move the race/gender to the appropiate spot
         sprite_set_frame(class_sel[i], 0);
     }
 
+    dnd2e_fix_stats_pc(&pc); // in case something need adjustment
     load_character_sprite(); // go ahead and get the new sprite
     set_class_frames(); // go ahead and setup the new class frames
 }
@@ -589,6 +537,8 @@ static void deselect_class(uint8_t class_selection) {
 
     set_class_frames();
     set_ps_sel_frames();
+
+    dnd2e_set_exp(&pc, 4000);
 }
 
 static void select_class(uint8_t class) {
@@ -606,6 +556,7 @@ static void select_class(uint8_t class) {
     }
 
     set_ps_sel_frames();
+    dnd2e_set_exp(&pc, 4000);
 }
 
 int new_character_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {

@@ -1035,17 +1035,6 @@ static const char *race_names[] = {
     "TRIKEEN",
 };
 
-enum {
-    LAWFUL_GOOD,
-    LAWFUL_NEUTRAL,
-    LAWFUL_EVIL,
-    NEUTRAL_GOOD,
-    TRUE_NEUTRAL,
-    NEUTRAL_EVIL,
-    CHAOTIC_GOOD,
-    CHAOTIC_NEUTRAL,
-    CHAOTIC_EVIL,
-};
 
 static const char *alignment_names[] = {
     "LAWFUL GOOD",
