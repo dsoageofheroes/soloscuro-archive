@@ -409,6 +409,13 @@ static const int8_t hit_die[] = {
     10, 10, 4, 6, 10, 10, 10, 10, 6
 };
 
+static int has_class(ds_character_t *pc, const int16_t class){
+    return pc->real_class[0] == class
+        || pc->real_class[1] == class
+        || pc->real_class[2] == class;
+}
+
+
 static const uint32_t* get_xp_table(const uint8_t class) {
     switch (class) {
         case REAL_CLASS_AIR_CLERIC:
@@ -492,6 +499,29 @@ int dnd2e_is_class_allowed(const uint8_t race, const int8_t classes[3]) {
     return 0;
 }
 
+static void set_psp(ds_character_t *pc) {
+    pc->base_psp = 0;
+    if (pc->stats.con > 15) {
+        pc->base_psp += pc->stats.con - 15;
+    }
+    if (pc->stats.intel > 15) {
+        pc->base_psp += pc->stats.intel - 15;
+    }
+    if (pc->stats.wis > 15) {
+        pc->base_psp += 20 + 2 * (pc->stats.intel - 15);
+    }
+    if (has_class(pc, REAL_CLASS_PSIONICIST)) {
+        int psi_level = 0;
+        if (pc->real_class[0] == REAL_CLASS_PSIONICIST) { psi_level = pc->level[0]; }
+        if (pc->real_class[1] == REAL_CLASS_PSIONICIST) { psi_level = pc->level[1]; }
+        if (pc->real_class[2] == REAL_CLASS_PSIONICIST) { psi_level = pc->level[2]; }
+        pc->base_psp += 10 * (psi_level);
+        if (pc->stats.wis > 15) {
+            pc->base_psp += (20 + 2 * (pc->stats.intel - 15)) * (psi_level - 1);
+        }
+    }
+}
+
 static void do_level_up(ds_character_t *pc, const uint32_t class_idx, const uint32_t class) {
     int clevel = pc->level[class];
     int num_classes = 0;
@@ -518,6 +548,7 @@ static void do_level_up(ds_character_t *pc, const uint32_t class_idx, const uint
     pc->base_hp += hp;
     pc->high_hp += hp;
     pc->level[class_idx]++;
+    set_psp(pc);
 }
 
 void dnd2e_set_exp(ds_character_t *pc, const uint32_t amt) {
@@ -562,8 +593,19 @@ int32_t dnd2e_exp_to_next_level_up(ds_character_t *pc) {
     return next_exp;
 }
 
-int16_t dnd2e_get_ac(ds_character_t *pc) {
-    return pc->base_ac;
+int16_t dnd2e_get_ac_pc(ds_character_t *pc) {
+    return pc->base_ac + dex_mods[pc->stats.dex][2];
+}
+
+// TODO, take into accound items held
+int16_t dnd2e_get_attack_num_pc(ds_character_t *pc) {
+    return 1;
+}
+int16_t dnd2e_get_attack_die_pc(ds_character_t *pc) {
+    return 4;
+}
+int16_t dnd2e_get_attack_mod_pc(ds_character_t *pc) {
+    return str_mods[pc->stats.str][STR_DAM];
 }
 
 void dnd2e_randomize_stats_pc(ds_character_t *pc) {
@@ -575,7 +617,9 @@ void dnd2e_randomize_stats_pc(ds_character_t *pc) {
     pc->stats.cha = 10 + (rand() % 11);
     pc->base_ac = 10;
     dnd2e_apply_race_mods(pc);
-    dnd2e_fix_stats_pc(pc);
+    dnd2e_fix_stats_pc(pc); // Get our base stats correct first.
+
+    dnd2e_set_exp(pc, pc->current_xp); // Also sets HP & PSP
 }
 
 void dnd2e_fix_stats_pc(ds_character_t *pc) {

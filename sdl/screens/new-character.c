@@ -23,6 +23,8 @@ static uint16_t races[14];
 static uint16_t spr;// sprite of the character on screen
 static uint16_t psionic_label; // 2047
 static uint16_t sphere_label; // 2046
+static uint16_t done_button;
+static uint16_t exit_button;
 
 static uint8_t show_psionic_label = 1;
 static int8_t sphere_selection = -1;
@@ -36,8 +38,18 @@ static SDL_Renderer *renderer;
 static ds_character_t pc; // the character we are creating.
 static psin_t psi; // psi group
 char sphere_text[32];
+char name_text[32];
 
 static void update_ui();
+
+static void get_random_name() {
+    uint32_t res_ids[1<<12];
+
+    int res_max = gff_get_resource_length(RESOURCE_GFF_INDEX, GFF_TEXT);
+    gff_get_resource_ids(RESOURCE_GFF_INDEX, GFF_TEXT, res_ids);
+    gff_chunk_header_t chunk = gff_find_chunk_header(RESOURCE_GFF_INDEX, GFF_TEXT, res_ids[rand() % res_max]);
+    gff_read_chunk(RESOURCE_GFF_INDEX, &chunk, name_text, 32);
+}
 
 static int convert_to_actual_class(const uint8_t class) {
     switch (class) {
@@ -133,6 +145,7 @@ static void init_pc() {
     pc.gender = GENDER_MALE;
     pc.real_class[0] = pc.real_class[1] = pc.real_class[2] = -1;
     memset(&psi, 0x0, sizeof(psi));
+    get_random_name();
 }
 
 static void new_character_init(SDL_Renderer *_renderer, const uint32_t x, const uint32_t y, const float _zoom) {
@@ -152,6 +165,8 @@ static void new_character_init(SDL_Renderer *_renderer, const uint32_t x, const 
     done = new_sprite_create(renderer, pal, 250 + x, 160 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2000);
     sphere_label = new_sprite_create(renderer, pal, 217 + x, 140 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2046);
     psionic_label = new_sprite_create(renderer, pal, 217 + x, 140 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2047);
+    done_button = new_sprite_create(renderer, pal, 240 + x, 174 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2000);
+    exit_button = new_sprite_create(renderer, pal, 255 + x, 156 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2058);
 
     for (int i = 0; i < 8; i++) {
         classes[i] = new_sprite_create(renderer, pal, 220 + x, 10 + y + (i*8),
@@ -302,6 +317,10 @@ void new_character_render(void *data, SDL_Renderer *renderer) {
     }
 
     sprite_render(renderer, show_psionic_label ? sphere_label : psionic_label);
+    sprite_render(renderer, done_button);
+    sprite_render(renderer, exit_button);
+    snprintf(buf, BUF_MAX, "NAME: %s", name_text);
+    print_line_len(renderer, FONT_GREY, buf, 20, 255, BUF_MAX);
     snprintf(buf, BUF_MAX, "STR: %d", pc.stats.str);
     print_line_len(renderer, FONT_GREY, buf, 20, 270, BUF_MAX);
     snprintf(buf, BUF_MAX, "DEX: %d", pc.stats.dex);
@@ -337,6 +356,17 @@ void new_character_render(void *data, SDL_Renderer *renderer) {
         snprintf(buf, BUF_MAX, "EXP: %d (%d)", pc.current_xp, dnd2e_exp_to_next_level_up(&pc));
         print_line_len(renderer, FONT_GREY, buf, 245, 315, BUF_MAX);
     }
+    snprintf(buf, BUF_MAX, "AC: %d", dnd2e_get_ac_pc(&pc));
+    print_line_len(renderer, FONT_GREY, buf, 175, 330, BUF_MAX);
+    pos = snprintf(buf, BUF_MAX, "%d%s", dnd2e_get_attack_num_pc(&pc) >> 1,
+        (dnd2e_get_attack_num_pc(&pc) & 0x01) ? ".5" : "");
+    pos += snprintf(buf + pos, BUF_MAX - pos, "x1D%d", dnd2e_get_attack_die_pc(&pc));
+    pos += snprintf(buf + pos, BUF_MAX - pos, "+%d", dnd2e_get_attack_mod_pc(&pc));
+    print_line_len(renderer, FONT_GREY, buf, 245, 330, BUF_MAX);
+    pos = snprintf(buf, BUF_MAX, "%d/%d", pc.base_hp, pc.high_hp);
+    print_line_len(renderer, FONT_GREY, buf, 185, 345, BUF_MAX);
+    pos = snprintf(buf, BUF_MAX, "%d/%d", pc.base_psp, pc.base_psp);
+    print_line_len(renderer, FONT_GREY, buf, 185, 360, BUF_MAX);
 }
 
 int new_character_handle_mouse_movement(const uint32_t x, const uint32_t y) {
@@ -366,6 +396,14 @@ int new_character_handle_mouse_movement(const uint32_t x, const uint32_t y) {
             }
         }
     }
+    sprite_set_frame(done_button, 0);
+    sprite_set_frame(exit_button, 0);
+    if (sprite_in_rect(done_button, x, y)) {
+        cspr = done_button;
+    }
+    if (sprite_in_rect(exit_button, x, y)) {
+        cspr = exit_button;
+    }
 
     if (sprite_get_frame(cspr) < 2) {
         sprite_set_frame(cspr, 1);
@@ -383,6 +421,12 @@ int new_character_handle_mouse_movement(const uint32_t x, const uint32_t y) {
 }
 
 int new_character_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
+    if (sprite_in_rect(done_button, x, y)) {
+        sprite_set_frame(done_button, 2);
+    }
+    if (sprite_in_rect(exit_button, x, y)) {
+        sprite_set_frame(exit_button, 2);
+    }
     return 1;// handle
 }
 
@@ -412,6 +456,7 @@ static void fix_race_gender() { // move the race/gender to the appropiate spot
         pc.real_class[0] = pc.real_class[1] = pc.real_class[2] = -1;
         sprite_set_frame(class_sel[i], 0);
     }
+    if (reset) { get_random_name(); }
 
     dnd2e_fix_stats_pc(&pc); // in case something need adjustment
     load_character_sprite(); // go ahead and get the new sprite
@@ -603,6 +648,12 @@ int new_character_handle_mouse_up(const uint32_t button, const uint32_t x, const
     } else if (!show_psionic_label && sprite_get_frame(sphere_label) < 2 && sprite_in_rect(sphere_label, x, y)) {
         show_psionic_label = 1;
         set_ps_sel_frames();
+    }
+    if (sprite_in_rect(done_button, x, y)) {
+        printf("DONE!\n");
+    }
+    if (sprite_in_rect(exit_button, x, y)) {
+        printf("EXIT!\n");
     }
     return 1;// handle
 }
