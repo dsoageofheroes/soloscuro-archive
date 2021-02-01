@@ -15,10 +15,10 @@ SDL_FLAGS = -g -I src/ -I sdl/ -I ext/ -L./ -Werror -Wall -llua5.3 -lxmimidi -O2
 include makefile.in
 
 obj/%.o : sdl/%.c $(DEPS) $(SDL_DEPS)
-	gcc -c $(SDL_FLAGS) $< -o $@
+	$(CC) -c $(SDL_FLAGS) $< -o $@
 
 mdark : obj/screens $(SDL_OBJS) libds.so libxmimidi.so
-	gcc $(SDL_FLAGS) $(SDL_OBJS) -o $@ -lds -lSDL2
+	$(CC) $(SDL_FLAGS) $(SDL_OBJS) -o $@ -lds -lSDL2
 
 obj/screens: obj
 	mkdir -p obj/screens

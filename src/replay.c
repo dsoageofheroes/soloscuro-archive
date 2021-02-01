@@ -44,7 +44,7 @@ static int replay_change_region(lua_State *l) {
 
 static int replay_talk_click(lua_State *l) {
     lua_Integer obj = luaL_checkinteger(l, 1);
-    printf("REPLAY: clicking ob obj: %lld\n", obj);
+    //printf("REPLAY: clicking ob obj: %lld\n", obj);
     fflush(stdout);
     talk_click(obj);
     return 0;
@@ -52,7 +52,7 @@ static int replay_talk_click(lua_State *l) {
 
 static int replay_select_menu(lua_State *l) {
     lua_Integer menu_id = luaL_checkinteger(l, 1);
-    printf("REPLAY: selecting menu: %lld\n", menu_id);
+    //printf("REPLAY: selecting menu: %lld\n", menu_id);
     fflush(stdout);
     narrate_select_menu(menu_id);
     return 0;
@@ -62,10 +62,10 @@ static int replay_signal(lua_State *l) {
     lua_Integer signal = luaL_checkinteger(l, 1);
     lua_Integer _accum = luaL_checkinteger(l, 2);
 
-    printf("REPLAY: signal: %lld, %lld\n", signal, _accum);
+    //printf("REPLAY: signal: %lld, %lld\n", signal, _accum);
     fflush(stdout);
-    printf("NEED TO GET game_loop_signal back!\n");
-    //game_loop_signal(signal, _accum);
+    //printf("NEED TO GET game_loop_signal back!\n");
+    game_loop_signal(signal, _accum);
 
     return 0;
 }
@@ -88,7 +88,7 @@ int replay_next() {
         return 0;
     }
 
-    if (fgets(line, LINE_MAX, replay_file)) {
+    if (fgets(line, LINE_SIZE, replay_file)) {
         //render();
         //tick();
         if (luaL_dostring(replay_lua, line)) {

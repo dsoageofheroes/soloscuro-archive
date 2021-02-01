@@ -2,13 +2,13 @@ all: obj $(EXEC) libds.so
 
 libds.so: obj $(OBJS) libxmimidi.so
 	echo $(SRCS)
-	gcc -L./ $(OBJS) -shared -o libds.$(LIB_EXT) -llua5.3 -lxmimidi
+	$(CC) -L./ $(OBJS) -shared -o libds.$(LIB_EXT) -llua5.3 -lxmimidi
 
 libxmimidi.so:
-	gcc ext/xmi2mid.c -shared -o libxmimidi.$(LIB_EXT)
+	$(CC) ext/xmi2mid.c -shared -o libxmimidi.$(LIB_EXT)
 
 obj/%.o : src/%.c $(DEPS)
-	gcc -c $(CFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $< -o $@
 
 obj:
 	mkdir -p obj
@@ -16,23 +16,23 @@ obj:
 tools: gff-inspector
 
 gff-inspector: $(OBJS) tools/gff-inspector.c
-	gcc $(CFLAGS) $(OBJS) tools/gff-inspector.c -o gff-inspector
+	$(CC) $(CFLAGS) $(OBJS) tools/gff-inspector.c -o gff-inspector
 
 bin:
 	mkdir -p bin
 
 lua-test: libds.so bin
-	gcc $(CFLAGS) test/lua-test.c -o bin/lua-test -lds -llua5.3
+	$(CC) $(CFLAGS) test/lua-test.c -o bin/lua-test -lds -llua5.3
 
 %test: bin libds.so libxmimidi.so
-	gcc $(CFLAGS) test/$@.c test/unity.c test/base.c -o bin/$@ -lds -llua5.3
+	$(CC) $(CFLAGS) test/$@.c test/unity.c test/base.c -o bin/$@ -lds -llua5.3
 	LD_LIBRARY_PATH=./ bin/$@
 
 %test-lua: bin
 	LD_LIBRARY_PATH=./ lua5.3 test/$@.lua -v
 
 clean:
-	rm -rf $(EXEC) obj gff-inspector libds.$(LIB_EXT) libxmimidi.$(LIB_EXT) bin/ mdark
+	rm -rf $(EXEC) obj gff-inspector libds.$(LIB_EXT) libxmimidi.$(LIB_EXT) bin/ mdark mdark.exe *dll
 
 flip:
 	ls imgs/ | xargs -I {} convert imgs/{} -flip imgs/{}

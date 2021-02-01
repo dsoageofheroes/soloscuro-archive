@@ -4,6 +4,7 @@
 #include "../font.h"
 #include "../../src/gff.h"
 #include "../../src/gfftypes.h"
+#include <string.h>
 
 static uint16_t background, popup_return, option[3];
 static char main_text[32], option_text[3][32];

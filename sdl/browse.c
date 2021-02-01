@@ -1237,7 +1237,7 @@ static void render_entry_char() {
         offset += 10 + rdff->len;
     }
     render_entry_header();
-    printf("offset = %ld\n", offset);
+    //printf("offset = %ld\n", offset);
     printf("------------------------------------\n");
 }
 
@@ -1298,7 +1298,8 @@ static void render_entry_it1r() {
         ds1_it1r_t *it1r = (ds1_it1r_t*)(it1rs + (mapy * sizeof(ds1_it1r_t)));
         render_entry_header();
 
-        snprintf(buf, BUF_MAX, "entry %d of %ld", mapy, amt/sizeof(ds1_it1r_t));
+        //snprintf(buf, BUF_MAX, "entry %d of %ld", mapy, (uint32_t)(amt/sizeof(ds1_it1r_t)));
+        snprintf(buf, BUF_MAX, "entry %d of %ld", mapy, (long int)(amt/sizeof(ds1_it1r_t)));
         print_line_len(renderer, 0, buf, 320, 40, BUF_MAX);
 
         pos = snprintf(buf, BUF_MAX, "Weapon and damage: ");

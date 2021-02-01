@@ -5,6 +5,8 @@
 #include "../../src/gfftypes.h"
 #include "../gameloop.h"
 #include "../font.h"
+#include <string.h>
+#include <ctype.h>
 
 #define STARTX (60)
 #define MAX_CHARS (256)
