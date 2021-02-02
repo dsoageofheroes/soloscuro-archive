@@ -15,6 +15,7 @@ enum {
 void popup_set_message(const char *msg);
 void popup_set_option(const int idx, const char *msg);
 uint8_t popup_get_selection();
+void popup_clear_selection();
 
 extern sops_t popup_screen;
 

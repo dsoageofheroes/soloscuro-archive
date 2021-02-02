@@ -108,5 +108,6 @@
 #define GFF_PSST GFFTYPE('P','S','S','T') // psionc list bytes
 #define GFF_CHAR GFFTYPE('C','H','A','R') // saved character slot.
 #define GFF_PSIN GFFTYPE('P','S','I','N') // psionic and sphere selection
+#define GFF_CACT GFFTYPE('C','A','C','T') // valid char id (0 if entry is invalid.)
 
 #endif

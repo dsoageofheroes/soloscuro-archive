@@ -11,6 +11,7 @@ enum {
     FONT_GREY,
     FONT_BLACK,
     FONT_RED,
+    FONT_REDDARK,
     NUM_FONTS
 };
 

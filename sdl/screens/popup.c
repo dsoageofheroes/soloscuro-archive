@@ -146,6 +146,7 @@ void popup_free() {
 }
 
 uint8_t popup_get_selection() { return selection; }
+void popup_clear_selection() { selection = POPUP_NOTHING; }
 
 sops_t popup_screen = {
     .init = popup_init,

@@ -403,6 +403,12 @@ extern size_t gff_read_chunk(int idx, gff_chunk_header_t *chunk, void *read_buf,
     return fread(read_buf, 1, chunk->length, open_files[idx].file);
 }
 
+extern size_t gff_read_chunk_piece(int idx, gff_chunk_header_t *chunk, void *read_buf, const size_t len) {
+    size_t min = chunk->length > len ? len : chunk->length;
+    fseek(open_files[idx].file, chunk->location, SEEK_SET);
+    return fread(read_buf, 1, min, open_files[idx].file);
+}
+
 size_t gff_read_raw_bytes(int idx, int type_id, int res_id, void *read_buf, const size_t len) {
     gff_chunk_header_t chunk = gff_find_chunk_header(idx, type_id, res_id);
     return gff_read_chunk(idx, &chunk, read_buf, len);

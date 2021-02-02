@@ -88,9 +88,10 @@ gff_palette_t* create_palettes(int gff_idx, unsigned int *len) {
 }
 
 int get_frame_count(int gff_idx, int type_id, int res_id) {
-    char buf[1<<14];
+    char buf[16];
     gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, type_id, res_id);
-    gff_read_chunk(gff_idx, &chunk, buf, 1<<14);
+    //printf("chunk: {id = %d, length = %d, location = %d}\n", chunk.id, chunk.length, chunk.location);
+    gff_read_chunk_piece(gff_idx, &chunk, buf, 16);
     short num_frames = *((unsigned short*)(buf + 4));
     return num_frames;
 }

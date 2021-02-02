@@ -71,7 +71,9 @@ uint16_t sprite_create(SDL_Renderer *renderer, SDL_Rect *initial,
 
     sprite = sprites + sprite_id;
     sprite->loc = apply_params(*initial, offsetx, offsetx);
+    //printf("%d, %d, %d\n", gff_idx, type_id, res_id);
     sprite->len = get_frame_count(gff_idx, type_id, res_id);
+    //printf("frame out: %d\n", sprite->len);
     if (sprite->len == 0) { sprite->len = 1;}
     // TODO: PERFORMANCE, create 1 large texture of multiple frames, which also eliminates a malloc...
     // TODO: alternatively, create a function to manually load the frames at once,
@@ -79,6 +81,7 @@ uint16_t sprite_create(SDL_Renderer *renderer, SDL_Rect *initial,
     sprite->tex = malloc(sizeof(SDL_Texture*) * sprite->len);
     for (int i = 0; i < sprite->len; i++) {
         sprite->tex[i] = create_texture(renderer, gff_idx, type_id, res_id, i, pal, &(sprite->loc));
+        //printf("->{%d, %d, %d, %d}\n", sprite->loc.x, sprite->loc.y, sprite->loc.w, sprite->loc.h);
     }
     set_zoom(&(sprite->loc), zoom);
     sprite->pos = 0;
@@ -104,6 +107,13 @@ void sprite_set_frame(const uint16_t id, const uint16_t frame) {
 void sprite_render(SDL_Renderer *renderer, const uint16_t sprite_id) {
     if (sprite_id == (uint16_t)SPRITE_ERROR) { return; }
     sprite_t *sprite = sprites + sprite_id;
+    /*
+    printf("->%p {%d, %d, %d, %d}\n", sprite->tex[sprite->pos],
+            sprite->loc.x,
+            sprite->loc.y,
+            sprite->loc.w,
+            sprite->loc.h);
+            */
     SDL_RenderCopy(renderer, sprite->tex[sprite->pos], NULL, &(sprite->loc));
 }
 

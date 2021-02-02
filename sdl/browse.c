@@ -1162,6 +1162,8 @@ static void render_entry_char() {
     }
     printf("\n");
     printf("data1[0] = %d, data1[1] = %d\n", character->data1[0], character->data1[1]);
+    */
+    /*
     printf("%s\n", (character->gender == 1) ? "MALE" : "FEMALE");
     //printf("%s\n", race_names[character->race]);
     //printf("%s\n", alignment_names[character->alignment]);

@@ -55,6 +55,7 @@ void font_init(SDL_Renderer *renderer) {
     create_font(renderer, FONT_GREY, 0x8A8AA2FF, 0x101038FF);
     create_font(renderer, FONT_BLACK, 0x101038FF, 0xA6A6BEFF);
     create_font(renderer, FONT_RED, 0xD72128FF, 0xA6A6BEFF);
+    create_font(renderer, FONT_REDDARK, 0xD72128FF, 0x000000FF);
 }
 
 void font_free(SDL_Renderer *renderer) {

@@ -125,6 +125,8 @@ void screen_pop() {
         screens[screen_pos].data = NULL;
     }
 
+    printf("cleanup down\n");
+
     if (screen_pos > 0 && screens[screen_pos - 1].return_control) {
         screens[screen_pos - 1].return_control();
     }
