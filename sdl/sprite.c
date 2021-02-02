@@ -107,6 +107,12 @@ void sprite_render(SDL_Renderer *renderer, const uint16_t sprite_id) {
     SDL_RenderCopy(renderer, sprite->tex[sprite->pos], NULL, &(sprite->loc));
 }
 
+void sprite_set_location(const uint16_t sprite_id, const uint32_t x, const uint32_t y) {
+    if (sprite_id == (uint16_t)SPRITE_ERROR) { return; }
+    sprites[sprite_id].loc.x = x;
+    sprites[sprite_id].loc.y = y;
+}
+
 int sprite_in_rect(const uint16_t id, const uint32_t x, const uint32_t y) {
     if (!valid_id(id)) { return 0; }
     SDL_Rect *loc = &(sprites[id].loc);

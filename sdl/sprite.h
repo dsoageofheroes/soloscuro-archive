@@ -26,6 +26,7 @@ void sprite_render(SDL_Renderer *renderer, const uint16_t sprite_id);
 uint16_t sprite_get_frame(const uint16_t id);
 void sprite_set_frame(const uint16_t id, const uint16_t frame);
 int sprite_in_rect(const uint16_t id, const uint32_t x, const uint32_t y);
+void sprite_set_location(const uint16_t, const uint32_t, const uint32_t y);
 // Free a sprite at an ID (do not use it again!)
 void sprite_free(const uint16_t id);
 

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "gameloop.h"
 #include "screen-manager.h"
+#include "screens/add-load-save.h"
 #include "screens/narrate.h"
 #include "screens/screen-main.h"
 #include "screens/view-character.h"
@@ -31,6 +32,9 @@ void load_screen(const char *arg) {
         popup_set_option(0, "Save");
         popup_set_option(1, "Load");
         popup_set_option(2, "Exit");
+    }
+    if (!strcmp(arg, "als")) {
+        screen_push_screen(renderer, &als_screen, 0, 0);
     }
 }
 
