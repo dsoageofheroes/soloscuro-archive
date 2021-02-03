@@ -192,6 +192,12 @@ void view_character_free() {
         sprite_free(leader[i]);
         sprite_free(ports[i]);
     }
+    sprite_free(game_return);
+    sprite_free(game_menu);
+    sprite_free(character);
+    sprite_free(inv);
+    sprite_free(magic);
+    sprite_free(status);
 }
 
 void view_character_return_control () {

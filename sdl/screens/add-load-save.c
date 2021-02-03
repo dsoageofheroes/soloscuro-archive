@@ -5,6 +5,7 @@
 #include "../font.h"
 #include "../sprite.h"
 #include "../../src/gff.h"
+#include "../../src/gff-char.h"
 #include "../../src/gfftypes.h"
 
 static uint16_t background;
@@ -20,6 +21,8 @@ static uint16_t new_sprite_create(SDL_Renderer *renderer, gff_palette_t *pal,
     return sprite_create(renderer, &tmp, pal, 0, 0, zoom, gff_idx, type_id, res_id);
 }
 
+#define RES_MAX (1<<10)
+
 static float zoom;
 static uint16_t mousex, mousey;
 static uint16_t selection;
@@ -29,6 +32,7 @@ static uint32_t num_entries = 0;
 static uint32_t top_entry = 0;
 static uint32_t num_valid_entries = 0;
 static int last_action = ACTION_NONE;
+static uint32_t res_ids[RES_MAX]; // for the deletion.
 static SDL_Renderer *renderer = NULL;
 
 static void free_entries() {
@@ -47,12 +51,10 @@ static void free_entries() {
     num_valid_entries = 0;
 }
 
-#define RES_MAX (1<<10)
 #define BUF_MAX (1<<12)
 
 static void setup_character_selection() {
     char buf[BUF_MAX];
-    uint32_t res_ids[RES_MAX];
     int16_t id;
 
     free_entries();
@@ -60,8 +62,9 @@ static void setup_character_selection() {
     num_entries = gff_get_resource_length(CHARSAVE_GFF_INDEX, GFF_CHAR);
 
     entries = malloc(sizeof(char*) * num_entries);
-    valids = malloc(sizeof(uint8_t) * num_entries);
+    valids = malloc(sizeof(uint16_t) * num_entries);
     if (!entries || !valids) { return; }
+    num_valid_entries = 0;
     gff_get_resource_ids(CHARSAVE_GFF_INDEX, GFF_CHAR, res_ids);
     for (int i = 0; i < num_entries; i++) {
         gff_chunk_header_t chunk = gff_find_chunk_header(CHARSAVE_GFF_INDEX, GFF_CHAR, res_ids[i]);
@@ -246,7 +249,9 @@ int add_load_save_handle_mouse_up(const uint32_t button, const uint32_t x, const
 void add_load_save_return_control () {
     sprite_set_frame(delete_btn, 0);
     if (popup_get_selection() == POPUP_0) {
-        printf("Need to delete!\n");
+        //printf("Need to delete! %d\n", res_ids[valids[selection]]);
+        gff_char_delete(res_ids[valids[selection]]);
+        setup_character_selection();
     }
     popup_clear_selection();
 }
@@ -259,6 +264,8 @@ void add_load_save_free() {
     sprite_free(delete_btn);
     sprite_free(action_btn);
     sprite_free(title);
+    sprite_free(bar);
+    free_entries();
 }
 
 int add_load_save_get_action() { return last_action; }

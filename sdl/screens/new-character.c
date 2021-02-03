@@ -690,10 +690,20 @@ void new_character_free() {
     }
     for (int i = 0; i < 4; i++) {
         sprite_free(spheres[i]);
+        sprite_free(ps_sel[i]);
     }
     for (int i = 0; i < 11; i++) {
         sprite_free(die[i]);
     }
+    for (int i = 0; i < 14; i++) {
+        sprite_free(races[i]);
+    }
+    sprite_free(done);
+    sprite_free(sphere_label);
+    sprite_free(psionic_label);
+    sprite_free(done_button);
+    sprite_free(exit_button);
+    sprite_free(spr);
 }
 
 sops_t new_character_screen = {

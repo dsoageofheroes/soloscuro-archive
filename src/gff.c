@@ -414,6 +414,11 @@ size_t gff_read_raw_bytes(int idx, int type_id, int res_id, void *read_buf, cons
     return gff_read_chunk(idx, &chunk, read_buf, len);
 }
 
+size_t gff_write_chunk(const int idx, const gff_chunk_header_t chunk, const char *path) {
+    fseek(open_files[idx].file, chunk.location, SEEK_SET);
+    return fwrite(path, 1, chunk.length, open_files[idx].file);
+}
+
 int gff_write_raw_bytes(int idx, int type_id, int res_id, const char *path) {
     int amt = 0;
     char *data;

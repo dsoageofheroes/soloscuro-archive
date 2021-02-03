@@ -209,7 +209,8 @@ extern size_t gff_read_raw_bytes(int idx, int type_id, int res_id, void *buf, co
 extern gff_chunk_header_t gff_find_chunk_header(int idx, int type_id, int res_id);
 extern size_t gff_read_chunk(int idx, gff_chunk_header_t *chunk, void *buf, const size_t len);
 extern size_t gff_read_chunk_piece(int idx, gff_chunk_header_t *chunk, void *read_buf, const size_t len);
-extern int gff_write_raw_bytes(int idx, int type_id, int res_id, const char *path);
+size_t gff_write_chunk(const int idx, const gff_chunk_header_t chunk, const char *path);
+extern int gff_write_raw_bytes(int idx, int type_id, int res_id, const char *path); // DEPRECATED?
 extern void gff_print(int idx, FILE *out);
 extern void gff_close (int gff_file);
 extern void gff_cleanup();
