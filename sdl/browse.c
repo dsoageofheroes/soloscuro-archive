@@ -393,6 +393,7 @@ static void render_entry_psst();
 static void render_entry_char();
 static void render_entry_psin();
 static void render_entry_it1r();
+static void render_entry_cact();
 
 static void render_entry() {
     switch(gff_get_type_id(gff_idx, entry_idx)) {
@@ -419,6 +420,7 @@ static void render_entry() {
         case GFF_CHAR: render_entry_char(); break;
         case GFF_PSIN: render_entry_psin(); break;
         case GFF_IT1R: render_entry_it1r(); break;
+        case GFF_CACT: render_entry_cact(); break;
         default:
             render_entry_header();
             print_line_len(renderer, 0, "Need to implement", 320, 40, 128);
@@ -1365,4 +1367,16 @@ static void render_entry_it1r() {
         pos = snprintf(buf, BUF_MAX, "data2: %d", it1r->data2);
         print_line_len(renderer, 0, buf, 320, 240, BUF_MAX);
     }
+}
+
+static void render_entry_cact() {
+    char buf[BUF_MAX];
+    int16_t id;
+    gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_CACT, res_ids[res_idx]);
+    gff_read_chunk(gff_idx, &chunk, &id, sizeof(id));
+
+    render_entry_header();
+
+    snprintf(buf, BUF_MAX, "id: %d, [%d, %d]\n", id, (id >> 8) & 0xFF, id & 0xFF);
+    print_line_len(renderer, 0, buf, 320, 40, BUF_MAX);
 }

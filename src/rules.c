@@ -623,10 +623,75 @@ void dnd2e_randomize_stats_pc(ds_character_t *pc) {
 }
 
 void dnd2e_fix_stats_pc(ds_character_t *pc) {
-    if (pc->stats.str < 9) { pc->stats.str = 9; }
-    if (pc->stats.dex < 9) { pc->stats.dex = 9; }
-    if (pc->stats.con < 9) { pc->stats.con = 9; }
-    if (pc->stats.intel < 9) { pc->stats.intel = 9; }
-    if (pc->stats.wis < 9) { pc->stats.wis = 9; }
-    if (pc->stats.cha < 9) { pc->stats.cha = 9; }
+    if (pc->stats.str < 5) { pc->stats.str = 9; }
+    if (pc->stats.dex < 5) { pc->stats.dex = 9; }
+    if (pc->stats.con < 5) { pc->stats.con = 9; }
+    if (pc->stats.intel < 5) { pc->stats.intel = 9; }
+    if (pc->stats.wis < 5) { pc->stats.wis = 9; }
+    if (pc->stats.cha < 5) { pc->stats.cha = 9; }
+}
+
+int dnd2e_character_is_valid(ds_character_t *pc) {
+    if (pc->stats.str < 0 || pc->stats.str > 25) { return 0; }
+    if (pc->stats.dex < 0 || pc->stats.dex > 25) { return 0; }
+    if (pc->stats.con < 0 || pc->stats.con > 25) { return 0; }
+    if (pc->stats.intel < 0 || pc->stats.intel > 25) { return 0; }
+    if (pc->stats.wis < 0 || pc->stats.wis > 25) { return 0; }
+    if (pc->stats.cha < 0 || pc->stats.cha > 25) { return 0; }
+    if (pc->base_hp < 1) { return 0; }
+    if (pc->high_hp < 1) { return 0; }
+    if (pc->current_xp < 1) { return 0; }
+    if (pc->base_psp < 0) { return 0; }
+    if (!dnd2e_is_class_allowed(pc->race, pc->real_class)) { return 0; }
+    if (pc->gender != GENDER_MALE && pc->gender != GENDER_FEMALE) { return 0; }
+    if (pc->alignment < LAWFUL_GOOD || pc->alignment > CHAOTIC_EVIL) { return 0; }
+    if (pc->level[0] < 1) { return 0; }
+    if (pc->real_class[1] > -1 && pc->level[1] < 1) { return 0; }
+    if (pc->real_class[2] > -1 &&pc->level[2] < 1) { return 0; }
+    if (pc->magic_resistance < 0 || pc->magic_resistance > 100) { return 0; }
+    if (pc->allegiance != 1) { return 0; }
+    if (pc->size < 0) { return 0; }
+    // Not checked:
+    // pc->id
+    // pc->data1
+    // pc->legalClass
+    // pc->base_ac
+    // pc->base_move
+    // pc->num_blows
+    // pc->num_attacks
+    // pc->num_dice
+    // pc->num_sides
+    // pc->num_bonuses
+    // pc->saving_throw
+    // pc->spell_group
+    // pc->high_level
+    // pc->soundfx
+    // pc->attack_sound
+    // pc->psi_group
+    // pc->pallette
+    return 1;// passed the checks.
+}
+
+int dnd2e_psin_is_valid(ds_character_t *pc, psin_t *psi) {
+    int num_psionics = 0;
+    int is_psionicist = 0;
+
+    for (int i = 0; i < 7; i++) {
+        if (psi->types[i]) { num_psionics++; }
+    }
+    for (int i = 0; i < 3; i++) {
+        if (pc->real_class[i] == REAL_CLASS_PSIONICIST) { is_psionicist = 1; }
+    }
+
+    if (is_psionicist) { return num_psionics == 3; }
+
+    return num_psionics == 1;
+}
+
+int16_t dnd2e_get_move_pc(ds_character_t *pc) {
+    return 12;
+}
+
+int16_t dnd2e_get_thac0_pc(ds_character_t *pc) {
+    return 20; //TODO: update
 }

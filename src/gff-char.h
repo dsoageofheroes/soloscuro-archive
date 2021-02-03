@@ -3,10 +3,17 @@
 
 #include <stdint.h>
 
-//int gff_load_map_tile_ids(int gff_file, int res_id);
-//int gff_load_map_flags(int gff_file, int res_id);
-//int gff_load_map(int gff_file);
-//int32_t get_tile_id(int gff_file, int row, int column);
+#include "spells.h"
+#include "dsl-object.h"
+
+typedef struct player_character_s {
+    ds_character_t pc;
+    psin_t psi;
+    spell_list_t spells;
+    psionic_list_t psionics;
+} player_character_t;
+
 int gff_char_delete(const int id);
+int gff_char_add_character(ds_character_t *pc, psin_t *psi, spell_list_t *spells, psionic_list_t *psionics, char *name);
 
 #endif

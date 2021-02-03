@@ -254,8 +254,8 @@ so_object_t* gff_object_inspect(int gff_idx, int res_id) {
             case RDFF_CONTAINER:
                 printf("CONTAINER\n");
                 break;
-            case RDFF_POINTER:
-                //printf("POINTER\n");
+            case RDFF_DATA:
+                //printf("DATA\n");
                 break;
             case RDFF_NEXT:
                 printf("NEXT\n");

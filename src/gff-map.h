@@ -94,7 +94,7 @@ typedef rdff_disk_object_t rdff_header_t;
 enum {
     RDFF_OBJECT    = 1,
     RDFF_CONTAINER = 2,
-    RDFF_POINTER   = 3,
+    RDFF_DATA   = 3,
     RDFF_NEXT      = 4,
     RDFF_END       =-1
 };

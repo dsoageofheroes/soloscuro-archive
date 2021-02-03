@@ -3,6 +3,9 @@
 
 #include <stdint.h>
 
+#define MAX_SPELLS (8*138)
+#define MAX_PSIONICS (34)
+
 enum {
     PSIONIC_PSYCHOKINETIC,
     PSIONIC_PSYCHOMETABOLISM,
@@ -211,6 +214,14 @@ enum {
 typedef struct psin_s {
     uint8_t types[7];
 } psin_t;
+
+typedef struct spell_list_s {
+    uint8_t spells[MAX_SPELLS/8];
+} spell_list_t;
+
+typedef struct psionic_list_s {
+    uint8_t psionics[34];
+} psionic_list_t;
 
 void spell_get_psionic_name(uint8_t psi, char name[32]);
 void spell_get_wizard_name(uint8_t spell, char name[32]);

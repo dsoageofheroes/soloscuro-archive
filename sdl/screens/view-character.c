@@ -1,8 +1,11 @@
 #include "view-character.h"
 #include "../main.h"
 #include "../../src/gff.h"
+#include "../../src/gff-char.h"
 #include "../../src/gfftypes.h"
+#include "../../src/rules.h"
 #include "narrate.h"
+#include "new-character.h"
 #include "popup.h"
 #include "add-load-save.h"
 #include "../font.h"
@@ -16,6 +19,8 @@ static uint16_t ports[4];
 static uint16_t effects, view_char, use, panel;
 static uint16_t character, inv, magic, status;
 static uint16_t game_menu, game_return;
+enum {SELECT_NONE, SELECT_POPUP, SELECT_NEW, SELECT_ALS};
+static int8_t last_selection = SELECT_NONE;
 
 static SDL_Rect initial_locs[] = {{ 155, 28, 0, 0 }, // description
                                   { 75, 175, 0, 0 }, // message
@@ -175,6 +180,7 @@ int view_character_handle_mouse_up(const uint32_t button, const uint32_t x, cons
                 popup_set_option(0, "NEW");
                 popup_set_option(1, "ADD");
                 popup_set_option(2, "CANCEL");
+                last_selection = SELECT_POPUP;
             }
         }
     }
@@ -201,11 +207,40 @@ void view_character_free() {
 }
 
 void view_character_return_control () {
-    if (popup_get_selection() == POPUP_1) { // ADD
-        popup_clear_selection();
-        screen_push_screen(rend, &als_screen, 0, 0);
+    if (last_selection == SELECT_POPUP) {
+        if (popup_get_selection() == POPUP_0) { // new
+            popup_clear_selection();
+            screen_push_screen(rend, &new_character_screen, 0, 0);
+            last_selection = SELECT_NEW;
+            return;
+        }
+        if (popup_get_selection() == POPUP_1) { // ADD
+            popup_clear_selection();
+            screen_push_screen(rend, &als_screen, 0, 0);
+            last_selection = SELECT_ALS;
+            return;
+        }
+    } else if (last_selection == SELECT_NEW) {
+        ds_character_t *pc = new_character_get_pc();
+        psin_t* psi = new_character_get_psin();
+        spell_list_t* spells = new_character_get_spell_list();
+        psionic_list_t* psionics = new_character_get_psionic_list();
+        char *name = new_character_get_name();
+        if (pc && psi && spells && psionics) {
+            if (dnd2e_character_is_valid(pc) && dnd2e_psin_is_valid(pc, psi)) {
+                gff_char_add_character(pc, psi, spells, psionics, name);
+            } else {
+                screen_push_screen(rend, &popup_screen, 100, 75);
+                popup_set_message("Character was invalid.");
+                popup_set_option(0, "TRY AGAIN");
+                popup_set_option(1, "ADD");
+                popup_set_option(2, "CANCEL");
+                last_selection = SELECT_POPUP;
+                return;
+            }
+        }
     }
-    printf("RETURN!\n");
+    last_selection = SELECT_NONE;
 }
 
 sops_t view_character_screen = {

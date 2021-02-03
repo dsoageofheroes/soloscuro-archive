@@ -184,7 +184,6 @@ typedef struct _ds_combat_t {
     uint8_t priority;
     uint8_t flags;
     ds_stats_t stats; // 34, confirmed
-    //uint8_t direction;
     // WARNING: This is actually 16, but we do 18 as a buffer.
     char    name[COMBAT_NAME_SIZE]; // 40, confirmed
 //} ds1_combat_t;

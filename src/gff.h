@@ -14,7 +14,6 @@
 #define GFFMAXCHUNKMASK  (0x7FFFFFFFL)
 #define GFFSEGFLAGMASK   (0x80000000L)
 #define NUM_FILES (256)
-#define MAX_SPELLS (8*138)
 
 enum {
     RESOURCE_GFF_INDEX,
@@ -26,10 +25,6 @@ enum {
     DARKRUN_GFF_INDEX,
     REST_GFF_INDEX
 };
-
-typedef struct spell_list_s {
-    uint8_t spells[MAX_SPELLS/8];
-} spell_list_t;
 
 typedef struct {
 

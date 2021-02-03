@@ -2,12 +2,12 @@
 #include "../main.h"
 #include "../../src/gff.h"
 #include "../../src/gfftypes.h"
-#include "../../src/rules.h"
 #include "narrate.h"
 #include "popup.h"
 #include "../font.h"
 #include "../sprite.h"
 #include "../../src/spells.h"
+#include "../../src/rules.h"
 #include <time.h>
 
 static uint16_t background;
@@ -15,7 +15,7 @@ static uint16_t parchment[5];
 static uint16_t done;
 static uint16_t classes[8];
 static uint16_t class_sel[8];
-static uint16_t psionics[3];
+static uint16_t psionic_devotion[3];
 static uint16_t spheres[4];
 static uint16_t ps_sel[4]; // seletion for psionics/spheres.
 static uint16_t die[11];
@@ -37,10 +37,37 @@ static float zoom;
 static SDL_Renderer *renderer;
 static ds_character_t pc; // the character we are creating.
 static psin_t psi; // psi group
-char sphere_text[32];
-char name_text[32];
+static spell_list_t spells;
+static psionic_list_t psionics;
+static uint8_t is_valid;
+static char sphere_text[32];
+static char name_text[32];
 
 static void update_ui();
+
+ds_character_t* new_character_get_pc() {
+    if (!is_valid) { return NULL; }
+    return &pc;
+}
+
+psin_t* new_character_get_psin() {
+    if (!is_valid) { return NULL; }
+    return &psi;
+}
+
+spell_list_t* new_character_get_spell_list() {
+    if (!is_valid) { return NULL; }
+    return &spells;
+}
+
+psionic_list_t* new_character_get_psionic_list() {
+    if (!is_valid) { return NULL; }
+    return &psionics;
+}
+
+char* new_character_get_name() {
+    return name_text;
+}
 
 static void get_random_name() {
     uint32_t res_ids[1<<12];
@@ -145,6 +172,9 @@ static void init_pc() {
     pc.gender = GENDER_MALE;
     pc.real_class[0] = pc.real_class[1] = pc.real_class[2] = -1;
     memset(&psi, 0x0, sizeof(psi));
+    memset(&spells, 0x0, sizeof(spells));
+    memset(&psionics, 0x0, sizeof(psionics));
+    pc.allegiance = 1;
     get_random_name();
 }
 
@@ -155,6 +185,7 @@ static void new_character_init(SDL_Renderer *_renderer, const uint32_t x, const 
     renderer = _renderer;
 
     init_pc();
+    is_valid = 0;
     spr = SPRITE_ERROR;
     background = new_sprite_create(renderer, pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 13001);
     parchment[0] = new_sprite_create(renderer, pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20084);
@@ -176,9 +207,9 @@ static void new_character_init(SDL_Renderer *_renderer, const uint32_t x, const 
         sprite_set_frame(classes[i], 2);
     }
     for (int i = 0; i < 3; i++) {
-        psionics[i] = new_sprite_create(renderer, pal, 220 + x, 105 + y + (i*8),
+        psionic_devotion[i] = new_sprite_create(renderer, pal, 220 + x, 105 + y + (i*8),
                 zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2038 + i);
-        sprite_set_frame(psionics[i], 0);
+        sprite_set_frame(psionic_devotion[i], 0);
     }
     for (int i = 0; i < 4; i++) {
         spheres[i] = new_sprite_create(renderer, pal, 220 + x, 105 + y + (i*8),
@@ -308,7 +339,7 @@ void new_character_render(void *data, SDL_Renderer *renderer) {
 
     for (int i = 0; i < 4; i++) {
         if (i < 3 && show_psionic_label) {
-            sprite_render(renderer, psionics[i]);
+            sprite_render(renderer, psionic_devotion[i]);
         }
         if (!show_psionic_label) {
             sprite_render(renderer, spheres[i]);
@@ -385,8 +416,8 @@ int new_character_handle_mouse_movement(const uint32_t x, const uint32_t y) {
 
     if (show_psionic_label) {
         for (int i = 0; i < 3; i++) {
-            if (sprite_in_rect(psionics[i], x, y)) {
-                cspr = psionics[i];
+            if (sprite_in_rect(psionic_devotion[i], x, y)) {
+                cspr = psionic_devotion[i];
             }
         }
     } else {
@@ -515,13 +546,13 @@ static void set_ps_sel_frames() {
                + spell_has_psin(&psi, PSIONIC_TELEPATH);
 
         if (ps_selections > 0) {
-            sprite_set_frame(psionics[0], spell_has_psin(&psi, PSIONIC_PSYCHOKINETIC) ? 0 : 2);
-            sprite_set_frame(psionics[1], spell_has_psin(&psi, PSIONIC_PSYCHOMETABOLISM) ? 0 : 2);
-            sprite_set_frame(psionics[2], spell_has_psin(&psi, PSIONIC_TELEPATH) ? 0 : 2);
+            sprite_set_frame(psionic_devotion[0], spell_has_psin(&psi, PSIONIC_PSYCHOKINETIC) ? 0 : 2);
+            sprite_set_frame(psionic_devotion[1], spell_has_psin(&psi, PSIONIC_PSYCHOMETABOLISM) ? 0 : 2);
+            sprite_set_frame(psionic_devotion[2], spell_has_psin(&psi, PSIONIC_TELEPATH) ? 0 : 2);
         } else {
-            sprite_set_frame(psionics[0], 0);
-            sprite_set_frame(psionics[1], 0);
-            sprite_set_frame(psionics[2], 0);
+            sprite_set_frame(psionic_devotion[0], 0);
+            sprite_set_frame(psionic_devotion[1], 0);
+            sprite_set_frame(psionic_devotion[2], 0);
         }
     } else {
         sprite_set_frame(ps_sel[0], (sphere_selection == 0) ? 1 : 0);
@@ -627,8 +658,8 @@ int new_character_handle_mouse_up(const uint32_t button, const uint32_t x, const
     }
     for (int i = 0; i < 4; i++) {
         if (i < 3 && show_psionic_label) {
-            if (sprite_in_rect(psionics[i], x, y)) {
-                if (sprite_get_frame(psionics[i]) < 2) {
+            if (sprite_in_rect(psionic_devotion[i], x, y)) {
+                if (sprite_get_frame(psionic_devotion[i]) < 2) {
                     toggle_psi(i);
                 }
             }
@@ -650,10 +681,12 @@ int new_character_handle_mouse_up(const uint32_t button, const uint32_t x, const
         set_ps_sel_frames();
     }
     if (sprite_in_rect(done_button, x, y)) {
-        printf("DONE!\n");
+        is_valid = 1;
+        screen_pop();
     }
     if (sprite_in_rect(exit_button, x, y)) {
-        printf("EXIT!\n");
+        is_valid = 0;
+        screen_pop();
     }
     return 1;// handle
 }
@@ -686,7 +719,7 @@ void new_character_free() {
         sprite_free(class_sel[i]);
     }
     for (int i = 0; i < 3; i++) {
-        sprite_free(psionics[i]);
+        sprite_free(psionic_devotion[i]);
     }
     for (int i = 0; i < 4; i++) {
         sprite_free(spheres[i]);
