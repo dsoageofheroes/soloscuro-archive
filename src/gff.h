@@ -62,26 +62,21 @@ typedef struct {
 
 } gff_type_header_t;
 
-
 typedef struct {
 
   uint32_t 	  typesOffset;	// Byte offset from a pointer to itself.
-  uint32_t 	  freeListOffset; // Byte offset from &typesOffset
+  uint32_t 	  free_list_offset; // Byte offset from &typesOffset
 
 } gff_toc_header_t;
 
 typedef struct {
   uint32_t	  identity;	// Always 'GFFI'
   int16_t 	  fileId;
-  int16_t 	  flags;	// See Masks Above
+  int16_t 	  flags;
   gff_file_header_t	  fileHeader;
-  uint32_t 	  tocPadLen;	// How much pad?
+  uint32_t 	  toc_pad_len; // allocated space for extensions.
   gff_toc_header_t	  tocHeader;
-
-
 } gff_int_file_t;
-
-//#define kGffIntFileSize ((uint32_t)sizeof(gff_int_file_t))
 
 typedef struct {
 
@@ -89,8 +84,6 @@ typedef struct {
   uint32_t 	  length;
 
 } gff_free_entry_t;
-
-//#define kGffFreeEntrySize ((uint32_t)sizeof(gff_free_entry_t))
 
 typedef struct {
 
@@ -205,6 +198,7 @@ extern gff_chunk_header_t gff_find_chunk_header(int idx, int type_id, int res_id
 extern size_t gff_read_chunk(int idx, gff_chunk_header_t *chunk, void *buf, const size_t len);
 extern size_t gff_read_chunk_piece(int idx, gff_chunk_header_t *chunk, void *read_buf, const size_t len);
 size_t gff_write_chunk(const int idx, const gff_chunk_header_t chunk, const char *path);
+size_t gff_add_chunk(const int idx, const int type_id, int res_id, char *buf, const size_t len);
 extern int gff_write_raw_bytes(int idx, int type_id, int res_id, const char *path); // DEPRECATED?
 extern void gff_print(int idx, FILE *out);
 extern void gff_close (int gff_file);

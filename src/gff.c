@@ -302,8 +302,6 @@ int gff_open(const char *pathName) {
 
     gff_read_headers(open_files + idx);
 
-
-    //fclose(file);
     if (is_master_name(filename)) { master_gff = idx; }
 
     open_files[idx].filename = filename;
@@ -387,6 +385,39 @@ gff_chunk_header_t gff_find_chunk_header(int idx, int type_id, int res_id) {
     }
 
     return ret;
+}
+
+size_t gff_add_chunk(const int idx, const int type_id, int res_id, char *buf, const size_t len) {
+    //fseek(gff->file, gff->header.tocLocation, SEEK_SET);
+    //if (fread(&(gff->toc), 1, sizeof(gff_toc_header_t), gff->file)
+            //!= sizeof(gff_toc_header_t)) {
+        //fatal("Unable to read Table of Contents!\n");
+    //}
+    gff_chunk_entry_t *entry = NULL;
+    gff_file_t *gff = open_files + idx;
+
+    for (int i = 0; !entry && i < gff->types.num_types; i++) {
+        if ((gff->chunks[i]->chunk_type & GFFMAXCHUNKMASK) == type_id) {
+            entry = gff->chunks[i];
+        }
+    }
+
+    if (entry->chunk_count & GFFSEGFLAGMASK) {
+        printf("ERROR: can't add to a segment.\n");
+        exit(1);
+    }
+
+    printf("regular chunk: %d\n", entry->chunk_count);
+    printf("TOC header length = %d\n", gff->header.tocLength);
+    printf("free_list_offset = %d\n", gff->toc.free_list_offset);
+    // It looks like it is best to just increase the amount (reuse is usually determined in the internally.)
+    // Find out if TOC is at the end of the file.
+    // If it is, "shrink" the file, so we can reuse the last data.
+    // Now write the new chunk to the end of the file.
+    // Write out the TOC to the end of the file (you will need to re-alloc the TOC header.)
+    // Update the GFF Header.
+
+    return 0;
 }
 
 size_t gff_read_chunk_length(int idx, int type_id, int res_id, void *read_buf, const size_t len) {

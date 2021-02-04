@@ -41,7 +41,8 @@ static void create_combat(ds_character_t *pc, char *name, ds1_combat_t *combat) 
     combat->priority = 0; // clear
     combat->flags = 0; // clear
     combat->stats = pc->stats;
-    strncpy(combat->name, name, 18);
+    strncpy(combat->name, name, 16);
+    combat->name[15] = '\0';
 }
 
 static void write_CHAR_entry(gff_chunk_header_t chunk, ds_character_t *pc, ds1_combat_t *combat) {
@@ -91,6 +92,7 @@ int gff_char_add_character(ds_character_t *pc, psin_t *psi, spell_list_t *spells
     int16_t id;
     int16_t replace_id = 1;
     int open_slot = -1;
+    char CACT[2];
 
     printf("Add character time!\n");
     int res_max = gff_get_resource_length(CHARSAVE_GFF_INDEX, GFF_CACT);
@@ -100,7 +102,7 @@ int gff_char_add_character(ds_character_t *pc, psin_t *psi, spell_list_t *spells
         gff_chunk_header_t chunk = gff_find_chunk_header(CHARSAVE_GFF_INDEX, GFF_CACT, res_ids[i]);
         gff_read_chunk(CHARSAVE_GFF_INDEX, &chunk, &id, sizeof(id));
         if (res_ids[i] > max_id) { max_id = res_ids[i]; }
-        if (id <= 0) {
+        if (id == 0) {
             replace_id = res_ids[i];
             open_slot = i;
         }
@@ -108,10 +110,27 @@ int gff_char_add_character(ds_character_t *pc, psin_t *psi, spell_list_t *spells
 
     id = max_id + 1;
     printf("open_slot = %d, replace_id = %d, id = %d\n", open_slot, replace_id, id);
-    if (open_slot >= -1) {
+    if (open_slot == -1) {
+        gff_add_chunk(CHARSAVE_GFF_INDEX, GFF_CHAR, id, (char*)res_ids, 1<<10);
+        printf("NEED TO ALLOC DATA!\n");
+    }
+    if (open_slot > -1) {
         create_combat(pc, name, &combat);
         gff_chunk_header_t chunk = gff_find_chunk_header(CHARSAVE_GFF_INDEX, GFF_CHAR, replace_id);
         write_CHAR_entry(chunk, pc, &combat);
+        chunk = gff_find_chunk_header(CHARSAVE_GFF_INDEX, GFF_SPST, replace_id);
+        size_t amt = gff_write_chunk(CHARSAVE_GFF_INDEX, chunk, (char*) spells);
+        printf("Wrote %ld\n", amt);
+        chunk = gff_find_chunk_header(CHARSAVE_GFF_INDEX, GFF_PSST, replace_id);
+        amt = gff_write_chunk(CHARSAVE_GFF_INDEX, chunk, (char*)psionics);
+        printf("Wrote %ld\n", amt);
+        chunk = gff_find_chunk_header(CHARSAVE_GFF_INDEX, GFF_PSIN, replace_id);
+        amt = gff_write_chunk(CHARSAVE_GFF_INDEX, chunk, (char*)psi);
+        printf("Wrote %ld\n", amt);
+        chunk = gff_find_chunk_header(CHARSAVE_GFF_INDEX, GFF_CACT, replace_id);
+        CACT[0] = id;
+        CACT[1] = 0x80;
+        gff_write_chunk(CHARSAVE_GFF_INDEX, chunk, (char*) &CACT);
         //gff_write_chunk(CHARSAVE_GFF_INDEX, chunk, (char*) pc);
     }
     return 0;
