@@ -80,7 +80,7 @@ static int set_gf(lua_State *l) {
     lua_Integer id = luaL_checkinteger(l, 1);
     lua_Integer val = luaL_checkinteger(l, 2);
     if (id < 0 || id >= MAX_GFLAGS) {
-        printf("ERROR: %lld is out of range for global flags!\n", id);
+        printf("ERROR: " PRI_LI " is out of range for global flags!\n", id);
         exit(1);
     }
     dsl_global_flags[id] = val;
@@ -90,7 +90,7 @@ static int set_gf(lua_State *l) {
 static int get_gf(lua_State *l) {
     lua_Integer id = luaL_checkinteger(l, 1);
     if (id < 0 || id >= MAX_GFLAGS) {
-        printf("ERROR: %lld is out of range for global flags!\n", id);
+        printf("ERROR: " PRI_LI " is out of range for global flags!\n", id);
         exit(1);
     }
     lua_pushinteger(l, dsl_global_flags[id]);
@@ -101,10 +101,10 @@ static int set_lf(lua_State *l) {
     lua_Integer id = luaL_checkinteger(l, 1);
     lua_Integer val = luaL_checkinteger(l, 2);
     if (id < 0 || id >= MAX_LFLAGS) {
-        printf("ERROR: %lld is out of range for local flags!\n", id);
+        printf("ERROR: " PRI_LI " is out of range for local flags!\n", id);
         exit(1);
     }
-    //printf("local_flag[%lld] := %lld\n", id, val);
+    //printf("local_flag[" PRI_LI "] := " PRI_LI "\n", id, val);
     fflush(stdout);
     dsl_local_flags[id] = val;
     return 0;
@@ -113,10 +113,10 @@ static int set_lf(lua_State *l) {
 static int get_lf(lua_State *l) {
     lua_Integer id = luaL_checkinteger(l, 1);
     if (id < 0 || id >= MAX_LFLAGS) {
-        printf("ERROR: %lld is out of range for local flags!\n", id);
+        printf("ERROR: " PRI_LI " is out of range for local flags!\n", id);
         exit(1);
     }
-    //printf("local_flag[%lld] = %d (get)\n", id, dsl_local_flags[id]);
+    //printf("local_flag[" PRI_LI "] = %d (get)\n", id, dsl_local_flags[id]);
     lua_pushinteger(l, dsl_local_flags[id]);
     return 1;
 }
@@ -125,7 +125,7 @@ static int set_gn(lua_State *l) {
     lua_Integer id = luaL_checkinteger(l, 1);
     lua_Integer val = luaL_checkinteger(l, 2);
     if (id < 0 || id >= MAX_GNUMS) {
-        printf("ERROR: %lld is out of range for global nums!\n", id);
+        printf("ERROR: " PRI_LI " is out of range for global nums!\n", id);
         exit(1);
     }
     dsl_global_nums[id] = val;
@@ -135,7 +135,7 @@ static int set_gn(lua_State *l) {
 static int get_gn(lua_State *l) {
     lua_Integer id = luaL_checkinteger(l, 1);
     if (id < 0 || id >= MAX_GNUMS) {
-        printf("ERROR: %lld is out of range for global nums!\n", id);
+        printf("ERROR: " PRI_LI " is out of range for global nums!\n", id);
         exit(1);
     }
     lua_pushinteger(l, dsl_global_nums[id]);
@@ -146,7 +146,7 @@ static int set_ln(lua_State *l) {
     lua_Integer id = luaL_checkinteger(l, 1);
     lua_Integer val = luaL_checkinteger(l, 2);
     if (id < 0 || id >= MAX_LNUMS) {
-        printf("ERROR: %lld is out of range for local nums!\n", id);
+        printf("ERROR: " PRI_LI " is out of range for local nums!\n", id);
         exit(1);
     }
     dsl_local_nums[id] = val;
@@ -156,7 +156,7 @@ static int set_ln(lua_State *l) {
 static int get_ln(lua_State *l) {
     lua_Integer id = luaL_checkinteger(l, 1);
     if (id < 0 || id >= MAX_LNUMS) {
-        printf("ERROR: %lld is out of range for local nums!\n", id);
+        printf("ERROR: " PRI_LI " is out of range for local nums!\n", id);
         exit(1);
     }
     lua_pushinteger(l, dsl_local_nums[id]);
@@ -167,7 +167,7 @@ static int set_gbn(lua_State *l) {
     lua_Integer id = luaL_checkinteger(l, 1);
     lua_Integer val = luaL_checkinteger(l, 2);
     if (id < 0 || id >= MAX_GBIGNUMS) {
-        error("ERROR: %lld is out of range for global big nums!\n", id);
+        error("ERROR: " PRI_LI " is out of range for global big nums!\n", id);
         exit(1);
     }
     dsl_global_bnums[id] = val;
@@ -177,7 +177,7 @@ static int set_gbn(lua_State *l) {
 static int get_gbn(lua_State *l) {
     lua_Integer id = luaL_checkinteger(l, 1);
     if (id < 0 || id >= MAX_GBIGNUMS) {
-        error("ERROR: %lld is out of range for global big nums!\n", id);
+        error("ERROR: " PRI_LI " is out of range for global big nums!\n", id);
         exit(1);
     }
     lua_pushinteger(l, dsl_global_bnums[id]);
@@ -188,7 +188,7 @@ static int set_lbn(lua_State *l) {
     lua_Integer id = luaL_checkinteger(l, 1);
     lua_Integer val = luaL_checkinteger(l, 2);
     if (id < 0 || id >= MAX_LBIGNUMS) {
-        printf("ERROR: %lld is out of range for local big nums!\n", id);
+        printf("ERROR: " PRI_LI " is out of range for local big nums!\n", id);
         exit(1);
     }
     dsl_local_bnums[id] = val;
@@ -198,7 +198,7 @@ static int set_lbn(lua_State *l) {
 static int get_lbn(lua_State *l) {
     lua_Integer id = luaL_checkinteger(l, 1);
     if (id < 0 || id >= MAX_LBIGNUMS) {
-        printf("ERROR: %lld is out of range for local big nums!\n", id);
+        printf("ERROR: " PRI_LI " is out of range for local big nums!\n", id);
         exit(1);
     }
     lua_pushinteger(l, dsl_local_bnums[id]);
@@ -209,7 +209,7 @@ static int set_gstr(lua_State *l) {
     lua_Integer id = luaL_checkinteger(l, 1);
     const char *val = luaL_checkstring(l, 2);
     if (id < 0 || id >= MAX_GSTRS) {
-        printf("ERROR: %lld is out of range for local big nums!\n", id);
+        printf("ERROR: " PRI_LI " is out of range for local big nums!\n", id);
         exit(1);
     }
     strncpy(dsl_global_strs[id], val, STRING_SIZE);
@@ -219,7 +219,7 @@ static int set_gstr(lua_State *l) {
 static int get_gstr(lua_State *l) {
     lua_Integer id = luaL_checkinteger(l, 1);
     if (id < 0 || id >= MAX_GSTRS) {
-        printf("ERROR: %lld is out of range for local big nums!\n", id);
+        printf("ERROR: " PRI_LI " is out of range for local big nums!\n", id);
         exit(1);
     }
     lua_pushstring(l, dsl_global_strs[id]);
@@ -229,10 +229,10 @@ static int get_gstr(lua_State *l) {
 static int get_gname(lua_State *l) {
     lua_Integer id = luaL_checkinteger(l, 1);
     if (id < 0 || id >= MAX_GNAMES) {
-        printf("ERROR: %lld is out of range for local big nums!\n", id);
+        printf("ERROR: " PRI_LI " is out of range for local big nums!\n", id);
         exit(1);
     }
-    //printf("GNAME----------------------------------------------------->[%lld] = %d\n", id, dsl_gnames[id]);
+    //printf("GNAME----------------------------------------------------->[" PRI_LI "] = %d\n", id, dsl_gnames[id]);
     lua_pushnumber(l, dsl_gnames[id]);
     return 1;
 }
@@ -241,15 +241,15 @@ static int set_gname(lua_State *l) {
     lua_Integer id = luaL_checkinteger(l, 1);
     lua_Integer val = luaL_checkinteger(l, 2);
     if (id < 0 || id >= MAX_GNAMES) {
-        error("%lld is out of range for local big nums!\n", id);
+        error("" PRI_LI " is out of range for local big nums!\n", id);
         exit(1);
     }
     if (id != 1 && id != 2 && id != 3) {
-        error("illegal set_gname? id = %lld\n", id);
+        error("illegal set_gname? id = " PRI_LI "\n", id);
     } else {
         dsl_gnames[id] = val;
     }
-    //printf("GNAME----------------------------------------------------->[%lld] = %d\n", id, dsl_gnames[id]);
+    //printf("GNAME----------------------------------------------------->[" PRI_LI "] = %d\n", id, dsl_gnames[id]);
     return 0;
 }
 
@@ -264,7 +264,7 @@ static int get_type(lua_State *l) {
 static int get_id(lua_State *l) {
     lua_Integer obj = luaL_checkinteger(l, 1);
     //printf("!!!!!!!!!!dsl.get_name: not implemented returning -1!\n");
-    //printf("-------->returning %lld\n", obj);
+    //printf("-------->returning " PRI_LI "\n", obj);
     lua_pushnumber(l, obj);
     //lua_pushnumber(l, -1);
     return 1;
@@ -272,7 +272,7 @@ static int get_id(lua_State *l) {
 
 static int get_party(lua_State *l) {
     lua_Integer member = luaL_checkinteger(l, 1);
-    printf("!!!!!!!!!!dsl.get_party: not implemented returning -9999 for member: %llu!\n", member);
+    printf("!!!!!!!!!!dsl.get_party: not implemented returning -9999 for member: " PRI_LI "!\n", member);
     //lua_pushnumber(l, dsl_gnames[id]);
     lua_pushnumber(l, 9999);
     return 1;
@@ -329,7 +329,7 @@ static int read_complex(lua_State *l) {
     lua_Integer header = luaL_checkinteger(l, 1);
     lua_Integer depth = luaL_checkinteger(l, 1);
 
-    warn("Need to implement read_complex(%lld, %lld, %lld)\n", obj, header, depth);
+    warn("Need to implement read_complex(" PRI_LI ", " PRI_LI ", " PRI_LI ")\n", obj, header, depth);
 
     lua_pushinteger(l, 1);
     return 1;
@@ -462,7 +462,7 @@ static int request(lua_State *l) {
     lua_Integer num1 = luaL_checkinteger(l, 3);
     lua_Integer num2 = luaL_checkinteger(l, 4);
 
-    //warn("Need to implement: request: cmd: %lld obj_type: %s num1: %lld num2: %lld\n", cmd, obj_type, num1, num2);
+    //warn("Need to implement: request: cmd: " PRI_LI " obj_type: %s num1: " PRI_LI " num2: " PRI_LI "\n", cmd, obj_type, num1, num2);
     dsl_request_impl(cmd, atol(obj_type), num1, num2);
     return 0;
 }
@@ -476,7 +476,8 @@ static int dsl_clone(lua_State *l) {
     lua_Integer placement = luaL_checkinteger(l, 6);
 
     region_object_t* robj = region_list_create_from_objex(dsl_region_get_current()->list, obj, x, y);
-    warn("Need to implement: dsl-clone: obj: %lld, qty: %lld, (%lld, %lld) pri: %lld, pla: %lld\n", obj, qty, x, y,
+    warn("Need to implement: dsl-clone: obj: " PRI_LI ", qty: " PRI_LI ", (" PRI_LI ", "
+             PRI_LI ") pri: " PRI_LI ", pla:" PRI_LI "\n", obj, qty, x, y,
         priority, placement);
     if (robj) {
         port_add_obj(robj);
@@ -488,8 +489,8 @@ static int call_function(lua_State *l) {
     lua_Integer file = luaL_checkinteger(l, 1);
     lua_Integer addr = luaL_checkinteger(l, 2);
 
-    debug("*****************calling file: %lld addr: %lld\n", file, addr);
-    //replay_print("dsl.call_function(%lld, %lld)\n", file, addr);
+    debug("*****************calling file: " PRI_LI " addr: " PRI_LI "\n", file, addr);
+    //replay_print("dsl.call_function(" PRI_LI ", " PRI_LI ")\n", file, addr);
     dsl_lua_execute_script(file, addr, 0);
 
     return 0;
@@ -510,7 +511,7 @@ static int lua_narrate_open(lua_State *l) {
     lua_Integer index = luaL_checkinteger(l, 3);
 
     narrate_open(cmd, text, index);
-    debug("I need to do %lld with text '%s' at index %lld\n", cmd, text, index);
+    debug("I need to do " PRI_LI " with text '%s' at index " PRI_LI "\n", cmd, text, index);
 
     return 0;
 }

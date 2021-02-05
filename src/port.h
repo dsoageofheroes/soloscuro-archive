@@ -7,6 +7,26 @@
 
 #include "dsl-object.h"
 
+#ifdef _WIN32
+#  ifdef _WIN64
+#    define PRI_SIZET "%I64u"
+#  else
+#    define PRI_SIZET "%I32u"
+#  endif
+#else
+#  define PRI_SIZET "%zu"
+#endif
+
+#ifdef _WIN32
+#  ifdef _WIN64
+#    define PRI_LI "%I64d"
+#  else
+#    define PRI_LI "%I32d"
+#  endif
+#else
+#  define PRI_LI "%lld"
+#endif
+
 // Narrate functions
 extern int8_t port_narrate_open(int16_t action, const char *text, int16_t index);
 extern void port_narrate_clear();

@@ -14,6 +14,8 @@ static uint16_t action_btn, exit_btn, delete_btn;
 static uint16_t title;
 static uint16_t bar;
 
+extern char *strdup(const char *s);
+
 static uint16_t new_sprite_create(SDL_Renderer *renderer, gff_palette_t *pal,
         const int offsetx, const int offsety, const float zoom,
         const int gff_idx, const int type_id, const int res_id) {

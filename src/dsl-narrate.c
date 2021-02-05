@@ -84,7 +84,7 @@ int narrate_select_menu(int option) {
 
     replay_print("rep.select_menu(%d)\n", option);
     if (option >= menu_pos || option < 0) {
-        error("select_menu: Menu option %d selected, but only (0 - %ld) available!\n", option, menu_pos - 1);
+        error("select_menu: Menu option %d selected, but only (0 - " PRI_SIZET ") available!\n", option, menu_pos - 1);
         return -1;
     }
     menu_pos = 0;

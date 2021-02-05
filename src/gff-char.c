@@ -3,6 +3,7 @@
 #include "gff-common.h"
 #include "gff.h"
 #include "rules.h"
+#include "port.h"
 #include "dsl-object.h"
 #include <string.h>
 #include <stdlib.h>
@@ -124,13 +125,13 @@ int gff_char_add_character(ds_character_t *pc, psin_t *psi, spell_list_t *spells
         write_CHAR_entry(chunk, pc, &combat);
         chunk = gff_find_chunk_header(CHARSAVE_GFF_INDEX, GFF_SPST, replace_id);
         size_t amt = gff_write_chunk(CHARSAVE_GFF_INDEX, chunk, (char*) spells);
-        printf("Wrote %ld\n", amt);
+        printf("Wrote " PRI_SIZET "\n", amt);
         chunk = gff_find_chunk_header(CHARSAVE_GFF_INDEX, GFF_PSST, replace_id);
         amt = gff_write_chunk(CHARSAVE_GFF_INDEX, chunk, (char*)psionics);
-        printf("Wrote %ld\n", amt);
+        printf("Wrote " PRI_SIZET "\n", amt);
         chunk = gff_find_chunk_header(CHARSAVE_GFF_INDEX, GFF_PSIN, replace_id);
         amt = gff_write_chunk(CHARSAVE_GFF_INDEX, chunk, (char*)psi);
-        printf("Wrote %ld\n", amt);
+        printf("Wrote " PRI_SIZET "\n", amt);
         chunk = gff_find_chunk_header(CHARSAVE_GFF_INDEX, GFF_CACT, replace_id);
         CACT[0] = id;
         CACT[1] = 0x80;

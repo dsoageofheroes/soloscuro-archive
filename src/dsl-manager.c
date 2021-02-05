@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "dsl.h"
+#include "port.h"
 #include "dsl-manager.h"
 #include "dsl-lua.h"
 #include "dsl-state.h"
@@ -70,7 +71,7 @@ void dsl_lua_load_scripts() {
 
     ids = gff_get_id_list(DSLDATA_GFF_INDEX, GFF_MAS);
     amt = gff_get_resource_length(DSLDATA_GFF_INDEX, GFF_MAS);
-    printf("Detected %ld master GPL files.\n", (long int)amt);
+    printf("Detected " PRI_SIZET " master GPL files.\n", amt);
     for (i = 0; i < amt; i++) { mas_max = mas_max > ids[i] ? mas_max : ids[i]; }
     mas_max++;
     mas_scripts = malloc(sizeof(char*) * mas_max);
@@ -79,7 +80,7 @@ void dsl_lua_load_scripts() {
 
     ids = gff_get_id_list(DSLDATA_GFF_INDEX, GFF_GPL);
     amt = gff_get_resource_length(DSLDATA_GFF_INDEX, GFF_GPL);
-    printf("Detected %ld standard GPL files.\n", (long int)amt);
+    printf("Detected " PRI_SIZET " standard GPL files.\n", amt);
     for (i = 0; i < amt; i++) { gpl_max = gpl_max > ids[i] ? gpl_max : ids[i]; }
     gpl_max++;
     gpl_scripts = malloc(sizeof(char*) * gpl_max);
@@ -94,8 +95,8 @@ uint8_t dsl_lua_execute_script(size_t file, size_t addr, uint8_t is_mas) {
     char func[BUF_SIZE];
     int ret = 1;
 
-    debug("execute_script(%ld, %ld, %d)\n", file, addr, is_mas);
-    snprintf(func, BUF_SIZE, "func%ld", addr);
+    debug("execute_script(" PRI_SIZET ", " PRI_SIZET ", %d)\n", file, addr, is_mas);
+    snprintf(func, BUF_SIZE, "func" PRI_SIZET "", addr);
 
     if (file < 0 || file >= size) { return 0; }
 
@@ -109,7 +110,7 @@ uint8_t dsl_lua_execute_script(size_t file, size_t addr, uint8_t is_mas) {
     luaL_openlibs(l);
     dsl_state_register(l);
     if (luaL_dostring(l, scripts[file])) {
-        printf("Error: unable to load %s script %ld:%ld\n",
+        printf("Error: unable to load %s script " PRI_SIZET ":" PRI_SIZET "\n",
             is_mas ? "MAS" : "GPL",
             file, addr);
         printf("error: %s\n", lua_tostring(l, -1));
@@ -118,7 +119,7 @@ uint8_t dsl_lua_execute_script(size_t file, size_t addr, uint8_t is_mas) {
     }
     lua_getglobal(l, func);
     if (lua_pcall(l, 0, 0, 0)) {
-        printf("error running function: '%s' in %s file %ld, addr %ld\n", func,
+        printf("error running function: '%s' in %s file " PRI_SIZET ", addr " PRI_SIZET "\n", func,
             is_mas ? "MAS" : "GPL",
             file, addr);
         printf("error: %s\n", lua_tostring(l, -1));
@@ -128,7 +129,7 @@ uint8_t dsl_lua_execute_script(size_t file, size_t addr, uint8_t is_mas) {
     printf("*******************CLOSING LUA****************************\n");
     clua = NULL;
     lua_close(l);
-    debug("exiting execute_script(%ld, %ld, %d)\n", file, addr, is_mas);
+    debug("exiting execute_script(" PRI_SIZET ", " PRI_SIZET ", %d)\n", file, addr, is_mas);
 
     return ret;
 }
