@@ -27,115 +27,50 @@ enum {
 };
 
 typedef struct {
-
-  uint32_t	  identity;
-  uint32_t	  version;
-  uint32_t 	  dataLocation;
-  uint32_t 	  tocLocation;
-  uint32_t 	  tocLength;
-  uint32_t 	  fileFlags;
-  uint32_t 	  reserve1;
-
+    uint32_t identity;
+    uint32_t version;
+    uint32_t data_location;
+    uint32_t toc_location;
+    uint32_t toc_length;
+    uint32_t file_flags;
+    uint32_t data0;
 } gff_file_header_t;
 
 typedef struct {
-
-  uint32_t	  chunkType;
-  uint32_t 	  chunkCount;
-
-} gff_chunk_list_header_t;
-
-#define GFFCHUNKLISTHEADERSIZE ((uint32_t)sizeof(gff_chunk_list_header_t))
-
-typedef struct {
-
-  uint32_t	  chunkType;
-  uint32_t 	  chunkCount;
-  gff_chunk_header_t	  chunks[1];
-
+    uint32_t chunk_type;
+    uint32_t chunk_count;
+    gff_chunk_header_t chunks[0];
 } gff_chunk_list_t;
 
 typedef struct {
-
-  uint16_t 	  num_types;
-  gff_chunk_list_t   chunks;
-
-} gff_type_header_t;
-
-typedef struct {
-
-  uint32_t 	  typesOffset;	// Byte offset from a pointer to itself.
-  uint32_t 	  free_list_offset; // Byte offset from &typesOffset
-
+    uint32_t types_offset;    // Byte offset from a pointer to itself.
+    uint32_t free_list_offset;// Byte offset from &typesOffset
 } gff_toc_header_t;
 
 typedef struct {
-  uint32_t	  identity;	// Always 'GFFI'
-  int16_t 	  fileId;
-  int16_t 	  flags;
-  gff_file_header_t	  fileHeader;
-  uint32_t 	  toc_pad_len; // allocated space for extensions.
-  gff_toc_header_t	  tocHeader;
-} gff_int_file_t;
-
-typedef struct {
-
-  uint32_t 	  location;
-  uint32_t 	  length;
-
-} gff_free_entry_t;
-
-typedef struct {
-
-  uint16_t 	  freeCt;
-  gff_free_entry_t   freeChunks[1];
-
-} gff_free_list_t;
-
-
-typedef struct {
-
-  int32_t	  firstId;
-  int32_t 	  consecChunks;
-
+    int32_t first_id;
+    int32_t consec_chunks;
 } gff_seg_ref_entry_t;
 
-#define GFFSEGREFENTRYSIZE ((uint32_t)sizeof(gff_seg_ref_entry_t))
-
 typedef struct {
-
-  int32_t 	  numEntries;
-  gff_seg_ref_entry_t entries[1];
-
+    int32_t num_entries;
+    gff_seg_ref_entry_t entries[0];
 } gff_seg_ref_struct_t;
 
 typedef struct {
-
-  int32_t 	  segOffset;
-  int32_t 	  segLength;
-
+    int32_t seg_offset;
+    int32_t seg_length;
 } gff_seg_loc_entry_t;
 
-#define GFFSEGLOCENTRYSIZE ((uint32_t)sizeof(gff_seg_loc_entry_t))
-
 typedef struct {
-
-  int32_t 	  segCount;
-  gff_seg_loc_entry_t segEntries[1];
-
-} gff_seg_loc_struct_t;
-
-typedef struct {
-
-  int32_t 	    segCount;
-  int32_t	    segLocId;
+  int32_t seg_count;
+  int32_t seg_loc_id;
   gff_seg_ref_struct_t  segRef;
-
 } gff_seg_header_t;
 
 typedef struct seg_header_s {
-    int32_t segCount;
-    int32_t segLocId;
+    int32_t seg_count;
+    int32_t seg_loc_id;
     int32_t num_entries;
 } seg_header_t;
 
@@ -153,7 +88,7 @@ typedef struct gff_chunk_entry_s {
     uint32_t chunk_type;
     uint32_t chunk_count;
     union {
-        gff_chunk_header_t chunks[1];
+        gff_chunk_header_t chunks[0];
         gff_seg_t segs;
     };
 } gff_chunk_entry_t;
@@ -170,7 +105,7 @@ typedef struct _gff_file_t {
     FILE *file;
     gff_file_header_t header;
     gff_toc_header_t toc;
-    gff_type_header_t types;
+    uint16_t num_types;
     gff_chunk_entry_t **chunks;
     gff_chunk_entry_t *gffi;
     gff_palettes_t *pals;
@@ -182,11 +117,10 @@ extern void gff_init();
 extern void gff_load_directory(const char *path);
 extern int gff_get_master();
 extern int gff_create(const char *pathName);
-extern int gff_update(const char *path, int id);
 extern int gff_open(const char *pathName);
 extern const char** gff_list(size_t *len);
 extern void get_gff_type_name(unsigned int gff_type, char *type);
-extern int gff_find_index(char *name);
+extern int gff_find_index(const char *name);
 extern int gff_get_number_of_types(int idx);
 extern int gff_get_type_id(int idx, int type_index);
 extern unsigned int gff_get_resource_length(int idx, int type_id);
@@ -199,6 +133,7 @@ extern size_t gff_read_chunk(int idx, gff_chunk_header_t *chunk, void *buf, cons
 extern size_t gff_read_chunk_piece(int idx, gff_chunk_header_t *chunk, void *read_buf, const size_t len);
 size_t gff_write_chunk(const int idx, const gff_chunk_header_t chunk, const char *path);
 size_t gff_add_chunk(const int idx, const int type_id, int res_id, char *buf, const size_t len);
+size_t gff_add_type(const int idx, const int type_id);
 extern int gff_write_raw_bytes(int idx, int type_id, int res_id, const char *path); // DEPRECATED?
 extern void gff_print(int idx, FILE *out);
 extern void gff_close (int gff_file);
@@ -234,7 +169,7 @@ typedef struct _ds_font_t {
 
 typedef struct _ds_char_t {
     uint16_t width;
-    uint8_t  data[1];
+    uint8_t  data[0];
 } ds_char_t;
 
 #endif

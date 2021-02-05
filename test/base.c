@@ -1,6 +1,9 @@
 #include <stdint.h>
 #include "dsl-region.h"
 
+void game_loop_signal(int signal, int _accum) {
+}
+
 int game_loop_wait_for_signal(int signal) {
     return 0;
 }

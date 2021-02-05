@@ -2,9 +2,6 @@
 #include "../src/gff.h"
 #include "../src/dsl.h"
 
-void game_loop_signal(int signal, int _accum) {
-}
-
 void setUp() {
     gff_init();
     gff_load_directory("/home/pwest/dosbox/DARKSUN");
@@ -20,7 +17,9 @@ int func() { return 40; }
 
 void test_start_close(void) {
     char buf[1024];
-    gff_add_chunk(CHARSAVE_GFF_INDEX, GFF_CHAR, 25, buf, 1<<10);
+    buf[0] = 0x00;
+    buf[1] = 0x00;
+    gff_add_chunk(CHARSAVE_GFF_INDEX, GFF_CACT, 25, buf, 2);
 }
 
 int main(void) {

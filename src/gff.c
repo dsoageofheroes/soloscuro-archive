@@ -12,26 +12,8 @@
 gff_file_t open_files[NUM_FILES];
 static int master_gff;
 
-typedef struct {
-  // --- File Header	    ---
-  uint32_t   identity;	    //	0
-  uint32_t   version;	    //	4
-  uint32_t   dataLocation;     //	8
-  uint32_t   tocLocation;	    // 12
-  uint32_t   tocLength;	    // 16
-  uint32_t   fileFlags;	    // 20
-  uint32_t   reserve1;	    // 24
-  // --- End of File Header ---
-  // --- Empty TOC follows  ---
-  uint32_t   typesLocation;    // 28    0
-  uint32_t   freeListLocation; // 32    4
-  uint16_t   numTypes;	    // 36    8
-  uint16_t   freeChunks;	    // 38   10
-  // --- End of Empty TOC   ---
-} gff_empty_file_t;
-
-static gff_type_header_t* get_type_header(int idx);
-static int get_next_idx(char *name);
+static int write_toc(const int gff_idx);
+static int get_next_idx(const char *name);
 
 int gff_get_master() {
     return master_gff;
@@ -47,7 +29,7 @@ static char* strtolwr(char *str) {
 }
 
 // Precondition, name is in lowercase!
-int gff_find_index(char *name) {
+int gff_find_index(const char *name) {
     if (!name) { return -1; }
 
     for (int i = 0; i < NUM_FILES; i++) {
@@ -62,7 +44,7 @@ int gff_find_index(char *name) {
 }
 
 // Precondition, name is in lowercase!
-int get_next_idx(char *name) {
+int get_next_idx(const char *name) {
     int i;
 
     if (gff_find_index(name) > -1) {
@@ -149,61 +131,53 @@ const char** gff_list(size_t *len) {
     return ret;
 }
 
-/*
-int gff_create(const char *pathName) {
-    uint32_t 	  len;
-    int idx;
-    gff_empty_file_t   emptyFile;
-    char *filename = strdup(pathName);
+int gff_create(const char *path) {
+    int id = get_next_idx(path);
+    FILE * file = fopen(path, "wb+");
+    gff_file_t *gff = open_files + id;
 
-	// Write the empty file struct with known offset
-	// values. This is the whole file structure of
-	// an "empty" file.
-	emptyFile.identity	    = GFF_GFFI;
-	emptyFile.version	    = GFFVERSION;
-	emptyFile.dataLocation	= 28L;
-	emptyFile.tocLocation	= 28L;
-	emptyFile.tocLength	    = 12L;
-	emptyFile.fileFlags	    =  0L;
-	emptyFile.reserve1	    =  0L;
+    gff->file = file;
+	gff->header.identity        = GFF_GFFI;
+	gff->header.version         = GFFVERSION;
+	gff->header.data_location   = 28L;
+	gff->header.toc_location    = 28L;
+	gff->header.toc_length      = 10L; // types is 2B, toc is 8B
+	gff->header.file_flags      =  0L;
+	gff->header.data0           =  0L;
 
-	// Following 3 are offsets from beginning of TOC
-	emptyFile.typesLocation     =  8L;
-	emptyFile.freeListLocation  = 10L;
+    gff->toc.types_offset       =  8L;
+    gff->toc.free_list_offset   = 10L;
 
-	// We have none of anything.
-	emptyFile.numTypes	    =  0;
-	emptyFile.freeChunks	    =  0;
+    gff->num_types              = 0L;
+    gff->pals = NULL;
 
-	len = (uint32_t)sizeof(gff_empty_file_t);
+    write_toc(id);
 
-    idx = get_next_idx(strtolwr(filename));
-    // Many things can cause, see stderr.
-    if (idx == -1) { 
-        free(filename);
-        return idx; 
+    return id;
+}
+
+size_t gff_add_type(const int idx, const int type_id) {
+    gff_file_t *gff = open_files + idx;
+    
+    for (int i = 0; i < gff->num_types; i++) {
+        if ((gff->chunks[i]->chunk_type & GFFMAXCHUNKMASK) == type_id) {
+            return 0; // Type already exists!
+        }
     }
 
-    //open_files[idx].data = malloc(len);
-    open_files[idx].filename = filename;
-    //memcpy(open_files[idx].data, &emptyFile, len);
+    gff->num_types++;
+    gff->chunks = realloc(gff->chunks, sizeof(gff_chunk_entry_t*) * gff->num_types);
+    gff_chunk_entry_t *new = malloc(8L); // Only allocate the initial 8 bytes worry about extensions later.
+    gff->chunks[gff->num_types - 1] = new;
+    new->chunk_type = type_id;
+    new->chunk_count = 0;
 
-    return idx;
-}
-*/
+    gff->header.toc_length += 8L;
+    gff->toc.free_list_offset += 8L;
 
-int gff_update(const char *path, int id) {
-    int len = 0;
+    write_toc(idx);
 
-    error("gff_update NOT implemented!!!!\n");
-
-    return len;
-
-    //FILE *file = fopen (path, "w+");
-    //len = fwrite(open_files[id].data, open_files[id].len, 1, file);
-    //fclose(file);
-
-    //return len;
+    return 1;
 }
 
 static char* get_filename_from_path(const char *path) {
@@ -224,6 +198,11 @@ static int is_master_name(const char *name) {
     return 0;
 }
 
+typedef struct {
+  uint32_t	  chunkType;
+  uint32_t 	  chunkCount;
+} gff_chunk_list_header_t;
+
 static void gff_read_headers(gff_file_t *gff) {
     fseek(gff->file, 0, SEEK_SET);
     if (fread(&(gff->header), 1, sizeof(gff_file_header_t), gff->file)
@@ -231,27 +210,29 @@ static void gff_read_headers(gff_file_t *gff) {
         fatal("Unable to read header!\n");
     }
 
-    fseek(gff->file, gff->header.tocLocation, SEEK_SET);
+    fseek(gff->file, gff->header.toc_location, SEEK_SET);
     if (fread(&(gff->toc), 1, sizeof(gff_toc_header_t), gff->file)
             != sizeof(gff_toc_header_t)) {
         fatal("Unable to read Table of Contents!\n");
     }
 
-    fseek(gff->file, gff->header.tocLocation + gff->toc.typesOffset, SEEK_SET);
-    if (fread(&(gff->types), 1, sizeof(gff_type_header_t), gff->file)
-            != sizeof(gff_type_header_t)) {
+    fseek(gff->file, gff->header.toc_location + gff->toc.types_offset, SEEK_SET);
+    //if (fread(&(gff->types), 1, sizeof(gff_type_header_t), gff->file)
+            //!= sizeof(gff_type_header_t)) {
+    if (fread(&(gff->num_types), 1, sizeof(uint16_t), gff->file)
+            != sizeof(uint16_t)) {
         fatal("Unable to read types header!\n");
     }
 
-    gff->chunks = malloc(sizeof(gff_chunk_entry_t*) * gff->types.num_types);
-    memset(gff->chunks, 0x0, sizeof(gff_chunk_entry_t*) * gff->types.num_types);
+    gff->chunks = malloc(sizeof(gff_chunk_entry_t*) * gff->num_types);
+    memset(gff->chunks, 0x0, sizeof(gff_chunk_entry_t*) * gff->num_types);
 
     int i = 0;
 
     gff_chunk_list_header_t chunk_header;
-    fseek(gff->file, gff->header.tocLocation + gff->toc.typesOffset + 2L, SEEK_SET);
+    fseek(gff->file, gff->header.toc_location + gff->toc.types_offset + 2L, SEEK_SET);
     seg_header_t seg_header;
-    for (i = 0; i < gff->types.num_types; i++) {
+    for (i = 0; i < gff->num_types; i++) {
         fread(&(chunk_header), 1, sizeof(gff_chunk_list_header_t), gff->file);
         gff_chunk_entry_t *chunk = NULL;
 
@@ -294,6 +275,8 @@ int gff_open(const char *pathName) {
     if (!file) { free(filename); return -1; }
     fseek(file, 0L, SEEK_SET);
 
+    memset(open_files + idx, 0x0, sizeof(gff_file_t));
+
     //printf("Detected file size of '%s': %d\n", filename, len);
     open_files[idx].num_palettes = 0;
     open_files[idx].num_objects = -1;
@@ -312,21 +295,15 @@ int gff_open(const char *pathName) {
     return idx;
 }
 
-static gff_type_header_t* get_type_header(int idx) {
-    return &(open_files[idx].types);
-}
-
 int gff_get_number_of_types(int idx) {
     if (open_files[idx].file == NULL) { return -1; }
 
-    return get_type_header(idx)->num_types;
+    return open_files[idx].num_types;
 }
 
 int gff_get_type_id(int idx, int type_index) {
-    gff_type_header_t *type_header = get_type_header(idx);
-
     if (open_files[idx].file == NULL || type_index < 0 
-            || type_index >= type_header->num_types) { 
+            || type_index >= open_files[idx].num_types) { 
         return -1;  // failure.
     }
 
@@ -340,7 +317,7 @@ gff_chunk_header_t gff_find_chunk_header(int idx, int type_id, int res_id) {
     gff_chunk_header_t *gffi_chunk_header = NULL;
     gff_chunk_header_t ret = {0, 0, 0};
 
-    for (int i = 0; !entry && i < gff->types.num_types; i++) {
+    for (int i = 0; !entry && i < gff->num_types; i++) {
         if ((gff->chunks[i]->chunk_type & GFFMAXCHUNKMASK) == type_id) {
             entry = gff->chunks[i];
         }
@@ -352,22 +329,19 @@ gff_chunk_header_t gff_find_chunk_header(int idx, int type_id, int res_id) {
     }
 
     if (entry->chunk_count & GFFSEGFLAGMASK) {
-        //printf("READ: SEG!\n");
         int32_t chunk_offset = 0;
-        gffi_chunk_header = gff->gffi->chunks + entry->segs.header.segLocId;
+        gffi_chunk_header = gff->gffi->chunks + entry->segs.header.seg_loc_id;
         for (int j = 0; j < entry->segs.header.num_entries; j++) {
             int32_t first_id = entry->segs.segs[j].first_id;
-            //printf("READ:first_id = %d, gff->gffi = %p\n", first_id, gff->gffi);
-            //printf("READ: chunk_count = %d\n", gff->gffi->chunkCount);
-            //printf("READ: entry->segs.segs[j].segLocId = %d\n", entry->segs.header.segLocId);
             if (res_id >= first_id && res_id <= (first_id + entry->segs.segs[j].num_chunks)) {
-                int offset = 4L + (GFFSEGLOCENTRYSIZE * chunk_offset);
-                fseek(gff->file, gffi_chunk_header->location + offset + (res_id - first_id)*GFFSEGLOCENTRYSIZE, SEEK_SET);
+                int offset = 4L + (sizeof(gff_seg_loc_entry_t) * chunk_offset);
+
+                fseek(gff->file, gffi_chunk_header->location + offset + (res_id - first_id)*sizeof(gff_seg_loc_entry_t), SEEK_SET);
                 fread(&seg, 1, sizeof(gff_seg_loc_entry_t), gff->file);
 
                 ret.id = res_id;
-                ret.location = seg.segOffset;
-                ret.length = seg.segLength;
+                ret.location = seg.seg_offset;
+                ret.length = seg.seg_length;
 
                 return ret;
             }
@@ -387,37 +361,109 @@ gff_chunk_header_t gff_find_chunk_header(int idx, int type_id, int res_id) {
     return ret;
 }
 
-size_t gff_add_chunk(const int idx, const int type_id, int res_id, char *buf, const size_t len) {
-    //fseek(gff->file, gff->header.tocLocation, SEEK_SET);
-    //if (fread(&(gff->toc), 1, sizeof(gff_toc_header_t), gff->file)
-            //!= sizeof(gff_toc_header_t)) {
-        //fatal("Unable to read Table of Contents!\n");
-    //}
-    gff_chunk_entry_t *entry = NULL;
-    gff_file_t *gff = open_files + idx;
+#define TOC_BUF_SIZE (1<<10)
 
-    for (int i = 0; !entry && i < gff->types.num_types; i++) {
-        if ((gff->chunks[i]->chunk_type & GFFMAXCHUNKMASK) == type_id) {
-            entry = gff->chunks[i];
+static int write_toc(const int gff_idx) {
+    gff_file_t *gff = open_files + gff_idx;
+    static char buf[TOC_BUF_SIZE];
+
+    memset(buf, 0x0, TOC_BUF_SIZE);
+
+    fseek(gff->file, 0, SEEK_SET);
+    if (fwrite(&(gff->header), 1, sizeof(gff_file_header_t), gff->file)
+            != sizeof(gff_file_header_t)) {
+        fatal("Unable to write header!\n");
+    }
+
+    fseek(gff->file, gff->header.toc_location, SEEK_SET);
+    if ((fwrite(&(gff->toc), 1, sizeof(gff_toc_header_t), gff->file))
+            != sizeof(gff_toc_header_t)) {
+        fatal("Unable to write Table of Contents header!\n");
+    }
+
+    fseek(gff->file, gff->header.toc_location + gff->toc.types_offset, SEEK_SET);
+    //if ((wamt = fwrite(&(gff->types), 1, sizeof(gff_type_header_t), gff->file))
+            //!= sizeof(gff_type_header_t)) {
+    if ((fwrite(&(gff->num_types), 1, sizeof(uint16_t), gff->file))
+            != sizeof(uint16_t)) {
+        fatal("Unable to write types header!\n");
+    }
+
+    fseek(gff->file, gff->header.toc_location + gff->toc.types_offset + 2L, SEEK_SET);
+    for (int i = 0; i < gff->num_types; i++) {
+        gff_chunk_entry_t *chunk = gff->chunks[i];
+        fwrite(&(chunk->chunk_type), 1, sizeof(uint32_t), gff->file);
+        fwrite(&(chunk->chunk_count), 1, sizeof(uint32_t), gff->file);
+        if (chunk->chunk_count & GFFSEGFLAGMASK) {
+            error("SEGMENT TOC Writting not implemented.\n");
+            exit(1);
+            fseek(gff->file, sizeof(seg_header_t), SEEK_SET);
+
+            //fread(&(chunk->segs.segs), 1, seg_header.num_entries * sizeof(gff_seg_entry_t), gff->file);
+            fseek(gff->file, chunk->segs.header.num_entries * sizeof(gff_seg_entry_t), SEEK_CUR);
+        } else {
+            //printf("%d: write %d chunks\n", i, chunk->chunk_count);
+            fwrite(&(chunk->chunks), 1, sizeof(gff_chunk_header_t) * chunk->chunk_count, gff->file);
         }
     }
 
-    if (entry->chunk_count & GFFSEGFLAGMASK) {
-        printf("ERROR: can't add to a segment.\n");
-        exit(1);
+    //printf("toc_length = %d, free_list-offset = %d\n", gff->header.toc_length, gff->toc.free_list_offset);
+    size_t bytes_to_write = gff->header.toc_length - gff->toc.free_list_offset;
+    if (bytes_to_write > TOC_BUF_SIZE) {
+        error ("overflowed buffer, make a loop!");
+        return 0;
+    }
+    fwrite(buf, 1, bytes_to_write, gff->file);
+
+    return 1;
+}
+
+size_t gff_add_chunk(const int idx, const int type_id, int res_id, char *buf, const size_t len) {
+    gff_chunk_entry_t *entry = NULL;
+    gff_file_t *gff = open_files + idx;
+    int chunk_idx;
+
+    for (chunk_idx = 0; !entry && chunk_idx < gff->num_types; chunk_idx++) {
+        if ((gff->chunks[chunk_idx]->chunk_type & GFFMAXCHUNKMASK) == type_id) {
+            entry = gff->chunks[chunk_idx];
+            break;
+        }
     }
 
-    printf("regular chunk: %d\n", entry->chunk_count);
-    printf("TOC header length = %d\n", gff->header.tocLength);
-    printf("free_list_offset = %d\n", gff->toc.free_list_offset);
-    // It looks like it is best to just increase the amount (reuse is usually determined in the internally.)
-    // Find out if TOC is at the end of the file.
-    // If it is, "shrink" the file, so we can reuse the last data.
-    // Now write the new chunk to the end of the file.
-    // Write out the TOC to the end of the file (you will need to re-alloc the TOC header.)
-    // Update the GFF Header.
+    if (!entry) {
+        error("type not found.\n");
+        return 0;
+    } // Didn't find...
 
-    return 0;
+    if (entry->chunk_count & GFFSEGFLAGMASK) {
+        error("can't add to a segment.\n");
+        return 0;
+    } 
+
+    // It looks like it is best to just increase the amount (reuse is usually determined internally to the resource.)
+    // Find out if TOC is at the end of the file.
+    fseek(gff->file, 0L, SEEK_END);
+    size_t size = ftell(gff->file);
+    size_t write_pos = (size == (gff->header.toc_length + gff->header.toc_location)) ? gff->header.toc_location : size;
+    entry->chunk_count++;
+    entry = realloc(entry, 8L + entry->chunk_count * sizeof(gff_chunk_header_t));
+    entry->chunks[entry->chunk_count - 1].id = res_id;
+    entry->chunks[entry->chunk_count - 1].location = gff->header.toc_location;
+    entry->chunks[entry->chunk_count - 1].length = len;
+
+    write_pos += len;
+
+    gff->header.toc_location = write_pos;
+    gff->header.toc_length += sizeof(gff_chunk_header_t);
+    gff->toc.free_list_offset += sizeof(gff_chunk_header_t);
+    gff->chunks[chunk_idx] = entry; // in case a new memory location was allocated.
+
+    // Now write the new chunk to the end of the file.
+    fseek(gff->file, entry->chunks[entry->chunk_count - 1].location, SEEK_SET);
+    fwrite(buf, 1, len, gff->file);
+
+    // Write out the TOC to the end of the file (you will need to re-alloc the TOC header.)
+    return write_toc(idx);
 }
 
 size_t gff_read_chunk_length(int idx, int type_id, int res_id, void *read_buf, const size_t len) {
@@ -476,12 +522,12 @@ unsigned int gff_get_resource_length(int idx, int type_id) {
     unsigned int sum = 0;
     gff_seg_header_t  *seg_header;
 
-    for (int i = 0; i < open_files[idx].types.num_types; i++) {
+    for (int i = 0; i < open_files[idx].num_types; i++) {
         if ((open_files[idx].chunks[i]->chunk_type & GFFMAXCHUNKMASK) != type_id) { continue; }
         if ((open_files[idx].chunks[i]->chunk_count) & GFFSEGFLAGMASK) {
             seg_header = (gff_seg_header_t*)&(open_files[idx].chunks[i]->chunks[0]);
-            for (int j = 0; j < seg_header->segRef.numEntries; j++) {
-                sum += seg_header->segRef.entries[j].consecChunks;
+            for (int j = 0; j < seg_header->segRef.num_entries; j++) {
+                sum += seg_header->segRef.entries[j].consec_chunks;
             }
         } else {
             sum = open_files[idx].chunks[i]->chunk_count;
@@ -503,20 +549,20 @@ size_t gff_get_resource_ids(int idx, int type_id, unsigned int *ids) {
     gff_seg_header_t  *seg_header;
     gff_chunk_header_t *chunk_header;
     
-    for (int i = 0; i < open_files[idx].types.num_types; i++) {
+    for (int i = 0; i < open_files[idx].num_types; i++) {
         if ((open_files[idx].chunks[i]->chunk_type & GFFMAXCHUNKMASK) != type_id) { continue; }
         if (open_files[idx].chunks[i]->chunk_count & GFFSEGFLAGMASK) {
             seg_header = (gff_seg_header_t*)&(open_files[idx].chunks[i]->chunks[0]);
-            for (int j = 0; j < seg_header->segRef.numEntries; j++) {
-                for (int id_offset = 0; id_offset < seg_header->segRef.entries[j].consecChunks; id_offset++) {
-                    ids[pos++] = seg_header->segRef.entries[j].firstId + id_offset;
+            for (int j = 0; j < seg_header->segRef.num_entries; j++) {
+                for (int id_offset = 0; id_offset < seg_header->segRef.entries[j].consec_chunks; id_offset++) {
+                    ids[pos++] = seg_header->segRef.entries[j].first_id + id_offset;
                 }
             }
         } else {
             //TODO: migrate the cpt to the proper structs.
             cptr = (void*)open_files[idx].chunks[i];
             for (int j = 0; j < open_files[idx].chunks[i]->chunk_count; j++) {
-                chunk_header = (void*)(cptr + GFFCHUNKLISTHEADERSIZE + (j * GFFCHUNKHEADERSIZE));
+                chunk_header = (void*)(cptr + sizeof(gff_chunk_list_header_t) + (j * GFFCHUNKHEADERSIZE));
                 ids[pos++] = chunk_header->id;
             }
         }
@@ -646,24 +692,27 @@ static void gff_close_file(gff_file_t *gff) {
     }
     if (gff->map) {
         free(gff->map);
+        gff->map = NULL;
     }
     if (gff->chunks) {
-        for (int i = 0; i < gff->types.num_types; i++) {
+        for (int i = 0; i < gff->num_types; i++) {
             if (gff->chunks[i]) {
                 free(gff->chunks[i]);
+                gff->chunks[i] = NULL;
             }
         }
         free(gff->chunks);
+        gff->chunks = NULL;
     }
     if (gff->file) {
         fclose(gff->file);
     }
     if (gff->pals) {
         free(gff->pals);
+        gff->pals = NULL;
     }
     gff->file = NULL;
     gff->filename = NULL;
-    gff->map = NULL;
 }
 
 void gff_close (int gff_file) {
@@ -672,24 +721,3 @@ void gff_close (int gff_file) {
     gff_close_file(open_files + gff_file );
 
 }
-
-/*
-gff_monster_entry_t* gff_load_monster(int region_id, int monster_id) {
-    if (monster_id < 0 || monster_id > MAX_MONSTERS_PER_REGION) { return NULL; }
-    unsigned long len;
-    gff_monster_region_t *mr = (gff_monster_region_t*)gff_get_raw_bytes(RESOURCE_GFF_INDEX, GFF_MONR, 1, &len);
-    if (!mr) {return NULL;}
-
-    for (int i = 0; i < len/sizeof(gff_monster_entry_t); i++) {
-        if (mr->region == i) {
-            return mr->monsters + monster_id;
-        }
-    }
-
-    printf("mr->region = %d\n", mr->region);
-    for (int j = 0; j < MAX_MONSTERS_PER_REGION; j++) {
-        printf("%d: level %d\n", mr->monsters[j].id, mr->monsters[j].level);
-    }
-    return NULL;
-}
-*/

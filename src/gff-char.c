@@ -112,7 +112,11 @@ int gff_char_add_character(ds_character_t *pc, psin_t *psi, spell_list_t *spells
     printf("open_slot = %d, replace_id = %d, id = %d\n", open_slot, replace_id, id);
     if (open_slot == -1) {
         gff_add_chunk(CHARSAVE_GFF_INDEX, GFF_CHAR, id, (char*)res_ids, 1<<10);
-        printf("NEED TO ALLOC DATA!\n");
+        gff_add_chunk(CHARSAVE_GFF_INDEX, GFF_PSST, id, (char*)res_ids, sizeof(psionic_list_t));
+        gff_add_chunk(CHARSAVE_GFF_INDEX, GFF_SPST, id, (char*)res_ids, sizeof(spell_list_t));
+        gff_add_chunk(CHARSAVE_GFF_INDEX, GFF_PSIN, id, (char*)res_ids, sizeof(psin_t));
+        gff_add_chunk(CHARSAVE_GFF_INDEX, GFF_CACT, id, (char*)res_ids, 2);
+        replace_id = open_slot = id;
     }
     if (open_slot > -1) {
         create_combat(pc, name, &combat);

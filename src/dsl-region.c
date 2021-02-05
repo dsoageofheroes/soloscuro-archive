@@ -17,7 +17,7 @@ static int is_region(const int gff_idx) {
     if (gff_idx < 0 || gff_idx >= NUM_FILES) { return 0; }
     if (!open_files[gff_idx].file) { return 0; }
 
-    for (int i = 0; i < open_files[gff_idx].types.num_types; i++) {
+    for (int i = 0; i < open_files[gff_idx].num_types; i++) {
         if ((open_files[gff_idx].chunks[i]->chunk_type & GFFMAXCHUNKMASK) == GFF_RMAP) { has_rmap = 1;}
         if ((open_files[gff_idx].chunks[i]->chunk_type & GFFMAXCHUNKMASK) == GFF_GMAP) { has_gmap = 1;}
         if ((open_files[gff_idx].chunks[i]->chunk_type & GFFMAXCHUNKMASK) == GFF_TILE) { has_tile = 1;}
