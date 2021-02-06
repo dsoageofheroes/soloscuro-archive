@@ -562,7 +562,7 @@ size_t gff_get_resource_ids(int idx, int type_id, unsigned int *ids) {
             //TODO: migrate the cpt to the proper structs.
             cptr = (void*)open_files[idx].chunks[i];
             for (int j = 0; j < open_files[idx].chunks[i]->chunk_count; j++) {
-                chunk_header = (void*)(cptr + sizeof(gff_chunk_list_header_t) + (j * GFFCHUNKHEADERSIZE));
+                chunk_header = (void*)(cptr + sizeof(gff_chunk_list_header_t) + (j * sizeof(gff_chunk_header_t)));
                 ids[pos++] = chunk_header->id;
             }
         }

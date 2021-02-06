@@ -8,6 +8,7 @@
 #include "new-character.h"
 #include "popup.h"
 #include "add-load-save.h"
+#include "../../src/ds-player.h"
 #include "../font.h"
 #include "../sprite.h"
 
@@ -21,6 +22,8 @@ static uint16_t character, inv, magic, status;
 static uint16_t game_menu, game_return;
 enum {SELECT_NONE, SELECT_POPUP, SELECT_NEW, SELECT_ALS};
 static int8_t last_selection = SELECT_NONE;
+static float zoom = 1.0;
+static uint8_t slot_clicked;
 
 static SDL_Rect initial_locs[] = {{ 155, 28, 0, 0 }, // description
                                   { 75, 175, 0, 0 }, // message
@@ -51,9 +54,10 @@ uint16_t view_sprite_create(SDL_Renderer *renderer, gff_palette_t *pal,
     return sprite_create(renderer, &tmp, pal, 0, 0, zoom, gff_idx, type_id, res_id);
 }
 
-void view_character_init(SDL_Renderer *renderer, const uint32_t x, const uint32_t y, const float zoom) {
+void view_character_init(SDL_Renderer *renderer, const uint32_t x, const uint32_t y, const float _zoom) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     rend = renderer;
+    zoom = _zoom;
 
     memset(description, 0x0, sizeof(description));
     memset(message, 0x0, sizeof(message));
@@ -102,7 +106,10 @@ void view_character_init(SDL_Renderer *renderer, const uint32_t x, const uint32_
     strcpy(message, "message");
 }
 
+#define BUF_MAX (1<<12)
+
 void view_character_render(void *data, SDL_Renderer *renderer) {
+    char buf[BUF_MAX];
     sprite_render(renderer, panel);
     sprite_render(renderer, view_char);
 
@@ -122,6 +129,26 @@ void view_character_render(void *data, SDL_Renderer *renderer) {
 
     print_line_len(renderer, FONT_YELLOW, description, description_loc.x, description_loc.y, sizeof(description));
     print_line_len(renderer, FONT_GREY, message, message_loc.x, message_loc.y, sizeof(message));
+
+    for (int i = 0; i < 4; i++) {
+        if (ds_player_exists(i)) {
+            ds1_combat_t* combat = ds_player_get_combat(i);
+            ds_character_t* ch = ds_player_get_char(i);
+            int x = 56, y = 74;
+            if (i == 1 || i == 3) { y += 60; }
+            if (i == 2 || i == 3) { x += 50; }
+            snprintf(buf, BUF_MAX, "%d/%d", combat->hp, ch->base_hp);
+            print_line_len(renderer, FONT_YELLOW, buf, x * zoom, (y + 0) * zoom, BUF_MAX);
+            snprintf(buf, BUF_MAX, "%d/%d", combat->psp, ch->base_psp);
+            print_line_len(renderer, FONT_BLUE, buf, x * zoom, (y + 8) * zoom, BUF_MAX);
+            if (combat->status) {
+                snprintf(buf, BUF_MAX, "%d", combat->status);
+            } else {
+                snprintf(buf, BUF_MAX, "Okay");
+            }
+            print_line_len(renderer, FONT_YELLOW, buf, x * zoom, (y + 16) * zoom, BUF_MAX);
+        }
+    }
 }
 
 static int get_sprite_mouse_is_on(const uint32_t x, const uint32_t y) {
@@ -156,25 +183,18 @@ int view_character_handle_mouse_movement(const uint32_t x, const uint32_t y) {
     }
     
     last_sprite = cur_sprite;
-    //character = view_sprite_create(renderer, pal, 45 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 10100);
-    //inv = view_sprite_create(renderer, pal, 70 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11102);
-    //magic = view_sprite_create(renderer, pal, 95 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11103);
-    //status = view_sprite_create(renderer, pal, 120 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11104);
-    //game_return = view_sprite_create(renderer, pal, 252 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 10108);
-    //game_menu = view_sprite_create(renderer, pal, 222 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11101);
     return 1;// handle
 }
 
 int view_character_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
-    //return 1; // means I captured the mouse click
-    return 0; // zero means I did not handle the mouse click, so another screen may.
+    return 1; // means I captured the mouse click
 }
 
 int view_character_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
-    //return 1; // means I captured the mouse click
     if (button == SDL_BUTTON_RIGHT) {
         for (int i = 0; i < 4; i++) {
             if (sprite_in_rect(ports[i], x, y)) {
+                slot_clicked = i;
                 screen_push_screen(rend, &popup_screen, 100, 75);
                 popup_set_message("INACTIVE CHARACTER");
                 popup_set_option(0, "NEW");
@@ -184,7 +204,8 @@ int view_character_handle_mouse_up(const uint32_t button, const uint32_t x, cons
             }
         }
     }
-    return 0; // zero means I did not handle the mouse click, so another screen may.
+    if (sprite_in_rect(game_return, x, y)) { screen_pop(); } 
+    return 1; // means I captured the mouse click
 }
 
 void view_character_free() {
@@ -237,6 +258,13 @@ void view_character_return_control () {
                 popup_set_option(2, "CANCEL");
                 last_selection = SELECT_POPUP;
                 return;
+            }
+        }
+    } else if (last_selection == SELECT_ALS) {
+        if (add_load_save_get_action() == ACTION_ADD) {
+            uint32_t sel = add_load_save_get_selection();
+            if (!ds_player_load_character_charsave(slot_clicked, sel)) {
+                printf("Char loading failed.\n");
             }
         }
     }

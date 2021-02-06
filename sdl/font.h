@@ -12,6 +12,7 @@ enum {
     FONT_BLACK,
     FONT_RED,
     FONT_REDDARK,
+    FONT_BLUE,
     NUM_FONTS
 };
 

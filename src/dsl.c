@@ -7,6 +7,7 @@
 #include "dsl-string.h"
 #include "dsl-var.h"
 //#include "gameloop.h"
+#include "ds-player.h"
 #include "replay.h"
 #include "trigger.h"
 
@@ -48,6 +49,7 @@ void dsl_init() {
     info("Initalizing DSL.\n");
     initialize_dsl_stack();
     dsl_init_vars();
+    ds_player_init();
     dsl_object_init();
     trigger_init();
     dsl_manager_init();

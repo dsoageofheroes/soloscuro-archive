@@ -28,6 +28,7 @@ static uint16_t new_sprite_create(SDL_Renderer *renderer, gff_palette_t *pal,
 static float zoom;
 static uint16_t mousex, mousey;
 static uint16_t selection;
+static uint16_t char_selected;
 static char **entries = NULL;
 static uint16_t *valids = NULL;
 static uint32_t num_entries = 0;
@@ -205,10 +206,10 @@ int add_load_save_handle_mouse_down(const uint32_t button, const uint32_t x, con
         sprite_set_location(bar, zoom * 45, zoom * (31 + i * 11));
         if (sprite_in_rect(bar, mousex, mousey)) {
             selection = top_entry + i;
+            char_selected = res_ids[valids[selection]];
         }
     }
     return 1; // means I captured the mouse click
-    //return 0; // zero means I did not handle the mouse click, so another screen may.
 }
 
 int add_load_save_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
@@ -271,7 +272,7 @@ void add_load_save_free() {
 }
 
 int add_load_save_get_action() { return last_action; }
-uint32_t add_load_save_get_selection() { return valids[selection]; }
+uint32_t add_load_save_get_selection() { return char_selected; }
 
 sops_t als_screen = {
     .init = add_load_save_init,

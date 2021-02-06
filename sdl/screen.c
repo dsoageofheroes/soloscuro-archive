@@ -19,7 +19,7 @@ void load_screen(const char *arg) {
         screen_push_screen(renderer, &main_screen, 10, 10);
     }
     if (!strcmp(arg, "view")) {
-        screen_push_screen(renderer, &view_character_screen, 10, 10);
+        screen_push_screen(renderer, &view_character_screen, 0, 10);
         narrate_init(renderer, 0, 0, 2.0); // to setup print_line
     }
     if (!strcmp(arg, "new")) {
