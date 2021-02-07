@@ -671,6 +671,15 @@ static void print_combat(ds1_combat_t combat, int pos) {
 
 static void print_item(ds1_item_t item, int pos) {
     char buf[BUF_MAX];
+    static char names[NAME_MAX];
+
+    gff_chunk_header_t chunk = gff_find_chunk_header(DSLDATA_GFF_INDEX, GFF_NAME, 1);
+    gff_read_chunk(DSLDATA_GFF_INDEX, &chunk, names, NAME_MAX);
+
+    FILE *f = fopen("out.dat", "wb+");
+    fwrite(names, 1, chunk.length, f);
+    fclose(f);
+
     snprintf(buf, BUF_MAX, "id: %d\n", item.id);
     print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     snprintf(buf, BUF_MAX, "quantity: %d\n", item.quantity);
@@ -693,7 +702,12 @@ static void print_item(ds1_item_t item, int pos) {
     print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     snprintf(buf, BUF_MAX, "slot: %d\n", item.slot);
     print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
-    snprintf(buf, BUF_MAX, "name_index: %d\n", item.name_idx);
+
+    if ((item.name_idx * 25) < NAME_MAX) {
+        snprintf(buf, BUF_MAX, "name_index: %d ( %s)\n", item.name_idx, names + 25 * item.name_idx);
+    } else {
+        snprintf(buf, BUF_MAX, "name_index: %d\n", item.name_idx);
+    }
     print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;
     snprintf(buf, BUF_MAX, "bonus: %d\n", item.bonus);
     print_line_len(renderer, 0, buf, 320, pos, 128); pos += 20;

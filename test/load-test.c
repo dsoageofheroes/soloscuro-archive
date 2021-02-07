@@ -10,7 +10,7 @@
 
 void setUp() {
     gff_init();
-    //gff_load_directory("/home/pwest/dosbox/DARKSUN");
+    gff_load_directory("/home/pwest/dosbox/DARKSUN");
     dsl_init();
 }
 
@@ -26,11 +26,13 @@ void create_players() {
     psin_t psi;
     spell_list_t spells;
     psionic_list_t psionics;
-    //ds1_combat_t *combat = ds_player_get_combat(0);
+    ds_inventory_t inv;
+
     memset(&pc, 0x0, sizeof(ds_character_t));
     memset(&psi, 0x0, sizeof(psin_t));
     memset(&spells, 0x0, sizeof(spells));
     memset(&psionics, 0x0, sizeof(psionics));
+    memset(&inv, 0x0, sizeof(ds_inventory_t));
     pc.current_xp = 1234;
     pc.base_hp = 23;
     pc.base_psp = 45;
@@ -58,12 +60,14 @@ void create_players() {
     spell_set_psin(&psi, PSIONIC_TELEPATH, 0);
     // Probably should add some psionics
     // Probably should add some spells
-    ds_player_replace(0, &pc, &psi, &spells, &psionics, "Garak");
+    ds_item_load(&(inv.hand0), -1252); // long sword.
+    ds_player_replace(0, &pc, &psi, &spells, &psionics, &inv, "Garak");
 
     memset(&pc, 0x0, sizeof(ds_character_t));
     memset(&psi, 0x0, sizeof(psin_t));
     memset(&spells, 0x0, sizeof(spells));
     memset(&psionics, 0x0, sizeof(psionics));
+    memset(&inv, 0x0, sizeof(ds_inventory_t));
     pc.current_xp = 4321;
     pc.base_hp = 32;
     pc.base_psp = 54;
@@ -91,12 +95,13 @@ void create_players() {
     spell_set_psin(&psi, PSIONIC_TELEPATH, 0);
     // Probably should add some psionics
     // Probably should add some spells
-    ds_player_replace(1, &pc, &psi, &spells, &psionics, "Dwarf");
+    ds_player_replace(1, &pc, &psi, &spells, &psionics, &inv, "Dwarf");
 
     memset(&pc, 0x0, sizeof(ds_character_t));
     memset(&psi, 0x0, sizeof(psin_t));
     memset(&spells, 0x0, sizeof(spells));
     memset(&psionics, 0x0, sizeof(psionics));
+    memset(&inv, 0x0, sizeof(ds_inventory_t));
     pc.current_xp = 10000;
     pc.base_hp = 32;
     pc.base_psp = 54;
@@ -130,12 +135,13 @@ void create_players() {
     spell_set_psionic(&psionics, PSIONIC_DETONATE);
     spell_set_psionic(&psionics, PSIONIC_DISINTEGRATE);
     // Probably should add some spells
-    ds_player_replace(2, &pc, &psi, &spells, &psionics, "Mel");
+    ds_player_replace(2, &pc, &psi, &spells, &psionics, &inv, "Mel");
 
     memset(&pc, 0x0, sizeof(ds_character_t));
     memset(&psi, 0x0, sizeof(psin_t));
     memset(&spells, 0x0, sizeof(spells));
     memset(&psionics, 0x0, sizeof(psionics));
+    memset(&inv, 0x0, sizeof(ds_inventory_t));
     pc.current_xp = 10000;
     pc.base_hp = 32;
     pc.base_psp = 54;
@@ -179,7 +185,7 @@ void create_players() {
     spell_set_spell(&spells, WIZ_FOG_CLOUD);
     spell_set_spell(&spells, WIZ_GLITTERDUST);
     spell_set_spell(&spells, WIZ_INVISIBILITY);
-    ds_player_replace(3, &pc, &psi, &spells, &psionics, "Edwin");
+    ds_player_replace(3, &pc, &psi, &spells, &psionics, &inv, "Edwin");
 
     ds_player_get_pos(0)->map = 42;
     ds_player_get_pos(0)->xpos = 25;
@@ -224,6 +230,7 @@ void test_load_save_char(void) {
     TEST_ASSERT_EQUAL_INT(0, spell_has_psin(ds_player_get_psi(0), PSIONIC_TELEPATH));
     // Probably should add some psionics
     // Probably should add some spells
+
     TEST_ASSERT_EQUAL_STRING("Dwarf",  ds_player_get_combat(1)->name); // make sure it was cleared.
     TEST_ASSERT_EQUAL_INT(4321, ds_player_get_char(1)->current_xp);
     TEST_ASSERT_EQUAL_INT(32, ds_player_get_char(1)->base_hp);

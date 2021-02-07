@@ -11,6 +11,7 @@
 void browse_loop(SDL_Surface*, SDL_Renderer *rend);
 void screen_debug_init(SDL_Surface *sur, SDL_Renderer *rend, const char *arg);
 void export_all_images(const char *filename);
+void export_all_items(const char *base_path);
 
 static uint32_t last_tick = 0;
 static const uint32_t TICK_AMT = 1000 / TICKS_PER_SEC;// Not fully correct...
@@ -163,6 +164,10 @@ static void init(int args, char *argv[]) {
         }
         if (!strcmp(argv[i], "--extract-images") && i < (args - 1)) {
             export_all_images(argv[i + 1]);
+            exit(0);
+        }
+        if (!strcmp(argv[i], "--extract-items") && i < (args - 1)) {
+            export_all_items(argv[i + 1]);
             exit(0);
         }
     }

@@ -106,3 +106,104 @@ void export_all_images(const char *base_path) {
         }
     }
 }
+
+static void write_rdff(int idx, const char *base_path) {
+    uint32_t res_ids[RES_MAX];
+    ds1_item_t item;
+    int res_max = gff_get_resource_length(idx, GFF_RDFF);
+    char buf[128];
+
+    snprintf(buf, 128, "%s/items.csv", base_path);
+    FILE *f = fopen(buf, "wb+");
+    fprintf(f, "id, quantity, next, value, pack_index, item_index, icon, charges, data0, slot, name, bonus, priority, special\n");
+    gff_get_resource_ids(idx, GFF_RDFF, res_ids);
+    for (int i = 0; i < res_max; i++) {
+        if (ds_item_load(&item, res_ids[i])) {
+            fprintf(f, "%d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d (%s), %d, %d, %d\n",
+                item.id,
+                item.quantity,
+                item.next,
+                item.value,
+                item.pack_index,
+                item.item_index,
+                item.icon,
+                item.charges,
+                item.data0,
+                item.slot,
+                item.name_idx,
+                ds_item_name(item.name_idx),
+                item.bonus,
+                item.priority,
+                item.special);
+        }
+    }
+    fclose(f);
+}
+
+static void write_it1r(int idx, const char *base_path) {
+    //int res_max = gff_get_resource_length(idx, GFF_IT1R);
+    //printf("THere are %d it1rs\n", res_max);
+    size_t pos = 0;
+    const ds_item1r_t * it1r = ds_get_item1r(pos);
+    char buf[128];
+
+    snprintf(buf, 128, "%s/it1r.csv", base_path);
+    FILE *f = fopen(buf, "wb+");
+    fprintf(f, "weapon_type, data0, damage_type, weight, data1, base_hp, material, placement, range"
+               ", num_attacks, sides, dice, mod, flags, legal_class, base_AC, data2\n");
+    while (it1r) {
+        fprintf(f, "%d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d\n",
+            it1r->weapon_type,
+            it1r->data0,
+            it1r->damage_type,
+            it1r->weight,
+            it1r->data1,
+            it1r->base_hp,
+            it1r->material,
+            it1r->placement,
+            it1r->range,
+            it1r->num_attacks,
+            it1r->sides,
+            it1r->dice,
+            it1r->mod,
+            it1r->flags,
+            it1r->legal_class,
+            it1r->base_AC,
+            it1r->data2);
+        /*
+    */
+        pos++;
+        it1r = ds_get_item1r(pos);
+    }
+    fclose(f);
+}
+
+void export_all_items(const char *base_path) {
+    //uint32_t res_ids[RES_MAX];
+    for (int i = 0; i < NUM_FILES; i++) {
+        if (open_files[i].file) {
+            for (int j = 0; j < gff_get_number_of_types(i); j++) {
+                int type = gff_get_type_id(i, j);
+                //int res_max = gff_get_resource_length(i, type = gff_get_type_id(i, j));
+                //printf("type = %d, res_max = %d\n", type, res_max);
+                switch(type) {
+                    case GFF_RDFF:
+                        write_rdff(i, base_path);
+                        break;
+                    case GFF_IT1R:
+                        write_it1r(i, base_path);
+                        break;
+                }
+                //printf("SIZE %s:[%d:%d] has %d\n", open_files[i].filename, i, type, res_max);
+                //gff_get_resource_ids(i, type, res_ids);
+                //printf("SIZE %s:[%d] has %d\n", open_files[i].filename, j, res_max);
+                //for (int k = 0; k < res_max; k++) {
+                    //write_image(base_path, i, type, res_ids[k]);
+                //}
+            }
+            //if (open_files[i].pals->len) {
+                //pal = open_files[i].pals->palettes;
+            //}
+        }
+    }
+}

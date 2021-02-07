@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "dsl.h"
 #include "dsl-manager.h"
+#include "ds-item.h"
 #include "ds-state.h"
 #include "ds-string.h"
 #include "dsl-var.h"
@@ -50,6 +51,7 @@ void dsl_init() {
     initialize_dsl_stack();
     dsl_init_vars();
     ds_player_init();
+    ds_item_init();
     dsl_object_init();
     trigger_init();
     dsl_manager_init();
@@ -65,5 +67,6 @@ void dsl_cleanup() {
     dsl_object_cleanup();
     dsl_cleanup_vars();
     dsl_manager_cleanup();
+    ds_item_close();
     trigger_cleanup();
 }

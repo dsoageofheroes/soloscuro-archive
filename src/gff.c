@@ -318,7 +318,7 @@ gff_chunk_header_t gff_find_chunk_header(int idx, int type_id, int res_id) {
     gff_chunk_header_t ret = {0, 0, 0};
 
     for (int i = 0; !entry && i < gff->num_types; i++) {
-        if ((gff->chunks[i]->chunk_type & GFFMAXCHUNKMASK) == type_id) {
+        if (gff->chunks && (gff->chunks[i]->chunk_type & GFFMAXCHUNKMASK) == type_id) {
             entry = gff->chunks[i];
         }
     }

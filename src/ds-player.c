@@ -3,6 +3,7 @@
 #include "gfftypes.h"
 #include "gff.h"
 #include "ds-player.h"
+#include "ds-item.h"
 #include "spells.h"
 #include "rules.h"
 
@@ -13,6 +14,7 @@ typedef struct player_s {
     spell_list_t spells;
     psionic_list_t psionics;
     player_pos_t pos;
+    ds_inventory_t inv;
 } player_t;
 
 static int active = 0;
@@ -52,7 +54,7 @@ static void create_combat(ds_character_t *pc, char *name, ds1_combat_t *combat) 
 }
 
 int ds_player_replace(const int slot, ds_character_t *ch, psin_t *psi, spell_list_t *spells,
-        psionic_list_t *psionics, char *name) {
+        psionic_list_t *psionics, ds_inventory_t *inv, char *name) {
     ds1_combat_t combat;
     if (slot < 0 || slot >= MAX_PCS) { return 0; }
 
@@ -62,6 +64,7 @@ int ds_player_replace(const int slot, ds_character_t *ch, psin_t *psi, spell_lis
     memcpy(&(pc[slot].psi), psi, sizeof(psin_t));
     memcpy(&(pc[slot].spells), spells, sizeof(spell_list_t));
     memcpy(&(pc[slot].psionics), psionics, sizeof(psionic_list_t));
+    memcpy(&(pc[slot].inv), inv, sizeof(ds_inventory_t));
 
     return 1;
 }
@@ -127,6 +130,11 @@ psionic_list_t* ds_player_get_psionics(const int slot) {
 player_pos_t* ds_player_get_pos(const int slot) {
     if (slot < 0 || slot >= MAX_PCS) { return NULL; }
     return &(pc[slot].pos);
+}
+
+ds_inventory_t* ds_player_get_inv(const int slot) {
+    if (slot < 0 || slot >= MAX_PCS) { return NULL; }
+    return &(pc[slot].inv);
 }
 
 int ds_player_get_active() {
