@@ -110,4 +110,10 @@
 #define GFF_PSIN GFFTYPE('P','S','I','N') // psionic and sphere selection
 #define GFF_CACT GFFTYPE('C','A','C','T') // valid char id (0 if entry is invalid.)
 
+// SAVE Entries:
+#define GFF_STXT GFFTYPE('S','T','X','T') // name of the save file entry
+#define GFF_ETME GFFTYPE('E','T','M','E') // copyright notice
+#define GFF_SAVE GFFTYPE('S','A','V','E') // save entries...
+#define GFF_POS GFFTYPE('P','O','S',' ') // save entry pos (not part of original engine.)
+
 #endif

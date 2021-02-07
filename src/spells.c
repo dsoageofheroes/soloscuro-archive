@@ -92,3 +92,23 @@ void spell_set_psin(psin_t *psin, const uint8_t psi, const int on) {
             break;
     }
 }
+
+void spell_set_psionic(psionic_list_t *psi, uint16_t power) {
+    if (power < 0 || power >= PSIONIC_MAX) { return; }
+    psi->psionics[power] = 1;
+}
+
+int spell_has_psionic(psionic_list_t *psi, uint16_t power) {
+    if (power < 0 || power >= PSIONIC_MAX) { return 0; }
+    return psi->psionics[power];
+}
+
+void spell_set_spell(spell_list_t *spells, uint16_t spell) {
+    if (spell < 0 || spell >= WIZ_MAX) { return; }
+    spells->spells[spell / 8] |= 1<<(spell % 8);
+}
+
+int spell_has_spell(spell_list_t *spells, uint16_t spell) {
+    if (spell < 0 || spell >= WIZ_MAX) { return 0; }
+    return (spells->spells[spell / 8] >> (spell % 8)) & 0x01;
+}

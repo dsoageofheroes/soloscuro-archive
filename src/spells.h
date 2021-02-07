@@ -229,5 +229,9 @@ void spell_get_cleric_name(uint8_t spell, char name[32]);
 void spell_get_psin_name(uint8_t psin, char name[32]);
 void spell_set_psin(psin_t *psin, const uint8_t psi, const int on);
 int spell_has_psin(psin_t *psin, const uint8_t psi);
+void spell_set_psionic(psionic_list_t *psi, uint16_t power);
+int spell_has_psionic(psionic_list_t *psi, uint16_t power);
+void spell_set_spell(spell_list_t *psi, uint16_t spell);
+int spell_has_spell(spell_list_t *psi, uint16_t spell);
 
 #endif

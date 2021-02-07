@@ -102,6 +102,7 @@ enum {
 enum {
     ITEM_OBJECT   = 1,
     COMBAT_OBJECT = 2,
+    CHAR_OBJECT   = 3,
     MINI_OBJECT   = 5,
 };
 

@@ -4,6 +4,7 @@
 #include "gff.h"
 #include "ds-player.h"
 #include "spells.h"
+#include "rules.h"
 
 typedef struct player_s {
     ds_character_t ch;
@@ -11,7 +12,10 @@ typedef struct player_s {
     psin_t psi;
     spell_list_t spells;
     psionic_list_t psionics;
+    player_pos_t pos;
 } player_t;
+
+static int active = 0;
 
 #define MAX_PCS (4)
 #define BUF_MAX (1<<12)
@@ -20,6 +24,46 @@ static player_t pc[MAX_PCS];
 
 void ds_player_init() {
     memset(pc, 0x0, MAX_PCS * sizeof(player_t));
+}
+
+static void create_combat(ds_character_t *pc, char *name, ds1_combat_t *combat) {
+    combat->hp = pc->high_hp;
+    combat->psp = pc->base_psp;
+    combat->char_index = 0; // TODO: do we need an index?
+    combat->id = pc->id;
+    combat->ready_item_index = 0; // TODO: do we need this?
+    combat->weapon_index = 0; // TODO: do we need this?
+    combat->pack_index = 0;  // TODO: do we need this?
+    memset(combat->data_block, 0x0, 8);
+    combat->special_attack = 0;
+    combat->special_defense = 0;
+    combat->icon = 0; // TODO: need to fix this eventually...
+    combat->ac = dnd2e_get_ac_pc(pc);
+    combat->move = dnd2e_get_move_pc(pc);
+    combat->status = 0; // clear
+    combat->allegiance = pc->allegiance;
+    combat->data = 0; // whatever
+    combat->thac0 = dnd2e_get_thac0_pc(pc);
+    combat->priority = 0; // clear
+    combat->flags = 0; // clear
+    combat->stats = pc->stats;
+    strncpy(combat->name, name, 16);
+    combat->name[15] = '\0';
+}
+
+int ds_player_replace(const int slot, ds_character_t *ch, psin_t *psi, spell_list_t *spells,
+        psionic_list_t *psionics, char *name) {
+    ds1_combat_t combat;
+    if (slot < 0 || slot >= MAX_PCS) { return 0; }
+
+    memcpy(&(pc[slot].ch), ch, sizeof(ds_character_t));
+    create_combat(ch, name, &combat);
+    memcpy(&(pc[slot].combat), &combat, sizeof(ds1_combat_t));
+    memcpy(&(pc[slot].psi), psi, sizeof(psin_t));
+    memcpy(&(pc[slot].spells), spells, sizeof(spell_list_t));
+    memcpy(&(pc[slot].psionics), psionics, sizeof(psionic_list_t));
+
+    return 1;
 }
 
 int ds_player_load_character_charsave(const int slot, const int res_id) {
@@ -56,11 +100,40 @@ int ds_player_exists(const int slot) {
 }
 
 ds1_combat_t* ds_player_get_combat(const int slot) {
-    if (slot < 0 || slot >= MAX_PCS) { return 0; }
+    if (slot < 0 || slot >= MAX_PCS) { return NULL; }
     return &(pc[slot].combat);
 }
 
 ds_character_t* ds_player_get_char(const int slot) {
-    if (slot < 0 || slot >= MAX_PCS) { return 0; }
+    if (slot < 0 || slot >= MAX_PCS) { return NULL; }
     return &(pc[slot].ch);
+}
+
+psin_t* ds_player_get_psi(const int slot) {
+    if (slot < 0 || slot >= MAX_PCS) { return NULL; }
+    return &(pc[slot].psi);
+}
+
+spell_list_t* ds_player_get_spells(const int slot) {
+    if (slot < 0 || slot >= MAX_PCS) { return NULL; }
+    return &(pc[slot].spells);
+}
+
+psionic_list_t* ds_player_get_psionics(const int slot) {
+    if (slot < 0 || slot >= MAX_PCS) { return NULL; }
+    return &(pc[slot].psionics);
+}
+
+player_pos_t* ds_player_get_pos(const int slot) {
+    if (slot < 0 || slot >= MAX_PCS) { return NULL; }
+    return &(pc[slot].pos);
+}
+
+int ds_player_get_active() {
+    return active;
+}
+
+void ds_player_set(const int slot) {
+    if (slot < 0 || slot >= MAX_PCS) { return; }
+    active = slot;
 }

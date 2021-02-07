@@ -3,13 +3,18 @@
 #include "../../src/gff.h"
 #include "../../src/gfftypes.h"
 #include "../sprite.h"
+#include "../map.h"
+#include "../player.h"
 #include "view-character.h"
+#include "narrate.h"
 
 static uint16_t background, sun, start, create_characters, load_save, exit_dos;
 static int mousex = 0, mousey = 0;
 static int mouse_down = 0;
 static int count_down = 0;
 static uint16_t count_down_spr = SPRITE_ERROR;
+
+static map_t cmap;
 
 SDL_Renderer *renderer = NULL;
 
@@ -35,6 +40,15 @@ void main_init(SDL_Renderer *_renderer, const uint32_t x, const uint32_t y, cons
 static void click_action() {
     if (count_down_spr == exit_dos) { main_exit_system(); }
     if (count_down_spr == create_characters) { screen_push_screen(renderer, &view_character_screen, 0, 10); }
+    if (count_down_spr == start) {
+        map_init(&cmap);
+        map_load_region(&cmap, renderer, gff_find_index("rgn2a.gff"));
+        screen_pop();
+        screen_push_screen(renderer, &map_screen, 0, 0);
+        screen_push_screen(renderer, &narrate_screen, 0, 0);
+        player_init();
+        player_load_graphics(renderer);
+    }
 }
 
 void main_render(void *data, SDL_Renderer *renderer) {

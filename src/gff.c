@@ -661,6 +661,10 @@ void get_gff_type_name(unsigned int gff_type, char *type) {
         case GFF_PSST: strcpy(type, "PSST Data: The psionic list."); break;
         case GFF_CHAR: strcpy(type, "CHAR Data: The character data."); break;
         case GFF_PSIN: strcpy(type, "PSIN Data: The psionic and sphere lists."); break;
+        case GFF_CACT: strcpy(type, "CACT Data: The id for a player."); break;
+        case GFF_STXT: strcpy(type, "STXT Data: The name of the save file."); break;
+        case GFF_ETME: strcpy(type, "ETME Data: Copyright notice, if you see this it means don't use it."); break;
+        case GFF_SAVE: strcpy(type, "SAVE Data: "); break;
         default: 
             sprintf(type, "UNKNOWN TYPE: '%c' '%c' '%c' '%c'",
                 (gff_type >> 0) & 0x00FF,
