@@ -1,7 +1,7 @@
 #ifndef DS_PLAYER_H
 #define DS_PLAYER_H
 
-#include "dsl-object.h"
+#include "ds-object.h"
 #include "spells.h"
 
 typedef struct player_pos_s {

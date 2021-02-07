@@ -7,7 +7,7 @@
 #include "port.h"
 #include "dsl-manager.h"
 #include "dsl-lua.h"
-#include "dsl-state.h"
+#include "ds-state.h"
 #include "gff.h"
 #include "gfftypes.h"
 

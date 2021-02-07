@@ -4,7 +4,7 @@
 #include <SDL2/SDL.h>
 #include "../../src/spells.h"
 #include "../screen-manager.h"
-#include "../../src/dsl-object.h"
+#include "../../src/ds-object.h"
 
 ds_character_t *new_character_get_pc();
 psin_t* new_character_get_psin();

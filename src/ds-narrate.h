@@ -1,5 +1,5 @@
-#ifndef DSL_NARRATE
-#define DSL_NARRATE
+#ifndef DS_NARRATE
+#define DS_NARRATE
 
 #include <stdint.h>
 

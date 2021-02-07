@@ -1,6 +1,6 @@
 #include "narrate.h"
 #include "../../src/dsl.h"
-#include "../../src/dsl-narrate.h"
+#include "../../src/ds-narrate.h"
 #include "../../src/gff.h"
 #include "../../src/gfftypes.h"
 #include "../gameloop.h"

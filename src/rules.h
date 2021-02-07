@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "dsl-object.h"
+#include "ds-object.h"
 #include "spells.h"
 
 enum {

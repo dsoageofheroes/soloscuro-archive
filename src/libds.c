@@ -7,7 +7,7 @@
 #include <stdlib.h>
 
 #include "dsl.h"
-#include "dsl-object.h"
+#include "ds-object.h"
 #include "dsl-var.h"
 #include "gff.h"
 #include "gff-image.h"

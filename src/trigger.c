@@ -1,6 +1,6 @@
 #include "dsl.h"
 #include "dsl-manager.h"
-#include "dsl-state.h"
+#include "ds-state.h"
 #include "replay.h"
 #include "trigger.h"
 #include <stdlib.h>

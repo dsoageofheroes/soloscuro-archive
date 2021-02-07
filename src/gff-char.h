@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #include "spells.h"
-#include "dsl-object.h"
+#include "ds-object.h"
 
 typedef struct player_character_s {
     ds_character_t pc;

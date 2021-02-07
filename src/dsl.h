@@ -15,7 +15,7 @@
 
 #include "gff.h"
 #include "gfftypes.h"
-#include "dsl-scmd.h"
+#include "ds-scmd.h"
 
 #define check_index_t uint16_t
 #define NULL_CHECK (0xFFFF)

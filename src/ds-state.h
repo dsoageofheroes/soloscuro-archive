@@ -1,5 +1,5 @@
-#ifndef DSL_STATE_H
-#define DSL_STATE_H
+#ifndef DS_STATE_H
+#define DS_STATE_H
 
 #include <lua5.3/lua.h>
 

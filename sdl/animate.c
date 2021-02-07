@@ -3,7 +3,7 @@
 #include "animate.h"
 #include "gameloop.h"
 #include "../src/dsl.h"
-#include "../src/dsl-scmd.h"
+#include "../src/ds-scmd.h"
 
 //#define MAX_DELAY (256)
 static animate_t *list;

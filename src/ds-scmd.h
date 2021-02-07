@@ -1,6 +1,6 @@
 // SCMD (Script CoMmanDs)
-#ifndef DSL_SCMD_H
-#define DSL_SCMD_H
+#ifndef DS_SCMD_H
+#define DS_SCMD_H
 
 typedef struct _scmd_t {
     uint8_t bmp_idx; // 0-254 = valid, 255 = none

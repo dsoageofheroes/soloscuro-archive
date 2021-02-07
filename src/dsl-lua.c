@@ -1,6 +1,6 @@
 #include "dsl-lua.h"
-#include "dsl-state.h"
-#include "dsl-string.h"
+#include "ds-state.h"
+#include "ds-string.h"
 #include "dsl-var.h"
 #include "dsl-manager.h"
 #include <stdio.h>

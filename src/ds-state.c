@@ -1,8 +1,8 @@
 #include "dsl.h"
 #include "dsl-manager.h"
-#include "dsl-narrate.h"
-#include "dsl-region.h"
-#include "dsl-state.h"
+#include "ds-narrate.h"
+#include "ds-region.h"
+#include "ds-state.h"
 #include "../sdl/gameloop.h"
 #include "port.h"
 #include "replay.h"
@@ -12,7 +12,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "dsl-narrate.h"
+#include "ds-narrate.h"
 
 #define BUF_SIZE           (1<<12)
 #define MAX_GFLAGS         (800)

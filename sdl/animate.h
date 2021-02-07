@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 #include <SDL2/SDL.h>
-#include "../src/dsl-object.h"
-#include "../src/dsl-scmd.h"
+#include "../src/ds-object.h"
+#include "../src/ds-scmd.h"
 
 typedef struct animate_s {
     SDL_Texture **textures;

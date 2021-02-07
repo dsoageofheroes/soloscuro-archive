@@ -5,7 +5,7 @@
 #include "screens/narrate.h"
 #include "gameloop.h"
 #include "../src/dsl.h"
-#include "../src/dsl-region.h"
+#include "../src/ds-region.h"
 #include "../src/gff.h"
 #include "../src/gff-map.h"
 #include "../src/gff-image.h"

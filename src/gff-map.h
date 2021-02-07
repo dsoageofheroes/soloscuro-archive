@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 
-#include "dsl-scmd.h"
-#include "dsl-object.h"
+#include "ds-scmd.h"
+#include "ds-object.h"
 
 #define MAP_LOS     (0x80) // Runtime flag to determine if block is in sight.
 #define MAP_BLOCK   (0x40) // This tile is blocked (you can't move into it.)

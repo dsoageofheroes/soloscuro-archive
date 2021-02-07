@@ -4,9 +4,9 @@
 #include "../src/dsl.h"
 #include "../src/trigger.h"
 #include "../src/dsl-manager.h"
-#include "../src/dsl-object.h"
-#include "../src/dsl-region.h"
-#include "../src/dsl-scmd.h"
+#include "../src/ds-object.h"
+#include "../src/ds-region.h"
+#include "../src/ds-scmd.h"
 #include "../src/dsl-var.h"
 
 static map_t *cmap = NULL;

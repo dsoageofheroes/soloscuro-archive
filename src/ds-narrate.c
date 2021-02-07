@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "dsl-manager.h"
-#include "dsl-narrate.h"
+#include "ds-narrate.h"
 #include "dsl.h"
 #include "dsl-var.h"
 #include "../sdl/gameloop.h"

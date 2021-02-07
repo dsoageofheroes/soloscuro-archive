@@ -1,5 +1,5 @@
 #include "dsl.h"
-#include "dsl-scmd.h"
+#include "ds-scmd.h"
 #include <stdlib.h>
 
 static scmd_t* get_script(unsigned char* scmd_entry, const int index) {

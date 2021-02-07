@@ -1,5 +1,5 @@
 #include "dsl.h"
-#include "dsl-region.h"
+#include "ds-region.h"
 #include "gff-map.h"
 #include "gff.h"
 #include "gfftypes.h"

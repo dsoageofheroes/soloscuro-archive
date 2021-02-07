@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <unistd.h>
-#include "dsl-narrate.h"
+#include "ds-narrate.h"
 #include "replay.h"
 #include "../sdl/gameloop.h"
 #include "trigger.h"

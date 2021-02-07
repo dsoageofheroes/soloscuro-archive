@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 #include "../src/gff-map.h"
-#include "dsl-object.h"
+#include "ds-object.h"
 
 typedef struct dsl_region_s {
     gff_map_object_t *entry_table;

@@ -1,5 +1,5 @@
 #include "dsl.h"
-#include "dsl-object.h"
+#include "ds-object.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
