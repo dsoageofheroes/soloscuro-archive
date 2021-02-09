@@ -153,6 +153,8 @@ static void init(int args, char *argv[]) {
 
     screen_init(renderer);
 
+    player_init();
+
     for (int i = 0; i < args; i++) {
         if (!strcmp(argv[i], "--browse") && i < (args)) {
             printf("Entering browsing mode!\n");
@@ -178,7 +180,6 @@ static void init(int args, char *argv[]) {
     screen_load_region(renderer);
     screen_push_screen(renderer, &narrate_screen, 0, 0);
 
-    player_init();
     player_load_graphics(renderer);
 }
 

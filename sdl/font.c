@@ -35,6 +35,21 @@ static void create_font(SDL_Renderer *renderer, const uint32_t idx, const uint32
     free(dsfont);
 }
 
+uint32_t font_pixel_width(font_t font, const char *text, const uint32_t len) {
+    uint32_t sum = 0;
+    size_t c;
+
+    if (text == NULL) { return sum; }
+
+    for (int i = 0; text[i] && i < len; i++) {
+        c = text[i];
+        sum += font_loc[font][c].w;
+        //debug("Need to print '%c'\n", i);
+    }
+
+    return sum;
+}
+
 void print_line_len(SDL_Renderer *renderer, font_t font, const char *text, size_t x, size_t y, const uint32_t len) {
     size_t c;
     if (text == NULL) { return; }

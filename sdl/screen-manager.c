@@ -67,7 +67,7 @@ void screen_render(SDL_Renderer *renderer, const uint32_t xmappos, const uint32_
             screens[i].render(screens[i].data, renderer);
         }
     }
-    player_render(renderer);
+    //player_render(renderer);
     SDL_RenderPresent(renderer);
 }
 

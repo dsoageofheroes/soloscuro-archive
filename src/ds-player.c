@@ -17,15 +17,17 @@ typedef struct player_s {
     ds_inventory_t inv;
 } player_t;
 
-static int active = 0;
 
 #define MAX_PCS (4)
 #define BUF_MAX (1<<12)
 
 static player_t pc[MAX_PCS];
+static int active = 0;
+static int ai[4];
 
 void ds_player_init() {
     memset(pc, 0x0, MAX_PCS * sizeof(player_t));
+    ai[0] = ai[1] = ai[2] = ai[3];
 
     // Setup the slots for reading/writing
     for (int i = 0; i < MAX_PCS; i++) {
@@ -121,7 +123,22 @@ int ds_player_get_active() {
     return active;
 }
 
-void ds_player_set(const int slot) {
+void ds_player_set_active(const int slot) {
     if (slot < 0 || slot >= MAX_PCS) { return; }
     active = slot;
+}
+
+int ds_player_is_ai(const int slot) {
+    if (slot < 0 || slot >= MAX_PCS) { return 0; }
+    return ai[slot];
+}
+
+void ds_player_set_ai(const int slot, int on) {
+    if (slot < 0 || slot >= MAX_PCS) { return; }
+    ai[slot] = on;
+}
+
+int ds_player_get_ac(const int slot) {
+    if (slot < 0 || slot >= MAX_PCS) { return 10; }
+    return pc[slot].ch.base_ac;
 }

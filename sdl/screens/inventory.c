@@ -5,6 +5,7 @@
 #include "../../src/gfftypes.h"
 #include "../../src/rules.h"
 #include "narrate.h"
+#include "../player.h"
 #include "new-character.h"
 #include "popup.h"
 #include "add-load-save.h"
@@ -24,9 +25,11 @@ enum {SELECT_NONE, SELECT_POPUP, SELECT_NEW, SELECT_ALS};
 static int8_t last_selection = SELECT_NONE;
 static float zoom = 1.0;
 static uint8_t slot_clicked;
+static uint32_t mousex, mousey;
+static int char_selected;
 
 static SDL_Rect initial_locs[] = {{ 59, 5, 0, 0 }, // name
-                                  { 57, 165, 0, 0 }, // description
+                                  { 52, 165, 174, 0 }, // description
 };
 static SDL_Rect slot_locs[] = {
     {0, 0, 0, 0},
@@ -83,6 +86,8 @@ void inventory_screen_init(SDL_Renderer *renderer, const uint32_t x, const uint3
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     rend = renderer;
     zoom = _zoom;
+    mousex = mousey = 0;
+    char_selected = 0;
 
     memset(name, 0x0, sizeof(name));
     memset(description, 0x0, sizeof(description));
@@ -103,10 +108,12 @@ void inventory_screen_init(SDL_Renderer *renderer, const uint32_t x, const uint3
 
     character = view_sprite_create(renderer, pal, 160 + x, 181 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 10100);
     inv = view_sprite_create(renderer, pal, 185 + x, 181 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11102);
+    sprite_set_frame(inv, 3);
     magic = view_sprite_create(renderer, pal, 210 + x, 181 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11103);
     status = view_sprite_create(renderer, pal, 235 + x, 181 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11104);
     game_return = view_sprite_create(renderer, pal, 288 + x, 181 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 10108);
     game_menu = view_sprite_create(renderer, pal, 258 + x, 181 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11101);
+    sprite_set_frame(game_menu, 2);
 
     ai[0] = view_sprite_create(renderer, pal, 2 + x, 14 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111);
     ai[1] = view_sprite_create(renderer, pal, 2 + x, 62 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111);
@@ -134,9 +141,107 @@ void inventory_screen_init(SDL_Renderer *renderer, const uint32_t x, const uint3
 
     strcpy(name, "NAME");
     strcpy(description, "message");
+    //ds_load_character_charsave(0, 9); // testing!
+    //ds_load_character_charsave(1, 10); // testing!
+    //ds_load_character_charsave(2, 7); // testing!
+    //ds_load_character_charsave(3, 8); // testing!
+    //player_load(renderer, 0, zoom);
+    //player_load(renderer, 1, zoom);
+    //player_load(renderer, 2, zoom);
+    //player_load(renderer, 3, zoom);
+}
+
+static const char *slot_names[] = {
+    "ARM",
+    "AMMO",
+    "MISSILE",
+    "RIGHT HAND",
+    "FINGER",
+    "WAIST",
+    "LEGS",
+    "HEAD",
+    "NECK",
+    "TORSO",
+    "LEFT HAND",
+    "FINGER",
+    "CLOAK",
+    "FOOT",
+    "BACKPACK"
+};
+
+static int do_slot_highlight(SDL_Renderer *renderer, const uint16_t frame, const uint16_t pos) {
+    if (sprite_in_rect(slots, mousex, mousey)) {
+        uint32_t x = sprite_getx(slots);
+        uint32_t y = sprite_gety(slots);
+        sprite_set_frame(slots, 7); // highight
+        //sprite_set_location(slots, x, y);
+        sprite_set_location(slots, x, y);
+        sprite_render(renderer, slots);
+        sprite_set_frame(slots, frame);
+        strcpy(description, slot_names[pos]);
+        //strcpy(description, "012345678901234567890123456789");
+        //strcpy(description, "00000000000000000000 0000000000");
+        //center_text(description, 37, slot_names[pos], strlen(slot_names[pos]));
+        strcpy(description, slot_names[pos]);
+        return 1;
+    }
+
+    return 0;
+}
+
+static void render_center(font_t font, const char *str, const SDL_Rect loc) {
+    int len = strlen(str);
+    int pixel_width = (font_pixel_width(font, str, len));
+    int offset = (loc.w / 2) - (pixel_width / 2);
+    print_line_len(rend, font, str, loc.x + offset, loc.y, len);
+}
+
+#define BUF_MAX (1<<8)
+
+static void render_character() {
+    char buf[BUF_MAX];
+    ds1_combat_t* combat = ds_player_get_combat(char_selected);
+    ds_character_t* character = ds_player_get_char(char_selected);
+    strcpy(name, combat->name);
+    if (name[0] == '\0') { return; } // no character.
+
+    print_line_len(rend, FONT_YELLOW, "STR:", 235 * zoom, 53 * zoom, BUF_MAX);
+    print_line_len(rend, FONT_YELLOW, "DEX:", 235 * zoom, 60 * zoom, BUF_MAX);
+    print_line_len(rend, FONT_YELLOW, "CON:", 235 * zoom, 67 * zoom, BUF_MAX);
+    print_line_len(rend, FONT_YELLOW, "INT:", 235 * zoom, 74 * zoom, BUF_MAX);
+    print_line_len(rend, FONT_YELLOW, "WIS:", 235 * zoom, 81 * zoom, BUF_MAX);
+    print_line_len(rend, FONT_YELLOW, "CHA:", 235 * zoom, 88 * zoom, BUF_MAX);
+    snprintf(buf, BUF_MAX, "%d\n", combat->stats.str);
+    print_line_len(rend, FONT_YELLOW, buf, 260 * zoom, 53 * zoom, BUF_MAX);
+    snprintf(buf, BUF_MAX, "%d\n", combat->stats.dex);
+    print_line_len(rend, FONT_YELLOW, buf, 260 * zoom, 60 * zoom, BUF_MAX);
+    snprintf(buf, BUF_MAX, "%d\n", combat->stats.con);
+    print_line_len(rend, FONT_YELLOW, buf, 260 * zoom, 67 * zoom, BUF_MAX);
+    snprintf(buf, BUF_MAX, "%d\n", combat->stats.intel);
+    print_line_len(rend, FONT_YELLOW, buf, 260 * zoom, 74 * zoom, BUF_MAX);
+    snprintf(buf, BUF_MAX, "%d\n", combat->stats.wis);
+    print_line_len(rend, FONT_YELLOW, buf, 260 * zoom, 81 * zoom, BUF_MAX);
+    snprintf(buf, BUF_MAX, "%d\n", combat->stats.cha);
+    print_line_len(rend, FONT_YELLOW, buf, 260 * zoom, 88 * zoom, BUF_MAX);
+
+    snprintf(buf, BUF_MAX, "PSI:  %d/%d\n", combat->psp, character->base_psp);
+    print_line_len(rend, FONT_YELLOW, buf, 235 * zoom, 100 * zoom, BUF_MAX);
+
+    snprintf(buf, BUF_MAX, "AC: %d\n", ds_player_get_ac(char_selected));
+    print_line_len(rend, FONT_YELLOW, buf, 235 * zoom, 115 * zoom, BUF_MAX);
+
+//ds1_combat_t* ds_player_get_combat(const int slot);
+//ds_character_t* ds_player_get_char(const int slot);
+//psin_t* ds_player_get_psi(const int slot);
+//spell_list_t* ds_player_get_spells(const int slot);
+//psionic_list_t* ds_player_get_psionics(const int slot);
+//player_pos_t* ds_player_get_pos(const int slot);
+//ds_inventory_t* ds_player_get_inv(const int slot);
 }
 
 void inventory_screen_render(void *data, SDL_Renderer *renderer) {
+    description[0] = '\0';
+
     sprite_render(renderer, panel);
     sprite_render(renderer, parchment);
     sprite_render(renderer, flag_spear);
@@ -158,12 +263,26 @@ void inventory_screen_render(void *data, SDL_Renderer *renderer) {
         sprite_render(renderer, ai[i]);
         sprite_render(renderer, leader[i]);
         //sprite_render(renderer, port_background[i]);
+        sprite_set_frame(ports[i], ds_player_exists(i) ? 1 : 2);
         sprite_render(renderer, ports[i]);
+        if (sprite_in_rect(ports[i], mousex, mousey)) {
+            sprite_set_frame(ports[i], 1);
+            sprite_render(renderer, ports[i]);
+            strcpy(description, "PRESS RIGHT MOUSE BUTTON");
+        }
+        if (char_selected == i) {
+            sprite_set_frame(ports[i], 3);
+            sprite_render(renderer, ports[i]);
+        } else {
+            sprite_set_frame(ports[i], 0);
+            sprite_render(renderer, ports[i]);
+        }
     }
 
     for (int i = 9; i < 23; i++) {
         sprite_set_frame(slots, i);
         sprite_render(renderer, slots);
+        do_slot_highlight(renderer, i, i - 9);
     }
 
     sprite_set_frame(slots, 0);
@@ -182,48 +301,45 @@ void inventory_screen_render(void *data, SDL_Renderer *renderer) {
         sprite_render(renderer, slots);
     }
 
-    print_line_len(renderer, FONT_YELLOW, name, name_loc.x, name_loc.y, sizeof(name));
-    print_line_len(renderer, FONT_GREY, description, description_loc.x, description_loc.y, sizeof(description));
-
-    sprite_render(renderer, slots);
-
-/*
-    for (int i = 0; i < 4; i++) {
-        if (ds_player_exists(i)) {
-            ds1_combat_t* combat = ds_player_get_combat(i);
-            ds_character_t* ch = ds_player_get_char(i);
-            int x = 56, y = 74;
-            if (i == 1 || i == 3) { y += 60; }
-            if (i == 2 || i == 3) { x += 50; }
-            snprintf(buf, BUF_MAX, "%d/%d", combat->hp, ch->base_hp);
-            print_line_len(renderer, FONT_YELLOW, buf, x * zoom, (y + 0) * zoom, BUF_MAX);
-            snprintf(buf, BUF_MAX, "%d/%d", combat->psp, ch->base_psp);
-            print_line_len(renderer, FONT_BLUE, buf, x * zoom, (y + 8) * zoom, BUF_MAX);
-            if (combat->status) {
-                snprintf(buf, BUF_MAX, "%d", combat->status);
-            } else {
-                snprintf(buf, BUF_MAX, "Okay");
-            }
-            print_line_len(renderer, FONT_YELLOW, buf, x * zoom, (y + 16) * zoom, BUF_MAX);
-        }
+    sprite_set_frame(slots, 5);
+    for (int i = 0; i < 6; i++) {
+        sprite_set_location(slots, (186 * zoom), (18 + 17 * i) * zoom);
+        do_slot_highlight(renderer, 5, 14);
+        sprite_set_location(slots, (204 * zoom), (18 + 17 * i) * zoom);
+        do_slot_highlight(renderer, 5, 14);
     }
-    */
+
+    if (sprite_in_rect(character, mousex, mousey)) { strcpy(description, "VIEW CHARACTER"); }
+    if (sprite_in_rect(inv, mousex, mousey)) { strcpy(description, "VIEW INVENTORY"); }
+    if (sprite_in_rect(magic, mousex, mousey)) { strcpy(description, "CAST SPELL/USE PSIONIC"); }
+    if (sprite_in_rect(status, mousex, mousey)) { strcpy(description, "CURRENT SPELL EFFECTS"); }
+    if (sprite_in_rect(game_return, mousex, mousey)) { strcpy(description, "GAME RETURN"); }
+
+    print_line_len(renderer, FONT_YELLOW, name, name_loc.x, name_loc.y, sizeof(name));
+    render_center(FONT_GREY, description, description_loc);
+
+    render_character();
+
+    for (int i = 0; i < 4; i++) {
+        player_center(i, 12 * zoom, (4 + 48 * i) * zoom, 34 * zoom, 34 * zoom);
+        player_render(rend, i);
+    }
+
+    if (ds_player_exists(char_selected)) {
+        player_center_portrait(char_selected, (75) * zoom, (36) * zoom, 90 * zoom, 125 * zoom);
+        player_render_portrait(rend, char_selected);
+    }
 }
 
 static int get_sprite_mouse_is_on(const uint32_t x, const uint32_t y) {
     if (sprite_in_rect(character, x, y)) { return character; }
-    if (sprite_in_rect(inv, x, y)) { return inv; }
     if (sprite_in_rect(magic, x, y)) { return magic; }
     if (sprite_in_rect(status, x, y)) { return status; }
-    if (sprite_in_rect(game_menu, x, y)) { return game_menu; }
     if (sprite_in_rect(game_return, x, y)) { return game_return; }
-    //if (sprite_in_rect(flag_spear, x, y)) { return flag_spear; }
 
     for (int i = 0; i < 4; i++) {
         if (sprite_in_rect(ai[i], x, y)) { return ai[i]; }
         if (sprite_in_rect(leader[i], x, y)) { return leader[i]; }
-        //if (sprite_in_rect(port_background[i], x, y)) { return port_background[i]; }
-        if (sprite_in_rect(ports[i], x, y)) { return ports[i]; }
     }
 
     return SPRITE_ERROR;
@@ -233,6 +349,9 @@ int inventory_screen_handle_mouse_movement(const uint32_t x, const uint32_t y) {
     static uint16_t last_sprite = SPRITE_ERROR;
 
     uint16_t cur_sprite = get_sprite_mouse_is_on(x, y);
+
+    mousex = x;
+    mousey = y;
 
     if (last_sprite != cur_sprite) {
         sprite_set_frame(cur_sprite, sprite_get_frame(cur_sprite) + 1);
@@ -250,9 +369,9 @@ int inventory_screen_handle_mouse_down(const uint32_t button, const uint32_t x, 
 }
 
 int inventory_screen_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
-    if (button == SDL_BUTTON_RIGHT) {
-        for (int i = 0; i < 4; i++) {
-            if (sprite_in_rect(ports[i], x, y)) {
+    for (int i = 0; i < 4; i++) {
+        if (sprite_in_rect(ports[i], x, y)) {
+            if (button == SDL_BUTTON_RIGHT) {
                 slot_clicked = i;
                 screen_push_screen(rend, &popup_screen, 100, 75);
                 popup_set_message("INACTIVE CHARACTER");
@@ -260,6 +379,8 @@ int inventory_screen_handle_mouse_up(const uint32_t button, const uint32_t x, co
                 popup_set_option(1, "ADD");
                 popup_set_option(2, "CANCEL");
                 last_selection = SELECT_POPUP;
+            } else if (button == SDL_BUTTON_LEFT) {
+                char_selected = i;
             }
         }
     }
@@ -284,6 +405,7 @@ void inventory_screen_free() {
     sprite_free(inv);
     sprite_free(magic);
     sprite_free(status);
+    sprite_free(slots);
 }
 
 void inventory_screen_return_control () {
@@ -309,6 +431,7 @@ void inventory_screen_return_control () {
         if (pc && psi && spells && psionics) {
             if (dnd2e_character_is_valid(pc) && dnd2e_psin_is_valid(pc, psi)) {
                 gff_char_add_character(pc, psi, spells, psionics, name);
+                player_load(rend, slot_clicked, zoom);
             } else {
                 screen_push_screen(rend, &popup_screen, 100, 75);
                 popup_set_message("Character was invalid.");
@@ -325,6 +448,8 @@ void inventory_screen_return_control () {
             //if (!ds_player_load_character_charsave(slot_clicked, sel)) {
             if (!ds_load_character_charsave(slot_clicked, sel)) {
                 printf("Char loading failed.\n");
+            } else {
+                player_load(rend, slot_clicked, zoom);
             }
         }
     }

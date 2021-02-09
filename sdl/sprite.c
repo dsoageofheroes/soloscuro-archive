@@ -59,6 +59,13 @@ static SDL_Texture* create_texture(SDL_Renderer *renderer, const uint32_t gff_id
     return ret;
 }
 
+uint16_t sprite_new(SDL_Renderer *renderer, gff_palette_t *pal,
+        const int offsetx, const int offsety, const float zoom,
+        const int gff_idx, const int type_id, const int res_id) {
+    SDL_Rect tmp = {offsetx, offsety, 0, 0};
+    return sprite_create(renderer, &tmp, pal, 0, 0, zoom, gff_idx, type_id, res_id);
+}
+
 // Create a sprite and return its ID
 uint16_t sprite_create(SDL_Renderer *renderer, SDL_Rect *initial,
         gff_palette_t *pal,
@@ -132,9 +139,32 @@ void sprite_set_location(const uint16_t sprite_id, const uint32_t x, const uint3
 
 int sprite_in_rect(const uint16_t id, const uint32_t x, const uint32_t y) {
     if (!valid_id(id)) { return 0; }
-    SDL_Rect *loc = (sprites[id].loc);
+    SDL_Rect *loc = (sprites[id].loc + sprites[id].pos);
     return (x >= loc->x && x < (loc->x + loc->w)
         && y >= loc->y && y < (loc->y + loc->h));
+}
+
+uint32_t sprite_getx(const uint16_t id) {
+    if (!valid_id(id)) { return 0; }
+    SDL_Rect *loc = (sprites[id].loc + sprites[id].pos);
+    return loc->x;
+}
+
+uint32_t sprite_gety(const uint16_t id) {
+    if (!valid_id(id)) { return 0; }
+    SDL_Rect *loc = (sprites[id].loc + sprites[id].pos);
+    return loc->y;
+}
+
+void sprite_center(const int id, const int x, const int y, const int w, const int h) {
+    if (!valid_id(id)) { return; }
+    SDL_Rect *loc = (sprites[id].loc + sprites[id].pos);
+
+    int diffx = (w - loc->w) / 2;
+    int diffy = (h - loc->h) / 2;
+
+    loc->x = x + diffx;
+    loc->y = y + diffy;
 }
 
 // Free a sprite at an ID (do not use it again!)
