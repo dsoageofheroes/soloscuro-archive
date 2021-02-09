@@ -57,9 +57,7 @@ void screen_load_region(SDL_Renderer *renderer) {
     map_init(&cmap);
     map_load_region(&cmap, renderer, gff_find_index("rgn2a.gff"));
 
-    screens[0] = map_screen;
-    screens[0].data = NULL;
-    //screens[0].init(renderer);
+    screen_push_screen(renderer, &map_screen, 0, 0);
 }
 
 void screen_render(SDL_Renderer *renderer, const uint32_t xmappos, const uint32_t ymappos) {

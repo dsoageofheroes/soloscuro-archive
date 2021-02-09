@@ -42,10 +42,18 @@ static void add_player_to_save(const int id, const int player) {
     size_t buf_len = 128, offset = 0;
     char *buf = malloc(buf_len);
     rdff_header_t rdff;
+    int num_items = 0;
+
+    ds1_item_t *item = (ds1_item_t*) ds_player_get_inv(player);
+    for (int i = 0; i < 26; i++) {
+        if (item[i].id) {
+            num_items++;
+        }
+    }
 
     // First the combat object
     rdff.load_action = RDFF_OBJECT;
-    rdff.blocknum = 2; // only 2 objects right now. We will need to add items later.
+    rdff.blocknum = 2 + num_items; // 2 objects (combat & char) + items.
     rdff.type = COMBAT_OBJECT;
     rdff.index = id;
     rdff.from = id;
@@ -64,6 +72,18 @@ static void add_player_to_save(const int id, const int player) {
     buf = append(buf, &offset, &buf_len, ds_player_get_char(player), sizeof(ds_character_t));
 
     // Next would be the items: TBD
+    for (int i = 0; i < 26; i++) {
+        if (item[i].id) {
+            rdff.load_action = RDFF_OBJECT;
+            rdff.blocknum = 0; // no sub objects, TBD: containers?
+            rdff.type = ITEM_OBJECT;
+            rdff.index = item[i].id;
+            rdff.from = item[i].id;
+            rdff.len = sizeof(ds1_item_t);
+            buf = append(buf, &offset, &buf_len, &rdff, sizeof(rdff_header_t));
+            buf = append(buf, &offset, &buf_len, item + i, sizeof(ds1_item_t));
+        }
+    }
 
     gff_add_chunk(id, GFF_CHAR, player, buf, offset);
     free(buf);
@@ -99,31 +119,49 @@ char* ls_create_save_file() {
 
 #define BUF_MAX (1<<12)
 
-static int load_player(int id, int player) {
+static int load_player(const int id, const int player, const int res_id) {
     char buf[BUF_MAX];
     rdff_header_t *rdff;
     size_t offset = 0;
-    gff_chunk_header_t chunk = gff_find_chunk_header(id, GFF_CHAR, player);
+    int num_items;
+    ds1_item_t *pc_items = (ds1_item_t*)ds_player_get_inv(player);
+    gff_chunk_header_t chunk = gff_find_chunk_header(id, GFF_CHAR, res_id);
+    printf("%d\n", chunk.length);
     if (gff_read_chunk(id, &chunk, &buf, sizeof(buf)) < 34) { return 0; }
 
     rdff = (rdff_disk_object_t*) (buf);
-    memcpy(ds_player_get_combat(player), buf + 10, sizeof(ds1_combat_t));
-    offset += 10 + rdff->len;
+    num_items = rdff->blocknum - 2;
+    offset += sizeof(rdff_disk_object_t);
+    memcpy(ds_player_get_combat(player), buf + offset, sizeof(ds1_combat_t));
+    offset += rdff->len;
 
-    memcpy(ds_player_get_char(player), buf + 0x4E, sizeof(ds_character_t));
+    rdff = (rdff_disk_object_t*) (buf + offset);
+    offset += sizeof(rdff_disk_object_t);
+    memcpy(ds_player_get_char(player), buf + offset, sizeof(ds_character_t));
+    offset += rdff->len;
 
-    // Now load the extra items...
+    for (int i = 0; i < num_items; i++) {
+        rdff = (rdff_disk_object_t*) (buf + offset);
+        offset += sizeof(rdff_disk_object_t);
+        int slot = ((ds1_item_t*)(buf + offset))->slot;
+        memcpy(pc_items + slot, buf + offset, sizeof(ds1_item_t));
+        offset += rdff->len;
+    }
 
-    chunk = gff_find_chunk_header(id, GFF_PSIN, player);
+    chunk = gff_find_chunk_header(id, GFF_PSIN, res_id);
     if (!gff_read_chunk(id, &chunk, ds_player_get_psi(player), sizeof(psin_t))) { return 0; }
 
-    chunk = gff_find_chunk_header(id, GFF_SPST, player);
+    chunk = gff_find_chunk_header(id, GFF_SPST, res_id);
     if (!gff_read_chunk(id, &chunk, ds_player_get_spells(player), sizeof(spell_list_t))) { return 0;}
 
-    chunk = gff_find_chunk_header(id, GFF_PSST, player);
+    chunk = gff_find_chunk_header(id, GFF_PSST, res_id);
     if (!gff_read_chunk(id, &chunk, ds_player_get_psionics(player), sizeof(psionic_list_t))) { return 0;}
     
     return 1;
+}
+
+int ds_load_character_charsave(const int slot, const int res_id) {
+    return load_player(CHARSAVE_GFF_INDEX, slot, res_id);
 }
 
 int ls_load_save_file(const char *path) {
@@ -132,7 +170,7 @@ int ls_load_save_file(const char *path) {
     if (id < 0) { return 0; }
 
     for (int i = 0; i < 4; i++) {
-        if (!load_player(id, i)) { return 0; }
+        if (!load_player(id, i, i)) { return 0; }
     }
 
     gff_chunk_header_t chunk = gff_find_chunk_header(id, GFF_POS, 0);

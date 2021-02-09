@@ -5,6 +5,7 @@
 #include "screen-manager.h"
 #include "gameloop.h"
 #include "screens/narrate.h"
+#include "screens/inventory.h"
 #include "../src/dsl.h"
 #include "../src/replay.h"
 
@@ -60,6 +61,9 @@ void handle_input() {
             case SDL_KEYDOWN:
                 if (event.key.keysym.sym == SDLK_ESCAPE) {
                     game_loop_signal(WAIT_FINAL, 0);
+                }
+                if (event.key.keysym.sym == SDLK_i) {
+                    screen_push_screen(renderer, &inventory_screen, 0, 0);
                 }
                 break;
             case SDL_MOUSEMOTION:
@@ -158,8 +162,6 @@ static void init(int args, char *argv[]) {
         if (!strcmp(argv[i], "--screen") && i < (args - 1)) {
             printf("Entering screen mode!\n");
             screen_debug_init(screen, renderer, argv[i + 1]);
-            //screen_loop();
-            //exit(1);
             return;
         }
         if (!strcmp(argv[i], "--extract-images") && i < (args - 1)) {
@@ -173,8 +175,8 @@ static void init(int args, char *argv[]) {
     }
 
     // Start the main game.
-    screen_load_screen(renderer, 2, &narrate_screen, 0, 0);
     screen_load_region(renderer);
+    screen_push_screen(renderer, &narrate_screen, 0, 0);
 
     player_init();
     player_load_graphics(renderer);

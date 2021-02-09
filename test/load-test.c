@@ -33,6 +33,7 @@ void create_players() {
     memset(&spells, 0x0, sizeof(spells));
     memset(&psionics, 0x0, sizeof(psionics));
     memset(&inv, 0x0, sizeof(ds_inventory_t));
+    for (int i = 0; i < 26; i++) { ((ds1_item_t*)(&inv))[i].slot = i; };
     pc.current_xp = 1234;
     pc.base_hp = 23;
     pc.base_psp = 45;
@@ -61,6 +62,7 @@ void create_players() {
     // Probably should add some psionics
     // Probably should add some spells
     ds_item_load(&(inv.hand0), -1252); // long sword.
+    ds_item_load(&(inv.bp[11]), -1252); // long sword.
     ds_player_replace(0, &pc, &psi, &spells, &psionics, &inv, "Garak");
 
     memset(&pc, 0x0, sizeof(ds_character_t));
@@ -68,6 +70,7 @@ void create_players() {
     memset(&spells, 0x0, sizeof(spells));
     memset(&psionics, 0x0, sizeof(psionics));
     memset(&inv, 0x0, sizeof(ds_inventory_t));
+    for (int i = 0; i < 26; i++) { ((ds1_item_t*)(&inv))[i].slot = i; };
     pc.current_xp = 4321;
     pc.base_hp = 32;
     pc.base_psp = 54;
@@ -102,6 +105,7 @@ void create_players() {
     memset(&spells, 0x0, sizeof(spells));
     memset(&psionics, 0x0, sizeof(psionics));
     memset(&inv, 0x0, sizeof(ds_inventory_t));
+    for (int i = 0; i < 26; i++) { ((ds1_item_t*)(&inv))[i].slot = i; };
     pc.current_xp = 10000;
     pc.base_hp = 32;
     pc.base_psp = 54;
@@ -142,6 +146,7 @@ void create_players() {
     memset(&spells, 0x0, sizeof(spells));
     memset(&psionics, 0x0, sizeof(psionics));
     memset(&inv, 0x0, sizeof(ds_inventory_t));
+    for (int i = 0; i < 26; i++) { ((ds1_item_t*)(&inv))[i].slot = i; };
     pc.current_xp = 10000;
     pc.base_hp = 32;
     pc.base_psp = 54;
@@ -228,6 +233,8 @@ void test_load_save_char(void) {
     TEST_ASSERT_EQUAL_INT(1, spell_has_psin(ds_player_get_psi(0), PSIONIC_PSYCHOKINETIC));
     TEST_ASSERT_EQUAL_INT(0, spell_has_psin(ds_player_get_psi(0), PSIONIC_PSYCHOMETABOLISM));
     TEST_ASSERT_EQUAL_INT(0, spell_has_psin(ds_player_get_psi(0), PSIONIC_TELEPATH));
+    TEST_ASSERT_EQUAL_INT(-1252, ds_player_get_inv(0)->hand0.id);
+    TEST_ASSERT_EQUAL_INT(-1252, ds_player_get_inv(0)->bp[11].id);
     // Probably should add some psionics
     // Probably should add some spells
 
@@ -257,6 +264,8 @@ void test_load_save_char(void) {
     TEST_ASSERT_EQUAL_INT(0, spell_has_psin(ds_player_get_psi(1), PSIONIC_PSYCHOKINETIC));
     TEST_ASSERT_EQUAL_INT(1, spell_has_psin(ds_player_get_psi(1), PSIONIC_PSYCHOMETABOLISM));
     TEST_ASSERT_EQUAL_INT(0, spell_has_psin(ds_player_get_psi(1), PSIONIC_TELEPATH));
+    TEST_ASSERT_EQUAL_INT(0, ds_player_get_inv(1)->hand0.id);
+    TEST_ASSERT_EQUAL_INT(0, ds_player_get_inv(1)->bp[11].id);
     // Probably should add some psionics
     // Probably should add some spells
     TEST_ASSERT_EQUAL_STRING("Mel",  ds_player_get_combat(2)->name); // make sure it was cleared.

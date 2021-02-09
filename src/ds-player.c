@@ -26,6 +26,14 @@ static player_t pc[MAX_PCS];
 
 void ds_player_init() {
     memset(pc, 0x0, MAX_PCS * sizeof(player_t));
+
+    // Setup the slots for reading/writing
+    for (int i = 0; i < MAX_PCS; i++) {
+        ds1_item_t *item = (ds1_item_t*)&(pc[i].inv);
+        for (int j = 0; j < 26; j++) {
+            item[j].slot = j;
+        }
+    }
 }
 
 static void create_combat(ds_character_t *pc, char *name, ds1_combat_t *combat) {
@@ -65,34 +73,6 @@ int ds_player_replace(const int slot, ds_character_t *ch, psin_t *psi, spell_lis
     memcpy(&(pc[slot].spells), spells, sizeof(spell_list_t));
     memcpy(&(pc[slot].psionics), psionics, sizeof(psionic_list_t));
     memcpy(&(pc[slot].inv), inv, sizeof(ds_inventory_t));
-
-    return 1;
-}
-
-int ds_player_load_character_charsave(const int slot, const int res_id) {
-    char buf[BUF_MAX];
-    rdff_header_t *rdff;
-    size_t offset = 0;
-
-    if (slot < 0 || slot >= MAX_PCS) { return 0; }
-
-    gff_chunk_header_t chunk = gff_find_chunk_header(CHARSAVE_GFF_INDEX, GFF_CHAR, res_id);
-    if (gff_read_chunk(CHARSAVE_GFF_INDEX, &chunk, &buf, sizeof(buf)) < 34) { return 0; }
-
-    rdff = (rdff_disk_object_t*) (buf);
-    memcpy(&(pc[slot].combat), buf + 10, sizeof(ds1_combat_t));
-    offset += 10 + rdff->len;
-
-    memcpy(&(pc[slot].ch), buf + 0x4E, sizeof(ds_character_t));
-
-    chunk = gff_find_chunk_header(CHARSAVE_GFF_INDEX, GFF_PSIN, res_id);
-    if (!gff_read_chunk(CHARSAVE_GFF_INDEX, &chunk, &(pc[slot].psi), sizeof(psin_t))) { return 0; }
-
-    chunk = gff_find_chunk_header(CHARSAVE_GFF_INDEX, GFF_SPST, res_id);
-    if (!gff_read_chunk(CHARSAVE_GFF_INDEX, &chunk, &(pc[slot].spells), sizeof(spell_list_t))) { return 0;}
-
-    chunk = gff_find_chunk_header(CHARSAVE_GFF_INDEX, GFF_PSST, res_id);
-    if (!gff_read_chunk(CHARSAVE_GFF_INDEX, &chunk, &(pc[slot].psionics), sizeof(psionic_list_t))) { return 0;}
 
     return 1;
 }

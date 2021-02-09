@@ -4,6 +4,7 @@
 #include "gameloop.h"
 #include "screen-manager.h"
 #include "screens/add-load-save.h"
+#include "screens/inventory.h"
 #include "screens/narrate.h"
 #include "screens/screen-main.h"
 #include "screens/view-character.h"
@@ -35,6 +36,9 @@ void load_screen(const char *arg) {
     }
     if (!strcmp(arg, "als")) {
         screen_push_screen(renderer, &als_screen, 0, 0);
+    }
+    if (!strcmp(arg, "inv")) {
+        screen_push_screen(renderer, &inventory_screen, 0, 0);
     }
 }
 

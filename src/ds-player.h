@@ -11,7 +11,6 @@ typedef struct player_pos_s {
 
 void ds_player_init();
 int ds_player_exists(const int slot);
-int ds_player_load_character_charsave(const int slot, const int res_id);
 int ds_player_replace(const int slot, ds_character_t *ch, psin_t *psi, spell_list_t *spells,
         psionic_list_t *psionics, ds_inventory_t *inv, char *name);
 ds1_combat_t* ds_player_get_combat(const int slot);

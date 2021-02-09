@@ -335,7 +335,7 @@ void new_character_render(void *data, SDL_Renderer *renderer) {
     update_die_countdown();
     sprite_render(renderer, die[die_pos]);
     sprite_render(renderer, races[get_race_id()]);
-    print_line_len(renderer, FONT_BLACK, sphere_text, 450, 193, 1<<12);
+    print_line_len(renderer, FONT_BLACKDARK, sphere_text, 450, 193, 1<<12);
 
     for (int i = 0; i < 4; i++) {
         if (i < 3 && show_psionic_label) {

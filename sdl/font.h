@@ -10,6 +10,7 @@ enum {
     FONT_YELLOW,
     FONT_GREY,
     FONT_BLACK,
+    FONT_BLACKDARK,
     FONT_RED,
     FONT_REDDARK,
     FONT_BLUE,

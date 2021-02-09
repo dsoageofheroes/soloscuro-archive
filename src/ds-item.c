@@ -41,6 +41,7 @@ int ds_item_load(ds1_item_t *item, int32_t id) {
     if (item == NULL) { return 0; }
     if (id < 0) { id *= -1; }
     char buf[BUF_MAX];
+    uint8_t slot;
     rdff_disk_object_t *entry = (rdff_disk_object_t *)buf;
 
     gff_chunk_header_t chunk = gff_find_chunk_header(OBJEX_GFF_INDEX, GFF_RDFF, id);
@@ -53,7 +54,9 @@ int ds_item_load(ds1_item_t *item, int32_t id) {
     //if(entry->type != RDFF_OBJECT && entry->type != RDFF_CONTAINER) { return 0; }
     if(entry->type != RDFF_OBJECT) { return 0; } // Containers are not items.
 
+    slot = item->slot;
     memcpy(item, (entry + 1), sizeof(ds1_item_t));
+    item->slot = slot;
     //printf("item->id = %d\n", item->id);
     //printf("item->name_idx = %d (%s)\n", item->name_idx, names + 25*item->name_idx);
     return 1;
