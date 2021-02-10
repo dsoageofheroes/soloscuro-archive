@@ -20,6 +20,8 @@ spell_list_t* ds_player_get_spells(const int slot);
 psionic_list_t* ds_player_get_psionics(const int slot);
 player_pos_t* ds_player_get_pos(const int slot);
 ds_inventory_t* ds_player_get_inv(const int slot);
+ds1_item_t* ds_player_remove_item(const int slot, const int pos);
+void ds_player_set_item(const int slot, ds1_item_t *item, const int item_slot);
 int ds_player_exists(const int slot);
 int ds_player_get_active();
 void ds_player_set_active(const int slot);

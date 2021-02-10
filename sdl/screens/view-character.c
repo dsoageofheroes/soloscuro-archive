@@ -5,6 +5,7 @@
 #include "../../src/gfftypes.h"
 #include "../../src/rules.h"
 #include "narrate.h"
+#include "../player.h"
 #include "inventory.h"
 #include "new-character.h"
 #include "popup.h"
@@ -268,6 +269,8 @@ void view_character_return_control () {
             //if (!ds_player_load_character_charsave(slot_clicked, sel)) {
             if (!ds_load_character_charsave(slot_clicked, sel)) {
                 printf("Char loading failed.\n");
+            } else {
+                player_load(rend, slot_clicked, zoom);
             }
         }
     }

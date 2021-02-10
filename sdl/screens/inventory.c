@@ -13,6 +13,7 @@
 #include "../../src/ds-load-save.h"
 #include "../font.h"
 #include "../sprite.h"
+#include "../mouse.h"
 
 // Sprites
 static uint16_t ai[4];
@@ -241,6 +242,8 @@ static void render_character() {
 
 void inventory_screen_render(void *data, SDL_Renderer *renderer) {
     description[0] = '\0';
+    inventory_sprites_t *inv_sprs = player_get_inventory_sprites(char_selected);
+    uint16_t *inv_sprs_list = (uint16_t*)inv_sprs;
 
     sprite_render(renderer, panel);
     sprite_render(renderer, parchment);
@@ -281,7 +284,17 @@ void inventory_screen_render(void *data, SDL_Renderer *renderer) {
 
     for (int i = 9; i < 23; i++) {
         sprite_set_frame(slots, i);
-        sprite_render(renderer, slots);
+        if (inv_sprs_list[i - 9] == SPRITE_ERROR) {
+            sprite_render(renderer, slots);
+        } else {
+            int32_t x = sprite_getx(slots);
+            int32_t y = sprite_gety(slots);
+            sprite_set_frame(slots, 2);
+            sprite_set_location(slots, x, y);
+            sprite_render(renderer, slots);
+            sprite_center_spr(inv_sprs_list[i - 9], slots);
+            sprite_render(renderer, inv_sprs_list[i - 9]);
+        }
         do_slot_highlight(renderer, i, i - 9);
     }
 
@@ -368,6 +381,15 @@ int inventory_screen_handle_mouse_down(const uint32_t button, const uint32_t x, 
     return 1; // means I captured the mouse click
 }
 
+static ds1_item_t* item_dup(ds1_item_t *item) {
+    ds1_item_t *ret = malloc(sizeof(ds1_item_t));
+    memcpy(ret, item, sizeof(ds1_item_t));
+    return ret;
+}
+
+static void clicked_slot(const int slot) {
+}
+
 int inventory_screen_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
     for (int i = 0; i < 4; i++) {
         if (sprite_in_rect(ports[i], x, y)) {
@@ -385,6 +407,36 @@ int inventory_screen_handle_mouse_up(const uint32_t button, const uint32_t x, co
         }
     }
     if (sprite_in_rect(game_return, x, y)) { screen_pop(); } 
+
+    for (int i = 9; i < 23; i++) {
+        sprite_set_frame(slots, i);
+        if (sprite_in_rect(slots, x, y)) {
+            int slot = i - 9;
+            clicked_slot(slot);
+            ds1_item_t* mouse_item = mouse_get_item();
+            uint16_t* inv_sprs = (uint16_t*)player_get_inventory_sprites(char_selected);
+            ds1_item_t* player_item = ((ds1_item_t*)ds_player_get_inv(char_selected)) + slot;
+            uint16_t player_item_spr = inv_sprs[slot];
+            //printf("clicked on %d\n", slot);
+            if (mouse_item) { // mouse has an item
+                if (player_item->id) { // If we are doing a swap
+                    // Order matters.
+                    mouse_retreive_item(inv_sprs + slot);
+                    mouse_set_as_item(item_dup(player_item), player_item_spr);
+                    ds_player_set_item(char_selected, mouse_item, slot);
+                    free(mouse_item);
+                } else {
+                    ds_player_set_item(char_selected, mouse_item, slot);
+                    free(mouse_retreive_item(inv_sprs + slot));
+                }
+
+            } else {
+                mouse_set_as_item((ds_player_remove_item(char_selected, slot)), inv_sprs[slot]);
+                inv_sprs[slot] = SPRITE_ERROR;
+            }
+        }
+    }
+    //void mouse_set_as_item(ds1_item_t *item, uint16_t spr) {
     return 1; // means I captured the mouse click
 }
 

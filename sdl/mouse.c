@@ -17,16 +17,19 @@ const static size_t icon_res[] = {
 
 static SDL_Cursor **cursors;
 static int num_cursors;
+static ds1_item_t *item_data;
+static uint16_t item_spr;
+static SDL_Cursor *item_cursor;
 
-static SDL_Cursor* create_cursor(const size_t res_id) {
+static SDL_Cursor* create_cursor(const int gff_idx, const int type_idx, const size_t res_id) {
     SDL_Surface *surface = NULL;
     SDL_Cursor *c;
     SDL_Rect loc;
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
 
-    unsigned char *data = get_frame_rgba_palette(RESOURCE_GFF_INDEX, GFF_ICON, res_id, 0, pal);
-    loc.w = get_frame_width(RESOURCE_GFF_INDEX, GFF_ICON, res_id, 0);
-    loc.h = get_frame_height(RESOURCE_GFF_INDEX, GFF_ICON, res_id, 0);
+    unsigned char *data = get_frame_rgba_palette(gff_idx, type_idx, res_id, 0, pal);
+    loc.w = get_frame_width(gff_idx, type_idx, res_id, 0);
+    loc.h = get_frame_height(gff_idx, type_idx, res_id, 0);
     surface = SDL_CreateRGBSurfaceFrom(data, loc.w, loc.h, 32, 4*loc.w,
             0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
     SDL_Surface *stretch = SDL_CreateRGBSurface(0, 2 * loc.w, 2 * loc.h, 32,
@@ -41,9 +44,10 @@ static SDL_Cursor* create_cursor(const size_t res_id) {
     stretchRect.h = loc.h * 2;
 
     SDL_BlitScaled( surface, &loc, stretch, &stretchRect );
-    c = SDL_CreateColorCursor(stretch, 8, 8);
+    c = SDL_CreateColorCursor(stretch, 0, 0);
     SDL_FreeSurface(surface);
     SDL_FreeSurface(stretch);
+    free(data);
     return c;
 }
 
@@ -52,10 +56,14 @@ void mouse_init(SDL_Renderer *rend) {
     cursors = malloc(sizeof(SDL_Cursor*) * num_cursors);
 
     for (int i = 0; i < num_cursors; i++) {
-        cursors[i] = create_cursor(icon_res[i]);
+        cursors[i] = create_cursor(RESOURCE_GFF_INDEX, GFF_ICON, icon_res[i]);
     }
 
     SDL_SetCursor(cursors[0]);
+
+    item_data = NULL;
+    item_spr = SPRITE_ERROR;
+    item_cursor = NULL;
 }
 
 void mouse_free() {
@@ -65,4 +73,44 @@ void mouse_free() {
     num_cursors = 0;
     free(cursors);
     cursors = NULL;
+    if (item_cursor) {
+        SDL_FreeCursor(item_cursor);
+        item_cursor = NULL;
+    }
+    if (item_data) {
+        free(item_data);
+        item_data = NULL;
+        sprite_free(item_spr);
+        item_spr = SPRITE_ERROR;
+    }
+}
+
+void mouse_set_as_item(ds1_item_t *item, uint16_t spr) {
+    if (item_data) { return; } // We don't take an item if we already have one.
+
+    item_data = item;
+    item_spr = spr;
+
+    // Unforutnately, in SDL you are suppose to use a surface for the cursor.
+    // So, we will store the texture for later and load the mouse as a surface.
+    if (item_cursor) { SDL_FreeCursor(item_cursor); }
+    item_cursor = create_cursor(OBJEX_GFF_INDEX, GFF_BMP, ds_item_get_bmp_id(item));
+    SDL_SetCursor(item_cursor);
+}
+
+ds1_item_t* mouse_get_item() {
+    return item_data;
+}
+
+ds1_item_t* mouse_retreive_item(uint16_t *spr) {
+    ds1_item_t *ret = item_data;
+    if (!item_data) { return NULL; }
+
+    *spr = item_spr;
+    SDL_SetCursor(cursors[0]);
+    SDL_FreeCursor(item_cursor);
+    item_cursor = NULL;
+    item_data = NULL;
+
+    return ret;
 }

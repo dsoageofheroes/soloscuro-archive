@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdlib.h>
 #include "gff-common.h"
 #include "gfftypes.h"
 #include "gff.h"
@@ -77,6 +78,29 @@ int ds_player_replace(const int slot, ds_character_t *ch, psin_t *psi, spell_lis
     memcpy(&(pc[slot].inv), inv, sizeof(ds_inventory_t));
 
     return 1;
+}
+
+ds1_item_t* ds_player_remove_item(const int slot, const int pos) {
+    if (slot < 0 || slot >= MAX_PCS) { return NULL; }
+    if (pos < 0 || pos >= 26) { return NULL; }
+    ds1_item_t *ret = malloc(sizeof(ds1_item_t));
+
+    ds1_item_t *item = ((ds1_item_t*)&(pc[slot].inv)) + pos;
+    memcpy(ret, item, sizeof(ds1_item_t));
+    item->id = 0;
+    //((ds1_item_t*)&(pc[slot].inv))[pos].id = 0;
+
+    return ret;;
+}
+
+void ds_player_set_item(const int slot, ds1_item_t *item, const int item_slot) {
+    if (slot < 0 || slot >= MAX_PCS) { return; }
+    if (item_slot < 0 || item_slot >= 26) { return; }
+
+    // TODO: check we can place there;
+
+    ds1_item_t *player_item = ((ds1_item_t*)&(pc[slot].inv)) + item_slot;
+    memcpy(player_item, item, sizeof(ds1_item_t));
 }
 
 int ds_player_exists(const int slot) {

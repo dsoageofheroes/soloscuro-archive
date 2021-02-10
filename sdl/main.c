@@ -188,8 +188,10 @@ static void init(int args, char *argv[]) {
 static void cleanup() {
     screen_free();
 
+    player_close();
     dsl_cleanup();
     gff_cleanup();
+    mouse_free();
 
     SDL_DestroyRenderer(renderer);
     //SDL_DestroySurface(screen);

@@ -82,3 +82,16 @@ void ds_item_close() {
         names = NULL;
     }
 }
+
+int32_t ds_item_get_bmp_id(ds1_item_t *item) {
+    disk_object_t dobj;
+    if (!item) { return -1; }
+
+    gff_chunk_header_t chunk = gff_find_chunk_header(OBJEX_GFF_INDEX, GFF_OJFF,
+            item->id < 0 ? -1 * item->id : item->id);
+    if (chunk.length <= 0) { return -1;}
+
+    gff_read_chunk(OBJEX_GFF_INDEX, &chunk, &dobj, sizeof(dobj));
+
+    return dobj.bmp_id;
+}

@@ -167,6 +167,15 @@ void sprite_center(const int id, const int x, const int y, const int w, const in
     loc->y = y + diffy;
 }
 
+void sprite_center_spr(const int dest, const int src) {
+    if (!valid_id(src)) { return; }
+    sprite_center(dest,
+            sprites[src].loc[sprites[src].pos].x,
+            sprites[src].loc[sprites[src].pos].y,
+            sprites[src].loc[sprites[src].pos].w,
+            sprites[src].loc[sprites[src].pos].h);
+}
+
 // Free a sprite at an ID (do not use it again!)
 void sprite_free(const uint16_t id) {
     if (sprites[id].in_use) {

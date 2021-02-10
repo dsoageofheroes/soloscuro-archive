@@ -13,6 +13,7 @@
 typedef struct player_sprites_s {
     uint16_t main;
     uint16_t port;
+    inventory_sprites_t inv;
 } player_sprites_t;
 
 static player_t player;
@@ -21,6 +22,7 @@ static animate_t *anim = NULL;
 static player_sprites_t players[MAX_PCS];
 
 // thri-keen is 291 & 292.
+#define sprite_t uint16_t
 
 void player_init() {
     player.x = 30;
@@ -28,6 +30,9 @@ void player_init() {
     memset(players, 0x00, sizeof(player_sprites_t) * MAX_PCS);
     for (int i = 0; i < 4; i++) {
         players[i].main = players[i].port = SPRITE_ERROR;
+        for (int j = 0; j < sizeof(inventory_sprites_t) / sizeof(sprite_t); j++) {
+            ((sprite_t*)&(players[i].inv))[j] = SPRITE_ERROR;
+        }
     }
 }
 
@@ -112,6 +117,7 @@ void player_move(const uint8_t direction) {
 }
 
 static void free_sprites(const int slot) {
+    sprite_t *inv_sprs = ((sprite_t*)&(players[slot].inv));
     if (players[slot].main != SPRITE_ERROR) {
         sprite_free(players[slot].main);
         players[slot].main = SPRITE_ERROR;
@@ -120,12 +126,20 @@ static void free_sprites(const int slot) {
         sprite_free(players[slot].port);
         players[slot].port = SPRITE_ERROR;
     }
+    for (int i = 0; i < sizeof(inventory_sprites_t) / sizeof(sprite_t); i++) {
+        if (inv_sprs[i] != SPRITE_ERROR) {
+            sprite_free(inv_sprs[i]);
+            inv_sprs[i] = SPRITE_ERROR;
+        }
+    }
 }
 
 static void load_character_sprite(SDL_Renderer *renderer, const int slot, const float zoom) {
     if (slot < 0 || slot >= MAX_PCS) { return; }
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     ds_character_t *ch = ds_player_get_char(slot);
+    ds1_item_t *inv = (ds1_item_t*)ds_player_get_inv(slot);
+    sprite_t *inv_sprs = (sprite_t*)&(players[slot].inv);
 
     free_sprites(slot);
 
@@ -179,6 +193,13 @@ static void load_character_sprite(SDL_Renderer *renderer, const int slot, const 
                 zoom, OBJEX_GFF_INDEX, GFF_BMP, 2097);
             break;
     }
+
+    for (int i = 0; i < sizeof(inventory_sprites_t) / sizeof(sprite_t) && inv; i++) {
+        if (inv[i].id != 0) {
+            inv_sprs[i] = sprite_new(renderer, pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP,
+                    ds_item_get_bmp_id(inv + i));
+        }
+    }
 }
 
 void player_load(SDL_Renderer *renderer, const int slot, const float zoom) {
@@ -222,3 +243,13 @@ void player_center_portrait(const int slot, const int x, const int y, const int 
     sprite_center(players[slot].port, x, y, w, h);
 }
 
+inventory_sprites_t* player_get_inventory_sprites(const int slot) {
+    if (slot < 0 || slot >= MAX_PCS) { return NULL; }
+    return &(players[slot].inv);
+}
+
+void player_close() {
+    for (int i = 0; i < MAX_PCS; i++) {
+        free_sprites(i);
+    }
+}

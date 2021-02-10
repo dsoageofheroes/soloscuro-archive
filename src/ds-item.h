@@ -66,6 +66,7 @@ void ds_item_init();
 int ds_item_load(ds1_item_t *item, int32_t id);
 const char *ds_item_name(const int32_t name_idx);
 const ds_item1r_t *ds_get_item1r(const int32_t item_idx);
+int32_t ds_item_get_bmp_id(ds1_item_t *item);
 void ds_item_close();
 //int ds_item_read(const int32_t id, 
 
