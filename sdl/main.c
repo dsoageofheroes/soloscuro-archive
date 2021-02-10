@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "map.h"
 #include "player.h"
+#include "mouse.h"
 #include "screen-manager.h"
 #include "gameloop.h"
 #include "screens/narrate.h"
@@ -154,6 +155,7 @@ static void init(int args, char *argv[]) {
     screen_init(renderer);
 
     player_init();
+    mouse_init(renderer);
 
     for (int i = 0; i < args; i++) {
         if (!strcmp(argv[i], "--browse") && i < (args)) {
