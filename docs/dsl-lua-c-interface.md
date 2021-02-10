@@ -11,8 +11,7 @@ this document) for the Game Programming Language (GPL.)  For now, this document 
 - libds, written in C, provides solid bit/byte manipulation which works well for the data structures of the GFF
 files/DarkSun and is cross platform.
 
-- UI, written in Lua/Love2D, provides many solid facilities for UI and sound, and is supported across many
-platforms.
+- UI, written in C SDL, provides many solid facilities for UI and sound, and is supported across many platforms.
 
 ## Game Programming Language
 The Game Programming Language (GPL) was created to assist in the development of the Darksun games.  Scripters would write
@@ -62,7 +61,7 @@ states.
 The interface between the UI and libds shall consist of Lua objects implemented with C/libds and lua stubs.  The Lua objects will
 represent any necessary state needed by the UI (NPC, monster, text, etc...)  The stubs (functions) will be what is called
 when the GPL needs to perform an action (like create a narration dialog.)  This design
-follows the classic wrapper method used in numerous programs, including Love's wrappers around C.  This should allow for quick
+follows the classic wrapper method used in numerous programs.  This should allow for quick
 implementation, the ability to create mods, and allow us to change the backend in the future.
 
 <table border="1"><tr>
