@@ -164,5 +164,14 @@ void ds_player_set_ai(const int slot, int on) {
 
 int ds_player_get_ac(const int slot) {
     if (slot < 0 || slot >= MAX_PCS) { return 10; }
+    int ac_bonus = 0;
+    ds1_item_t *item = (ds1_item_t*)&(pc[slot].inv);
+    for (int i = 0; i <= SLOT_FOOT; i++) {
+        if (item[i].id) {
+            ac_bonus += ds_get_item1r(item[i].item_index)->base_AC;
+            printf("slot: %d, it1r: %d, ac: %d\n", i, item[i].item_index, ds_get_item1r(item[i].item_index)->base_AC);
+        }
+    }
+    printf("ac_bonus = %d\n", ac_bonus);
     return pc[slot].ch.base_ac;
 }

@@ -142,11 +142,11 @@ void inventory_screen_init(SDL_Renderer *renderer, const uint32_t x, const uint3
 
     strcpy(name, "NAME");
     strcpy(description, "message");
-    //ds_load_character_charsave(0, 9); // testing!
+    ds_load_character_charsave(0, 9); // testing!
     //ds_load_character_charsave(1, 10); // testing!
     //ds_load_character_charsave(2, 7); // testing!
     //ds_load_character_charsave(3, 8); // testing!
-    //player_load(renderer, 0, zoom);
+    player_load(renderer, 0, zoom);
     //player_load(renderer, 1, zoom);
     //player_load(renderer, 2, zoom);
     //player_load(renderer, 3, zoom);
@@ -174,15 +174,12 @@ static int do_slot_highlight(SDL_Renderer *renderer, const uint16_t frame, const
     if (sprite_in_rect(slots, mousex, mousey)) {
         uint32_t x = sprite_getx(slots);
         uint32_t y = sprite_gety(slots);
+
         sprite_set_frame(slots, 7); // highight
-        //sprite_set_location(slots, x, y);
+
         sprite_set_location(slots, x, y);
         sprite_render(renderer, slots);
         sprite_set_frame(slots, frame);
-        strcpy(description, slot_names[pos]);
-        //strcpy(description, "012345678901234567890123456789");
-        //strcpy(description, "00000000000000000000 0000000000");
-        //center_text(description, 37, slot_names[pos], strlen(slot_names[pos]));
         strcpy(description, slot_names[pos]);
         return 1;
     }
@@ -230,14 +227,26 @@ static void render_character() {
 
     snprintf(buf, BUF_MAX, "AC: %d\n", ds_player_get_ac(char_selected));
     print_line_len(rend, FONT_YELLOW, buf, 235 * zoom, 115 * zoom, BUF_MAX);
+}
 
-//ds1_combat_t* ds_player_get_combat(const int slot);
-//ds_character_t* ds_player_get_char(const int slot);
-//psin_t* ds_player_get_psi(const int slot);
-//spell_list_t* ds_player_get_spells(const int slot);
-//psionic_list_t* ds_player_get_psionics(const int slot);
-//player_pos_t* ds_player_get_pos(const int slot);
-//ds_inventory_t* ds_player_get_inv(const int slot);
+static void render_backpack_slot(const int slot, const int frame, const int x, const int y, uint16_t *inv_sprs_list) {
+    sprite_set_frame(slots, 5);
+    sprite_set_location(slots, x, y);
+    sprite_render(rend, slots);
+    sprite_set_frame(slots, frame);
+    sprite_set_location(slots, x, y);
+    sprite_render(rend, slots);
+    //sprite_set_frame(slots, 5);
+    if (inv_sprs_list[slot] != SPRITE_ERROR) {
+        sprite_center_spr(inv_sprs_list[slot], slots);
+        sprite_render(rend, inv_sprs_list[slot]);
+    }
+    do_slot_highlight(rend, 5, 14);
+    if (ds_item_allowed_in_slot(mouse_get_item(), slot)) {
+        sprite_set_frame(slots, sprite_in_rect(slots, mousex, mousey) ? 8 : 4);
+        sprite_set_location(slots, x, y);
+        sprite_render(rend, slots);
+    }
 }
 
 void inventory_screen_render(void *data, SDL_Renderer *renderer) {
@@ -284,11 +293,11 @@ void inventory_screen_render(void *data, SDL_Renderer *renderer) {
 
     for (int i = 9; i < 23; i++) {
         sprite_set_frame(slots, i);
+        int32_t x = sprite_getx(slots);
+        int32_t y = sprite_gety(slots);
         if (inv_sprs_list[i - 9] == SPRITE_ERROR) {
             sprite_render(renderer, slots);
         } else {
-            int32_t x = sprite_getx(slots);
-            int32_t y = sprite_gety(slots);
             sprite_set_frame(slots, 2);
             sprite_set_location(slots, x, y);
             sprite_render(renderer, slots);
@@ -296,30 +305,17 @@ void inventory_screen_render(void *data, SDL_Renderer *renderer) {
             sprite_render(renderer, inv_sprs_list[i - 9]);
         }
         do_slot_highlight(renderer, i, i - 9);
+        if (ds_item_allowed_in_slot(mouse_get_item(), i - 9)) {
+            sprite_set_frame(slots, sprite_in_rect(slots, mousex, mousey) ? 8 : 4);
+            sprite_set_location(slots, x, y);
+            sprite_render(rend, slots);
+        }
     }
 
     sprite_set_frame(slots, 0);
     for (int i = 0; i < 6; i++) {
-        sprite_set_frame(slots, 5);
-        sprite_set_location(slots, (186 * zoom), (18 + 17 * i) * zoom);
-        sprite_render(renderer, slots);
-        sprite_set_frame(slots, 0);
-        sprite_set_location(slots, (186 * zoom), (18 + 17 * i) * zoom);
-        sprite_render(renderer, slots);
-        sprite_set_frame(slots, 5);
-        sprite_set_location(slots, (204 * zoom), (18 + 17 * i) * zoom);
-        sprite_render(renderer, slots);
-        sprite_set_frame(slots, 0);
-        sprite_set_location(slots, (204 * zoom), (18 + 17 * i) * zoom);
-        sprite_render(renderer, slots);
-    }
-
-    sprite_set_frame(slots, 5);
-    for (int i = 0; i < 6; i++) {
-        sprite_set_location(slots, (186 * zoom), (18 + 17 * i) * zoom);
-        do_slot_highlight(renderer, 5, 14);
-        sprite_set_location(slots, (204 * zoom), (18 + 17 * i) * zoom);
-        do_slot_highlight(renderer, 5, 14);
+        render_backpack_slot(14 + 2 * i, 0, 186 * zoom, (18 + 18 * i) * zoom, inv_sprs_list);
+        render_backpack_slot(15 + 2 * i, 0, 204 * zoom, (18 + 18 * i) * zoom, inv_sprs_list);
     }
 
     if (sprite_in_rect(character, mousex, mousey)) { strcpy(description, "VIEW CHARACTER"); }
@@ -388,6 +384,27 @@ static ds1_item_t* item_dup(ds1_item_t *item) {
 }
 
 static void clicked_slot(const int slot) {
+    ds1_item_t* mouse_item = mouse_get_item();
+    uint16_t* inv_sprs = (uint16_t*)player_get_inventory_sprites(char_selected);
+    ds1_item_t* player_item = ((ds1_item_t*)ds_player_get_inv(char_selected)) + slot;
+    uint16_t player_item_spr = inv_sprs[slot];
+    //printf("clicked on %d\n", slot);
+    if (mouse_item) { // mouse has an item
+        if (!ds_item_allowed_in_slot(mouse_get_item(), slot)) { return; }
+        if (player_item->id) { // If we are doing a swap
+            // Order matters.
+            mouse_retreive_item(inv_sprs + slot);
+            mouse_set_as_item(item_dup(player_item), player_item_spr);
+            ds_player_set_item(char_selected, mouse_item, slot);
+            free(mouse_item);
+        } else {
+            ds_player_set_item(char_selected, mouse_item, slot);
+            free(mouse_retreive_item(inv_sprs + slot));
+        }
+    } else if (player_item->id) {
+        mouse_set_as_item((ds_player_remove_item(char_selected, slot)), inv_sprs[slot]);
+        inv_sprs[slot] = SPRITE_ERROR;
+    }
 }
 
 int inventory_screen_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
@@ -406,34 +423,25 @@ int inventory_screen_handle_mouse_up(const uint32_t button, const uint32_t x, co
             }
         }
     }
+
     if (sprite_in_rect(game_return, x, y)) { screen_pop(); } 
 
     for (int i = 9; i < 23; i++) {
         sprite_set_frame(slots, i);
         if (sprite_in_rect(slots, x, y)) {
-            int slot = i - 9;
-            clicked_slot(slot);
-            ds1_item_t* mouse_item = mouse_get_item();
-            uint16_t* inv_sprs = (uint16_t*)player_get_inventory_sprites(char_selected);
-            ds1_item_t* player_item = ((ds1_item_t*)ds_player_get_inv(char_selected)) + slot;
-            uint16_t player_item_spr = inv_sprs[slot];
-            //printf("clicked on %d\n", slot);
-            if (mouse_item) { // mouse has an item
-                if (player_item->id) { // If we are doing a swap
-                    // Order matters.
-                    mouse_retreive_item(inv_sprs + slot);
-                    mouse_set_as_item(item_dup(player_item), player_item_spr);
-                    ds_player_set_item(char_selected, mouse_item, slot);
-                    free(mouse_item);
-                } else {
-                    ds_player_set_item(char_selected, mouse_item, slot);
-                    free(mouse_retreive_item(inv_sprs + slot));
-                }
+            clicked_slot(i-9);
+        }
+    }
 
-            } else {
-                mouse_set_as_item((ds_player_remove_item(char_selected, slot)), inv_sprs[slot]);
-                inv_sprs[slot] = SPRITE_ERROR;
-            }
+    sprite_set_frame(slots, 5);
+    for (int i = 0; i < 6; i++) {
+        sprite_set_location(slots, (186 * zoom), (18 + 17 * i) * zoom);
+        if (sprite_in_rect(slots, x, y)) {
+            clicked_slot(14 + 2 * i);
+        }
+        sprite_set_location(slots, (204 * zoom), (18 + 17 * i) * zoom);
+        if (sprite_in_rect(slots, x, y)) {
+            clicked_slot(15 + 2 * i);
         }
     }
     //void mouse_set_as_item(ds1_item_t *item, uint16_t spr) {

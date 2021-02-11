@@ -95,3 +95,39 @@ int32_t ds_item_get_bmp_id(ds1_item_t *item) {
 
     return dobj.bmp_id;
 }
+
+int ds_item_allowed_in_slot(ds1_item_t *item, const int slot) {
+    if (!item || slot < 0 || slot > 25) { return 0; }
+    ds_item1r_t *it1r = item1rs + item->item_index;
+
+    if (slot > 13) { return 1; } // backpack is always okay!
+
+    switch (it1r->placement) {
+        case 1: // Chest
+            return slot == SLOT_CHEST;
+        case 2: // Waist
+            return slot == SLOT_WAIST;
+        case 3: // ARM
+            return slot == SLOT_ARM;
+        case 4: // FOOT
+            return slot == SLOT_FOOT;
+        case 5: // HAND
+            return slot == SLOT_HAND0 || slot == SLOT_HAND1;
+        case 6: // HEAD
+            return slot == SLOT_HEAD;
+        case 7: // NECK
+            return slot == SLOT_NECK;
+        case 8: // CLOAK
+            return slot == SLOT_CLOAK;
+        case 9: // FINGER
+            return slot == SLOT_FINGER0 || slot == SLOT_FINGER1;
+        case 10: // LEGS
+            return slot == SLOT_LEGS;
+        case 11: // AMMO
+            return slot == SLOT_AMMO;
+        case 12: // MISSILE
+            return slot == SLOT_MISSILE;
+    }
+
+    return 0;
+}

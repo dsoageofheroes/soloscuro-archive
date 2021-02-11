@@ -36,13 +36,19 @@ typedef struct ds_item1r_s {
     int8_t mod;
     uint8_t flags;
     uint16_t legal_class;
+    uint8_t data2; // padding?
     int8_t base_AC;
-    uint8_t data2; // always 0, 1, or 2
 } __attribute__ ((__packed__)) ds_item1r_t;
 
 typedef struct _item_name_t {
     char name[25];
 } item_name_t;
+
+enum {
+    SLOT_ARM, SLOT_AMMO, SLOT_MISSILE, SLOT_HAND0, SLOT_FINGER0, SLOT_WAIST,
+    SLOT_LEGS, SLOT_HEAD, SLOT_NECK, SLOT_CHEST, SLOT_HAND1, SLOT_FINGER1,
+    SLOT_CLOAK, SLOT_FOOT
+};
 
 typedef struct ds_inventory_s {
     ds1_item_t arm;
@@ -68,6 +74,7 @@ const char *ds_item_name(const int32_t name_idx);
 const ds_item1r_t *ds_get_item1r(const int32_t item_idx);
 int32_t ds_item_get_bmp_id(ds1_item_t *item);
 void ds_item_close();
+int ds_item_allowed_in_slot(ds1_item_t *item, const int slot);
 //int ds_item_read(const int32_t id, 
 
 #endif
