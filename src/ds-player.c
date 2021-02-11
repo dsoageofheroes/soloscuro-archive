@@ -28,7 +28,7 @@ static int ai[4];
 
 void ds_player_init() {
     memset(pc, 0x0, MAX_PCS * sizeof(player_t));
-    ai[0] = ai[1] = ai[2] = ai[3];
+    ai[0] = ai[1] = ai[2] = ai[3] = 0;
 
     // Setup the slots for reading/writing
     for (int i = 0; i < MAX_PCS; i++) {
@@ -51,7 +51,7 @@ static void create_combat(ds_character_t *pc, char *name, ds1_combat_t *combat) 
     combat->special_attack = 0;
     combat->special_defense = 0;
     combat->icon = 0; // TODO: need to fix this eventually...
-    combat->ac = dnd2e_get_ac_pc(pc);
+    combat->ac = dnd2e_get_ac_pc(pc, NULL);
     combat->move = dnd2e_get_move_pc(pc);
     combat->status = 0; // clear
     combat->allegiance = pc->allegiance;
@@ -164,14 +164,5 @@ void ds_player_set_ai(const int slot, int on) {
 
 int ds_player_get_ac(const int slot) {
     if (slot < 0 || slot >= MAX_PCS) { return 10; }
-    int ac_bonus = 0;
-    ds1_item_t *item = (ds1_item_t*)&(pc[slot].inv);
-    for (int i = 0; i <= SLOT_FOOT; i++) {
-        if (item[i].id) {
-            ac_bonus += ds_get_item1r(item[i].item_index)->base_AC;
-            printf("slot: %d, it1r: %d, ac: %d\n", i, item[i].item_index, ds_get_item1r(item[i].item_index)->base_AC);
-        }
-    }
-    printf("ac_bonus = %d\n", ac_bonus);
-    return pc[slot].ch.base_ac;
+    return dnd2e_get_ac_pc(&(pc[slot].ch), &(pc[slot].inv));
 }

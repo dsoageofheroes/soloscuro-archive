@@ -36,6 +36,7 @@ static int offsetx, offsety;
 static float zoom;
 static SDL_Renderer *renderer;
 static ds_character_t pc; // the character we are creating.
+static ds_inventory_t inv; // the inventory
 static psin_t psi; // psi group
 static spell_list_t spells;
 static psionic_list_t psionics;
@@ -168,6 +169,7 @@ static void load_character_sprite() {
 
 static void init_pc() {
     memset(&pc, 0x0, sizeof(ds_character_t));
+    memset(&inv, 0x0, sizeof(ds_inventory_t));
     pc.race = RACE_HUMAN;
     pc.gender = GENDER_MALE;
     pc.real_class[0] = pc.real_class[1] = pc.real_class[2] = -1;
@@ -387,12 +389,12 @@ void new_character_render(void *data, SDL_Renderer *renderer) {
         snprintf(buf, BUF_MAX, "EXP: %d (%d)", pc.current_xp, dnd2e_exp_to_next_level_up(&pc));
         print_line_len(renderer, FONT_GREY, buf, 245, 315, BUF_MAX);
     }
-    snprintf(buf, BUF_MAX, "AC: %d", dnd2e_get_ac_pc(&pc));
+    snprintf(buf, BUF_MAX, "AC: %d", dnd2e_get_ac_pc(&pc, &inv));
     print_line_len(renderer, FONT_GREY, buf, 175, 330, BUF_MAX);
-    pos = snprintf(buf, BUF_MAX, "%d%s", dnd2e_get_attack_num_pc(&pc) >> 1,
-        (dnd2e_get_attack_num_pc(&pc) & 0x01) ? ".5" : "");
-    pos += snprintf(buf + pos, BUF_MAX - pos, "x1D%d", dnd2e_get_attack_die_pc(&pc));
-    pos += snprintf(buf + pos, BUF_MAX - pos, "+%d", dnd2e_get_attack_mod_pc(&pc));
+    pos = snprintf(buf, BUF_MAX, "%d%s", dnd2e_get_attack_num_pc(&pc, 0) >> 1,
+        (dnd2e_get_attack_num_pc(&pc, 0) & 0x01) ? ".5" : "");
+    pos += snprintf(buf + pos, BUF_MAX - pos, "x1D%d", dnd2e_get_attack_die_pc(&pc, 0));
+    pos += snprintf(buf + pos, BUF_MAX - pos, "+%d", dnd2e_get_attack_mod_pc(&pc, 0));
     print_line_len(renderer, FONT_GREY, buf, 245, 330, BUF_MAX);
     pos = snprintf(buf, BUF_MAX, "%d/%d", pc.base_hp, pc.high_hp);
     print_line_len(renderer, FONT_GREY, buf, 185, 345, BUF_MAX);

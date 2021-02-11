@@ -33,7 +33,7 @@ static void create_combat(ds_character_t *pc, char *name, ds1_combat_t *combat) 
     combat->special_attack = 0;
     combat->special_defense = 0;
     combat->icon = 0; // TODO: need to fix this eventually...
-    combat->ac = dnd2e_get_ac_pc(pc);
+    combat->ac = dnd2e_get_ac_pc(pc, NULL);
     combat->move = dnd2e_get_move_pc(pc);
     combat->status = 0; // clear
     combat->allegiance = pc->allegiance;

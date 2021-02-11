@@ -593,18 +593,28 @@ int32_t dnd2e_exp_to_next_level_up(ds_character_t *pc) {
     return next_exp;
 }
 
-int16_t dnd2e_get_ac_pc(ds_character_t *pc) {
-    return pc->base_ac + dex_mods[pc->stats.dex][2];
+int16_t dnd2e_get_ac_pc(ds_character_t *pc, ds_inventory_t *inv) {
+    int ac_bonus = 0;
+    if (inv) {
+        ds1_item_t *item = (ds1_item_t*)(inv);
+        for (int i = 0; i <= SLOT_FOOT; i++) {
+            if (item[i].id) {
+                ac_bonus += -ds_get_item1r(item[i].item_index)->base_AC;
+                //printf("slot: %d, id: %d it1r: %d, ac: %d\n", i, item[i].id, item[i].item_index, ds_get_item1r(item[i].item_index)->base_AC);
+            }
+        }
+    }
+    return pc->base_ac + dex_mods[pc->stats.dex][2] + ac_bonus;
 }
 
 // TODO, take into accound items held
-int16_t dnd2e_get_attack_num_pc(ds_character_t *pc) {
+int16_t dnd2e_get_attack_num_pc(const ds_character_t *pc, const int slot) {
     return 1;
 }
-int16_t dnd2e_get_attack_die_pc(ds_character_t *pc) {
+int16_t dnd2e_get_attack_die_pc(const ds_character_t *pc, const int slot) {
     return 4;
 }
-int16_t dnd2e_get_attack_mod_pc(ds_character_t *pc) {
+int16_t dnd2e_get_attack_mod_pc(const ds_character_t *pc, const int slot) {
     return str_mods[pc->stats.str][STR_DAM];
 }
 

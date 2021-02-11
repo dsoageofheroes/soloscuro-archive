@@ -200,6 +200,7 @@ static void render_character() {
     char buf[BUF_MAX];
     ds1_combat_t* combat = ds_player_get_combat(char_selected);
     ds_character_t* character = ds_player_get_char(char_selected);
+    ds1_item_t* player_items = ((ds1_item_t*)ds_player_get_inv(char_selected));
     strcpy(name, combat->name);
     if (name[0] == '\0') { return; } // no character.
 
@@ -227,6 +228,17 @@ static void render_character() {
 
     snprintf(buf, BUF_MAX, "AC: %d\n", ds_player_get_ac(char_selected));
     print_line_len(rend, FONT_YELLOW, buf, 235 * zoom, 115 * zoom, BUF_MAX);
+
+    if (player_items[SLOT_HAND0].id != 0) {
+        print_line_len(rend, FONT_YELLOW, ds_item_name(player_items[SLOT_HAND0].name_idx), 235 * zoom, 125 * zoom, BUF_MAX);
+        snprintf(buf, BUF_MAX, "%dD%d%s%d\n", 
+            dnd2e_get_attack_num_pc(character, SLOT_HAND0),
+            dnd2e_get_attack_die_pc(character, SLOT_HAND0),
+            "+",
+            dnd2e_get_attack_mod_pc(character, SLOT_HAND0));
+
+        //print_line_len(rend, FONT_YELLOW, buf, 235 * zoom, 132 * zoom, BUF_MAX);
+    }
 }
 
 static void render_backpack_slot(const int slot, const int frame, const int x, const int y, uint16_t *inv_sprs_list) {
@@ -280,7 +292,13 @@ void inventory_screen_render(void *data, SDL_Renderer *renderer) {
         if (sprite_in_rect(ports[i], mousex, mousey)) {
             sprite_set_frame(ports[i], 1);
             sprite_render(renderer, ports[i]);
-            strcpy(description, "PRESS RIGHT MOUSE BUTTON");
+            if (ds_player_get_combat(i)->name[0]) {
+                snprintf(description, 128, "%s%s",
+                        i == char_selected ? "" : "SELECT ",
+                        ds_player_get_combat(i)->name);
+            } else {
+                strcpy(description, "PRESS RIGHT MOUSE BUTTON");
+            }
         }
         if (char_selected == i) {
             sprite_set_frame(ports[i], 3);
@@ -510,6 +528,7 @@ void inventory_screen_return_control () {
                 printf("Char loading failed.\n");
             } else {
                 player_load(rend, slot_clicked, zoom);
+                char_selected = slot_clicked;
             }
         }
     }

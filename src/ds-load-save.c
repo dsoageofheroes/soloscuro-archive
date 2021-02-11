@@ -126,7 +126,6 @@ static int load_player(const int id, const int player, const int res_id) {
     int num_items;
     ds1_item_t *pc_items = (ds1_item_t*)ds_player_get_inv(player);
     gff_chunk_header_t chunk = gff_find_chunk_header(id, GFF_CHAR, res_id);
-    printf("%d\n", chunk.length);
     if (gff_read_chunk(id, &chunk, &buf, sizeof(buf)) < 34) { return 0; }
 
     rdff = (rdff_disk_object_t*) (buf);

@@ -36,8 +36,8 @@ typedef struct ds_item1r_s {
     int8_t mod;
     uint8_t flags;
     uint16_t legal_class;
-    uint8_t data2; // padding?
     int8_t base_AC;
+    uint8_t data2; // padding?
 } __attribute__ ((__packed__)) ds_item1r_t;
 
 typedef struct _item_name_t {

@@ -19,11 +19,15 @@ void ds_item_init() {
     }
     item1rs = malloc(chunk.length);
     num_item1rs = chunk.length / sizeof(ds_item1r_t);
+    printf("chunk.length = %d, num_item1rs = %ld\n", chunk.length, num_item1rs);
+    //exit(1);
     size_t amt = gff_read_chunk(DSLDATA_GFF_INDEX, &chunk, item1rs, chunk.length);
     if (amt != chunk.length) {
         error("error reading item1rs...\n");
         exit(1);
     }
+    //printf("%d: %d\n", 4, item1rs[4].base_AC);
+    //exit(1);
 
     chunk = gff_find_chunk_header(DSLDATA_GFF_INDEX, GFF_NAME, 1);
     names = malloc(chunk.length);
@@ -69,7 +73,7 @@ const char *ds_item_name(const int32_t name_idx) {
 
 const ds_item1r_t *ds_get_item1r(const int32_t item_idx) {
     if (item_idx < 0 || item_idx >= num_item1rs) { return NULL; }
-    return item1rs + (sizeof(ds_item1r_t) * item_idx);
+    return item1rs + item_idx;
 }
 
 void ds_item_close() {
