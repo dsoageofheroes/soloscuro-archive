@@ -1,1 +1,0 @@
-mdark.exe --ds1 ./

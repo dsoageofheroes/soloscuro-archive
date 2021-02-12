@@ -19,7 +19,7 @@ void ds_item_init() {
     }
     item1rs = malloc(chunk.length);
     num_item1rs = chunk.length / sizeof(ds_item1r_t);
-    printf("chunk.length = %d, num_item1rs = %ld\n", chunk.length, num_item1rs);
+    //printf("chunk.length = %d, num_item1rs = %ld\n", chunk.length, num_item1rs);
     //exit(1);
     size_t amt = gff_read_chunk(DSLDATA_GFF_INDEX, &chunk, item1rs, chunk.length);
     if (amt != chunk.length) {
