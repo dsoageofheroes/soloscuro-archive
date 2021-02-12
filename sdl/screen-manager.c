@@ -18,13 +18,7 @@ void screen_init(SDL_Renderer *renderer) {
 
     sprite_init();
 
-    for (int i = 0; i < MAX_SCREENS; i++) {
-        screens[i].render = NULL;
-        screens[i].mouse_movement = NULL;
-        screens[i].mouse_down = NULL;
-        screens[i].mouse_up = NULL;
-        screens[i].data = NULL;
-    }
+    memset(screens, 0x0, sizeof(sops_t) * MAX_SCREENS);
 
     animate_init();
 }
@@ -36,11 +30,6 @@ void screen_load_screen(SDL_Renderer *renderer, int layer, sops_t *screen, const
         // cleanup?
     }
 
-    screens[layer].render = NULL;
-    screens[layer].mouse_movement = NULL;
-    screens[layer].mouse_up = NULL;
-    screens[layer].mouse_down = NULL;
-
     screens[layer] = *screen;
 
     if (screens[layer].init) {
@@ -48,7 +37,34 @@ void screen_load_screen(SDL_Renderer *renderer, int layer, sops_t *screen, const
     }
 }
 
+void screen_toggle_screen(SDL_Renderer *renderer, sops_t *the_screen, const uint32_t x, const uint32_t y) {
+    int pos;
+    sops_t tmp;
+    for (pos = 0; pos < screen_pos; pos++) {
+        if (screens[pos].render == the_screen->render) { break; }
+    }
+
+    if (pos >= screen_pos) { // not found so turn on.
+        screen_load_screen(renderer, screen_pos++, the_screen, x, y);
+        return;
+    }
+
+    tmp = screens[pos]; // Found, so we bring to the front, then pop.
+
+    while (pos < (screen_pos - 1)) {
+        screens[pos] = screens[pos + 1];
+        pos++;
+    }
+
+    screens[screen_pos - 1] = tmp;
+
+    screen_pop();
+}
+
 void screen_push_screen(SDL_Renderer *renderer, sops_t *screen, const uint32_t x, const uint32_t y) {
+    for (int i = 0; i < screen_pos; i++) {
+        if (screens[i].render == screen->render) { return; }
+    }
     screen_load_screen(renderer, screen_pos++, screen, x, y);
 }
 
@@ -112,18 +128,16 @@ SDL_Texture* create_texture(SDL_Renderer *renderer, const uint32_t gff_file,
     return ret;
 }
 
-void screen_pop() {
-    screen_pos--;
-    if (screens[screen_pos].cleanup) {
-        screens[screen_pos].cleanup();
-        screens[screen_pos].render = NULL;
-        screens[screen_pos].mouse_movement = NULL;
-        screens[screen_pos].mouse_down = NULL;
-        screens[screen_pos].mouse_up = NULL;
-        screens[screen_pos].data = NULL;
+static void destroy_screen(const int pos) {
+    if (screens[pos].cleanup) {
+        screens[pos].cleanup();
     }
 
-    printf("cleanup down\n");
+    memset(screens + pos, 0x0, sizeof(sops_t));
+}
+
+void screen_pop() {
+    destroy_screen(--screen_pos);
 
     if (screen_pos > 0 && screens[screen_pos - 1].return_control) {
         screens[screen_pos - 1].return_control();

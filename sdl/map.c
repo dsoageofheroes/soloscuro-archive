@@ -53,6 +53,7 @@ void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
     SDL_Surface* tile = NULL;
     uint32_t *ids = NULL;
     uint32_t width, height;
+    size_t max_id = 0;
     unsigned char *data;
     region_object_t *obj;
 
@@ -60,14 +61,17 @@ void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
     cren = renderer;
     map->region = dsl_load_region(id);
     ids = map->region->ids;
+    for (int i = 0; i < map->region->num_tiles; i++) { max_id = max_id > ids[i] ? max_id : ids[i]; }
+    max_id++;
     animate_clear();
-    map->tiles = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * map->region->num_tiles);
-    memset(map->tiles, 0x0, sizeof(SDL_Texture*) * map->region->num_tiles);
+    map->tiles = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * max_id);
+    memset(map->tiles, 0x0, sizeof(SDL_Texture*) * max_id);
 
     for (int i = 0; i < map->region->num_tiles; i++) {
         dsl_region_get_tile(map->region, i, &width, &height, &data);
 
         tile = SDL_CreateRGBSurfaceFrom(data, width, height, 32, 4*width, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
+
         map->tiles[ids[i]] = SDL_CreateTextureFromSurface(renderer, tile);
         SDL_FreeSurface(tile);
 

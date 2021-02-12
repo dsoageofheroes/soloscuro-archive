@@ -142,11 +142,11 @@ void inventory_screen_init(SDL_Renderer *renderer, const uint32_t x, const uint3
 
     strcpy(name, "NAME");
     strcpy(description, "message");
-    ds_load_character_charsave(0, 9); // testing!
+    //ds_load_character_charsave(0, 9); // testing!
     //ds_load_character_charsave(1, 10); // testing!
     //ds_load_character_charsave(2, 7); // testing!
     //ds_load_character_charsave(3, 8); // testing!
-    player_load(renderer, 0, zoom);
+    //player_load(renderer, 0, zoom);
     //player_load(renderer, 1, zoom);
     //player_load(renderer, 2, zoom);
     //player_load(renderer, 3, zoom);

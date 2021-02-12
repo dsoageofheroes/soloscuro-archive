@@ -64,7 +64,7 @@ void handle_input() {
                     game_loop_signal(WAIT_FINAL, 0);
                 }
                 if (event.key.keysym.sym == SDLK_i) {
-                    screen_push_screen(renderer, &inventory_screen, 0, 0);
+                    screen_toggle_screen(renderer, &inventory_screen, 0, 0);
                 }
                 break;
             case SDL_MOUSEMOTION:
