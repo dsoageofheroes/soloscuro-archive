@@ -53,7 +53,7 @@ enum {
 typedef struct ds_inventory_s {
     ds1_item_t arm;
     ds1_item_t ammo;
-    ds1_item_t missle;
+    ds1_item_t missile;
     ds1_item_t hand0;
     ds1_item_t finger0;
     ds1_item_t waist;

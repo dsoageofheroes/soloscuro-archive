@@ -465,6 +465,7 @@ static int get_total_hit_die(const uint8_t class, const uint8_t level) {
     if (level < 0 || level > 20) { return 0; }
     return xp_table[3 * (level + 1)];
 }
+
 int dnd2e_is_class_allowed(const uint8_t race, const int8_t classes[3]) {
     uint16_t class = convert_to_class_sel(classes[0]);
     const uint16_t *allowed = NULL;
@@ -607,15 +608,83 @@ int16_t dnd2e_get_ac_pc(ds_character_t *pc, ds_inventory_t *inv) {
     return pc->base_ac + dex_mods[pc->stats.dex][2] + ac_bonus;
 }
 
-// TODO, take into accound items held
-int16_t dnd2e_get_attack_num_pc(const ds_character_t *pc, const int slot) {
-    return 1;
+// return in half attacks.
+static int16_t class_attack_num(const ds_character_t *pc, const ds1_item_t *item) {
+    const ds_item1r_t *it1r = ds_get_item1r(item->item_index);
+    if (it1r->weapon_type == 1) { // MELEE
+        for (int i = 0; i < 3; i++) {
+            switch (pc->real_class[i]) {
+                case REAL_CLASS_FIGHTER:
+                case REAL_CLASS_GLADIATOR:
+                case REAL_CLASS_AIR_RANGER:
+                case REAL_CLASS_WATER_RANGER:
+                case REAL_CLASS_FIRE_RANGER:
+                case REAL_CLASS_EARTH_RANGER:
+                    if (pc->level[i] < 7) { return 1; }
+                    if (pc->level[i] < 13) { return 2; }
+                    return 3;
+            }
+        }
+    } else if (it1r->weapon_type == 2) { // MISSILE
+        for (int i = 0; i < 3; i++) {
+            switch (pc->real_class[i]) {
+                case REAL_CLASS_FIGHTER:
+                case REAL_CLASS_GLADIATOR:
+                case REAL_CLASS_AIR_RANGER:
+                case REAL_CLASS_WATER_RANGER:
+                case REAL_CLASS_FIRE_RANGER:
+                case REAL_CLASS_EARTH_RANGER:
+                    if (pc->level[i] < 7) { return 2; }
+                    if (pc->level[i] < 13) { return 4; }
+                    return 6;
+            }
+        }
+    }
+    return 0;
 }
-int16_t dnd2e_get_attack_die_pc(const ds_character_t *pc, const int slot) {
-    return 4;
+
+int16_t dnd2e_get_attack_num_pc(const ds_character_t *pc, const ds1_item_t *item) {
+    if (item == NULL) { return 0; }
+    const ds_item1r_t *it1r = ds_get_item1r(item->item_index);
+    // For some reason double attacks are stored for missiles...
+    uint16_t base_attacks = (it1r->weapon_type == 2) ? it1r->num_attacks : it1r->num_attacks * 2;
+    return base_attacks + class_attack_num(pc, item);
 }
-int16_t dnd2e_get_attack_mod_pc(const ds_character_t *pc, const int slot) {
-    return str_mods[pc->stats.str][STR_DAM];
+
+int16_t dnd2e_get_attack_sides_pc(const ds_character_t *pc, const ds1_item_t *item) {
+    if (item == NULL) { return 0; }
+    return ds_get_item1r(item->item_index)->sides;
+}
+
+int16_t dnd2e_get_attack_die_pc(const ds_character_t *pc, const ds1_item_t *item) {
+    if (item == NULL) { return 0; }
+    return ds_get_item1r(item->item_index)->dice;
+}
+
+enum {
+    MATERIAL_WOOD,
+    MATERIAL_BONE =  (1<<0),
+    MATERIAL_STONE = (1<<1),
+    MATERIAL_OBSIDIAN = (1<<2),
+    MATERIAL_METAL = (1<<3),
+    MATERIAL_LEATHER = (1<<3),
+};
+
+int16_t dnd2e_get_attack_mod_pc(const ds_character_t *pc, const ds1_item_t *item) {
+    if (item == NULL) { return 0; }
+    uint16_t material_mod = 0;
+    const ds_item1r_t *it1r = ds_get_item1r(item->item_index);
+
+    switch(it1r->material) {
+        case MATERIAL_WOOD: material_mod = -2; break;
+        case MATERIAL_STONE:
+        case MATERIAL_BONE:
+        case MATERIAL_OBSIDIAN:
+            material_mod = -1; break;
+    }
+
+    return it1r->mod + material_mod + 
+            str_mods[pc->stats.str][STR_DAM];
 }
 
 void dnd2e_randomize_stats_pc(ds_character_t *pc) {

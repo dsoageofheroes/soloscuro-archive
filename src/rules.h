@@ -30,8 +30,9 @@ int16_t dnd2e_get_ac_pc(ds_character_t *pc, ds_inventory_t *inv);
 int16_t dnd2e_get_move_pc(ds_character_t *pc);
 int16_t dnd2e_get_thac0_pc(ds_character_t *pc);
 int16_t dnd2e_get_damage_pc(ds_character_t *pc);
-int16_t dnd2e_get_attack_num_pc(const ds_character_t *pc, const int slot);
-int16_t dnd2e_get_attack_die_pc(const ds_character_t *pc, const int slot);
-int16_t dnd2e_get_attack_mod_pc(const ds_character_t *pc, const int slot);
+int16_t dnd2e_get_attack_num_pc(const ds_character_t *pc, const ds1_item_t *item);
+int16_t dnd2e_get_attack_die_pc(const ds_character_t *pc, const ds1_item_t *item);
+int16_t dnd2e_get_attack_sides_pc(const ds_character_t *pc, const ds1_item_t *item);
+int16_t dnd2e_get_attack_mod_pc(const ds_character_t *pc, const ds1_item_t *item);
 
 #endif

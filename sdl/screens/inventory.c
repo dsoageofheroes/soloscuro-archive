@@ -196,11 +196,36 @@ static void render_center(font_t font, const char *str, const SDL_Rect loc) {
 
 #define BUF_MAX (1<<8)
 
+static int display_attack(ds_character_t *character, ds1_item_t *item, const int xpos, const int ypos) {
+    char buf[BUF_MAX];
+    int pos = 0;
+    if (item->id == 0) { return 0; }
+    const ds_item1r_t *it1r = ds_get_item1r(item->item_index);
+    if (it1r->weapon_type != 1 && it1r->weapon_type != 2) { return 0; } // not a weapon.
+
+    print_line_len(rend, FONT_YELLOW, ds_item_name(item->name_idx), 235 * zoom, ypos * zoom, BUF_MAX);
+
+    uint16_t num_attacks = dnd2e_get_attack_num_pc(character, item);
+    if (num_attacks > 2) {
+        pos += snprintf(buf, BUF_MAX, "%d%sx",
+            num_attacks >> 1, // num_attacks is half-attacks.
+            (num_attacks & 0x01) ? ".5" : "");
+    }
+    snprintf(buf + pos, BUF_MAX - pos, "%dD%d%s%d\n", 
+        dnd2e_get_attack_die_pc(character, item),
+        dnd2e_get_attack_sides_pc(character, item),
+        "+",
+        dnd2e_get_attack_mod_pc(character, item));
+
+    print_line_len(rend, FONT_YELLOW, buf, 235 * zoom, (ypos + 7) * zoom, BUF_MAX);
+    return 1;
+}
+
 static void render_character() {
     char buf[BUF_MAX];
     ds1_combat_t* combat = ds_player_get_combat(char_selected);
     ds_character_t* character = ds_player_get_char(char_selected);
-    ds1_item_t* player_items = ((ds1_item_t*)ds_player_get_inv(char_selected));
+    ds_inventory_t* player_items = ds_player_get_inv(char_selected);
     strcpy(name, combat->name);
     if (name[0] == '\0') { return; } // no character.
 
@@ -229,16 +254,10 @@ static void render_character() {
     snprintf(buf, BUF_MAX, "AC: %d\n", ds_player_get_ac(char_selected));
     print_line_len(rend, FONT_YELLOW, buf, 235 * zoom, 115 * zoom, BUF_MAX);
 
-    if (player_items[SLOT_HAND0].id != 0) {
-        print_line_len(rend, FONT_YELLOW, ds_item_name(player_items[SLOT_HAND0].name_idx), 235 * zoom, 125 * zoom, BUF_MAX);
-        snprintf(buf, BUF_MAX, "%dD%d%s%d\n", 
-            dnd2e_get_attack_num_pc(character, SLOT_HAND0),
-            dnd2e_get_attack_die_pc(character, SLOT_HAND0),
-            "+",
-            dnd2e_get_attack_mod_pc(character, SLOT_HAND0));
-
-        //print_line_len(rend, FONT_YELLOW, buf, 235 * zoom, 132 * zoom, BUF_MAX);
-    }
+    int ypos = 125;
+    ypos += display_attack(character, &(player_items->missile), 235, ypos) ? 14 : 0;
+    ypos += display_attack(character, &(player_items->hand0), 235, ypos) ? 14 : 0;
+    ypos += display_attack(character, &(player_items->hand1), 235, ypos) ? 14 : 0;
 }
 
 static void render_backpack_slot(const int slot, const int frame, const int x, const int y, uint16_t *inv_sprs_list) {
