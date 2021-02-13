@@ -24,7 +24,6 @@ typedef struct inventory_sprites_s {
 
 typedef struct player_s {
     int32_t x, y;
-    animate_t *anim;
 } player_t;
 
 void player_init();
@@ -39,8 +38,9 @@ void player_center(const int i, const int x, const int y, const int w, const int
 void player_center_portrait(const int i, const int x, const int y, const int w, const int h);
 void player_render_portrait(SDL_Renderer *rend, const int slot);
 void player_set_loc(const int slot, const int32_t x, const int32_t y);
+void player_update();
 inventory_sprites_t* player_get_inventory_sprites(const int slot);
 
-enum{PLAYER_UP, PLAYER_DOWN, PLAYER_LEFT, PLAYER_RIGHT};
+enum{PLAYER_UP = 0x01, PLAYER_DOWN = 0x02, PLAYER_LEFT = 0x04, PLAYER_RIGHT = 0x08};
 
 #endif

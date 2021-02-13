@@ -26,6 +26,7 @@ uint16_t sprite_new(SDL_Renderer *renderer, gff_palette_t *pal,
         const int offsetx, const int offsety, const float zoom,
         const int gff_idx, const int type_id, const int res_id);
 void sprite_render(SDL_Renderer *renderer, const uint16_t sprite_id);
+void sprite_render_flip(SDL_Renderer *renderer, const uint16_t sprite_id, SDL_RendererFlip flip);
 uint16_t sprite_get_frame(const uint16_t id);
 void sprite_set_frame(const uint16_t id, const uint16_t frame);
 int sprite_in_rect(const uint16_t id, const uint32_t x, const uint32_t y);

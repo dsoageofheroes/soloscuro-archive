@@ -332,8 +332,8 @@ void browse_loop(SDL_Surface *surface, SDL_Renderer *rend) {
 
     browse_render();
     move_gff_cursor(1);
-    move_gff_cursor(1);
-    move_gff_cursor(1);
+    //move_gff_cursor(1);
+    //move_gff_cursor(1);
     //move_gff_cursor(1);
     //move_gff_cursor(1);
     //move_gff_cursor(1);
@@ -394,6 +394,7 @@ static void render_entry_char();
 static void render_entry_psin();
 static void render_entry_it1r();
 static void render_entry_cact();
+static void render_entry_scmd();
 
 static void render_entry() {
     switch(gff_get_type_id(gff_idx, entry_idx)) {
@@ -421,6 +422,7 @@ static void render_entry() {
         case GFF_PSIN: render_entry_psin(); break;
         case GFF_IT1R: render_entry_it1r(); break;
         case GFF_CACT: render_entry_cact(); break;
+        case GFF_SCMD: render_entry_scmd(); break;
         default:
             render_entry_header();
             print_line_len(renderer, 0, "Need to implement", 320, 40, 128);
@@ -1393,4 +1395,46 @@ static void render_entry_cact() {
 
     snprintf(buf, BUF_MAX, "id: %d, [%d, %d]\n", id, (id >> 8) & 0xFF, id & 0xFF);
     print_line_len(renderer, 0, buf, 320, 40, BUF_MAX);
+}
+
+static void render_entry_scmd() {
+    render_entry_header();
+    char buf[BUF_MAX];
+    int pos = 0;
+    int num_entries = 0;
+    const int max_entries = 20;
+    int ypos = 40;
+    scmd_t* scmd = dsl_scmd_get(gff_idx, res_ids[res_idx], 0);
+    while (num_entries < max_entries && scmd->flags != SCMD_LAST && scmd->flags != SCMD_JUMP) {// && scmd->delay != 0) {
+        snprintf(buf, BUF_MAX, "bmp: %d, delay: %d, offset: (%d, %d), hot: (%d, %d)", 
+            scmd->bmp_idx, scmd->delay, scmd->xoffset, scmd->yoffset,
+            scmd->xoffsethot, scmd->yoffsethot);
+        print_line_len(renderer, 0, buf, 320, ypos, BUF_MAX);
+        ypos += 12;
+        snprintf(buf, BUF_MAX, "        sound: %d, flags = 0x%x",
+            scmd->soundidx, scmd->flags);
+        print_line_len(renderer, 0, buf, 320, ypos, BUF_MAX);
+        ypos += 12;
+        num_entries++;
+    //.bmp_idx = 0,
+    //.delay = 0,
+    //.flags = SCMD_LAST,
+    //.xoffset = 0,
+    //.yoffset = 0,
+    //.xoffsethot = 0,
+    //.yoffsethot = 0,
+    //.soundidx = 0
+        //printf("bmp: %d, delay: %d\n", scmd->bmp_idx, scmd->delay);
+        scmd++;
+    }
+    if (scmd->flags & SCMD_LAST) {
+        pos += snprintf(buf, BUF_MAX, "LAST ");
+    } else if (scmd->flags & SCMD_JUMP) {
+        pos += snprintf(buf + pos, BUF_MAX - pos, "LAST ");
+    } else if (num_entries == max_entries) {
+        pos += snprintf(buf + pos, BUF_MAX - pos, "MAX ENTRIES");
+    }
+    print_line_len(renderer, 0, buf, 320, ypos, BUF_MAX);
+    /*
+    */
 }

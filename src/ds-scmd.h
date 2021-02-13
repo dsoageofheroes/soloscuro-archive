@@ -28,6 +28,7 @@ typedef struct _scmd_t {
 #define SCMD_TICKS_PER_SECOND (96)
 
 scmd_t* dsl_scmd_get(const int gff_file, const int res_id, const int index);
+scmd_t* ds_scmd_empty();
 int dsl_scmd_is_default(const scmd_t *scmd, const int scmd_index);
 
 #endif

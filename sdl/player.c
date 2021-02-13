@@ -16,18 +16,62 @@ typedef struct player_sprites_s {
     inventory_sprites_t inv;
 } player_sprites_t;
 
+static scmd_t move_down[] = {
+    {.bmp_idx = 3, .delay = 7, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 4, .delay = 7, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 5, .delay = 7, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 6, .delay = 7, .flags = SCMD_JUMP, .xoffset = 0, .yoffset = 0, 0, 0, 0},
+};
+
+static scmd_t move_up[] = {
+    {.bmp_idx = 7, .delay = 7, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 8, .delay = 7, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 9, .delay = 7, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 10, .delay = 7, .flags = SCMD_JUMP, .xoffset = 0, .yoffset = 0, 0, 0, 0},
+};
+
+static scmd_t move_right[] = {
+    {.bmp_idx = 11, .delay = 7, .flags = 0x0, .xoffset = 9, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 12, .delay = 7, .flags = 0x0, .xoffset = 4, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 13, .delay = 7, .flags = 0x0, .xoffset = 8, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 14, .delay = 7, .flags = SCMD_JUMP, .xoffset = 3, .yoffset = 0, 0, 0, 0},
+};
+
+static scmd_t move_left[] = {
+    {.bmp_idx = 11, .delay = 7, .flags = SCMD_XMIRROR, .xoffset = -9, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 12, .delay = 7, .flags = SCMD_XMIRROR, .xoffset = -4, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 13, .delay = 7, .flags = SCMD_XMIRROR, .xoffset = -8, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 14, .delay = 7, .flags = SCMD_XMIRROR | SCMD_JUMP, .xoffset = -3, .yoffset = 0, 0, 0, 0},
+};
+
+static scmd_t stand_down[] = {
+    {.bmp_idx = 0, .delay = 0, .flags = SCMD_LAST, .xoffset = 0, .yoffset = 0, 0, 0, 0},
+};
+
+static scmd_t stand_up[] = {
+    {.bmp_idx = 1, .delay = 0, .flags = SCMD_LAST, .xoffset = 0, .yoffset = 0, 0, 0, 0},
+};
+
+static scmd_t stand_right[] = {
+    {.bmp_idx = 2, .delay = 0, .flags = SCMD_LAST, .xoffset = 0, .yoffset = 0, 0, 0, 0},
+};
+
+static scmd_t stand_left[] = {
+    {.bmp_idx = 2, .delay = 0, .flags = SCMD_XMIRROR | SCMD_LAST, .xoffset = 0, .yoffset = 0, 0, 0, 0},
+};
+
 static player_t player;
 static region_object_t dsl_player;
-static animate_t *anim = NULL;
 static player_sprites_t players[MAX_PCS];
+static animate_sprite_t anims[MAX_PCS];
 
-// thri-keen is 291 & 292.
 #define sprite_t uint16_t
 
 void player_init() {
     player.x = 30;
     player.y = 10;
     memset(players, 0x00, sizeof(player_sprites_t) * MAX_PCS);
+    memset(anims, 0x00, sizeof(animate_sprite_t) * MAX_PCS);
     for (int i = 0; i < 4; i++) {
         players[i].main = players[i].port = SPRITE_ERROR;
         for (int j = 0; j < sizeof(inventory_sprites_t) / sizeof(sprite_t); j++) {
@@ -58,42 +102,63 @@ void player_load_graphics(SDL_Renderer *rend) {
     dsl_player.disk_idx = 0;
     dsl_player.game_time = 0;
     dsl_player.scmd = NULL;
-    anim = animate_add_obj(rend, &dsl_player, OBJEX_GFF_INDEX, -1);
+    //anim = animate_add_obj(rend, &dsl_player, OBJEX_GFF_INDEX, -1);
 
     // Set initial location
     dsl_player.mapx = player.x * 16;
     dsl_player.mapy = player.y * 16;
 }
 
-#define TICKS_PER_MOVE (5)
+#define TICKS_PER_MOVE (10)
 
 static int count = TICKS_PER_MOVE;
+static int direction = 0x0;
 
-void player_move(const uint8_t direction) {
+static void set_animation(animate_sprite_t *as, scmd_t *scmd) {
+    const int diffx = abs(as->x - as->destx);
+    const int diffy = abs(as->y - as->desty);
+    const float distance = sqrt(diffx * diffx + diffy * diffy);
+
+    as->scmd = scmd;
+    as->pos = 0;
+    as->move = distance == 0 ? 0 : distance / ((float)TICKS_PER_MOVE * 2);
+
+    sprite_set_frame(as->spr, as->scmd->bmp_idx);
+    sprite_set_location(as->spr, as->x, as->y);
+}
+
+void player_update() {
     if (--count > 0) { return; }
+
     int nextx = player.x;
     int nexty = player.y;
-    switch(direction) {
-        case PLAYER_UP:
-            nexty -= 1;
-            break;
-        case PLAYER_DOWN:
-            nexty += 1;
-            break;
-        case PLAYER_LEFT:
-            nextx -= 1;
-            break;
-        case PLAYER_RIGHT:
-            nextx += 1;
-            break;
-        default:
-            warn("Unknown player direction: %d\n", direction);
-            break;
-    }
+    if (direction & PLAYER_UP) { nexty -= 1; }
+    if (direction & PLAYER_DOWN) { nexty += 1; }
+    if (direction & PLAYER_LEFT) { nextx -= 1; }
+    if (direction & PLAYER_RIGHT) { nextx += 1; }
     //debug ("tile @ (%d, %d) = %d\n", player.x, player.y, cmap_is_block(player.y, player.x));
-    if (cmap_is_block(nexty + 1, nextx)) { return; }
+    //if (cmap_is_block(nexty + 1, nextx)) { return; }
+    //if (direction == 0x0) {
+    if (direction == 0x0 || cmap_is_block(nexty + 1, nextx)) {
+        direction = 0x0;
+        anims[0].x = anims[0].destx;
+        anims[0].y = anims[0].desty;
+        if (anims[0].scmd == move_left) {
+            set_animation(anims + 0, stand_left);
+        } else if (anims[0].scmd == move_right) {
+            set_animation(anims + 0, stand_right);
+        } else if (anims[0].scmd == move_up) {
+            set_animation(anims + 0, stand_up);
+        } else if (anims[0].scmd == move_down) {
+            set_animation(anims + 0, stand_down);
+        } else {
+        }
+        return;
+    }
+
     player.x = nextx;
     player.y = nexty;
+
     dsl_check_t* dsl_check = dsl_find_tile_check(player.x, player.y);
     if (dsl_check) {
         debug("TILE CHECK: Need to execute file = %d, addr = %d, trip = %d\n",
@@ -110,10 +175,29 @@ void player_move(const uint8_t direction) {
         //dsl_execute_subroutine(dsl_check->data.box_check.file,
             //dsl_check->data.box_check.addr, 0);
     }
-    count = TICKS_PER_MOVE;
     dsl_player.mapx = player.x * 16;
     dsl_player.mapy = player.y * 16;
-    shift_anim(anim);
+    anims[0].x = anims[0].destx;
+    anims[0].y = anims[0].desty;
+    anims[0].destx = player.x * 16 * 2;
+    anims[0].desty = player.y * 16 * 2;
+
+    if (direction & PLAYER_LEFT) { 
+        set_animation(anims + 0, move_left);
+    } else if (direction & PLAYER_RIGHT) {
+        set_animation(anims + 0, move_right);
+    } else if (direction & PLAYER_DOWN) {
+        set_animation(anims + 0, move_down);
+    } else if (direction & PLAYER_UP) {
+        set_animation(anims + 0, move_up);
+    }
+
+    count = TICKS_PER_MOVE;
+    direction = 0x0;
+}
+
+void player_move(const uint8_t _direction) {
+    direction |= _direction;
 }
 
 static void free_sprites(const int slot) {
@@ -204,6 +288,9 @@ static void load_character_sprite(SDL_Renderer *renderer, const int slot, const 
 
 void player_load(SDL_Renderer *renderer, const int slot, const float zoom) {
     load_character_sprite(renderer, slot, zoom);
+    anims[slot].spr = players[slot].main;
+    set_animation(anims + slot, stand_down);
+    animate_list_add(anims + slot, 1);
 }
 
 int32_t player_getx(const int slot) {

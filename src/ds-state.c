@@ -5,6 +5,7 @@
 #include "ds-state.h"
 #include "../sdl/gameloop.h"
 #include "port.h"
+#include "ds-scmd.h"
 #include "replay.h"
 #include "trigger.h"
 #include <lua5.3/lualib.h>
@@ -480,6 +481,7 @@ static int dsl_clone(lua_State *l) {
              PRI_LI ") pri: " PRI_LI ", pla:" PRI_LI "\n", obj, qty, x, y,
         priority, placement);
     if (robj) {
+        if (robj->scmd == NULL) { robj->scmd = ds_scmd_empty(); }
         port_add_obj(robj);
     }
     return 0;

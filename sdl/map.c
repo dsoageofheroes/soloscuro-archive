@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "map.h"
 #include "animate.h"
+#include "sprite.h"
 #include "../src/dsl.h"
 #include "../src/trigger.h"
 #include "../src/dsl-manager.h"
@@ -11,6 +12,8 @@
 
 static map_t *cmap = NULL;
 static SDL_Renderer *cren = NULL;
+static animate_sprite_t anims[256];
+static int anim_pos = 0;
 
 void map_init(map_t *map) {
     map->tiles = NULL;
@@ -56,10 +59,13 @@ void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
     size_t max_id = 0;
     unsigned char *data;
     region_object_t *obj;
+    int zoom = 2.0;
+    gff_palette_t *pal;
 
     map_free(map);
     cren = renderer;
     map->region = dsl_load_region(id);
+    pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + map->region->map_id - 1;
     ids = map->region->ids;
     for (int i = 0; i < map->region->num_tiles; i++) { max_id = max_id > ids[i] ? max_id : ids[i]; }
     max_id++;
@@ -79,7 +85,22 @@ void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
     }
 
     region_list_for_each(map->region->list, obj) {
-        obj->anim = animate_add(map, renderer, obj);
+        //printf("(%d, %d, %d), scmd = %p, bmp = %d\n", obj->mapx, obj->mapy, obj->mapz, obj->scmd, obj->btc_idx);
+        anims[anim_pos].scmd = obj->scmd;
+        anims[anim_pos].spr = 
+            sprite_new(renderer, pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP, obj->btc_idx);
+            //create_texture(renderer, OBJEX_GFF_INDEX, GFF_BMP, obj->btc_idx, obj->bmp_idx, palette_id, &loc);
+        anims[anim_pos].delay = 0;
+        anims[anim_pos].pos = 0;
+        anims[anim_pos].x = obj->mapx * zoom;
+        anims[anim_pos].y = obj->mapy * zoom;
+        anims[anim_pos].destx = anims[anim_pos].x;
+        anims[anim_pos].destx = anims[anim_pos].y;
+        anims[anim_pos].move = anims[anim_pos].left_over = 0.0;
+        animate_list_add(anims + anim_pos, obj->mapz);
+        obj->data = anims + anim_pos;
+
+        anim_pos++;
     }
 
     cmap = map;
@@ -111,22 +132,51 @@ void map_render(void *data, SDL_Renderer *renderer) {
         tile_loc.x = -xoffset;
         tile_loc.y += stretch * 16;
     }
-    animate_render(NULL, renderer);
+    //animate_render(NULL, renderer);
+    animate_list_render(renderer);
 }
 
 void port_add_obj(region_object_t *obj) {
-    obj->anim = animate_add_objex(cmap, cren, obj);
+    //obj->anim = animate_add_objex(cmap, cren, obj);
+    gff_palette_t *pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + cmap->region->map_id - 1;
+    const int zoom = 2;
+    anims[anim_pos].scmd = obj->scmd;
+    anims[anim_pos].spr = 
+        sprite_new(cren, pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP, obj->btc_idx);
+            //create_texture(renderer, OBJEX_GFF_INDEX, GFF_BMP, obj->btc_idx, obj->bmp_idx, palette_id, &loc);
+    anims[anim_pos].delay = 0;
+    anims[anim_pos].pos = 0;
+    anims[anim_pos].x = obj->mapx * zoom;
+    anims[anim_pos].y = obj->mapy * zoom;
+    anims[anim_pos].destx = anims[anim_pos].x;
+    anims[anim_pos].destx = anims[anim_pos].y;
+    anims[anim_pos].move = anims[anim_pos].left_over = 0.0;
+    animate_list_add(anims + anim_pos, obj->mapz);
+    obj->data = anims + anim_pos;
+    anim_pos++;
+    /*
+    */
 }
 
 void port_swap_objs(int obj_id, region_object_t *obj) {
-    animate_t *anim = obj->anim;
-    SDL_Rect loc;
+    //animate_t *anim = obj->anim;
+    animate_sprite_t *as = (animate_sprite_t*) obj->data;
+    gff_palette_t *pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + cmap->region->map_id - 1;
+    const int zoom = 2.0;
+    //SDL_Rect loc;
 
-    if (anim) {
-        SDL_DestroyTexture(anim->textures[0]);
-        anim->textures[0] = 
-            create_texture(cren, OBJEX_GFF_INDEX, GFF_BMP, obj->btc_idx, obj->bmp_idx, cmap->region->palette_id, &loc);
+    if (as) {
+        //printf("obj->bmp_idx = %d\n", obj->btc_idx);
+        //sprite_set_frame(as->spr, obj->bmp_idx);
+        sprite_free(as->spr);
+        as->spr = 
+            sprite_new(cren, pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP, obj->btc_idx);
     } else {
+
+    //if (anim) {
+        //SDL_DestroyTexture(anim->textures[0]);
+        //anim->textures[0] = 
+            //create_texture(cren, OBJEX_GFF_INDEX, GFF_BMP, obj->btc_idx, obj->bmp_idx, cmap->region->palette_id, &loc);
         error("Unable to find animation for obj_id!\n");
     }
 }
@@ -134,33 +184,13 @@ void port_swap_objs(int obj_id, region_object_t *obj) {
 #define CLICKABLE (0x10)
 
 region_object_t* get_object_at_location(const uint32_t x, const uint32_t y) {
-    const int stretch = 2;
-    uint32_t mx = getCameraX() + x;
-    uint32_t my = getCameraY() + y;
-    uint32_t osx, osy, oex, oey; // object start x, object start y, object end x, object end y
-    SDL_Rect loc;
     region_object_t *obj = NULL;
     if (!cmap) { return 0; }
 
     region_list_for_each(cmap->region->list, obj) {
-        if (obj->flags & CLICKABLE) {
-            animate_t *anim = obj->anim;
-            if (anim && anim->obj) {
-                loc.w = anim->obj->bmp_width;
-                loc.h = anim->obj->bmp_height;
-                loc.x = anim->obj->mapx;
-                loc.y = anim->obj->mapy;
-                osx = loc.x * stretch;
-                osy = loc.y * stretch;
-                oex = osx + (stretch * loc.w);
-                oey = osy + (stretch * loc.h);
-            } else {
-                osx = obj->mapx * stretch;
-                osy = obj->mapy * stretch;
-                oex = osx + (stretch * obj->bmp_width);
-                oey = osy + (stretch * obj->bmp_height);
-            }
-            if (mx >= osx && mx < oex && my >= osy && my < oey) {
+        animate_sprite_t *as = obj->data;
+        if (as && obj->flags & CLICKABLE) {
+            if (sprite_in_rect(as->spr, x, y)) {
                 return obj;
             }
         }

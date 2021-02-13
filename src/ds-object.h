@@ -131,7 +131,7 @@ typedef struct region_object_s {
     int16_t disk_idx;   // disk index
     int32_t game_time;  // game time for animating
     scmd_t *scmd;       // the script
-    struct animate_s *anim;     // animation script, to be defined later...
+    void *data;         // used for special data the UI needs.
 } region_object_t;
 
 typedef struct _region_list_s {

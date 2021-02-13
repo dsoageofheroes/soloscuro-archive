@@ -41,17 +41,20 @@ static scmd_t empty_scmd = {
     .soundidx = 0
 };
 
-scmd_t* dsl_scmd_get(const int gff_idx, const int res_id, const int index) {
-    if (res_id > 0) {
-        gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_SCMD, res_id);
-        if (chunk.length > SCMD_MAX) {
-            error("chunk length (%d) is larger than SCMD_MAX (%d)\n", chunk.length, SCMD_MAX);
-            exit(1);
-        }
-        gff_read_chunk(gff_idx, &chunk, scmds[res_id], SCMD_MAX);
-        return get_script(scmds[res_id], index);
-    }
+scmd_t* ds_scmd_empty() {
     return &empty_scmd;
+}
+
+scmd_t* dsl_scmd_get(const int gff_idx, const int res_id, const int index) {
+    if (res_id <= 0 || res_id >= SCMD_MAX) { return &empty_scmd; } // needs a better check...
+
+    gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_SCMD, res_id);
+    if (chunk.length > SCMD_MAX) {
+        error("chunk length (%d) is larger than SCMD_MAX (%d)\n", chunk.length, SCMD_MAX);
+        exit(1);
+    }
+    gff_read_chunk(gff_idx, &chunk, scmds[res_id], SCMD_MAX);
+    return get_script(scmds[res_id], index);
 }
 
 int dsl_scmd_is_default(const scmd_t *scmd, const int scmd_index) {

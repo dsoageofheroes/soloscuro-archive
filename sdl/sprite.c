@@ -130,6 +130,19 @@ void sprite_render(SDL_Renderer *renderer, const uint16_t sprite_id) {
     SDL_RenderCopy(renderer, sprite->tex[sprite->pos], NULL, (sprite->loc + sprite->pos));
 }
 
+void sprite_render_flip(SDL_Renderer *renderer, const uint16_t sprite_id, SDL_RendererFlip flip) {
+    if (sprite_id == (uint16_t)SPRITE_ERROR) { return; }
+    sprite_t *sprite = sprites + sprite_id;
+    /*
+    printf("->%p {%d, %d, %d, %d}\n", sprite->tex[sprite->pos],
+            sprite->loc.x,
+            sprite->loc.y,
+            sprite->loc.w,
+            sprite->loc.h);
+            */
+    SDL_RenderCopyEx(renderer, sprite->tex[sprite->pos], NULL, (sprite->loc + sprite->pos), 0, NULL, flip);
+}
+
 void sprite_set_location(const uint16_t sprite_id, const uint32_t x, const uint32_t y) {
     if (sprite_id == (uint16_t)SPRITE_ERROR) { return; }
     int pos = sprites[sprite_id].pos;

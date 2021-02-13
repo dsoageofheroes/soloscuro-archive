@@ -6,14 +6,15 @@
 #include "../src/ds-object.h"
 #include "../src/ds-scmd.h"
 
-typedef struct animate_s {
-    SDL_Texture **textures;
-    uint16_t len;
+typedef struct animate_sprite_s {
+    scmd_t *scmd;
+    uint16_t spr;
+    uint16_t delay;
     uint16_t pos;
-    int16_t ticks_left;
-    region_object_t *obj;
-    struct animate_s *next, *prev;
-} animate_t;
+    uint16_t x, y;
+    uint16_t destx, desty;
+    float move, left_over; // see animate_tick for left_over
+} animate_sprite_t;
 
 #include "map.h"
 
@@ -21,12 +22,9 @@ struct map_s;
 
 void animate_init();
 void animate_clear();
-void shift_anim(animate_t *anim);
-animate_t* animate_add(struct map_s *map, SDL_Renderer *renderer, region_object_t *obj);
-animate_t* animate_add_obj(SDL_Renderer *renderer, region_object_t *obj, const int gff_file, const int pallete_id);
-animate_t* animate_add_objex(struct map_s *map, SDL_Renderer *renderer, region_object_t *obj);
-animate_t* animate_find(region_object_t *obj);
-void animate_render(void *data, SDL_Renderer *renderer);
 void animate_close();
 
+// NEW INTERFACE:
+void animate_list_render(SDL_Renderer *renderer);
+void animate_list_add(animate_sprite_t *anim, const int zpos);
 #endif

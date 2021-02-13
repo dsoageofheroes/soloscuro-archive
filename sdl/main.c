@@ -9,6 +9,7 @@
 #include "screens/inventory.h"
 #include "../src/dsl.h"
 #include "../src/replay.h"
+#include "../src/ds-load-save.h"
 
 void browse_loop(SDL_Surface*, SDL_Renderer *rend);
 void screen_debug_init(SDL_Surface *sur, SDL_Renderer *rend, const char *arg);
@@ -93,6 +94,7 @@ void handle_input() {
     if(key_state[SDL_SCANCODE_E])     { player_move(PLAYER_UP); }
     if(key_state[SDL_SCANCODE_S])     { player_move(PLAYER_LEFT); }
     if(key_state[SDL_SCANCODE_F])     { player_move(PLAYER_RIGHT); }
+    player_update();
 }
 
 void render() {
@@ -177,6 +179,15 @@ static void init(int args, char *argv[]) {
             exit(0);
         }
     }
+
+    ds_load_character_charsave(0, 9); // testing!
+    //ds_load_character_charsave(1, 10); // testing!
+    //ds_load_character_charsave(2, 7); // testing!
+    //ds_load_character_charsave(3, 8); // testing!
+    player_load(renderer, 0, 2.0);
+    //player_load(renderer, 1, zoom);
+    //player_load(renderer, 2, zoom);
+    //player_load(renderer, 3, zoom);
 
     // Start the main game.
     screen_load_region(renderer);
