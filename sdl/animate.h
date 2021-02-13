@@ -5,6 +5,7 @@
 #include <SDL2/SDL.h>
 #include "../src/ds-object.h"
 #include "../src/ds-scmd.h"
+#include "map.h"
 
 typedef struct animate_sprite_s {
     scmd_t *scmd;
@@ -13,6 +14,7 @@ typedef struct animate_sprite_s {
     uint16_t pos;
     uint16_t x, y;
     uint16_t destx, desty;
+    region_object_t *obj;
     float move, left_over; // see animate_tick for left_over
 } animate_sprite_t;
 
@@ -21,11 +23,6 @@ typedef struct animate_sprite_node_s {
     struct animate_sprite_node_s *next;
     struct animate_sprite_node_s *prev;
 } animate_sprite_node_t;
-
-
-#include "map.h"
-
-struct map_s;
 
 void animate_init();
 void animate_clear();

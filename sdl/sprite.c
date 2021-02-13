@@ -169,6 +169,12 @@ uint32_t sprite_gety(const uint16_t id) {
     return loc->y;
 }
 
+uint32_t sprite_geth(const uint16_t id) {
+    if (!valid_id(id)) { return 0; }
+    SDL_Rect *loc = (sprites[id].loc + sprites[id].pos);
+    return loc->h;
+}
+
 void sprite_center(const int id, const int x, const int y, const int w, const int h) {
     if (!valid_id(id)) { return; }
     SDL_Rect *loc = (sprites[id].loc + sprites[id].pos);
@@ -179,16 +185,6 @@ void sprite_center(const int id, const int x, const int y, const int w, const in
     loc->x = x + diffx;
     loc->y = y + diffy;
 }
-
-int sprite_is_under(const uint16_t bottom, const uint16_t top) {
-    if (!valid_id(bottom) || !valid_id(top)) { return 0; }
-
-    SDL_Rect *bloc = (sprites[bottom].loc + sprites[bottom].pos);
-    SDL_Rect *tloc = (sprites[top].loc + sprites[top].pos);
-
-    return (bloc->y + bloc->h) < (tloc->y + tloc->h);
-}
-
 
 void sprite_center_spr(const int dest, const int src) {
     if (!valid_id(src)) { return; }

@@ -19,8 +19,6 @@ static ds1_item_t *ds1_items = NULL; // Confirmed
 static int item_pos = 0;
 static ds_character_t *ds_characters = NULL; // Confirmed
 static int character_pos = 0;
-//static item1r_t *ds1_item1rs = NULL; // Confirmed
-//static int item1r_pos = 0;
 static mini_t *minis = NULL;
 static int mini_pos = 0;
 static item_name_t *item_names = NULL;
@@ -35,31 +33,20 @@ static int item_names_pos = 0;
  * OT_NAMEIX <-- may not be needed
  */
 void dsl_object_init() {
-    //unsigned long len;
-    //char *ptr;
     ds1_combats = malloc(sizeof(ds1_combat_t) * MAX_COMBATS);
     ds1_items = malloc(sizeof(ds1_item_t) * MAX_ITEMS);
     ds_characters = malloc(sizeof(ds_character_t) * MAX_CHARACTERS);
-    //ds1_item1rs = malloc(sizeof(item1r_t) * MAX_ITEM1R);
     minis = malloc(sizeof(mini_t) * MAX_MINIS);
     item_names = malloc(sizeof(item_name_t) * MAX_ITEM_NAMES);
     combat_pos = 0;
     item_pos = 0;
     character_pos = 0;
-    //item1r_pos = 0;
     mini_pos = 0;
     item_names_pos = 0;
     memset(ds1_items, 0x00, sizeof(ds1_item_t) * MAX_ITEMS);
     memset(ds_characters, 0x00, sizeof(ds_character_t) * MAX_CHARACTERS);
     memset(ds1_combats, 0x00, sizeof(ds1_combat_t) * MAX_COMBATS);
-    //memset(ds1_item1rs, 0x00, sizeof(item1r_t) * MAX_ITEM1R);
     memset(minis, 0x00, sizeof(mini_t) * MAX_MINIS);
-    // TODO FIXME WARNING, this may not be correct!
-    //ptr = gff_get_raw_bytes(DSLDATA_GFF_INDEX, GT_IT1R, 1, &len);
-    //for (int i = 0; i < len/15; i++) {
-        //memcpy(ds1_item1rs + i, ptr + (15*i), 15);
-        ////printf("%d\n", ds1_item1rs[i].range);
-    //}
     printf("DSL_OBJECT LIST INIT\n");
 }
 
@@ -76,13 +63,11 @@ void dsl_object_cleanup() {
     free(ds1_combats);
     free(ds1_items);
     free(ds_characters);
-    //free(ds1_item1rs);
     free(minis);
     free(item_names);
     ds1_combats = NULL;
     ds1_items = NULL;
     ds_characters = NULL;
-    //ds1_item1rs = NULL;
     minis = NULL;
     item_names = NULL;
 }
@@ -111,10 +96,8 @@ static void load_object_from_etab(region_object_t *dsl_object, gff_map_object_t 
     dsl_object->bmpy = gm->ypos - disk_object.yoffset - disk_object.zpos;
     dsl_object->xoffset = disk_object.xoffset;
     dsl_object->yoffset = disk_object.yoffset;
-    //dsl_object->mapx = gm->xpos;
-    //dsl_object->mapy = gm->ypos;
-    dsl_object->mapx = gm->xpos - disk_object.xoffset;
-    dsl_object->mapy = gm->ypos - disk_object.yoffset;
+    dsl_object->mapx = gm->xpos;
+    dsl_object->mapy = gm->ypos;
     dsl_object->mapz = gm->zpos;
     dsl_object->entry_id = id;
 }

@@ -12,17 +12,17 @@ static animate_sprite_node_t *animate_list[MAX_ZPOS];
 
 // Return if we need to flip
 static SDL_RendererFlip animate_tick(animate_sprite_t *anim, const uint32_t xoffset, const uint32_t yoffset) {
-//void sprite_render_flip(SDL_Renderer *renderer, const uint16_t sprite_id, SDL_RendererFlip flip);
     size_t pos = anim->pos;
     SDL_RendererFlip flip = 0;
 
     if (anim->scmd[pos].flags & SCMD_LAST) { goto out; }
+
     if (anim->scmd[pos].flags & SCMD_JUMP && anim->delay == 0) {
         pos = anim->pos = 0;
         sprite_set_frame(anim->spr, anim->scmd[pos].bmp_idx);
         anim->delay = anim->scmd[pos].delay;
     }
-    //if (anim->scmd[pos].delay == 0) {
+
     if (anim->delay == 0) {
         anim->pos++; pos++;
         sprite_set_frame(anim->spr, anim->scmd[pos].bmp_idx);
@@ -64,40 +64,50 @@ void animate_list_render(SDL_Renderer *renderer) {
     // TODO: Definite performance issues.
     for (int i = 0; i < MAX_ZPOS; i++) {
         for (animate_sprite_node_t *rover = animate_list[i]; rover != NULL; rover = rover->next) {
-            //printf("    (%d, %d, %d)\n", rover->anim->x, rover->anim->y, i);
             sprite_render_flip(renderer, rover->anim->spr, animate_tick(rover->anim, xoffset, yoffset));
         }
     }
 }
 
-void animate_shift_node(animate_sprite_node_t *an, const int zpos) {
-    animate_sprite_node_t *prev, *next;
+// The assembly makes even less sense...
+static int is_less(animate_sprite_t *a0, animate_sprite_t *a1) {
+    const float zoom = 2.0;
+    const int map0y = a0->obj
+        //? ((a0->obj->mapy * zoom))// - sprite_geth(a0->spr)/2))
+        ? ((a0->obj->mapy * zoom) - sprite_geth(a0->spr) )
+        //: a0->y + sprite_geth(a0->spr) / 2;
+        //: a0->y - sprite_geth(a0->spr) / 2;
+        : a0->y;
+    const int map1y = a1->obj
+        //? ((a1->obj->mapy * zoom))// - sprite_geth(a1->spr)/2))
+        ? ((a1->obj->mapy * zoom) - sprite_geth(a0->spr) )
+        //: a1->y + sprite_geth(a1->spr) / 2;
+        //: a1->y - sprite_geth(a1->spr) / 2;
+        : a1->y;
+    //printf("%d, %d\n", map0y, map1y);
+    return map0y < map1y;
+}
 
-    //while (an && an->next && an->anim->y > an->next->anim->y) {
-    while (an && an->next && !sprite_is_under(an->anim->spr, an->next->anim->spr)) {
-        printf("Shift up\n");
-        next = an->next;
-        prev = an->prev;
-        if (next->next) { next->next->prev = an; }
-        next->prev = prev;
-        an->next = next->next;
-        an->prev = next;
-        next->next = an;
-        if (prev) { prev->next = next; }
-        if (!prev) { animate_list[zpos] = next; }
+static void swap_with_next(animate_sprite_node_t *an, const int zpos) {
+    animate_sprite_node_t *next = an->next;
+    animate_sprite_node_t *prev = an->prev;
+    if (next->next) { next->next->prev = an; }
+    next->prev = prev;
+    an->next = next->next;
+    an->prev = next;
+    next->next = an;
+    if (prev) { prev->next = next; }
+    if (!prev) { animate_list[zpos] = next; }
+}
+
+void animate_shift_node(animate_sprite_node_t *an, const int zpos) {
+
+    while (an && an->next && !is_less(an->anim, an->next->anim)) {
+        swap_with_next(an, zpos);
     }
-    //while (an && an->prev && an->anim->y < an->prev->anim->y) {
-    while (an && an->prev && sprite_is_under(an->anim->spr, an->prev->anim->spr)) {
-        printf("Shift down\n");
-        next = an->next;
-        prev = an->prev;
-        if (prev->prev) { prev->prev->next = an; }
-        an->prev = prev->prev;
-        an->next = prev;
-        prev->next = next;
-        prev->prev = an;
-        if (next) { next->prev = prev; }
-        if (!an->prev) { animate_list[zpos] = an; }
+
+    while (an && an->prev && is_less(an->anim, an->prev->anim)) {
+        swap_with_next(an->prev, zpos);
     }
 }
 
@@ -119,8 +129,6 @@ animate_sprite_node_t *animate_list_add(animate_sprite_t *anim, const int zpos) 
 
     return node;
 }
-
-//static animation_delay_t *animations[MAX_DELAY];
 
 void animate_init() {
     memset(animate_list, 0x0, sizeof(animate_sprite_node_t*) * MAX_ZPOS);

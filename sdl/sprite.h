@@ -33,9 +33,9 @@ int sprite_in_rect(const uint16_t id, const uint32_t x, const uint32_t y);
 void sprite_set_location(const uint16_t, const uint32_t, const uint32_t y);
 void sprite_center(const int id, const int x, const int y, const int w, const int h);
 void sprite_center_spr(const int dest, const int src);
-int sprite_is_under(const uint16_t bottom, const uint16_t top);
 uint32_t sprite_getx(const uint16_t id);
 uint32_t sprite_gety(const uint16_t id);
+uint32_t sprite_geth(const uint16_t id);
 // Free a sprite at an ID (do not use it again!)
 void sprite_free(const uint16_t id);
 
