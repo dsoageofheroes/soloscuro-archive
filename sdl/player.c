@@ -10,6 +10,9 @@
 
 #define MAX_PCS (4)
 
+static animate_sprite_node_t *player_node;
+static int player_zpos;
+
 typedef struct player_sprites_s {
     uint16_t main;
     uint16_t port;
@@ -70,6 +73,7 @@ static animate_sprite_t anims[MAX_PCS];
 void player_init() {
     player.x = 30;
     player.y = 10;
+    player_zpos = 0;
     memset(players, 0x00, sizeof(player_sprites_t) * MAX_PCS);
     memset(anims, 0x00, sizeof(animate_sprite_t) * MAX_PCS);
     for (int i = 0; i < 4; i++) {
@@ -128,6 +132,7 @@ static void set_animation(animate_sprite_t *as, scmd_t *scmd) {
 }
 
 void player_update() {
+    animate_shift_node(player_node, player_zpos);
     if (--count > 0) { return; }
 
     int nextx = player.x;
@@ -290,7 +295,7 @@ void player_load(SDL_Renderer *renderer, const int slot, const float zoom) {
     load_character_sprite(renderer, slot, zoom);
     anims[slot].spr = players[slot].main;
     set_animation(anims + slot, stand_down);
-    animate_list_add(anims + slot, 1);
+    player_node = animate_list_add(anims + slot, player_zpos);
 }
 
 int32_t player_getx(const int slot) {

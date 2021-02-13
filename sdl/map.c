@@ -97,6 +97,7 @@ void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
         anims[anim_pos].destx = anims[anim_pos].x;
         anims[anim_pos].destx = anims[anim_pos].y;
         anims[anim_pos].move = anims[anim_pos].left_over = 0.0;
+        //if (obj->mapz
         animate_list_add(anims + anim_pos, obj->mapz);
         obj->data = anims + anim_pos;
 

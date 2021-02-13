@@ -6,12 +6,6 @@
 #include "../src/dsl.h"
 #include "../src/ds-scmd.h"
 
-typedef struct animate_sprite_node_s {
-    animate_sprite_t *anim;
-    struct animate_sprite_node_s *next;
-    struct animate_sprite_node_s *prev;
-} animate_sprite_node_t;
-
 #define MAX_ZPOS (128)
 
 static animate_sprite_node_t *animate_list[MAX_ZPOS];
@@ -76,11 +70,42 @@ void animate_list_render(SDL_Renderer *renderer) {
     }
 }
 
-void animate_list_add(animate_sprite_t *anim, const int zpos) {
+void animate_shift_node(animate_sprite_node_t *an, const int zpos) {
+    animate_sprite_node_t *prev, *next;
+
+    //while (an && an->next && an->anim->y > an->next->anim->y) {
+    while (an && an->next && !sprite_is_under(an->anim->spr, an->next->anim->spr)) {
+        printf("Shift up\n");
+        next = an->next;
+        prev = an->prev;
+        if (next->next) { next->next->prev = an; }
+        next->prev = prev;
+        an->next = next->next;
+        an->prev = next;
+        next->next = an;
+        if (prev) { prev->next = next; }
+        if (!prev) { animate_list[zpos] = next; }
+    }
+    //while (an && an->prev && an->anim->y < an->prev->anim->y) {
+    while (an && an->prev && sprite_is_under(an->anim->spr, an->prev->anim->spr)) {
+        printf("Shift down\n");
+        next = an->next;
+        prev = an->prev;
+        if (prev->prev) { prev->prev->next = an; }
+        an->prev = prev->prev;
+        an->next = prev;
+        prev->next = next;
+        prev->prev = an;
+        if (next) { next->prev = prev; }
+        if (!an->prev) { animate_list[zpos] = an; }
+    }
+}
+
+animate_sprite_node_t *animate_list_add(animate_sprite_t *anim, const int zpos) {
     animate_sprite_node_t *node = malloc(sizeof(animate_sprite_node_t));
     if (zpos < 0 || zpos >= MAX_ZPOS) {
         error("zpos is beyond range!");
-        return;
+        return NULL;
     }
     node->anim = anim;
     node->next = animate_list[zpos];
@@ -90,6 +115,9 @@ void animate_list_add(animate_sprite_t *anim, const int zpos) {
     node->prev = NULL;;
     sprite_set_frame(anim->spr, anim->scmd->bmp_idx);
     animate_list[zpos] = node;
+    animate_shift_node(animate_list[zpos], zpos);
+
+    return node;
 }
 
 //static animation_delay_t *animations[MAX_DELAY];

@@ -16,6 +16,13 @@ typedef struct animate_sprite_s {
     float move, left_over; // see animate_tick for left_over
 } animate_sprite_t;
 
+typedef struct animate_sprite_node_s {
+    animate_sprite_t *anim;
+    struct animate_sprite_node_s *next;
+    struct animate_sprite_node_s *prev;
+} animate_sprite_node_t;
+
+
 #include "map.h"
 
 struct map_s;
@@ -26,5 +33,7 @@ void animate_close();
 
 // NEW INTERFACE:
 void animate_list_render(SDL_Renderer *renderer);
-void animate_list_add(animate_sprite_t *anim, const int zpos);
+animate_sprite_node_t *animate_list_add(animate_sprite_t *anim, const int zpos);
+void animate_shift_node(animate_sprite_node_t *an, const int zpos);
+
 #endif

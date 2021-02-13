@@ -180,6 +180,16 @@ void sprite_center(const int id, const int x, const int y, const int w, const in
     loc->y = y + diffy;
 }
 
+int sprite_is_under(const uint16_t bottom, const uint16_t top) {
+    if (!valid_id(bottom) || !valid_id(top)) { return 0; }
+
+    SDL_Rect *bloc = (sprites[bottom].loc + sprites[bottom].pos);
+    SDL_Rect *tloc = (sprites[top].loc + sprites[top].pos);
+
+    return (bloc->y + bloc->h) < (tloc->y + tloc->h);
+}
+
+
 void sprite_center_spr(const int dest, const int src) {
     if (!valid_id(src)) { return; }
     sprite_center(dest,
