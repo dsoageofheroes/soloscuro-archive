@@ -195,6 +195,15 @@ void sprite_center_spr(const int dest, const int src) {
             sprites[src].loc[sprites[src].pos].h);
 }
 
+// Needed which our scmds are xmirrored. Used to calculate offset.
+uint32_t sprite_get_xdiff_from_start(const uint16_t id) {
+    if (!valid_id(id)) { return 0; }
+    SDL_Rect *oloc = (sprites[id].loc);
+    SDL_Rect *cloc = (sprites[id].loc + sprites[id].pos);
+
+    return cloc->w - oloc->w;
+}
+
 // Free a sprite at an ID (do not use it again!)
 void sprite_free(const uint16_t id) {
     if (sprites[id].in_use) {

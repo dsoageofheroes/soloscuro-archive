@@ -1416,15 +1416,6 @@ static void render_entry_scmd() {
         print_line_len(renderer, 0, buf, 320, ypos, BUF_MAX);
         ypos += 12;
         num_entries++;
-    //.bmp_idx = 0,
-    //.delay = 0,
-    //.flags = SCMD_LAST,
-    //.xoffset = 0,
-    //.yoffset = 0,
-    //.xoffsethot = 0,
-    //.yoffsethot = 0,
-    //.soundidx = 0
-        //printf("bmp: %d, delay: %d\n", scmd->bmp_idx, scmd->delay);
         scmd++;
     }
     if (scmd->flags & SCMD_LAST) {
@@ -1435,6 +1426,4 @@ static void render_entry_scmd() {
         pos += snprintf(buf + pos, BUF_MAX - pos, "MAX ENTRIES");
     }
     print_line_len(renderer, 0, buf, 320, ypos, BUF_MAX);
-    /*
-    */
 }

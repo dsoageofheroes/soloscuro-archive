@@ -130,6 +130,7 @@ typedef struct region_object_s {
     uint16_t btc_idx;   // bitmap table chunk index
     int16_t disk_idx;   // disk index
     int32_t game_time;  // game time for animating
+    uint16_t scmd_flags;//
     scmd_t *scmd;       // the script
     void *data;         // used for special data the UI needs.
 } region_object_t;

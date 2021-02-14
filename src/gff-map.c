@@ -35,29 +35,6 @@ int gff_map_get_num_objects(int gff_idx, int res_id) {
     }
 
     return open_files[gff_idx].num_objects;
-    /*
-    if (entry_table) {
-        open_files[gff_idx].entry_table = entry_table;
-        for (num_entries = 0; centry->index && num_entries < MAX_MAP_OBJECTS; centry++, num_entries++) {
-            // centry->index = (centry->index > 0) ? -centry->index : centry->index; //TODO: Only needed if using disk?
-            centry->flags |= OBJECT_EXISTS;
-        }
-        // TODO: Forwarding Bug Fix.  This should only be need once and then saved later.
-        for (i = 0; i < num_entries; i++) {
-            if (entry_table[i].flags & OBJECT_ONE_OBJECT) {
-                for (j = 0; j < num_entries; j++) {
-                    if (entry_table[j].index == entry_table[i].index) {
-                        entry_table[j].flags |= OBJECT_ONE_OBJECT;
-                    }
-                }
-            }
-        }
-        printf("MAP: num_entries = %d, open_files[gff_idx].num_objects = %d\n", num_entries,
-        open_files[gff_idx].num_objects);
-        open_files[gff_idx].num_objects = num_entries;
-        return num_entries;
-    }
-    */
 }
 
 int gff_map_get_object_frame_count(int gff_index, int res_id, int obj_id) {
@@ -88,14 +65,6 @@ scmd_t* gff_map_get_object_scmd(int gff_index, int res_id, int obj_id, int scmd_
     gff_read_object(entry_table[obj_id].index, &disk_object);
     return dsl_scmd_get(OBJEX_GFF_INDEX, disk_object.script_id, scmd_index);
 }
-
-/*
-unsigned char* gff_map_get_obj_bmp_pal(dsl_region_t *region, int res_id, dsl_object_t *obj, int frame_id) {
-    *w = get_frame_width(OBJEX_GFF_INDEX, GFF_BMP, disk_object->bmp_id, frame_id);
-    *h = get_frame_height(OBJEX_GFF_INDEX, GFF_BMP, disk_object->bmp_id, frame_id);
-    return get_frame_rgba_with_palette(OBJEX_GFF_INDEX, GFF_BMP, disk_object->bmp_id, frame_id, palette_id);
-}
-*/
 
 unsigned char* gff_map_get_object_bmp_pal(int gff_index, int res_id, int obj_id, int *w, int *h, int frame_id,
         int palette_id) {

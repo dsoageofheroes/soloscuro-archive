@@ -14,6 +14,7 @@ static animate_sprite_node_t *animate_list[MAX_ZPOS];
 static SDL_RendererFlip animate_tick(animate_sprite_t *anim, const uint32_t xoffset, const uint32_t yoffset) {
     size_t pos = anim->pos;
     SDL_RendererFlip flip = 0;
+    int32_t scmd_xoffset = 0;
 
     if (anim->scmd[pos].flags & SCMD_LAST) { goto out; }
 
@@ -33,7 +34,10 @@ static SDL_RendererFlip animate_tick(animate_sprite_t *anim, const uint32_t xoff
     anim->delay--;
 
 out:
-    if (anim->scmd[pos].flags & SCMD_XMIRROR) {
+    scmd_xoffset = anim->scmd->xoffset;
+    if (anim->scmd[pos].flags & SCMD_XMIRROR
+        || (anim->obj && anim->obj->scmd_flags & 0x80)) {
+        scmd_xoffset -= sprite_get_xdiff_from_start(anim->spr);
         flip |= SDL_FLIP_HORIZONTAL;
     }
     if (anim->scmd[pos].flags & SCMD_YMIRROR) {
@@ -51,7 +55,7 @@ out:
 
     //printf("anim->x = %d (move_amt = %f)\n", anim->x, move_amt);
     sprite_set_location(anim->spr,
-        anim->x - xoffset + anim->scmd->xoffset,
+        anim->x - xoffset + scmd_xoffset,
         anim->y - yoffset + anim->scmd->yoffset);
 
     return flip;

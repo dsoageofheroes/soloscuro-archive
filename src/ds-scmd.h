@@ -13,6 +13,19 @@ typedef struct _scmd_t {
     uint8_t soundidx;  // sound index to play
 } scmd_t;
 
+typedef struct _disk_object_s {
+    uint16_t flags;
+    int16_t  xoffset;
+    int16_t  yoffset;
+    uint16_t xpos;
+    uint16_t ypos;
+    int8_t   zpos;
+    uint8_t  object_index;
+    uint16_t bmp_id;
+    uint16_t script_id;
+} disk_object_t;
+
+
 // SCMD flags
 #define SCMD_JUMP (0x01) // loop
 #define SCMD_LAST (0x02) // end of script
@@ -27,7 +40,7 @@ typedef struct _scmd_t {
 #define SCMD_DEFAULT_DELAY (16)
 #define SCMD_TICKS_PER_SECOND (96)
 
-scmd_t* dsl_scmd_get(const int gff_file, const int res_id, const int index);
+scmd_t* dsl_scmd_get(const int gff_idx, const int res_id, const int index);
 scmd_t* ds_scmd_empty();
 int dsl_scmd_is_default(const scmd_t *scmd, const int scmd_index);
 
