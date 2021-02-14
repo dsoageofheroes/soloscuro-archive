@@ -2,10 +2,12 @@
 #include <stdio.h>
 #include "map.h"
 #include "player.h"
+#include "lua.h"
 #include "mouse.h"
 #include "screen-manager.h"
 #include "gameloop.h"
 #include "screens/narrate.h"
+#include "screens/screen-main.h"
 #include "screens/inventory.h"
 #include "../src/dsl.h"
 #include "../src/replay.h"
@@ -21,12 +23,12 @@ static const uint32_t TICK_AMT = 1000 / TICKS_PER_SEC;// Not fully correct...
 static SDL_Window *win = NULL;
 static SDL_Surface *screen = NULL;
 static SDL_Renderer *renderer = NULL;
+static float zoom = 2.0;
 
 static uint32_t xmappos, ymappos;
 
 const uint32_t getCameraX() { return xmappos; }
 const uint32_t getCameraY() { return ymappos; }
-
 
 void handle_mouse_motion() {
     int x, y;
@@ -160,6 +162,12 @@ static void init(int args, char *argv[]) {
     mouse_init(renderer);
 
     for (int i = 0; i < args; i++) {
+        if (!strcmp(argv[i], "--lua") && i < (args - 1)) {
+            if (ui_lua_load("main.lua") ) {
+                printf("Init being handled by lua.\n");
+                return;
+            }
+        }
         if (!strcmp(argv[i], "--browse") && i < (args)) {
             printf("Entering browsing mode!\n");
             browse_loop(screen, renderer);
@@ -180,23 +188,12 @@ static void init(int args, char *argv[]) {
         }
     }
 
-    ds_load_character_charsave(0, 9); // testing!
-    //ds_load_character_charsave(1, 10); // testing!
-    //ds_load_character_charsave(2, 7); // testing!
-    //ds_load_character_charsave(3, 8); // testing!
-    player_load(renderer, 0, 2.0);
-    //player_load(renderer, 1, zoom);
-    //player_load(renderer, 2, zoom);
-    //player_load(renderer, 3, zoom);
-
     // Start the main game.
-    screen_load_region(renderer);
-    screen_push_screen(renderer, &narrate_screen, 0, 0);
-
-    player_load_graphics(renderer);
+    screen_push_screen(renderer, &main_screen, 0, 0);
 }
 
 static void cleanup() {
+    ui_lua_close();
     // Order matters.
     player_close();
     screen_free();
@@ -324,6 +321,9 @@ void game_loop() {
         }
     }
 }
+
+SDL_Renderer *main_get_rend() { return renderer; }
+const float main_get_zoom() { return zoom; }
 
 void main_exit_system() {
     /*

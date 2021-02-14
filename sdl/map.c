@@ -2,6 +2,7 @@
 #include "map.h"
 #include "animate.h"
 #include "sprite.h"
+#include "main.h"
 #include "player.h"
 #include "../src/dsl.h"
 #include "../src/trigger.h"
@@ -153,7 +154,7 @@ void map_render(void *data, SDL_Renderer *renderer) {
 
 void port_add_obj(region_object_t *obj) {
     gff_palette_t *pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + cmap->region->map_id - 1;
-    const int zoom = 2;
+    const float zoom = main_get_zoom();
 
     anims[anim_pos].scmd = obj->scmd;
     anims[anim_pos].spr = 
@@ -165,7 +166,8 @@ void port_add_obj(region_object_t *obj) {
     anims[anim_pos].destx = anims[anim_pos].x;
     anims[anim_pos].destx = anims[anim_pos].y;
     anims[anim_pos].move = anims[anim_pos].left_over = 0.0;
-    animate_list_add(anims + anim_pos, obj->mapz);
+    anim_nodes[anim_pos] = animate_list_add(anims + anim_pos, obj->mapz);
+    anim_zpos[anim_pos] = obj->mapz;
     obj->data = anims + anim_pos;
     anim_pos++;
 }

@@ -160,6 +160,7 @@ static int load_player(const int id, const int player, const int res_id) {
 }
 
 int ds_load_character_charsave(const int slot, const int res_id) {
+    if (slot < 0 || slot >= 4) { return 0; }
     return load_player(CHARSAVE_GFF_INDEX, slot, res_id);
 }
 

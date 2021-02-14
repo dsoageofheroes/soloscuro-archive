@@ -2,6 +2,7 @@
 #include "map.h"
 #include "animate.h"
 #include "player.h"
+#include "screens/narrate.h"
 #include "sprite.h"
 #include "font.h"
 #include "../src/dsl.h"
@@ -68,12 +69,21 @@ void screen_push_screen(SDL_Renderer *renderer, sops_t *screen, const uint32_t x
     screen_load_screen(renderer, screen_pos++, screen, x, y);
 }
 
-void screen_load_region(SDL_Renderer *renderer) {
+int screen_load_region(SDL_Renderer *renderer, const int region) {
+    char gff_name[32];
+
+    snprintf(gff_name, 32, "rgn%x.gff", region);
+    int index = gff_find_index(gff_name);
+    if (index < 0 ) { return 0; }
+
     // Map is a special case.
     map_init(&cmap);
-    map_load_region(&cmap, renderer, gff_find_index("rgn2a.gff"));
+    map_load_region(&cmap, renderer, index);
 
     screen_push_screen(renderer, &map_screen, 0, 0);
+    screen_push_screen(renderer, &narrate_screen, 0, 0);
+
+    return 1;
 }
 
 void screen_render(SDL_Renderer *renderer, const uint32_t xmappos, const uint32_t ymappos) {
