@@ -1,6 +1,6 @@
 #!/bin/bash
 # One hacked script to automake windows builds.
-FILE_NAME=ds1-pre-alpha-0.01-lin64.zip 
+FILE_NAME=ds1-pre-alpha-latest-lin64.zip
 INSTALL_PATH=/var/www/dso/downloads/
 
 cd .. 

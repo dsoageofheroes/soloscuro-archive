@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 #include "animate.h"
 #include "gameloop.h"
 #include "sprite.h"
