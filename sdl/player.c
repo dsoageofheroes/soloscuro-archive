@@ -1,3 +1,4 @@
+#include <math.h>
 #include "player.h"
 #include "../src/dsl.h"
 #include "sprite.h"
