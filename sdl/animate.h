@@ -31,6 +31,7 @@ void animate_close();
 // NEW INTERFACE:
 void animate_list_render(SDL_Renderer *renderer);
 animate_sprite_node_t *animate_list_add(animate_sprite_t *anim, const int zpos);
+void animate_list_remove(animate_sprite_node_t *node, const int zpos);
 void animate_shift_node(animate_sprite_node_t *an, const int zpos);
 
 #endif

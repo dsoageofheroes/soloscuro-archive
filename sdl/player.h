@@ -40,6 +40,7 @@ void player_render_portrait(SDL_Renderer *rend, const int slot);
 void player_set_loc(const int slot, const int32_t x, const int32_t y);
 void player_update();
 inventory_sprites_t* player_get_inventory_sprites(const int slot);
+void player_add_to_animation_list();
 
 enum{PLAYER_UP = 0x01, PLAYER_DOWN = 0x02, PLAYER_LEFT = 0x04, PLAYER_RIGHT = 0x08};
 

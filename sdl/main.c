@@ -197,9 +197,10 @@ static void init(int args, char *argv[]) {
 }
 
 static void cleanup() {
+    // Order matters.
+    player_close();
     screen_free();
 
-    player_close();
     dsl_cleanup();
     gff_cleanup();
     mouse_free();

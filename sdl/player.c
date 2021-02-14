@@ -10,7 +10,7 @@
 
 #define MAX_PCS (4)
 
-static animate_sprite_node_t *player_node;
+static animate_sprite_node_t *player_node = NULL;
 static int player_zpos;
 
 typedef struct player_sprites_s {
@@ -106,7 +106,6 @@ void player_load_graphics(SDL_Renderer *rend) {
     dsl_player.disk_idx = 0;
     dsl_player.game_time = 0;
     dsl_player.scmd = NULL;
-    //anim = animate_add_obj(rend, &dsl_player, OBJEX_GFF_INDEX, -1);
 
     // Set initial location
     dsl_player.mapx = player.x * 16;
@@ -295,7 +294,11 @@ void player_load(SDL_Renderer *renderer, const int slot, const float zoom) {
     load_character_sprite(renderer, slot, zoom);
     anims[slot].spr = players[slot].main;
     set_animation(anims + slot, stand_down);
-    player_node = animate_list_add(anims + slot, player_zpos);
+    player_add_to_animation_list();
+}
+
+void player_add_to_animation_list() {
+    player_node = animate_list_add(anims + 0, player_zpos);
 }
 
 int32_t player_getx(const int slot) {
@@ -341,6 +344,7 @@ inventory_sprites_t* player_get_inventory_sprites(const int slot) {
 }
 
 void player_close() {
+    animate_list_remove(player_node, player_zpos);
     for (int i = 0; i < MAX_PCS; i++) {
         free_sprites(i);
     }

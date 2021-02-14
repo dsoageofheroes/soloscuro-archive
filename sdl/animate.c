@@ -115,12 +115,29 @@ void animate_shift_node(animate_sprite_node_t *an, const int zpos) {
     }
 }
 
+void animate_list_remove(animate_sprite_node_t *an, const int zpos) {
+    animate_sprite_node_t *next = an->next;
+    animate_sprite_node_t *prev = an->prev;
+
+    if (next) {
+        next->prev = prev;
+    }
+
+    if (prev) {
+        prev->next = next;
+    } else {
+        animate_list[zpos] = next;
+    }
+
+    free(an);
+}
+
 animate_sprite_node_t *animate_list_add(animate_sprite_t *anim, const int zpos) {
-    animate_sprite_node_t *node = malloc(sizeof(animate_sprite_node_t));
     if (zpos < 0 || zpos >= MAX_ZPOS) {
         error("zpos is beyond range!");
         return NULL;
     }
+    animate_sprite_node_t *node = malloc(sizeof(animate_sprite_node_t));
     node->anim = anim;
     node->next = animate_list[zpos];
     if (animate_list[zpos]) {
@@ -139,8 +156,14 @@ void animate_init() {
 }
 
 void animate_clear() {
+    for (int i = 0; i < MAX_ZPOS; i++) {
+        while(animate_list[i]) {
+            animate_list_remove(animate_list[i], i);
+        }
+    }
 }
 
 void animate_close() {
     animate_clear();
+    memset(animate_list, 0x0, sizeof(animate_sprite_node_t*) * MAX_ZPOS);
 }

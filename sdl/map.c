@@ -2,6 +2,7 @@
 #include "map.h"
 #include "animate.h"
 #include "sprite.h"
+#include "player.h"
 #include "../src/dsl.h"
 #include "../src/trigger.h"
 #include "../src/dsl-manager.h"
@@ -13,13 +14,18 @@
 static map_t *cmap = NULL;
 static SDL_Renderer *cren = NULL;
 static animate_sprite_t anims[256];
+static animate_sprite_node_t *anim_nodes[256];
+static uint8_t anim_zpos[256];
 static int anim_pos = 0;
+
+static void clear_animations();
 
 void map_init(map_t *map) {
     map->tiles = NULL;
 }
 
 void map_cleanup() {
+    clear_animations();
     map_free(cmap);
     cmap = NULL;
 }
@@ -70,6 +76,7 @@ void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
     for (int i = 0; i < map->region->num_tiles; i++) { max_id = max_id > ids[i] ? max_id : ids[i]; }
     max_id++;
     animate_clear();
+    player_add_to_animation_list();
     map->tiles = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * max_id);
     memset(map->tiles, 0x0, sizeof(SDL_Texture*) * max_id);
 
@@ -96,7 +103,8 @@ void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
         anims[anim_pos].destx = anims[anim_pos].x;
         anims[anim_pos].destx = anims[anim_pos].y;
         anims[anim_pos].move = anims[anim_pos].left_over = 0.0;
-        animate_list_add(anims + anim_pos, obj->mapz);
+        anim_nodes[anim_pos] = animate_list_add(anims + anim_pos, obj->mapz);
+        anim_zpos[anim_pos] = obj->mapz;
         anims[anim_pos].obj = obj;
         obj->data = anims + anim_pos;
 
@@ -106,6 +114,16 @@ void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
     cmap = map;
 
     dsl_change_region(42);
+}
+
+static void clear_animations() {
+    for (int i = 0; i < anim_pos; i++) {
+        animate_list_remove(anim_nodes[i], anim_zpos[i]);
+        sprite_free(anims[i].spr);
+        anims[i].spr = SPRITE_ERROR;
+    }
+
+    anim_pos = 0;
 }
 
 void map_render(void *data, SDL_Renderer *renderer) {
