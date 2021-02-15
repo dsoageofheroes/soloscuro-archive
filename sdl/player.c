@@ -113,9 +113,8 @@ void player_load_graphics(SDL_Renderer *rend) {
     dsl_player.mapy = player.y * 16;
 }
 
-#define TICKS_PER_MOVE (10)
-
-static int count = TICKS_PER_MOVE;
+static int ticks_per_move = 10;
+static int count = 0;
 static int direction = 0x0;
 
 static void set_animation(animate_sprite_t *as, scmd_t *scmd) {
@@ -125,7 +124,7 @@ static void set_animation(animate_sprite_t *as, scmd_t *scmd) {
 
     as->scmd = scmd;
     as->pos = 0;
-    as->move = distance == 0 ? 0 : distance / ((float)TICKS_PER_MOVE * 2);
+    as->move = distance == 0 ? 0 : distance / ((float)ticks_per_move * 2);
 
     sprite_set_frame(as->spr, as->scmd->bmp_idx);
     sprite_set_location(as->spr, as->x, as->y);
@@ -142,10 +141,7 @@ void player_update() {
     if (direction & PLAYER_LEFT) { nextx -= 1; }
     if (direction & PLAYER_RIGHT) { nextx += 1; }
     //debug ("tile @ (%d, %d) = %d\n", player.x, player.y, cmap_is_block(player.y, player.x));
-    //if (cmap_is_block(nexty + 1, nextx)) { return; }
-    //if (direction == 0x0) {
     if (direction == 0x0 || cmap_is_block(nexty + 1, nextx)) {
-        direction = 0x0;
         anims[0].x = anims[0].destx;
         anims[0].y = anims[0].desty;
         if (anims[0].scmd == move_left) {
@@ -197,12 +193,15 @@ void player_update() {
         set_animation(anims + 0, move_up);
     }
 
-    count = TICKS_PER_MOVE;
-    direction = 0x0;
+    count = ticks_per_move;
 }
 
 void player_move(const uint8_t _direction) {
     direction |= _direction;
+}
+
+void player_unmove(const uint8_t _direction) {
+    direction &= ~(_direction);
 }
 
 static void free_sprites(const int slot) {
@@ -300,6 +299,10 @@ void player_load(SDL_Renderer *renderer, const int slot, const float zoom) {
 
 void player_add_to_animation_list() {
     player_node = animate_list_add(anims + 0, player_zpos);
+    anims[0].destx = player.x * 16 * 2;
+    anims[0].desty = player.y * 16 * 2;
+    anims[0].x = anims[0].destx;
+    anims[0].y = anims[0].desty;
 }
 
 int32_t player_getx(const int slot) {
@@ -312,15 +315,8 @@ int32_t player_gety(const int slot) {
     return sprite_gety(players[slot].main);
 }
 
-void player_set_loc(const int slot, const int32_t x, const int32_t y) {
-    if (slot < 0 || slot >= MAX_PCS) { return; }
-
-    sprite_set_location(players[slot].main, x, y);
-}
-
 void player_render(SDL_Renderer *rend, const int slot) {
     if (slot < 0 || slot >= MAX_PCS) { return; }
-    //sprite_set_location(players[slot].main, players[slot].x, players[slot].y);
     sprite_render(rend, players[slot].main);
 }
 
@@ -344,8 +340,27 @@ inventory_sprites_t* player_get_inventory_sprites(const int slot) {
     return &(players[slot].inv);
 }
 
+void player_set_delay(const int amt) {
+    if (amt < 0) { return; }
+
+    for (int i = 0; i < 4; i++) {
+        move_down[i].delay = amt;
+        move_up[i].delay = amt;
+        move_left[i].delay = amt;
+        move_right[i].delay = amt;
+    }
+}
+
+void player_set_move(const int amt) {
+    if (amt < 0) { return; }
+    ticks_per_move = amt;
+}
+
 void player_close() {
-    animate_list_remove(player_node, player_zpos);
+    if (player_node) {
+        animate_list_remove(player_node, player_zpos);
+    }
+
     for (int i = 0; i < MAX_PCS; i++) {
         free_sprites(i);
     }

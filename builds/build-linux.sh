@@ -10,6 +10,7 @@ cd builds
 rm -rf staging
 mkdir staging
 cp ../mdark staging/
+cp ../main.lua staging/
 cp ../*so staging/
 locate SDL2.so | xargs -I {} cp {} staging/
 locate -b "\liblua5.3.so" | xargs -I {} cp {} staging/

@@ -4,12 +4,14 @@
 #include "main.h"
 #include "player.h"
 #include "../src/ds-load-save.h"
+#include "screens/inventory.h"
 
 static lua_State *ui_lua = NULL;
 static void ui_lua_state_register(lua_State *l);
 
-static void ui_lua_error(const char *msg) {
+static int ui_lua_error(const char *msg) {
     error("%s: %s\n", msg, lua_tostring(ui_lua, -1));
+    return 0;
 }
 
 int ui_lua_load(const char *filename) {
@@ -31,6 +33,26 @@ int ui_lua_load(const char *filename) {
     return lua_toboolean(ui_lua, -1);
 }
 
+int ui_lua_keydown(const int key_code) {
+    if (!ui_lua) { return 0; }
+
+    lua_getglobal(ui_lua, "keydown");
+    lua_pushnumber(ui_lua, key_code);
+    if (lua_pcall(ui_lua, 1, 1, 0)) { return ui_lua_error("Can't call keydown()"); }
+
+    return lua_toboolean(ui_lua, -1);
+}
+
+int ui_lua_keyup(const int key_code) {
+    if (!ui_lua) { return 0; }
+
+    lua_getglobal(ui_lua, "keyup");
+    lua_pushnumber(ui_lua, key_code);
+    if (lua_pcall(ui_lua, 1, 1, 0)) { return ui_lua_error("Can't call keyup()"); }
+
+    return lua_toboolean(ui_lua, -1);
+}
+
 void ui_lua_close() {
     if (ui_lua) {
         lua_close(ui_lua);
@@ -39,14 +61,7 @@ void ui_lua_close() {
 }
 
 static int uil_toggle_inventory(lua_State *l) {
-    //lua_Integer id = luaL_checkinteger(l, 1);
-    //if (id < 0 || id >= MAX_GFLAGS) {
-        //printf("ERROR: " PRI_LI " is out of range for global flags!\n", id);
-        //exit(1);
-    //}
-    //lua_pushinteger(l, dsl_global_flags[id]);
-    //screen_toggle_screen(renderer, &inventory_screen, 0, 0);
-    printf("HERE!\n");
+    screen_toggle_screen(main_get_rend(), &inventory_screen, 0, 0);
     return 0;
 }
 
@@ -80,21 +95,64 @@ static int uil_load_region(lua_State *l) {
         screen_load_region(main_get_rend(), luaL_checkinteger(l, 1)));
 }
 
+static int uil_set_player_frame_delay(lua_State *l) {
+    player_set_delay(luaL_checkinteger(l, 1));
+    return 0;
+}
+
+static int uil_set_player_move(lua_State *l) {
+    player_set_move(luaL_checkinteger(l, 1));
+    return 0;
+}
+
+static int uil_player_move(lua_State *l) {
+    player_move(luaL_checkinteger(l, 1));
+    return 0;
+}
+
+static int uil_player_unmove(lua_State *l) {
+    player_unmove(luaL_checkinteger(l, 1));
+    return 0;
+}
+
+static int uil_set_xscroll(lua_State *l) {
+    main_set_xscroll(luaL_checkinteger(l, 1));
+    return 0;
+}
+
+static int uil_set_yscroll(lua_State *l) {
+    main_set_yscroll(luaL_checkinteger(l, 1));
+    return 0;
+}
+
+static int uil_exit_game(lua_State *l) {
+    main_exit_game();
+    return 0;
+}
+
 static const struct luaL_Reg ds_funcs[] = {
     {"load_charsave", uil_load_charsave},
     {"load_region", uil_load_region},
+    {"set_player_frame_delay", uil_set_player_frame_delay},
+    {"set_player_move", uil_set_player_move},
+    {"set_xscroll", uil_set_xscroll},
+    {"set_yscroll", uil_set_yscroll},
+    {"player_move", uil_player_move},
+    {"player_unmove", uil_player_unmove},
     {"toggle_inventory", uil_toggle_inventory},
+    {"exit_game", uil_exit_game},
     {NULL, NULL},
 };
-/*
-*/
 
-#define BUF_SIZE (1<<10)
+#define BUF_MAX (128)
 
 static void set_globals(lua_State *l) {
-    char buf[BUF_SIZE];
-    snprintf(buf, BUF_SIZE, "GLOBAL = %d\n", 33);
-    luaL_dostring(l, buf);
+    char buf[BUF_MAX];
+    snprintf(buf, BUF_MAX, "PLAYER_LEFT = %d", PLAYER_LEFT); luaL_dostring(l, buf);
+    snprintf(buf, BUF_MAX, "PLAYER_RIGHT = %d", PLAYER_RIGHT); luaL_dostring(l, buf);
+    snprintf(buf, BUF_MAX, "PLAYER_UP = %d", PLAYER_DOWN); luaL_dostring(l, buf);
+    snprintf(buf, BUF_MAX, "PLAYER_DOWN = %d", PLAYER_UP); luaL_dostring(l, buf);
+    uil_set_globals(l);
 }
 
 static void ui_lua_state_register(lua_State *l) {

@@ -10,6 +10,7 @@ cd builds
 rm -rf staging
 mkdir staging
 cp ../mdark.exe staging/
+cp ../main.lua staging/
 cp ../*dll staging/
 locate SDL2.dll | xargs -I {} cp {} staging/
 locate lua53.dll | xargs -I {} cp {} staging/

@@ -8,5 +8,8 @@
 
 int ui_lua_load(const char *filename);
 void ui_lua_close();
+int ui_lua_keydown(const int key_code);
+int ui_lua_keyup(const int key_code);
+void uil_set_globals(lua_State *l);
 
 #endif

@@ -1,1 +1,1 @@
-mdark.exe --ds1 ./ --screen main
+mdark.exe --ds1 ./

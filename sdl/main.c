@@ -26,6 +26,7 @@ static SDL_Renderer *renderer = NULL;
 static float zoom = 2.0;
 
 static uint32_t xmappos, ymappos;
+static int32_t xmapdiff, ymapdiff;
 
 const uint32_t getCameraX() { return xmappos; }
 const uint32_t getCameraY() { return ymappos; }
@@ -54,21 +55,45 @@ void handle_mouse_up(uint32_t button) {
     screen_handle_mouse_up(button, x, y);
 }
 
+void main_exit_game() {
+    game_loop_signal(WAIT_FINAL, 0);
+}
+
 void handle_input() {
-    const Uint8 *key_state = SDL_GetKeyboardState(NULL);
     SDL_Event event;
     while (SDL_PollEvent(&event) != 0) {
         switch(event.type) {
             case SDL_QUIT:
-                game_loop_signal(WAIT_FINAL, 0);
+                main_exit_game();
+                break;
+            case SDL_KEYUP:
+                if (ui_lua_keyup(event.key.keysym.sym)) { break; }
+                if (event.key.keysym.sym == SDLK_s) { player_unmove(PLAYER_LEFT); }
+                if (event.key.keysym.sym == SDLK_e) { player_unmove(PLAYER_UP); }
+                if (event.key.keysym.sym == SDLK_f) { player_unmove(PLAYER_RIGHT); }
+                if (event.key.keysym.sym == SDLK_d) { player_unmove(PLAYER_DOWN); }
+                if (event.key.keysym.sym == SDLK_UP) { ymapdiff = 0;}
+                if (event.key.keysym.sym == SDLK_DOWN) { ymapdiff = 0;}
+                if (event.key.keysym.sym == SDLK_LEFT) { xmapdiff = 0;}
+                if (event.key.keysym.sym == SDLK_RIGHT) { xmapdiff = 0;}
+                break;
                 break;
             case SDL_KEYDOWN:
+                if (ui_lua_keydown(event.key.keysym.sym)) { break; }
                 if (event.key.keysym.sym == SDLK_ESCAPE) {
                     game_loop_signal(WAIT_FINAL, 0);
                 }
                 if (event.key.keysym.sym == SDLK_i) {
                     screen_toggle_screen(renderer, &inventory_screen, 0, 0);
                 }
+                if (event.key.keysym.sym == SDLK_s) { player_move(PLAYER_LEFT); }
+                if (event.key.keysym.sym == SDLK_e) { player_move(PLAYER_UP); }
+                if (event.key.keysym.sym == SDLK_f) { player_move(PLAYER_RIGHT); }
+                if (event.key.keysym.sym == SDLK_d) { player_move(PLAYER_DOWN); }
+                if (event.key.keysym.sym == SDLK_UP) { ymapdiff = -2;}
+                if (event.key.keysym.sym == SDLK_DOWN) { ymapdiff = 2;}
+                if (event.key.keysym.sym == SDLK_LEFT) { xmapdiff = -2;}
+                if (event.key.keysym.sym == SDLK_RIGHT) { xmapdiff = 2;}
                 break;
             case SDL_MOUSEMOTION:
                 handle_mouse_motion();
@@ -88,22 +113,17 @@ void handle_input() {
         }
     }
 
-    if(key_state[SDL_SCANCODE_DOWN])  { ymappos += 2; handle_mouse_motion(); }
-    if(key_state[SDL_SCANCODE_UP])    { ymappos -= 2; handle_mouse_motion(); }
-    if(key_state[SDL_SCANCODE_LEFT])  { xmappos -= 2; handle_mouse_motion(); }
-    if(key_state[SDL_SCANCODE_RIGHT]) { xmappos += 2; handle_mouse_motion(); }
-    if(key_state[SDL_SCANCODE_D])     { player_move(PLAYER_DOWN); }
-    if(key_state[SDL_SCANCODE_E])     { player_move(PLAYER_UP); }
-    if(key_state[SDL_SCANCODE_S])     { player_move(PLAYER_LEFT); }
-    if(key_state[SDL_SCANCODE_F])     { player_move(PLAYER_RIGHT); }
+    xmappos += xmapdiff;
+    ymappos += ymapdiff;
+    handle_mouse_motion();
     player_update();
 }
 
+void main_set_xscroll(int amt) { xmapdiff = amt; }
+void main_set_yscroll(int amt) { ymapdiff = amt; }
+
 void render() {
-    //map_render(&cmap, renderer, xmappos, ymappos);
     screen_render(renderer, xmappos, ymappos);
-    //map_blit(&cmap, screen);
-    //SDL_UpdateWindowSurface(win);
 }
 
 // Simple timing for now...
@@ -134,6 +154,7 @@ static int sdl_init(const int what) {
 static void init(int args, char *argv[]) {
     xmappos = 560;
     ymappos = 50;
+    xmapdiff = ymapdiff = 0;
 
     if (sdl_init( SDL_INIT_VIDEO) ) {
         error( "Unable to init video!\n");
