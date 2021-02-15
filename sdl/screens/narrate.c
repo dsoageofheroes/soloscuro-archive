@@ -46,6 +46,8 @@ static void clear() {
     }
 }
 
+int narrate_is_open() { return display; }
+
 #define PORT_MAX (1<<14)
 void load_portraits(SDL_Renderer *renderer) {
     unsigned char *data;
@@ -195,7 +197,7 @@ int8_t port_narrate_open(int16_t action, const char *text, int16_t index) {
 }
 
 int narrate_handle_mouse_movement(const uint32_t x, const uint32_t y) {
-    return 0; // zero means I did not handle the mouse, so another screen may.
+    return display; // zero means I did not handle the mouse, so another screen may.
 }
 
 int narrate_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
@@ -228,7 +230,7 @@ int narrate_handle_mouse_down(const uint32_t button, const uint32_t x, const uin
         return 1;
     }
     */
-    return 0; // zero means I did not handle the mouse click, so another screen may.
+    return display; // zero means I did not handle the mouse click, so another screen may.
 }
 
 void narrate_free() {

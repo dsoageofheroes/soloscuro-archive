@@ -225,6 +225,52 @@ void trigger_object_clear(const uint32_t obj) {
     list_object_clear(talkto_list, obj, talk_equals);
 }
 
+void trigger_noorders() {
+    trigger_node_t *rover = noorders_list;
+
+    while (rover) {
+        noorders_list = rover->next;
+        debug("Noorders executing %d:%d\n", rover->noorders.file, rover->noorders.addr);
+        dsl_lua_execute_script(rover->noorders.file, rover->noorders.addr, 0);
+        free(rover);
+        rover = noorders_list;
+    }
+}
+
+void trigger_box_check(uint32_t x, uint32_t y) {
+    trigger_node_t *rover = box_list, *prev = NULL, *hold = NULL;
+    //y -= 10; // TODO: FIX?
+
+    while (rover) {
+        box_trigger_t *box = &(rover->box);
+        //printf("(%d, %d) + (%d, %d)\n", box->x, box->y, box->w, box->h);
+
+        if (box->x <= x && (box->x + box->w) >= x
+                && (box->y <= y && (box->y + box->h) >= y)) {
+            debug("Box triggered:\n");
+            if (prev) {
+                prev->next = rover->next;
+            }else {
+                box_list = rover->next;
+            }
+
+            // Take out of list.
+            hold = rover;
+            rover = rover->next;
+
+            // execute script, box check is not valid.
+            dsl_lua_execute_script(box->file, box->addr, 0);
+
+            // put check back in list.
+            hold->next = box_list;
+            box_list = hold;
+            return;
+        }
+        prev = rover;
+        rover = rover->next;
+    }
+}
+
 void talk_click(uint32_t obj) {
     talkto_trigger_t tt = get_talkto_trigger(obj);
     look_trigger_t lt = get_look_trigger(obj);

@@ -673,6 +673,9 @@ void dsl_lua_move_boxtrigger(void) {
 void dsl_lua_door_boxtrigger(void) {
     lua_exit("Can't parse lua_door_boxtrigger yet.\n");
     lprintf("--unimplmented door box trigger.\n");
+    lprintf("dsl.box_trigger(%s, %s, %s, %s, %s, %s, %s)\n",
+        lparams.params[0], lparams.params[1], lparams.params[2], lparams.params[3], lparams.params[4],
+        lparams.params[5], lparams.params[6]);
 }
 
 void dsl_lua_pickup_itemtrigger(void) {
@@ -881,7 +884,7 @@ void dsl_lua_give(void) {
 
 void dsl_lua_go(void) {
     dsl_lua_get_parameters(2);
-    lprintf("--need to give GO order!");
+    lprintf("--need to give GO order!\n");
     //set_orders(param.val[1], GO_OBJECT, param.val[0], 0);
 }
 

@@ -9,6 +9,7 @@ void narrate_render(void *data, SDL_Renderer *renderer);
 int narrate_handle_mouse_movement(const uint32_t x, const uint32_t y);
 int narrate_handle_mouse_click(const uint32_t button, const uint32_t x, const uint32_t y);
 void narrate_free();
+int narrate_is_open();
 
 extern sops_t narrate_screen;
 

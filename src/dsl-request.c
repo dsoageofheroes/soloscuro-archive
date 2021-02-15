@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "dsl.h"
 #include "ds-region.h"
 #include "ds-state.h"

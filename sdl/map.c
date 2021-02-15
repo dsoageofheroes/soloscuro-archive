@@ -4,6 +4,7 @@
 #include "sprite.h"
 #include "main.h"
 #include "player.h"
+#include "screens/narrate.h"
 #include "../src/dsl.h"
 #include "../src/trigger.h"
 #include "../src/dsl-manager.h"
@@ -206,14 +207,16 @@ region_object_t* get_object_at_location(const uint32_t x, const uint32_t y) {
 int map_handle_mouse(const uint32_t x, const uint32_t y) {
     region_object_t *obj = NULL;
 
+    if (!narrate_is_open()) {
+        trigger_noorders();
+    }
+
     if (!cmap) { return 0; }
     obj = get_object_at_location(x, y);
 
     if (obj) {
         //debug("found @ %d, need to change icon\n", obj_id);
     }
-
-    // Nothing found...
 
     return 1; // map always intercepts the mouse...
 }

@@ -133,7 +133,7 @@ void tick() {
     last_tick += TICK_AMT;
     //debug("last_time = %u, cticks = %u\n", last_tick, cticks);
     if (last_tick < cticks) {
-        debug("gameloop took too long, not sleeping...\n");
+        //debug("gameloop took too long, not sleeping...\n");
     } else {
         amt_to_wait = last_tick - cticks;
         //debug("going to wait %ums\n", amt_to_wait);

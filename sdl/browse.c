@@ -605,9 +605,45 @@ static void render_entry_cpal() {
     render_entry_as_pal(GFF_CPAL);
 }
 
+typedef struct monster_type_s {
+    int16_t id;
+    int16_t strength; // it looks like this is used to help calculate the strength
+} monster_type_t;
+
+typedef struct ds_region_mon_s {
+    int16_t region;
+    monster_type_t monsters[10];
+} __attribute__ ((__packed__)) ds_region_mon_t;
+
+// This is a big guess...
 static void render_entry_monr() {
+    char buf[BUF_MAX];
+    int pos = 60;
+    static ds_region_mon_t *mon = NULL;
+    static int num_monsters = 0;
+
     render_entry_header();
-    print_line_len(renderer, 0, "Need to implement", 320, 40, 128);
+
+    if (!mon) {
+        gff_chunk_header_t chunk = gff_find_chunk_header(RESOURCE_GFF_INDEX, GFF_MONR, 1);
+        mon = malloc(chunk.length);
+        gff_read_chunk(RESOURCE_GFF_INDEX, &chunk, mon, chunk.length);
+        num_monsters = chunk.length / sizeof(ds_region_mon_t);
+    }
+
+    if (mapy >= num_monsters) { mapy = 0; }
+    if (mapy < 0) { mapy = num_monsters - 1; }
+
+    snprintf(buf, BUF_MAX, "monster list %d of %d", mapy, num_monsters);
+    print_line_len(renderer, 0, buf, 320, 40, BUF_MAX);
+
+    for (int i = 0; i < 10; i++) {
+        snprintf(buf, BUF_MAX, "region %d: = {id:%d, strength:%d}",
+            mon[mapy].region, mon[mapy].monsters[i].id, mon[mapy].monsters[i].strength);
+        print_line_len(renderer, 0, buf, 320, pos, BUF_MAX);
+        pos += 20;
+       // printf("%d: {%d, %d}\n", mon[0].region, mon[0].monsters[i].id, mon[0].monsters[i].strength);
+    }
 }
 
 const char* rdff_type_names[] = {

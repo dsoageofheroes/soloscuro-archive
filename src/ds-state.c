@@ -436,8 +436,8 @@ static int use_with_trigger(lua_State *l) {
 static int tile_trigger(lua_State *l) {
     lua_Integer x = luaL_checkinteger(l, 1);
     lua_Integer y = luaL_checkinteger(l, 2);
-    lua_Integer file = luaL_checkinteger(l, 3);
-    lua_Integer addr = luaL_checkinteger(l, 4);
+    lua_Integer addr = luaL_checkinteger(l, 3);
+    lua_Integer file = luaL_checkinteger(l, 4);
     lua_Integer trip = luaL_checkinteger(l, 5);
 
     add_tile_trigger(x, y, file, addr, trip);
@@ -449,8 +449,8 @@ static int box_trigger(lua_State *l) {
     lua_Integer y = luaL_checkinteger(l, 2);
     lua_Integer w = luaL_checkinteger(l, 3);
     lua_Integer h = luaL_checkinteger(l, 4);
-    lua_Integer file = luaL_checkinteger(l, 5);
-    lua_Integer addr = luaL_checkinteger(l, 6);
+    lua_Integer addr = luaL_checkinteger(l, 5);
+    lua_Integer file = luaL_checkinteger(l, 6);
     lua_Integer trip = luaL_checkinteger(l, 7);
 
     add_box_trigger(x, y, w, h, file, addr, trip);
@@ -523,6 +523,12 @@ static int lua_narrate_show(lua_State *l) {
     return 1;
 }
 
+static int lua_play_sound(lua_State *l) {
+    lua_Integer bvoc_index = luaL_checkinteger(l, 1);
+    debug("I need to play bvoc: " PRI_LI "\n", bvoc_index);
+    return 0;
+}
+
 static const struct luaL_Reg dsl_state_lib[] = {
     {"set_while_callback", set_while_callback},
     {"set_gf", set_gf},
@@ -567,6 +573,7 @@ static const struct luaL_Reg dsl_state_lib[] = {
     {"exit", dsl_exit},
     {"narrate_open", lua_narrate_open},
     {"narrate_show", lua_narrate_show},
+    {"play_sound", lua_play_sound},
     {NULL, NULL}
 } ;
 
