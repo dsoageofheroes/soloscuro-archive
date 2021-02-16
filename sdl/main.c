@@ -10,6 +10,7 @@
 #include "screens/screen-main.h"
 #include "screens/inventory.h"
 #include "../src/dsl.h"
+#include "../src/dsl-manager.h"
 #include "../src/replay.h"
 #include "../src/ds-load-save.h"
 
@@ -24,6 +25,7 @@ static SDL_Window *win = NULL;
 static SDL_Surface *screen = NULL;
 static SDL_Renderer *renderer = NULL;
 static float zoom = 2.0;
+static uint8_t ignore_repeat = 1;
 
 static uint32_t xmappos, ymappos;
 static int32_t xmapdiff, ymapdiff;
@@ -67,6 +69,7 @@ void handle_input() {
                 main_exit_game();
                 break;
             case SDL_KEYUP:
+                if (ignore_repeat && event.key.repeat != 0) { break; }
                 if (ui_lua_keyup(event.key.keysym.sym)) { break; }
                 if (event.key.keysym.sym == SDLK_s) { player_unmove(PLAYER_LEFT); }
                 if (event.key.keysym.sym == SDLK_e) { player_unmove(PLAYER_UP); }
@@ -79,6 +82,7 @@ void handle_input() {
                 break;
                 break;
             case SDL_KEYDOWN:
+                if (ignore_repeat && event.key.repeat != 0) { break; }
                 if (ui_lua_keydown(event.key.keysym.sym)) { break; }
                 if (event.key.keysym.sym == SDLK_ESCAPE) {
                     game_loop_signal(WAIT_FINAL, 0);
@@ -121,6 +125,7 @@ void handle_input() {
 
 void main_set_xscroll(int amt) { xmapdiff = amt; }
 void main_set_yscroll(int amt) { ymapdiff = amt; }
+void main_set_ignore_repeat(int repeat) { ignore_repeat = repeat; }
 
 void render() {
     screen_render(renderer, xmappos, ymappos);
@@ -205,6 +210,10 @@ static void init(int args, char *argv[]) {
         }
         if (!strcmp(argv[i], "--extract-items") && i < (args - 1)) {
             export_all_items(argv[i + 1]);
+            exit(0);
+        }
+        if (!strcmp(argv[i], "--extract-lua") && i < (args - 1)) {
+            dsl_lua_load_all_scripts();
             exit(0);
         }
     }

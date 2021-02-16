@@ -65,6 +65,13 @@ void dsl_lua_load_script(const uint32_t script_id, const uint8_t is_mas) {
     write_lua(buf, script[script_id], script_len);
 }
 
+void dsl_lua_load_all_scripts() {
+    for (int i = 0; i < 100; i++) {
+        dsl_lua_load_script(i, 0);
+        dsl_lua_load_script(i, 1);
+    }
+}
+
 void dsl_lua_load_scripts() {
     unsigned int *ids;
     size_t i, amt;

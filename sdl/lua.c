@@ -1,3 +1,4 @@
+#include <SDL2/SDL.h>
 #include "lua.h"
 #include "screen-manager.h"
 #include "../src/dsl.h"
@@ -125,6 +126,11 @@ static int uil_set_yscroll(lua_State *l) {
     return 0;
 }
 
+static int uil_set_ignore_repeat(lua_State *l) {
+    main_set_ignore_repeat(lua_toboolean(l, 1));
+    return 0;
+}
+
 static int uil_exit_game(lua_State *l) {
     main_exit_game();
     return 0;
@@ -140,6 +146,7 @@ static const struct luaL_Reg ds_funcs[] = {
     {"player_move", uil_player_move},
     {"player_unmove", uil_player_unmove},
     {"toggle_inventory", uil_toggle_inventory},
+    {"set_ignore_repeat", uil_set_ignore_repeat},
     {"exit_game", uil_exit_game},
     {NULL, NULL},
 };
