@@ -11,10 +11,10 @@ cd builds
 rm -rf staging
 mkdir staging
 cp ../mdark staging/
-cp ../main.lua staging/
+cp ../*.lua staging/
 cp ../*so staging/
-locate SDL2.so | xargs -I {} cp {} staging/
-locate -b "\liblua5.3.so" | xargs -I {} cp {} staging/
+locate SDL2.so | grep "usr/lib" | xargs -I {} cp {} staging/
+locate -b "\liblua5.3.so" | grep "usr/lib" | xargs -I {} cp {} staging/
 cp linux/* staging/
 cd staging
 zip ${FILE_NAME} *
