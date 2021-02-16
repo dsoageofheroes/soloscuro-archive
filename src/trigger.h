@@ -55,6 +55,7 @@ look_trigger_t get_look_trigger(uint32_t obj);
 void trigger_object_clear(const uint32_t obj);
 void trigger_noorders();
 void trigger_box_check(uint32_t x, uint32_t y);
+void trigger_tile_check(uint32_t x, uint32_t y);
 
 void talk_click(uint32_t obj);
 

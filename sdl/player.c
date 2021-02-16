@@ -137,6 +137,7 @@ void player_update() {
 
     //printf("%d, %d\n", player.x, player.y);
     trigger_box_check(player.x, player.y);
+    trigger_tile_check(player.x, player.y);
     dsl_check_t* dsl_check = dsl_find_tile_check(player.x, player.y);
     if (dsl_check) {
         debug("TILE CHECK: Need to execute file = %d, addr = %d, trip = %d\n",

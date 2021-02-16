@@ -175,6 +175,11 @@ uint32_t sprite_geth(const uint16_t id) {
     return loc->h;
 }
 
+uint32_t sprite_num_frames(const uint16_t id) {
+    if (!valid_id(id)) { return 0; }
+    return sprites[id].len;
+}
+
 void sprite_center(const int id, const int x, const int y, const int w, const int h) {
     if (!valid_id(id)) { return; }
     SDL_Rect *loc = (sprites[id].loc + sprites[id].pos);

@@ -133,7 +133,6 @@ uint8_t dsl_lua_execute_script(size_t file, size_t addr, uint8_t is_mas) {
         ret = 0;
     }
 
-    printf("*******************CLOSING LUA****************************\n");
     clua = NULL;
     lua_close(l);
     debug("exiting execute_script(" PRI_SIZET ", " PRI_SIZET ", %d)\n", file, addr, is_mas);

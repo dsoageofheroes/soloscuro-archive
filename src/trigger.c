@@ -1,6 +1,7 @@
 #include "dsl.h"
 #include "dsl-manager.h"
 #include "ds-state.h"
+#include "ds-region.h"
 #include "replay.h"
 #include "trigger.h"
 #include <stdlib.h>
@@ -231,15 +232,53 @@ void trigger_noorders() {
     while (rover) {
         noorders_list = rover->next;
         debug("Noorders executing %d:%d\n", rover->noorders.file, rover->noorders.addr);
+        //rover->noorders.obj
         dsl_lua_execute_script(rover->noorders.file, rover->noorders.addr, 0);
+        region_object_t* robj = dsl_region_find_object(rover->noorders.obj);
+        printf("(%d, %d)\n", robj->mapx / 16, robj->mapy / 16);
+        add_tile_trigger(robj->mapx / 16, robj->mapy / 16,
+                rover->noorders.file, rover->noorders.addr, 1);
         free(rover);
         rover = noorders_list;
     }
 }
 
+void trigger_tile_check(uint32_t x, uint32_t y) {
+    trigger_node_t *rover = tile_list, *prev = NULL; //, *hold = NULL;
+
+    while (rover) {
+        tile_trigger_t *tile = &(rover->tile);
+        //printf("(%d, %d) + (%d, %d)\n", box->x, box->y, box->w, box->h);
+
+        if (tile->x == x && tile->y == y) {
+            debug("tile triggered:\n");
+            if (prev) {
+                prev->next = rover->next;
+            }else {
+                tile_list = rover->next;
+            }
+
+            // Take out of list.
+            //hold = rover;
+            rover = rover->next;
+
+            // execute script, box check is not valid.
+            dsl_lua_execute_script(tile->file, tile->addr, 0);
+
+            //exit(1);
+            //free(rover);
+            // put check back in list.
+            //hold->next = box_list;
+            //box_list = hold;
+            return;
+        }
+        prev = rover;
+        rover = rover->next;
+    }
+}
+
 void trigger_box_check(uint32_t x, uint32_t y) {
     trigger_node_t *rover = box_list, *prev = NULL, *hold = NULL;
-    //y -= 10; // TODO: FIX?
 
     while (rover) {
         box_trigger_t *box = &(rover->box);

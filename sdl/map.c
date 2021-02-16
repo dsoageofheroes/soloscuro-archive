@@ -186,6 +186,12 @@ void port_swap_objs(int obj_id, region_object_t *obj) {
     }
 }
 
+void port_update_obj(region_object_t *obj) {
+    animate_sprite_t *as = obj->data;
+    uint32_t num_frames = sprite_num_frames(as->spr);
+    sprite_set_frame(as->spr, (obj->bmp_idx) % num_frames);
+}
+
 #define CLICKABLE (0x10)
 
 region_object_t* get_object_at_location(const uint32_t x, const uint32_t y) {

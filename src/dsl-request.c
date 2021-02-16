@@ -168,7 +168,7 @@ uint32_t dsl_request_impl(int16_t token, int16_t name,
             command_implemented = 0;
             break;
         case REQUEST_ANIMATION:
-            request_to_do(name, DO_TO_ALL, req_animation, num1, num2);
+            request_to_do(name, 0, req_animation, num1, num2);
             break;
         case REQUEST_CINEMATIC:
             debug("I need to play the %d cinematic\n", num1);
@@ -638,6 +638,14 @@ int16_t request_to_do(int16_t name, int16_t rectype, int (*request_proc)(int16_t
 
 int req_animation(int16_t object, long notused1, long notused2) {
     debug("Need to request animation on %d\n", object);
+    region_object_t* robj = dsl_region_find_object(object);
+    if (robj) {
+        robj->bmp_idx++;
+        robj->bmp_idx %= 2;
+        port_update_obj(robj);
+    } else {
+        error("Unable to find object %d\n", object);
+    }
     return 0;
 }
 
