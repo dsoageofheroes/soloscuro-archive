@@ -202,9 +202,6 @@ void set_accumulator(int32_t a);
 int32_t get_accumulator();
 
 void setrecord();
-dsl_check_t* dsl_find_check(int32_t type, int32_t id);
-dsl_check_t* dsl_find_tile_check(const int32_t x, const int32_t y);
-dsl_check_t* dsl_find_box_check(const int32_t x, const int32_t y);
 
 void print_vars(int what);
 void print_all_checks();

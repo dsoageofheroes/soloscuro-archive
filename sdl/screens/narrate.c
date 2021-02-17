@@ -144,16 +144,12 @@ void narrate_render(void *data, SDL_Renderer *renderer) {
     }
 }
 
+void narrate_clear() {
+    text_pos = 0;
+}
+
 static void add_text(const char *to_add) {
     if (!to_add) { return; }
-    if (!strcmp(to_add, "END")) {
-        end_received = 1;
-        return;
-    }
-    if (!strcmp(to_add, "CLOSE")) {
-        close_received = 1;
-        return;
-    }
 
     int len = strlen(to_add);
 
@@ -218,18 +214,7 @@ int narrate_handle_mouse_down(const uint32_t button, const uint32_t x, const uin
             }
         }
     }
-    /*
-    if (display && !display_menu) {
-        int call_resume = !end_received && !close_received;
-        clear();
 
-        if (call_resume) {
-            dsl_resume_dialog();
-        }
-
-        return 1;
-    }
-    */
     return display; // zero means I did not handle the mouse click, so another screen may.
 }
 
@@ -239,6 +224,11 @@ void narrate_free() {
     for (int i = 0; i < MAX_PORTRAITS; i++) {
         SDL_DestroyTexture(portraits[i]);
     }
+}
+
+int port_ask_yes_no() {
+    error("MUST ASK YES NO, for now NO\n");
+    return 0;
 }
 
 sops_t narrate_screen = {

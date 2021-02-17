@@ -104,6 +104,7 @@ void handle_input() {
                 break;
             case SDL_MOUSEBUTTONDOWN:
                 if (game_loop_is_waiting_for(WAIT_NARRATE_CONTINUE)) {
+                    narrate_clear();
                     game_loop_signal(WAIT_NARRATE_CONTINUE, 0);
                 }
                 handle_mouse_down(event.button.button);
@@ -295,6 +296,11 @@ void gameloop_init() {
     wait_flags[WAIT_FINAL] = 1;
 }
 
+int main_player_freeze() {
+    return wait_flags[WAIT_NARRATE_CONTINUE]
+        || wait_flags[WAIT_NARRATE_SELECT];
+}
+
 //static animation_t *animations[TICKS_PER_SEC];
 int game_loop_is_waiting_for(int signal) {
     if (signal < 0 || signal >= WAIT_MAX_SIGNALS) {
@@ -317,6 +323,7 @@ void game_loop_signal(int signal, int _accum) {
         done = 1;
     } else {
         warn("signal %d received, but not waiting on it...\n", signal);
+        exit(1);
     }
 }
 

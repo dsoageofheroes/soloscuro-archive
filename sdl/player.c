@@ -1,5 +1,6 @@
 #include <math.h>
 #include "player.h"
+#include "main.h"
 #include "../src/dsl.h"
 #include "sprite.h"
 #include "../src/trigger.h"
@@ -137,23 +138,8 @@ void player_update() {
 
     //printf("%d, %d\n", player.x, player.y);
     trigger_box_check(player.x, player.y);
+    //while(trigger_tile_check(player.x, player.y)) { ; }
     trigger_tile_check(player.x, player.y);
-    dsl_check_t* dsl_check = dsl_find_tile_check(player.x, player.y);
-    if (dsl_check) {
-        debug("TILE CHECK: Need to execute file = %d, addr = %d, trip = %d\n",
-            dsl_check->data.tile_check.file, dsl_check->data.tile_check.addr,
-            dsl_check->data.tile_check.trip);
-        //dsl_execute_subroutine(dsl_check->data.tile_check.file,
-            //dsl_check->data.tile_check.addr, 0);
-    }
-    dsl_check = dsl_find_box_check(player.x, player.y);
-    if (dsl_check) {
-        debug("BOX CHECK: Need to execute file = %d, addr = %d, trip = %d\n",
-            dsl_check->data.box_check.file, dsl_check->data.box_check.addr,
-            dsl_check->data.box_check.trip);
-        //dsl_execute_subroutine(dsl_check->data.box_check.file,
-            //dsl_check->data.box_check.addr, 0);
-    }
 
     int nextx = player.x;
     int nexty = player.y;
@@ -162,7 +148,7 @@ void player_update() {
     if (direction & PLAYER_LEFT) { nextx -= 1; }
     if (direction & PLAYER_RIGHT) { nextx += 1; }
     //debug ("tile @ (%d, %d) = %d\n", player.x, player.y, cmap_is_block(player.y, player.x));
-    if (direction == 0x0 || cmap_is_block(nexty + 1, nextx)) {
+    if (main_player_freeze() || direction == 0x0 || cmap_is_block(nexty + 1, nextx)) {
         anims[0].x = anims[0].destx;
         anims[0].y = anims[0].desty;
         if (anims[0].scmd == move_left) {
@@ -177,6 +163,12 @@ void player_update() {
         }
         return;
     }
+
+    // When moving off do a check.
+    //if (player.x != nextx || player.y != nexty) {
+        //trigger_box_check(player.x, player.y);
+        //trigger_tile_check(player.x, player.y);
+    //}
 
     player.x = nextx;
     player.y = nexty;

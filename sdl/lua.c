@@ -131,6 +131,11 @@ static int uil_set_ignore_repeat(lua_State *l) {
     return 0;
 }
 
+static int uil_set_quiet(lua_State *l) {
+    dsl_set_quiet(luaL_checkinteger(l, 1));
+    return 0;
+}
+
 static int uil_exit_game(lua_State *l) {
     main_exit_game();
     return 0;
@@ -147,6 +152,7 @@ static const struct luaL_Reg ds_funcs[] = {
     {"player_unmove", uil_player_unmove},
     {"toggle_inventory", uil_toggle_inventory},
     {"set_ignore_repeat", uil_set_ignore_repeat},
+    {"set_quiet", uil_set_quiet},
     {"exit_game", uil_exit_game},
     {NULL, NULL},
 };
