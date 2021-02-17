@@ -196,9 +196,11 @@ uint32_t dsl_request_impl(int16_t token, int16_t name,
             break;
         case REQUEST_SET_BLOCK:
             debug("Need to set the bit flags for map position (%d, %d) to %d & commit!\n", num1, num2, GB_BLOCK);
+            dsl_region_set_block(dsl_region_get_current(), num1, num2, GB_BLOCK);
             break;
         case REQUEST_CLEAR_BLOCK:
             debug("I need to clear the block at (%d, %d) with flags %d\n", num1, num2, GB_BLOCK);
+            dsl_region_clear_block(dsl_region_get_current(), num1, num2, GB_BLOCK);
             break;
         case REQUEST_SET_LOS:
             debug("request SET_LOS not implemented\n");

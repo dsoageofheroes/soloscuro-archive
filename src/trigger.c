@@ -244,7 +244,7 @@ void trigger_noorders() {
 }
 
 void trigger_tile_check(uint32_t x, uint32_t y) {
-    trigger_node_t *rover = tile_list, *prev = NULL; //, *hold = NULL;
+    trigger_node_t *rover = tile_list, *prev = NULL, *hold = NULL;
 
     while (rover) {
         tile_trigger_t *tile = &(rover->tile);
@@ -259,7 +259,7 @@ void trigger_tile_check(uint32_t x, uint32_t y) {
             }
 
             // Take out of list.
-            //hold = rover;
+            hold = rover;
             rover = rover->next;
 
             // execute script, box check is not valid.
@@ -268,8 +268,8 @@ void trigger_tile_check(uint32_t x, uint32_t y) {
             //exit(1);
             //free(rover);
             // put check back in list.
-            //hold->next = box_list;
-            //box_list = hold;
+            hold->next = tile_list;
+            tile_list = hold;
             return;
         }
         prev = rover;

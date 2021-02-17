@@ -23,6 +23,8 @@ typedef struct dsl_region_s {
 
 dsl_region_t* dsl_load_region(const int gff_file);
 int dsl_region_is_block(dsl_region_t *region, int row, int column);
+void dsl_region_set_block(dsl_region_t *region, int row, int column, int val);
+void dsl_region_clear_block(dsl_region_t *region, int row, int column, int val);
 int dsl_region_is_actor(dsl_region_t *region, int row, int column);
 int dsl_region_is_danger(dsl_region_t *region, int row, int column);
 int32_t region_tile_id(dsl_region_t *region, int row, int column);

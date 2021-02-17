@@ -85,6 +85,7 @@ static int set_gf(lua_State *l) {
         exit(1);
     }
     dsl_global_flags[id] = val;
+    debug("dsl_globals_flags[" PRI_LI "] = " PRI_LI "\n", id, val);
     return 0;
 }
 
@@ -105,9 +106,8 @@ static int set_lf(lua_State *l) {
         printf("ERROR: " PRI_LI " is out of range for local flags!\n", id);
         exit(1);
     }
-    //printf("local_flag[" PRI_LI "] := " PRI_LI "\n", id, val);
-    fflush(stdout);
     dsl_local_flags[id] = val;
+    debug("dsl_local_flags[" PRI_LI "] = " PRI_LI "\n", id, val);
     return 0;
 }
 
@@ -130,6 +130,7 @@ static int set_gn(lua_State *l) {
         exit(1);
     }
     dsl_global_nums[id] = val;
+    debug("dsl_globals_nums[" PRI_LI "] = " PRI_LI "\n", id, val);
     return 0;
 }
 
@@ -273,9 +274,16 @@ static int get_id(lua_State *l) {
 
 static int get_party(lua_State *l) {
     lua_Integer member = luaL_checkinteger(l, 1);
+    //static int idx = -1;
     printf("!!!!!!!!!!dsl.get_party: not implemented returning -9999 for member: " PRI_LI "!\n", member);
     //lua_pushnumber(l, dsl_gnames[id]);
     lua_pushnumber(l, 9999);
+    /*
+    lua_pushnumber(l, idx);
+    if (idx == 9999) { idx = -1; return 1;}
+    idx--;
+    if (idx < -4) {idx = 9999;};
+    */
     return 1;
 }
 

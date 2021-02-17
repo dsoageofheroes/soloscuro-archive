@@ -146,15 +146,33 @@ out:
     free(gmap_ids);
 }
 
-int dsl_region_is_block(dsl_region_t *region, int row, int column) {
+static uint8_t* get_block(dsl_region_t *region, const int row, const int column) {
     int pos = row*MAP_COLUMNS + column;
 
     if (!region || !VALID_MAP_ROW(row) || !VALID_MAP_COLUMN(column) 
         || pos >= region->tile_ids_size) {
-        return -1;
+        return NULL;
     }
 
-    return (int32_t)(region->flags[row][column] & MAP_BLOCK);
+    return &(region->flags[row][column]);
+}
+
+int dsl_region_is_block(dsl_region_t *region, int row, int column) {
+    uint8_t *block = get_block(region, row, column);
+
+    return block ? (*block & MAP_BLOCK) : -1;
+}
+
+void dsl_region_set_block(dsl_region_t *region, int row, int column, int val) {
+    uint8_t *block = get_block(region, row, column);
+
+    if (block) { *block |= val; }
+}
+
+void dsl_region_clear_block(dsl_region_t *region, int row, int column, int val) {
+    uint8_t *block = get_block(region, row, column);
+
+    if (block) { region->flags[row][column] &= ~val; }
 }
 
 int dsl_region_is_actor(dsl_region_t *region, int row, int column) {

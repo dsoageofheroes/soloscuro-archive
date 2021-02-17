@@ -885,6 +885,7 @@ void dsl_lua_give(void) {
 void dsl_lua_go(void) {
     dsl_lua_get_parameters(2);
     lprintf("--need to give GO order!\n");
+    lprintf("print (\"GO ORDER\")\n");
     //set_orders(param.val[1], GO_OBJECT, param.val[0], 0);
 }
 
@@ -1228,9 +1229,26 @@ void dsl_lua_byte_inc(void) {
     //( *((uint8_t *) param.ptr[0]) )++;
 }
 
+static void print_increment(const char *stmt) {
+    char buf[128];
+    int pos;
+    if (!strncmp(stmt, "dsl.get_", 8)) {
+        strcpy(buf, stmt); // create something to edit
+        for (pos = 0; pos < strlen(stmt) && buf[pos] != 'g'; pos++) { ; }
+        buf[pos] = 's';
+        buf[strlen(buf) - 1] = '\0'; // chop off the final ')'
+        lprintf("%s, %s + 1)\n", buf, stmt);
+        return;
+    }
+    lua_exit("Unable to convert stmt\n");
+}
+
 void dsl_lua_word_inc(void) {
     dsl_lua_get_parameters(1);
-    lprintf("--((uint16_t)lparams.params[0])++\n");
+    lprintf("--WORD INC\n");
+    //lprintf("--((uint16_t)lparams.params[0])++\n");
+    lprintf("--%s\n", lparams.params[0]);
+    print_increment(lparams.params[0]);
     //(*((uint16_t*)param.ptr[0]))++;
 }
 
