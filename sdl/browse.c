@@ -1455,11 +1455,16 @@ static void render_entry_scmd() {
         scmd++;
     }
     if (scmd->flags & SCMD_LAST) {
-        pos += snprintf(buf, BUF_MAX, "LAST ");
+        pos += snprintf(buf, BUF_MAX, "LAST:");
     } else if (scmd->flags & SCMD_JUMP) {
-        pos += snprintf(buf + pos, BUF_MAX - pos, "LAST ");
+        pos += snprintf(buf + pos, BUF_MAX - pos, "JUMP:");
     } else if (num_entries == max_entries) {
-        pos += snprintf(buf + pos, BUF_MAX - pos, "MAX ENTRIES");
+        pos += snprintf(buf + pos, BUF_MAX - pos, "MAX ENTRIES:");
     }
+    print_line_len(renderer, 0, buf, 320, ypos, BUF_MAX);
+    ypos += 12;
+    snprintf(buf, BUF_MAX, "  bmp: %d, delay: %d, offset: (%d, %d), hot: (%d, %d)", 
+        scmd->bmp_idx, scmd->delay, scmd->xoffset, scmd->yoffset,
+        scmd->xoffsethot, scmd->yoffsethot);
     print_line_len(renderer, 0, buf, 320, ypos, BUF_MAX);
 }

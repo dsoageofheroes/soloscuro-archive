@@ -160,7 +160,7 @@ static void load_character_sprite() {
             spr = new_sprite_create(renderer, pal, 150 + offsetx, 28 + offsetx,
                 zoom, OBJEX_GFF_INDEX, GFF_BMP, 2093);
             break;
-        case RACE_TRIKEEN:
+        case RACE_THRIKEEN:
             spr = new_sprite_create(renderer, pal, 150 + offsetx, 28 + offsetx,
                 zoom, OBJEX_GFF_INDEX, GFF_BMP, 2097);
             break;
@@ -273,7 +273,7 @@ static const char* get_race_as_string() {
         case RACE_HALFGIANT: return "HALF-GIANT";
         case RACE_HALFLING: return "HALFLING";
         case RACE_MUL: return "MUL";
-        case RACE_TRIKEEN: return "TRIKEEN";
+        case RACE_THRIKEEN: return "THRIKEEN";
     }
     return "UNKNOWN";
 }
@@ -474,14 +474,14 @@ static void fix_race_gender() { // move the race/gender to the appropiate spot
         pc.race--;
         reset = 1;
     }
-    if (pc.race < RACE_HUMAN) { pc.race = RACE_TRIKEEN; reset = 1;}
-    if (pc.race > RACE_TRIKEEN) { pc.race = RACE_HUMAN; reset = 1;}
+    if (pc.race < RACE_HUMAN) { pc.race = RACE_THRIKEEN; reset = 1;}
+    if (pc.race > RACE_THRIKEEN) { pc.race = RACE_HUMAN; reset = 1;}
 
     if (pc.race == RACE_MUL && pc.gender == GENDER_FEMALE) {
-        pc.race = RACE_TRIKEEN;
+        pc.race = RACE_THRIKEEN;
     }
 
-    if (pc.race == RACE_TRIKEEN && pc.gender == GENDER_MALE) {
+    if (pc.race == RACE_THRIKEEN && pc.gender == GENDER_MALE) {
         pc.race = RACE_MUL;
     }
 

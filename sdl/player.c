@@ -279,7 +279,7 @@ static void load_character_sprite(SDL_Renderer *renderer, const int slot, const 
             players[slot].main = sprite_new(renderer, pal, 0, 0,
                 zoom, OBJEX_GFF_INDEX, GFF_BMP, 2093);
             break;
-        case RACE_TRIKEEN:
+        case RACE_THRIKEEN:
             players[slot].port = sprite_new(renderer, pal, 0, 0,
                 zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20013);
             players[slot].main = sprite_new(renderer, pal, 0, 0,
