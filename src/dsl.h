@@ -2,8 +2,10 @@
 #ifndef DSL_H
 #define DSL_H
 
+void dsl_debug(const char *file, const int line_num, const char *pretty, const char *str, ...);
+
 #ifdef DEBUG
-#       define debug(fmt, ...) printf(("[%s:%d] %s: " fmt), __FILE__, __LINE__, __PRETTY_FUNCTION__, ##__VA_ARGS__);
+#define  debug(fmt, ...) dsl_debug(__FILE__, __LINE__, __PRETTY_FUNCTION__, fmt, ##__VA_ARGS__)
 #else
 #       define debug(...)
 #endif
@@ -35,6 +37,8 @@ int do_dsl_command(uint8_t cmd);
 uint32_t dsl_request_impl(int16_t token, int16_t name,
         int32_t num1, int32_t num2);
 void dsl_cleanup();
+void dsl_set_quiet(const int val);
+
 
 /* Parsing functions */
 uint8_t peek_one_byte();

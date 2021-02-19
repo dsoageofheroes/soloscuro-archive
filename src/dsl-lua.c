@@ -504,6 +504,7 @@ static int print_cmd() {
             //script_id, ((size_t)get_data_ptr()) - dsl_lua_start_ptr);
         lua_depth++;
         in_func = 1;
+        lprintf("dsl.debug(\"func%ld\")\n", cfunc_num);
     } else {
         print_label();
     }
@@ -543,6 +544,7 @@ void dsl_lua_load_accum(void) {
 
 void dsl_lua_global_ret(void) {
     in_func = 0;
+    lprintf("dsl.debug(\"return func%ld\")\n", cfunc_num);
     lua_depth--;
     lprintf("end --return\n");
     if (lua_depth < 0) { lua_depth = 0; }
@@ -1203,33 +1205,10 @@ void dsl_lua_request(void) {
         (lparams.params[1]),
         (lparams.params[2]),
         (lparams.params[3]));
+    lprintf("obj = accum\n");
 }
 
-void dsl_lua_byte_dec(void) {
-    dsl_lua_get_parameters(1);
-    //( *((uint8_t *) param.ptr[0]) )--;
-    lprintf("--((uint8_t)lparams.params[0])--\n");
-}
-
-void dsl_lua_word_dec(void) {
-    dsl_lua_get_parameters(1);
-    lprintf("--((uint16_t)lparams.params[0])--\n");
-    //(*((uint16_t *)param.ptr[0]))--;
-}
-
-void dsl_lua_long_dec(void) {
-    dsl_lua_get_parameters(1);
-    lprintf("--((uint32_t)lparams.params[0])--\n");
-    //command_implemented = 0;
-}
-
-void dsl_lua_byte_inc(void) {
-    dsl_lua_get_parameters(1);
-    lprintf("--((uint8_t)lparams.params[0])++\n");
-    //( *((uint8_t *) param.ptr[0]) )++;
-}
-
-static void print_increment(const char *stmt) {
+static void print_change(const char *stmt, const char *op) {
     char buf[128];
     int pos;
     if (!strncmp(stmt, "dsl.get_", 8)) {
@@ -1237,10 +1216,38 @@ static void print_increment(const char *stmt) {
         for (pos = 0; pos < strlen(stmt) && buf[pos] != 'g'; pos++) { ; }
         buf[pos] = 's';
         buf[strlen(buf) - 1] = '\0'; // chop off the final ')'
-        lprintf("%s, %s + 1)\n", buf, stmt);
+        lprintf("%s, %s %s)\n", buf, stmt, op);
         return;
     }
     lua_exit("Unable to convert stmt\n");
+}
+
+void dsl_lua_byte_dec(void) {
+    dsl_lua_get_parameters(1);
+    //( *((uint8_t *) param.ptr[0]) )--;
+    lprintf("--((uint8_t)lparams.params[0])--\n");
+    lprintf("-- byte_dec: %s\n", lparams.params[0]);
+}
+
+void dsl_lua_word_dec(void) {
+    dsl_lua_get_parameters(1);
+    lprintf("--((uint16_t)lparams.params[0])--\n");
+    lprintf("-- word_dec: %s\n", lparams.params[0]);
+    print_change(lparams.params[0], "- 1");
+}
+
+void dsl_lua_long_dec(void) {
+    dsl_lua_get_parameters(1);
+    lprintf("--((uint32_t)lparams.params[0])--\n");
+    //command_implemented = 0;
+    lprintf("-- long_dec: %s\n", lparams.params[0]);
+}
+
+void dsl_lua_byte_inc(void) {
+    dsl_lua_get_parameters(1);
+    lprintf("--((uint8_t)lparams.params[0])++\n");
+    //( *((uint8_t *) param.ptr[0]) )++;
+    lprintf("-- byte_inc: %s\n", lparams.params[0]);
 }
 
 void dsl_lua_word_inc(void) {
@@ -1248,8 +1255,7 @@ void dsl_lua_word_inc(void) {
     lprintf("--WORD INC\n");
     //lprintf("--((uint16_t)lparams.params[0])++\n");
     lprintf("--%s\n", lparams.params[0]);
-    print_increment(lparams.params[0]);
-    //(*((uint16_t*)param.ptr[0]))++;
+    print_change(lparams.params[0], "+ 1");
 }
 
 void dsl_lua_long_inc(void) {
@@ -1344,6 +1350,7 @@ void dsl_lua_global_sub(void) {
 
 void dsl_lua_local_ret(void) {
     in_func = 0;
+    lprintf("dsl.debug(\"return func%ld\")\n", cfunc_num);
     lua_depth--;
     lprintf("end --return\n");
 }
@@ -1509,6 +1516,7 @@ void dsl_lua_exit(void) {
     lprintf("dsl.exit()\n");
     if (lua_depth == 1) {
         in_func = 0;
+        lprintf("dsl.debug(\"return func%ld\")\n", cfunc_num);
         lua_depth--;
         lprintf("end\n");
     }

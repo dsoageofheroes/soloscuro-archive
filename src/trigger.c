@@ -110,6 +110,9 @@ int add_noorders_trigger(uint32_t obj, uint32_t file, uint32_t addr) {
     to_add->noorders.addr = addr;
     to_add->next = noorders_list;
     noorders_list = to_add;
+    if (obj == 0) {
+        error("adding no order for obj 0, this makes no sense.\n");
+    }
     return 1;
 }
 
@@ -232,10 +235,14 @@ void trigger_noorders() {
     while (rover) {
         noorders_list = rover->next;
         debug("Noorders executing %d:%d\n", rover->noorders.file, rover->noorders.addr);
+        if (rover->noorders.obj == 0) {
+            debug("noorder obj is 0, ignoring all no orders.");
+            return;
+        }
         //rover->noorders.obj
         dsl_lua_execute_script(rover->noorders.file, rover->noorders.addr, 0);
         region_object_t* robj = dsl_region_find_object(rover->noorders.obj);
-        printf("(%d, %d)\n", robj->mapx / 16, robj->mapy / 16);
+        //printf("(%d, %d)\n", robj->mapx / 16, robj->mapy / 16);
         add_tile_trigger(robj->mapx / 16, robj->mapy / 16,
                 rover->noorders.file, rover->noorders.addr, 1);
         free(rover);
@@ -243,7 +250,7 @@ void trigger_noorders() {
     }
 }
 
-void trigger_tile_check(uint32_t x, uint32_t y) {
+int trigger_tile_check(uint32_t x, uint32_t y) {
     trigger_node_t *rover = tile_list, *prev = NULL, *hold = NULL;
 
     while (rover) {
@@ -270,11 +277,13 @@ void trigger_tile_check(uint32_t x, uint32_t y) {
             // put check back in list.
             hold->next = tile_list;
             tile_list = hold;
-            return;
+            return 1;
         }
         prev = rover;
         rover = rover->next;
     }
+
+    return 0;
 }
 
 void trigger_box_check(uint32_t x, uint32_t y) {

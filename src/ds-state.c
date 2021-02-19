@@ -257,7 +257,7 @@ static int set_gname(lua_State *l) {
 
 static int get_type(lua_State *l) {
     //lua_Integer id = luaL_checkinteger(l, 1);
-    printf("!!!!!!!!!!dsl.get_type: not implemented returning -1!\n");
+    error("error: dsl.get_type: not implemented returning -1!\n");
     //lua_pushnumber(l, dsl_gnames[id]);
     lua_pushnumber(l, -1);
     return 1;
@@ -267,6 +267,7 @@ static int get_id(lua_State *l) {
     lua_Integer obj = luaL_checkinteger(l, 1);
     //printf("!!!!!!!!!!dsl.get_name: not implemented returning -1!\n");
     //printf("-------->returning " PRI_LI "\n", obj);
+    error("error: dsl.get_id not implement, just returning whatever.\n");
     lua_pushnumber(l, obj);
     //lua_pushnumber(l, -1);
     return 1;
@@ -275,7 +276,7 @@ static int get_id(lua_State *l) {
 static int get_party(lua_State *l) {
     lua_Integer member = luaL_checkinteger(l, 1);
     //static int idx = -1;
-    printf("!!!!!!!!!!dsl.get_party: not implemented returning -9999 for member: " PRI_LI "!\n", member);
+    error("error: dsl.get_party: not implemented returning 9999 for member: " PRI_LI "!\n", member);
     //lua_pushnumber(l, dsl_gnames[id]);
     lua_pushnumber(l, 9999);
     /*
@@ -353,7 +354,7 @@ static int range(lua_State *l) {
     const char *x = luaL_checkstring(l, 1);
     const char *y = luaL_checkstring(l, 2);
 
-    printf("Must find range from '%s' to '%s'\n", x, y);
+    debug("Must find range from '%s' to '%s'\n", x, y);
     lua_pushinteger(l, 0);
 
     return 1;
@@ -472,8 +473,9 @@ static int request(lua_State *l) {
     lua_Integer num2 = luaL_checkinteger(l, 4);
 
     //warn("Need to implement: request: cmd: " PRI_LI " obj_type: %s num1: " PRI_LI " num2: " PRI_LI "\n", cmd, obj_type, num1, num2);
-    dsl_request_impl(cmd, atol(obj_type), num1, num2);
-    return 0;
+    lua_pushinteger(l,
+        dsl_request_impl(cmd, atol(obj_type), num1, num2));
+    return 1;
 }
 
 static int dsl_clone(lua_State *l) {
@@ -495,6 +497,12 @@ static int dsl_clone(lua_State *l) {
     return 0;
 }
 
+static int dsl_ask_yes_no(lua_State *l) {
+    debug("Must implement yes no!\n");
+    lua_pushinteger(l, port_ask_yes_no());
+    return 1;
+}
+
 static int call_function(lua_State *l) {
     lua_Integer file = luaL_checkinteger(l, 1);
     lua_Integer addr = luaL_checkinteger(l, 2);
@@ -508,7 +516,7 @@ static int call_function(lua_State *l) {
 
 static int dsl_exit(lua_State *l) {
     if (luaL_dostring(l, "return")) {
-        printf("ERORR MUST IMPLEMENT: NEED TO EXIT.\n");
+        error("ERORR MUST IMPLEMENT: NEED TO EXIT.\n");
         exit(1);
     }
 
@@ -537,6 +545,12 @@ static int lua_play_sound(lua_State *l) {
     return 0;
 }
 
+static int lua_debug(lua_State *l) {
+    //printf("%s\n", luaL_checkstring(l, 1));
+    return 0;
+}
+
+
 static const struct luaL_Reg dsl_state_lib[] = {
     {"set_while_callback", set_while_callback},
     {"set_gf", set_gf},
@@ -549,8 +563,8 @@ static const struct luaL_Reg dsl_state_lib[] = {
     {"get_ln", get_ln},
     {"set_gbn", set_gbn},
     {"get_gbn", get_gbn},
-    {"set_ln", set_lbn},
-    {"get_ln", get_lbn},
+    {"set_lbn", set_lbn},
+    {"get_lbn", get_lbn},
     {"set_gstr", set_gstr},
     {"get_gstr", get_gstr},
     {"get_gname", get_gname},
@@ -578,10 +592,12 @@ static const struct luaL_Reg dsl_state_lib[] = {
     {"call_function", call_function},
     {"request", request},
     {"clone", dsl_clone},
+    {"ask_yes_no", dsl_ask_yes_no},
     {"exit", dsl_exit},
     {"narrate_open", lua_narrate_open},
     {"narrate_show", lua_narrate_show},
     {"play_sound", lua_play_sound},
+    {"debug", lua_debug},
     {NULL, NULL}
 } ;
 

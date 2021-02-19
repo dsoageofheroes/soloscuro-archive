@@ -1,4 +1,5 @@
 function init()
+    --ds.set_quiet(1) -- uncomment to place into quiet mode
     ds.load_charsave(0, 15) -- load character from charsave.gff
     ds.load_charsave(1, 16) -- load character from charsave.gff
 

@@ -52,7 +52,7 @@ void dsl_lua_load_script(const uint32_t script_id, const uint8_t is_mas) {
     }
     if (!gff_read_chunk(DSLDATA_GFF_INDEX, &chunk, dsl, chunk.length)) { return; }
 
-    printf("Coverting %s %d to lua, length = %d\n",
+    debug("Converting %s %d to lua, length = %d\n",
         is_mas ? "MAS" : "GPL",
         script_id, chunk.length);
     //script_ptr = dsl_lua_print(dsl, len, is_master_mas, &script_len);
@@ -117,19 +117,19 @@ uint8_t dsl_lua_execute_script(size_t file, size_t addr, uint8_t is_mas) {
     luaL_openlibs(l);
     dsl_state_register(l);
     if (luaL_dostring(l, scripts[file])) {
-        printf("Error: unable to load %s script " PRI_SIZET ":" PRI_SIZET "\n",
+        error("Error: unable to load %s script " PRI_SIZET ":" PRI_SIZET "\n",
             is_mas ? "MAS" : "GPL",
             file, addr);
-        printf("error: %s\n", lua_tostring(l, -1));
+        error("error: %s\n", lua_tostring(l, -1));
         lua_close(l);
         return 0;
     }
     lua_getglobal(l, func);
     if (lua_pcall(l, 0, 0, 0)) {
-        printf("error running function: '%s' in %s file " PRI_SIZET ", addr " PRI_SIZET "\n", func,
+        error("error running function: '%s' in %s file " PRI_SIZET ", addr " PRI_SIZET "\n", func,
             is_mas ? "MAS" : "GPL",
             file, addr);
-        printf("error: %s\n", lua_tostring(l, -1));
+        error("error: %s\n", lua_tostring(l, -1));
         ret = 0;
     }
 

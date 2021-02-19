@@ -16,6 +16,7 @@
 #define DSL_LOS_ORDER (1)
 
 uint8_t command_implemented = 0; // Temporary while I figure out each function.
+uint8_t quiet = 0;
 
 /* Globals */
 void get_parameters(int16_t amt);
@@ -58,6 +59,18 @@ void dsl_init() {
     info("Running Master DSL #99.\n");
     //dsl_execute_subroutine(99, 0, 1);
     dsl_lua_execute_script(99, 0, 1);
+}
+
+void dsl_set_quiet(const int val) {
+    quiet = val;
+}
+
+void dsl_debug(const char *file, const int line_num, const char *pretty, const char *str, ...) {
+    if (quiet) { return; }
+    va_list argp;
+    va_start(argp, str);
+    printf("[%s:%d] %s: ", file, line_num, pretty);
+    vprintf(str, argp);
 }
 
 void dsl_cleanup() {
