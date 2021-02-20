@@ -180,8 +180,14 @@ static void init_pc() {
     get_random_name();
 }
 
-static void new_character_init(SDL_Renderer *_renderer, const uint32_t x, const uint32_t y, const float _zoom) {
-    gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
+// FIXME - Change these to ds1_race_offsets_x and then add ones for DS2 and possibly DSO, if extra races are ever added in DSO
+// H = Human - D = Dwarf - E = Elf - HE = Half-Elf - HG = Half-Giant - HL= Halfling - M = Mul - T = Thri-Kreen
+// genderRace                   mH   fH   mD   fD   mE   fE  mHE  fHE  mHG  fHG  mHL  fHL   mM   fT
+static int race_offsets_x[] = {  0,   0,  -6,   0, -10, -10,   3,   0, -14,  -9,   3,   9,  -7, -14 };
+static int race_offsets_y[] = {  0,   5,  14,  15,   2,   4,   2,   1,   3,   5,  15,  18,  -5,   1 };
+
+static void new_character_init(SDL_Renderer* _renderer, const uint32_t x, const uint32_t y, const float _zoom) {
+    gff_palette_t* pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     offsetx = x; offsety = y;
     zoom = _zoom;
     renderer = _renderer;
@@ -202,31 +208,31 @@ static void new_character_init(SDL_Renderer *_renderer, const uint32_t x, const 
     exit_button = new_sprite_create(renderer, pal, 255 + x, 156 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2058);
 
     for (int i = 0; i < 8; i++) {
-        classes[i] = new_sprite_create(renderer, pal, 220 + x, 10 + y + (i*8),
-                zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2002 + i);
-        class_sel[i] = new_sprite_create(renderer, pal, 220 + x, 10 + y + (i*8),
-                zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20047);
+        classes[i] = new_sprite_create(renderer, pal, 220 + x, 10 + y + (i * 8),
+            zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2002 + i);
+        class_sel[i] = new_sprite_create(renderer, pal, 220 + x, 10 + y + (i * 8),
+            zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20047);
         sprite_set_frame(classes[i], 2);
     }
     for (int i = 0; i < 3; i++) {
-        psionic_devotion[i] = new_sprite_create(renderer, pal, 220 + x, 105 + y + (i*8),
-                zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2038 + i);
+        psionic_devotion[i] = new_sprite_create(renderer, pal, 220 + x, 105 + y + (i * 8),
+            zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2038 + i);
         sprite_set_frame(psionic_devotion[i], 0);
     }
     for (int i = 0; i < 4; i++) {
-        spheres[i] = new_sprite_create(renderer, pal, 220 + x, 105 + y + (i*8),
-                zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2042 + i);
-        ps_sel[i] = new_sprite_create(renderer, pal, 220 + x, 105 + y + (i*8),
-                zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20047);
+        spheres[i] = new_sprite_create(renderer, pal, 220 + x, 105 + y + (i * 8),
+            zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2042 + i);
+        ps_sel[i] = new_sprite_create(renderer, pal, 220 + x, 105 + y + (i * 8),
+            zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20047);
         sprite_set_frame(spheres[i], 0);
     }
     for (int i = 0; i < 11; i++) {
         die[i] = new_sprite_create(renderer, pal, 142, 65,
-                zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20048 + i);
+            zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20048 + i);
     }
     for (int i = 0; i < 14; i++) {
-        races[i] = new_sprite_create(renderer, pal, 25, 12,
-                zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20000 + i);
+        races[i] = new_sprite_create(renderer, pal, race_offsets_x[i] + 25, race_offsets_y[i] + 12,
+            zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20000 + i);
     }
 
     strcpy(sphere_text, "PSI DISCIPLINES");
