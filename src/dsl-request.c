@@ -187,20 +187,15 @@ uint32_t dsl_request_impl(int16_t token, int16_t name,
             robj->btc_idx = dobj.bmp_id;
             trigger_object_clear(name);
             port_swap_objs(name, robj);
-
-            //if (name > 0) {
-                //debug("I need to swap to %d from disk id %d with flags %d\n", name, num1, num2);
-            //} else {
-                //debug("I need to swap to iObjectIx from disk id %d with flags %d\n", num1, num2);
-            //}
             break;
         case REQUEST_SET_BLOCK:
-            debug("Need to set (BLOCK) the bit flags for map position (%d, %d) to %d & commit!\n", num1, num2, GB_BLOCK);
-            dsl_region_set_block(dsl_region_get_current(), num1, num2, GB_BLOCK);
+            debug("Need to set (BLOCK) the bit flags for %d map position (%d, %d) to %d & commit!\n", name, num1, num2, GB_BLOCK);
+            dsl_region_set_block(dsl_region_get_current(), num2, num1, MAP_BLOCK);
+            trigger_enable_object(name);
             break;
         case REQUEST_CLEAR_BLOCK:
             debug("I need to clear (UNBLOCK) the block at (%d, %d) with flags %d\n", num1, num2, GB_BLOCK);
-            dsl_region_clear_block(dsl_region_get_current(), num1, num2, GB_BLOCK);
+            dsl_region_clear_block(dsl_region_get_current(), num2, num1, MAP_BLOCK);
             break;
         case REQUEST_SET_LOS:
             debug("request SET_LOS not implemented\n");
@@ -211,6 +206,7 @@ uint32_t dsl_request_impl(int16_t token, int16_t name,
             break;
         case REQUEST_BATTLE_DEMO:
             debug("request REQUEST_BATTLE_DEMO: Need to call lua or something to run the demo!\n");
+            trigger_noorders_enable_all();
             break;
         case REQUEST_SET_GAME_MOVE:
             debug("I need to set the game back to regular moving around (not combat/look/xfer/target).\n");
@@ -641,10 +637,9 @@ int16_t request_to_do(int16_t name, int16_t rectype, int (*request_proc)(int16_t
 int req_animation(int16_t object, long notused1, long notused2) {
     debug("Need to request animation on %d\n", object);
     region_object_t* robj = dsl_region_find_object(object);
+    dsl_set_gname(GNAME_PASSIVE, object);
     if (robj) {
-        robj->bmp_idx++;
-        robj->bmp_idx %= 2;
-        port_update_obj(robj);
+        port_animate_obj(robj);
     } else {
         error("Unable to find object %d\n", object);
     }

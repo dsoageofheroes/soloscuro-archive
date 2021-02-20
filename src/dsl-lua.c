@@ -1350,7 +1350,7 @@ void dsl_lua_global_sub(void) {
 
 void dsl_lua_local_ret(void) {
     in_func = 0;
-    lprintf("dsl.debug(\"return func%ld\")\n", cfunc_num);
+    //lprintf("dsl.debug(\"return func%ld\")\n", cfunc_num);
     lua_depth--;
     lprintf("end --return\n");
 }
@@ -1516,7 +1516,7 @@ void dsl_lua_exit(void) {
     lprintf("dsl.exit()\n");
     if (lua_depth == 1) {
         in_func = 0;
-        lprintf("dsl.debug(\"return func%ld\")\n", cfunc_num);
+        //lprintf("dsl.debug(\"return func%ld\")\n", cfunc_num);
         lua_depth--;
         lprintf("end\n");
     }

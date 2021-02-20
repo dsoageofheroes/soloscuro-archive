@@ -108,6 +108,8 @@ int add_noorders_trigger(uint32_t obj, uint32_t file, uint32_t addr) {
     to_add->noorders.obj = obj;
     to_add->noorders.file = file;
     to_add->noorders.addr = addr;
+    to_add->noorders.need_to_run = 1;
+    to_add->noorders.trigger_on_tile = 1;
     to_add->next = noorders_list;
     noorders_list = to_add;
     if (obj == 0) {
@@ -229,24 +231,43 @@ void trigger_object_clear(const uint32_t obj) {
     list_object_clear(talkto_list, obj, talk_equals);
 }
 
-void trigger_noorders() {
+void trigger_enable_object(const uint32_t obj) {
+    for(trigger_node_t *rover = noorders_list; rover; rover = rover->next) {
+        if (rover->noorders.obj == obj) {
+            rover->noorders.need_to_run = 1;
+        }
+    }
+}
+
+void trigger_noorders_enable_all() {
+    for(trigger_node_t *rover = noorders_list; rover; rover = rover->next) {
+        rover->noorders.need_to_run = 1;
+    }
+}
+
+void trigger_noorders(uint32_t x, uint32_t y) {
     trigger_node_t *rover = noorders_list;
 
     while (rover) {
-        noorders_list = rover->next;
-        debug("Noorders executing %d:%d\n", rover->noorders.file, rover->noorders.addr);
-        if (rover->noorders.obj == 0) {
-            debug("noorder obj is 0, ignoring all no orders.");
-            return;
-        }
-        //rover->noorders.obj
-        dsl_lua_execute_script(rover->noorders.file, rover->noorders.addr, 0);
+        // TODO: We need to enable trigger when on.
         region_object_t* robj = dsl_region_find_object(rover->noorders.obj);
-        //printf("(%d, %d)\n", robj->mapx / 16, robj->mapy / 16);
-        add_tile_trigger(robj->mapx / 16, robj->mapy / 16,
-                rover->noorders.file, rover->noorders.addr, 1);
-        free(rover);
-        rover = noorders_list;
+        //printf("(%d, %d)\n", x, y);
+        if (robj && rover->noorders.trigger_on_tile && (robj->mapx / 16) == x && (robj->mapy / 16) == y) {
+            rover->noorders.trigger_on_tile = 0;
+            rover->noorders.need_to_run = 1;
+        }
+        if (!rover->noorders.need_to_run) {
+            rover = rover->next;
+            continue;
+        }
+
+        rover->noorders.need_to_run = 0; // We are going to execute, so disable bit running again.
+
+        // Now execute.
+        debug("Noorders executing %d:%d\n", rover->noorders.file, rover->noorders.addr);
+        dsl_lua_execute_script(rover->noorders.file, rover->noorders.addr, 0);
+
+        rover = rover->next;
     }
 }
 
