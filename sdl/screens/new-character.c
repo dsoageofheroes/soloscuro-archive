@@ -525,8 +525,8 @@ static void fix_race_gender() { // move the race/gender to the appropiate spot
     }
 
     pc.real_class[0] = pc.real_class[1] = pc.real_class[2] = -1;
-
-    for (int i = 0; reset && i < 8; i++)
+//    for (int i = 0; reset && i < 8; i++)
+    for (int i = 0; i < 8; i++)
         sprite_set_frame(class_sel[i], 0);
 
     if (reset) { get_random_name(); }
