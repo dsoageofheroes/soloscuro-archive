@@ -45,6 +45,7 @@ static char sphere_text[32];
 static char name_text[32];
 
 static void update_ui();
+static void select_class(uint8_t class);
 
 ds_character_t* new_character_get_pc() {
     if (!is_valid) { return NULL; }
@@ -99,6 +100,21 @@ static int has_class(const uint16_t class) {
         if (pc.real_class[i] == class) { return 1; }
     }
     return 0;
+}
+
+static int is_divine_spell_user() {
+    return     has_class(REAL_CLASS_AIR_CLERIC)
+            || has_class(REAL_CLASS_EARTH_CLERIC)
+            || has_class(REAL_CLASS_FIRE_CLERIC)
+            || has_class(REAL_CLASS_WATER_CLERIC)
+            || has_class(REAL_CLASS_AIR_DRUID)
+            || has_class(REAL_CLASS_EARTH_DRUID)
+            || has_class(REAL_CLASS_FIRE_DRUID)
+            || has_class(REAL_CLASS_WATER_DRUID)
+            || has_class(REAL_CLASS_AIR_RANGER)
+            || has_class(REAL_CLASS_EARTH_RANGER)
+            || has_class(REAL_CLASS_FIRE_RANGER)
+            || has_class(REAL_CLASS_WATER_RANGER);
 }
 
 static void set_class_frames() {
@@ -180,8 +196,14 @@ static void init_pc() {
     get_random_name();
 }
 
-static void new_character_init(SDL_Renderer *_renderer, const uint32_t x, const uint32_t y, const float _zoom) {
-    gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
+// FIXME - Change these to ds1_race_offsets_x and then add ones for DS2 and possibly DSO, if extra races are ever added in DSO
+// H = Human - D = Dwarf - E = Elf - HE = Half-Elf - HG = Half-Giant - HL = Halfling - M = Mul - T = Thri-Kreen
+// genderRace                   mH   fH   mD   fD   mE   fE  mHE  fHE  mHG  fHG  mHL  fHL   mM   fT
+static int race_offsets_x[] = { 25,  25,  19,  25,  15,  15,  28,  25,  11,  16,  28,  34,  18,  11 };
+static int race_offsets_y[] = { 12,  17,  26,  27,  14,  16,  14,  13,  15,  17,  27,  30,  07,  13 };
+
+static void new_character_init(SDL_Renderer* _renderer, const uint32_t x, const uint32_t y, const float _zoom) {
+    gff_palette_t* pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     offsetx = x; offsety = y;
     zoom = _zoom;
     renderer = _renderer;
@@ -202,31 +224,31 @@ static void new_character_init(SDL_Renderer *_renderer, const uint32_t x, const 
     exit_button = new_sprite_create(renderer, pal, 255 + x, 156 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2058);
 
     for (int i = 0; i < 8; i++) {
-        classes[i] = new_sprite_create(renderer, pal, 220 + x, 10 + y + (i*8),
-                zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2002 + i);
-        class_sel[i] = new_sprite_create(renderer, pal, 220 + x, 10 + y + (i*8),
-                zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20047);
+        classes[i] = new_sprite_create(renderer, pal, 220 + x, 10 + y + (i * 8),
+            zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2002 + i);
+        class_sel[i] = new_sprite_create(renderer, pal, 220 + x, 11 + y + (i * 8),
+            zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20047);
         sprite_set_frame(classes[i], 2);
     }
     for (int i = 0; i < 3; i++) {
-        psionic_devotion[i] = new_sprite_create(renderer, pal, 220 + x, 105 + y + (i*8),
-                zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2038 + i);
+        psionic_devotion[i] = new_sprite_create(renderer, pal, 217 + x, 105 + y + (i * 8),
+            zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2038 + i);
         sprite_set_frame(psionic_devotion[i], 0);
     }
     for (int i = 0; i < 4; i++) {
-        spheres[i] = new_sprite_create(renderer, pal, 220 + x, 105 + y + (i*8),
-                zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2042 + i);
-        ps_sel[i] = new_sprite_create(renderer, pal, 220 + x, 105 + y + (i*8),
-                zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20047);
+        spheres[i] = new_sprite_create(renderer, pal, 216 + x, 105 + y + (i * 8),
+            zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2042 + i);
+        ps_sel[i] = new_sprite_create(renderer, pal, 218 + x, 106 + y + (i * 8),
+            zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20047);
         sprite_set_frame(spheres[i], 0);
     }
     for (int i = 0; i < 11; i++) {
         die[i] = new_sprite_create(renderer, pal, 142, 65,
-                zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20048 + i);
+            zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20048 + i);
     }
     for (int i = 0; i < 14; i++) {
-        races[i] = new_sprite_create(renderer, pal, 25, 12,
-                zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20000 + i);
+        races[i] = new_sprite_create(renderer, pal, race_offsets_x[i], race_offsets_y[i],
+            zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20000 + i);
     }
 
     strcpy(sphere_text, "PSI DISCIPLINES");
@@ -235,6 +257,7 @@ static void new_character_init(SDL_Renderer *_renderer, const uint32_t x, const 
     load_character_sprite(renderer);
     dnd2e_randomize_stats_pc(&pc);
     set_class_frames(); // go ahead and setup the new class frames
+    select_class(2); // Fighter is the default class
 }
 
 static void update_die_countdown() {
@@ -273,7 +296,7 @@ static const char* get_race_as_string() {
         case RACE_HALFGIANT: return "HALF-GIANT";
         case RACE_HALFLING: return "HALFLING";
         case RACE_MUL: return "MUL";
-        case RACE_THRIKREEN: return "THRIKREEN";
+        case RACE_THRIKREEN: return "THRI-KREEN";
     }
     return "UNKNOWN";
 }
@@ -337,7 +360,10 @@ void new_character_render(void *data, SDL_Renderer *renderer) {
     update_die_countdown();
     sprite_render(renderer, die[die_pos]);
     sprite_render(renderer, races[get_race_id()]);
-    print_line_len(renderer, FONT_BLACKDARK, sphere_text, 450, 193, 1<<12);
+
+    show_psionic_label ? strcpy(sphere_text, "PSI DISCIPLINES") : strcpy(sphere_text, "CLERICAL SPHERE");
+
+    print_line_len(renderer, FONT_BLACKDARK, sphere_text, 446, 193, 1<<12);
 
     for (int i = 0; i < 4; i++) {
         if (i < 3 && show_psionic_label) {
@@ -352,23 +378,36 @@ void new_character_render(void *data, SDL_Renderer *renderer) {
     sprite_render(renderer, show_psionic_label ? sphere_label : psionic_label);
     sprite_render(renderer, done_button);
     sprite_render(renderer, exit_button);
-    snprintf(buf, BUF_MAX, "NAME: %s", name_text);
-    print_line_len(renderer, FONT_GREY, buf, 20, 255, BUF_MAX);
+
+    int oX = 8, oY = 235;
+
+    snprintf(buf, BUF_MAX, "NAME:");
+    print_line_len(renderer, FONT_GREYLIGHT, buf, oX, oY += 15, BUF_MAX);
+    snprintf(buf, BUF_MAX, "%s", name_text);
+    print_line_len(renderer, FONT_GREYLIGHT, buf, oX + 76, oY, BUF_MAX);
     snprintf(buf, BUF_MAX, "STR: %d", pc.stats.str);
-    print_line_len(renderer, FONT_GREY, buf, 20, 270, BUF_MAX);
+    print_line_len(renderer, FONT_GREYLIGHT, buf, oX += 12, oY += 20, BUF_MAX);
     snprintf(buf, BUF_MAX, "DEX: %d", pc.stats.dex);
-    print_line_len(renderer, FONT_GREY, buf, 20, 285, BUF_MAX);
+    print_line_len(renderer, FONT_GREYLIGHT, buf, oX, oY += 15, BUF_MAX);
     snprintf(buf, BUF_MAX, "CON: %d", pc.stats.con);
-    print_line_len(renderer, FONT_GREY, buf, 20, 300, BUF_MAX);
-    snprintf(buf, BUF_MAX, "INT: %d", pc.stats.intel);
-    print_line_len(renderer, FONT_GREY, buf, 20, 315, BUF_MAX);
-    snprintf(buf, BUF_MAX, "WIS: %d", pc.stats.wis);
-    print_line_len(renderer, FONT_GREY, buf, 20, 330, BUF_MAX);
+    print_line_len(renderer, FONT_GREYLIGHT, buf, oX, oY += 15, BUF_MAX);
+//    snprintf(buf, BUF_MAX, "INT: %d", pc.stats.intel);
+//    print_line_len(renderer, FONT_GREYLIGHT, buf, 20, 315, BUF_MAX);
+    snprintf(buf, BUF_MAX, "INT:");
+    print_line_len(renderer, FONT_GREYLIGHT, buf, oX, oY += 15, BUF_MAX);
+    snprintf(buf, BUF_MAX, "%d", pc.stats.intel);
+    print_line_len(renderer, FONT_GREYLIGHT, buf, oX + 52, oY, BUF_MAX);
+//    snprintf(buf, BUF_MAX, "WIS: %d", pc.stats.wis);
+//    print_line_len(renderer, FONT_GREYLIGHT, buf, 20, 330, BUF_MAX);
+    snprintf(buf, BUF_MAX, "WIS:");
+    print_line_len(renderer, FONT_GREYLIGHT, buf, oX, oY += 15, BUF_MAX);
+    snprintf(buf, BUF_MAX, "%d", pc.stats.wis);
+    print_line_len(renderer, FONT_GREYLIGHT, buf, oX + 52, oY, BUF_MAX);
     snprintf(buf, BUF_MAX, "CHA: %d", pc.stats.cha);
-    print_line_len(renderer, FONT_GREY, buf, 20, 345, BUF_MAX);
+    print_line_len(renderer, FONT_GREYLIGHT, buf, oX, oY += 15, BUF_MAX);
     snprintf(buf, BUF_MAX, "%s %s", pc.gender == GENDER_MALE ? "MALE" : "FEMALE", get_race_as_string());
-    print_line_len(renderer, FONT_GREY, buf, 175, 270, BUF_MAX);
-    print_line_len(renderer, FONT_GREY, get_alignment_as_string(), 175, 285, BUF_MAX);
+    print_line_len(renderer, FONT_GREYLIGHT, buf, oX = 170, oY = 270, BUF_MAX);
+    print_line_len(renderer, FONT_GREYLIGHT, get_alignment_as_string(), oX, oY += 15, BUF_MAX);
     pos = 0;
     for (int i = 0; i < 3; i++) {
         if (pc.real_class[i] >= 0) {
@@ -376,7 +415,7 @@ void new_character_render(void *data, SDL_Renderer *renderer) {
         }
     }
     buf[pos] = '\0';
-    print_line_len(renderer, FONT_GREY, buf, 175, 300, BUF_MAX);
+    print_line_len(renderer, FONT_GREYLIGHT, buf, oX, oY += 15, BUF_MAX);
     pos = 0;
     for (int i = 0; i < 3; i++) {
         if (pc.real_class[i] >= 0) {
@@ -384,22 +423,22 @@ void new_character_render(void *data, SDL_Renderer *renderer) {
         }
     }
     buf[pos] = '\0';
-    print_line_len(renderer, FONT_GREY, buf, 175, 315, BUF_MAX);
+    print_line_len(renderer, FONT_GREYLIGHT, buf, oX, oY += 15, BUF_MAX);
     if (pc.real_class[0] > -1) {
         snprintf(buf, BUF_MAX, "EXP: %d (%d)", pc.current_xp, dnd2e_exp_to_next_level_up(&pc));
-        print_line_len(renderer, FONT_GREY, buf, 245, 315, BUF_MAX);
+        print_line_len(renderer, FONT_GREYLIGHT, buf, oX + 70, oY, BUF_MAX);
     }
     snprintf(buf, BUF_MAX, "AC: %d", dnd2e_get_ac_pc(&pc, &inv));
-    print_line_len(renderer, FONT_GREY, buf, 175, 330, BUF_MAX);
-    pos = snprintf(buf, BUF_MAX, "%d%s", dnd2e_get_attack_num_pc(&pc, 0) >> 1,
+    print_line_len(renderer, FONT_GREYLIGHT, buf, oX, oY += 15, BUF_MAX);
+    pos = snprintf(buf, BUF_MAX, "DAM: %d%s", dnd2e_get_attack_num_pc(&pc, 0) >> 1,
         (dnd2e_get_attack_num_pc(&pc, 0) & 0x01) ? ".5" : "");
     pos += snprintf(buf + pos, BUF_MAX - pos, "x1D%d", dnd2e_get_attack_die_pc(&pc, 0));
     pos += snprintf(buf + pos, BUF_MAX - pos, "+%d", dnd2e_get_attack_mod_pc(&pc, 0));
-    print_line_len(renderer, FONT_GREY, buf, 245, 330, BUF_MAX);
+    print_line_len(renderer, FONT_GREYLIGHT, buf, oX + 70, oY, BUF_MAX);
     pos = snprintf(buf, BUF_MAX, "%d/%d", pc.base_hp, pc.high_hp);
-    print_line_len(renderer, FONT_GREY, buf, 185, 345, BUF_MAX);
+    print_line_len(renderer, FONT_GREYLIGHT, buf, oX + 15, oY += 15, BUF_MAX);
     pos = snprintf(buf, BUF_MAX, "%d/%d", pc.base_psp, pc.base_psp);
-    print_line_len(renderer, FONT_GREY, buf, 185, 360, BUF_MAX);
+    print_line_len(renderer, FONT_GREYLIGHT, buf, oX + 15, oY += 15, BUF_MAX);
 }
 
 int new_character_handle_mouse_movement(const uint32_t x, const uint32_t y) {
@@ -474,8 +513,8 @@ static void fix_race_gender() { // move the race/gender to the appropiate spot
         pc.race--;
         reset = 1;
     }
-    if (pc.race < RACE_HUMAN) { pc.race = RACE_THRIKREEN; reset = 1;}
-    if (pc.race > RACE_THRIKREEN) { pc.race = RACE_HUMAN; reset = 1;}
+    if (pc.race < RACE_HUMAN) { pc.race = RACE_THRIKREEN; reset = 1; }
+    if (pc.race > RACE_THRIKREEN) { pc.race = RACE_HUMAN; reset = 1; }
 
     if (pc.race == RACE_MUL && pc.gender == GENDER_FEMALE) {
         pc.race = RACE_THRIKREEN;
@@ -485,15 +524,17 @@ static void fix_race_gender() { // move the race/gender to the appropiate spot
         pc.race = RACE_MUL;
     }
 
-    for (int i = 0; reset && i < 8; i++) {
-        pc.real_class[0] = pc.real_class[1] = pc.real_class[2] = -1;
+    pc.real_class[0] = pc.real_class[1] = pc.real_class[2] = -1;
+//    for (int i = 0; reset && i < 8; i++)
+    for (int i = 0; i < 8; i++)
         sprite_set_frame(class_sel[i], 0);
-    }
+
     if (reset) { get_random_name(); }
 
-    dnd2e_fix_stats_pc(&pc); // in case something need adjustment
     load_character_sprite(); // go ahead and get the new sprite
     set_class_frames(); // go ahead and setup the new class frames
+    select_class(2); // Default to Fighter whenever race changes
+    dnd2e_fix_stats_pc(&pc); // in case something need adjustment
 }
 
 static int find_class_selection(const uint8_t real_class) {
@@ -508,15 +549,15 @@ static int find_class_selection_position(const uint8_t class_selection) {
     switch(class_selection) {
         case 0:
             sel = find_class_selection(REAL_CLASS_AIR_CLERIC);
-            if (sel == -1) { sel = find_class_selection(REAL_CLASS_EARTH_CLERIC);}
-            if (sel == -1) { sel = find_class_selection(REAL_CLASS_FIRE_CLERIC);}
-            if (sel == -1) { sel = find_class_selection(REAL_CLASS_WATER_CLERIC);}
+            if (sel == -1) { sel = find_class_selection(REAL_CLASS_EARTH_CLERIC); }
+            if (sel == -1) { sel = find_class_selection(REAL_CLASS_FIRE_CLERIC); }
+            if (sel == -1) { sel = find_class_selection(REAL_CLASS_WATER_CLERIC); }
             return sel;
         case 1:
             sel = find_class_selection(REAL_CLASS_AIR_DRUID);
-            if (sel == -1) { sel = find_class_selection(REAL_CLASS_EARTH_DRUID);}
-            if (sel == -1) { sel = find_class_selection(REAL_CLASS_FIRE_DRUID);}
-            if (sel == -1) { sel = find_class_selection(REAL_CLASS_WATER_DRUID);}
+            if (sel == -1) { sel = find_class_selection(REAL_CLASS_EARTH_DRUID); }
+            if (sel == -1) { sel = find_class_selection(REAL_CLASS_FIRE_DRUID); }
+            if (sel == -1) { sel = find_class_selection(REAL_CLASS_WATER_DRUID); }
             return sel;
         case 2: return find_class_selection(REAL_CLASS_FIGHTER);
         case 3: return find_class_selection(REAL_CLASS_GLADIATOR);
@@ -524,9 +565,9 @@ static int find_class_selection_position(const uint8_t class_selection) {
         case 5: return find_class_selection(REAL_CLASS_PSIONICIST);
         case 6:
             sel = find_class_selection(REAL_CLASS_AIR_RANGER);
-            if (sel == -1) { sel = find_class_selection(REAL_CLASS_EARTH_RANGER);}
-            if (sel == -1) { sel = find_class_selection(REAL_CLASS_FIRE_RANGER);}
-            if (sel == -1) { sel = find_class_selection(REAL_CLASS_WATER_RANGER);}
+            if (sel == -1) { sel = find_class_selection(REAL_CLASS_EARTH_RANGER); }
+            if (sel == -1) { sel = find_class_selection(REAL_CLASS_FIRE_RANGER); }
+            if (sel == -1) { sel = find_class_selection(REAL_CLASS_WATER_RANGER); }
             return sel;
         case 7: return find_class_selection(REAL_CLASS_THIEF);
     }
@@ -561,6 +602,7 @@ static void set_ps_sel_frames() {
         sprite_set_frame(ps_sel[1], (sphere_selection == 1) ? 1 : 0);
         sprite_set_frame(ps_sel[2], (sphere_selection == 2) ? 1 : 0);
         sprite_set_frame(ps_sel[3], (sphere_selection == 3) ? 1 : 0);
+
         if (sphere_selection == -1) {
             sprite_set_frame(spheres[0], 0);
             sprite_set_frame(spheres[1], 0);
@@ -609,6 +651,10 @@ static void deselect_class(uint8_t class_selection) {
         spell_set_psin(&psi, PSIONIC_TELEPATH, 0);
     }
 
+    // If the player doesn't have a Cleric, Druid, or Ranger class, reset their sphere
+    if (!is_divine_spell_user())
+        sphere_selection = -1;
+
     pc.real_class[2] = -1;
     sprite_set_frame(class_sel[class_selection], 0);
     show_psionic_label = 1;
@@ -632,6 +678,12 @@ static void select_class(uint8_t class) {
         spell_set_psin(&psi, PSIONIC_PSYCHOMETABOLISM, 1);
         spell_set_psin(&psi, PSIONIC_TELEPATH, 1);
     }
+    else if (!spell_has_psin(&psi, PSIONIC_PSYCHOKINETIC) && !spell_has_psin(&psi, PSIONIC_PSYCHOMETABOLISM) && !spell_has_psin(&psi, PSIONIC_TELEPATH))
+        spell_set_psin(&psi, PSIONIC_PSYCHOKINETIC, 1); // Default psi discipline
+
+    // Force Cleric/Druid/Ranger to have a sphere chosen
+    if (is_divine_spell_user() && sphere_selection == -1)
+        sphere_selection = 0;
 
     set_ps_sel_frames();
     dnd2e_set_exp(&pc, 4000);
@@ -694,19 +746,7 @@ int new_character_handle_mouse_up(const uint32_t button, const uint32_t x, const
 }
 
 static void update_ui() {
-    int show_spheres =
-        has_class(REAL_CLASS_AIR_CLERIC)
-        || has_class(REAL_CLASS_EARTH_CLERIC)
-        || has_class(REAL_CLASS_FIRE_CLERIC)
-        || has_class(REAL_CLASS_WATER_CLERIC)
-        || has_class(REAL_CLASS_AIR_DRUID)
-        || has_class(REAL_CLASS_EARTH_DRUID)
-        || has_class(REAL_CLASS_FIRE_DRUID)
-        || has_class(REAL_CLASS_WATER_DRUID)
-        || has_class(REAL_CLASS_AIR_RANGER)
-        || has_class(REAL_CLASS_EARTH_RANGER)
-        || has_class(REAL_CLASS_FIRE_RANGER)
-        || has_class(REAL_CLASS_WATER_RANGER);
+    int show_spheres = is_divine_spell_user();
     sprite_set_frame(sphere_label, show_spheres ? 0 : 2);
     sprite_set_frame(psionic_label, show_spheres ? 0 : 2);
 }
