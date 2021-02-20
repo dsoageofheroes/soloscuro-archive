@@ -210,7 +210,7 @@ static void new_character_init(SDL_Renderer* _renderer, const uint32_t x, const 
     for (int i = 0; i < 8; i++) {
         classes[i] = new_sprite_create(renderer, pal, 220 + x, 10 + y + (i * 8),
             zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2002 + i);
-        class_sel[i] = new_sprite_create(renderer, pal, 220 + x, 10 + y + (i * 8),
+        class_sel[i] = new_sprite_create(renderer, pal, 220 + x, 11 + y + (i * 8),
             zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20047);
         sprite_set_frame(classes[i], 2);
     }
@@ -222,7 +222,7 @@ static void new_character_init(SDL_Renderer* _renderer, const uint32_t x, const 
     for (int i = 0; i < 4; i++) {
         spheres[i] = new_sprite_create(renderer, pal, 220 + x, 105 + y + (i * 8),
             zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2042 + i);
-        ps_sel[i] = new_sprite_create(renderer, pal, 220 + x, 105 + y + (i * 8),
+        ps_sel[i] = new_sprite_create(renderer, pal, 220 + x, 106 + y + (i * 8),
             zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20047);
         sprite_set_frame(spheres[i], 0);
     }
