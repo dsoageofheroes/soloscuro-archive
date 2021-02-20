@@ -9,6 +9,7 @@ typedef uint16_t font_t;
 enum {
     FONT_YELLOW,
     FONT_GREY,
+    FONT_GREYLIGHT,
     FONT_BLACK,
     FONT_BLACKDARK,
     FONT_RED,

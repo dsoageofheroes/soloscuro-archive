@@ -181,10 +181,10 @@ static void init_pc() {
 }
 
 // FIXME - Change these to ds1_race_offsets_x and then add ones for DS2 and possibly DSO, if extra races are ever added in DSO
-// H = Human - D = Dwarf - E = Elf - HE = Half-Elf - HG = Half-Giant - HL= Halfling - M = Mul - T = Thri-Kreen
+// H = Human - D = Dwarf - E = Elf - HE = Half-Elf - HG = Half-Giant - HL = Halfling - M = Mul - T = Thri-Kreen
 // genderRace                   mH   fH   mD   fD   mE   fE  mHE  fHE  mHG  fHG  mHL  fHL   mM   fT
-static int race_offsets_x[] = {  0,   0,  -6,   0, -10, -10,   3,   0, -14,  -9,   3,   9,  -7, -14 };
-static int race_offsets_y[] = {  0,   5,  14,  15,   2,   4,   2,   1,   3,   5,  15,  18,  -5,   1 };
+static int race_offsets_x[] = { 25,  25,  19,  25,  15,  15,  28,  25,  11,  16,  28,  34,  18,  11 };
+static int race_offsets_y[] = { 12,  17,  26,  27,  14,  16,  14,  13,  15,  17,  27,  30,  07,  13 };
 
 static void new_character_init(SDL_Renderer* _renderer, const uint32_t x, const uint32_t y, const float _zoom) {
     gff_palette_t* pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
@@ -231,7 +231,7 @@ static void new_character_init(SDL_Renderer* _renderer, const uint32_t x, const 
             zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20048 + i);
     }
     for (int i = 0; i < 14; i++) {
-        races[i] = new_sprite_create(renderer, pal, race_offsets_x[i] + 25, race_offsets_y[i] + 12,
+        races[i] = new_sprite_create(renderer, pal, race_offsets_x[i], race_offsets_y[i],
             zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20000 + i);
     }
 
@@ -358,23 +358,36 @@ void new_character_render(void *data, SDL_Renderer *renderer) {
     sprite_render(renderer, show_psionic_label ? sphere_label : psionic_label);
     sprite_render(renderer, done_button);
     sprite_render(renderer, exit_button);
-    snprintf(buf, BUF_MAX, "NAME: %s", name_text);
-    print_line_len(renderer, FONT_GREY, buf, 20, 255, BUF_MAX);
+
+    int oX = 8, oY = 235;
+
+    snprintf(buf, BUF_MAX, "NAME:");
+    print_line_len(renderer, FONT_GREYLIGHT, buf, oX, oY += 15, BUF_MAX);
+    snprintf(buf, BUF_MAX, "%s", name_text);
+    print_line_len(renderer, FONT_GREYLIGHT, buf, oX + 76, oY, BUF_MAX);
     snprintf(buf, BUF_MAX, "STR: %d", pc.stats.str);
-    print_line_len(renderer, FONT_GREY, buf, 20, 270, BUF_MAX);
+    print_line_len(renderer, FONT_GREYLIGHT, buf, oX += 12, oY += 20, BUF_MAX);
     snprintf(buf, BUF_MAX, "DEX: %d", pc.stats.dex);
-    print_line_len(renderer, FONT_GREY, buf, 20, 285, BUF_MAX);
+    print_line_len(renderer, FONT_GREYLIGHT, buf, oX, oY += 15, BUF_MAX);
     snprintf(buf, BUF_MAX, "CON: %d", pc.stats.con);
-    print_line_len(renderer, FONT_GREY, buf, 20, 300, BUF_MAX);
-    snprintf(buf, BUF_MAX, "INT: %d", pc.stats.intel);
-    print_line_len(renderer, FONT_GREY, buf, 20, 315, BUF_MAX);
-    snprintf(buf, BUF_MAX, "WIS: %d", pc.stats.wis);
-    print_line_len(renderer, FONT_GREY, buf, 20, 330, BUF_MAX);
+    print_line_len(renderer, FONT_GREYLIGHT, buf, oX, oY += 15, BUF_MAX);
+//    snprintf(buf, BUF_MAX, "INT: %d", pc.stats.intel);
+//    print_line_len(renderer, FONT_GREYLIGHT, buf, 20, 315, BUF_MAX);
+    snprintf(buf, BUF_MAX, "INT:");
+    print_line_len(renderer, FONT_GREYLIGHT, buf, oX, oY += 15, BUF_MAX);
+    snprintf(buf, BUF_MAX, "%d", pc.stats.intel);
+    print_line_len(renderer, FONT_GREYLIGHT, buf, oX + 52, oY, BUF_MAX);
+//    snprintf(buf, BUF_MAX, "WIS: %d", pc.stats.wis);
+//    print_line_len(renderer, FONT_GREYLIGHT, buf, 20, 330, BUF_MAX);
+    snprintf(buf, BUF_MAX, "WIS:");
+    print_line_len(renderer, FONT_GREYLIGHT, buf, oX, oY += 15, BUF_MAX);
+    snprintf(buf, BUF_MAX, "%d", pc.stats.wis);
+    print_line_len(renderer, FONT_GREYLIGHT, buf, oX + 52, oY, BUF_MAX);
     snprintf(buf, BUF_MAX, "CHA: %d", pc.stats.cha);
-    print_line_len(renderer, FONT_GREY, buf, 20, 345, BUF_MAX);
+    print_line_len(renderer, FONT_GREYLIGHT, buf, oX, oY += 15, BUF_MAX);
     snprintf(buf, BUF_MAX, "%s %s", pc.gender == GENDER_MALE ? "MALE" : "FEMALE", get_race_as_string());
-    print_line_len(renderer, FONT_GREY, buf, 175, 270, BUF_MAX);
-    print_line_len(renderer, FONT_GREY, get_alignment_as_string(), 175, 285, BUF_MAX);
+    print_line_len(renderer, FONT_GREYLIGHT, buf, oX = 170, oY = 270, BUF_MAX);
+    print_line_len(renderer, FONT_GREYLIGHT, get_alignment_as_string(), oX, oY += 15, BUF_MAX);
     pos = 0;
     for (int i = 0; i < 3; i++) {
         if (pc.real_class[i] >= 0) {
@@ -382,7 +395,7 @@ void new_character_render(void *data, SDL_Renderer *renderer) {
         }
     }
     buf[pos] = '\0';
-    print_line_len(renderer, FONT_GREY, buf, 175, 300, BUF_MAX);
+    print_line_len(renderer, FONT_GREYLIGHT, buf, oX, oY += 15, BUF_MAX);
     pos = 0;
     for (int i = 0; i < 3; i++) {
         if (pc.real_class[i] >= 0) {
@@ -390,22 +403,22 @@ void new_character_render(void *data, SDL_Renderer *renderer) {
         }
     }
     buf[pos] = '\0';
-    print_line_len(renderer, FONT_GREY, buf, 175, 315, BUF_MAX);
+    print_line_len(renderer, FONT_GREYLIGHT, buf, oX, oY += 15, BUF_MAX);
     if (pc.real_class[0] > -1) {
         snprintf(buf, BUF_MAX, "EXP: %d (%d)", pc.current_xp, dnd2e_exp_to_next_level_up(&pc));
-        print_line_len(renderer, FONT_GREY, buf, 245, 315, BUF_MAX);
+        print_line_len(renderer, FONT_GREYLIGHT, buf, oX + 70, oY, BUF_MAX);
     }
     snprintf(buf, BUF_MAX, "AC: %d", dnd2e_get_ac_pc(&pc, &inv));
-    print_line_len(renderer, FONT_GREY, buf, 175, 330, BUF_MAX);
-    pos = snprintf(buf, BUF_MAX, "%d%s", dnd2e_get_attack_num_pc(&pc, 0) >> 1,
+    print_line_len(renderer, FONT_GREYLIGHT, buf, oX, oY += 15, BUF_MAX);
+    pos = snprintf(buf, BUF_MAX, "DAM: %d%s", dnd2e_get_attack_num_pc(&pc, 0) >> 1,
         (dnd2e_get_attack_num_pc(&pc, 0) & 0x01) ? ".5" : "");
     pos += snprintf(buf + pos, BUF_MAX - pos, "x1D%d", dnd2e_get_attack_die_pc(&pc, 0));
     pos += snprintf(buf + pos, BUF_MAX - pos, "+%d", dnd2e_get_attack_mod_pc(&pc, 0));
-    print_line_len(renderer, FONT_GREY, buf, 245, 330, BUF_MAX);
+    print_line_len(renderer, FONT_GREYLIGHT, buf, oX + 70, oY, BUF_MAX);
     pos = snprintf(buf, BUF_MAX, "%d/%d", pc.base_hp, pc.high_hp);
-    print_line_len(renderer, FONT_GREY, buf, 185, 345, BUF_MAX);
+    print_line_len(renderer, FONT_GREYLIGHT, buf, oX + 15, oY += 15, BUF_MAX);
     pos = snprintf(buf, BUF_MAX, "%d/%d", pc.base_psp, pc.base_psp);
-    print_line_len(renderer, FONT_GREY, buf, 185, 360, BUF_MAX);
+    print_line_len(renderer, FONT_GREYLIGHT, buf, oX + 15, oY += 15, BUF_MAX);
 }
 
 int new_character_handle_mouse_movement(const uint32_t x, const uint32_t y) {
