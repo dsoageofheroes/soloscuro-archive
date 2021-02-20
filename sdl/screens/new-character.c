@@ -296,7 +296,7 @@ static const char* get_race_as_string() {
         case RACE_HALFGIANT: return "HALF-GIANT";
         case RACE_HALFLING: return "HALFLING";
         case RACE_MUL: return "MUL";
-        case RACE_THRIKREEN: return "THRIKREEN";
+        case RACE_THRIKREEN: return "THRI-KREEN";
     }
     return "UNKNOWN";
 }
