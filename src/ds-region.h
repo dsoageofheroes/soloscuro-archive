@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include "../src/gff-map.h"
 #include "ds-object.h"
+#include "combat.h"
 
 typedef struct dsl_region_s {
     gff_map_object_t *entry_table;
@@ -19,6 +20,7 @@ typedef struct dsl_region_s {
     uint32_t gff_file;
     uint32_t map_id;
     region_list_t *list;
+    combat_region_t cr;
 } dsl_region_t;
 
 dsl_region_t* dsl_load_region(const int gff_file);
@@ -33,7 +35,9 @@ int dsl_region_get_tile(const dsl_region_t *region, const uint32_t image_id,
 unsigned char* dsl_load_object_bmp(dsl_region_t *region, const uint32_t id, const uint32_t bmp_id);
 dsl_region_t* dsl_region_get_current();
 
+uint16_t dsl_region_create_from_objex(dsl_region_t *reg, const int id, const int32_t x, const int32_t y);
 region_object_t* dsl_region_find_object(const int16_t entry_id);
+region_object_t* dsl_region_get_object(const int16_t entry_id);
 
 void dsl_region_free(dsl_region_t *region);
 

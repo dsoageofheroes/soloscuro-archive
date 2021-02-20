@@ -62,6 +62,124 @@ dsl_region_t* dsl_load_region(const int gff_file) {
     return ret;
 }
 
+static int location_blocked(const dsl_region_t *reg, const int32_t x, const int32_t y) {
+    region_object_t *obj = NULL;
+    region_list_for_each(reg->list, obj) {
+        if (obj->mapx == x && obj->mapy == y) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+static void place_region_object(dsl_region_t *reg, region_object_t *robj, const int32_t x, const int32_t y) {
+    if (!location_blocked(reg, x, y)) { return; }
+    if (!location_blocked(reg, x, y + 16)) {
+        robj->mapy = y + 16;
+        return;
+    }
+    if (!location_blocked(reg, x - 16, y + 16)) {
+        robj->mapx = x - 16;
+        robj->mapy = y + 16;
+        return;
+    }
+    if (!location_blocked(reg, x - 16, y)) {
+        robj->mapx = x - 16;
+        return;
+    }
+    if (!location_blocked(reg, x - 16, y - 16)) {
+        robj->mapx = x - 16;
+        robj->mapy = y - 16;
+        return;
+    }
+    if (!location_blocked(reg, x, y - 16)) {
+        robj->mapy = y - 16;
+        return;
+    }
+    if (!location_blocked(reg, x + 16, y - 16)) {
+        robj->mapx = x + 16;
+        robj->mapy = y - 16;
+        return;
+    }
+    if (!location_blocked(reg, x + 16, y)) {
+        robj->mapx = x + 16;
+        return;
+    }
+    if (!location_blocked(reg, x + 16, y + 16)) {
+        robj->mapx = x + 16;
+        robj->mapy = y + 16;
+        return;
+    }
+
+    error("Unable to place object, please update place_region_object!\n");
+    exit(1);
+}
+
+#define RDFF_BUF_SIZE (1<<11)
+uint16_t dsl_region_create_from_objex(dsl_region_t *reg, const int id, const int32_t x, const int32_t y) {
+    region_object_t *robj = NULL;
+    char buf[RDFF_BUF_SIZE];
+    rdff_disk_object_t *rdff = (rdff_disk_object_t*) buf;
+    disk_object_t dobj;
+    uint16_t ret = reg->list->pos;
+
+    gff_chunk_header_t chunk = gff_find_chunk_header(OBJEX_GFF_INDEX, GFF_RDFF, -1 * id);
+    if (chunk.length >= RDFF_BUF_SIZE) {
+        error ("Unable to load RDFF, buffer size is too small.\n");
+        exit(1);
+    }
+    if (!gff_read_chunk(OBJEX_GFF_INDEX, &chunk, buf, chunk.length)) {
+        printf("unable to get obj from id: %d\n", id);
+        return 0;
+    }
+    switch(rdff->type) {
+        case COMBAT_OBJECT:
+            combat_add(&(reg->cr), (ds1_combat_t *) (rdff + 1));
+            break;
+    }
+    chunk = gff_find_chunk_header(OBJEX_GFF_INDEX, GFF_OJFF, -1 * id);
+    if (!gff_read_chunk(OBJEX_GFF_INDEX, &chunk, &(dobj), sizeof(disk_object_t))) {
+        printf("unable to get obj from id: %d\n", id);
+        return 0;
+    }
+
+    if (reg->list->pos >= MAX_REGION_OBJS) {
+        error("Ran out of region objects!\n");
+        exit(1);
+    }
+
+    robj = reg->list->objs + reg->list->pos;
+    memset(robj, 0x0, sizeof(region_object_t));
+    robj->disk_idx = id;
+    robj->flags = dobj.flags;
+    robj->gt_idx = dobj.object_index;
+    robj->btc_idx = dobj.bmp_id;
+    // For some reason x and y are reversed.
+    robj->bmpy = x - dobj.xoffset;
+    robj->bmpx = y - dobj.yoffset - dobj.zpos;
+    robj->xoffset = dobj.xoffset;
+    robj->yoffset = dobj.yoffset;
+    robj->mapy = x - dobj.xoffset;
+    robj->mapx = y - dobj.yoffset;
+    robj->mapx *= 16;
+    robj->mapy *= 16;
+    place_region_object(reg, robj, robj->mapx, robj->mapy);
+    robj->rdff_type = rdff->type;
+    //robj->mapz = gm->zpos;
+    robj->mapz = 0;
+    robj->entry_id = -1 * id;
+
+    if (robj->rdff_type == COMBAT_OBJECT) {
+        robj->scmd = combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
+    }
+
+    reg->list->pos++;
+
+    return ret;
+}
+
+
 void dsl_region_free(dsl_region_t *region) {
     if (!region) { return; }
     if (region->list) {
@@ -93,6 +211,10 @@ region_object_t* dsl_region_find_object(const int16_t disk_idx) {
     }
 
     return NULL;
+}
+
+region_object_t* dsl_region_get_object(const int16_t entry_id) {
+    return cregion->list->objs + entry_id;
 }
 
 #define RMAP_MAX (1<<14)

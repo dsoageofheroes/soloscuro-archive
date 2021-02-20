@@ -486,15 +486,21 @@ static int dsl_clone(lua_State *l) {
     lua_Integer priority = luaL_checkinteger(l, 5);
     lua_Integer placement = luaL_checkinteger(l, 6);
 
-    region_object_t* robj = region_list_create_from_objex(dsl_region_get_current()->list, obj, x, y);
     warn("Need to implement: dsl-clone: obj: " PRI_LI ", qty: " PRI_LI ", (" PRI_LI ", "
              PRI_LI ") pri: " PRI_LI ", pla:" PRI_LI "\n", obj, qty, x, y,
         priority, placement);
-    if (robj) {
-        if (robj->scmd == NULL) { robj->scmd = ds_scmd_empty(); }
-        port_add_obj(robj);
+    uint16_t entry_id;
+    for (int i = 0; i < qty; i++) {
+        entry_id = dsl_region_create_from_objex(dsl_region_get_current(), obj, x, y);
+        region_object_t* robj = dsl_region_get_object(entry_id);
+
+        if (robj) {
+            if (robj->scmd == NULL) { robj->scmd = ds_scmd_empty(); }
+            port_add_obj(robj);
+        }
     }
-    return 0;
+    lua_pushinteger(l, entry_id);
+    return 1;
 }
 
 static int dsl_ask_yes_no(lua_State *l) {

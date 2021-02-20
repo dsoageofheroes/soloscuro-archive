@@ -1,6 +1,7 @@
 #include <math.h>
 #include "player.h"
 #include "main.h"
+#include "../src/combat.h"
 #include "../src/dsl.h"
 #include "sprite.h"
 #include "screens/narrate.h"
@@ -22,50 +23,6 @@ typedef struct player_sprites_s {
     uint16_t port;
     inventory_sprites_t inv;
 } player_sprites_t;
-
-static scmd_t move_down[] = {
-    {.bmp_idx = 3, .delay = 7, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 4, .delay = 7, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 5, .delay = 7, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 6, .delay = 7, .flags = SCMD_JUMP, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-};
-
-static scmd_t move_up[] = {
-    {.bmp_idx = 7, .delay = 7, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 8, .delay = 7, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 9, .delay = 7, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 10, .delay = 7, .flags = SCMD_JUMP, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-};
-
-static scmd_t move_right[] = {
-    {.bmp_idx = 11, .delay = 7, .flags = 0x0, .xoffset = 9, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 12, .delay = 7, .flags = 0x0, .xoffset = 4, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 13, .delay = 7, .flags = 0x0, .xoffset = 8, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 14, .delay = 7, .flags = SCMD_JUMP, .xoffset = 3, .yoffset = 0, 0, 0, 0},
-};
-
-static scmd_t move_left[] = {
-    {.bmp_idx = 11, .delay = 7, .flags = SCMD_XMIRROR, .xoffset = -9, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 12, .delay = 7, .flags = SCMD_XMIRROR, .xoffset = -4, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 13, .delay = 7, .flags = SCMD_XMIRROR, .xoffset = -8, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 14, .delay = 7, .flags = SCMD_XMIRROR | SCMD_JUMP, .xoffset = -3, .yoffset = 0, 0, 0, 0},
-};
-
-static scmd_t stand_down[] = {
-    {.bmp_idx = 0, .delay = 0, .flags = SCMD_LAST, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-};
-
-static scmd_t stand_up[] = {
-    {.bmp_idx = 1, .delay = 0, .flags = SCMD_LAST, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-};
-
-static scmd_t stand_right[] = {
-    {.bmp_idx = 2, .delay = 0, .flags = SCMD_LAST, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-};
-
-static scmd_t stand_left[] = {
-    {.bmp_idx = 2, .delay = 0, .flags = SCMD_XMIRROR | SCMD_LAST, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-};
 
 static player_t player;
 static region_object_t dsl_player;
@@ -155,15 +112,14 @@ void player_update() {
     if (main_player_freeze() || direction == 0x0 || cmap_is_block(nexty + 1, nextx)) {
         anims[0].x = anims[0].destx;
         anims[0].y = anims[0].desty;
-        if (anims[0].scmd == move_left) {
-            set_animation(anims + 0, stand_left);
-        } else if (anims[0].scmd == move_right) {
-            set_animation(anims + 0, stand_right);
-        } else if (anims[0].scmd == move_up) {
-            set_animation(anims + 0, stand_up);
-        } else if (anims[0].scmd == move_down) {
-            set_animation(anims + 0, stand_down);
-        } else {
+        if (anims[0].scmd == combat_get_scmd(COMBAT_SCMD_MOVE_LEFT)) {
+            set_animation(anims + 0, combat_get_scmd(COMBAT_SCMD_STAND_LEFT));
+        } else if (anims[0].scmd == combat_get_scmd(COMBAT_SCMD_MOVE_RIGHT)) {
+            set_animation(anims + 0, combat_get_scmd(COMBAT_SCMD_STAND_RIGHT));
+        } else if (anims[0].scmd == combat_get_scmd(COMBAT_SCMD_MOVE_UP)) {
+            set_animation(anims + 0, combat_get_scmd(COMBAT_SCMD_STAND_UP));
+        } else if (anims[0].scmd == combat_get_scmd(COMBAT_SCMD_MOVE_DOWN)) {
+            set_animation(anims + 0, combat_get_scmd(COMBAT_SCMD_STAND_DOWN));
         }
         return;
     }
@@ -179,13 +135,13 @@ void player_update() {
     anims[0].desty = player.y * 16 * 2;
 
     if (direction & PLAYER_LEFT) { 
-        set_animation(anims + 0, move_left);
+        set_animation(anims + 0, combat_get_scmd(COMBAT_SCMD_MOVE_LEFT));
     } else if (direction & PLAYER_RIGHT) {
-        set_animation(anims + 0, move_right);
+        set_animation(anims + 0, combat_get_scmd(COMBAT_SCMD_MOVE_RIGHT));
     } else if (direction & PLAYER_DOWN) {
-        set_animation(anims + 0, move_down);
+        set_animation(anims + 0, combat_get_scmd(COMBAT_SCMD_MOVE_DOWN));
     } else if (direction & PLAYER_UP) {
-        set_animation(anims + 0, move_up);
+        set_animation(anims + 0, combat_get_scmd(COMBAT_SCMD_MOVE_UP));
     }
 
     count = ticks_per_move;
@@ -288,7 +244,7 @@ static void load_character_sprite(SDL_Renderer *renderer, const int slot, const 
 void player_load(SDL_Renderer *renderer, const int slot, const float zoom) {
     load_character_sprite(renderer, slot, zoom);
     anims[slot].spr = players[slot].main;
-    set_animation(anims + slot, stand_down);
+    set_animation(anims + slot, combat_get_scmd(COMBAT_SCMD_STAND_DOWN));
     player_add_to_animation_list();
 }
 
@@ -339,10 +295,10 @@ void player_set_delay(const int amt) {
     if (amt < 0) { return; }
 
     for (int i = 0; i < 4; i++) {
-        move_down[i].delay = amt;
-        move_up[i].delay = amt;
-        move_left[i].delay = amt;
-        move_right[i].delay = amt;
+        combat_get_scmd(COMBAT_SCMD_MOVE_DOWN)->delay = amt;
+        combat_get_scmd(COMBAT_SCMD_MOVE_UP)->delay = amt;
+        combat_get_scmd(COMBAT_SCMD_MOVE_LEFT)->delay = amt;
+        combat_get_scmd(COMBAT_SCMD_MOVE_RIGHT)->delay = amt;
     }
 }
 

@@ -1282,21 +1282,14 @@ void dsl_lua_shop(void) {
 
 void dsl_lua_clone(void) {
     dsl_lua_get_parameters(6);
-    //int16_t header_num = atoi(lparams.params[0]);
-    //int16_t qty = atoi(lparams.params[1]);
-    //int16_t x = atoi(lparams.params[2]);
-    //int16_t y = atoi(lparams.params[3]);
-    //uint8_t priority = atoi(lparams.params[4]);
-    //uint8_t placement = atoi(lparams.params[5]);
-    lprintf("dsl.clone(%s, %s, %s, %s, %s, %s)\n",
+
+    lprintf("obj = dsl.clone(%s, %s, %s, %s, %s, %s)\n",
         lparams.params[0],
         lparams.params[1],
         lparams.params[2],
         lparams.params[3],
         lparams.params[4],
         lparams.params[5]);
-    //warn("dsl_clone: must create %d of %d objects at (%d, %d) with priority = %d, placement = %d\n",
-        //header_num, qty, x, y, priority, placement);
 }
 
 void dsl_lua_changemoney(void) {
