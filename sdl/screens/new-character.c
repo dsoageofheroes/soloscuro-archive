@@ -524,15 +524,17 @@ static void fix_race_gender() { // move the race/gender to the appropiate spot
         pc.race = RACE_MUL;
     }
 
-    for (int i = 0; reset && i < 8; i++) {
-        pc.real_class[0] = pc.real_class[1] = pc.real_class[2] = -1;
+    pc.real_class[0] = pc.real_class[1] = pc.real_class[2] = -1;
+
+    for (int i = 0; reset && i < 8; i++)
         sprite_set_frame(class_sel[i], 0);
-    }
+
     if (reset) { get_random_name(); }
 
-    dnd2e_fix_stats_pc(&pc); // in case something need adjustment
     load_character_sprite(); // go ahead and get the new sprite
     set_class_frames(); // go ahead and setup the new class frames
+    select_class(2); // Default to Fighter whenever race changes
+    dnd2e_fix_stats_pc(&pc); // in case something need adjustment
 }
 
 static int find_class_selection(const uint8_t real_class) {
