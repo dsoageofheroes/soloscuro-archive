@@ -1436,13 +1436,14 @@ static void render_entry_cact() {
 static void render_entry_scmd() {
     render_entry_header();
     char buf[BUF_MAX];
-    int pos = 0;
     int num_entries = 0;
-    const int max_entries = 20;
+    const int max_entries = 36;
     int ypos = 40;
     scmd_t* scmd = dsl_scmd_get(gff_idx, res_ids[res_idx], 0);
-    while (num_entries < max_entries && scmd->flags != SCMD_LAST && scmd->flags != SCMD_JUMP) {// && scmd->delay != 0) {
-        snprintf(buf, BUF_MAX, "bmp: %d, delay: %d, offset: (%d, %d), hot: (%d, %d)", 
+    while (num_entries < max_entries && scmd->flags != SCMD_JUMP) {// && scmd->delay != 0) {
+        snprintf(buf, BUF_MAX, "%c%c: bmp: %d, delay: %d, offset: (%d, %d), hot: (%d, %d)", 
+            scmd->flags & SCMD_LAST ? 'L' : ' ',
+            scmd->flags & SCMD_JUMP ? 'J' : ' ',
             scmd->bmp_idx, scmd->delay, scmd->xoffset, scmd->yoffset,
             scmd->xoffsethot, scmd->yoffsethot);
         print_line_len(renderer, 0, buf, 320, ypos, BUF_MAX);
@@ -1454,12 +1455,11 @@ static void render_entry_scmd() {
         num_entries++;
         scmd++;
     }
-    if (scmd->flags & SCMD_LAST) {
-        pos += snprintf(buf, BUF_MAX, "LAST ");
-    } else if (scmd->flags & SCMD_JUMP) {
-        pos += snprintf(buf + pos, BUF_MAX - pos, "LAST ");
-    } else if (num_entries == max_entries) {
-        pos += snprintf(buf + pos, BUF_MAX - pos, "MAX ENTRIES");
-    }
+    snprintf(buf, BUF_MAX, "%c%c: bmp: %d, delay: %d, offset: (%d, %d), hot: (%d, %d)", 
+        scmd->flags & SCMD_LAST ? 'L' : ' ',
+        scmd->flags & SCMD_JUMP ? 'J' : ' ',
+        scmd->bmp_idx, scmd->delay, scmd->xoffset, scmd->yoffset,
+        scmd->xoffsethot, scmd->yoffsethot);
     print_line_len(renderer, 0, buf, 320, ypos, BUF_MAX);
+    //printf("num_entries = %d\n", num_entries);
 }

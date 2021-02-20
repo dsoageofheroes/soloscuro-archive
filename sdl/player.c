@@ -3,6 +3,7 @@
 #include "main.h"
 #include "../src/dsl.h"
 #include "sprite.h"
+#include "screens/narrate.h"
 #include "../src/trigger.h"
 #include "../src/ds-player.h"
 #include "../src/dsl-var.h"
@@ -136,10 +137,6 @@ void player_update() {
     animate_shift_node(player_node, player_zpos);
     if (--count > 0) { return; }
 
-    //printf("%d, %d\n", player.x, player.y);
-    trigger_box_check(player.x, player.y);
-    //while(trigger_tile_check(player.x, player.y)) { ; }
-    trigger_tile_check(player.x, player.y);
 
     int nextx = player.x;
     int nexty = player.y;
@@ -148,6 +145,13 @@ void player_update() {
     if (direction & PLAYER_LEFT) { nextx -= 1; }
     if (direction & PLAYER_RIGHT) { nextx += 1; }
     //debug ("tile @ (%d, %d) = %d\n", player.x, player.y, cmap_is_block(player.y, player.x));
+
+    if (!narrate_is_open()) {
+        trigger_noorders(player.x, player.y);
+    }
+    trigger_box_check(player.x, player.y);
+    trigger_tile_check(player.x, player.y);
+
     if (main_player_freeze() || direction == 0x0 || cmap_is_block(nexty + 1, nextx)) {
         anims[0].x = anims[0].destx;
         anims[0].y = anims[0].desty;
@@ -163,12 +167,6 @@ void player_update() {
         }
         return;
     }
-
-    // When moving off do a check.
-    //if (player.x != nextx || player.y != nexty) {
-        //trigger_box_check(player.x, player.y);
-        //trigger_tile_check(player.x, player.y);
-    //}
 
     player.x = nextx;
     player.y = nexty;
@@ -271,7 +269,7 @@ static void load_character_sprite(SDL_Renderer *renderer, const int slot, const 
             players[slot].main = sprite_new(renderer, pal, 0, 0,
                 zoom, OBJEX_GFF_INDEX, GFF_BMP, 2093);
             break;
-        case RACE_TRIKEEN:
+        case RACE_THRIKEEN:
             players[slot].port = sprite_new(renderer, pal, 0, 0,
                 zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20013);
             players[slot].main = sprite_new(renderer, pal, 0, 0,

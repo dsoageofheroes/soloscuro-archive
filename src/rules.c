@@ -111,7 +111,7 @@ static const uint16_t mul_classes[] = {
     A_S | A_T,
     A_END
 };
-static const uint16_t trikeen_classes[] = {
+static const uint16_t thrikeen_classes[] = {
     A_C, A_D, A_F, A_G, A_S, A_R,
     A_C | A_F, A_C | A_S, A_C | A_R,
     A_C | A_F | A_S,
@@ -137,7 +137,7 @@ const static uint8_t race_mods[][6] = {
 };
 
 static void dnd2e_apply_race_mods(ds_character_t *pc) {
-    if (pc->race < RACE_HUMAN || pc->race > RACE_TRIKEEN) { return; }
+    if (pc->race < RACE_HUMAN || pc->race > RACE_THRIKEEN) { return; }
     pc->stats.str += race_mods[pc->race][0];
     pc->stats.dex += race_mods[pc->race][1];
     pc->stats.con += race_mods[pc->race][2];
@@ -490,7 +490,7 @@ int dnd2e_is_class_allowed(const uint8_t race, const int8_t classes[3]) {
         case RACE_HALFGIANT: allowed = half_giant_classes; break;
         case RACE_HALFLING: allowed = halfling_classes; break;
         case RACE_MUL: allowed = mul_classes; break;
-        case RACE_TRIKEEN: allowed = trikeen_classes; break;
+        case RACE_THRIKEEN: allowed = thrikeen_classes; break;
     }
 
     while (allowed && *allowed) {

@@ -213,10 +213,6 @@ region_object_t* get_object_at_location(const uint32_t x, const uint32_t y) {
 int map_handle_mouse(const uint32_t x, const uint32_t y) {
     region_object_t *obj = NULL;
 
-    if (!narrate_is_open()) {
-        trigger_noorders();
-    }
-
     if (!cmap) { return 0; }
     obj = get_object_at_location(x, y);
 

@@ -246,7 +246,7 @@ enum {
     RACE_HALFGIANT,
     RACE_HALFLING,
     RACE_MUL,
-    RACE_TRIKEEN,
+    RACE_THRIKEEN,
     RACE_MAX
 };
 

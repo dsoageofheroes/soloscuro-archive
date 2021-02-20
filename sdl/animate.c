@@ -17,6 +17,7 @@ static SDL_RendererFlip animate_tick(animate_sprite_t *anim, const uint32_t xoff
     SDL_RendererFlip flip = 0;
     int32_t scmd_xoffset = 0;
 
+    sprite_set_frame(anim->spr, anim->scmd[pos].bmp_idx);
     if (anim->scmd[pos].flags & SCMD_LAST) { goto out; }
 
     if (anim->scmd[pos].flags & SCMD_JUMP && anim->delay == 0) {
@@ -30,6 +31,13 @@ static SDL_RendererFlip animate_tick(animate_sprite_t *anim, const uint32_t xoff
         sprite_set_frame(anim->spr, anim->scmd[pos].bmp_idx);
         anim->delay = anim->scmd[pos].delay;
         goto out;
+    }
+
+    while (anim->delay == 0 && pos > 0) {
+        anim->pos++; pos++;
+        if (pos >= SCMD_MAX_SIZE) {
+            anim->pos = pos = 0;
+        }
     }
 
     anim->delay--;
@@ -167,4 +175,20 @@ void animate_clear() {
 void animate_close() {
     animate_clear();
     memset(animate_list, 0x0, sizeof(animate_sprite_node_t*) * MAX_ZPOS);
+}
+
+void port_animate_obj(region_object_t *robj) {
+    animate_sprite_t *anim = robj->data;
+
+    // In case we are in the middle of an animation, skip past it.
+    while (! (anim->scmd[anim->pos].flags & SCMD_LAST) && anim->pos < SCMD_MAX_SIZE) {
+        anim->pos++;
+    }
+    if (anim->pos == SCMD_MAX_SIZE) { anim->pos = 0; }
+    // No increment and loop if needed
+    anim->pos++;
+    while (! (anim->scmd[anim->pos].flags & SCMD_LAST) && anim->pos < SCMD_MAX_SIZE) {
+        anim->pos++;
+    }
+    if (anim->pos == SCMD_MAX_SIZE) { anim->pos = 0; }
 }

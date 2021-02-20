@@ -12,6 +12,8 @@ typedef struct attack_trigger_s {
 
 typedef struct noorders_trigger_s {
     uint32_t obj, file, addr;
+    uint8_t need_to_run; // flag if we need to run/execute at the next oppurtunity.
+    uint8_t trigger_on_tile; // flag if we need to run/execute next tile trigger.
 } noorders_trigger_t;
 
 typedef struct use_trigger_s {
@@ -53,7 +55,9 @@ int add_box_trigger(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t fil
 talkto_trigger_t get_talkto_trigger(uint32_t obj);
 look_trigger_t get_look_trigger(uint32_t obj);
 void trigger_object_clear(const uint32_t obj);
-void trigger_noorders();
+void trigger_enable_object(const uint32_t obj);
+void trigger_noorders(uint32_t x, uint32_t y);
+void trigger_noorders_enable_all();
 void trigger_box_check(uint32_t x, uint32_t y);
 int trigger_tile_check(uint32_t x, uint32_t y);
 
