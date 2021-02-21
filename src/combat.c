@@ -117,8 +117,10 @@ static int location_is_blocked(dsl_region_t *reg, const uint32_t x, const uint32
 }
 
 void combat_update(dsl_region_t *reg) {
+    if (reg == NULL) { return; }
     combat_region_t *cr = &(reg->cr);
     player_pos_t* pc = ds_player_get_pos(ds_player_get_active());
+    if (cr == NULL || pc == NULL) { return; }
     int xdiff, ydiff;
     int posx, posy;
 

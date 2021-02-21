@@ -160,6 +160,7 @@ static int sdl_init(const int what) {
 }
 
 static void init(int args, char *argv[]) {
+    int run_lua = 1;
     xmappos = 560;
     ymappos = 50;
     xmapdiff = ymapdiff = 0;
@@ -213,9 +214,12 @@ static void init(int args, char *argv[]) {
             dsl_lua_load_all_scripts();
             exit(0);
         }
+        if (!strcmp(argv[i], "--ignore-lua")) {
+            run_lua = 0;
+        }
     }
 
-    if (ui_lua_load("lua/main.lua") ) {
+    if (run_lua && ui_lua_load("lua/main.lua") ) {
         printf("Init being handled by lua.\n");
         return;
     }
