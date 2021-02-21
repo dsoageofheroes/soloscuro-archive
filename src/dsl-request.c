@@ -236,7 +236,7 @@ uint32_t dsl_request_impl(int16_t token, int16_t name,
             debug("I need to flash (-)%d at (%d, %d)\n", name, num1, num2);
             break;
         case REQUEST_SET_ALLEGIANCE:
-            request_to_do(name, DO_COMBAT, req_set_allegiance, num1, num2);
+            return request_to_do(name, DO_COMBAT, req_set_allegiance, num1, num2);
             break;
         case REQUEST_END_GAME:
             debug("Request END_GAME: end game and start over...\n");
@@ -622,11 +622,9 @@ int16_t request_to_do(int16_t name, int16_t rectype, int (*request_proc)(int16_t
     if (name < NULL_OBJECT) {
         if (rectype == DO_TO_ALL) {
             debug("Need to add LUA hooks to walk through every object and...\n");
-            request_proc(name, param1, param2);
-            return 1;
+            return request_proc(name, param1, param2);
         } else {
-            request_proc(name, param1, param2);
-            return 1;
+            return request_proc(name, param1, param2);
         }
     } 
     debug("request_to_do: object %d, request %d not implemented\n", name, rectype);
@@ -647,6 +645,13 @@ int req_animation(int16_t object, long notused1, long notused2) {
 }
 
 int req_set_allegiance(int16_t object, long allegiance, long notused2) {
-    debug("Need to set object %d allegiance to %ld\n", object, allegiance);
-    return 0;
+    region_object_t* robj = dsl_region_get_object(object);
+
+    if (robj) {
+        dsl_region_set_allegiance(dsl_region_get_current(), robj->obj_id, allegiance);
+    } else {
+        error("error: Unable to find object: %d\n", object);
+    }
+
+    return object;
 }

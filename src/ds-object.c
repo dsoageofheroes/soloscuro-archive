@@ -101,7 +101,9 @@ static void load_object_from_etab(region_object_t *dsl_object, gff_map_object_t 
     dsl_object->mapy = gm->ypos;
     dsl_object->mapz = gm->zpos;
     dsl_object->entry_id = id;
+    dsl_object->combat_id = COMBAT_ERROR;
     dsl_object->scmd_flags = gm->flags;
+    dsl_object->obj_id = abs(gm->index);
 }
 
 region_object_t* __region_list_get_next(region_list_t *rl, int *i) {

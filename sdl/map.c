@@ -173,6 +173,13 @@ void port_add_obj(region_object_t *obj) {
     anim_pos++;
 }
 
+void port_update_obj(region_object_t *robj, const uint16_t nextx, const uint16_t nexty) {
+    animate_sprite_t *as = (animate_sprite_t*) robj->data;
+    as->destx = nextx * main_get_zoom();
+    as->desty = nexty * main_get_zoom();
+    animate_set_animation(as, robj->scmd, 20);
+}
+
 void port_swap_objs(int obj_id, region_object_t *obj) {
     animate_sprite_t *as = (animate_sprite_t*) obj->data;
     gff_palette_t *pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + cmap->region->map_id - 1;
@@ -184,12 +191,6 @@ void port_swap_objs(int obj_id, region_object_t *obj) {
     } else {
         error("Unable to find animation for obj_id!\n");
     }
-}
-
-void port_update_obj(region_object_t *obj) {
-    animate_sprite_t *as = obj->data;
-    uint32_t num_frames = sprite_num_frames(as->spr);
-    sprite_set_frame(as->spr, (obj->bmp_idx) % num_frames);
 }
 
 #define CLICKABLE (0x10)

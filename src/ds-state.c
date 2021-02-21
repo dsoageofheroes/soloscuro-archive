@@ -267,7 +267,7 @@ static int get_id(lua_State *l) {
     lua_Integer obj = luaL_checkinteger(l, 1);
     //printf("!!!!!!!!!!dsl.get_name: not implemented returning -1!\n");
     //printf("-------->returning " PRI_LI "\n", obj);
-    error("error: dsl.get_id not implement, just returning whatever.\n");
+    //error("error: dsl.get_id not implement, just returning obj (" PRI_LI " ).\n", obj);
     lua_pushnumber(l, obj);
     //lua_pushnumber(l, -1);
     return 1;
@@ -503,6 +503,21 @@ static int dsl_clone(lua_State *l) {
     return 1;
 }
 
+static int dsl_hunt(lua_State *l) {
+    lua_Integer obj = luaL_checkinteger(l, 1);
+
+    debug("Need to let " PRI_LI " hunt.\n", obj);
+    // Need to get actual id of obj first.
+    region_object_t* robj = dsl_region_get_object(obj);
+    //dsl_region_set_hunt(dsl_region_get_current(), obj);
+    if (robj) {
+        dsl_region_set_hunt(dsl_region_get_current(), robj->obj_id);
+    } else {
+        error("unable to find an object for entry " PRI_LI "\n", obj);
+    }
+    return 0;
+}
+
 static int dsl_ask_yes_no(lua_State *l) {
     debug("Must implement yes no!\n");
     lua_pushinteger(l, port_ask_yes_no());
@@ -598,6 +613,7 @@ static const struct luaL_Reg dsl_state_lib[] = {
     {"call_function", call_function},
     {"request", request},
     {"clone", dsl_clone},
+    {"hunt", dsl_hunt},
     {"ask_yes_no", dsl_ask_yes_no},
     {"exit", dsl_exit},
     {"narrate_open", lua_narrate_open},

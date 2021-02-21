@@ -18,7 +18,6 @@ typedef struct player_s {
     ds_inventory_t inv;
 } player_t;
 
-
 #define MAX_PCS (4)
 #define BUF_MAX (1<<12)
 

@@ -9,6 +9,7 @@
 #include "screens/narrate.h"
 #include "screens/screen-main.h"
 #include "screens/inventory.h"
+#include "../src/combat.h"
 #include "../src/dsl.h"
 #include "../src/dsl-manager.h"
 #include "../src/replay.h"
@@ -129,6 +130,7 @@ void main_set_yscroll(int amt) { ymapdiff = amt; }
 void main_set_ignore_repeat(int repeat) { ignore_repeat = repeat; }
 
 void render() {
+    combat_update(dsl_region_get_current());
     screen_render(renderer, xmappos, ymappos);
 }
 

@@ -65,6 +65,7 @@ dsl_region_t* dsl_load_region(const int gff_file) {
 static int location_blocked(const dsl_region_t *reg, const int32_t x, const int32_t y) {
     region_object_t *obj = NULL;
     region_list_for_each(reg->list, obj) {
+        //printf("(%d, %d) ?= (%d, %d)\n", obj->mapx, obj->mapy, x, y);
         if (obj->mapx == x && obj->mapy == y) {
             return 1;
         }
@@ -133,11 +134,6 @@ uint16_t dsl_region_create_from_objex(dsl_region_t *reg, const int id, const int
         printf("unable to get obj from id: %d\n", id);
         return 0;
     }
-    switch(rdff->type) {
-        case COMBAT_OBJECT:
-            combat_add(&(reg->cr), (ds1_combat_t *) (rdff + 1));
-            break;
-    }
     chunk = gff_find_chunk_header(OBJEX_GFF_INDEX, GFF_OJFF, -1 * id);
     if (!gff_read_chunk(OBJEX_GFF_INDEX, &chunk, &(dobj), sizeof(disk_object_t))) {
         printf("unable to get obj from id: %d\n", id);
@@ -164,21 +160,25 @@ uint16_t dsl_region_create_from_objex(dsl_region_t *reg, const int id, const int
     robj->mapx = y - dobj.yoffset;
     robj->mapx *= 16;
     robj->mapy *= 16;
+    robj->combat_id = 0;
     place_region_object(reg, robj, robj->mapx, robj->mapy);
     robj->rdff_type = rdff->type;
     //robj->mapz = gm->zpos;
     robj->mapz = 0;
     robj->entry_id = -1 * id;
+    robj->obj_id = abs(id);
 
-    if (robj->rdff_type == COMBAT_OBJECT) {
-        robj->scmd = combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
+    switch(rdff->type) {
+        case COMBAT_OBJECT:
+            robj->scmd = combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
+            robj->combat_id = combat_add(&(reg->cr), robj, (ds1_combat_t *) (rdff + 1));
+            break;
     }
 
     reg->list->pos++;
 
     return ret;
 }
-
 
 void dsl_region_free(dsl_region_t *region) {
     if (!region) { return; }
@@ -202,6 +202,30 @@ void dsl_region_free(dsl_region_t *region) {
 }
 
 dsl_region_t* dsl_region_get_current() { return cregion; }
+uint16_t dsl_region_set_hunt(dsl_region_t *reg, const int16_t obj_id) {
+    if (!reg || obj_id == COMBAT_ERROR) { return COMBAT_ERROR; }
+
+    for (int i = 0; i < reg->list->pos; i++) {
+        if (reg->list->objs[i].obj_id == obj_id) {
+            debug("Setting %d to hunt.\n", obj_id);
+            combat_set_hunt(&(reg->cr), reg->list->objs[i].combat_id);
+        }
+    }
+    return reg->list->objs[obj_id].combat_id;
+}
+
+uint16_t dsl_region_set_allegiance(dsl_region_t *reg, const int16_t obj_id, const uint8_t allegiance) {
+    if (!reg || obj_id == COMBAT_ERROR) { return COMBAT_ERROR; }
+
+    for (int i = 0; i < reg->list->pos; i++) {
+        if (reg->list->objs[i].obj_id == obj_id) {
+            debug("Setting allegiance of %d to %d\n", obj_id, allegiance);
+            ds1_combat_t* combat = combat_get_combat(&(reg->cr), reg->list->objs[i].combat_id);
+            combat->allegiance = allegiance;
+        }
+    }
+    return reg->list->objs[obj_id].combat_id;
+}
 
 region_object_t* dsl_region_find_object(const int16_t disk_idx) {
     region_object_t *obj = NULL;
@@ -212,6 +236,11 @@ region_object_t* dsl_region_find_object(const int16_t disk_idx) {
 
     return NULL;
 }
+
+int dsl_region_has_object(dsl_region_t *region, int row, int column) {
+    return location_blocked(region, row * 16, column * 16);
+}
+
 
 region_object_t* dsl_region_get_object(const int16_t entry_id) {
     return cregion->list->objs + entry_id;

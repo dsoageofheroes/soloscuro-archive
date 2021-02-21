@@ -504,7 +504,7 @@ static int print_cmd() {
             //script_id, ((size_t)get_data_ptr()) - dsl_lua_start_ptr);
         lua_depth++;
         in_func = 1;
-        lprintf("dsl.debug(\"func%ld\")\n", cfunc_num);
+        //lprintf("dsl.debug(\"func%ld\")\n", cfunc_num);
     } else {
         print_label();
     }
@@ -544,7 +544,7 @@ void dsl_lua_load_accum(void) {
 
 void dsl_lua_global_ret(void) {
     in_func = 0;
-    lprintf("dsl.debug(\"return func%ld\")\n", cfunc_num);
+    //lprintf("dsl.debug(\"return func%ld\")\n", cfunc_num);
     lua_depth--;
     lprintf("end --return\n");
     if (lua_depth < 0) { lua_depth = 0; }
@@ -1266,8 +1266,7 @@ void dsl_lua_long_inc(void) {
 void dsl_lua_hunt(void) {
     char buf[BUF_SIZE];
     dsl_lua_read_number(buf, BUF_SIZE);
-    lprintf("--Need to set %s to HUNT!\n", buf);
-    //set_orders(read_number(), HUNT, gPov, 0);
+    lprintf("dsl.hunt(%s)\n", buf);
 }
 
 void dsl_lua_source_trace(void) {

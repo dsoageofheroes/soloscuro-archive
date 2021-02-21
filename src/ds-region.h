@@ -38,7 +38,13 @@ dsl_region_t* dsl_region_get_current();
 uint16_t dsl_region_create_from_objex(dsl_region_t *reg, const int id, const int32_t x, const int32_t y);
 region_object_t* dsl_region_find_object(const int16_t entry_id);
 region_object_t* dsl_region_get_object(const int16_t entry_id);
+uint16_t dsl_region_set_hunt(dsl_region_t *reg, const int16_t obj_id);
+uint16_t dsl_region_set_allegiance(dsl_region_t *reg, const int16_t obj_id, const uint8_t allegiance);
+int dsl_region_has_object(dsl_region_t *region, int row, int column);
 
 void dsl_region_free(dsl_region_t *region);
+
+// external functions...
+void combat_update(dsl_region_t *reg);
 
 #endif

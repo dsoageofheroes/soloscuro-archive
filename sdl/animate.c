@@ -160,6 +160,20 @@ animate_sprite_node_t *animate_list_add(animate_sprite_t *anim, const int zpos) 
     return node;
 }
 
+void animate_set_animation(animate_sprite_t *as, scmd_t *scmd, const uint32_t ticks_per_move) {
+    //printf("%d -> %d, %d -> %d\n", as->x, as->destx, as->y, as->desty);
+    const int diffx = abs(as->x - as->destx);
+    const int diffy = abs(as->y - as->desty);
+    const float distance = sqrt(diffx * diffx + diffy * diffy);
+
+    as->scmd = scmd;
+    as->pos = 0;
+    as->move = distance == 0 ? 0 : distance / ((float)ticks_per_move * 2);
+
+    sprite_set_frame(as->spr, as->scmd->bmp_idx);
+    sprite_set_location(as->spr, as->x, as->y);
+}
+
 void animate_init() {
     memset(animate_list, 0x0, sizeof(animate_sprite_node_t*) * MAX_ZPOS);
 }
