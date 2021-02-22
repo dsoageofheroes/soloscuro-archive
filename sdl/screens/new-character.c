@@ -494,19 +494,18 @@ int new_character_handle_mouse_down(const uint32_t button, const uint32_t x, con
 }
 
 static void fix_race_gender() { // move the race/gender to the appropiate spot
-    int reset = 0;
     if (pc.gender > GENDER_FEMALE) {
         pc.gender = GENDER_MALE;
         pc.race++;
-        reset = 1;
     } else if (pc.gender < GENDER_MALE) {
         pc.gender = GENDER_FEMALE;
         pc.race--;
-        reset = 1;
     }
-    if (pc.race < RACE_HUMAN) { pc.race = RACE_THRIKREEN; reset = 1; }
-    if (pc.race > RACE_THRIKREEN) { pc.race = RACE_HUMAN; reset = 1; }
 
+    if (pc.race < RACE_HUMAN) { pc.race = RACE_THRIKREEN; }
+    if (pc.race > RACE_THRIKREEN) { pc.race = RACE_HUMAN; }
+
+    // FIXME - Add (optional) support for Female Muls/Male Thri-Kreen if art assets are ever created for them
     if (pc.race == RACE_MUL && pc.gender == GENDER_FEMALE) {
         pc.race = RACE_THRIKREEN;
     }
@@ -516,11 +515,9 @@ static void fix_race_gender() { // move the race/gender to the appropiate spot
     }
 
     pc.real_class[0] = pc.real_class[1] = pc.real_class[2] = -1;
-//    for (int i = 0; reset && i < 8; i++)
     for (int i = 0; i < 8; i++)
         sprite_set_frame(class_sel[i], 0);
 
-//    if (reset) { get_random_name(); } // A new name is always chosen when race/gender is changed.
     get_random_name();
 
     load_character_sprite(); // go ahead and get the new sprite
