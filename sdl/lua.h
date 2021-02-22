@@ -6,6 +6,7 @@
 #include <lua5.3/lualib.h>
 #include <lua5.3/lauxlib.h>
 
+int ui_lua_load_preload(const char *filename);
 int ui_lua_load(const char *filename);
 void ui_lua_close();
 int ui_lua_keydown(const int key_code);

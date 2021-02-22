@@ -259,10 +259,6 @@ void parse_args(int argc, char *argv[]) {
         }
     }
 
-    if (!ds1_gffs) {
-        error("Unable to get the location of the DarkSun 1 GFFs, please pass with '--ds1 <location>'\n");
-        exit(1);
-    }
     replay_init("replay.lua");
 }
 
@@ -271,7 +267,14 @@ int main(int argc, char *argv[]) {
 
     // Order matters.
     gff_init();
-    gff_load_directory(ds1_gffs);
+    ui_lua_load_preload("lua/settings.lua");
+    if (gff_get_game_type() == DARKSUN_UNKNOWN) {
+        if (!ds1_gffs) {
+            error("Unable to get the location of the DarkSun 1 GFFs, please pass with '--ds1 <location>'\n");
+            exit(1);
+        }
+        gff_load_directory(ds1_gffs);
+    }
     dsl_init();
 
     init(argc, argv);
@@ -365,6 +368,7 @@ void game_loop() {
 }
 
 SDL_Renderer *main_get_rend() { return renderer; }
+SDL_Surface *main_get_screen() { return screen; }
 const float main_get_zoom() { return zoom; }
 
 void main_exit_system() {

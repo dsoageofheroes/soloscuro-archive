@@ -15,7 +15,7 @@ static int ui_lua_error(const char *msg) {
     return 0;
 }
 
-int ui_lua_load(const char *filename) {
+static void ui_lua_run(const char *filename, const char *name) {
     ui_lua = luaL_newstate();
     luaL_openlibs(ui_lua);
 
@@ -24,13 +24,22 @@ int ui_lua_load(const char *filename) {
     if (luaL_loadfile(ui_lua, filename)) {
         error("unable to open '%s'.\n", filename);
         ui_lua_close();
-        return 0;
+        return;
     }
 
-    if (lua_pcall(ui_lua, 0, 0, 0)) { ui_lua_error("Can't prime init()"); }
-    lua_getglobal(ui_lua, "init");
-    if (lua_pcall(ui_lua, 0, 1, 0)) { ui_lua_error("Can't call init()"); }
+    if (lua_pcall(ui_lua, 0, 0, 0)) { ui_lua_error("Can't prime"); }
+    lua_getglobal(ui_lua, name);
+    if (lua_pcall(ui_lua, 0, 1, 0)) { ui_lua_error("Can't call"); }
 
+}
+
+int ui_lua_load_preload(const char *filename) {
+    ui_lua_run(filename, "preload");
+    return 0;
+}
+
+int ui_lua_load(const char *filename) {
+    ui_lua_run(filename, "init");
     return lua_toboolean(ui_lua, -1);
 }
 
@@ -136,6 +145,19 @@ static int uil_set_quiet(lua_State *l) {
     return 0;
 }
 
+static int uil_load_directory(lua_State *l) {
+    const char *str = luaL_checkstring(l, 1);
+    printf("str = %s\n", str);
+    gff_load_directory(str);
+    return 0;
+}
+
+extern void browse_loop(SDL_Surface*, SDL_Renderer *rend);
+static int uil_run_browser(lua_State *l) {
+    browse_loop(main_get_screen(), main_get_rend());
+    return 0;
+}
+
 static int uil_exit_game(lua_State *l) {
     main_exit_game();
     return 0;
@@ -153,6 +175,8 @@ static const struct luaL_Reg ds_funcs[] = {
     {"toggle_inventory", uil_toggle_inventory},
     {"set_ignore_repeat", uil_set_ignore_repeat},
     {"set_quiet", uil_set_quiet},
+    {"load_directory", uil_load_directory},
+    {"run_browser", uil_run_browser},
     {"exit_game", uil_exit_game},
     {NULL, NULL},
 };
