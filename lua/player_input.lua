@@ -16,10 +16,13 @@
 -- Three options I can easily think of (other than leaving it as-is):
 -- 1)	Store the last keydown combo and execute its keyup counterpart when any new key is pressed
 -- 2)	Execute the last keydown combo's keyup counterpart only when a new modifier key is pressed
--- 3)	Store a list of keydowns that were executed (until all keys are released), then execute keyups when the primary
---		(non-modifier) key for each is released (best solution?)
+-- 3)	Store a list of keydowns that were executed (until all keys are released), then execute keyups when the primary (non-modifier) key
+--	for each is released (best solution?)
 -- *FIXME* *FIXME* *FIXME* *FIXME* *FIXME* *FIXME* *FIXME* *FIXME* *FIXME* *FIXME* *FIXME* *FIXME* *FIXME* *FIXME* *FIXME* *FIXME* *FIXME*
 
+
+-- TODO: Adjust these keybindings. Probably un-hardcode the keybindings in the engine? Add a section in settings.lua for custom keybindings
+--       so people don't have to edit this file.
 
 -- DOWN: NO MODIFIERS
 KEYS_NOMODS_DOWN				= {}
@@ -89,9 +92,11 @@ KEYS_CTRL_SHIFT_UP				= {}
 KEYS_ALT_CTRL_SHIFT_UP				= {}
 
 
--- KEY DOWN --
 function keydown(key)
-	key_handled = false
+	local key_handled = false
+	local alt_is_down = alt_is_down()
+	local ctrl_is_down = ctrl_is_down()
+	local shift_is_down = shift_is_down()
 
 	-- Handle the 
 	-- arg1 = keycode, arg2 = true for being called from keydown(), false for being called from keyup()
@@ -107,43 +112,43 @@ function keydown(key)
 	end
 
 	-- ALT+key
-	if alt_is_down() and KEYS_ALT_DOWN[key] then
+	if alt_is_down and KEYS_ALT_DOWN[key] then
 		KEYS_ALT_DOWN[key]()
 		return key_handled
 	end
 
 	-- CTRL+key
-	if ctrl_is_down() and KEYS_CTRL_DOWN[key] then
+	if ctrl_is_down and KEYS_CTRL_DOWN[key] then
 		KEYS_CTRL_DOWN[key]()
 		return key_handled
 	end
 
 	-- SHIFT+key
-	if shift_is_down() and KEYS_SHIFT_DOWN[key] then
+	if shift_is_down and KEYS_SHIFT_DOWN[key] then
 		KEYS_SHIFT_DOWN[key]()
 		return key_handled
 	end
 
 	-- ALT+CTRL+key
-	if alt_is_down() and ctrl_is_down() and KEYS_ALT_CTRL_DOWN[key] then
+	if alt_is_down and ctrl_is_down and KEYS_ALT_CTRL_DOWN[key] then
 		KEYS_ALT_CTRL_DOWN[key]()
 		return key_handled
 	end
 
 	-- ALT+SHIFT+key
-	if alt_is_down() and shift_is_down() and KEYS_ALT_SHIFT_DOWN[key] then
+	if alt_is_down and shift_is_down and KEYS_ALT_SHIFT_DOWN[key] then
 		KEYS_ALT_SHIFT_DOWN[key]()
 		return key_handled
 	end
 
 	-- CTRL+SHIFT+key
-	if ctrl_is_down() and shift_is_down() and KEYS_CTRL_SHIFT_DOWN[key] then
+	if ctrl_is_down and shift_is_down and KEYS_CTRL_SHIFT_DOWN[key] then
 		KEYS_CTRL_SHIFT_DOWN[key]()
 		return key_handled
 	end
 
 	-- ALT+CTRL+SHIFT+key
-	if alt_is_down() and ctrl_is_down() and shift_is_down() and KEYS_ALT_CTRL_SHIFT_DOWN[key] then
+	if alt_is_down and ctrl_is_down and shift_is_down and KEYS_ALT_CTRL_SHIFT_DOWN[key] then
 		KEYS_ALT_CTRL_SHIFT_DOWN[key]()
 		return key_handled
 	end
@@ -152,9 +157,11 @@ function keydown(key)
 			-- returning true would make lua handle ALL keydown functions and disable the engine's keybindings.
 end
 
--- KEY UP --
 function keyup(key)
-	key_handled = false
+	local key_handled = false
+	local alt_is_down = alt_is_down()
+	local ctrl_is_down = ctrl_is_down()
+	local shift_is_down = shift_is_down()
 
 	-- Key modifiers are in a separate function that handles both key up and key up, so this function
 	-- isn't cluttered with anything other than actual keybindings.
@@ -171,43 +178,43 @@ function keyup(key)
 	end
 
 	-- ALT+key
-	if alt_is_down() and KEYS_ALT_UP[key] then
+	if alt_is_down and KEYS_ALT_UP[key] then
 		KEYS_ALT_UP[key]()
 		return key_handled
 	end
 
 	-- CTRL+key
-	if ctrl_is_down() and KEYS_CTRL_UP[key] then
+	if ctrl_is_down and KEYS_CTRL_UP[key] then
 		KEYS_CTRL_UP[key]()
 		return key_handled
 	end
 
 	-- SHIFT+key
-	if shift_is_down() and KEYS_SHIFT_UP[key] then
+	if shift_is_down and KEYS_SHIFT_UP[key] then
 		KEYS_SHIFT_UP[key]()
 		return key_handled
 	end
 
 	-- ALT+CTRL+key
-	if alt_is_down() and ctrl_is_down() and KEYS_ALT_CTRL_UP[key] then
+	if alt_is_down and ctrl_is_down and KEYS_ALT_CTRL_UP[key] then
 		KEYS_ALT_CTRL_UP[key]()
 		return key_handled
 	end
 
 	-- ALT+SHIFT+key
-	if alt_is_down() and shift_is_down() and KEYS_ALT_SHIFT_UP[key] then
+	if alt_is_down and shift_is_down and KEYS_ALT_SHIFT_UP[key] then
 		KEYS_ALT_SHIFT_UP[key]()
 		return key_handled
 	end
 
 	-- CTRL+SHIFT+key
-	if ctrl_is_down() and shift_is_down() and KEYS_CTRL_SHIFT_UP[key] then
+	if ctrl_is_down and shift_is_down and KEYS_CTRL_SHIFT_UP[key] then
 		KEYS_CTRL_SHIFT_UP[key]()
 		return key_handled
 	end
 
 	-- ALT+CTRL+SHIFT+key
-	if alt_is_down() and ctrl_is_down() and shift_is_down() and KEYS_ALT_CTRL_SHIFT_UP[key] then
+	if alt_is_down and ctrl_is_down and shift_is_down and KEYS_ALT_CTRL_SHIFT_UP[key] then
 		KEYS_ALT_CTRL_SHIFT_UP[key]()
 		return key_handled
 	end
