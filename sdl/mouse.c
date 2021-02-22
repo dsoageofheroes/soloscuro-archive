@@ -1,8 +1,9 @@
 #include "mouse.h"
+#include "../src/dsl.h"
 #include "../src/gff.h"
 #include "../src/gfftypes.h"
 
-const static size_t icon_res[] = {
+const static size_t ds1_icon_res[] = {
     6001, // regular
     6002, // No click
     6003, // melee
@@ -52,11 +53,15 @@ static SDL_Cursor* create_cursor(const int gff_idx, const int type_idx, const si
 }
 
 void mouse_init(SDL_Renderer *rend) {
-    num_cursors = sizeof(icon_res) / sizeof(size_t);
+    if (gff_get_game_type() != DARKSUN_1) {
+        warn("Mouse cursor implemented in DS1 only right now. Not loading mouse cursor.");
+        return;
+    }
+    num_cursors = sizeof(ds1_icon_res) / sizeof(size_t);
     cursors = malloc(sizeof(SDL_Cursor*) * num_cursors);
 
     for (int i = 0; i < num_cursors; i++) {
-        cursors[i] = create_cursor(RESOURCE_GFF_INDEX, GFF_ICON, icon_res[i]);
+        cursors[i] = create_cursor(RESOURCE_GFF_INDEX, GFF_ICON, ds1_icon_res[i]);
     }
 
     SDL_SetCursor(cursors[0]);

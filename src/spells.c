@@ -6,14 +6,17 @@
 static void load_name_from_gff(const uint8_t id, const uint16_t offset, const uint8_t max, char name[32]) {
     char buf[1<<10];
     int pos = 0;
+    int gff = gff_get_game_type() == DARKSUN_ONLINE
+        ? RESFLOP_GFF_INDEX
+        : RESOURCE_GFF_INDEX;
 
     if (id >= max) {
         name[0] = '\0';
         return;
     }
 
-    gff_chunk_header_t chunk = gff_find_chunk_header(RESOURCE_GFF_INDEX, GFF_SPIN, offset + id);
-    gff_read_chunk(RESOURCE_GFF_INDEX, &chunk, buf, sizeof(buf));
+    gff_chunk_header_t chunk = gff_find_chunk_header(gff, GFF_SPIN, offset + id);
+    gff_read_chunk(gff, &chunk, buf, sizeof(buf));
 
     while (pos < 31 && buf[pos] != ':') {
         name[pos] = buf[pos];

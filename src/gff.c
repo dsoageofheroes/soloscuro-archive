@@ -54,11 +54,13 @@ int get_next_idx(const char *name) {
 
     if (strcmp(name, "resource.gff") == 0) { return RESOURCE_GFF_INDEX; }
     if (strcmp(name, "segobjex.gff") == 0) { return OBJEX_GFF_INDEX; }
+    if (strcmp(name, "objex.gff") == 0) { return OBJEX_GFF_INDEX; }
     if (strcmp(name, "gpldata.gff") == 0) { return DSLDATA_GFF_INDEX; }
     if (strcmp(name, "charsave.gff") == 0) { return CHARSAVE_GFF_INDEX; }
     if (strcmp(name, "darksave.gff") == 0) { return DARKSAVE_GFF_INDEX; }
     if (strcmp(name, "cine.gff") == 0) { return CINE_GFF_INDEX; }
     if (strcmp(name, "darkrun.gff") == 0) { return DARKRUN_GFF_INDEX; }
+    if (strcmp(name, "resflop.gff") == 0) { return RESFLOP_GFF_INDEX; }
 
     for (i = REST_GFF_INDEX; i < NUM_FILES; i++) {
         if (!open_files[i].file) {
@@ -71,11 +73,7 @@ int get_next_idx(const char *name) {
 }
 
 void gff_init() {
-    int i = 0;
-
-    for (i = 0; i < NUM_FILES; i++) {
-        memset(open_files+i, 0, sizeof(gff_file_t));
-    }
+    memset(open_files, 0, sizeof(gff_file_t) * NUM_FILES);
 
     master_gff = -1;
     gff_image_init();
@@ -107,6 +105,22 @@ void gff_load_directory(const char *path) {
     } else {
         fprintf(stderr, "Unable to open directory: '%s'\n", path);
     }
+}
+
+const enum game_type_t gff_get_game_type() {
+    if (open_files[RESOURCE_GFF_INDEX].filename && open_files[RESFLOP_GFF_INDEX].filename) {
+        return DARKSUN_2;
+    }
+
+    if (open_files[RESOURCE_GFF_INDEX].filename && !open_files[RESFLOP_GFF_INDEX].filename) {
+        return DARKSUN_1;
+    }
+
+    if (!open_files[RESOURCE_GFF_INDEX].filename && open_files[RESFLOP_GFF_INDEX].filename) {
+        return DARKSUN_ONLINE;
+    }
+
+    return DARKSUN_UNKNOWN;
 }
 
 const char** gff_list(size_t *len) {
