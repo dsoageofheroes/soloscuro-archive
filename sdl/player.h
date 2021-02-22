@@ -2,6 +2,7 @@
 #define PLAYER_H
 
 #include "animate.h"
+#include "../src/combat.h"
 #include <stdint.h>
 
 typedef struct inventory_sprites_s {

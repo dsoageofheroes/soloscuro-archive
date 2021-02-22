@@ -131,6 +131,9 @@ typedef struct region_object_s {
     int16_t disk_idx;   // disk index
     int32_t game_time;  // game time for animating
     uint16_t scmd_flags;//
+    uint8_t rdff_type;
+    uint16_t combat_id;
+    uint16_t obj_id;
     scmd_t *scmd;       // the script
     void *data;         // used for special data the UI needs.
 } region_object_t;
@@ -164,33 +167,6 @@ typedef struct _ds_saving_throw_t {
     uint8_t breath;
     uint8_t spell;
 } ds_saving_throw_t;
-
-typedef struct _ds_combat_t {
-    int16_t hp; // At byte pos 0, confirmed
-    int16_t psp; // 2, confirmed
-    int16_t char_index; // 4, unconfirmed but looks right.
-    int16_t id;  // 6, yes, but is id *-1
-    int16_t ready_item_index; // 8, to be cleared.
-    int16_t weapon_index; // 10, to be cleared
-    int16_t pack_index;   // 12, to be cleared
-    uint8_t data_block[8]; // just to shift down 8 bytes.
-    uint8_t special_attack; // 22, looks probable.
-    uint8_t special_defense; // 23, looks probable.
-    int16_t icon; // doesn't look right
-    int8_t  ac;   // 26, confirmed
-    uint8_t move; // 27, confirmed
-    uint8_t status;
-    uint8_t allegiance;
-    uint8_t data;
-    int8_t  thac0; // 31, confirmed
-    uint8_t priority;
-    uint8_t flags;
-    ds_stats_t stats; // 34, confirmed
-    // WARNING: This is actually 16, but we do 18 as a buffer.
-    char    name[COMBAT_NAME_SIZE]; // 40, confirmed
-//} ds1_combat_t;
-} __attribute__ ((__packed__)) ds1_combat_t;
-
 
 typedef struct _ds_character_s {
     uint32_t current_xp; // confirmed
@@ -289,7 +265,6 @@ int dsl_valid_character_id(const int id);
 region_list_t* region_list_create();
 void region_list_free(region_list_t *rl);
 void region_list_load_objs(region_list_t *rl, const int gff_file, const int map_id);
-region_object_t* region_list_create_from_objex(region_list_t *rl, const int id, const int32_t x, const int32_t y);
 #define region_list_get_object(rl, i) (rl->objs + i)
 
 #endif

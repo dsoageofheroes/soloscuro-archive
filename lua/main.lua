@@ -12,4 +12,4 @@ function init()
                 -- returning false, would allow the engine to proceed with normal startup
 end
 
-dofile("player_input.lua")
+dofile("lua/player_input.lua")

@@ -1,5 +1,6 @@
 #include "dsl.h"
 #include "ds-object.h"
+#include "ds-region.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -100,7 +101,9 @@ static void load_object_from_etab(region_object_t *dsl_object, gff_map_object_t 
     dsl_object->mapy = gm->ypos;
     dsl_object->mapz = gm->zpos;
     dsl_object->entry_id = id;
+    dsl_object->combat_id = COMBAT_ERROR;
     dsl_object->scmd_flags = gm->flags;
+    dsl_object->obj_id = abs(gm->index);
 }
 
 region_object_t* __region_list_get_next(region_list_t *rl, int *i) {
@@ -110,39 +113,6 @@ region_object_t* __region_list_get_next(region_list_t *rl, int *i) {
     }
 
     return NULL;
-}
-
-region_object_t* region_list_create_from_objex(region_list_t *rl, const int id, const int32_t x, const int32_t y) {
-    region_object_t *robj = NULL;
-    disk_object_t dobj;
-
-    gff_chunk_header_t chunk = gff_find_chunk_header(OBJEX_GFF_INDEX, GFF_OJFF, -1 * id);
-    if (!gff_read_chunk(OBJEX_GFF_INDEX, &chunk, &(dobj), sizeof(disk_object_t))) {
-        printf("unable to get obj from id: %d\n", id);
-        return NULL;
-    }
-
-    if (rl->pos >= MAX_REGION_OBJS) {
-        error("Ran out of region objects!\n");
-        exit(1);
-    }
-
-    robj = rl->objs + rl->pos++;
-    memset(robj, 0x0, sizeof(region_object_t));
-    robj->disk_idx = id;
-    robj->flags = dobj.flags;
-    robj->gt_idx = dobj.object_index;
-    robj->btc_idx = dobj.bmp_id;
-    robj->bmpx = x - dobj.xoffset;
-    robj->bmpy = y - dobj.yoffset - dobj.zpos;
-    robj->xoffset = dobj.xoffset;
-    robj->yoffset = dobj.yoffset;
-    robj->mapx = x - dobj.xoffset;
-    robj->mapy = y - dobj.yoffset;
-    //robj->mapz = gm->zpos;
-    robj->mapz = 0;
-    robj->entry_id = -1 * id;
-    return robj;
 }
 
 void region_list_load_objs(region_list_t *rl, const int gff_idx, const int map_id) {

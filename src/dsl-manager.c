@@ -60,7 +60,7 @@ void dsl_lua_load_script(const uint32_t script_id, const uint8_t is_mas) {
     script[script_id] = malloc(sizeof(char) * (script_len + 1)); // (A)
     strncpy(script[script_id], script_ptr, script_len);
     script[script_id][script_len] = '\0'; // Okay because of (A)
-    sprintf(buf, "lua/%d-%s.lua", script_id,
+    sprintf(buf, "gpl/%d-%s.lua", script_id,
         is_mas ? "mas" : "gpl");
     write_lua(buf, script[script_id], script_len);
 }

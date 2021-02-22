@@ -1,6 +1,7 @@
 #include <math.h>
 #include "player.h"
 #include "main.h"
+#include "../src/combat.h"
 #include "../src/dsl.h"
 #include "sprite.h"
 #include "screens/narrate.h"
@@ -23,51 +24,6 @@ typedef struct player_sprites_s {
     inventory_sprites_t inv;
 } player_sprites_t;
 
-static scmd_t move_down[] = {
-    {.bmp_idx = 3, .delay = 7, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 4, .delay = 7, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 5, .delay = 7, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 6, .delay = 7, .flags = SCMD_JUMP, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-};
-
-static scmd_t move_up[] = {
-    {.bmp_idx = 7, .delay = 7, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 8, .delay = 7, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 9, .delay = 7, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 10, .delay = 7, .flags = SCMD_JUMP, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-};
-
-static scmd_t move_right[] = {
-    {.bmp_idx = 11, .delay = 7, .flags = 0x0, .xoffset = 9, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 12, .delay = 7, .flags = 0x0, .xoffset = 4, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 13, .delay = 7, .flags = 0x0, .xoffset = 8, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 14, .delay = 7, .flags = SCMD_JUMP, .xoffset = 3, .yoffset = 0, 0, 0, 0},
-};
-
-static scmd_t move_left[] = {
-    {.bmp_idx = 11, .delay = 7, .flags = SCMD_XMIRROR, .xoffset = -9, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 12, .delay = 7, .flags = SCMD_XMIRROR, .xoffset = -4, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 13, .delay = 7, .flags = SCMD_XMIRROR, .xoffset = -8, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 14, .delay = 7, .flags = SCMD_XMIRROR | SCMD_JUMP, .xoffset = -3, .yoffset = 0, 0, 0, 0},
-};
-
-static scmd_t stand_down[] = {
-    {.bmp_idx = 0, .delay = 0, .flags = SCMD_LAST, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-};
-
-static scmd_t stand_up[] = {
-    {.bmp_idx = 1, .delay = 0, .flags = SCMD_LAST, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-};
-
-static scmd_t stand_right[] = {
-    {.bmp_idx = 2, .delay = 0, .flags = SCMD_LAST, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-};
-
-static scmd_t stand_left[] = {
-    {.bmp_idx = 2, .delay = 0, .flags = SCMD_XMIRROR | SCMD_LAST, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-};
-
-static player_t player;
 static region_object_t dsl_player;
 static player_sprites_t players[MAX_PCS];
 static animate_sprite_t anims[MAX_PCS];
@@ -75,8 +31,9 @@ static animate_sprite_t anims[MAX_PCS];
 #define sprite_t uint16_t
 
 void player_init() {
-    player.x = 30;
-    player.y = 10;
+    player_pos_t* pc = ds_player_get_pos(ds_player_get_active());
+    pc->xpos = 30;
+    pc->ypos = 10;
     player_zpos = 0;
     memset(players, 0x00, sizeof(player_sprites_t) * MAX_PCS);
     memset(anims, 0x00, sizeof(animate_sprite_t) * MAX_PCS);
@@ -89,6 +46,7 @@ void player_init() {
 }
 
 void player_load_graphics(SDL_Renderer *rend) {
+    player_pos_t* pc = ds_player_get_pos(ds_player_get_active());
     dsl_player.flags = 0;
     dsl_player.entry_id = 0;
     dsl_player.bmpx = 0;
@@ -112,80 +70,66 @@ void player_load_graphics(SDL_Renderer *rend) {
     dsl_player.scmd = NULL;
 
     // Set initial location
-    dsl_player.mapx = player.x * 16;
-    dsl_player.mapy = player.y * 16;
+    dsl_player.mapx = pc->xpos * 16;
+    dsl_player.mapy = pc->ypos * 16;
 }
 
 static int ticks_per_move = 10;
 static int count = 0;
 static int direction = 0x0;
 
-static void set_animation(animate_sprite_t *as, scmd_t *scmd) {
-    const int diffx = abs(as->x - as->destx);
-    const int diffy = abs(as->y - as->desty);
-    const float distance = sqrt(diffx * diffx + diffy * diffy);
-
-    as->scmd = scmd;
-    as->pos = 0;
-    as->move = distance == 0 ? 0 : distance / ((float)ticks_per_move * 2);
-
-    sprite_set_frame(as->spr, as->scmd->bmp_idx);
-    sprite_set_location(as->spr, as->x, as->y);
-}
-
 void player_update() {
+    player_pos_t* pc = ds_player_get_pos(ds_player_get_active());
     animate_shift_node(player_node, player_zpos);
     if (--count > 0) { return; }
 
-
-    int nextx = player.x;
-    int nexty = player.y;
+    int nextx = pc->xpos;
+    int nexty = pc->ypos;
     if (direction & PLAYER_UP) { nexty -= 1; }
     if (direction & PLAYER_DOWN) { nexty += 1; }
     if (direction & PLAYER_LEFT) { nextx -= 1; }
     if (direction & PLAYER_RIGHT) { nextx += 1; }
-    //debug ("tile @ (%d, %d) = %d\n", player.x, player.y, cmap_is_block(player.y, player.x));
+    //debug ("tile @ (%d, %d) = %d\n", pc->xpos, pc->ypos, cmap_is_block(pc->xpos, pc->ypos));
 
     if (!narrate_is_open()) {
-        trigger_noorders(player.x, player.y);
+        trigger_noorders(pc->xpos, pc->ypos);
     }
-    trigger_box_check(player.x, player.y);
-    trigger_tile_check(player.x, player.y);
+    trigger_box_check(pc->xpos, pc->ypos);
+    trigger_tile_check(pc->xpos, pc->ypos);
 
     if (main_player_freeze() || direction == 0x0 || cmap_is_block(nexty + 1, nextx)) {
         anims[0].x = anims[0].destx;
         anims[0].y = anims[0].desty;
-        if (anims[0].scmd == move_left) {
-            set_animation(anims + 0, stand_left);
-        } else if (anims[0].scmd == move_right) {
-            set_animation(anims + 0, stand_right);
-        } else if (anims[0].scmd == move_up) {
-            set_animation(anims + 0, stand_up);
-        } else if (anims[0].scmd == move_down) {
-            set_animation(anims + 0, stand_down);
-        } else {
+        if (anims[0].scmd == combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_LEFT)) {
+            animate_set_animation(anims + 0, combat_get_scmd(COMBAT_SCMD_STAND_LEFT), ticks_per_move);
+        } else if (anims[0].scmd == combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_RIGHT)) {
+            animate_set_animation(anims + 0, combat_get_scmd(COMBAT_SCMD_STAND_RIGHT), ticks_per_move);
+        } else if (anims[0].scmd == combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_UP)) {
+            animate_set_animation(anims + 0, combat_get_scmd(COMBAT_SCMD_STAND_UP), ticks_per_move);
+        } else if (anims[0].scmd == combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_DOWN)) {
+            animate_set_animation(anims + 0, combat_get_scmd(COMBAT_SCMD_STAND_DOWN), ticks_per_move);
         }
         return;
     }
 
-    player.x = nextx;
-    player.y = nexty;
+    pc->xpos = nextx;
+    pc->ypos = nexty;
 
-    dsl_player.mapx = player.x * 16;
-    dsl_player.mapy = player.y * 16;
+    dsl_player.mapx = pc->xpos * 16;
+    dsl_player.mapy = pc->ypos * 16;
     anims[0].x = anims[0].destx;
     anims[0].y = anims[0].desty;
-    anims[0].destx = player.x * 16 * 2;
-    anims[0].desty = player.y * 16 * 2;
+    anims[0].destx = pc->xpos * 16 * 2;
+    anims[0].desty = pc->ypos * 16 * 2;
 
     if (direction & PLAYER_LEFT) { 
-        set_animation(anims + 0, move_left);
+        animate_set_animation(anims + 0, combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_LEFT), ticks_per_move);
     } else if (direction & PLAYER_RIGHT) {
-        set_animation(anims + 0, move_right);
+        animate_set_animation(anims + 0, combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_RIGHT), ticks_per_move);
     } else if (direction & PLAYER_DOWN) {
-        set_animation(anims + 0, move_down);
+        animate_set_animation(anims + 0, combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_DOWN), ticks_per_move);
     } else if (direction & PLAYER_UP) {
-        set_animation(anims + 0, move_up);
+        animate_set_animation(anims + 0, combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_UP), ticks_per_move);
     }
 
     count = ticks_per_move;
@@ -288,14 +232,15 @@ static void load_character_sprite(SDL_Renderer *renderer, const int slot, const 
 void player_load(SDL_Renderer *renderer, const int slot, const float zoom) {
     load_character_sprite(renderer, slot, zoom);
     anims[slot].spr = players[slot].main;
-    set_animation(anims + slot, stand_down);
+    animate_set_animation(anims + slot, combat_get_scmd(COMBAT_SCMD_STAND_DOWN), ticks_per_move);
     player_add_to_animation_list();
 }
 
 void player_add_to_animation_list() {
+    player_pos_t* pc = ds_player_get_pos(ds_player_get_active());
     player_node = animate_list_add(anims + 0, player_zpos);
-    anims[0].destx = player.x * 16 * 2;
-    anims[0].desty = player.y * 16 * 2;
+    anims[0].destx = pc->xpos * 16 * 2;
+    anims[0].desty = pc->ypos * 16 * 2;
     anims[0].x = anims[0].destx;
     anims[0].y = anims[0].desty;
 }
@@ -339,10 +284,10 @@ void player_set_delay(const int amt) {
     if (amt < 0) { return; }
 
     for (int i = 0; i < 4; i++) {
-        move_down[i].delay = amt;
-        move_up[i].delay = amt;
-        move_left[i].delay = amt;
-        move_right[i].delay = amt;
+        combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_DOWN)[i].delay = amt;
+        combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_UP)[i].delay = amt;
+        combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_LEFT)[i].delay = amt;
+        combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_RIGHT)[i].delay = amt;
     }
 }
 

@@ -2,6 +2,7 @@
 #define DS_PLAYER_H
 
 #include "ds-object.h"
+#include "combat.h"
 #include "spells.h"
 
 typedef struct player_pos_s {
@@ -28,5 +29,7 @@ void ds_player_set_active(const int slot);
 int ds_player_is_ai(const int slot);
 void ds_player_set_ai(const int slot, int on);
 int ds_player_get_ac(const int slot);
+
+int ds_player_get_active();
 
 #endif

@@ -9,6 +9,7 @@
 #include "screens/narrate.h"
 #include "screens/screen-main.h"
 #include "screens/inventory.h"
+#include "../src/combat.h"
 #include "../src/dsl.h"
 #include "../src/dsl-manager.h"
 #include "../src/replay.h"
@@ -129,6 +130,7 @@ void main_set_yscroll(int amt) { ymapdiff = amt; }
 void main_set_ignore_repeat(int repeat) { ignore_repeat = repeat; }
 
 void render() {
+    combat_update(dsl_region_get_current());
     screen_render(renderer, xmappos, ymappos);
 }
 
@@ -189,12 +191,6 @@ static void init(int args, char *argv[]) {
     mouse_init(renderer);
 
     for (int i = 0; i < args; i++) {
-        if (!strcmp(argv[i], "--lua") && i < (args - 1)) {
-            if (ui_lua_load("main.lua") ) {
-                printf("Init being handled by lua.\n");
-                return;
-            }
-        }
         if (!strcmp(argv[i], "--browse") && i < (args)) {
             printf("Entering browsing mode!\n");
             browse_loop(screen, renderer);
@@ -217,6 +213,11 @@ static void init(int args, char *argv[]) {
             dsl_lua_load_all_scripts();
             exit(0);
         }
+    }
+
+    if (ui_lua_load("lua/main.lua") ) {
+        printf("Init being handled by lua.\n");
+        return;
     }
 
     // Start the main game.
