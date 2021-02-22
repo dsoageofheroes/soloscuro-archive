@@ -32,6 +32,15 @@ static int8_t sphere_selection = -1;
 static int die_pos = 0;
 static int die_countdown = 0;
 
+// FIXME - Change these to ds1_race_[...] and then add ones for DS2 and DSO
+// H = Human - D = Dwarf - E = Elf - HE = Half-Elf - HG = Half-Giant - HL = Halfling - M = Mul - T = Thri-Kreen
+// genderRace                              mH    fH   mD     fD    mE    fE   mHE   fHE   mHG   fHG   mHL   fHL    mM    fM    mT    fT
+static int race_portrait_offsets_x[] = {   25,   25,   19,   25,   15,   15,   28,   25,   11,   16,   28,   34,   18,   18,   11,   11 };
+static int race_portrait_offsets_y[] = {   12,   17,   26,   27,   14,   16,   14,   13,   15,   17,   27,   30,   07,   07,   13,   13 };
+static int race_sprite_offsets_x[]   = {  148,  150,  150,  150,  151,  152,  148,  150,  144,  146,  150,  151,  149,  149,  146,  146 };
+static int race_sprite_offsets_y[]   = {   27,   28,   33,   33,   28,   26,   27,   28,   24,   24,   33,   32,   26,   26,   24,   24 };
+static int race_sprite_ids[]         = { 2095, 2099, 2055, 2053, 2061, 2059, 2095, 2099, 2072, 2074, 2068, 2070, 2093, 2093, 2097, 2097 };
+
 static int offsetx, offsety;
 static float zoom;
 static SDL_Renderer *renderer;
@@ -71,12 +80,22 @@ char* new_character_get_name() {
     return name_text;
 }
 
+// FIXME - For DS2/DSO, there may be new random names (I don't think there are?)
+// Hard-coding these unless we can come up with a better way of figuring out
+// which names are Female/Thri-Kreen
 static void get_random_name() {
     uint32_t res_ids[1<<12];
+    int name_list_start  = pc.race == RACE_THRIKREEN ? 52 : pc.gender == GENDER_FEMALE ? 33 : 0;
+    int name_list_length = pc.race == RACE_THRIKREEN ? 7 : pc.gender == GENDER_FEMALE ? 17 : 32;
+    int chosen_name = (rand() % (name_list_length + 1)) + name_list_start;
 
-    int res_max = gff_get_resource_length(RESOURCE_GFF_INDEX, GFF_TEXT);
+    memset(&name_text[0], 0, sizeof(name_text));
+
+    // Name resource length is hard-coded now
+    //int res_max = gff_get_resource_length(RESOURCE_GFF_INDEX, GFF_TEXT);
+
     gff_get_resource_ids(RESOURCE_GFF_INDEX, GFF_TEXT, res_ids);
-    gff_chunk_header_t chunk = gff_find_chunk_header(RESOURCE_GFF_INDEX, GFF_TEXT, res_ids[rand() % res_max]);
+    gff_chunk_header_t chunk = gff_find_chunk_header(RESOURCE_GFF_INDEX, GFF_TEXT, res_ids[chosen_name]);
     gff_read_chunk(RESOURCE_GFF_INDEX, &chunk, name_text, 32);
 }
 
@@ -145,42 +164,19 @@ static uint16_t new_sprite_create(SDL_Renderer *renderer, gff_palette_t *pal,
 
 static void load_character_sprite() {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
+    int race = (pc.race - 1) * 2;
+    int gender = pc.gender - 1;
 
     if (spr != SPRITE_ERROR) {
         sprite_free(spr);
         spr = SPRITE_ERROR;
     }
-    switch(pc.race) {
-        case RACE_HALFELF:
-        case RACE_HUMAN:
-            spr = new_sprite_create(renderer, pal, 150 + offsetx, 28 + offsetx,
-                zoom, OBJEX_GFF_INDEX, GFF_BMP, (pc.gender == GENDER_MALE) ? 2095 : 2099);
-            break;
-        case RACE_DWARF:
-            spr = new_sprite_create(renderer, pal, 150 + offsetx, 28 + offsetx,
-                zoom, OBJEX_GFF_INDEX, GFF_BMP, (pc.gender == GENDER_MALE) ? 2055 : 2053);
-            break;
-        case RACE_ELF:
-            spr = new_sprite_create(renderer, pal, 150 + offsetx, 28 + offsetx,
-                zoom, OBJEX_GFF_INDEX, GFF_BMP, (pc.gender == GENDER_MALE) ? 2061 : 2059);
-            break;
-        case RACE_HALFGIANT:
-            spr = new_sprite_create(renderer, pal, 150 + offsetx, 28 + offsetx,
-                zoom, OBJEX_GFF_INDEX, GFF_BMP, (pc.gender == GENDER_MALE) ? 2072 : 2074);
-            break;
-        case RACE_HALFLING:
-            spr = new_sprite_create(renderer, pal, 150 + offsetx, 28 + offsetx,
-                zoom, OBJEX_GFF_INDEX, GFF_BMP, (pc.gender == GENDER_MALE) ? 2068 : 2070);
-            break;
-        case RACE_MUL:
-            spr = new_sprite_create(renderer, pal, 150 + offsetx, 28 + offsetx,
-                zoom, OBJEX_GFF_INDEX, GFF_BMP, 2093);
-            break;
-        case RACE_THRIKREEN:
-            spr = new_sprite_create(renderer, pal, 150 + offsetx, 28 + offsetx,
-                zoom, OBJEX_GFF_INDEX, GFF_BMP, 2097);
-            break;
-    }
+
+    spr = new_sprite_create(renderer, pal,
+                            race_sprite_offsets_x[race + gender],
+                            race_sprite_offsets_y[race + gender],
+                            zoom, OBJEX_GFF_INDEX, GFF_BMP,
+                            race_sprite_ids[race + gender]);
 }
 
 static void init_pc() {
@@ -195,12 +191,6 @@ static void init_pc() {
     pc.allegiance = 1;
     get_random_name();
 }
-
-// FIXME - Change these to ds1_race_offsets_x and then add ones for DS2 and possibly DSO, if extra races are ever added in DSO
-// H = Human - D = Dwarf - E = Elf - HE = Half-Elf - HG = Half-Giant - HL = Halfling - M = Mul - T = Thri-Kreen
-// genderRace                   mH   fH   mD   fD   mE   fE  mHE  fHE  mHG  fHG  mHL  fHL   mM   fT
-static int race_offsets_x[] = { 25,  25,  19,  25,  15,  15,  28,  25,  11,  16,  28,  34,  18,  11 };
-static int race_offsets_y[] = { 12,  17,  26,  27,  14,  16,  14,  13,  15,  17,  27,  30,  07,  13 };
 
 static void new_character_init(SDL_Renderer* _renderer, const uint32_t x, const uint32_t y, const float _zoom) {
     gff_palette_t* pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
@@ -247,8 +237,10 @@ static void new_character_init(SDL_Renderer* _renderer, const uint32_t x, const 
             zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20048 + i);
     }
     for (int i = 0; i < 14; i++) {
-        races[i] = new_sprite_create(renderer, pal, race_offsets_x[i], race_offsets_y[i],
-            zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20000 + i);
+        races[i] = new_sprite_create(renderer, pal,
+                                     race_portrait_offsets_x[i == 13 ? 14 : i], // FIXME - Hack until/if female Muls are implemented
+                                     race_portrait_offsets_y[i == 13 ? 14 : i], // FIXME - Hack until/if female Muls are implemented
+                                     zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20000 + i);
     }
 
     strcpy(sphere_text, "PSI DISCIPLINES");
@@ -379,10 +371,9 @@ void new_character_render(void *data, SDL_Renderer *renderer) {
     sprite_render(renderer, done_button);
     sprite_render(renderer, exit_button);
 
-    int oX = 8, oY = 235;
-
+    int oX = 8, oY = 250;
     snprintf(buf, BUF_MAX, "NAME:");
-    print_line_len(renderer, FONT_GREYLIGHT, buf, oX, oY += 15, BUF_MAX);
+    print_line_len(renderer, FONT_GREYLIGHT, buf, oX, oY, BUF_MAX);
     snprintf(buf, BUF_MAX, "%s", name_text);
     print_line_len(renderer, FONT_GREYLIGHT, buf, oX + 76, oY, BUF_MAX);
     snprintf(buf, BUF_MAX, "STR: %d", pc.stats.str);
@@ -529,7 +520,8 @@ static void fix_race_gender() { // move the race/gender to the appropiate spot
     for (int i = 0; i < 8; i++)
         sprite_set_frame(class_sel[i], 0);
 
-    if (reset) { get_random_name(); }
+//    if (reset) { get_random_name(); } // A new name is always chosen when race/gender is changed.
+    get_random_name();
 
     load_character_sprite(); // go ahead and get the new sprite
     set_class_frames(); // go ahead and setup the new class frames
@@ -690,7 +682,7 @@ static void select_class(uint8_t class) {
 }
 
 int new_character_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
-    if (sprite_in_rect(die[die_pos], x, y)) {
+    if (sprite_in_rect(parchment[2], x, y)) { // Was die[die_pos]
         die_countdown = 40;
     }
     for (int i = 0; i < 8; i++) {
@@ -702,10 +694,19 @@ int new_character_handle_mouse_up(const uint32_t button, const uint32_t x, const
             } 
         }
     }
-    if (sprite_in_rect(races[pc.race], x, y)) {
+    if (sprite_in_rect(parchment[0], x, y)) { // Change race/gender via portrait - Was races[pc.race]
         if (button == SDL_BUTTON_LEFT) {
             pc.gender++;
         } else {
+            pc.gender--;
+        }
+        fix_race_gender();
+    }
+    if (sprite_in_rect(parchment[1], x, y)) { // Change race/gender via sprite - FIXME: This should change just the SPRITE (not race/gender) in DSO!
+        if (button == SDL_BUTTON_LEFT) {
+            pc.gender++;
+        }
+        else {
             pc.gender--;
         }
         fix_race_gender();
