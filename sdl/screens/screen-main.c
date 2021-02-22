@@ -2,19 +2,19 @@
 #include "../main.h"
 #include "../../src/gff.h"
 #include "../../src/gfftypes.h"
+#include "../../src/ds-player.h"
 #include "../sprite.h"
 #include "../map.h"
 #include "../player.h"
 #include "view-character.h"
 #include "narrate.h"
+#include "popup.h"
 
 static uint16_t background, sun, start, create_characters, load_save, exit_dos;
 static int mousex = 0, mousey = 0;
 static int mouse_down = 0;
 static int count_down = 0;
 static uint16_t count_down_spr = SPRITE_ERROR;
-
-static map_t cmap;
 
 SDL_Renderer *renderer = NULL;
 
@@ -41,13 +41,16 @@ static void click_action() {
     if (count_down_spr == exit_dos) { main_exit_system(); }
     if (count_down_spr == create_characters) { screen_push_screen(renderer, &view_character_screen, 0, 10); }
     if (count_down_spr == start) {
-        map_init(&cmap);
-        map_load_region(&cmap, renderer, gff_find_index("rgn2a.gff"));
-        screen_pop();
-        screen_push_screen(renderer, &map_screen, 0, 0);
-        screen_push_screen(renderer, &narrate_screen, 0, 0);
-        player_init();
-        player_load_graphics(renderer);
+        if(ds_player_exists(ds_player_get_active())) {
+            screen_pop();
+            screen_load_region(renderer, 42);
+        } else {
+            screen_push_screen(renderer, &popup_screen, 100, 75);
+            popup_set_message("CREATE CHARACTER");
+            popup_set_option(0, "Ok");
+            popup_set_option(1, "");
+            popup_set_option(2, "CANCEL");
+        }
     }
 }
 

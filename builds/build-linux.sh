@@ -9,9 +9,9 @@ make clean
 make -f makefile.sdl mdark
 cd builds
 rm -rf staging
-mkdir staging
+mkdir -p staging/lua
 cp ../mdark staging/
-cp ../*.lua staging/
+cp ../lua/*.lua staging/lua/
 cp ../*so staging/
 locate SDL2.so | grep "usr/lib" | xargs -I {} cp {} staging/
 locate -b "\liblua5.3.so" | grep "usr/lib" | xargs -I {} cp {} staging/
