@@ -1,8 +1,4 @@
 -- Debug/Developer Options
-function preload()
-    ds.load_directory("../../dosbox/DARKSUN");
-end
-
 function game_settings()
     -- Movement Options
     ds.set_player_frame_delay(7) -- set how many delay ticks between frame changes of a player sprite. (default: 7)

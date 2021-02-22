@@ -33,8 +33,80 @@ static void ui_lua_run(const char *filename, const char *name) {
 
 }
 
+static void write_generic_settings() {
+    FILE *file = fopen("solconfig.lua", "w");
+
+    fprintf(file, "settings = {}\n");
+    fprintf(file, "settings[\"ds1_location\"] = \"ds1/\"\n");
+    fprintf(file, "settings[\"ds2_location\"] = \"ds2/\"\n");
+    fprintf(file, "settings[\"dso_location\"] = \"dso/\"\n");
+    fprintf(file, "settings[\"run\"] = \"ds1\"\n");
+    fprintf(file, "--settings[\"run\"] = \"browse-ds1\"\n");
+    fprintf(file, "--settings[\"run\"] = \"browse-ds2\"\n");
+    fprintf(file, "--settings[\"run\"] = \"browse-dso\"\n");
+
+    fclose(file);
+}
+
+static void load_game() {
+    const char *lua_str = NULL;
+    if (lua_pcall(ui_lua, 0, 0, 0)) { ui_lua_error("Can't prime"); }
+
+    lua_getglobal(ui_lua, "settings");
+    lua_pushstring(ui_lua, "run");
+    lua_gettable(ui_lua, -2);
+
+    lua_str = luaL_checkstring(ui_lua, -1);
+    
+    if (!strcmp(lua_str, "ds1")) {
+        lua_pop(ui_lua, 1);
+        lua_pushstring(ui_lua, "ds1_location");
+        lua_gettable(ui_lua, -2);
+        lua_str = luaL_checkstring(ui_lua, -1);
+        gff_load_directory(lua_str);
+    } else if (!strcmp(lua_str, "browse-ds1")) {
+        lua_pop(ui_lua, 1);
+        lua_pushstring(ui_lua, "ds1_location");
+        lua_gettable(ui_lua, -2);
+        lua_str = luaL_checkstring(ui_lua, -1);
+        gff_load_directory(lua_str);
+        main_set_browser_mode();
+    } else if (!strcmp(lua_str, "browse-ds2")) {
+        lua_pop(ui_lua, 1);
+        lua_pushstring(ui_lua, "ds2_location");
+        lua_gettable(ui_lua, -2);
+        lua_str = luaL_checkstring(ui_lua, -1);
+        gff_load_directory(lua_str);
+        main_set_browser_mode();
+    } else if (!strcmp(lua_str, "browse-dso")) {
+        lua_pop(ui_lua, 1);
+        lua_pushstring(ui_lua, "dso_location");
+        lua_gettable(ui_lua, -2);
+        lua_str = luaL_checkstring(ui_lua, -1);
+        gff_load_directory(lua_str);
+        main_set_browser_mode();
+    }
+
+    ui_lua_close();
+}
+
 int ui_lua_load_preload(const char *filename) {
-    ui_lua_run(filename, "preload");
+    ui_lua = luaL_newstate();
+    luaL_openlibs(ui_lua);
+
+    if (luaL_loadfile(ui_lua, "solconfig.lua")) {
+        write_generic_settings();
+
+        if (luaL_loadfile(ui_lua, "solconfig.lua")) {
+            ui_lua_close();
+            error("unable to open '%s'.\n", "solconfig.lua");
+            return 0;
+        }
+    }
+
+    load_game();
+
+    //ui_lua_run(filename, "preload");
     return 0;
 }
 

@@ -26,13 +26,17 @@ static SDL_Window *win = NULL;
 static SDL_Surface *screen = NULL;
 static SDL_Renderer *renderer = NULL;
 static float zoom = 2.0;
-static uint8_t ignore_repeat = 1;
+static uint8_t ignore_repeat = 1, browser_mode = 0;
 
 static uint32_t xmappos, ymappos;
 static int32_t xmapdiff, ymapdiff;
 
 const uint32_t getCameraX() { return xmappos; }
 const uint32_t getCameraY() { return ymappos; }
+
+void main_set_browser_mode() {
+    browser_mode = 1;
+}
 
 void handle_mouse_motion() {
     int x, y;
@@ -190,6 +194,11 @@ static void init(int args, char *argv[]) {
 
     player_init();
     mouse_init(renderer);
+
+    if (browser_mode) {
+        browse_loop(screen, renderer);
+        exit(1);
+    }
 
     for (int i = 0; i < args; i++) {
         if (!strcmp(argv[i], "--browse") && i < (args)) {
