@@ -61,6 +61,9 @@ void trigger_noorders_enable_all();
 void trigger_box_check(uint32_t x, uint32_t y);
 int trigger_tile_check(uint32_t x, uint32_t y);
 
+char* trigger_serialize(size_t *len);
+void trigger_deserialize(char *data);
+
 void talk_click(uint32_t obj);
 
 #endif

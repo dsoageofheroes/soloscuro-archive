@@ -5,6 +5,7 @@
 #include "gfftypes.h"
 #include "gff-map.h"
 #include "port.h"
+#include "trigger.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -161,6 +162,7 @@ void ls_save_to_file(const char *path) {
     gff_add_type(id, GFF_CHAR);
     gff_add_type(id, GFF_POS);
     gff_add_type(id, GFF_ROBJ); // Region objects
+    gff_add_type(id, GFF_TRIG); // Trigger Objects
 
     for (int i = 0; i < 4; i++) {
         gff_add_chunk(id, GFF_PSIN, i, (char*)ds_player_get_psi(i), sizeof(psin_t));
@@ -173,6 +175,11 @@ void ls_save_to_file(const char *path) {
 
     save_region(id);
 
+    size_t trigger_len;
+    char* triggers = trigger_serialize(&trigger_len);
+    gff_add_chunk(id, GFF_TRIG, 0, triggers, trigger_len);
+
+    free(triggers);
     gff_close(id);
 }
 
@@ -231,6 +238,7 @@ int ds_load_character_charsave(const int slot, const int res_id) {
 
 int ls_load_save_file(const char *path) {
     int id = gff_open(path);
+    char *triggers = NULL;;
 
     if (id < 0) { return 0; }
 
@@ -245,6 +253,13 @@ int ls_load_save_file(const char *path) {
     if (gff_read_chunk(id, &chunk, ds_player_get_pos(3), sizeof(player_pos_t)) < 1) { return 0; }
 
     load_region(id);
+
+    chunk = gff_find_chunk_header(id, GFF_TRIG, 0);
+    triggers = malloc(chunk.length);
+    if (gff_read_chunk(id, &chunk, triggers, chunk.length) < 1) { return 0; }
+    trigger_deserialize(triggers);
+    free(triggers);
+    triggers = NULL;
 
     return 1;
 }

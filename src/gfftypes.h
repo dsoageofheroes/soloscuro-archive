@@ -116,5 +116,6 @@
 #define GFF_SAVE GFFTYPE('S','A','V','E') // save entries...
 #define GFF_POS GFFTYPE('P','O','S',' ') // save entry pos (not part of original engine.)
 #define GFF_ROBJ GFFTYPE('R','O','B','J') // save entry region (not part of original engine.)
+#define GFF_TRIG GFFTYPE('T','R','I','G') // save entry triggers (not part of original engine.)
 
 #endif
