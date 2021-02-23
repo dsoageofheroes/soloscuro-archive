@@ -1105,7 +1105,7 @@ static const char *race_names[] = {
     "HALFGIANT",
     "HALFLING",
     "MUL",
-    "TRIKEEN",
+    "THRI-KREEN",
 };
 
 
