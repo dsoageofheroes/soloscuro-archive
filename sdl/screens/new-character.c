@@ -551,6 +551,8 @@ void update_stats_align_hp(int i, uint32_t button)
             }
         break;
     }
+
+    dnd2e_fix_stats_pc(&pc);
 }
 
 static int find_class_selection(const uint8_t real_class) {
