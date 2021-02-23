@@ -151,10 +151,8 @@ static const uint16_t elf_classes[] = {
 //  PSI / RNG / THF
     A_S | A_R | A_T,
 
-
 //  RNG / THF
     A_R | A_T,
-
 
     A_END // END Elf
 };
