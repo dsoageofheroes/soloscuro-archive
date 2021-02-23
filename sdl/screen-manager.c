@@ -1,11 +1,13 @@
 #include "screen-manager.h"
 #include "map.h"
+#include "main.h"
 #include "animate.h"
 #include "player.h"
 #include "screens/narrate.h"
 #include "sprite.h"
 #include "font.h"
 #include "../src/dsl.h"
+#include "../src/ds-player.h"
 
 #define MAX_SCREENS (10)
 
@@ -67,6 +69,12 @@ void screen_push_screen(SDL_Renderer *renderer, sops_t *screen, const uint32_t x
         if (screens[i].render == screen->render) { return; }
     }
     screen_load_screen(renderer, screen_pos++, screen, x, y);
+}
+
+void port_change_region(const int region_id) {
+    //player_load_graphics(main_get_rend());
+    player_load(main_get_rend(), ds_player_get_active(), main_get_zoom());
+    screen_load_region(main_get_rend(), region_id);
 }
 
 int screen_load_region(SDL_Renderer *renderer, const int region) {

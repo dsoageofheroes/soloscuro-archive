@@ -151,7 +151,7 @@ void create_players() {
     pc.base_hp = 32;
     pc.base_psp = 54;
     pc.id = 3;
-    pc.race = RACE_TRIKEEN;
+    pc.race = RACE_THRIKREEN;
     pc.gender = GENDER_FEMALE;
     pc.alignment = CHAOTIC_GOOD;
     pc.stats.str = pc.stats.dex = pc.stats.con = pc.stats.intel = pc.stats.wis = pc.stats.cha = 13;
@@ -307,7 +307,7 @@ void test_load_save_char(void) {
     TEST_ASSERT_EQUAL_INT(32, ds_player_get_char(3)->base_hp);
     TEST_ASSERT_EQUAL_INT(54, ds_player_get_char(3)->base_psp);
     TEST_ASSERT_EQUAL_INT(3, ds_player_get_char(3)->id);
-    TEST_ASSERT_EQUAL_INT(RACE_TRIKEEN, ds_player_get_char(3)->race);
+    TEST_ASSERT_EQUAL_INT(RACE_THRIKREEN, ds_player_get_char(3)->race);
     TEST_ASSERT_EQUAL_INT(GENDER_FEMALE, ds_player_get_char(3)->gender);
     TEST_ASSERT_EQUAL_INT(CHAOTIC_GOOD, ds_player_get_char(3)->alignment);
     TEST_ASSERT_EQUAL_INT(13, ds_player_get_char(3)->stats.str);

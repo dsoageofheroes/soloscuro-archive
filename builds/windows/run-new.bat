@@ -1,1 +1,1 @@
-mdark.exe --ds1 ./ --screen new
+mdark.exe --ds1 ./ --screen new --ignore-lua

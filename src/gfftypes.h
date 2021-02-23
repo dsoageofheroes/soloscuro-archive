@@ -115,5 +115,6 @@
 #define GFF_ETME GFFTYPE('E','T','M','E') // copyright notice
 #define GFF_SAVE GFFTYPE('S','A','V','E') // save entries...
 #define GFF_POS GFFTYPE('P','O','S',' ') // save entry pos (not part of original engine.)
+#define GFF_ROBJ GFFTYPE('R','O','B','J') // save entry region (not part of original engine.)
 
 #endif
