@@ -28,7 +28,7 @@ static int is_region(const int gff_idx) {
     return has_rmap && has_gmap && has_tile && has_etab;
 }
 
-dsl_region_t* dsl_load_region(const int gff_file) {
+dsl_region_t* init_region_from_gff(const int gff_file) {
     if (!is_region(gff_file)) { return NULL; } // guard
     uint32_t *tids = NULL;
     dsl_region_t *ret = malloc(sizeof(dsl_region_t));
@@ -56,9 +56,16 @@ dsl_region_t* dsl_load_region(const int gff_file) {
     dsl_load_map_tile_ids(ret);
     dsl_load_map_flags(ret);
 
-    region_list_load_objs(ret->list, ret->gff_file, ret->map_id);
-
     cregion = ret;
+
+    return ret;
+}
+
+dsl_region_t* dsl_load_region(const int gff_file) {
+    dsl_region_t *ret = init_region_from_gff(gff_file);
+    if (!ret) { return NULL; }
+
+    region_list_load_objs(ret->list, ret->gff_file, ret->map_id);
 
     for (int i = 0; i < 4; i++) {
         ds_player_get_pos(i)->map = ret->map_id;

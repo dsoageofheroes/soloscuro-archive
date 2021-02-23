@@ -100,21 +100,56 @@ static void save_region(const int id) {
     }
 }
 
+#define RDFF_BUF_SIZE (1<<11)
 static void load_region(const int id) {
+    char gff_name[32];
+    char buf[RDFF_BUF_SIZE];
+
+    snprintf(gff_name, 32, "rgn%x.gff", id);
+    int gff_index = gff_find_index(gff_name);
+    if (gff_index < 0 ) { return; }
+
     dsl_region_t *reg = NULL;
-    player_pos_t *player =  ds_player_get_pos(ds_player_get_active());
+    player_pos_t *player = ds_player_get_pos(ds_player_get_active());
 
     gff_chunk_header_t chunk = gff_find_chunk_header(id, GFF_ROBJ, player->map);
-    printf("map = %d, reg = %p\n", player->map, reg);
     printf("chunk.length = %d\n", chunk.length);
-    port_change_region(player->map);
-    //dsl_load_region(player->map);
-    reg = dsl_region_get_current();
-    printf("map = %d, reg = %p\n", player->map, reg);
-    //if (gff_read_chunk(id, &chunk, &reg->list, chunk.length) < chunk.length) {
-        //printf("ERROR READING!\n");
-        //return ;
-    //}
+    reg = dsl_load_region(gff_index);
+
+    if (gff_read_chunk(id, &chunk, reg->list, chunk.length) < chunk.length) {
+        printf("ERROR READING!\n");
+        return ;
+    }
+
+    // Need to get correct pointers for the scmd.
+    // TODO: clean this up.
+    for (int i = 0; i < MAX_REGION_OBJS; i++) {
+        //printf("reg->list->objs[i].entry_id = %d, %d\n", reg->list->objs[i].entry_id, reg->list->objs[i].combat_id);
+        region_object_t *robj = reg->list->objs + i;
+        if (robj->combat_id == 9999) {
+            robj->scmd = gff_map_get_object_scmd(gff_index, id,
+                robj->entry_id, 0);
+            if (robj->scmd == 0) {
+                robj->scmd = ds_scmd_empty();
+            }
+        } else {
+            if (robj->entry_id > 0) {
+                robj->scmd = combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
+                gff_chunk_header_t chunk = gff_find_chunk_header(OBJEX_GFF_INDEX, GFF_RDFF, robj->entry_id);
+                if (!gff_read_chunk(OBJEX_GFF_INDEX, &chunk, buf, chunk.length)) {
+                    printf("ERROR can't read %d\n", robj->entry_id);
+                    exit(1);
+                }
+                robj->combat_id = combat_add(&(reg->cr), robj,
+                (ds1_combat_t *) (buf + sizeof(rdff_disk_object_t)));
+                port_add_obj(reg->list->objs + i);
+            }
+        }
+        robj->data = NULL;
+    }
+
+    port_change_region(reg);
+    printf("READ!\n");
 }
 
 void ls_save_to_file(const char *path) {

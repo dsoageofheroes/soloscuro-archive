@@ -8,6 +8,7 @@
 #include "font.h"
 #include "../src/dsl.h"
 #include "../src/ds-player.h"
+#include "../src/ds-region.h"
 
 #define MAX_SCREENS (10)
 
@@ -71,10 +72,12 @@ void screen_push_screen(SDL_Renderer *renderer, sops_t *screen, const uint32_t x
     screen_load_screen(renderer, screen_pos++, screen, x, y);
 }
 
-void port_change_region(const int region_id) {
+void port_change_region(dsl_region_t *reg) {
     //player_load_graphics(main_get_rend());
     player_load(main_get_rend(), ds_player_get_active(), main_get_zoom());
-    screen_load_region(main_get_rend(), region_id);
+    map_init(&cmap);
+    map_load_region(reg, main_get_rend());
+    //screen_load_region(main_get_rend(), region_id);
 }
 
 int screen_load_region(SDL_Renderer *renderer, const int region) {
@@ -86,7 +89,7 @@ int screen_load_region(SDL_Renderer *renderer, const int region) {
 
     // Map is a special case.
     map_init(&cmap);
-    map_load_region(&cmap, renderer, index);
+    map_load_map(&cmap, renderer, index);
 
     screen_push_screen(renderer, &map_screen, 0, 0);
     screen_push_screen(renderer, &narrate_screen, 0, 0);

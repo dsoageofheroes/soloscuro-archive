@@ -33,6 +33,7 @@ void map_cleanup() {
 }
 
 void map_free(map_t *map) {
+    if (!map) { return; }
     if (map->tiles) {
         for (int i = 0; i < cmap->region->num_tiles; i++) {
             if (map->tiles[i]) {
@@ -60,7 +61,8 @@ int cmap_is_danger(const int row, const int column) {
     return dsl_region_is_danger(cmap->region, row, column);
 }
 
-void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
+
+static void map_load_current_region() {
     SDL_Surface* tile = NULL;
     uint32_t *ids = NULL;
     uint32_t width, height;
@@ -69,15 +71,14 @@ void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
     region_object_t *obj;
     int zoom = 2.0;
     gff_palette_t *pal;
+    map_t *map = cmap;
 
-    map_free(map);
-    cren = renderer;
-    map->region = dsl_load_region(id);
     pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + map->region->map_id - 1;
     ids = map->region->ids;
     for (int i = 0; i < map->region->num_tiles; i++) { max_id = max_id > ids[i] ? max_id : ids[i]; }
     max_id++;
     animate_clear();
+    anim_pos = 0;
     player_add_to_animation_list();
     map->tiles = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * max_id);
     memset(map->tiles, 0x0, sizeof(SDL_Texture*) * max_id);
@@ -87,7 +88,7 @@ void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
 
         tile = SDL_CreateRGBSurfaceFrom(data, width, height, 32, 4*width, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
 
-        map->tiles[ids[i]] = SDL_CreateTextureFromSurface(renderer, tile);
+        map->tiles[ids[i]] = SDL_CreateTextureFromSurface(cren, tile);
         SDL_FreeSurface(tile);
 
         free(data);
@@ -97,7 +98,7 @@ void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
         //printf("(%d, %d, %d), scmd = %p, bmp = %d\n", obj->mapx, obj->mapy, obj->mapz, obj->scmd, obj->btc_idx);
         anims[anim_pos].scmd = obj->scmd;
         anims[anim_pos].spr = 
-            sprite_new(renderer, pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP, obj->btc_idx);
+            sprite_new(cren, pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP, obj->btc_idx);
         anims[anim_pos].delay = 0;
         anims[anim_pos].pos = 0;
         anims[anim_pos].x = obj->bmpx * zoom;
@@ -116,6 +117,33 @@ void map_load_region(map_t *map, SDL_Renderer *renderer, int id) {
     cmap = map;
 
     dsl_change_region(42);
+}
+
+static map_t *create_map() {
+    map_t *ret = malloc(sizeof(map_t));
+    memset(ret, 0x0, sizeof(map_t));
+    return ret;
+}
+
+void map_load_region(dsl_region_t *reg, SDL_Renderer *renderer) {
+    map_free(cmap);
+    if (!cmap) { cmap = create_map(); }
+    map_init(cmap);
+    cren = renderer;
+    cmap->region = reg;
+    map_load_current_region();
+
+    // TODO: NEED TO CLEAR ALL SCREENS
+    screen_push_screen(renderer, &map_screen, 0, 0);
+    screen_push_screen(renderer, &narrate_screen, 0, 0);
+}
+
+void map_load_map(map_t *map, SDL_Renderer *renderer, int id) {
+    map_free(map);
+    cren = renderer;
+    map->region = dsl_load_region(id);
+    cmap = map;
+    map_load_current_region();
 }
 
 static void clear_animations() {
@@ -154,7 +182,7 @@ void map_render(void *data, SDL_Renderer *renderer) {
 }
 
 void port_add_obj(region_object_t *obj) {
-    gff_palette_t *pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + cmap->region->map_id - 1;
+    gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes;
     const float zoom = main_get_zoom();
 
     anims[anim_pos].scmd = obj->scmd;
