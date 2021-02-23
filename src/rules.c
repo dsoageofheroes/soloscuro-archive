@@ -228,11 +228,15 @@ static const uint16_t halfling_classes[] = {
 //  CLR  DRU  FGR  GLD  PSI  RNG  THF
     A_C, A_D, A_F, A_G, A_S, A_R, A_T,
 
-//  CLR / FGR           CLR / PSI           CLR / RNG     CLR / THF
-    A_C | A_F,          A_C | A_S,          A_C | A_R,    A_C | A_T,
+//  CLR / FGR           CLR / PSI           CLR / RNG     
+    A_C | A_F,          A_C | A_S,          A_C | A_R,
+//  CLR / THF
+    A_C | A_T,
 
-//  DRU / FGR           DRU  / PSI          DRU / RNG     DRU / THF
-    A_D | A_F,          A_D | A_S,          A_D | A_R,    A_D | A_T,
+//  DRU / FGR           DRU  / PSI          DRU / RNG     
+    A_D | A_F,          A_D | A_S,          A_D | A_R,
+//  DRU / THF
+    A_D | A_T,
 
 //  FGR / PSI           FGR / THF
     A_F | A_S,          A_F | A_T,
