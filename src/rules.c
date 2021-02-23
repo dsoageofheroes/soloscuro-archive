@@ -3,15 +3,16 @@
 #include <stdio.h>
 
 enum {
-    A_END = 0x0, // End of Allowed Classes
-    A_C = 0x1, // Allowed Cleric
-    A_D = 0x2, // Allowed Druid
-    A_F = 0x4, // Allowed Fighter
-    A_G = 0x8, // Allowed Gladiator
-    A_P = 0x10, // Allowed Preserver
-    A_S = 0x20, // Allowed pSionicist
-    A_R = 0x40, // Allowed Ranger
-    A_T = 0x80, // Allowed Thief
+    A_END = 0x0,     // End of Allowed Classes
+    A_C   = 0x1,     // Allowed Cleric
+    A_D   = 0x2,     // Allowed Druid
+    A_F   = 0x4,     // Allowed Fighter
+    A_G   = 0x8,     // Allowed Gladiator
+    A_P   = 0x10,    // Allowed Preserver
+    A_S   = 0x20,    // Allowed pSionicist
+    A_R   = 0x40,    // Allowed Ranger
+    A_T   = 0x80,    // Allowed Thief
+    A_U   = 0x8000,  // Allowed dUal
 };
 
 static int convert_to_class_sel(const uint8_t class) {
@@ -38,102 +39,281 @@ static int convert_to_class_sel(const uint8_t class) {
 }
 
 static const uint16_t human_classes[] = {
-    A_C, A_D, A_F, A_G, A_P, A_S, A_R, A_T, A_END
+//  CLR  DRU  FGR  GLD  PRE  PSI  RNG  THF
+    A_C, A_D, A_F, A_G, A_P, A_S, A_R, A_T,
+
+//  DUAL  CLR / FGR           DUAL  CLR / GLD           DUAL  CLR / PRE     
+    A_U | A_C | A_F,          A_U | A_C | A_G,          A_U | A_C | A_P,
+//  DUAL  CLR / PSI           DUAL  CLR / RNG           DUAL  CLR / THF
+    A_U | A_C | A_S,          A_U | A_C | A_R,          A_U | A_C | A_T,
+//  DUAL  CLR / FGR / PRE     DUAL  CLR / FGR / PSI     DUAL  CLR / FGR / THF
+    A_U | A_C | A_F | A_P,    A_U | A_C | A_F | A_S,    A_U | A_C | A_F | A_T,
+//  DUAL  CLR / GLD / PRE     DUAL  CLR / GLD / PSI     DUAL  CLR / GLD / THF
+    A_U | A_C | A_G | A_P,    A_U | A_C | A_G | A_S,    A_U | A_C | A_G | A_T,
+//  DUAL  CLR / PRE / PSI     DUAL  CLR / PRE / RNG     DUAL  CLR / PRE / THF
+    A_U | A_C | A_P | A_S,    A_U | A_C | A_P | A_R,    A_U | A_C | A_P | A_T,
+//  DUAL  CLR / PSI / RNG     DUAL  CLR / PSI / THF
+    A_U | A_C | A_S | A_R,    A_U | A_C | A_S | A_T,
+//  DUAL  CLR / RNG / THF
+    A_U | A_C | A_R | A_T,
+
+//  DUAL  DRU / FGR           DUAL  DRU / GLD           DUAL  DRU / PRE     
+    A_U | A_D | A_F,          A_U | A_D | A_G,          A_U | A_D | A_P,
+//  DUAL  DRU / PSI           DUAL  DRU / THF
+    A_U | A_D | A_S,          A_U | A_D | A_T,
+//  DUAL  DRU / FGR / PRE     DUAL  DRU / FGR / PSI     DUAL  DRU / FGR / THF
+    A_U | A_D | A_F | A_P,    A_U | A_D | A_F | A_S,    A_U | A_D | A_F | A_T,
+//  DUAL  DRU / GLD / PRE     DUAL  DRU / GLD / PSI     DUAL  DRU / GLD / THF
+    A_U | A_D | A_G | A_P,    A_U | A_D | A_G | A_S,    A_U | A_D | A_G | A_T,
+//  DUAL  DRU / PRE / PSI     DUAL  DRU / PRE / THF
+    A_U | A_D | A_P | A_S,    A_U | A_D | A_P | A_T,
+//  DUAL  DRU / PSI / THF
+    A_U | A_D | A_S | A_T,
+
+//  DUAL  FGR / PRE           DUAL  FGR / PSI           DUAL  FGR / THF
+    A_U | A_F | A_P,          A_U | A_F | A_S,          A_U | A_F | A_T,
+//  DUAL  FGR / PRE / PSI     DUAL  FGR / PRE / THF
+    A_U | A_F | A_P | A_S,    A_U | A_F | A_P | A_T,
+//  DUAL  FGR / PSI / THF
+    A_U | A_F | A_S | A_T,
+
+//  DUAL  GLD / PRE           DUAL  GLD / PSI           DUAL  GLD / THF
+    A_U | A_G | A_P,          A_U | A_G | A_S,          A_U | A_G | A_T,
+//  DUAL  GLD / PRE / PSI     DUAL  GLD / PRE / THF
+    A_U | A_G | A_P | A_S,    A_U | A_G | A_P | A_T,
+//  DUAL  GLD / PSI / THF
+    A_U | A_G | A_S | A_T,
+
+//  DUAL  PRE / PSI           DUAL  PRE / RNG           DUAL  PRE / THF
+    A_U | A_P | A_S,          A_U | A_P | A_R,          A_U | A_P | A_T,
+//  DUAL  PRE / PSI / RNG     DUAL  PRE / PSI / THF
+    A_U | A_P | A_S | A_R,    A_U | A_P | A_S | A_T,
+//  DUAL  PRE / RNG / THF
+    A_U | A_P | A_R | A_T,
+
+//  DUAL  PSI / RNG           DUAL  PSI / THF
+    A_U | A_S | A_R,          A_U | A_S | A_T,
+//  DUAL  PSI / RNG / THF
+    A_U | A_S | A_R | A_T,
+
+//  DUAL  RNG / THF
+    A_U | A_R | A_T,
+
+
+    A_END // END Human
 };
 static const uint16_t dwarf_classes[] = {
-    A_C, A_F, A_G, A_S, A_T, A_C | A_F, A_C | A_S, A_F | A_S, A_F | A_T, A_S | A_T, 0x0
+//  CLR  FGR  GLD  PSI  THF
+    A_C, A_F, A_G, A_S, A_T,
+
+//  CLR / FGR                 CLR / PSI
+    A_C | A_F,                A_C | A_S,
+
+//  FGR / PSI                 FGR / THF
+    A_F | A_S,                A_F | A_T,
+
+//  PSI / THF
+    A_S | A_T,
+
+    A_END // END Dwarf
 };
 static const uint16_t elf_classes[] = {
-    A_C, A_F, A_G, A_P, A_S, A_R, A_T, 
-    A_C | A_F, A_C | A_P, A_C | A_S, A_C | A_R, A_S | A_T, A_C | A_T,
-    A_C | A_F | A_P, A_C | A_F | A_S, A_C | A_F | A_T,
-    A_C | A_P | A_S, A_C | A_P | A_R, A_C | A_P | A_T,
-    A_C | A_S | A_R, A_C | A_S | A_T,
+//  CLR  FGR  GLD  PRE  PSI  RNG  THF
+    A_C, A_F, A_G, A_P, A_S, A_R, A_T,
+
+//  CLR / FGR                 CLR / PRE                 CLR / PSI
+    A_C | A_F,                A_C | A_P,                A_C | A_S,
+//  CLR / RNG                 CLR / THF
+    A_C | A_R,                A_C | A_T,
+//  CLR / FGR / PRE           CLR / FGR / PSI           CLR / FGR / THF
+    A_C | A_F | A_P,          A_C | A_F | A_S,          A_C | A_F | A_T,
+//  CLR / PRE / PSI           CLR / PRE / RNG           CLR / PRE / THF
+    A_C | A_P | A_S,          A_C | A_P | A_R,          A_C | A_P | A_T,
+//  CLR / PSI / RNG           CLR / PSI / THF
+    A_C | A_S | A_R,          A_C | A_S | A_T,
+//  CLR / RNG / THF
     A_C | A_R | A_T,
-    A_F | A_P, A_F | A_S, A_F | A_T,
-    A_F | A_P | A_S, A_F | A_P | A_T,
+
+//  FGR / PRE                 FGR / PSI                 FGR / THF
+    A_F | A_P,                A_F | A_S,                A_F | A_T,
+//  FGR / PRE / PSI           FGR / PRE / THF
+    A_F | A_P | A_S,          A_F | A_P | A_T,
+//  FGR / PSI / THF
     A_F | A_S | A_T,
-    A_P | A_S, A_P | A_R, A_P | A_T,
-    A_P | A_S | A_R, A_P | A_S | A_T,
-    A_S | A_R, A_S | A_T,
+
+//  PRE / PSI                 PRE / RNG                 PRE / THF
+    A_P | A_S,                A_P | A_R,                A_P | A_T,
+//  PRE / PSI / RNG           PRE / PSI / THF
+    A_P | A_S | A_R,          A_P | A_S | A_T,
+
+//  PSI / RNG                 PSI / THF
+    A_S | A_R,                A_S | A_T,
+//  PSI / RNG / THF
     A_S | A_R | A_T,
+
+//  RNG / THF
     A_R | A_T,
-    A_END
+
+    A_END // END Elf
 };
 static const uint16_t half_elf_classes[] = {
-    A_C, A_D, A_F, A_G, A_P, A_S, A_R, A_T, 
-    A_C | A_F, A_C | A_P, A_C | A_S, A_C | A_R, A_S | A_T, A_C | A_T,
-    A_C | A_F | A_P, A_C | A_F | A_S, A_C | A_F | A_T,
-    A_C | A_P | A_S, A_C | A_P | A_R, A_C | A_P | A_T,
-    A_C | A_S | A_R, A_C | A_S | A_T,
+//  CLR  DRU  FGR  GLD  PRE  PSI  RNG  THF
+    A_C, A_D, A_F, A_G, A_P, A_S, A_R, A_T,
+
+//  CLR / FGR                 CLR / PRE                 CLR / PSI
+    A_C | A_F,                A_C | A_P,                A_C | A_S,
+//  CLR / RNG                 CLR / THF
+    A_C | A_R,                A_C | A_T,
+//  CLR / FGR / PRE           CLR / FGR / PSI           CLR / FGR / THF
+    A_C | A_F | A_P,          A_C | A_F | A_S,          A_C | A_F | A_T,
+//  CLR / PRE / PSI           CLR / PRE / RNG           CLR / PRE / THF
+    A_C | A_P | A_S,          A_C | A_P | A_R,          A_C | A_P | A_T,
+//  CLR / PSI / RNG           CLR / PSI / THF
+    A_C | A_S | A_R,          A_C | A_S | A_T,
+//  CLR / RNG / THF
     A_C | A_R | A_T,
-    A_D | A_F, A_D | A_P, A_D | A_S, A_D | A_T,
-    A_D | A_F | A_P, A_D | A_F | A_S, A_D | A_F | A_T,
-    A_D | A_P | A_S, A_D | A_P | A_T,
+
+//  DRU / FGR                 DRU / PRE                 DRU / PSI
+    A_D | A_F,                A_D | A_P,                A_D | A_S,
+//  DRU / THF
+    A_D | A_T,
+//  DRU / FGR / PRE           DRU / FGR / PSI           DRU / FGR / THF
+    A_D | A_F | A_P,          A_D | A_F | A_S,          A_D | A_F | A_T,
+//  DRU / PRE / PSI           DRU / PRE / THF
+    A_D | A_P | A_S,          A_D | A_P | A_T,
+//  DRU / PSI / THF
     A_D | A_S | A_T,
-    A_F | A_P, A_F | A_S, A_F | A_T,
-    A_F | A_P | A_S, A_F | A_P | A_T,
+
+//  FGR / PRE                 FGR / PSI                 FGR / THF
+    A_F | A_P,                A_F | A_S,                A_F | A_T,
+//  FGR / PRE / PSI           FGR / PRE / THF
+    A_F | A_P | A_S,          A_F | A_P | A_T,
+//  FGR / PSI / THF
     A_F | A_S | A_T,
-    A_P | A_S, A_P | A_R, A_P | A_T, A_P | A_R,
-    A_P | A_S | A_R, A_P | A_S | A_T, A_P | A_S | A_R, A_P | A_R | A_T,
-    A_S | A_R, A_S | A_T, A_S | A_R,
+
+//  PRE / PSI                 PRE / RNG                 PRE / THF
+    A_P | A_S,                A_P | A_R,                A_P | A_T,
+//  PRE / PSI / RNG           PRE / PSI / THF
+    A_P | A_S | A_R,          A_P | A_S | A_T,
+//  PRE / RNG / THF
+    A_P | A_R | A_T,
+
+//  PSI / RNG                 PSI / THF
+    A_S | A_R,                A_S | A_T,
+//  PSI / RNG / THF
     A_S | A_R | A_T,
+
+//  RNG / THF
     A_R | A_T,
-    A_END
+
+
+    A_END // END Half-Elf
 };
 static const uint16_t half_giant_classes[] = {
+//  CLR  FGR  GLD  PSI  RNG
     A_C, A_F, A_G, A_S, A_R,
-    A_C | A_F, A_C | A_S, A_C | A_R,
-    A_F | A_S,
-    A_S | A_R,
-    A_END
-};
 
+//  CLR / FGR                 CLR / PSI                 CLR / RNG
+    A_C | A_F,                A_C | A_S,                A_C | A_R,
+
+//  FGR / PSI
+    A_F | A_S,
+
+//  PSI / RNG
+    A_S | A_R,
+
+    A_END // END Half-Giant
+};
 static const uint16_t halfling_classes[] = {
-    A_C, A_D, A_F, A_G, A_S, A_R, A_T, 
-    A_C | A_F, A_C | A_S, A_C | A_R, A_C | A_T,
-    A_D | A_F, A_D | A_S, A_D | A_R, A_D | A_T,
-    A_F | A_S, A_F | A_T,
+//  CLR  DRU  FGR  GLD  PSI  RNG  THF
+    A_C, A_D, A_F, A_G, A_S, A_R, A_T,
+
+//  CLR / FGR                 CLR / PSI                 CLR / RNG     
+    A_C | A_F,                A_C | A_S,                A_C | A_R,
+//  CLR / THF
+    A_C | A_T,
+
+//  DRU / FGR                 DRU  / PSI                DRU / RNG     
+    A_D | A_F,                A_D | A_S,                A_D | A_R,
+//  DRU / THF
+    A_D | A_T,
+
+//  FGR / PSI                 FGR / THF
+    A_F | A_S,                A_F | A_T,
+//  FGR / PSI / THF
     A_F | A_S | A_T,
-    A_S | A_R, A_S | A_T,
+
+//  PSI / RNG                 PSI / THF
+    A_S | A_R,                A_S | A_T,
+//  PSI / RNG / THF
     A_S | A_R | A_T,
+
+//  RNG / THF
     A_R | A_T,
-    A_END
+
+    A_END // END Halfling
 };
 static const uint16_t mul_classes[] = {
-    A_C, A_D, A_F, A_G, A_S, A_R, A_T, 
-    A_C | A_F, A_C | A_S, A_C | A_T,
+//  CLR  DRU  FGR  GLD  PSI  RNG  THF
+    A_C, A_D, A_F, A_G, A_S, A_R, A_T,
+
+//  CLR / FGR                 CLR / PSI                 CLR / THF
+    A_C | A_F,                A_C | A_S,                A_C | A_T,
+//  CLR / FGR / THF
     A_C | A_F | A_T,
-    A_D | A_F, A_D | A_S, A_D | A_T,
+
+//  DRU / FGR                 DRU / PSI                 DRU / THF
+    A_D | A_F,                A_D | A_S,                A_D | A_T,
+//  DRU / FGR / THF
     A_D | A_F | A_T,
-    A_F | A_S, A_F | A_T,
+
+//  FGR / PSI                 FGR / THF
+    A_F | A_S,                A_F | A_T,
+
+//  FGR / PSI / THF
     A_F | A_S | A_T,
+
+//  PSI / THF
     A_S | A_T,
-    A_END
+
+    A_END // END Mul
 };
 static const uint16_t thrikreen_classes[] = {
+//  CLR  DRU  FGR  GLD  PSI  RNG
     A_C, A_D, A_F, A_G, A_S, A_R,
-    A_C | A_F, A_C | A_S, A_C | A_R,
+
+//  CLR / FGR                 CLR / PSI                 CLR / RNG
+    A_C | A_F,                A_C | A_S,                A_C | A_R,
+//  CLR / FGR / PSI
     A_C | A_F | A_S,
+//  CLR / PSI / RNG
     A_C | A_S | A_R,
-    A_D | A_F, A_D | A_S,
+
+//  DRU / FGR                 DRU / PSI
+    A_D | A_F,                A_D | A_S,
+//  DRU / FGR / PSI
     A_D | A_F | A_S,
+
+//  FGR / PSI
     A_F | A_S,
+
+//  PSI / RNG
     A_S | A_R,
-    A_END
+
+    A_END // END Thri-Kreen
 };
 
-//TODO: These are not correct...
+//    str dex con int wis chr
 const static uint8_t race_mods[][6] = {
-    { 0, 0, 0, 0, 0, 0}, // MONSTER
-    { 0, 0, 0, 0, 0, 0}, // HUMAN
-    { 0, -1, 1, 0, 0, -2}, // DWARF
-    { 0, 1, -1, 0, 0, 0}, // ELF
-    { 0, 1, -1, 0, 0, 0}, // HALFELF
-    { 4, -5, 2, -5, -3, -3}, // HALFGIANT
-    { 0, 1, 0, 0, -1, 0}, // HALFLING
-    { 2, 0, 1, -1, 0, -2}, // MUL
-    { 0, 2, 0, -1, 1, -2}, // TRIKEEN
+    {  0,  0,  0,  0,  0,  0  }, // MONSTER
+    {  0,  0,  0,  0,  0,  0  }, // HUMAN
+    {  1, -1,  2,  0,  0, -2  }, // DWARF
+    {  0,  2, -2,  1, -1,  0  }, // ELF
+    {  0,  1, -1,  0,  0,  0  }, // HALFELF
+    {  4, -5,  2, -5, -3, -3  }, // HALFGIANT
+    { -2,  2, -1,  0,  2, -1  }, // HALFLING
+    {  2,  0,  1, -1,  0, -2  }, // MUL
+    {  0,  2,  0, -1,  1, -2  }, // THRI-KREEN
 };
 
 static void dnd2e_apply_race_mods(ds_character_t *pc) {
@@ -146,266 +326,265 @@ static void dnd2e_apply_race_mods(ds_character_t *pc) {
     pc->stats.cha += race_mods[pc->race][5];
 }
 
-enum {STR_HIT, STR_DAM, STR_WEIGHT, STR_PRESS, STR_OPEN, STR_BEND};
-
+enum {STR_HIT,   STR_DAM,   STR_WEIGHT,   STR_PRESS,   STR_OPEN,   STR_BEND};
 const int16_t str_mods[][6] = {
-    {-9, -9, 0, 0, 0, 0},
-    {-5, -4, 1, 3, 1, 0},
-    {-3, -2, 1, 5, 1, 0},
-    {-3, -1, 5, 10, 2, 0},
-    {-2, -1, 10, 25, 3, 0},
-    {-2, -1, 10, 25, 3, 0},
-    {-1, 0, 20, 55, 4, 0},
-    {-1, 0, 20, 55, 4, 0},
-    {0, 0, 35, 90, 5, 1},
-    {0, 0, 35, 90, 5, 1},
-    {0, 0, 40, 115, 6, 2},
-    {0, 0, 40, 115, 6, 2},
-    {0, 0, 45, 140, 7, 4}, // 12
-    {0, 0, 45, 140, 7, 4}, // 13
-    {0, 0, 55, 170, 8, 7}, // 14
-    {0, 0, 55, 170, 8, 7}, // 15
-    {0, 1, 70, 195, 9, 10}, // 16
-    {1, 1, 85, 220, 10, 13}, // 17
-    {1, 2, 110, 255, 11, 16}, //18
-    {3, 7, 485, 640, 16, 50}, // 19
-    {3, 8, 535, 700, 17, 60}, // 20
-    {4, 9, 635, 810, 17, 70}, // 21
-    {4, 10, 785, 970, 18, 80}, // 22
-    {5, 11, 935, 1130, 18, 90}, // 23
-    {6, 12, 1235, 1440, 19, 95}, // 24
-    {7, 14, 1535, 1750, 19, 99}, // 25
+    {   -9,        -9,         0,            0,           0,          0 }, // 00
+    {   -5,        -4,         1,            3,           1,          0 }, // 01
+    {   -3,        -2,         1,            5,           1,          0 }, // 02
+    {   -3,        -1,         5,           10,           2,          0 }, // 03
+    {   -2,        -1,        10,           25,           3,          0 }, // 04
+    {   -2,        -1,        10,           25,           3,          0 }, // 05
+    {   -1,         0,        20,           55,           4,          0 }, // 06
+    {   -1,         0,        20,           55,           4,          0 }, // 07
+    {    0,         0,        35,           90,           5,          1 }, // 08
+    {    0,         0,        35,           90,           5,          1 }, // 09
+    {    0,         0,        40,          115,           6,          2 }, // 10
+    {    0,         0,        40,          115,           6,          2 }, // 11
+    {    0,         0,        45,          140,           7,          4 }, // 12
+    {    0,         0,        45,          140,           7,          4 }, // 13
+    {    0,         0,        55,          170,           8,          7 }, // 14
+    {    0,         0,        55,          170,           8,          7 }, // 15
+    {    0,         1,        70,          195,           9,         10 }, // 16
+    {    1,         1,        85,          220,          10,         13 }, // 17
+    {    1,         2,       110,          255,          11,         16 }, // 18
+    {    3,         7,       485,          640,          16,         50 }, // 19
+    {    3,         8,       535,          700,          17,         60 }, // 20
+    {    4,         9,       635,          810,          17,         70 }, // 21
+    {    4,        10,       785,          970,          18,         80 }, // 22
+    {    5,        11,       935,         1130,          18,         90 }, // 23
+    {    6,        12,      1235,         1440,          19,         95 }, // 24
+    {    7,        14,      1535,         1750,          19,         99 }, // 25
 };
 
-enum {DEX_REACTION, DEX_MISSILE, DEX_AC};
-
+enum {DEX_REACTION,   DEX_MISSILE,   DEX_AC};
 const int16_t dex_mods[][3] = {
-    {-9, -9, 9},
-    {-6, -6, 5},
-    {-3, -3, 4},
-    {-2, -2, 3},
-    {-1, -1, 2},
-    {0, 0, 1}, // 6
-    {0, 0, 0},
-    {0, 0, 0},
-    {0, 0, 0},
-    {0, 0, 0},
-    {0, 0, 0},
-    {0, 0, 0},
-    {0, 0, 0},
-    {0, 0, 0},
-    {0, 0, -1}, // 15
-    {1, 1, -2},
-    {2, 2, -3},
-    {2, 2, -4},
-    {3, 3, -4},
-    {3, 3, -4},
-    {4, 4, -5},
-    {4, 4, -5},
-    {4, 4, -5},
-    {5, 5, -6},
-    {5, 5, -6},
+    {   -9,             -9,             9 }, // 00
+    {   -6,             -6,             5 }, // 01
+    {   -4,             -4,             5 }, // 02
+    {   -3,             -3,             4 }, // 03
+    {   -2,             -2,             3 }, // 04
+    {   -1,             -1,             2 }, // 05
+    {    0,              0,             1 }, // 06
+    {    0,              0,             0 }, // 07
+    {    0,              0,             0 }, // 08
+    {    0,              0,             0 }, // 09
+    {    0,              0,             0 }, // 10
+    {    0,              0,             0 }, // 11
+    {    0,              0,             0 }, // 12
+    {    0,              0,             0 }, // 13
+    {    0,              0,             0 }, // 14
+    {    0,              0,            -1 }, // 15
+    {    1,              1,            -2 }, // 16
+    {    2,              2,            -3 }, // 17
+    {    2,              2,            -4 }, // 18
+    {    3,              3,            -4 }, // 19
+    {    3,              3,            -4 }, // 20
+    {    4,              4,            -5 }, // 21
+    {    4,              4,            -5 }, // 22
+    {    4,              4,            -5 }, // 23
+    {    5,              5,            -6 }, // 24
+    {    5,              5,            -6 }, // 25
 };
 
-enum { CON_HP, CON_SHOCK, CON_RES, CON_POISON_SAVE, CON_REGEN};
-
+enum {CON_HP,   CON_SHOCK,   CON_RES,   CON_POISON_SAVE,   CON_REGEN};
 const int16_t con_mods[][5] = {
-    {-3, 25, 30, -2, 0},
-    {-2, 30, 35, -1, 0},
-    {-2, 35, 40, 0, 0},
-    {-1, 40, 45, 0, 0},
-    {-1, 45, 50, 0, 0},
-    {-1, 50, 55, 0, 0},
-    {0, 55, 60, 0, 0},
-    {0, 60, 65, 0, 0},
-    {0, 65, 70, 0, 0},
-    {0, 70, 75, 0, 0},
-    {0, 75, 80, 0, 0},
-    {0, 80, 85, 0, 0},
-    {0, 85, 90, 0, 0},
-    {0, 88, 92, 0, 0},
-    {1, 90, 94, 0, 0},
-    {2, 95, 96, 0, 0},
-    {3, 97, 98, 0, 0},
-    {4, 99, 100, 0, 0},
-    {5, 99, 100, 1, 0},
-    {5, 99, 100, 1, 6},
-    {6, 99, 100, 2, 5},
-    {6, 99, 100, 2, 4},
-    {6, 99, 100, 3, 3},
-    {7, 99, 100, 3, 2},
-    {7, 100, 100, 4, 1},
+    {   -9,        0,           0,        -9,                 0 }, // 00
+    {   -3,       25,          30,        -2,                 0 }, // 01
+    {   -2,       30,          35,        -1,                 0 }, // 02
+    {   -2,       35,          40,         0,                 0 }, // 03
+    {   -1,       40,          45,         0,                 0 }, // 04
+    {   -1,       45,          50,         0,                 0 }, // 05
+    {   -1,       50,          55,         0,                 0 }, // 06
+    {    0,       55,          60,         0,                 0 }, // 07
+    {    0,       60,          65,         0,                 0 }, // 08
+    {    0,       65,          70,         0,                 0 }, // 09
+    {    0,       70,          75,         0,                 0 }, // 10
+    {    0,       75,          80,         0,                 0 }, // 11
+    {    0,       80,          85,         0,                 0 }, // 12
+    {    0,       85,          90,         0,                 0 }, // 13
+    {    0,       88,          92,         0,                 0 }, // 14
+    {    1,       90,          94,         0,                 0 }, // 15
+    {    2,       95,          96,         0,                 0 }, // 16
+    {    3,       97,          98,         0,                 0 }, // 17
+    {    4,       99,         100,         0,                 0 }, // 18
+    {    5,       99,         100,         1,                 0 }, // 19
+    {    5,       99,         100,         1,                 6 }, // 20
+    {    6,       99,         100,         2,                 5 }, // 21
+    {    6,       99,         100,         2,                 4 }, // 22
+    {    6,       99,         100,         3,                 3 }, // 23
+    {    7,       99,         100,         3,                 2 }, // 24
+    {    7,      100,         100,         4,                 1 }, // 25
 };
 
-enum {INT_LANG, INT_SL, INT_CHANCE, INT_MAX_SL, INT_ILLUSIONS};
-
+enum {INT_LANG,   INT_SL,   INT_CHANCE,   INT_MAX_SL,   INT_ILLUSIONS};
 const int16_t int_mods[][5] = {
-    {0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0},
-    {1, 0, 0, 0, 0},
-    {1, 0, 0, 0, 0},
-    {1, 0, 0, 0, 0},
-    {1, 0, 0, 0, 0},
-    {1, 0, 0, 0, 0},
-    {1, 0, 0, 0, 0},
-    {1, 0, 0, 0, 0},
-    {2, 4, 35, 6, 0},
-    {2, 5, 40, 7, 0},
-    {2, 5, 45, 7, 0},
-    {3, 6, 50, 7, 0},
-    {3, 6, 55, 9, 0},
-    {4, 7, 60, 9, 0},
-    {4, 7, 65, 11, 0},
-    {5, 8, 70, 11, 0},
-    {6, 8, 75, 14, 0},
-    {7, 9, 85, 18, 0}, // 18
-    {8, 9, 95, 9999, 1},
-    {9, 9, 96, 9999, 2},
-    {10, 9, 97, 9999, 3},
-    {11, 9, 98, 9999, 4},
-    {12, 9, 99, 9999, 5},
-    {15, 9, 100, 9999, 6},
-    {20, 9, 100, 9999, 7},
+    {    0,          0,        0,            0,            0 }, // 00
+    {    0,          0,        0,            0,            0 }, // 01
+    {    1,          0,        0,            0,            0 }, // 02
+    {    1,          0,        0,            0,            0 }, // 03
+    {    1,          0,        0,            0,            0 }, // 04
+    {    1,          0,        0,            0,            0 }, // 05
+    {    1,          0,        0,            0,            0 }, // 06
+    {    1,          0,        0,            0,            0 }, // 07
+    {    1,          0,        0,            0,            0 }, // 08
+    {    2,          4,       35,            6,            0 }, // 09
+    {    2,          5,       40,            7,            0 }, // 10
+    {    2,          5,       45,            7,            0 }, // 11
+    {    3,          6,       50,            7,            0 }, // 12
+    {    3,          6,       55,            9,            0 }, // 13
+    {    4,          7,       60,            9,            0 }, // 14
+    {    4,          7,       65,           11,            0 }, // 15
+    {    5,          8,       70,           11,            0 }, // 16
+    {    6,          8,       75,           14,            0 }, // 17
+    {    7,          9,       85,           18,            0 }, // 18
+    {    8,          9,       95,         9999,            1 }, // 19
+    {    9,          9,       96,         9999,            2 }, // 20
+    {   10,          9,       97,         9999,            3 }, // 21
+    {   11,          9,       98,         9999,            4 }, // 22
+    {   12,          9,       99,         9999,            5 }, // 23
+    {   15,          9,      100,         9999,            6 }, // 24
+    {   20,          9,      100,         9999,            7 }, // 25
 };
 
-enum {WIS_MAG_DEF, WIS_BONUS_SPELL, WIS_SPELL_FAILURE};
-
+enum {WIS_MAG_DEF,   WIS_BONUS_SPELL,   WIS_SPELL_FAILURE};
 const int16_t wis_mod[][3] = {
-    {-9, 0x0000, 100},
-    {-6, 0x0000, 80},
-    {-4, 0x0000, 60},
-    {-3, 0x0000, 50},
-    {-2, 0x0000, 45},
-    {-1, 0x0000, 40},
-    {-1, 0x0000, 35},
-    {-1, 0x0000, 30},
-    {0, 0x0000, 25},
-    {0, 0x0000, 20},
-    {0, 0x0000, 15},
-    {0, 0x0000, 10},
-    {0, 0x0000, 5},
-    {0, 0x0001, 0},
-    {0, 0x0001, 0},
-    {1, 0x0002, 0},
-    {2, 0x0002, 0},
-    {3, 0x0003, 0},
-    {4, 0x0004, 0},
-    {4, 0x0103, 0}, // 1st and 3rd bonuses
-    {4, 0x0204, 0},
-    {4, 0x0305, 0},
-    {4, 0x0405, 0},
-    {4, 0x0106, 0},
-    {4, 0x0506, 0},
-    {4, 0x0607, 0},
+    {   -9,        0x0000,               100 }, // 00
+    {   -6,        0x0000,                80 }, // 01
+    {   -4,        0x0000,                60 }, // 02
+    {   -3,        0x0000,                50 }, // 03
+    {   -2,        0x0000,                45 }, // 04
+    {   -1,        0x0000,                40 }, // 05
+    {   -1,        0x0000,                35 }, // 06
+    {   -1,        0x0000,                30 }, // 07
+    {    0,        0x0000,                25 }, // 08
+    {    0,        0x0000,                20 }, // 09
+    {    0,        0x0000,                15 }, // 10
+    {    0,        0x0000,                10 }, // 11
+    {    0,        0x0000,                 5 }, // 12
+    {    0,        0x0001,                 0 }, // 13
+    {    0,        0x0001,                 0 }, // 14
+    {    1,        0x0002,                 0 }, // 15
+    {    2,        0x0002,                 0 }, // 16
+    {    3,        0x0003,                 0 }, // 17
+    {    4,        0x0004,                 0 }, // 18
+    {    4,        0x0103,                 0 }, // 19 - 1st and 3rd bonuses
+    {    4,        0x0204,                 0 }, // 20
+    {    4,        0x0305,                 0 }, // 21
+    {    4,        0x0405,                 0 }, // 22
+    {    4,        0x0106,                 0 }, // 23
+    {    4,        0x0506,                 0 }, // 24
+    {    4,        0x0607,                 0 }, // 25
 };
 
-enum {CHA_HENCH, CHA_LOYALTY, CHA_REACTION};
-
+enum {CHA_HENCH,   CHA_LOYALTY,   CHA_REACTION};
 const int16_t cha_mods[][3] = {
-    {0, -9, -9},
-    {0, -8, -7},
-    {1, -7, -6},
-    {1, -6, -5},
-    {1, -5, -4},
-    {2, -4, -3},
-    {2, -3, -2},
-    {3, -2, -1},
-    {3, -1, 0},
-    {4, 0, 0},
-    {4, 0, 0},
-    {4, 0, 0},
-    {5, 0, 0},
-    {5, 0, 1},
-    {6, 1, 2},
-    {7, 3, 3},
-    {8, 4, 5},
-    {10, 6, 6},
-    {15, 8, 7},
-    {20, 10, 8},
-    {25, 12, 9},
-    {30, 14, 10},
-    {35, 16, 11},
-    {40, 18, 12},
-    {45, 20, 13},
-    {50, 20, 14},
+    {    0,          -9,            -9 }, // 00
+    {    0,          -8,            -7 }, // 01
+    {    1,          -7,            -6 }, // 02
+    {    1,          -6,            -5 }, // 03
+    {    1,          -5,            -4 }, // 04
+    {    2,          -4,            -3 }, // 05
+    {    2,          -3,            -2 }, // 06
+    {    3,          -2,            -1 }, // 07
+    {    3,          -1,             0 }, // 08
+    {    4,           0,             0 }, // 09
+    {    4,           0,             0 }, // 10
+    {    4,           0,             0 }, // 11
+    {    5,           0,             0 }, // 12
+    {    5,           0,             1 }, // 13
+    {    6,           1,             2 }, // 14
+    {    7,           3,             3 }, // 15
+    {    8,           4,             5 }, // 16
+    {   10,           6,             6 }, // 17
+    {   15,           8,             7 }, // 18
+    {   20,          10,             8 }, // 19
+    {   25,          12,             9 }, // 20
+    {   30,          14,            10 }, // 21
+    {   35,          16,            11 }, // 22
+    {   40,          18,            12 }, // 23
+    {   45,          20,            13 }, // 24
+    {   50,          20,            14 }, // 25
 };
 
+//        exp    hdlimit      hapr
 const uint32_t fighter_levels[][3] = {
-    {0, 0, 0},
-    {0, 1, 2}, // the third parameter is how many half-attacks per round.
-    {2000, 2, 2},
-    {4000, 3, 2},
-    {8000, 4, 2},
-    {16000, 5, 2},
-    {32000, 6, 2},
-    {64000, 7, 3},
-    {125000, 8, 3},
-    {250000, 9, 3},
-    {500000, 9, 3},
-    {750000, 9, 3},
-    {1000000, 9, 3},
-    {1250000, 9, 4},
-    {1500000, 9, 4},
-    {1750000, 9, 4},
-    {2000000, 9, 4},
-    {2250000, 9, 4},
-    {2500000, 9, 4},
-    {2750000, 9, 4},
-    {3000000, 9, 4},
+    {       0,         0,        0 }, // 00 - the third parameter is how many half-attacks per round.
+    {       0,         1,        2 }, // 01
+    {    2000,         2,        2 }, // 02
+    {    4000,         3,        2 }, // 03
+    {    8000,         4,        2 }, // 04
+    {   16000,         5,        2 }, // 05
+    {   32000,         6,        2 }, // 06
+    {   64000,         7,        3 }, // 07
+    {  125000,         8,        3 }, // 08
+    {  250000,         9,        3 }, // 09
+    {  500000,         9,        3 }, // 10
+    {  750000,         9,        3 }, // 11
+    { 1000000,         9,        3 }, // 12
+    { 1250000,         9,        4 }, // 13
+    { 1500000,         9,        4 }, // 14
+    { 1750000,         9,        4 }, // 15
+    { 2000000,         9,        4 }, // 16
+    { 2250000,         9,        4 }, // 17
+    { 2500000,         9,        4 }, // 18
+    { 2750000,         9,        4 }, // 19
+    { 3000000,         9,        4 }, // 20
 };
 
+//        exp    hdlimit      hapr
 const uint32_t ranger_levels[][3] = {
-    {0, 0, 0},
-    {0, 1, 2}, // the third parameter is how many half-attacks per round.
-    {2250, 2, 2},
-    {4500, 3, 2},
-    {9000, 4, 2},
-    {18000, 5, 2},
-    {36000, 6, 2},
-    {75000, 7, 3},
-    {150000, 8, 3},
-    {300000, 9, 3},
-    {600000, 9, 3},
-    {900000, 9, 3},
-    {1200000, 9, 3},
-    {1500000, 9, 4},
-    {1800000, 9, 4},
-    {2100000, 9, 4},
-    {2400000, 9, 4},
-    {2700000, 9, 4},
-    {3000000, 9, 4},
-    {3300000, 9, 4},
-    {3600000, 9, 4},
+    {       0,         0,        0 }, // 00 - the third parameter is how many half-attacks per round.
+    {       0,         1,        2 }, // 01
+    {    2250,         2,        2 }, // 02
+    {    4500,         3,        2 }, // 03
+    {    9000,         4,        2 }, // 04
+    {   18000,         5,        2 }, // 05
+    {   36000,         6,        2 }, // 06
+    {   75000,         7,        3 }, // 07
+    {  150000,         8,        3 }, // 08
+    {  300000,         9,        3 }, // 09
+    {  600000,         9,        3 }, // 10
+    {  900000,         9,        3 }, // 11
+    { 1200000,         9,        3 }, // 12
+    { 1500000,         9,        4 }, // 13
+    { 1800000,         9,        4 }, // 14
+    { 2100000,         9,        4 }, // 15
+    { 2400000,         9,        4 }, // 16
+    { 2700000,         9,        4 }, // 17
+    { 3000000,         9,        4 }, // 18
+    { 3300000,         9,        4 }, // 19
+    { 3600000,         9,        4 }, // 20
 };
 
+//        exp    hdlimit      hapr
 const uint32_t preserver_levels[][3] = {
-    {0, 0, 0},
-    {0, 1, 0},
-    {2500, 2, 0},
-    {5000, 3, 0},
-    {10000, 4, 0},
-    {20000, 5, 0},
-    {40000, 6, 0},
-    {60000, 7, 0},
-    {90000, 8, 0},
-    {135000, 9, 0},
-    {250000, 10, 0},
-    {375000, 10, 0},
-    {750000, 10, 0},
-    {11250000, 10, 0},
-    {15000000, 10, 0},
-    {18750000, 10, 0},
-    {22500000, 10, 0},
-    {26250000, 10, 0},
-    {30000000, 10, 0},
-    {33750000, 10, 0},
-    {37500000, 10, 0},
+    {        0,        0,        0 }, // 00 - the third parameter is how many half-attacks per round.
+    {        0,        1,        0 }, // 01
+    {     2500,        2,        0 }, // 02
+    {     5000,        3,        0 }, // 03
+    {    10000,        4,        0 }, // 04
+    {    20000,        5,        0 }, // 05
+    {    40000,        6,        0 }, // 06
+    {    60000,        7,        0 }, // 07
+    {    90000,        8,        0 }, // 08
+    {   135000,        9,        0 }, // 09
+    {   250000,       10,        0 }, // 10
+    {   375000,       10,        0 }, // 11
+    {   750000,       10,        0 }, // 12
+    { 11250000,       10,        0 }, // 13
+    { 15000000,       10,        0 }, // 14
+    { 18750000,       10,        0 }, // 15
+    { 22500000,       10,        0 }, // 16
+    { 26250000,       10,        0 }, // 17
+    { 30000000,       10,        0 }, // 18
+    { 33750000,       10,        0 }, // 19
+    { 37500000,       10,        0 }, // 20
 };
 
 // TODO: REMEMBER TO UPDATE get_hit_die!!!!
 
 static const int8_t hit_die[] = {
-    0, 8, 8, 8, 8, 8, 8, 8, 8,
+     0,  8, 8, 8,  8,  8,  8,  8, 8,
     10, 10, 4, 6, 10, 10, 10, 10, 6
 };
 

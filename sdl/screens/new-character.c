@@ -42,7 +42,7 @@ static int cursor_countdown = 0;
 
 // FIXME - Change these to ds1_race_[...] and then add ones for DS2 and DSO
 // H = Human - D = Dwarf - E = Elf - HE = Half-Elf - HG = Half-Giant - HL = Halfling - M = Mul - T = Thri-Kreen
-// genderRace                              mH    fH   mD     fD    mE    fE   mHE   fHE   mHG   fHG   mHL   fHL    mM    fM    mT    fT
+// genderRace                              mH    fH    mD    fD    mE    fE   mHE   fHE   mHG   fHG   mHL   fHL    mM    fM    mT    fT
 static int race_portrait_offsets_x[] = {   25,   25,   19,   25,   15,   15,   28,   25,   11,   16,   28,   34,   18,   18,   11,   11 };
 static int race_portrait_offsets_y[] = {   12,   17,   26,   27,   14,   16,   14,   13,   15,   17,   27,   30,   07,   07,   13,   13 };
 static int race_sprite_offsets_x[]   = {  148,  150,  150,  150,  151,  152,  148,  150,  144,  146,  150,  151,  149,  149,  146,  146 };
@@ -741,6 +741,7 @@ static void fix_race_gender() { // move the race/gender to the appropiate spot
     load_character_sprite(); // go ahead and get the new sprite
     set_class_frames(); // go ahead and setup the new class frames
     select_class(2); // Default to Fighter whenever race changes
+    dnd2e_randomize_stats_pc(&pc);
     dnd2e_fix_stats_pc(&pc); // in case something need adjustment
 }
 
@@ -797,6 +798,11 @@ int new_character_handle_mouse_movement(const uint32_t x, const uint32_t y) {
 }
 
 int new_character_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
+    // Only support Left and Right mouse buttons for now
+    if (button != SDL_BUTTON_LEFT && button != SDL_BUTTON_RIGHT) {
+        return 1; // Handle
+    }
+
     last_sprite_mousedowned = 0;
 
     if (sprite_in_rect(done_button, x, y)) {
@@ -861,6 +867,11 @@ int new_character_handle_mouse_down(const uint32_t button, const uint32_t x, con
 }
 
 int new_character_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
+    // Only support Left and Right mouse buttons for now
+    if (button != SDL_BUTTON_LEFT && button != SDL_BUTTON_RIGHT) {
+        return 1;
+    }
+
     for (int i = 0; i < 8; i++) {
         if (last_sprite_mousedowned == stats_align_hp_buttons[i] && sprite_in_rect(stats_align_hp_buttons[i], x, y)) {
             update_stats_align_hp(i, button);
