@@ -6,6 +6,11 @@
 #include "../screen-manager.h"
 #include "../../src/ds-object.h"
 
+enum {
+	TEXTBOX_NONE,
+	TEXTBOX_NAME
+};
+
 ds_character_t *new_character_get_pc();
 psin_t* new_character_get_psin();
 spell_list_t* new_character_get_spell_list();

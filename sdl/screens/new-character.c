@@ -13,8 +13,11 @@
 static uint16_t background;
 static uint16_t parchment[5];
 static uint16_t done;
+static uint16_t name_textbox;
+static uint16_t text_cursor;
 static uint16_t classes[8];
 static uint16_t class_sel[8];
+static uint16_t stats_align_hp_buttons[8];
 static uint16_t psionic_devotion[3];
 static uint16_t spheres[4];
 static uint16_t ps_sel[4]; // seletion for psionics/spheres.
@@ -26,11 +29,16 @@ static uint16_t sphere_label; // 2046
 static uint16_t done_button;
 static uint16_t exit_button;
 
+// Store this so we don't trigger mouseup events in sprites we didn't mousedown in
+static uint16_t last_sprite_mousedowned;
+
 static uint8_t show_psionic_label = 1;
 static int8_t sphere_selection = -1;
 
 static int die_pos = 0;
 static int die_countdown = 0;
+
+static int cursor_countdown = 0;
 
 // FIXME - Change these to ds1_race_[...] and then add ones for DS2 and DSO
 // H = Human - D = Dwarf - E = Elf - HE = Half-Elf - HG = Half-Giant - HL = Halfling - M = Mul - T = Thri-Kreen
@@ -52,6 +60,8 @@ static psionic_list_t psionics;
 static uint8_t is_valid;
 static char sphere_text[32];
 static char name_text[32];
+static int current_textbox;
+static int changed_name;
 
 static void update_ui();
 static void select_class(uint8_t class);
@@ -208,10 +218,27 @@ static void new_character_init(SDL_Renderer* _renderer, const uint32_t x, const 
     parchment[3] = new_sprite_create(renderer, pal, 210 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20086);
     parchment[4] = new_sprite_create(renderer, pal, 210 + x, 90 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20087);
     done = new_sprite_create(renderer, pal, 250 + x, 160 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2000);
+    name_textbox = new_sprite_create(renderer, pal, 37 + x, 124 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 4003);
     sphere_label = new_sprite_create(renderer, pal, 217 + x, 140 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2046);
     psionic_label = new_sprite_create(renderer, pal, 217 + x, 140 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2047);
     done_button = new_sprite_create(renderer, pal, 240 + x, 174 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2000);
     exit_button = new_sprite_create(renderer, pal, 255 + x, 156 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2058);
+
+    text_cursor = new_sprite_create(renderer, pal, 170 + x, 150 + y, // Blinking text cursor (for the player's name)
+        zoom, RESOURCE_GFF_INDEX, GFF_ICON, 100);
+    sprite_set_frame(text_cursor, 1);
+
+    for (int i = 0; i < 6; i++) { // STR, DEX, CON, INT, WIS, CHA BUTTONS
+        stats_align_hp_buttons[i] = new_sprite_create(renderer, pal, 30 + x, 982 + (i * (6 * 8.9)),
+            zoom * .14, RESOURCE_GFF_INDEX, GFF_BMP, 5013);
+        sprite_set_frame(stats_align_hp_buttons[i], 1);
+    }
+    stats_align_hp_buttons[6] = new_sprite_create(renderer, pal, 564 + x, 1037 + y, // ALIGNMENT BUTTON
+        zoom * .14, RESOURCE_GFF_INDEX, GFF_BMP, 5013);
+    sprite_set_frame(stats_align_hp_buttons[6], 1);
+    stats_align_hp_buttons[7] = new_sprite_create(renderer, pal, 564 + x, 1251 + y, // HP BUTTON
+        zoom * .14, RESOURCE_GFF_INDEX, GFF_BMP, 5013);
+    sprite_set_frame(stats_align_hp_buttons[7], 1);
 
     for (int i = 0; i < 8; i++) {
         classes[i] = new_sprite_create(renderer, pal, 220 + x, 10 + y + (i * 8),
@@ -272,6 +299,14 @@ static void update_die_countdown() {
         }
         last_die_pos = die_pos;
     }
+}
+
+static void update_cursor_blink() {
+    if (cursor_countdown >= 30) {
+        sprite_render(renderer, text_cursor);
+    }
+
+    cursor_countdown--;
 }
 
 static int get_race_id() { // for the large portrait
@@ -345,6 +380,9 @@ void new_character_render(void *data, SDL_Renderer *renderer) {
         sprite_render(renderer, parchment[i]);
     }
     for (int i = 0; i < 8; i++) {
+        sprite_render(renderer, stats_align_hp_buttons[i]);
+    }
+    for (int i = 0; i < 8; i++) {
         sprite_render(renderer, classes[i]);
         sprite_render(renderer, class_sel[i]);
     }
@@ -367,11 +405,25 @@ void new_character_render(void *data, SDL_Renderer *renderer) {
         sprite_render(renderer, ps_sel[i]);
     }
 
+    sprite_render(renderer, name_textbox);
+
+    if (current_textbox == TEXTBOX_NAME) {
+        sprite_set_location(text_cursor, 85 + font_pixel_width(FONT_GREYLIGHT, name_text, strlen(name_text)), sprite_gety(name_textbox) + 3);
+
+        if (cursor_countdown == 0) {
+            cursor_countdown = 60;
+        }
+
+        update_cursor_blink();
+    } else {
+        cursor_countdown = 0;
+    }
+
     sprite_render(renderer, show_psionic_label ? sphere_label : psionic_label);
     sprite_render(renderer, done_button);
     sprite_render(renderer, exit_button);
 
-    int oX = 8, oY = 250;
+    int oX = 8, oY = 249;
     snprintf(buf, BUF_MAX, "NAME:");
     print_line_len(renderer, FONT_GREYLIGHT, buf, oX, oY, BUF_MAX);
     snprintf(buf, BUF_MAX, "%s", name_text);
@@ -432,98 +484,73 @@ void new_character_render(void *data, SDL_Renderer *renderer) {
     print_line_len(renderer, FONT_GREYLIGHT, buf, oX + 15, oY += 15, BUF_MAX);
 }
 
-int new_character_handle_mouse_movement(const uint32_t x, const uint32_t y) {
-    static uint16_t last_spr = SPRITE_ERROR;
-    uint16_t cspr = SPRITE_ERROR;
-
-    for (int i = 0; i < 8; i++) {
-        if (sprite_in_rect(classes[i], x, y)) {
-            cspr = classes[i];
-        }
-    }
-
-    if (sprite_in_rect(sphere_label, x, y)) {
-        cspr = show_psionic_label ? sphere_label : psionic_label;
-    }
-
-    if (show_psionic_label) {
-        for (int i = 0; i < 3; i++) {
-            if (sprite_in_rect(psionic_devotion[i], x, y)) {
-                cspr = psionic_devotion[i];
+void update_stats_align_hp(int i, uint32_t button)
+{
+    switch (button)
+    {
+        case SDL_BUTTON_LEFT:
+            switch (i) {
+                case 0: // STR
+                    pc.stats.str++;
+                    break;
+                case 1: // DEX
+                    pc.stats.dex++;
+                    break;
+                case 2: // CON
+                    pc.stats.con++;
+                    break;
+                case 3: // INT
+                    pc.stats.intel++;
+                    break;
+                case 4: // WIS
+                    pc.stats.wis++;
+                    break;
+                case 5: // CHA
+                    pc.stats.cha++;
+                    break;
+                case 6:
+                    pc.alignment++;
+                    break;
+                case 7:
+                    pc.base_hp++;
+                    pc.high_hp++;
+                    break;
+                default:
+                    break;
             }
-        }
-    } else {
-        for (int i = 0; i < 4; i++) {
-            if (sprite_in_rect(spheres[i], x, y)) {
-                cspr = spheres[i];
+        break;
+        case SDL_BUTTON_RIGHT:
+            switch (i) {
+                case 0: // STR
+                    pc.stats.str--;
+                    break;
+                case 1: // DEX
+                    pc.stats.dex--;
+                    break;
+                case 2: // CON
+                    pc.stats.con--;
+                    break;
+                case 3: // INT
+                    pc.stats.intel--;
+                    break;
+                case 4: // WIS
+                    pc.stats.wis--;
+                    break;
+                case 5: // CHA
+                    pc.stats.cha--;
+                    break;
+                case 6:
+                    pc.alignment--;
+                    break;
+                case 7:
+                    pc.base_hp--;
+                    pc.high_hp--;
+                    break;
+                default:
+                    break;
             }
-        }
+        break;
     }
-    sprite_set_frame(done_button, 0);
-    sprite_set_frame(exit_button, 0);
-    if (sprite_in_rect(done_button, x, y)) {
-        cspr = done_button;
-    }
-    if (sprite_in_rect(exit_button, x, y)) {
-        cspr = exit_button;
-    }
-
-    if (sprite_get_frame(cspr) < 2) {
-        sprite_set_frame(cspr, 1);
-    }
-
-    if (last_spr != SPRITE_ERROR && last_spr != cspr) {
-        if (sprite_get_frame(last_spr) < 2) {
-            sprite_set_frame(last_spr, 0);
-        }
-    }
-
-    last_spr = cspr;
-
-    return 1;// handle
-}
-
-int new_character_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
-    if (sprite_in_rect(done_button, x, y)) {
-        sprite_set_frame(done_button, 2);
-    }
-    if (sprite_in_rect(exit_button, x, y)) {
-        sprite_set_frame(exit_button, 2);
-    }
-    return 1;// handle
-}
-
-static void fix_race_gender() { // move the race/gender to the appropiate spot
-    if (pc.gender > GENDER_FEMALE) {
-        pc.gender = GENDER_MALE;
-        pc.race++;
-    } else if (pc.gender < GENDER_MALE) {
-        pc.gender = GENDER_FEMALE;
-        pc.race--;
-    }
-
-    if (pc.race < RACE_HUMAN) { pc.race = RACE_THRIKREEN; }
-    if (pc.race > RACE_THRIKREEN) { pc.race = RACE_HUMAN; }
-
-    // FIXME - Add (optional) support for Female Muls/Male Thri-Kreen if art assets are ever created for them
-    if (pc.race == RACE_MUL && pc.gender == GENDER_FEMALE) {
-        pc.race = RACE_THRIKREEN;
-    }
-
-    if (pc.race == RACE_THRIKREEN && pc.gender == GENDER_MALE) {
-        pc.race = RACE_MUL;
-    }
-
-    pc.real_class[0] = pc.real_class[1] = pc.real_class[2] = -1;
-    for (int i = 0; i < 8; i++)
-        sprite_set_frame(class_sel[i], 0);
-
-    get_random_name();
-
-    load_character_sprite(); // go ahead and get the new sprite
-    set_class_frames(); // go ahead and setup the new class frames
-    select_class(2); // Default to Fighter whenever race changes
-    dnd2e_fix_stats_pc(&pc); // in case something need adjustment
 }
 
 static int find_class_selection(const uint8_t real_class) {
@@ -678,12 +705,178 @@ static void select_class(uint8_t class) {
     dnd2e_set_exp(&pc, 4000);
 }
 
-int new_character_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
-    if (sprite_in_rect(parchment[2], x, y)) { // Was die[die_pos]
-        die_countdown = 40;
+static void fix_race_gender() { // move the race/gender to the appropiate spot
+    if (pc.gender > GENDER_FEMALE) {
+        pc.gender = GENDER_MALE;
+        pc.race++;
     }
+    else if (pc.gender < GENDER_MALE) {
+        pc.gender = GENDER_FEMALE;
+        pc.race--;
+    }
+
+    if (pc.race < RACE_HUMAN) { pc.race = RACE_THRIKREEN; }
+    if (pc.race > RACE_THRIKREEN) { pc.race = RACE_HUMAN; }
+
+    // FIXME: Add (optional?) support for Female Muls/Male Thri-Kreen if art assets
+    // are ever created for them
+    if (pc.race == RACE_MUL && pc.gender == GENDER_FEMALE) {
+        pc.race = RACE_THRIKREEN;
+    }
+
+    if (pc.race == RACE_THRIKREEN && pc.gender == GENDER_MALE) {
+        pc.race = RACE_MUL;
+    }
+
+    pc.real_class[0] = pc.real_class[1] = pc.real_class[2] = -1;
+    for (int i = 0; i < 8; i++)
+        sprite_set_frame(class_sel[i], 0);
+
+    if (!changed_name) { // Only automatically generate a name if the player hasn't modified it
+        get_random_name();
+    }
+
+    load_character_sprite(); // go ahead and get the new sprite
+    set_class_frames(); // go ahead and setup the new class frames
+    select_class(2); // Default to Fighter whenever race changes
+    dnd2e_fix_stats_pc(&pc); // in case something need adjustment
+}
+
+int new_character_handle_mouse_movement(const uint32_t x, const uint32_t y) {
+    static uint16_t last_spr = SPRITE_ERROR;
+    uint16_t cspr = SPRITE_ERROR;
+
     for (int i = 0; i < 8; i++) {
         if (sprite_in_rect(classes[i], x, y)) {
+            cspr = classes[i];
+        }
+    }
+
+    if (sprite_in_rect(sphere_label, x, y)) {
+        cspr = show_psionic_label ? sphere_label : psionic_label;
+    }
+
+    if (show_psionic_label) {
+        for (int i = 0; i < 3; i++) {
+            if (sprite_in_rect(psionic_devotion[i], x, y)) {
+                cspr = psionic_devotion[i];
+            }
+        }
+    }
+    else {
+        for (int i = 0; i < 4; i++) {
+            if (sprite_in_rect(spheres[i], x, y)) {
+                cspr = spheres[i];
+            }
+        }
+    }
+    sprite_set_frame(done_button, 0);
+    sprite_set_frame(exit_button, 0);
+    if (sprite_in_rect(done_button, x, y)) {
+        cspr = done_button;
+    }
+    if (sprite_in_rect(exit_button, x, y)) {
+        cspr = exit_button;
+    }
+
+    if (sprite_get_frame(cspr) < 2) {
+        sprite_set_frame(cspr, 1);
+    }
+
+    if (last_spr != SPRITE_ERROR && last_spr != cspr) {
+        if (sprite_get_frame(last_spr) < 2) {
+            sprite_set_frame(last_spr, 0);
+        }
+    }
+
+    last_spr = cspr;
+
+    return 1;// handle
+}
+
+int new_character_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
+    last_sprite_mousedowned = 0;
+
+    if (sprite_in_rect(done_button, x, y)) {
+        last_sprite_mousedowned = done_button;
+        sprite_set_frame(done_button, 2);
+    }
+
+    if (sprite_in_rect(exit_button, x, y)) {
+        last_sprite_mousedowned = exit_button;
+        sprite_set_frame(exit_button, 2);
+    }
+
+    if (sprite_in_rect(name_textbox, x, y)) {
+        last_sprite_mousedowned = name_textbox;
+    }
+
+    for (int i = 0; i < 8; i++) {
+        if (sprite_in_rect(stats_align_hp_buttons[i], x, y)) {
+            last_sprite_mousedowned = stats_align_hp_buttons[i];
+        }
+    }
+
+    if (sprite_in_rect(parchment[2], x, y)) { // Was die[die_pos]
+        last_sprite_mousedowned = parchment[2];
+    }
+
+    for (int i = 0; i < 8; i++) {
+        if (sprite_in_rect(classes[i], x, y)) {
+            last_sprite_mousedowned = classes[i];
+        }
+    }
+
+    if (sprite_in_rect(parchment[0], x, y)) { // Change race/gender via portrait - Was races[pc.race]
+        last_sprite_mousedowned = parchment[0];
+    }
+
+    if (sprite_in_rect(parchment[1], x, y)) { // Change race/gender via sprite
+        last_sprite_mousedowned = parchment[1];
+    }
+
+    for (int i = 0; i < 4; i++) {
+        if (i < 3 && show_psionic_label) {
+            if (sprite_in_rect(psionic_devotion[i], x, y)) {
+                last_sprite_mousedowned = psionic_devotion[i];
+            }
+        }
+
+        if (!show_psionic_label) {
+            if (sprite_in_rect(spheres[i], x, y)) {
+                last_sprite_mousedowned = spheres[i];
+            }
+        }
+    }
+
+    if (show_psionic_label && sprite_get_frame(psionic_label) < 2 && sprite_in_rect(psionic_label, x, y)) {
+        last_sprite_mousedowned = psionic_label;
+    } else if (!show_psionic_label && sprite_get_frame(sphere_label) < 2 && sprite_in_rect(sphere_label, x, y)) {
+        last_sprite_mousedowned = sphere_label;
+    }
+
+    return 1; // handle
+}
+
+int new_character_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
+    for (int i = 0; i < 8; i++) {
+        if (last_sprite_mousedowned == stats_align_hp_buttons[i] && sprite_in_rect(stats_align_hp_buttons[i], x, y)) {
+            update_stats_align_hp(i, button);
+        }
+    }
+
+    if (sprite_in_rect(name_textbox, x, y)) {
+        current_textbox = TEXTBOX_NAME;
+    } else {
+        current_textbox = TEXTBOX_NONE;
+    }
+
+    if (last_sprite_mousedowned == parchment[2] && sprite_in_rect(parchment[2], x, y)) {
+        die_countdown = 40;
+    }
+
+    for (int i = 0; i < 8; i++) {
+        if (last_sprite_mousedowned == classes[i] && sprite_in_rect(classes[i], x, y)) {
             if (sprite_get_frame(class_sel[i]) == 1) {
                 deselect_class(i);
             } else if (sprite_get_frame(classes[i]) < 2) {
@@ -691,56 +884,68 @@ int new_character_handle_mouse_up(const uint32_t button, const uint32_t x, const
             } 
         }
     }
-    if (sprite_in_rect(parchment[0], x, y)) { // Change race/gender via portrait - Was races[pc.race]
+
+    // Change race/gender via portrait
+    if (last_sprite_mousedowned == parchment[0] && sprite_in_rect(parchment[0], x, y)) {
         if (button == SDL_BUTTON_LEFT) {
             pc.gender++;
-        } else {
+        } else if (button == SDL_BUTTON_RIGHT) {
             pc.gender--;
         }
+
         fix_race_gender();
     }
-    if (sprite_in_rect(parchment[1], x, y)) { // Change race/gender via sprite - FIXME: This should change just the SPRITE (not race/gender) in DSO!
+
+    // Change race/gender via sprite - FIXME: This should change just the SPRITE (not race/gender) in DSO!
+    if (last_sprite_mousedowned == parchment[1] && sprite_in_rect(parchment[1], x, y)) {
         if (button == SDL_BUTTON_LEFT) {
             pc.gender++;
-        }
-        else {
+        } else if (button == SDL_BUTTON_RIGHT) {
             pc.gender--;
         }
+
         fix_race_gender();
     }
+
     for (int i = 0; i < 4; i++) {
         if (i < 3 && show_psionic_label) {
-            if (sprite_in_rect(psionic_devotion[i], x, y)) {
+            if (last_sprite_mousedowned == psionic_devotion[i] && sprite_in_rect(psionic_devotion[i], x, y)) {
                 if (sprite_get_frame(psionic_devotion[i]) < 2) {
                     toggle_psi(i);
                 }
             }
         }
+
         if (!show_psionic_label) {
-            if (sprite_in_rect(spheres[i], x, y)) {
+            if (last_sprite_mousedowned == spheres[i] && sprite_in_rect(spheres[i], x, y)) {
                 if (sprite_get_frame(spheres[i]) < 2) {
                     toggle_sphere(i);
                 }
             }
         }
+
         sprite_render(renderer, ps_sel[i]);
     }
-    if (show_psionic_label && sprite_get_frame(psionic_label) < 2 && sprite_in_rect(psionic_label, x, y)) {
+
+    if (show_psionic_label && sprite_get_frame(psionic_label) < 2 && last_sprite_mousedowned == psionic_label && sprite_in_rect(psionic_label, x, y)) {
         show_psionic_label = 0;
         set_ps_sel_frames();
-    } else if (!show_psionic_label && sprite_get_frame(sphere_label) < 2 && sprite_in_rect(sphere_label, x, y)) {
+    } else if (!show_psionic_label && sprite_get_frame(sphere_label) < 2 && last_sprite_mousedowned == sphere_label && sprite_in_rect(sphere_label, x, y)) {
         show_psionic_label = 1;
         set_ps_sel_frames();
     }
-    if (sprite_in_rect(done_button, x, y)) {
+
+    if (last_sprite_mousedowned == done_button && sprite_in_rect(done_button, x, y)) {
         is_valid = 1;
         screen_pop();
     }
-    if (sprite_in_rect(exit_button, x, y)) {
+
+    if (last_sprite_mousedowned == exit_button && sprite_in_rect(exit_button, x, y)) {
         is_valid = 0;
         screen_pop();
     }
-    return 1;// handle
+
+    return 1; // handle
 }
 
 static void update_ui() {
