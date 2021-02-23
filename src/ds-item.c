@@ -14,7 +14,8 @@ static size_t num_names = 0;
 void ds_item_init() {
     gff_chunk_header_t chunk = gff_find_chunk_header(DSLDATA_GFF_INDEX, GFF_IT1R, 1);
     if (chunk.length == 0 || (chunk.length % sizeof(ds_item1r_t)) != 0) {
-        error("item1r not loadable...\n");
+        error("***********************item1r not loadable*********************\n");
+        return;
         exit(1);
     }
     item1rs = malloc(chunk.length);

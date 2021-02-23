@@ -10,18 +10,37 @@ static void create_font(SDL_Renderer *renderer, const uint32_t idx, const uint32
     char *data = NULL;
     SDL_Surface *surface = NULL;
     ds_char_t *ds_char = NULL;
-    gff_chunk_header_t chunk = gff_find_chunk_header(RESOURCE_GFF_INDEX, GFF_FONT, 100);
-    ds_font_t *dsfont = malloc(chunk.length);
+    gff_chunk_header_t chunk;
+    ds_font_t *dsfont = NULL;
+    int resource_gff = -1;
+
+    switch(gff_get_game_type()) {
+        case DARKSUN_1:
+            resource_gff = RESOURCE_GFF_INDEX;
+            break;
+        case DARKSUN_2:
+            resource_gff = RESFLOP_GFF_INDEX;
+            break;
+        case DARKSUN_ONLINE:
+            resource_gff = RESFLOP_GFF_INDEX;
+            break;
+        default:
+            error("Unknown Darksun gffs. Did you set the correct path?");
+            exit(1);
+            break;
+    }
+    chunk = gff_find_chunk_header(resource_gff, GFF_FONT, 100);
+    dsfont = malloc(chunk.length);
 
     if (!dsfont) {
         error ("unable to malloc for font!\n");
         exit(1);
     }
 
-    gff_read_chunk(RESOURCE_GFF_INDEX, &chunk, dsfont, chunk.length);
+    gff_read_chunk(resource_gff, &chunk, dsfont, chunk.length);
     for (int c = 0; c < MAX_CHARS; c++ ) {
         ds_char = (ds_char_t*)(((uint8_t*)dsfont) + dsfont->char_offset[c]);
-        data = (char*)create_font_rgba(RESOURCE_GFF_INDEX, c, fg_color, bg_color);
+        data = (char*)create_font_rgba(resource_gff, c, fg_color, bg_color);
         font_loc[idx][c].w = ds_char->width;
         font_loc[idx][c].h = dsfont->height;
         surface = SDL_CreateRGBSurfaceFrom(data, font_loc[idx][c].w, font_loc[idx][c].h, 32, 4*font_loc[idx][c].w,
@@ -32,6 +51,7 @@ static void create_font(SDL_Renderer *renderer, const uint32_t idx, const uint32
         SDL_FreeSurface(surface);
         free(data);
     }
+
     free(dsfont);
 }
 

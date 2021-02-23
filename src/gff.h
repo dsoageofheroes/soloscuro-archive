@@ -15,6 +15,13 @@
 #define GFFSEGFLAGMASK   (0x80000000L)
 #define NUM_FILES (256)
 
+enum game_type_t {
+    DARKSUN_UNKNOWN,
+    DARKSUN_1,
+    DARKSUN_2,
+    DARKSUN_ONLINE,
+};
+
 enum {
     RESOURCE_GFF_INDEX,
     OBJEX_GFF_INDEX,
@@ -23,6 +30,7 @@ enum {
     DARKSAVE_GFF_INDEX,
     CINE_GFF_INDEX,
     DARKRUN_GFF_INDEX,
+    RESFLOP_GFF_INDEX,
     REST_GFF_INDEX
 };
 
@@ -139,6 +147,7 @@ extern void gff_print(int idx, FILE *out);
 extern void gff_close (int gff_file);
 extern void gff_cleanup();
 extern size_t gff_get_palette_id(int idx, int palette_num);
+extern const enum game_type_t gff_get_game_type();
 
 // functions for other modules, NOT "public"
 //extern gff_chunk_list_t* search_for_chunk_by_name(gff_file_t *file, unsigned long name);

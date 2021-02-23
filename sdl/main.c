@@ -26,13 +26,17 @@ static SDL_Window *win = NULL;
 static SDL_Surface *screen = NULL;
 static SDL_Renderer *renderer = NULL;
 static float zoom = 2.0;
-static uint8_t ignore_repeat = 1;
+static uint8_t ignore_repeat = 1, browser_mode = 0;
 
 static uint32_t xmappos, ymappos;
 static int32_t xmapdiff, ymapdiff;
 
 const uint32_t getCameraX() { return xmappos; }
 const uint32_t getCameraY() { return ymappos; }
+
+void main_set_browser_mode() {
+    browser_mode = 1;
+}
 
 void handle_mouse_motion() {
     int x, y;
@@ -191,6 +195,11 @@ static void init(int args, char *argv[]) {
     player_init();
     mouse_init(renderer);
 
+    if (browser_mode) {
+        browse_loop(screen, renderer);
+        exit(1);
+    }
+
     for (int i = 0; i < args; i++) {
         if (!strcmp(argv[i], "--browse") && i < (args)) {
             printf("Entering browsing mode!\n");
@@ -259,10 +268,6 @@ void parse_args(int argc, char *argv[]) {
         }
     }
 
-    if (!ds1_gffs) {
-        error("Unable to get the location of the DarkSun 1 GFFs, please pass with '--ds1 <location>'\n");
-        exit(1);
-    }
     replay_init("replay.lua");
 }
 
@@ -271,7 +276,14 @@ int main(int argc, char *argv[]) {
 
     // Order matters.
     gff_init();
-    gff_load_directory(ds1_gffs);
+    ui_lua_load_preload("lua/settings.lua");
+    if (gff_get_game_type() == DARKSUN_UNKNOWN) {
+        if (!ds1_gffs) {
+            error("Unable to get the location of the DarkSun 1 GFFs, please pass with '--ds1 <location>'\n");
+            exit(1);
+        }
+        gff_load_directory(ds1_gffs);
+    }
     dsl_init();
 
     init(argc, argv);
@@ -365,6 +377,7 @@ void game_loop() {
 }
 
 SDL_Renderer *main_get_rend() { return renderer; }
+SDL_Surface *main_get_screen() { return screen; }
 const float main_get_zoom() { return zoom; }
 
 void main_exit_system() {

@@ -12,7 +12,7 @@
 #include "../src/spells.h"
 
 #define BUF_MAX (1<<12)
-#define RES_MAX (1<<12)
+#define RES_MAX (1<<14)
 #define NAME_MAX (1<<14)
 
 static int done = 0;
@@ -328,10 +328,10 @@ static void browse_tick() {
 void browse_loop(SDL_Surface *surface, SDL_Renderer *rend) {
     renderer = rend;
 
-    narrate_init(renderer, 0, 0, 2.0); // to setup print_line
+    for (gff_idx = 0; !open_files[gff_idx].filename; gff_idx++) { ; }
 
     browse_render();
-    move_gff_cursor(1);
+    //move_gff_cursor(1);
     //move_gff_cursor(1);
     //move_gff_cursor(1);
     //move_gff_cursor(1);
@@ -339,10 +339,10 @@ void browse_loop(SDL_Surface *surface, SDL_Renderer *rend) {
     //move_gff_cursor(1);
     //move_gff_cursor(1);
     //move_entry_cursor(-1);
-    move_entry_cursor(1);
-    move_entry_cursor(1);
-    move_entry_cursor(1);
-    move_entry_cursor(1);
+    //move_entry_cursor(1);
+    //move_entry_cursor(1);
+    //move_entry_cursor(1);
+    //move_entry_cursor(1);
     //move_entry_cursor(1);
     //move_entry_cursor(1);
     res_idx = 0;
@@ -480,6 +480,10 @@ static void render_entry_as_image(const int gff_idx, const int type_id, const in
     snprintf(buf, BUF_MAX-1, "current frame: %d, total frames: %d\n", cframe, cimg->frame_num);
     print_line_len(renderer, 0, buf, x, y, BUF_MAX);
     unsigned char* data = get_frame_rgba_palette_img(cimg, cframe, pal);
+    if (!data) {
+        print_line_len(renderer, 0, "BMP Data is not readable.", 320, 60, 128);
+        return;
+    }
     loc.w = get_frame_width(gff_idx, type_id, res_id, cframe);
     loc.h = get_frame_height(gff_idx, type_id, res_id, cframe);
     SDL_Surface *surface = SDL_CreateRGBSurfaceFrom(data, loc.w, loc.h, 32, 
@@ -496,7 +500,10 @@ static void render_entry_as_image(const int gff_idx, const int type_id, const in
 }
 
 static void render_entry_bmp() {
-    gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes;
+    int pal_idx = gff_get_game_type() == DARKSUN_ONLINE
+        ? RESFLOP_GFF_INDEX
+        : RESOURCE_GFF_INDEX;
+    gff_palette_t *pal = open_files[pal_idx].pals->palettes;
 
     if (open_files[gff_idx].pals->len) {
         pal = open_files[gff_idx].pals->palettes;
@@ -506,11 +513,17 @@ static void render_entry_bmp() {
 }
 
 static void render_entry_icon() {
-    render_entry_as_image(gff_idx, GFF_ICON, res_ids[res_idx], open_files[RESOURCE_GFF_INDEX].pals->palettes, 320, 40);
+    int pal_idx = gff_get_game_type() == DARKSUN_ONLINE
+        ? RESFLOP_GFF_INDEX
+        : RESOURCE_GFF_INDEX;
+    render_entry_as_image(gff_idx, GFF_ICON, res_ids[res_idx], open_files[pal_idx].pals->palettes, 320, 40);
 }
 
 static void render_entry_port() {
-    render_entry_as_image(gff_idx, GFF_PORT, res_ids[res_idx], open_files[RESOURCE_GFF_INDEX].pals->palettes, 320, 40);
+    int pal_idx = gff_get_game_type() == DARKSUN_ONLINE
+        ? RESFLOP_GFF_INDEX
+        : RESOURCE_GFF_INDEX;
+    render_entry_as_image(gff_idx, GFF_PORT, res_ids[res_idx], open_files[pal_idx].pals->palettes, 320, 40);
 }
 
 static void render_entry_tile() {
@@ -621,13 +634,16 @@ static void render_entry_monr() {
     int pos = 60;
     static ds_region_mon_t *mon = NULL;
     static int num_monsters = 0;
+    int gff = gff_get_game_type() == DARKSUN_ONLINE
+        ? RESFLOP_GFF_INDEX
+        : RESOURCE_GFF_INDEX;
 
     render_entry_header();
 
     if (!mon) {
-        gff_chunk_header_t chunk = gff_find_chunk_header(RESOURCE_GFF_INDEX, GFF_MONR, 1);
+        gff_chunk_header_t chunk = gff_find_chunk_header(gff, GFF_MONR, 1);
         mon = malloc(chunk.length);
-        gff_read_chunk(RESOURCE_GFF_INDEX, &chunk, mon, chunk.length);
+        gff_read_chunk(gff, &chunk, mon, chunk.length);
         num_monsters = chunk.length / sizeof(ds_region_mon_t);
     }
 
@@ -960,6 +976,9 @@ static void render_entry_etab() {
     max_objs = gff_map_get_num_objects(gff_idx, res_ids[res_idx]);
     disk_object_t dobj;
     gff_map_object_t *obj = NULL;
+    int gff = gff_get_game_type() == DARKSUN_ONLINE
+        ? RESFLOP_GFF_INDEX
+        : RESOURCE_GFF_INDEX;
 
     if (cobj < 0) { cobj = max_objs - 1; }
     if (cobj >= max_objs) { cobj = 0; }
@@ -995,7 +1014,7 @@ static void render_entry_etab() {
     print_line_len(renderer, 0, buf, 320, 180, BUF_MAX);
     snprintf(buf, BUF_MAX, "    .bmp_id = %d\n", dobj.bmp_id);
     print_line_len(renderer, 0, buf, 320, 200, BUF_MAX);
-    gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes;
+    gff_palette_t *pal = open_files[gff].pals->palettes;
     render_entry_as_image(OBJEX_GFF_INDEX, GFF_BMP, dobj.bmp_id, pal, 340, 220);
 }
 
