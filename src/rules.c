@@ -43,7 +43,7 @@ static const uint16_t human_classes[] = {
     A_C, A_D, A_F, A_G, A_P, A_S, A_R, A_T,
 
 //  DUAL  CLR / FGR           DUAL  CLR / GLD           DUAL  CLR / PRE     
-    A_U | A_C | A_F,          A_U | A_C / A_G,          A_U | A_C | A_P,
+    A_U | A_C | A_F,          A_U | A_C | A_G,          A_U | A_C | A_P,
 //  DUAL  CLR / PSI           DUAL  CLR / RNG           DUAL  CLR / THF
     A_U | A_C | A_S,          A_U | A_C | A_R,          A_U | A_C | A_T,
 //  DUAL  CLR / FGR / PRE     DUAL  CLR / FGR / PSI     DUAL  CLR / FGR / THF
@@ -328,7 +328,7 @@ static void dnd2e_apply_race_mods(ds_character_t *pc) {
 
 enum {STR_HIT,   STR_DAM,   STR_WEIGHT,   STR_PRESS,   STR_OPEN,   STR_BEND};
 const int16_t str_mods[][6] = {
-    {   -9,        -9,         0,            0,           0,          0 }, // 00 (should be character death?)
+    {   -9,        -9,         0,            0,           0,          0 }, // 00
     {   -5,        -4,         1,            3,           1,          0 }, // 01
     {   -3,        -2,         1,            5,           1,          0 }, // 02
     {   -3,        -1,         5,           10,           2,          0 }, // 03
@@ -358,7 +358,7 @@ const int16_t str_mods[][6] = {
 
 enum {DEX_REACTION,   DEX_MISSILE,   DEX_AC};
 const int16_t dex_mods[][3] = {
-    {   -9,             -9,             9 }, // 00 (should be character death?)
+    {   -9,             -9,             9 }, // 00
     {   -6,             -6,             5 }, // 01
     {   -4,             -4,             5 }, // 02
     {   -3,             -3,             4 }, // 03
@@ -388,7 +388,7 @@ const int16_t dex_mods[][3] = {
 
 enum {CON_HP,   CON_SHOCK,   CON_RES,   CON_POISON_SAVE,   CON_REGEN};
 const int16_t con_mods[][5] = {
-    {   -9,        0,           0,        -9,                 0 }, // 00 (should be character death?)
+    {   -9,        0,           0,        -9,                 0 }, // 00
     {   -3,       25,          30,        -2,                 0 }, // 01
     {   -2,       30,          35,        -1,                 0 }, // 02
     {   -2,       35,          40,         0,                 0 }, // 03
@@ -418,7 +418,7 @@ const int16_t con_mods[][5] = {
 
 enum {INT_LANG,   INT_SL,   INT_CHANCE,   INT_MAX_SL,   INT_ILLUSIONS};
 const int16_t int_mods[][5] = {
-    {    0,          0,        0,            0,            0 }, // 00 (should be character death?)
+    {    0,          0,        0,            0,            0 }, // 00
     {    0,          0,        0,            0,            0 }, // 01
     {    1,          0,        0,            0,            0 }, // 02
     {    1,          0,        0,            0,            0 }, // 03
