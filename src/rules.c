@@ -3,16 +3,16 @@
 #include <stdio.h>
 
 enum {
-    A_END = 0x0,     // End of Allowed Classes
-    A_C   = 0x1,     // Allowed Cleric
-    A_D   = 0x2,     // Allowed Druid
-    A_F   = 0x4,     // Allowed Fighter
-    A_G   = 0x8,     // Allowed Gladiator
-    A_P   = 0x10,    // Allowed Preserver
-    A_S   = 0x20,    // Allowed pSionicist
-    A_R   = 0x40,    // Allowed Ranger
-    A_T   = 0x80,    // Allowed Thief
-    A_U   = 0x8000,  // Allowed dUal
+    A_END   = 0x0,     // End of Allowed Classes
+    A_CLR   = 0x1,     // Allowed Cleric
+    A_DRU   = 0x2,     // Allowed Druid
+    A_FGR   = 0x4,     // Allowed Fighter
+    A_GLD   = 0x8,     // Allowed Gladiator
+    A_PRE   = 0x10,    // Allowed Preserver
+    A_PSI   = 0x20,    // Allowed Psionicist
+    A_RNG   = 0x40,    // Allowed Ranger
+    A_THF   = 0x80,    // Allowed Thief
+    A_DLC   = 0x8000,  // Allowed Dual Class
 };
 
 static int convert_to_class_sel(const uint8_t class) {
@@ -21,284 +21,187 @@ static int convert_to_class_sel(const uint8_t class) {
         case REAL_CLASS_EARTH_CLERIC:
         case REAL_CLASS_FIRE_CLERIC:
         case REAL_CLASS_WATER_CLERIC:
-            return A_C;
+            return A_CLR;
         case REAL_CLASS_AIR_DRUID:
         case REAL_CLASS_EARTH_DRUID:
         case REAL_CLASS_FIRE_DRUID:
         case REAL_CLASS_WATER_DRUID:
-            return A_D;
-        case REAL_CLASS_FIGHTER: return A_F;
-        case REAL_CLASS_GLADIATOR: return A_G;
-        case REAL_CLASS_PRESERVER: return A_P;
-        case REAL_CLASS_PSIONICIST: return A_S;
-        case REAL_CLASS_AIR_RANGER: return A_R;
-        case REAL_CLASS_THIEF: return A_T;
+            return A_DRU;
+        case REAL_CLASS_FIGHTER: return A_FGR;
+        case REAL_CLASS_GLADIATOR: return A_GLD;
+        case REAL_CLASS_PRESERVER: return A_PRE;
+        case REAL_CLASS_PSIONICIST: return A_PSI;
+        case REAL_CLASS_AIR_RANGER: return A_RNG;
+        case REAL_CLASS_THIEF: return A_THF;
     }
 
     return 0; // UNKNOWN CLASS
 }
 
 static const uint16_t human_classes[] = {
-//  CLR  DRU  FGR  GLD  PRE  PSI  RNG  THF
-    A_C, A_D, A_F, A_G, A_P, A_S, A_R, A_T,
+    A_CLR, A_DRU, A_FGR, A_GLD, A_PRE, A_PSI, A_RNG, A_THF,
 
-//  DUAL  CLR / FGR           DUAL  CLR / GLD           DUAL  CLR / PRE     
-    A_U | A_C | A_F,          A_U | A_C | A_G,          A_U | A_C | A_P,
-//  DUAL  CLR / PSI           DUAL  CLR / RNG           DUAL  CLR / THF
-    A_U | A_C | A_S,          A_U | A_C | A_R,          A_U | A_C | A_T,
-//  DUAL  CLR / FGR / PRE     DUAL  CLR / FGR / PSI     DUAL  CLR / FGR / THF
-    A_U | A_C | A_F | A_P,    A_U | A_C | A_F | A_S,    A_U | A_C | A_F | A_T,
-//  DUAL  CLR / GLD / PRE     DUAL  CLR / GLD / PSI     DUAL  CLR / GLD / THF
-    A_U | A_C | A_G | A_P,    A_U | A_C | A_G | A_S,    A_U | A_C | A_G | A_T,
-//  DUAL  CLR / PRE / PSI     DUAL  CLR / PRE / RNG     DUAL  CLR / PRE / THF
-    A_U | A_C | A_P | A_S,    A_U | A_C | A_P | A_R,    A_U | A_C | A_P | A_T,
-//  DUAL  CLR / PSI / RNG     DUAL  CLR / PSI / THF
-    A_U | A_C | A_S | A_R,    A_U | A_C | A_S | A_T,
-//  DUAL  CLR / RNG / THF
-    A_U | A_C | A_R | A_T,
+    A_DLC | A_CLR | A_FGR,            A_DLC | A_CLR | A_GLD,            A_DLC | A_CLR | A_PRE,
+    A_DLC | A_CLR | A_PSI,            A_DLC | A_CLR | A_RNG,            A_DLC | A_CLR | A_THF,
+    A_DLC | A_CLR | A_FGR | A_PRE,    A_DLC | A_CLR | A_FGR | A_PSI,    A_DLC | A_CLR | A_FGR | A_THF,
+    A_DLC | A_CLR | A_GLD | A_PRE,    A_DLC | A_CLR | A_GLD | A_PSI,    A_DLC | A_CLR | A_GLD | A_THF,
+    A_DLC | A_CLR | A_PRE | A_PSI,    A_DLC | A_CLR | A_PRE | A_RNG,    A_DLC | A_CLR | A_PRE | A_THF,
+    A_DLC | A_CLR | A_PSI | A_RNG,    A_DLC | A_CLR | A_PSI | A_THF,
+    A_DLC | A_CLR | A_RNG | A_THF,
 
-//  DUAL  DRU / FGR           DUAL  DRU / GLD           DUAL  DRU / PRE     
-    A_U | A_D | A_F,          A_U | A_D | A_G,          A_U | A_D | A_P,
-//  DUAL  DRU / PSI           DUAL  DRU / THF
-    A_U | A_D | A_S,          A_U | A_D | A_T,
-//  DUAL  DRU / FGR / PRE     DUAL  DRU / FGR / PSI     DUAL  DRU / FGR / THF
-    A_U | A_D | A_F | A_P,    A_U | A_D | A_F | A_S,    A_U | A_D | A_F | A_T,
-//  DUAL  DRU / GLD / PRE     DUAL  DRU / GLD / PSI     DUAL  DRU / GLD / THF
-    A_U | A_D | A_G | A_P,    A_U | A_D | A_G | A_S,    A_U | A_D | A_G | A_T,
-//  DUAL  DRU / PRE / PSI     DUAL  DRU / PRE / THF
-    A_U | A_D | A_P | A_S,    A_U | A_D | A_P | A_T,
-//  DUAL  DRU / PSI / THF
-    A_U | A_D | A_S | A_T,
+    A_DLC | A_DRU | A_FGR,            A_DLC | A_DRU | A_GLD,            A_DLC | A_DRU | A_PRE,
+    A_DLC | A_DRU | A_PSI,            A_DLC | A_DRU | A_THF,
+    A_DLC | A_DRU | A_FGR | A_PRE,    A_DLC | A_DRU | A_FGR | A_PSI,    A_DLC | A_DRU | A_FGR | A_THF,
+    A_DLC | A_DRU | A_GLD | A_PRE,    A_DLC | A_DRU | A_GLD | A_PSI,    A_DLC | A_DRU | A_GLD | A_THF,
+    A_DLC | A_DRU | A_PRE | A_PSI,    A_DLC | A_DRU | A_PRE | A_THF,
+    A_DLC | A_DRU | A_PSI | A_THF,
 
-//  DUAL  FGR / PRE           DUAL  FGR / PSI           DUAL  FGR / THF
-    A_U | A_F | A_P,          A_U | A_F | A_S,          A_U | A_F | A_T,
-//  DUAL  FGR / PRE / PSI     DUAL  FGR / PRE / THF
-    A_U | A_F | A_P | A_S,    A_U | A_F | A_P | A_T,
-//  DUAL  FGR / PSI / THF
-    A_U | A_F | A_S | A_T,
+    A_DLC | A_FGR | A_PRE,            A_DLC | A_FGR | A_PSI,            A_DLC | A_FGR | A_THF,
+    A_DLC | A_FGR | A_PRE | A_PSI,    A_DLC | A_FGR | A_PRE | A_THF,
+    A_DLC | A_FGR | A_PSI | A_THF,
 
-//  DUAL  GLD / PRE           DUAL  GLD / PSI           DUAL  GLD / THF
-    A_U | A_G | A_P,          A_U | A_G | A_S,          A_U | A_G | A_T,
-//  DUAL  GLD / PRE / PSI     DUAL  GLD / PRE / THF
-    A_U | A_G | A_P | A_S,    A_U | A_G | A_P | A_T,
-//  DUAL  GLD / PSI / THF
-    A_U | A_G | A_S | A_T,
+    A_DLC | A_GLD | A_PRE,            A_DLC | A_GLD | A_PSI,            A_DLC | A_GLD | A_THF,
+    A_DLC | A_GLD | A_PRE | A_PSI,    A_DLC | A_GLD | A_PRE | A_THF,
+    A_DLC | A_GLD | A_PSI | A_THF,
 
-//  DUAL  PRE / PSI           DUAL  PRE / RNG           DUAL  PRE / THF
-    A_U | A_P | A_S,          A_U | A_P | A_R,          A_U | A_P | A_T,
-//  DUAL  PRE / PSI / RNG     DUAL  PRE / PSI / THF
-    A_U | A_P | A_S | A_R,    A_U | A_P | A_S | A_T,
-//  DUAL  PRE / RNG / THF
-    A_U | A_P | A_R | A_T,
+    A_DLC | A_PRE | A_PSI,            A_DLC | A_PRE | A_RNG,            A_DLC | A_PRE | A_THF,
+    A_DLC | A_PRE | A_PSI | A_RNG,    A_DLC | A_PRE | A_PSI | A_THF,
+    A_DLC | A_PRE | A_RNG | A_THF,
 
-//  DUAL  PSI / RNG           DUAL  PSI / THF
-    A_U | A_S | A_R,          A_U | A_S | A_T,
-//  DUAL  PSI / RNG / THF
-    A_U | A_S | A_R | A_T,
+    A_DLC | A_PSI | A_RNG,            A_DLC | A_PSI | A_THF,
+    A_DLC | A_PSI | A_RNG | A_THF,
 
-//  DUAL  RNG / THF
-    A_U | A_R | A_T,
-
+    A_DLC | A_RNG | A_THF,
 
     A_END // END Human
 };
 static const uint16_t dwarf_classes[] = {
-//  CLR  FGR  GLD  PSI  THF
-    A_C, A_F, A_G, A_S, A_T,
+    A_CLR, A_FGR, A_GLD, A_PSI, A_THF,
 
-//  CLR / FGR                 CLR / PSI
-    A_C | A_F,                A_C | A_S,
+    A_CLR | A_FGR,                    A_CLR | A_PSI,
 
-//  FGR / PSI                 FGR / THF
-    A_F | A_S,                A_F | A_T,
+    A_FGR | A_PSI,                    A_FGR | A_THF,
 
-//  PSI / THF
-    A_S | A_T,
+    A_PSI | A_THF,
 
     A_END // END Dwarf
 };
 static const uint16_t elf_classes[] = {
-//  CLR  FGR  GLD  PRE  PSI  RNG  THF
-    A_C, A_F, A_G, A_P, A_S, A_R, A_T,
+    A_CLR, A_FGR, A_GLD, A_PRE, A_PSI, A_RNG, A_THF,
 
-//  CLR / FGR                 CLR / PRE                 CLR / PSI
-    A_C | A_F,                A_C | A_P,                A_C | A_S,
-//  CLR / RNG                 CLR / THF
-    A_C | A_R,                A_C | A_T,
-//  CLR / FGR / PRE           CLR / FGR / PSI           CLR / FGR / THF
-    A_C | A_F | A_P,          A_C | A_F | A_S,          A_C | A_F | A_T,
-//  CLR / PRE / PSI           CLR / PRE / RNG           CLR / PRE / THF
-    A_C | A_P | A_S,          A_C | A_P | A_R,          A_C | A_P | A_T,
-//  CLR / PSI / RNG           CLR / PSI / THF
-    A_C | A_S | A_R,          A_C | A_S | A_T,
-//  CLR / RNG / THF
-    A_C | A_R | A_T,
+    A_CLR | A_FGR,                    A_CLR | A_PRE,                    A_CLR | A_PSI,
+    A_CLR | A_RNG,                    A_CLR | A_THF,
+    A_CLR | A_FGR | A_PRE,            A_CLR | A_FGR | A_PSI,            A_CLR | A_FGR | A_THF,
+    A_CLR | A_PRE | A_PSI,            A_CLR | A_PRE | A_RNG,            A_CLR | A_PRE | A_THF,
+    A_CLR | A_PSI | A_RNG,            A_CLR | A_PSI | A_THF,
+    A_CLR | A_RNG | A_THF,
 
-//  FGR / PRE                 FGR / PSI                 FGR / THF
-    A_F | A_P,                A_F | A_S,                A_F | A_T,
-//  FGR / PRE / PSI           FGR / PRE / THF
-    A_F | A_P | A_S,          A_F | A_P | A_T,
-//  FGR / PSI / THF
-    A_F | A_S | A_T,
+    A_FGR | A_PRE,                    A_FGR | A_PSI,                    A_FGR | A_THF,
+    A_FGR | A_PRE | A_PSI,            A_FGR | A_PRE | A_THF,
+    A_FGR | A_PSI | A_THF,
 
-//  PRE / PSI                 PRE / RNG                 PRE / THF
-    A_P | A_S,                A_P | A_R,                A_P | A_T,
-//  PRE / PSI / RNG           PRE / PSI / THF
-    A_P | A_S | A_R,          A_P | A_S | A_T,
+    A_PRE | A_PSI,                    A_PRE | A_RNG,                    A_PRE | A_THF,
+    A_PRE | A_PSI | A_RNG,            A_PRE | A_PSI | A_THF,
 
-//  PSI / RNG                 PSI / THF
-    A_S | A_R,                A_S | A_T,
-//  PSI / RNG / THF
-    A_S | A_R | A_T,
+    A_PSI | A_RNG,                    A_PSI | A_THF,
+    A_PSI | A_RNG | A_THF,
 
-//  RNG / THF
-    A_R | A_T,
+    A_RNG | A_THF,
 
     A_END // END Elf
 };
 static const uint16_t half_elf_classes[] = {
-//  CLR  DRU  FGR  GLD  PRE  PSI  RNG  THF
-    A_C, A_D, A_F, A_G, A_P, A_S, A_R, A_T,
+    A_CLR, A_DRU, A_FGR, A_GLD, A_PRE, A_PSI, A_RNG, A_THF,
 
-//  CLR / FGR                 CLR / PRE                 CLR / PSI
-    A_C | A_F,                A_C | A_P,                A_C | A_S,
-//  CLR / RNG                 CLR / THF
-    A_C | A_R,                A_C | A_T,
-//  CLR / FGR / PRE           CLR / FGR / PSI           CLR / FGR / THF
-    A_C | A_F | A_P,          A_C | A_F | A_S,          A_C | A_F | A_T,
-//  CLR / PRE / PSI           CLR / PRE / RNG           CLR / PRE / THF
-    A_C | A_P | A_S,          A_C | A_P | A_R,          A_C | A_P | A_T,
-//  CLR / PSI / RNG           CLR / PSI / THF
-    A_C | A_S | A_R,          A_C | A_S | A_T,
-//  CLR / RNG / THF
-    A_C | A_R | A_T,
+    A_CLR | A_FGR,                    A_CLR | A_PRE,                    A_CLR | A_PSI,
+    A_CLR | A_RNG,                    A_CLR | A_THF,
+    A_CLR | A_FGR | A_PRE,            A_CLR | A_FGR | A_PSI,            A_CLR | A_FGR | A_THF,
+    A_CLR | A_PRE | A_PSI,            A_CLR | A_PRE | A_RNG,            A_CLR | A_PRE | A_THF,
+    A_CLR | A_PSI | A_RNG,            A_CLR | A_PSI | A_THF,
+    A_CLR | A_RNG | A_THF,
 
-//  DRU / FGR                 DRU / PRE                 DRU / PSI
-    A_D | A_F,                A_D | A_P,                A_D | A_S,
-//  DRU / THF
-    A_D | A_T,
-//  DRU / FGR / PRE           DRU / FGR / PSI           DRU / FGR / THF
-    A_D | A_F | A_P,          A_D | A_F | A_S,          A_D | A_F | A_T,
-//  DRU / PRE / PSI           DRU / PRE / THF
-    A_D | A_P | A_S,          A_D | A_P | A_T,
-//  DRU / PSI / THF
-    A_D | A_S | A_T,
+    A_DRU | A_FGR,                    A_DRU | A_PRE,                    A_DRU | A_PSI,
+    A_DRU | A_THF,
+    A_DRU | A_FGR | A_PRE,            A_DRU | A_FGR | A_PSI,            A_DRU | A_FGR | A_THF,
+    A_DRU | A_PRE | A_PSI,            A_DRU | A_PRE | A_THF,
+    A_DRU | A_PSI | A_THF,
 
-//  FGR / PRE                 FGR / PSI                 FGR / THF
-    A_F | A_P,                A_F | A_S,                A_F | A_T,
-//  FGR / PRE / PSI           FGR / PRE / THF
-    A_F | A_P | A_S,          A_F | A_P | A_T,
-//  FGR / PSI / THF
-    A_F | A_S | A_T,
+    A_FGR | A_PRE,                    A_FGR | A_PSI,                    A_FGR | A_THF,
+    A_FGR | A_PRE | A_PSI,            A_FGR | A_PRE | A_THF,
+    A_FGR | A_PSI | A_THF,
 
-//  PRE / PSI                 PRE / RNG                 PRE / THF
-    A_P | A_S,                A_P | A_R,                A_P | A_T,
-//  PRE / PSI / RNG           PRE / PSI / THF
-    A_P | A_S | A_R,          A_P | A_S | A_T,
-//  PRE / RNG / THF
-    A_P | A_R | A_T,
+    A_PRE | A_PSI,                    A_PRE | A_RNG,                    A_PRE | A_THF,
+    A_PRE | A_PSI | A_RNG,            A_PRE | A_PSI | A_THF,
+    A_PRE | A_RNG | A_THF,
 
-//  PSI / RNG                 PSI / THF
-    A_S | A_R,                A_S | A_T,
-//  PSI / RNG / THF
-    A_S | A_R | A_T,
+    A_PSI | A_RNG,                    A_PSI | A_THF,
+    A_PSI | A_RNG | A_THF,
 
-//  RNG / THF
-    A_R | A_T,
+    A_RNG | A_THF,
 
 
     A_END // END Half-Elf
 };
 static const uint16_t half_giant_classes[] = {
-//  CLR  FGR  GLD  PSI  RNG
-    A_C, A_F, A_G, A_S, A_R,
+    A_CLR, A_FGR, A_GLD, A_PSI, A_RNG,
 
-//  CLR / FGR                 CLR / PSI                 CLR / RNG
-    A_C | A_F,                A_C | A_S,                A_C | A_R,
+    A_CLR | A_FGR,                    A_CLR | A_PSI,                    A_CLR | A_RNG,
 
-//  FGR / PSI
-    A_F | A_S,
+    A_FGR | A_PSI,
 
-//  PSI / RNG
-    A_S | A_R,
+    A_PSI | A_RNG,
 
     A_END // END Half-Giant
 };
 static const uint16_t halfling_classes[] = {
-//  CLR  DRU  FGR  GLD  PSI  RNG  THF
-    A_C, A_D, A_F, A_G, A_S, A_R, A_T,
+    A_CLR, A_DRU, A_FGR, A_GLD, A_PSI, A_RNG, A_THF,
 
-//  CLR / FGR                 CLR / PSI                 CLR / RNG     
-    A_C | A_F,                A_C | A_S,                A_C | A_R,
-//  CLR / THF
-    A_C | A_T,
+    A_CLR | A_FGR,                    A_CLR | A_PSI,                    A_CLR | A_RNG,
+    A_CLR | A_THF,
 
-//  DRU / FGR                 DRU  / PSI                DRU / RNG     
-    A_D | A_F,                A_D | A_S,                A_D | A_R,
-//  DRU / THF
-    A_D | A_T,
+    A_DRU | A_FGR,                    A_DRU | A_PSI,                    A_DRU | A_RNG,
+    A_DRU | A_THF,
 
-//  FGR / PSI                 FGR / THF
-    A_F | A_S,                A_F | A_T,
-//  FGR / PSI / THF
-    A_F | A_S | A_T,
+    A_FGR | A_PSI,                    A_FGR | A_THF,
+    A_FGR | A_PSI | A_THF,
 
-//  PSI / RNG                 PSI / THF
-    A_S | A_R,                A_S | A_T,
-//  PSI / RNG / THF
-    A_S | A_R | A_T,
+    A_PSI | A_RNG,                    A_PSI | A_THF,
+    A_PSI | A_RNG | A_THF,
 
-//  RNG / THF
-    A_R | A_T,
+    A_RNG | A_THF,
 
     A_END // END Halfling
 };
 static const uint16_t mul_classes[] = {
-//  CLR  DRU  FGR  GLD  PSI  RNG  THF
-    A_C, A_D, A_F, A_G, A_S, A_R, A_T,
+    A_CLR, A_DRU, A_FGR, A_GLD, A_PSI, A_RNG, A_THF,
 
-//  CLR / FGR                 CLR / PSI                 CLR / THF
-    A_C | A_F,                A_C | A_S,                A_C | A_T,
-//  CLR / FGR / THF
-    A_C | A_F | A_T,
+    A_CLR | A_FGR,                    A_CLR | A_PSI,                    A_CLR | A_THF,
+    A_CLR | A_FGR | A_THF,
 
-//  DRU / FGR                 DRU / PSI                 DRU / THF
-    A_D | A_F,                A_D | A_S,                A_D | A_T,
-//  DRU / FGR / THF
-    A_D | A_F | A_T,
+    A_DRU | A_FGR,                    A_DRU | A_PSI,                    A_DRU | A_THF,
+    A_DRU | A_FGR | A_THF,
 
-//  FGR / PSI                 FGR / THF
-    A_F | A_S,                A_F | A_T,
+    A_FGR | A_PSI,                    A_FGR | A_THF,
 
-//  FGR / PSI / THF
-    A_F | A_S | A_T,
+    A_FGR | A_PSI | A_THF,
 
-//  PSI / THF
-    A_S | A_T,
+    A_PSI | A_THF,
 
     A_END // END Mul
 };
 static const uint16_t thrikreen_classes[] = {
-//  CLR  DRU  FGR  GLD  PSI  RNG
-    A_C, A_D, A_F, A_G, A_S, A_R,
+    A_CLR, A_DRU, A_FGR, A_GLD, A_PSI, A_RNG,
 
-//  CLR / FGR                 CLR / PSI                 CLR / RNG
-    A_C | A_F,                A_C | A_S,                A_C | A_R,
-//  CLR / FGR / PSI
-    A_C | A_F | A_S,
-//  CLR / PSI / RNG
-    A_C | A_S | A_R,
+    A_CLR | A_FGR,                    A_CLR | A_PSI,                    A_CLR | A_RNG,
+    A_CLR | A_FGR | A_PSI,
+    A_CLR | A_PSI | A_RNG,
 
-//  DRU / FGR                 DRU / PSI
-    A_D | A_F,                A_D | A_S,
-//  DRU / FGR / PSI
-    A_D | A_F | A_S,
+    A_DRU | A_FGR,                    A_DRU | A_PSI,
+    A_DRU | A_FGR | A_PSI,
 
-//  FGR / PSI
-    A_F | A_S,
+    A_FGR | A_PSI,
 
-//  PSI / RNG
-    A_S | A_R,
+    A_PSI | A_RNG,
 
     A_END // END Thri-Kreen
 };
