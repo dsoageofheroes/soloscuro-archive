@@ -24,3 +24,13 @@ void port_swap_objs(int obj_id, region_object_t *obj) {
 void port_add_obj(region_object_t *obj) {
 }
 
+void port_animate_obj(region_object_t *obj) {
+}
+
+void port_update_obj(region_object_t *obj, const uint16_t nextx, const uint16_t nexty) {
+}
+
+int port_ask_yes_no() {
+    return 1;
+}
+

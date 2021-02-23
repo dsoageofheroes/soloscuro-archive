@@ -1,8 +1,10 @@
 #include "ds-load-save.h"
 #include "ds-player.h"
+#include "ds-region.h"
 #include "gff.h"
 #include "gfftypes.h"
 #include "gff-map.h"
+#include "port.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -89,8 +91,33 @@ static void add_player_to_save(const int id, const int player) {
     free(buf);
 }
 
-char* ls_create_save_file() {
-    char *path = get_next_save_file();
+static void save_region(const int id) {
+    dsl_region_t *reg = dsl_region_get_current();
+    player_pos_t *player =  ds_player_get_pos(ds_player_get_active());
+
+    if (reg) {
+        gff_add_chunk(id, GFF_ROBJ, player->map, (char*)reg->list, sizeof(region_list_t));
+    }
+}
+
+static void load_region(const int id) {
+    dsl_region_t *reg = NULL;
+    player_pos_t *player =  ds_player_get_pos(ds_player_get_active());
+
+    gff_chunk_header_t chunk = gff_find_chunk_header(id, GFF_ROBJ, player->map);
+    printf("map = %d, reg = %p\n", player->map, reg);
+    printf("chunk.length = %d\n", chunk.length);
+    port_change_region(player->map);
+    //dsl_load_region(player->map);
+    reg = dsl_region_get_current();
+    printf("map = %d, reg = %p\n", player->map, reg);
+    //if (gff_read_chunk(id, &chunk, &reg->list, chunk.length) < chunk.length) {
+        //printf("ERROR READING!\n");
+        //return ;
+    //}
+}
+
+void ls_save_to_file(const char *path) {
     int id = gff_create(path);
 
     gff_add_type(id, GFF_PSIN);
@@ -98,22 +125,25 @@ char* ls_create_save_file() {
     gff_add_type(id, GFF_SPST);
     gff_add_type(id, GFF_CHAR);
     gff_add_type(id, GFF_POS);
+    gff_add_type(id, GFF_ROBJ); // Region objects
 
     for (int i = 0; i < 4; i++) {
         gff_add_chunk(id, GFF_PSIN, i, (char*)ds_player_get_psi(i), sizeof(psin_t));
-        //psin_t* ds_player_get_psi(i);
         gff_add_chunk(id, GFF_PSST, i, (char*)ds_player_get_psionics(i), sizeof(psionic_list_t));
-        //psionic_list_t* ds_player_get_psionics(i);
         gff_add_chunk(id, GFF_SPST, i, (char*)ds_player_get_spells(i), sizeof(spell_list_t));
-        //spell_list_t* ds_player_get_spells(i);
         add_player_to_save(id, i);
-        //ds1_combat_t *combat = ds_player_get_combat(i);
-        //ds_character_t* ds_player_get_char(i);
     }
 
     gff_add_chunk(id, GFF_POS, 0, (char*)ds_player_get_pos(ds_player_get_active()), sizeof(player_pos_t));
 
+    save_region(id);
+
     gff_close(id);
+}
+
+char* ls_create_save_file() {
+    char *path = get_next_save_file();
+    ls_save_to_file(path);
     return path;
 }
 
@@ -178,6 +208,8 @@ int ls_load_save_file(const char *path) {
     if (gff_read_chunk(id, &chunk, ds_player_get_pos(1), sizeof(player_pos_t)) < 1) { return 0; }
     if (gff_read_chunk(id, &chunk, ds_player_get_pos(2), sizeof(player_pos_t)) < 1) { return 0; }
     if (gff_read_chunk(id, &chunk, ds_player_get_pos(3), sizeof(player_pos_t)) < 1) { return 0; }
+
+    load_region(id);
 
     return 1;
 }

@@ -1,4 +1,5 @@
 #include "dsl.h"
+#include "ds-player.h"
 #include "ds-region.h"
 #include "gff-map.h"
 #include "gff.h"
@@ -58,6 +59,10 @@ dsl_region_t* dsl_load_region(const int gff_file) {
     region_list_load_objs(ret->list, ret->gff_file, ret->map_id);
 
     cregion = ret;
+
+    for (int i = 0; i < 4; i++) {
+        ds_player_get_pos(i)->map = ret->map_id;
+    }
 
     return ret;
 }

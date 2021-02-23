@@ -8,6 +8,7 @@
 typedef struct player_pos_s {
     uint16_t map;
     uint16_t xpos, ypos, zpos;
+    uint8_t active, ai;
 } player_pos_t;
 
 void ds_player_init();

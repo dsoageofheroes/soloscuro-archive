@@ -84,6 +84,7 @@ void handle_input() {
                 if (event.key.keysym.sym == SDLK_DOWN) { ymapdiff = 0;}
                 if (event.key.keysym.sym == SDLK_LEFT) { xmapdiff = 0;}
                 if (event.key.keysym.sym == SDLK_RIGHT) { xmapdiff = 0;}
+                if (event.key.keysym.sym == SDLK_F11) { ls_save_to_file("save01.sav"); exit(1);}
                 break;
                 break;
             case SDL_KEYDOWN:
@@ -233,8 +234,9 @@ static void init(int args, char *argv[]) {
         return;
     }
 
+    ls_load_save_file("save01.sav");
     // Start the main game.
-    screen_push_screen(renderer, &main_screen, 0, 0);
+    //screen_push_screen(renderer, &main_screen, 0, 0);
 }
 
 static void cleanup() {

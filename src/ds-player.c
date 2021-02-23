@@ -23,11 +23,9 @@ typedef struct player_s {
 
 static player_t pc[MAX_PCS];
 static int active = 0;
-static int ai[4];
 
 void ds_player_init() {
     memset(pc, 0x0, MAX_PCS * sizeof(player_t));
-    ai[0] = ai[1] = ai[2] = ai[3] = 0;
 
     // Setup the slots for reading/writing
     for (int i = 0; i < MAX_PCS; i++) {
@@ -153,12 +151,12 @@ void ds_player_set_active(const int slot) {
 
 int ds_player_is_ai(const int slot) {
     if (slot < 0 || slot >= MAX_PCS) { return 0; }
-    return ai[slot];
+    return pc[slot].pos.ai;
 }
 
 void ds_player_set_ai(const int slot, int on) {
     if (slot < 0 || slot >= MAX_PCS) { return; }
-    ai[slot] = on;
+    pc[slot].pos.ai = on;
 }
 
 int ds_player_get_ac(const int slot) {

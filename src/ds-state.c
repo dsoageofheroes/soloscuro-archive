@@ -489,7 +489,7 @@ static int dsl_clone(lua_State *l) {
     warn("Need to implement: dsl-clone: obj: " PRI_LI ", qty: " PRI_LI ", (" PRI_LI ", "
              PRI_LI ") pri: " PRI_LI ", pla:" PRI_LI "\n", obj, qty, x, y,
         priority, placement);
-    uint16_t entry_id;
+    uint16_t entry_id = -1;
     for (int i = 0; i < qty; i++) {
         entry_id = dsl_region_create_from_objex(dsl_region_get_current(), obj, x, y);
         region_object_t* robj = dsl_region_get_object(entry_id);
