@@ -39,14 +39,14 @@ static int convert_to_class_sel(const uint8_t class) {
 }
 
 static const uint16_t human_classes[] = {
-//  CLR     DRU     FGR     GLD     PRE     PSI     RNG     THF
-    A_C,    A_D,    A_F,    A_G,    A_P,    A_S,    A_R,    A_T,
+//  CLR  DRU  FGR  GLD  PRE  PSI  RNG  THF
+    A_C, A_D, A_F, A_G, A_P, A_S, A_R, A_T,
 
 
-//  DUAL  CLR / FGR     DUAL  CLR / GLD     DUAL  CLR / PRE     DUAL  CLR / PSI
-    A_U | A_C | A_F,    A_U | A_C / A_G,    A_U | A_C | A_P,    A_U | A_C | A_S,
-//  DUAL  CLR / RNG     DUAL  CLR / THF
-    A_U | A_C | A_R,    A_U | A_C | A_T,
+//  DUAL  CLR / FGR           DUAL  CLR / GLD           DUAL  CLR / PRE     
+    A_U | A_C | A_F,          A_U | A_C / A_G,          A_U | A_C | A_P,
+//  DUAL  CLR / PSI           DUAL  CLR / RNG           DUAL  CLR / THF
+    A_U | A_C | A_S,          A_U | A_C | A_R,          A_U | A_C | A_T,
 
 //  DUAL  CLR / FGR / PRE     DUAL  CLR / FGR / PSI     DUAL  CLR / FGR / THF
     A_U | A_C | A_F | A_P,    A_U | A_C | A_F | A_S,    A_U | A_C | A_F | A_T,
@@ -60,10 +60,10 @@ static const uint16_t human_classes[] = {
     A_U | A_C | A_R | A_T,
 
 
-//  DUAL  DRU / FGR     DUAL  DRU / GLD     DUAL  DRU / PRE     DUAL  DRU / PSI
-    A_U | A_D | A_F,    A_U | A_D | A_G,    A_U | A_D | A_P,    A_U | A_D | A_S,
-//  DUAL  DRU / THF
-    A_U | A_D | A_T,
+//  DUAL  DRU / FGR           DUAL  DRU / GLD           DUAL  DRU / PRE     
+    A_U | A_D | A_F,          A_U | A_D | A_G,          A_U | A_D | A_P,
+//  DUAL  DRU / PSI           DUAL  DRU / THF
+    A_U | A_D | A_S,          A_U | A_D | A_T,
 
 //  DUAL  DRU / FGR / PRE     DUAL  DRU / FGR / PSI     DUAL  DRU / FGR / THF
     A_U | A_D | A_F | A_P,    A_U | A_D | A_F | A_S,    A_U | A_D | A_F | A_T,
@@ -75,8 +75,8 @@ static const uint16_t human_classes[] = {
     A_U | A_D | A_S | A_T,
 
 
-//  DUAL  FGR / PRE     DUAL  FGR / PSI     DUAL  FGR / THF
-    A_U | A_F | A_P,    A_U | A_F | A_S,    A_U | A_F | A_T,
+//  DUAL  FGR / PRE           DUAL  FGR / PSI           DUAL  FGR / THF
+    A_U | A_F | A_P,          A_U | A_F | A_S,          A_U | A_F | A_T,
 
 //  DUAL  FGR / PRE / PSI     DUAL  FGR / PRE / THF
     A_U | A_F | A_P | A_S,    A_U | A_F | A_P | A_T,
@@ -84,8 +84,8 @@ static const uint16_t human_classes[] = {
     A_U | A_F | A_S | A_T,
 
 
-//  DUAL  GLD / PRE     DUAL  GLD / PSI     DUAL  GLD / THF
-    A_U | A_G | A_P,    A_U | A_G | A_S,    A_U | A_G | A_T,
+//  DUAL  GLD / PRE           DUAL  GLD / PSI           DUAL  GLD / THF
+    A_U | A_G | A_P,          A_U | A_G | A_S,          A_U | A_G | A_T,
 
 //  DUAL  GLD / PRE / PSI     DUAL  GLD / PRE / THF
     A_U | A_G | A_P | A_S,    A_U | A_G | A_P | A_T,
@@ -93,8 +93,8 @@ static const uint16_t human_classes[] = {
     A_U | A_G | A_S | A_T,
 
 
-//  DUAL  PRE / PSI     DUAL  PRE / RNG     DUAL  PRE / THF
-    A_U | A_P | A_S,    A_U | A_P | A_R,    A_U | A_P | A_T,
+//  DUAL  PRE / PSI           DUAL  PRE / RNG           DUAL  PRE / THF
+    A_U | A_P | A_S,          A_U | A_P | A_R,          A_U | A_P | A_T,
 
 //  DUAL  PRE / PSI / RNG     DUAL  PRE / PSI / THF
     A_U | A_P | A_S | A_R,    A_U | A_P | A_S | A_T,
@@ -102,8 +102,8 @@ static const uint16_t human_classes[] = {
     A_U | A_P | A_R | A_T,
 
 
-//  DUAL  PSI / RNG     DUAL  PSI / THF
-    A_U | A_S | A_R,    A_U | A_S | A_T,
+//  DUAL  PSI / RNG           DUAL  PSI / THF
+    A_U | A_S | A_R,          A_U | A_S | A_T,
 
 //  DUAL  PSI / RNG / THF
     A_U | A_S | A_R | A_T,
@@ -116,16 +116,16 @@ static const uint16_t human_classes[] = {
     A_END // END Human
 };
 static const uint16_t dwarf_classes[] = {
-//  CLR     FGR     GLD     PSI     THF
-    A_C,    A_F,    A_G,    A_S,    A_T,
+//  CLR  FGR  GLD  PSI  THF
+    A_C, A_F, A_G, A_S, A_T,
 
 
-//  CLR / FGR     CLR / PSI
-    A_C | A_F,    A_C | A_S,
+//  CLR / FGR           CLR / PSI
+    A_C | A_F,          A_C | A_S,
 
 
-//  FGR / PSI     FGR / THF
-    A_F | A_S,    A_F | A_T,
+//  FGR / PSI           FGR / THF
+    A_F | A_S,          A_F | A_T,
 
 
 //  PSI / THF
@@ -134,12 +134,14 @@ static const uint16_t dwarf_classes[] = {
     A_END // END Dwarf
 };
 static const uint16_t elf_classes[] = {
-//  CLR     FGR     GLD     PRE     PSI     RNG     THF
-    A_C,    A_F,    A_G,    A_P,    A_S,    A_R,    A_T,
+//  CLR  FGR  GLD  PRE  PSI  RNG  THF
+    A_C, A_F, A_G, A_P, A_S, A_R, A_T,
 
 
-//  CLR / FGR     CLR / PRE     CLR / PSI     CLR / RNG     CLR / THF
-    A_C | A_F,    A_C | A_P,    A_C | A_S,    A_C | A_R,    A_C | A_T,
+//  CLR / FGR           CLR / PRE           CLR / PSI
+    A_C | A_F,          A_C | A_P,          A_C | A_S,
+//  CLR / RNG           CLR / THF
+    A_C | A_R,          A_C | A_T,
 
 //  CLR / FGR / PRE     CLR / FGR / PSI     CLR / FGR / THF
     A_C | A_F | A_P,    A_C | A_F | A_S,    A_C | A_F | A_T,
@@ -151,8 +153,8 @@ static const uint16_t elf_classes[] = {
     A_C | A_R | A_T,
 
 
-//  FGR / PRE     FGR / PSI     FGR / THF
-    A_F | A_P,    A_F | A_S,    A_F | A_T,
+//  FGR / PRE           FGR / PSI           FGR / THF
+    A_F | A_P,          A_F | A_S,          A_F | A_T,
 
 //  FGR / PRE / PSI     FGR / PRE / THF
     A_F | A_P | A_S,    A_F | A_P | A_T,
@@ -160,15 +162,15 @@ static const uint16_t elf_classes[] = {
     A_F | A_S | A_T,
 
 
-//  PRE / PSI     PRE / RNG     PRE / THF
-    A_P | A_S,    A_P | A_R,    A_P | A_T,
+//  PRE / PSI           PRE / RNG           PRE / THF
+    A_P | A_S,          A_P | A_R,          A_P | A_T,
 
 //  PRE / PSI / RNG     PRE / PSI / THF
     A_P | A_S | A_R,    A_P | A_S | A_T,
 
 
-//  PSI / RNG     PSI / THF
-    A_S | A_R,    A_S | A_T,
+//  PSI / RNG           PSI / THF
+    A_S | A_R,          A_S | A_T,
 
 //  PSI / RNG / THF
     A_S | A_R | A_T,
@@ -181,12 +183,14 @@ static const uint16_t elf_classes[] = {
     A_END // END Elf
 };
 static const uint16_t half_elf_classes[] = {
-//  CLR     DRU     FGR     GLD     PRE     PSI     RNG     THF
-    A_C,    A_D,    A_F,    A_G,    A_P,    A_S,    A_R,    A_T, 
+//  CLR  DRU  FGR  GLD  PRE  PSI  RNG  THF
+    A_C, A_D, A_F, A_G, A_P, A_S, A_R, A_T,
 
 
-//  CLR / FGR     CLR / PRE     CLR / PSI     CLR / RNG     CLR / THF
-    A_C | A_F,    A_C | A_P,    A_C | A_S,    A_C | A_R,    A_C | A_T,
+//  CLR / FGR           CLR / PRE           CLR / PSI
+    A_C | A_F,          A_C | A_P,          A_C | A_S,
+//  CLR / RNG           CLR / THF
+    A_C | A_R,          A_C | A_T,
 
 //  CLR / FGR / PRE     CLR / FGR / PSI     CLR / FGR / THF
     A_C | A_F | A_P,    A_C | A_F | A_S,    A_C | A_F | A_T,
@@ -198,8 +202,10 @@ static const uint16_t half_elf_classes[] = {
     A_C | A_R | A_T,
 
 
-//  DRU / FGR     DRU / PRE     DRU / PSI     DRU / THF
-    A_D | A_F,    A_D | A_P,    A_D | A_S,    A_D | A_T,
+//  DRU / FGR           DRU / PRE           DRU / PSI
+    A_D | A_F,          A_D | A_P,          A_D | A_S,
+//  DRU / THF
+    A_D | A_T,
 
 //  DRU / FGR / PRE     DRU / FGR / PSI     DRU / FGR / THF
     A_D | A_F | A_P,    A_D | A_F | A_S,    A_D | A_F | A_T,
@@ -209,8 +215,8 @@ static const uint16_t half_elf_classes[] = {
     A_D | A_S | A_T,
 
 
-//  FGR / PRE     FGR / PSI     FGR / THF
-    A_F | A_P,    A_F | A_S,    A_F | A_T,
+//  FGR / PRE           FGR / PSI           FGR / THF
+    A_F | A_P,          A_F | A_S,          A_F | A_T,
 
 //  FGR / PRE / PSI     FGR / PRE / THF
     A_F | A_P | A_S,    A_F | A_P | A_T,
@@ -218,8 +224,8 @@ static const uint16_t half_elf_classes[] = {
     A_F | A_S | A_T,
 
 
-//  PRE / PSI     PRE / RNG     PRE / THF
-    A_P | A_S,    A_P | A_R,    A_P | A_T,
+//  PRE / PSI           PRE / RNG           PRE / THF
+    A_P | A_S,          A_P | A_R,          A_P | A_T,
 
 //  PRE / PSI / RNG     PRE / PSI / THF
     A_P | A_S | A_R,    A_P | A_S | A_T,
@@ -227,8 +233,8 @@ static const uint16_t half_elf_classes[] = {
     A_P | A_R | A_T,
 
 
-//  PSI / RNG     PSI / THF
-    A_S | A_R,    A_S | A_T,
+//  PSI / RNG           PSI / THF
+    A_S | A_R,          A_S | A_T,
 
 //  PSI / RNG / THF
     A_S | A_R | A_T,
@@ -241,12 +247,12 @@ static const uint16_t half_elf_classes[] = {
     A_END // END Half-Elf
 };
 static const uint16_t half_giant_classes[] = {
-//  CLR     FGR     GLD     PSI     RNG
-    A_C,    A_F,    A_G,    A_S,    A_R,
+//  CLR  FGR  GLD  PSI  RNG
+    A_C, A_F, A_G, A_S, A_R,
 
 
-//  CLR / FGR     CLR / PSI     CLR / RNG
-    A_C | A_F,    A_C | A_S,    A_C | A_R,
+//  CLR / FGR           CLR / PSI           CLR / RNG
+    A_C | A_F,          A_C | A_S,          A_C | A_R,
 
 
 //  FGR / PSI
@@ -260,27 +266,27 @@ static const uint16_t half_giant_classes[] = {
     A_END // END Half-Giant
 };
 static const uint16_t halfling_classes[] = {
-//  CLR     DRU     FGR     GLD     PSI     RNG     THF
-    A_C,    A_D,    A_F,    A_G,    A_S,    A_R,    A_T,
+//  CLR  DRU  FGR  GLD  PSI  RNG  THF
+    A_C, A_D, A_F, A_G, A_S, A_R, A_T,
 
 
-//  CLR / FGR     CLR / PSI     CLR / RNG     CLR / THF
-    A_C | A_F,    A_C | A_S,    A_C | A_R,    A_C | A_T,
+//  CLR / FGR           CLR / PSI           CLR / RNG     CLR / THF
+    A_C | A_F,          A_C | A_S,          A_C | A_R,    A_C | A_T,
 
 
-//  DRU / FGR     DRU  / PSI    DRU / RNG     DRU / THF
-    A_D | A_F,    A_D | A_S,    A_D | A_R,    A_D | A_T,
+//  DRU / FGR           DRU  / PSI          DRU / RNG     DRU / THF
+    A_D | A_F,          A_D | A_S,          A_D | A_R,    A_D | A_T,
 
 
-//  FGR / PSI     FGR / THF
-    A_F | A_S,    A_F | A_T,
+//  FGR / PSI           FGR / THF
+    A_F | A_S,          A_F | A_T,
 
 //  FGR / PSI / THF
     A_F | A_S | A_T,
 
 
-//  PSI / RNG     PSI / THF
-    A_S | A_R,    A_S | A_T,
+//  PSI / RNG           PSI / THF
+    A_S | A_R,          A_S | A_T,
 
 //  PSI / RNG / THF
     A_S | A_R | A_T,
@@ -292,26 +298,26 @@ static const uint16_t halfling_classes[] = {
     A_END // END Halfling
 };
 static const uint16_t mul_classes[] = {
-//  CLR     DRU     FGR     GLD     PSI     RNG     THF
-    A_C,    A_D,    A_F,    A_G,    A_S,    A_R,    A_T, 
+//  CLR  DRU  FGR  GLD  PSI  RNG  THF
+    A_C, A_D, A_F, A_G, A_S, A_R, A_T, 
 
 
-//  CLR / FGR     CLR / PSI     CLR / THF
-    A_C | A_F,    A_C | A_S,    A_C | A_T,
+//  CLR / FGR           CLR / PSI           CLR / THF
+    A_C | A_F,          A_C | A_S,          A_C | A_T,
 
 //  CLR / FGR / THF
     A_C | A_F | A_T,
 
 
-//  DRU / FGR     DRU / PSI     DRU / THF
-    A_D | A_F,    A_D | A_S,    A_D | A_T,
+//  DRU / FGR           DRU / PSI           DRU / THF
+    A_D | A_F,          A_D | A_S,          A_D | A_T,
 
 //  DRU / FGR / THF
     A_D | A_F | A_T,
 
 
-//  FGR / PSI     FGR / THF
-    A_F | A_S,    A_F | A_T,
+//  FGR / PSI           FGR / THF
+    A_F | A_S,          A_F | A_T,
 
 //  FGR / PSI / THF
     A_F | A_S | A_T,
@@ -324,12 +330,12 @@ static const uint16_t mul_classes[] = {
     A_END // END Mul
 };
 static const uint16_t thrikreen_classes[] = {
-//  CLR     DRU     FGR     GLD     PSI     RNG
-    A_C,    A_D,    A_F,    A_G,    A_S,    A_R,
+//  CLR  DRU  FGR  GLD  PSI  RNG
+    A_C, A_D, A_F, A_G, A_S, A_R,
 
 
-//  CLR / FGR     CLR / PSI     CLR / RNG
-    A_C | A_F,    A_C | A_S,    A_C | A_R,
+//  CLR / FGR           CLR / PSI           CLR / RNG
+    A_C | A_F,          A_C | A_S,          A_C | A_R,
 
 //  CLR / FGR / PSI
     A_C | A_F | A_S,
@@ -337,8 +343,8 @@ static const uint16_t thrikreen_classes[] = {
     A_C | A_S | A_R,
 
 
-//  DRU / FGR     DRU / PSI
-    A_D | A_F,    A_D | A_S,
+//  DRU / FGR           DRU / PSI
+    A_D | A_F,          A_D | A_S,
 
 //  DRU / FGR / PSI
     A_D | A_F | A_S,
