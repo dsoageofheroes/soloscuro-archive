@@ -1,1 +1,1 @@
-mdark.exe --ds1 ./
+mdark.exe --ds1 ./ --ignore-lua

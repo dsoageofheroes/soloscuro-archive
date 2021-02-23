@@ -1,1 +1,1 @@
-LD_LIBRARY_PATH=./ ./mdark --ds1 ./
+LD_LIBRARY_PATH=./ ./mdark

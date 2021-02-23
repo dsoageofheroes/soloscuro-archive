@@ -1,1 +1,1 @@
-mdark.exe --ds1 ./ --browse
+mdark.exe --ds1 ./ --browse --ignore-lua
