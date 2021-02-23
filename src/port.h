@@ -6,6 +6,7 @@
 #define PORT_H
 
 #include "ds-object.h"
+#include "ds-region.h"
 
 #ifdef _WIN32
 #  ifdef _WIN64
@@ -39,6 +40,6 @@ extern void port_animate_obj(region_object_t *obj);
 extern void port_update_obj(region_object_t *obj, const uint16_t nextx, const uint16_t nexty);
 extern int port_ask_yes_no();
 
-extern void port_change_region(const int region_id);
+extern void port_change_region(dsl_region_t *reg);
 
 #endif

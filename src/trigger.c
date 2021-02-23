@@ -5,6 +5,7 @@
 #include "replay.h"
 #include "trigger.h"
 #include <stdlib.h>
+#include <string.h>
 
 typedef struct trigger_node_s {
     union {
@@ -355,4 +356,93 @@ void talk_click(uint32_t obj) {
     if (lt.obj != 0) {
         dsl_lua_execute_script(lt.file, lt.addr, 0);
     }
+}
+
+static char* append(char *buf, size_t *offset, size_t *len, const void *data, const size_t data_len) {
+    while ((*offset + data_len) >= *len) {
+        *len *= 1.5;
+        buf = realloc(buf, *len);
+    }
+
+    memcpy(buf + *offset, data, data_len);
+    *offset += data_len;
+
+    return buf;
+}
+
+static uint32_t list_size(trigger_node_t *tl) {
+    uint32_t len = 0;
+    for (trigger_node_t *rover = tl; rover; rover = rover->next) {
+        len++;
+    }
+    return len;
+}
+
+static char* write_trigger_list(trigger_node_t *tl, char *buf, size_t *buf_len, size_t *offset) {
+    uint32_t list_len = list_size(tl);
+    buf = append(buf, offset, buf_len, &list_len, sizeof(uint32_t));
+    printf("list_len = %d\n", list_len);
+    for (trigger_node_t *rover = tl; rover; rover = rover->next) {
+        buf = append(buf, offset, buf_len, &(rover->noorders), sizeof(trigger_node_t));
+    }
+
+    return buf;
+}
+
+char* trigger_serialize(size_t *len) {
+    size_t buf_len = 128, offset = 0;
+    char *buf = malloc(buf_len);
+
+    buf = write_trigger_list(attack_list, buf, &buf_len, &offset);
+    buf = write_trigger_list(noorders_list, buf, &buf_len, &offset);
+    buf = write_trigger_list(use_list, buf, &buf_len, &offset);
+    buf = write_trigger_list(look_list, buf, &buf_len, &offset);
+    buf = write_trigger_list(talkto_list, buf, &buf_len, &offset);
+    buf = write_trigger_list(usewith_list, buf, &buf_len, &offset);
+    buf = write_trigger_list(tile_list, buf, &buf_len, &offset);
+    buf = write_trigger_list(box_list, buf, &buf_len, &offset);
+
+    *len = offset;
+
+    return buf;
+}
+
+static char* read_trigger_list(trigger_node_t **list, char *buf) {
+    uint32_t amt = *(uint32_t*)buf;
+    printf("amt = %d\n", amt);
+    buf += sizeof(uint32_t);
+    for (uint32_t i = 0; i < amt; i++) {
+        trigger_node_t *tn = (trigger_node_t*)buf;
+        trigger_node_t *to_add = malloc(sizeof(trigger_node_t));
+        memcpy(to_add, tn, sizeof(trigger_node_t));
+        to_add->next = *list;
+        *list = to_add;
+        buf += sizeof(trigger_node_t);
+    }
+    return buf;
+}
+
+void trigger_deserialize(char *data) {
+    // Uncomment later.
+    trigger_init();
+    trigger_cleanup();
+    printf("HERE!\n");
+    char *buf = read_trigger_list(&attack_list, data);
+    buf = read_trigger_list(&noorders_list, buf);
+    buf = read_trigger_list(&use_list, buf);
+    buf = read_trigger_list(&look_list, buf);
+    buf = read_trigger_list(&talkto_list, buf);
+    buf = read_trigger_list(&usewith_list, buf);
+    buf = read_trigger_list(&tile_list, buf);
+    buf = read_trigger_list(&box_list, buf);
+    printf("--->%d\n", noorders_list->noorders.obj);
+    printf("--->%d\n", noorders_list->noorders.need_to_run);
+    printf("--->%d\n", noorders_list->noorders.trigger_on_tile);
+    printf("--->%d\n", noorders_list->next->noorders.obj);
+    printf("--->%d\n", noorders_list->next->noorders.need_to_run);
+    printf("--->%d\n", noorders_list->next->noorders.trigger_on_tile);
+    printf("--->%d\n", noorders_list->next->next->noorders.obj);
+    printf("--->%d\n", noorders_list->next->next->noorders.need_to_run);
+    printf("--->%d\n", noorders_list->next->next->noorders.trigger_on_tile);
+    //exit(1);
 }

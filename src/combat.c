@@ -150,6 +150,8 @@ void combat_update(dsl_region_t *reg) {
             cr->robjs[i]->scmd = get_scmd(xdiff, ydiff);
             cr->robjs[i]->mapx += xdiff;
             cr->robjs[i]->mapy += ydiff;
+        }
+        if (cr->robjs[i]) {
             port_update_obj(cr->robjs[i], cr->robjs[i]->mapx, cr->robjs[i]->mapy);
         }
     }
