@@ -265,8 +265,8 @@ static void new_character_init(SDL_Renderer* _renderer, const uint32_t x, const 
     }
     for (int i = 0; i < 14; i++) {
         races[i] = new_sprite_create(renderer, pal,
-                                     race_portrait_offsets_x[i == 13 ? 14 : i], // FIXME - Hack until/if female Muls are implemented
-                                     race_portrait_offsets_y[i == 13 ? 14 : i], // FIXME - Hack until/if female Muls are implemented
+                                     race_portrait_offsets_x[i == 13 ? 15 : i], // FIXME - Hack until/if female Muls are implemented
+                                     race_portrait_offsets_y[i == 13 ? 15 : i], // FIXME - Hack until/if female Muls are implemented
                                      zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20000 + i);
     }
 
