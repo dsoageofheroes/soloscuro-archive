@@ -797,6 +797,11 @@ int new_character_handle_mouse_movement(const uint32_t x, const uint32_t y) {
 }
 
 int new_character_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
+    // Only support Left and Right mouse buttons for now
+    if (button != SDL_BUTTON_LEFT && button != SDL_BUTTON_RIGHT) {
+        return 1; // Handle
+    }
+
     last_sprite_mousedowned = 0;
 
     if (sprite_in_rect(done_button, x, y)) {
@@ -861,6 +866,11 @@ int new_character_handle_mouse_down(const uint32_t button, const uint32_t x, con
 }
 
 int new_character_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
+    // Only support Left and Right mouse buttons for now
+    if (button != SDL_BUTTON_LEFT && button != SDL_BUTTON_RIGHT) {
+        return 1;
+    }
+
     for (int i = 0; i < 8; i++) {
         if (last_sprite_mousedowned == stats_align_hp_buttons[i] && sprite_in_rect(stats_align_hp_buttons[i], x, y)) {
             update_stats_align_hp(i, button);
