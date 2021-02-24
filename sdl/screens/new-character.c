@@ -757,7 +757,7 @@ static void fix_race_gender() { // move the race/gender to the appropiate spot
 }
 
 static void fix_alignment(int direction) { // -1 = previous alignment, 1 = next alignment
-    if (pc.alignment > 0x7F) { // Wrapped around from LAWFUL_GOOD - unsigned int, so gotta check for 0x7F
+    if ((int8_t)pc.alignment < LAWFUL_GOOD) { // Wrapped around from LAWFUL_GOOD
         pc.alignment = CHAOTIC_EVIL;
     } else if (pc.alignment > CHAOTIC_EVIL) {
         pc.alignment = LAWFUL_GOOD;
