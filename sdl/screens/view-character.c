@@ -240,6 +240,7 @@ void view_character_return_control () {
         }
         if (popup_get_selection() == POPUP_1) { // ADD
             popup_clear_selection();
+            add_load_save_set_mode(ACTION_ADD);
             screen_push_screen(rend, &als_screen, 0, 0);
             last_selection = SELECT_ALS;
             return;

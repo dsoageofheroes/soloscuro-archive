@@ -650,3 +650,65 @@ void dsl_local_clear() {
     memset(dsl_local_bnums, 0x0, sizeof(int32_t) * MAX_LBIGNUMS);
     //memset(dsl_local_bnums, 0x0, sizeof(int32_t) * MAX_LBIGNUMS); string!
 }
+
+char* dsl_serialize_globals(uint32_t *len) {
+    *len =
+        sizeof(dsl_global_flags) +
+        sizeof(dsl_global_nums) +
+        sizeof(dsl_global_bnums) +
+        sizeof(dsl_global_strs) +
+        sizeof(dsl_gnames);
+    char *ret = malloc(*len);
+    char *buf = ret;
+    memcpy(buf, dsl_global_flags, sizeof(dsl_global_flags));
+    buf += sizeof(dsl_global_flags);
+    memcpy(buf, dsl_global_nums, sizeof(dsl_global_nums));
+    buf += sizeof(dsl_global_nums);
+    memcpy(buf, dsl_global_bnums, sizeof(dsl_global_bnums));
+    buf += sizeof(dsl_global_bnums);
+    memcpy(buf, dsl_global_strs, sizeof(dsl_global_strs));
+    buf += sizeof(dsl_global_strs);
+    memcpy(buf, dsl_gnames, sizeof(dsl_gnames));
+    buf += sizeof(dsl_gnames);
+
+    return ret;
+}
+
+void dsl_deserialize_globals(char *buf) {
+    memcpy(dsl_global_flags, buf, sizeof(dsl_global_flags));
+    buf += sizeof(dsl_global_flags);
+    memcpy(dsl_global_nums, buf, sizeof(dsl_global_nums));
+    buf += sizeof(dsl_global_nums);
+    memcpy(dsl_global_bnums, buf, sizeof(dsl_global_bnums));
+    buf += sizeof(dsl_global_bnums);
+    memcpy(dsl_global_strs, buf, sizeof(dsl_global_strs));
+    buf += sizeof(dsl_global_strs);
+    memcpy(dsl_gnames, buf, sizeof(dsl_gnames));
+    buf += sizeof(dsl_gnames);
+}
+
+void dsl_deserialize_locals(char *buf) {
+    memcpy(dsl_local_flags, buf, sizeof(dsl_local_flags));
+    buf += sizeof(dsl_local_flags);
+    memcpy(dsl_local_nums, buf, sizeof(dsl_local_nums));
+    buf += sizeof(dsl_local_nums);
+    memcpy(dsl_local_bnums, buf, sizeof(dsl_local_bnums));
+    buf += sizeof(dsl_local_bnums);
+}
+
+char* dsl_serialize_locals(uint32_t *len) {
+    *len =
+        sizeof(dsl_local_flags) +
+        sizeof(dsl_local_nums) +
+        sizeof(dsl_local_bnums);
+    char *ret = malloc(*len);
+    char *buf = ret;
+    memcpy(buf, dsl_local_flags, sizeof(dsl_local_flags));
+    buf += sizeof(dsl_local_flags);
+    memcpy(buf, dsl_local_nums, sizeof(dsl_local_nums));
+    buf += sizeof(dsl_local_nums);
+    memcpy(buf, dsl_local_bnums, sizeof(dsl_local_bnums));
+    buf += sizeof(dsl_local_bnums);
+
+    return ret;
+}

@@ -98,6 +98,7 @@ void player_update() {
     trigger_tile_check(pc->xpos, pc->ypos);
 
     if (main_player_freeze() || direction == 0x0 || cmap_is_block(nexty + 1, nextx)) {
+        //printf("HERE! (%d, %d, %d)  (%d, %d)\n", main_player_freeze(), direction, cmap_is_block(nexty + 1, nextx), nexty + 1, nextx);
         anims[0].x = anims[0].destx;
         anims[0].y = anims[0].desty;
         if (anims[0].scmd == combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_LEFT)) {
