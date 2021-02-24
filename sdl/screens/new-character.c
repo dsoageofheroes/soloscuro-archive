@@ -696,6 +696,8 @@ static void select_class(uint8_t class) {
     if (pc.real_class[pos] != -1) { pos++; }
     if (pc.real_class[pos] != -1) { pos++; }
     sprite_set_frame(class_sel[class], 1);
+
+    pc.alignment = pc.real_class[0] == -1 ? TRUE_NEUTRAL : pc.alignment;
     pc.real_class[pos] = convert_to_actual_class(class);
     set_class_frames();
 
@@ -713,7 +715,6 @@ static void select_class(uint8_t class) {
 
     set_ps_sel_frames();
     dnd2e_set_exp(&pc, 4000);
-    pc.alignment = TRUE_NEUTRAL;
     fix_alignment(1); // 1 = next alignment
 }
 
@@ -756,8 +757,7 @@ static void fix_race_gender() { // move the race/gender to the appropiate spot
 }
 
 static void fix_alignment(int direction) { // -1 = previous alignment, 1 = next alignment
-    printf("in fix_alignment() - alignment = %d - direction = %d\n", pc.alignment, direction);
-    if (pc.alignment > 0x7F) { // Wrapped around from LAWFUL_GOOD
+    if (pc.alignment > 0x7F) { // Wrapped around from LAWFUL_GOOD - unsigned int, so gotta check for 0x7F
         pc.alignment = CHAOTIC_EVIL;
     } else if (pc.alignment > CHAOTIC_EVIL) {
         pc.alignment = LAWFUL_GOOD;
@@ -766,25 +766,21 @@ static void fix_alignment(int direction) { // -1 = previous alignment, 1 = next 
     if (!dnd2e_is_alignment_allowed(pc.alignment, pc.real_class, 1))
     {
         for (int i = pc.alignment + direction; i != pc.alignment; i += direction) {
-            if (i > 0x7F) { // Wrapping around from LAWFUL_GOOD
+            if (i < LAWFUL_GOOD) { // Wrapping around from LAWFUL_GOOD
                 i = CHAOTIC_EVIL;
                 direction = -1;
-                printf("wrapping around to CHAOTIC_EVIL\n");
             } else if (i > CHAOTIC_EVIL) {
                 i = LAWFUL_GOOD;
                 direction = 1;
-                printf("wrapping around to LAWFUL_GOOD\n");
             }
 
             if (dnd2e_is_alignment_allowed(i, pc.real_class, 1))
             {
-                printf("alignment loop - classes: %d/%d/%d - alignment = %d\n", pc.real_class[0], pc.real_class[1], pc.real_class[2], i);
                 pc.alignment = i;
                 break;
             }
         }
     }
-    else { printf("no alignment loop - classes: %d/%d/%d - alignment = %d\n", pc.real_class[0], pc.real_class[1], pc.real_class[2], pc.alignment); }
 }
 
 int new_character_handle_mouse_movement(const uint32_t x, const uint32_t y) {
