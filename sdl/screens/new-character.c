@@ -65,6 +65,7 @@ static int changed_name;
 
 static void update_ui();
 static void select_class(uint8_t class);
+static void fix_alignment(int direction);
 
 ds_character_t* new_character_get_pc() {
     if (!is_valid) { return NULL; }
@@ -96,7 +97,7 @@ char* new_character_get_name() {
 static void get_random_name() {
     uint32_t res_ids[1<<12];
     int name_list_start  = pc.race == RACE_THRIKREEN ? 52 : pc.gender == GENDER_FEMALE ? 33 : 0;
-    int name_list_length = pc.race == RACE_THRIKREEN ? 7 : pc.gender == GENDER_FEMALE ? 17 : 32;
+    int name_list_length = pc.race == RACE_THRIKREEN ? 7  : pc.gender == GENDER_FEMALE ? 17 : 32;
     int chosen_name = (rand() % (name_list_length + 1)) + name_list_start;
 
     memset(&name_text[0], 0, sizeof(name_text));
@@ -194,6 +195,7 @@ static void init_pc() {
     memset(&inv, 0x0, sizeof(ds_inventory_t));
     pc.race = RACE_HUMAN;
     pc.gender = GENDER_MALE;
+    pc.alignment = TRUE_NEUTRAL;
     pc.real_class[0] = pc.real_class[1] = pc.real_class[2] = -1;
     memset(&psi, 0x0, sizeof(psi));
     memset(&spells, 0x0, sizeof(spells));
@@ -510,6 +512,7 @@ void update_stats_align_hp(int i, uint32_t button)
                     break;
                 case 6:
                     pc.alignment++;
+                    fix_alignment(1); // 1 = next alignment
                     break;
                 case 7:
                     pc.base_hp++;
@@ -541,6 +544,7 @@ void update_stats_align_hp(int i, uint32_t button)
                     break;
                 case 6:
                     pc.alignment--;
+                    fix_alignment(-1); // -1 = previous alignment
                     break;
                 case 7:
                     pc.base_hp--;
@@ -595,7 +599,7 @@ static int find_class_selection_position(const uint8_t class_selection) {
 static void set_ps_sel_frames() {
     int ps_selections = 0;
 
-        // Setup selection correctionly
+    // Setup selection correctly
     if (show_psionic_label) {
         sprite_set_frame(ps_sel[0], spell_has_psin(&psi, PSIONIC_PSYCHOKINETIC));
         sprite_set_frame(ps_sel[1], spell_has_psin(&psi, PSIONIC_PSYCHOMETABOLISM));
@@ -681,6 +685,10 @@ static void deselect_class(uint8_t class_selection) {
     set_ps_sel_frames();
 
     dnd2e_set_exp(&pc, 4000);
+    
+    if (pc.real_class[0] == -1) {
+        pc.alignment = TRUE_NEUTRAL;
+    }
 }
 
 static void select_class(uint8_t class) {
@@ -688,6 +696,8 @@ static void select_class(uint8_t class) {
     if (pc.real_class[pos] != -1) { pos++; }
     if (pc.real_class[pos] != -1) { pos++; }
     sprite_set_frame(class_sel[class], 1);
+
+    pc.alignment = pc.real_class[0] == -1 ? TRUE_NEUTRAL : pc.alignment;
     pc.real_class[pos] = convert_to_actual_class(class);
     set_class_frames();
 
@@ -705,6 +715,7 @@ static void select_class(uint8_t class) {
 
     set_ps_sel_frames();
     dnd2e_set_exp(&pc, 4000);
+    fix_alignment(1); // 1 = next alignment
 }
 
 static void fix_race_gender() { // move the race/gender to the appropiate spot
@@ -743,6 +754,33 @@ static void fix_race_gender() { // move the race/gender to the appropiate spot
     select_class(2); // Default to Fighter whenever race changes
     dnd2e_randomize_stats_pc(&pc);
     dnd2e_fix_stats_pc(&pc); // in case something need adjustment
+}
+
+static void fix_alignment(int direction) { // -1 = previous alignment, 1 = next alignment
+    if (pc.alignment > 0x7F) { // Wrapped around from LAWFUL_GOOD - unsigned int, so gotta check for 0x7F
+        pc.alignment = CHAOTIC_EVIL;
+    } else if (pc.alignment > CHAOTIC_EVIL) {
+        pc.alignment = LAWFUL_GOOD;
+    }
+
+    if (!dnd2e_is_alignment_allowed(pc.alignment, pc.real_class, 1))
+    {
+        for (int i = pc.alignment + direction; i != pc.alignment; i += direction) {
+            if (i < LAWFUL_GOOD) { // Wrapping around from LAWFUL_GOOD
+                i = CHAOTIC_EVIL;
+                direction = -1;
+            } else if (i > CHAOTIC_EVIL) {
+                i = LAWFUL_GOOD;
+                direction = 1;
+            }
+
+            if (dnd2e_is_alignment_allowed(i, pc.real_class, 1))
+            {
+                pc.alignment = i;
+                break;
+            }
+        }
+    }
 }
 
 int new_character_handle_mouse_movement(const uint32_t x, const uint32_t y) {
