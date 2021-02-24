@@ -4,6 +4,7 @@
 #include "dsl.h"
 #include "dsl-manager.h"
 #include "ds-item.h"
+#include "ds-region-manager.h"
 #include "ds-state.h"
 #include "ds-string.h"
 #include "dsl-var.h"
@@ -21,25 +22,16 @@ uint8_t quiet = 0;
 /* Globals */
 void get_parameters(int16_t amt);
 
-/* If command data */
-#define MAX_IFDEPTH (32)
-int8_t ifptr = 0;
-int8_t ifstate[MAX_IFDEPTH+1];
-#define YES (1)
-#define NO (0)
-
 param_t param;
 /* End Globals */
 
 void dsl_change_region(const int region_id) {
     //dsl_execute_subroutine(region_id, 0, 1);
     replay_print("rep.change_region(%lld)\n", region_id);
-    dsl_set_region(region_id);
     dsl_lua_execute_script(region_id, 0, 1);
 }
 
 static void initialize_dsl_stack() {
-    ifptr = 0;
     dsl_global_strings = (dsl_string_t*) malloc(GSTRINGVARSIZE);
     memset(dsl_global_strings, 0, GSTRINGVARSIZE);
     dsl_local_strings = (dsl_string_t*) malloc(LSTRINGVARSIZE);
@@ -56,6 +48,7 @@ void dsl_init() {
     dsl_object_init();
     trigger_init();
     dsl_manager_init();
+    ds_region_manager_init();
     info("Running Master DSL #99.\n");
     //dsl_execute_subroutine(99, 0, 1);
     dsl_lua_execute_script(99, 0, 1);
@@ -82,4 +75,5 @@ void dsl_cleanup() {
     dsl_manager_cleanup();
     ds_item_close();
     trigger_cleanup();
+    ds_region_manager_cleanup();
 }

@@ -45,6 +45,7 @@ void trigger_cleanup() {
     free_list(usewith_list);
     free_list(tile_list);
     free_list(box_list);
+    trigger_init();
 }
 
 static int _add_attack_trigger(uint32_t obj, uint32_t file, uint32_t addr, uint32_t global) {
@@ -423,11 +424,9 @@ static char* read_trigger_list(trigger_node_t **list, char *buf) {
 }
 
 void trigger_deserialize(char *data) {
-    // Uncomment later.
-    trigger_init();
     trigger_cleanup();
-    char *buf = read_trigger_list(&attack_list, data);
 
+    char *buf = read_trigger_list(&attack_list, data);
     buf = read_trigger_list(&noorders_list, buf);
     buf = read_trigger_list(&use_list, buf);
     buf = read_trigger_list(&look_list, buf);

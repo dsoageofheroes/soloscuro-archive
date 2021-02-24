@@ -11,9 +11,7 @@ typedef struct map_s {
     SDL_Texture **tiles;
 } map_t;
 
-void map_init(map_t *map);
-void map_free(map_t *map);
-void map_load_map(map_t *map, SDL_Renderer *renderer, int id);
+void map_load_map(SDL_Renderer *renderer, int id);
 void map_load_region(dsl_region_t *reg, SDL_Renderer *renderer);
 void map_render(void *data, SDL_Renderer *renderer);
 int map_handle_mouse(const uint32_t x, const uint32_t y);

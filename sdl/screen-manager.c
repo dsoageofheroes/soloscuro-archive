@@ -15,8 +15,6 @@
 static sops_t screens[MAX_SCREENS];
 static uint32_t screen_pos = 0;
 
-static map_t cmap;
-
 void screen_init(SDL_Renderer *renderer) {
     font_init(renderer);
 
@@ -73,23 +71,12 @@ void screen_push_screen(SDL_Renderer *renderer, sops_t *screen, const uint32_t x
 }
 
 void port_change_region(dsl_region_t *reg) {
-    //player_load_graphics(main_get_rend());
     player_load(main_get_rend(), ds_player_get_active(), main_get_zoom());
-    map_init(&cmap);
     map_load_region(reg, main_get_rend());
-    //screen_load_region(main_get_rend(), region_id);
 }
 
 int screen_load_region(SDL_Renderer *renderer, const int region) {
-    char gff_name[32];
-
-    snprintf(gff_name, 32, "rgn%x.gff", region);
-    int index = gff_find_index(gff_name);
-    if (index < 0 ) { return 0; }
-
-    // Map is a special case.
-    map_init(&cmap);
-    map_load_map(&cmap, renderer, index);
+    map_load_map(renderer, region);
 
     screen_push_screen(renderer, &map_screen, 0, 0);
     screen_push_screen(renderer, &narrate_screen, 0, 0);

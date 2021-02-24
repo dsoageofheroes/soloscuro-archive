@@ -1,6 +1,7 @@
 #include "ds-load-save.h"
 #include "ds-player.h"
 #include "ds-region.h"
+#include "ds-region-manager.h"
 #include "ds-state.h"
 #include "gff.h"
 #include "gfftypes.h"
@@ -93,7 +94,7 @@ static void add_player_to_save(const int id, const int player) {
     free(buf);
 }
 
-static void save_region(const int id) {
+static void save_regions(const int id) {
     dsl_region_t *reg = dsl_region_get_current();
     player_pos_t *player =  ds_player_get_pos(ds_player_get_active());
     size_t buf_len = 128, offset = 0;
@@ -117,82 +118,12 @@ static void save_region(const int id) {
     free(buf);
 }
 
-static void load_region(const int id) {
-    char gff_name[32];
-    char *buf = NULL;
-
-    snprintf(gff_name, 32, "rgn%x.gff", id);
-    int gff_index = gff_find_index(gff_name);
-    if (gff_index < 0 ) { return; }
-
-    dsl_region_t *reg = NULL;
+//TODO: Will need to save off ALL regions when we get to multiple regions
+static void load_regions(const int id) {
     player_pos_t *player = ds_player_get_pos(ds_player_get_active());
 
-    gff_chunk_header_t chunk = gff_find_chunk_header(id, GFF_ROBJ, player->map);
-    reg = dsl_load_region(gff_index);
-
-    if (gff_read_chunk(id, &chunk, reg->list, chunk.length) < chunk.length) {
-        printf("ERROR READING!\n");
-        return ;
-    }
-
-    // TODO: clean this up.
-    for (int i = 0; i < MAX_REGION_OBJS; i++) {
-        //printf("reg->list->objs[i].entry_id = %d, %d\n", reg->list->objs[i].entry_id, reg->list->objs[i].combat_id);
-        region_object_t *robj = reg->list->objs + i;
-        if (robj->combat_id == 9999) {
-            robj->scmd = gff_map_get_object_scmd(gff_index, id,
-                robj->entry_id, 0);
-            if (robj->scmd == 0) {
-                robj->scmd = ds_scmd_empty();
-            }
-        } else {
-            if (robj->entry_id > 0) {
-                robj->scmd = combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
-                gff_chunk_header_t chunk = gff_find_chunk_header(OBJEX_GFF_INDEX, GFF_RDFF, robj->entry_id);
-                buf = malloc(chunk.length);
-                if (!gff_read_chunk(OBJEX_GFF_INDEX, &chunk, buf, chunk.length)) {
-                    printf("ERROR can't read %d\n", robj->entry_id);
-                    exit(1);
-                }
-                robj->combat_id = combat_add(&(reg->cr), robj,
-                (ds1_combat_t *) (buf + sizeof(rdff_disk_object_t)));
-                port_add_obj(reg->list->objs + i);
-                free(buf);
-            }
-        }
-        robj->data = NULL;
-    }
-
-    chunk = gff_find_chunk_header(id, GFF_RDAT, player->map);
-    buf = malloc(chunk.length);
-    if (!gff_read_chunk(id, &chunk, buf, chunk.length)) {
-        printf("Error loading file.\n");
-        exit(1);
-    }
-    memcpy(reg->flags, buf, sizeof(reg->flags));
-    buf += sizeof(reg->flags);
-    memcpy(&(reg->cr.hunt), &(((combat_region_t*)buf)->hunt), sizeof(reg->cr.hunt));
-    buf -= sizeof(reg->flags);
-    free(buf);
-
-    chunk = gff_find_chunk_header(id, GFF_GDAT, 99);
-    buf = malloc(chunk.length);
-    if (!gff_read_chunk(id, &chunk, buf, chunk.length)) {
-        printf("Error loading file.\n");
-        exit(1);
-    }
-    dsl_deserialize_globals(buf);
-    free(buf);
-
-    chunk = gff_find_chunk_header(id, GFF_GDAT, player->map);
-    buf = malloc(chunk.length);
-    if (!gff_read_chunk(id, &chunk, buf, chunk.length)) {
-        printf("Error loading file.\n");
-        exit(1);
-    }
-    dsl_deserialize_locals(buf);
-    free(buf);
+    ds_region_load_region_from_save(id, player->map);
+    ds_region_t* reg = ds_region_get_region(player->map);
 
     port_change_region(reg);
 }
@@ -219,7 +150,7 @@ void ls_save_to_file(const char *path) {
 
     gff_add_chunk(id, GFF_POS, 0, (char*)ds_player_get_pos(ds_player_get_active()), sizeof(player_pos_t));
 
-    save_region(id);
+    save_regions(id);
 
     size_t trigger_len;
     char* triggers = trigger_serialize(&trigger_len);
@@ -273,7 +204,7 @@ static int load_player(const int id, const int player, const int res_id) {
 
     chunk = gff_find_chunk_header(id, GFF_PSST, res_id);
     if (!gff_read_chunk(id, &chunk, ds_player_get_psionics(player), sizeof(psionic_list_t))) { return 0;}
-    
+
     return 1;
 }
 
@@ -298,7 +229,7 @@ int ls_load_save_file(const char *path) {
     if (gff_read_chunk(id, &chunk, ds_player_get_pos(2), sizeof(player_pos_t)) < 1) { return 0; }
     if (gff_read_chunk(id, &chunk, ds_player_get_pos(3), sizeof(player_pos_t)) < 1) { return 0; }
 
-    load_region(id);
+    load_regions(id);
 
     chunk = gff_find_chunk_header(id, GFF_TRIG, 0);
     triggers = malloc(chunk.length);

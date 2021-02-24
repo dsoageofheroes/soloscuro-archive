@@ -4,6 +4,7 @@
 #include "../main.h"
 #include "../font.h"
 #include "../sprite.h"
+#include "../map.h"
 #include "../../src/ds-load-save.h"
 #include "../../src/gff.h"
 #include "../../src/gff-char.h"
@@ -112,6 +113,7 @@ static void setup_save_load_selection() {
         snprintf(buf, BUF_MAX, "save%02d.sav", i);
         entries[i] = strdup(buf);
         valids[i] = i;
+        num_entries++;
         num_valid_entries++;
     }
 }
@@ -253,6 +255,7 @@ static void load_game() {
     strncpy(buf, entries[selection], 127);
     screen_clear();
     ls_load_save_file(buf);
+    main_center_on_player();
 }
 
 int add_load_save_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
