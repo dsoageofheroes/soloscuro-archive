@@ -9,6 +9,7 @@
 #include "screens/narrate.h"
 #include "screens/screen-main.h"
 #include "screens/inventory.h"
+#include "screens/add-load-save.h"
 #include "../src/combat.h"
 #include "../src/dsl.h"
 #include "../src/dsl-manager.h"
@@ -84,7 +85,14 @@ void handle_input() {
                 if (event.key.keysym.sym == SDLK_DOWN) { ymapdiff = 0;}
                 if (event.key.keysym.sym == SDLK_LEFT) { xmapdiff = 0;}
                 if (event.key.keysym.sym == SDLK_RIGHT) { xmapdiff = 0;}
-                if (event.key.keysym.sym == SDLK_F11) { ls_save_to_file("save01.sav"); exit(1);}
+                if (event.key.keysym.sym == SDLK_F11) {
+                    add_load_save_set_mode(ACTION_SAVE);
+                    screen_push_screen(renderer, &als_screen, 0, 0);
+                }
+                if (event.key.keysym.sym == SDLK_F12) {
+                    add_load_save_set_mode(ACTION_LOAD);
+                    screen_push_screen(renderer, &als_screen, 0, 0);
+                }
                 break;
                 break;
             case SDL_KEYDOWN:
@@ -116,9 +124,6 @@ void handle_input() {
                 handle_mouse_down(event.button.button);
                 break;
             case SDL_MOUSEBUTTONUP:
-                //if (game_loop_is_waiting_for(WAIT_NARRATE_CONTINUE)) {
-                    //game_loop_signal(WAIT_NARRATE_CONTINUE, 0);
-                //}
                 handle_mouse_up(event.button.button);
                 break;
         }

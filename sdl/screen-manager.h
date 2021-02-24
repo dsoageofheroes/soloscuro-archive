@@ -25,6 +25,7 @@ void screen_handle_mouse(const uint32_t x, const uint32_t y);
 void screen_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y);
 void screen_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y);
 int screen_load_region(SDL_Renderer *renderer, const int region);
+void screen_clear();
 void screen_free();
 
 // Utility function

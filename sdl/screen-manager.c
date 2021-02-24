@@ -157,6 +157,12 @@ static void destroy_screen(const int pos) {
     memset(screens + pos, 0x0, sizeof(sops_t));
 }
 
+void screen_clear() {
+    while(screen_pos) {
+        screen_pop();
+    }
+}
+
 void screen_pop() {
     destroy_screen(--screen_pos);
 

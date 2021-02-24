@@ -307,5 +307,7 @@ int ls_load_save_file(const char *path) {
     free(triggers);
     triggers = NULL;
 
+    gff_close(id);
+
     return 1;
 }
