@@ -65,7 +65,7 @@ static int changed_name;
 
 static void update_ui();
 static void select_class(uint8_t class);
-static void fix_alignment();
+static void fix_alignment(int direction);
 
 ds_character_t* new_character_get_pc() {
     if (!is_valid) { return NULL; }
@@ -512,7 +512,7 @@ void update_stats_align_hp(int i, uint32_t button)
                     break;
                 case 6:
                     pc.alignment++;
-                    fix_alignment();
+                    fix_alignment(1); // 1 = next alignment
                     break;
                 case 7:
                     pc.base_hp++;
@@ -544,7 +544,7 @@ void update_stats_align_hp(int i, uint32_t button)
                     break;
                 case 6:
                     pc.alignment--;
-                    fix_alignment();
+                    fix_alignment(-1); // -1 = previous alignment
                     break;
                 case 7:
                     pc.base_hp--;
@@ -714,7 +714,7 @@ static void select_class(uint8_t class) {
     set_ps_sel_frames();
     dnd2e_set_exp(&pc, 4000);
     pc.alignment = TRUE_NEUTRAL;
-    fix_alignment();
+    fix_alignment(1); // 1 = next alignment
 }
 
 static void fix_race_gender() { // move the race/gender to the appropiate spot
@@ -753,12 +753,11 @@ static void fix_race_gender() { // move the race/gender to the appropiate spot
     select_class(2); // Default to Fighter whenever race changes
     dnd2e_randomize_stats_pc(&pc);
     dnd2e_fix_stats_pc(&pc); // in case something need adjustment
-    pc.alignment = TRUE_NEUTRAL;
 }
 
-static void fix_alignment() {
-    printf("in fix_alignment()\n");
-    if (pc.alignment < LAWFUL_GOOD) {
+static void fix_alignment(int direction) { // -1 = previous alignment, 1 = next alignment
+    printf("in fix_alignment() - alignment = %d - direction = %d\n", pc.alignment, direction);
+    if (pc.alignment > 0x7F) { // Wrapped around from LAWFUL_GOOD
         pc.alignment = CHAOTIC_EVIL;
     } else if (pc.alignment > CHAOTIC_EVIL) {
         pc.alignment = LAWFUL_GOOD;
@@ -766,22 +765,22 @@ static void fix_alignment() {
 
     if (!dnd2e_is_alignment_allowed(pc.alignment, pc.real_class, 1))
     {
-        for (int i = 0; i < 3; i++) {
-            if (pc.real_class[i] == -1) {
-                break;
+        for (int i = pc.alignment + direction; i != pc.alignment; i += direction) {
+            if (i > 0x7F) { // Wrapping around from LAWFUL_GOOD
+                i = CHAOTIC_EVIL;
+                direction = -1;
+                printf("wrapping around to CHAOTIC_EVIL\n");
+            } else if (i > CHAOTIC_EVIL) {
+                i = LAWFUL_GOOD;
+                direction = 1;
+                printf("wrapping around to LAWFUL_GOOD\n");
             }
 
-            for (int i = pc.alignment + 1; i != pc.alignment; i++) {
-                if (i > CHAOTIC_EVIL) {
-                    i = LAWFUL_GOOD;
-                }
-
-                if (dnd2e_is_alignment_allowed(i, pc.real_class, 1))
-                {
-                    printf("alignment loop - classes: %d/%d/%d - alignment = %d\n", pc.real_class[0], pc.real_class[1], pc.real_class[2], i);
-                    pc.alignment = i;
-                    break;
-                }
+            if (dnd2e_is_alignment_allowed(i, pc.real_class, 1))
+            {
+                printf("alignment loop - classes: %d/%d/%d - alignment = %d\n", pc.real_class[0], pc.real_class[1], pc.real_class[2], i);
+                pc.alignment = i;
+                break;
             }
         }
     }
