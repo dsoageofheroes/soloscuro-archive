@@ -675,7 +675,7 @@ int dnd2e_is_class_allowed(const uint8_t race, const int8_t classes[3]) {
 int dnd2e_is_alignment_allowed(const uint8_t alignment, const int8_t class)
 {
     return class_alignments[class] == ANY_ALIGNMENT ||
-           alignment_flags[alignment] & class_alignments[class];
+           class_alignments[class] & alignment_flags[alignment];
 }
 
 static void set_psp(ds_character_t *pc) {
