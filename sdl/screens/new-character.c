@@ -202,7 +202,6 @@ static void init_pc() {
     memset(&psionics, 0x0, sizeof(psionics));
     pc.allegiance = 1;
     get_random_name();
-    fix_alignment();
 }
 
 static void new_character_init(SDL_Renderer* _renderer, const uint32_t x, const uint32_t y, const float _zoom) {
@@ -280,7 +279,6 @@ static void new_character_init(SDL_Renderer* _renderer, const uint32_t x, const 
     dnd2e_randomize_stats_pc(&pc);
     set_class_frames(); // go ahead and setup the new class frames
     select_class(2); // Fighter is the default class
-    fix_alignment();
 }
 
 static void update_die_countdown() {
@@ -601,7 +599,7 @@ static int find_class_selection_position(const uint8_t class_selection) {
 static void set_ps_sel_frames() {
     int ps_selections = 0;
 
-        // Setup selection correctionly
+    // Setup selection correctly
     if (show_psionic_label) {
         sprite_set_frame(ps_sel[0], spell_has_psin(&psi, PSIONIC_PSYCHOKINETIC));
         sprite_set_frame(ps_sel[1], spell_has_psin(&psi, PSIONIC_PSYCHOMETABOLISM));
@@ -687,6 +685,10 @@ static void deselect_class(uint8_t class_selection) {
     set_ps_sel_frames();
 
     dnd2e_set_exp(&pc, 4000);
+    
+    if (pc.real_class[0] == -1) {
+        pc.alignment = TRUE_NEUTRAL;
+    }
 }
 
 static void select_class(uint8_t class) {
@@ -711,6 +713,8 @@ static void select_class(uint8_t class) {
 
     set_ps_sel_frames();
     dnd2e_set_exp(&pc, 4000);
+    pc.alignment = TRUE_NEUTRAL;
+    fix_alignment();
 }
 
 static void fix_race_gender() { // move the race/gender to the appropiate spot
@@ -750,35 +754,38 @@ static void fix_race_gender() { // move the race/gender to the appropiate spot
     dnd2e_randomize_stats_pc(&pc);
     dnd2e_fix_stats_pc(&pc); // in case something need adjustment
     pc.alignment = TRUE_NEUTRAL;
-    fix_alignment();
 }
 
 static void fix_alignment() {
+    printf("in fix_alignment()\n");
     if (pc.alignment < LAWFUL_GOOD) {
         pc.alignment = CHAOTIC_EVIL;
     } else if (pc.alignment > CHAOTIC_EVIL) {
         pc.alignment = LAWFUL_GOOD;
     }
 
-    if (!dnd2e_is_alignment_allowed(pc.alignment, pc.real_class))
+    if (!dnd2e_is_alignment_allowed(pc.alignment, pc.real_class, 1))
     {
-        for (int i = pc.alignment + 1; i != pc.alignment; i++)
-        {
+        for (int i = 0; i < 3; i++) {
             if (pc.real_class[i] == -1) {
                 break;
             }
 
-            if (i > CHAOTIC_EVIL) {
-                i = LAWFUL_GOOD;
-            }
+            for (int i = pc.alignment + 1; i != pc.alignment; i++) {
+                if (i > CHAOTIC_EVIL) {
+                    i = LAWFUL_GOOD;
+                }
 
-            if (dnd2e_is_alignment_allowed(i, pc.real_class))
-            {
-                pc.alignment = i;
-                break;
+                if (dnd2e_is_alignment_allowed(i, pc.real_class, 1))
+                {
+                    printf("alignment loop - classes: %d/%d/%d - alignment = %d\n", pc.real_class[0], pc.real_class[1], pc.real_class[2], i);
+                    pc.alignment = i;
+                    break;
+                }
             }
         }
     }
+    else { printf("no alignment loop - classes: %d/%d/%d - alignment = %d\n", pc.real_class[0], pc.real_class[1], pc.real_class[2], pc.alignment); }
 }
 
 int new_character_handle_mouse_movement(const uint32_t x, const uint32_t y) {

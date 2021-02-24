@@ -14,3 +14,11 @@ solconfig.lua
 # Media
 *.sf2
 *.mid
+build
+clean
+mdark.exe
+play
+rebuild
+replay.lua
+playnew
+playlua
