@@ -459,7 +459,7 @@ const uint32_t ranger_levels[][3] = {
     { 3600000,         9,        4 }, // 20
 };
 
-//        exp    hdlimit      hapr
+//         exp   hdlimit      hapr
 const uint32_t preserver_levels[][3] = {
     {        0,        0,        0 }, // 00 - the third parameter is how many half-attacks per round.
     {        0,        1,        0 }, // 01
@@ -489,6 +489,96 @@ const uint32_t preserver_levels[][3] = {
 static const int8_t hit_die[] = {
      0,  8, 8, 8,  8,  8,  8,  8, 8,
     10, 10, 4, 6, 10, 10, 10, 10, 6
+};
+
+// FIXME - Templars can only be "one step away" from their
+//         patron in either axis, but not both
+static const int32_t class_alignments[] = {
+//  Air Cleric            Earth Cleric          Fire Cleric           Water Cleric
+    ANY_ALIGNMENT,        ANY_ALIGNMENT,        ANY_ALIGNMENT,        ANY_ALIGNMENT,    
+//  Air Druid             Earth Druid           Fire Druid            Water Druid
+    ONLY_TRUE_NEUTRAL,    ONLY_TRUE_NEUTRAL,    ONLY_TRUE_NEUTRAL,    ONLY_TRUE_NEUTRAL,
+//  Fighter
+    ANY_ALIGNMENT,
+//  Gladiator
+    ANY_ALIGNMENT,
+//  Preserver
+    NOT_EVIL_MORALS,
+//  Psionicist
+    ANY_ALIGNMENT,
+//  Air Ranger            Earth Ranger          Fire Ranger           Water Ranger
+    ONLY_GOOD_MORALS,     ONLY_GOOD_MORALS,     ONLY_GOOD_MORALS,     ONLY_GOOD_MORALS,
+//  Thief
+    NOT_LAWFUL_GOOD,
+//  Defiler
+    NOT_GOOD_MORALS,
+//  Templar
+    NOT_GOOD_MORALS,
+};
+
+static const int32_t alignment_flags[] = {
+    // Lawful Good
+    ONLY_LAWFUL_ETHICS   | NOT_NEUTRAL_ETHICS      | NOT_CHAOTIC_ETHICS    |
+    ONLY_GOOD_MORALS     | NOT_NEUTRAL_MORALS      | NOT_EVIL_MORALS       |
+    ONLY_LAWFUL_GOOD     | NOT_NEUTRAL_GOOD        | NOT_CHAOTIC_GOOD      |
+    NOT_LAWFUL_NEUTRAL   | NOT_TRUE_NEUTRAL        | NOT_CHAOTIC_NEUTRAL   |
+    NOT_LAWFUL_EVIL      | NOT_NEUTRAL_EVIL        | NOT_CHAOTIC_EVIL,
+
+    // Lawful Neutral
+    ONLY_LAWFUL_ETHICS   | NOT_NEUTRAL_ETHICS      | NOT_CHAOTIC_ETHICS    |
+    NOT_GOOD_MORALS      | ONLY_NEUTRAL_MORALS     | NOT_EVIL_MORALS       |
+    NOT_LAWFUL_GOOD      | NOT_NEUTRAL_GOOD        | NOT_CHAOTIC_GOOD      |
+    ONLY_LAWFUL_NEUTRAL  | NOT_TRUE_NEUTRAL        | NOT_CHAOTIC_NEUTRAL   |
+    NOT_LAWFUL_EVIL      | NOT_NEUTRAL_EVIL        | NOT_CHAOTIC_EVIL,
+
+    // Lawful Evil
+    ONLY_LAWFUL_ETHICS   | NOT_NEUTRAL_ETHICS      | NOT_CHAOTIC_ETHICS    |
+    NOT_GOOD_MORALS      | NOT_NEUTRAL_MORALS      | ONLY_EVIL_MORALS      |
+    NOT_LAWFUL_GOOD      | NOT_NEUTRAL_GOOD        | NOT_CHAOTIC_GOOD      |
+    NOT_LAWFUL_NEUTRAL   | NOT_TRUE_NEUTRAL        | NOT_CHAOTIC_NEUTRAL   |
+    ONLY_LAWFUL_EVIL     | NOT_NEUTRAL_EVIL        | NOT_CHAOTIC_EVIL,
+
+    // Neutral Good
+    NOT_LAWFUL_ETHICS    | ONLY_NEUTRAL_ETHICS     | NOT_CHAOTIC_ETHICS    |
+    ONLY_GOOD_MORALS     | NOT_NEUTRAL_MORALS      | NOT_EVIL_MORALS       |
+    NOT_LAWFUL_GOOD      | ONLY_NEUTRAL_GOOD       | NOT_CHAOTIC_GOOD      |
+    NOT_LAWFUL_NEUTRAL   | NOT_TRUE_NEUTRAL        | NOT_CHAOTIC_NEUTRAL   |
+    NOT_LAWFUL_EVIL      | NOT_NEUTRAL_EVIL        | NOT_CHAOTIC_EVIL,
+
+    // True Neutral
+    NOT_LAWFUL_ETHICS    | ONLY_NEUTRAL_ETHICS     | NOT_CHAOTIC_ETHICS    |
+    NOT_GOOD_MORALS      | ONLY_NEUTRAL_MORALS     | NOT_EVIL_MORALS       |
+    NOT_LAWFUL_GOOD      | NOT_NEUTRAL_GOOD        | NOT_CHAOTIC_GOOD      |
+    NOT_LAWFUL_NEUTRAL   | ONLY_TRUE_NEUTRAL       | NOT_CHAOTIC_NEUTRAL   |
+    NOT_LAWFUL_EVIL      | NOT_NEUTRAL_EVIL        | NOT_CHAOTIC_EVIL,
+
+    // Neutral Evil
+    NOT_LAWFUL_ETHICS    | ONLY_NEUTRAL_ETHICS     | NOT_CHAOTIC_ETHICS    |
+    NOT_GOOD_MORALS      | NOT_NEUTRAL_MORALS      | ONLY_EVIL_MORALS      |
+    NOT_LAWFUL_GOOD      | NOT_NEUTRAL_GOOD        | NOT_CHAOTIC_GOOD      |
+    NOT_LAWFUL_NEUTRAL   | NOT_TRUE_NEUTRAL        | NOT_CHAOTIC_NEUTRAL   |
+    NOT_LAWFUL_EVIL      | ONLY_NEUTRAL_EVIL       | NOT_CHAOTIC_EVIL,
+
+    // Chaotic Good
+    NOT_LAWFUL_ETHICS    | NOT_NEUTRAL_ETHICS      | ONLY_CHAOTIC_ETHICS   |
+    ONLY_GOOD_MORALS     | NOT_NEUTRAL_MORALS      | NOT_EVIL_MORALS       |
+    NOT_LAWFUL_GOOD      | NOT_NEUTRAL_GOOD        | ONLY_CHAOTIC_GOOD     |
+    NOT_LAWFUL_NEUTRAL   | NOT_TRUE_NEUTRAL        | NOT_CHAOTIC_NEUTRAL   |
+    NOT_LAWFUL_EVIL      | NOT_NEUTRAL_EVIL        | NOT_CHAOTIC_EVIL,
+
+    // Chaotic Neutral
+    NOT_LAWFUL_ETHICS    | NOT_NEUTRAL_ETHICS      | ONLY_CHAOTIC_ETHICS   |
+    NOT_GOOD_MORALS      | ONLY_NEUTRAL_MORALS     | NOT_EVIL_MORALS       |
+    NOT_LAWFUL_GOOD      | NOT_NEUTRAL_GOOD        | NOT_CHAOTIC_GOOD      |
+    NOT_LAWFUL_NEUTRAL   | NOT_TRUE_NEUTRAL        | ONLY_CHAOTIC_NEUTRAL  |
+    NOT_LAWFUL_EVIL      | NOT_NEUTRAL_EVIL        | NOT_CHAOTIC_EVIL,
+
+    // Chaotic Evil
+    NOT_LAWFUL_ETHICS    | NOT_NEUTRAL_ETHICS      | ONLY_CHAOTIC_ETHICS   |
+    NOT_GOOD_MORALS      | NOT_NEUTRAL_MORALS      | ONLY_EVIL_MORALS      |
+    NOT_LAWFUL_GOOD      | NOT_NEUTRAL_GOOD        | NOT_CHAOTIC_GOOD      |
+    NOT_LAWFUL_NEUTRAL   | NOT_TRUE_NEUTRAL        | NOT_CHAOTIC_NEUTRAL   |
+    NOT_LAWFUL_EVIL      | NOT_NEUTRAL_EVIL        | ONLY_CHAOTIC_EVIL,
 };
 
 static int has_class(ds_character_t *pc, const int16_t class){
@@ -580,6 +670,12 @@ int dnd2e_is_class_allowed(const uint8_t race, const int8_t classes[3]) {
         allowed++;
     }
     return 0;
+}
+
+int dnd2e_is_alignment_allowed(const uint32_t alignment, const int8_t class)
+{
+    return class_alignments[class] == ANY_ALIGNMENT ||
+           alignment_flags[alignment] & class_alignments[class];
 }
 
 static void set_psp(ds_character_t *pc) {
