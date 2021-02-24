@@ -115,8 +115,6 @@ static void map_load_current_region() {
     }
 
     cmap = map;
-
-    dsl_change_region(42);
 }
 
 static map_t *create_map() {
@@ -144,6 +142,7 @@ void map_load_map(map_t *map, SDL_Renderer *renderer, int id) {
     map->region = dsl_load_region(id);
     cmap = map;
     map_load_current_region();
+    dsl_change_region(42);
 }
 
 static void clear_animations() {

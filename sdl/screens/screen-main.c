@@ -7,6 +7,7 @@
 #include "../map.h"
 #include "../player.h"
 #include "view-character.h"
+#include "add-load-save.h"
 #include "narrate.h"
 #include "popup.h"
 
@@ -51,6 +52,10 @@ static void click_action() {
             popup_set_option(1, "");
             popup_set_option(2, "CANCEL");
         }
+    }
+    if (count_down_spr == load_save) {
+        add_load_save_set_mode(ACTION_LOAD);
+        screen_push_screen(renderer, &als_screen, 0, 0);
     }
 }
 

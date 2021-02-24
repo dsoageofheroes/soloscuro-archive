@@ -30,4 +30,9 @@ uint32_t dsl_get_gff_index();
 void dsl_set_gname(const int index, const int32_t obj);
 void dsl_local_clear();
 
+char* dsl_serialize_globals(uint32_t *len);
+void dsl_deserialize_globals(char *buf);
+char* dsl_serialize_locals(uint32_t *len);
+void dsl_deserialize_locals(char *buf);
+
 #endif

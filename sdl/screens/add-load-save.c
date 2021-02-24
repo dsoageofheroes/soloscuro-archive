@@ -37,6 +37,9 @@ static uint32_t num_valid_entries = 0;
 static int last_action = ACTION_NONE;
 static uint32_t res_ids[RES_MAX]; // for the deletion.
 static SDL_Renderer *renderer = NULL;
+static int mode = ACTION_ADD; // ADD, LOAD, SAVE
+
+void add_load_save_set_mode(int _mode) { mode = _mode; }
 
 static void free_entries() {
     if (entries) {
@@ -98,18 +101,26 @@ void add_load_save_init(SDL_Renderer *_renderer, const uint32_t x, const uint32_
     down_arrow = new_sprite_create(renderer, pal, 215 + x, 130 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2094);
     exit_btn = new_sprite_create(renderer, pal, 230 + x, 50 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2058);
     delete_btn = new_sprite_create(renderer, pal, 215 + x, 150 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2097);
-    //title = new_sprite_create(renderer, pal, 115 + x, 150 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2056); // SAVE
-    //title = new_sprite_create(renderer, pal, 115 + x, 150 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6030); // Load
-    title = new_sprite_create(renderer, pal, 115 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6036); // Add
-    //title = new_sprite_create(renderer, pal, 115 + x, 150 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6038); // Drop
-    //action_btn = new_sprite_create(renderer, pal, 230 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2057); // save
-    //action_btn = new_sprite_create(renderer, pal, 230 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6031); // load
-    action_btn = new_sprite_create(renderer, pal, 230 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6037); // add
-   // action_btn = new_sprite_create(renderer, pal, 230 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6039); // drop
-
     bar = new_sprite_create(renderer, pal, 45 + x, 31 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 18100);
-
-    setup_character_selection();
+    switch(mode) {
+        case ACTION_ADD:
+            title = new_sprite_create(renderer, pal, 115 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6036); // Add
+            action_btn = new_sprite_create(renderer, pal, 230 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6037); // add
+            setup_character_selection();
+            break;
+        case ACTION_SAVE:
+            title = new_sprite_create(renderer, pal, 115 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2056); // SAVE
+            action_btn = new_sprite_create(renderer, pal, 230 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2057); // save
+            break;
+        case ACTION_LOAD:
+            title = new_sprite_create(renderer, pal, 115 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6030); // Load
+            action_btn = new_sprite_create(renderer, pal, 230 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6031); // load
+            break;
+        case ACTION_DROP:
+            title = new_sprite_create(renderer, pal, 115 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6038); // Drop
+            action_btn = new_sprite_create(renderer, pal, 230 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6039); // drop
+            break;
+    }
 }
 
 void add_load_save_render(void *data, SDL_Renderer *renderer) {

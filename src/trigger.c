@@ -250,9 +250,8 @@ void trigger_noorders(uint32_t x, uint32_t y) {
     trigger_node_t *rover = noorders_list;
 
     while (rover) {
-        // TODO: We need to enable trigger when on.
         region_object_t* robj = dsl_region_find_object(rover->noorders.obj);
-        //printf("(%d, %d)\n", x, y);
+        //printf("%d: player (%d, %d)\n", rover->noorders.obj, x, y);
         if (robj && rover->noorders.trigger_on_tile && (robj->mapx / 16) == x && (robj->mapy / 16) == y) {
             rover->noorders.trigger_on_tile = 0;
             rover->noorders.need_to_run = 1;
@@ -380,8 +379,8 @@ static uint32_t list_size(trigger_node_t *tl) {
 
 static char* write_trigger_list(trigger_node_t *tl, char *buf, size_t *buf_len, size_t *offset) {
     uint32_t list_len = list_size(tl);
+
     buf = append(buf, offset, buf_len, &list_len, sizeof(uint32_t));
-    printf("list_len = %d\n", list_len);
     for (trigger_node_t *rover = tl; rover; rover = rover->next) {
         buf = append(buf, offset, buf_len, &(rover->noorders), sizeof(trigger_node_t));
     }
@@ -409,7 +408,7 @@ char* trigger_serialize(size_t *len) {
 
 static char* read_trigger_list(trigger_node_t **list, char *buf) {
     uint32_t amt = *(uint32_t*)buf;
-    printf("amt = %d\n", amt);
+
     buf += sizeof(uint32_t);
     for (uint32_t i = 0; i < amt; i++) {
         trigger_node_t *tn = (trigger_node_t*)buf;
@@ -419,6 +418,7 @@ static char* read_trigger_list(trigger_node_t **list, char *buf) {
         *list = to_add;
         buf += sizeof(trigger_node_t);
     }
+
     return buf;
 }
 
@@ -426,8 +426,8 @@ void trigger_deserialize(char *data) {
     // Uncomment later.
     trigger_init();
     trigger_cleanup();
-    printf("HERE!\n");
     char *buf = read_trigger_list(&attack_list, data);
+
     buf = read_trigger_list(&noorders_list, buf);
     buf = read_trigger_list(&use_list, buf);
     buf = read_trigger_list(&look_list, buf);
@@ -435,14 +435,4 @@ void trigger_deserialize(char *data) {
     buf = read_trigger_list(&usewith_list, buf);
     buf = read_trigger_list(&tile_list, buf);
     buf = read_trigger_list(&box_list, buf);
-    printf("--->%d\n", noorders_list->noorders.obj);
-    printf("--->%d\n", noorders_list->noorders.need_to_run);
-    printf("--->%d\n", noorders_list->noorders.trigger_on_tile);
-    printf("--->%d\n", noorders_list->next->noorders.obj);
-    printf("--->%d\n", noorders_list->next->noorders.need_to_run);
-    printf("--->%d\n", noorders_list->next->noorders.trigger_on_tile);
-    printf("--->%d\n", noorders_list->next->next->noorders.obj);
-    printf("--->%d\n", noorders_list->next->next->noorders.need_to_run);
-    printf("--->%d\n", noorders_list->next->next->noorders.trigger_on_tile);
-    //exit(1);
 }

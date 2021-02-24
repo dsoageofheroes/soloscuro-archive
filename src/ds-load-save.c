@@ -1,6 +1,7 @@
 #include "ds-load-save.h"
 #include "ds-player.h"
 #include "ds-region.h"
+#include "ds-state.h"
 #include "gff.h"
 #include "gfftypes.h"
 #include "gff-map.h"
@@ -95,16 +96,30 @@ static void add_player_to_save(const int id, const int player) {
 static void save_region(const int id) {
     dsl_region_t *reg = dsl_region_get_current();
     player_pos_t *player =  ds_player_get_pos(ds_player_get_active());
+    size_t buf_len = 128, offset = 0;
+    uint32_t len;
+    char *buf = malloc(buf_len);
 
     if (reg) {
         gff_add_chunk(id, GFF_ROBJ, player->map, (char*)reg->list, sizeof(region_list_t));
+        buf = append(buf, &offset, &buf_len, reg->flags, sizeof(reg->flags));
+        buf = append(buf, &offset, &buf_len, &(reg->cr), sizeof(reg->cr));
+        gff_add_chunk(id, GFF_RDAT, player->map, buf, offset);
     }
+    free(buf);
+
+    buf = dsl_serialize_globals(&len);
+    gff_add_chunk(id, GFF_GDAT, 99, buf, len);
+    free(buf);
+
+    buf = dsl_serialize_locals(&len);
+    gff_add_chunk(id, GFF_GDAT, player->map, buf, len);
+    free(buf);
 }
 
-#define RDFF_BUF_SIZE (1<<11)
 static void load_region(const int id) {
     char gff_name[32];
-    char buf[RDFF_BUF_SIZE];
+    char *buf = NULL;
 
     snprintf(gff_name, 32, "rgn%x.gff", id);
     int gff_index = gff_find_index(gff_name);
@@ -114,7 +129,6 @@ static void load_region(const int id) {
     player_pos_t *player = ds_player_get_pos(ds_player_get_active());
 
     gff_chunk_header_t chunk = gff_find_chunk_header(id, GFF_ROBJ, player->map);
-    printf("chunk.length = %d\n", chunk.length);
     reg = dsl_load_region(gff_index);
 
     if (gff_read_chunk(id, &chunk, reg->list, chunk.length) < chunk.length) {
@@ -122,7 +136,6 @@ static void load_region(const int id) {
         return ;
     }
 
-    // Need to get correct pointers for the scmd.
     // TODO: clean this up.
     for (int i = 0; i < MAX_REGION_OBJS; i++) {
         //printf("reg->list->objs[i].entry_id = %d, %d\n", reg->list->objs[i].entry_id, reg->list->objs[i].combat_id);
@@ -137,6 +150,7 @@ static void load_region(const int id) {
             if (robj->entry_id > 0) {
                 robj->scmd = combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
                 gff_chunk_header_t chunk = gff_find_chunk_header(OBJEX_GFF_INDEX, GFF_RDFF, robj->entry_id);
+                buf = malloc(chunk.length);
                 if (!gff_read_chunk(OBJEX_GFF_INDEX, &chunk, buf, chunk.length)) {
                     printf("ERROR can't read %d\n", robj->entry_id);
                     exit(1);
@@ -144,13 +158,43 @@ static void load_region(const int id) {
                 robj->combat_id = combat_add(&(reg->cr), robj,
                 (ds1_combat_t *) (buf + sizeof(rdff_disk_object_t)));
                 port_add_obj(reg->list->objs + i);
+                free(buf);
             }
         }
         robj->data = NULL;
     }
 
+    chunk = gff_find_chunk_header(id, GFF_RDAT, player->map);
+    buf = malloc(chunk.length);
+    if (!gff_read_chunk(id, &chunk, buf, chunk.length)) {
+        printf("Error loading file.\n");
+        exit(1);
+    }
+    memcpy(reg->flags, buf, sizeof(reg->flags));
+    buf += sizeof(reg->flags);
+    memcpy(&(reg->cr.hunt), &(((combat_region_t*)buf)->hunt), sizeof(reg->cr.hunt));
+    buf -= sizeof(reg->flags);
+    free(buf);
+
+    chunk = gff_find_chunk_header(id, GFF_GDAT, 99);
+    buf = malloc(chunk.length);
+    if (!gff_read_chunk(id, &chunk, buf, chunk.length)) {
+        printf("Error loading file.\n");
+        exit(1);
+    }
+    dsl_deserialize_globals(buf);
+    free(buf);
+
+    chunk = gff_find_chunk_header(id, GFF_GDAT, player->map);
+    buf = malloc(chunk.length);
+    if (!gff_read_chunk(id, &chunk, buf, chunk.length)) {
+        printf("Error loading file.\n");
+        exit(1);
+    }
+    dsl_deserialize_locals(buf);
+    free(buf);
+
     port_change_region(reg);
-    printf("READ!\n");
 }
 
 void ls_save_to_file(const char *path) {
@@ -162,7 +206,9 @@ void ls_save_to_file(const char *path) {
     gff_add_type(id, GFF_CHAR);
     gff_add_type(id, GFF_POS);
     gff_add_type(id, GFF_ROBJ); // Region objects
+    gff_add_type(id, GFF_RDAT); // Region data, not compatible with DS1.
     gff_add_type(id, GFF_TRIG); // Trigger Objects
+    gff_add_type(id, GFF_GDAT); // GPL data Objects
 
     for (int i = 0; i < 4; i++) {
         gff_add_chunk(id, GFF_PSIN, i, (char*)ds_player_get_psi(i), sizeof(psin_t));
