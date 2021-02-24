@@ -65,6 +65,7 @@ static int changed_name;
 
 static void update_ui();
 static void select_class(uint8_t class);
+static void fix_alignment();
 
 ds_character_t* new_character_get_pc() {
     if (!is_valid) { return NULL; }
@@ -96,7 +97,7 @@ char* new_character_get_name() {
 static void get_random_name() {
     uint32_t res_ids[1<<12];
     int name_list_start  = pc.race == RACE_THRIKREEN ? 52 : pc.gender == GENDER_FEMALE ? 33 : 0;
-    int name_list_length = pc.race == RACE_THRIKREEN ? 7 : pc.gender == GENDER_FEMALE ? 17 : 32;
+    int name_list_length = pc.race == RACE_THRIKREEN ? 7  : pc.gender == GENDER_FEMALE ? 17 : 32;
     int chosen_name = (rand() % (name_list_length + 1)) + name_list_start;
 
     memset(&name_text[0], 0, sizeof(name_text));
@@ -194,12 +195,14 @@ static void init_pc() {
     memset(&inv, 0x0, sizeof(ds_inventory_t));
     pc.race = RACE_HUMAN;
     pc.gender = GENDER_MALE;
+    pc.alignment = TRUE_NEUTRAL;
     pc.real_class[0] = pc.real_class[1] = pc.real_class[2] = -1;
     memset(&psi, 0x0, sizeof(psi));
     memset(&spells, 0x0, sizeof(spells));
     memset(&psionics, 0x0, sizeof(psionics));
     pc.allegiance = 1;
     get_random_name();
+    fix_alignment();
 }
 
 static void new_character_init(SDL_Renderer* _renderer, const uint32_t x, const uint32_t y, const float _zoom) {
@@ -277,6 +280,7 @@ static void new_character_init(SDL_Renderer* _renderer, const uint32_t x, const 
     dnd2e_randomize_stats_pc(&pc);
     set_class_frames(); // go ahead and setup the new class frames
     select_class(2); // Fighter is the default class
+    fix_alignment();
 }
 
 static void update_die_countdown() {
@@ -510,6 +514,7 @@ void update_stats_align_hp(int i, uint32_t button)
                     break;
                 case 6:
                     pc.alignment++;
+                    fix_alignment();
                     break;
                 case 7:
                     pc.base_hp++;
@@ -541,6 +546,7 @@ void update_stats_align_hp(int i, uint32_t button)
                     break;
                 case 6:
                     pc.alignment--;
+                    fix_alignment();
                     break;
                 case 7:
                     pc.base_hp--;
@@ -743,6 +749,36 @@ static void fix_race_gender() { // move the race/gender to the appropiate spot
     select_class(2); // Default to Fighter whenever race changes
     dnd2e_randomize_stats_pc(&pc);
     dnd2e_fix_stats_pc(&pc); // in case something need adjustment
+    pc.alignment = TRUE_NEUTRAL;
+    fix_alignment();
+}
+
+static void fix_alignment() {
+    if (pc.alignment < LAWFUL_GOOD) {
+        pc.alignment = CHAOTIC_EVIL;
+    } else if (pc.alignment > CHAOTIC_EVIL) {
+        pc.alignment = LAWFUL_GOOD;
+    }
+
+    if (!dnd2e_is_alignment_allowed(pc.alignment, pc.real_class))
+    {
+        for (int i = pc.alignment + 1; i != pc.alignment; i++)
+        {
+            if (pc.real_class[i] == -1) {
+                break;
+            }
+
+            if (i > CHAOTIC_EVIL) {
+                i = LAWFUL_GOOD;
+            }
+
+            if (dnd2e_is_alignment_allowed(i, pc.real_class))
+            {
+                pc.alignment = i;
+                break;
+            }
+        }
+    }
 }
 
 int new_character_handle_mouse_movement(const uint32_t x, const uint32_t y) {

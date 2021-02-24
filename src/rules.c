@@ -672,10 +672,18 @@ int dnd2e_is_class_allowed(const uint8_t race, const int8_t classes[3]) {
     return 0;
 }
 
-int dnd2e_is_alignment_allowed(const uint8_t alignment, const int8_t class)
-{
-    return class_alignments[class] == ANY_ALIGNMENT ||
-           class_alignments[class] & alignment_flags[alignment];
+int dnd2e_is_alignment_allowed(const uint8_t alignment, const int8_t classes[3]) {
+    int allowed = 1;
+
+    for (int i = 0; i < 3; i++)
+    {
+        allowed = class_alignments[classes[i]] == ANY_ALIGNMENT ||
+                  class_alignments[classes[i]] & alignment_flags[alignment];
+
+        if (!allowed) {
+            return 0;
+        }
+    }
 }
 
 static void set_psp(ds_character_t *pc) {
