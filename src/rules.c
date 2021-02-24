@@ -493,7 +493,7 @@ static const int8_t hit_die[] = {
 
 // FIXME - Templars can only be "one step away" from their
 //         patron in either axis, but not both
-static const int32_t class_alignments[] = {
+static const uint32_t class_alignments[] = {
 //  Air Cleric            Earth Cleric          Fire Cleric           Water Cleric
     ANY_ALIGNMENT,        ANY_ALIGNMENT,        ANY_ALIGNMENT,        ANY_ALIGNMENT,    
 //  Air Druid             Earth Druid           Fire Druid            Water Druid
@@ -516,7 +516,7 @@ static const int32_t class_alignments[] = {
     NOT_GOOD_MORALS,
 };
 
-static const int32_t alignment_flags[] = {
+static const uint32_t alignment_flags[] = {
     // Lawful Good
     ONLY_LAWFUL_ETHICS   | NOT_NEUTRAL_ETHICS      | NOT_CHAOTIC_ETHICS    |
     ONLY_GOOD_MORALS     | NOT_NEUTRAL_MORALS      | NOT_EVIL_MORALS       |
@@ -672,7 +672,7 @@ int dnd2e_is_class_allowed(const uint8_t race, const int8_t classes[3]) {
     return 0;
 }
 
-int dnd2e_is_alignment_allowed(const uint32_t alignment, const int8_t class)
+int dnd2e_is_alignment_allowed(const uint8_t alignment, const int8_t class)
 {
     return class_alignments[class] == ANY_ALIGNMENT ||
            alignment_flags[alignment] & class_alignments[class];
