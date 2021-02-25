@@ -20,9 +20,7 @@ enum {
 
 void font_init(SDL_Renderer *renderer);
 uint32_t font_pixel_width(font_t font, const char *text, const uint32_t len);
-uint32_t font_pixel_height(font_t font, const char* text);
-uint32_t font_pixel_height_max(font_t font, const char* text);
-uint32_t font_pixel_height_min(font_t font, const char* text);
+uint32_t font_pixel_height(font_t font);
 void print_line_len(SDL_Renderer *renderer, font_t font, const char *text, size_t x, size_t y, const uint32_t len);
 
 #endif

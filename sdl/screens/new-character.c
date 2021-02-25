@@ -885,7 +885,7 @@ static void fix_alignment(int direction) { // direction: -1 = previous alignment
 
 int mouse_in_label(const uint32_t x, const uint32_t y) {
     int label = LABEL_NONE;
-    int font_h = font_pixel_height(FONT_GREYLIGHT, "T"); // Height seems to be character-agnostic
+    int font_h = font_pixel_height(FONT_GREYLIGHT);
 
     for (int i = 0; i < LABEL_END; i++) {
         int font_w = label_pos[i][2];
