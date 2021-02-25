@@ -4,6 +4,8 @@
 #include "../main.h"
 #include "../font.h"
 #include "../sprite.h"
+#include "../map.h"
+#include "../../src/ds-load-save.h"
 #include "../../src/gff.h"
 #include "../../src/gff-char.h"
 #include "../../src/gfftypes.h"
@@ -83,10 +85,37 @@ static void setup_character_selection() {
             valids[num_valid_entries] = i;
             num_valid_entries++;
         }
-        //if (valids[i]) { num_valid_entries++; }
-        //printf("Name: '%s'\n", entries[i]);
     }
-    //printf("num_valid_entries = %d\n", num_valid_entries);
+}
+
+static void setup_save_load_selection() {
+    char buf[BUF_MAX];
+    int16_t id = 0;
+    FILE *file = NULL;
+
+    free_entries();
+
+    snprintf(buf, BUF_MAX, "save%02d.sav", id);
+    file = fopen(buf, "rb");
+    while (file) {
+        fclose(file);
+        id++;
+        snprintf(buf, BUF_MAX, "save%02d.sav", id);
+        file = fopen(buf, "rb");
+    }
+
+    entries = malloc(sizeof(char*) * id);
+    valids = malloc(sizeof(uint16_t) * id);
+    if (!entries || !valids) { return; }
+    num_valid_entries = 0;
+    for (int i = 0; i < id; i++) {
+        //TODO: Store the name and get it back.
+        snprintf(buf, BUF_MAX, "save%02d.sav", i);
+        entries[i] = strdup(buf);
+        valids[i] = i;
+        num_entries++;
+        num_valid_entries++;
+    }
 }
 
 void add_load_save_init(SDL_Renderer *_renderer, const uint32_t x, const uint32_t y, const float _zoom) {
@@ -102,6 +131,7 @@ void add_load_save_init(SDL_Renderer *_renderer, const uint32_t x, const uint32_
     exit_btn = new_sprite_create(renderer, pal, 230 + x, 50 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2058);
     delete_btn = new_sprite_create(renderer, pal, 215 + x, 150 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2097);
     bar = new_sprite_create(renderer, pal, 45 + x, 31 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 18100);
+
     switch(mode) {
         case ACTION_ADD:
             title = new_sprite_create(renderer, pal, 115 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6036); // Add
@@ -111,10 +141,12 @@ void add_load_save_init(SDL_Renderer *_renderer, const uint32_t x, const uint32_
         case ACTION_SAVE:
             title = new_sprite_create(renderer, pal, 115 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2056); // SAVE
             action_btn = new_sprite_create(renderer, pal, 230 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2057); // save
+            setup_save_load_selection();
             break;
         case ACTION_LOAD:
             title = new_sprite_create(renderer, pal, 115 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6030); // Load
             action_btn = new_sprite_create(renderer, pal, 230 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6031); // load
+            setup_save_load_selection();
             break;
         case ACTION_DROP:
             title = new_sprite_create(renderer, pal, 115 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6038); // Drop
@@ -124,9 +156,7 @@ void add_load_save_init(SDL_Renderer *_renderer, const uint32_t x, const uint32_
 }
 
 void add_load_save_render(void *data, SDL_Renderer *renderer) {
-    //printf("Render background %d -> %d\n", background, sprite_get_frame(background));
     sprite_render(renderer, background);
-    //printf("--------------------------\n");
     sprite_render(renderer, up_arrow);
     sprite_render(renderer, down_arrow);
     sprite_render(renderer, exit_btn);
@@ -145,15 +175,11 @@ void add_load_save_render(void *data, SDL_Renderer *renderer) {
         sprite_render(renderer, bar);
     }
 
-    //for (int i = top_entry; i < top_entry + 10 && i < num_entries; i++) {
     for (int i = top_entry; i < top_entry + 10 && i < num_valid_entries; i++) {
         print_line_len(renderer, (selection != i) ? FONT_GREY : FONT_REDDARK,
-                //entries[i],
                 entries[valids[i]],
                 zoom * 47, zoom * (31 + (i - top_entry) * 11), 1<<10);
-        //printf("entries[%d] = %s\n", i, entries[i]);
     }
-    //sprite_render(renderer, bar);
 }
 
 int add_load_save_handle_mouse_movement(const uint32_t x, const uint32_t y) {
@@ -194,7 +220,6 @@ int add_load_save_handle_mouse_movement(const uint32_t x, const uint32_t y) {
 
     last_spr = cspr;
     return 1; // means I captured the mouse movement
-    //return 0; // zero means I did not handle the mouse, so another screen may.
 }
 
 int add_load_save_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
@@ -217,17 +242,35 @@ int add_load_save_handle_mouse_down(const uint32_t button, const uint32_t x, con
         sprite_set_location(bar, zoom * 45, zoom * (31 + i * 11));
         if (sprite_in_rect(bar, mousex, mousey)) {
             selection = top_entry + i;
-            char_selected = res_ids[valids[selection]];
+            if (selection < num_valid_entries) {
+                char_selected = res_ids[valids[selection]];
+            }
         }
     }
     return 1; // means I captured the mouse click
 }
 
+static void load_game() {
+    char buf[128];
+    strncpy(buf, entries[selection], 127);
+    screen_clear();
+    ls_load_save_file(buf);
+    main_center_on_player();
+}
+
 int add_load_save_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
     if (sprite_in_rect(action_btn, x, y)) {
+        if (mode == ACTION_LOAD) {
+            load_game();
+            return 1;
+        }
+        if (mode == ACTION_SAVE) {
+            //TODO: Fix for naming
+            ls_save_to_file(entries[selection]);
+        }
         sprite_set_frame(action_btn, 0);
         if (selection != 0xFFFF) {
-            last_action = ACTION_ADD;
+            last_action = mode;
             screen_pop();
         }
     }
@@ -249,15 +292,12 @@ int add_load_save_handle_mouse_up(const uint32_t button, const uint32_t x, const
     if (sprite_in_rect(up_arrow, x, y)) {
         sprite_set_frame(up_arrow, 0);
         if (top_entry > 0) { top_entry--; }
-        //printf("top_entry = %d\n", top_entry);
     }
     if (sprite_in_rect(down_arrow, x, y)) {
         sprite_set_frame(down_arrow, 0);
         if (top_entry < num_valid_entries - 10) { top_entry++; }
-        //printf("top_entry = %d\n", top_entry);
     }
     return 1; // means I captured the mouse click
-    //return 0; // zero means I did not handle the mouse click, so another screen may.
 }
 
 void add_load_save_return_control () {

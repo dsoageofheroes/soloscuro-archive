@@ -6,10 +6,12 @@
 #include "player.h"
 #include "screens/narrate.h"
 #include "../src/dsl.h"
+#include "../src/port.h"
 #include "../src/trigger.h"
 #include "../src/dsl-manager.h"
 #include "../src/ds-object.h"
 #include "../src/ds-region.h"
+#include "../src/ds-region-manager.h"
 #include "../src/ds-scmd.h"
 #include "../src/dsl-var.h"
 
@@ -21,6 +23,7 @@ static uint8_t anim_zpos[256];
 static int anim_pos = 0;
 
 static void clear_animations();
+void map_free(map_t *map);
 
 void map_init(map_t *map) {
     map->tiles = NULL;
@@ -44,6 +47,7 @@ void map_free(map_t *map) {
         map->tiles = NULL;
     }
     dsl_region_free(map->region);
+    free(map);
 }
 
 int cmap_is_block(const int row, const int column) {
@@ -69,7 +73,6 @@ static void map_load_current_region() {
     size_t max_id = 0;
     unsigned char *data;
     region_object_t *obj;
-    int zoom = 2.0;
     gff_palette_t *pal;
     map_t *map = cmap;
 
@@ -77,9 +80,6 @@ static void map_load_current_region() {
     ids = map->region->ids;
     for (int i = 0; i < map->region->num_tiles; i++) { max_id = max_id > ids[i] ? max_id : ids[i]; }
     max_id++;
-    animate_clear();
-    anim_pos = 0;
-    player_add_to_animation_list();
     map->tiles = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * max_id);
     memset(map->tiles, 0x0, sizeof(SDL_Texture*) * max_id);
 
@@ -96,22 +96,7 @@ static void map_load_current_region() {
 
     region_list_for_each(map->region->list, obj) {
         //printf("(%d, %d, %d), scmd = %p, bmp = %d\n", obj->mapx, obj->mapy, obj->mapz, obj->scmd, obj->btc_idx);
-        anims[anim_pos].scmd = obj->scmd;
-        anims[anim_pos].spr = 
-            sprite_new(cren, pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP, obj->btc_idx);
-        anims[anim_pos].delay = 0;
-        anims[anim_pos].pos = 0;
-        anims[anim_pos].x = obj->bmpx * zoom;
-        anims[anim_pos].y = obj->bmpy * zoom;
-        anims[anim_pos].destx = anims[anim_pos].x;
-        anims[anim_pos].destx = anims[anim_pos].y;
-        anims[anim_pos].move = anims[anim_pos].left_over = 0.0;
-        anim_nodes[anim_pos] = animate_list_add(anims + anim_pos, obj->mapz);
-        anim_zpos[anim_pos] = obj->mapz;
-        anims[anim_pos].obj = obj;
-        obj->data = anims + anim_pos;
-
-        anim_pos++;
+        port_add_obj(obj, pal);
     }
 
     cmap = map;
@@ -136,11 +121,21 @@ void map_load_region(dsl_region_t *reg, SDL_Renderer *renderer) {
     screen_push_screen(renderer, &narrate_screen, 0, 0);
 }
 
-void map_load_map(map_t *map, SDL_Renderer *renderer, int id) {
-    map_free(map);
+void map_load_map(SDL_Renderer *renderer, int id) {
+    int run_mas = 0;
+
+    map_free(cmap);
+    if (!cmap) { cmap = create_map(); }
+
     cren = renderer;
-    map->region = dsl_load_region(id);
-    cmap = map;
+    ds_region_t* reg = ds_region_get_region(id);
+
+    if (!reg) {
+        run_mas = 1;
+        cmap->region = ds_region_load_region(id);
+        printf("run_mas = %d\n", run_mas);
+    }
+
     map_load_current_region();
     dsl_change_region(42);
 }
@@ -180,8 +175,7 @@ void map_render(void *data, SDL_Renderer *renderer) {
     animate_list_render(renderer);
 }
 
-void port_add_obj(region_object_t *obj) {
-    gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes;
+void port_add_obj(region_object_t *obj, gff_palette_t *pal) {
     const float zoom = main_get_zoom();
 
     anims[anim_pos].scmd = obj->scmd;
@@ -189,11 +183,12 @@ void port_add_obj(region_object_t *obj) {
         sprite_new(cren, pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP, obj->btc_idx);
     anims[anim_pos].delay = 0;
     anims[anim_pos].pos = 0;
-    anims[anim_pos].x = obj->mapx * zoom;
-    anims[anim_pos].y = obj->mapy * zoom;
+    anims[anim_pos].x = obj->bmpx * zoom;
+    anims[anim_pos].y = obj->bmpy * zoom;
     anims[anim_pos].destx = anims[anim_pos].x;
     anims[anim_pos].destx = anims[anim_pos].y;
     anims[anim_pos].move = anims[anim_pos].left_over = 0.0;
+    anims[anim_pos].obj = obj;
     anim_nodes[anim_pos] = animate_list_add(anims + anim_pos, obj->mapz);
     anim_zpos[anim_pos] = obj->mapz;
     obj->data = anims + anim_pos;

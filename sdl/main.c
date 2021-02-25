@@ -9,11 +9,13 @@
 #include "screens/narrate.h"
 #include "screens/screen-main.h"
 #include "screens/inventory.h"
+#include "screens/add-load-save.h"
 #include "../src/combat.h"
 #include "../src/dsl.h"
 #include "../src/dsl-manager.h"
 #include "../src/replay.h"
 #include "../src/ds-load-save.h"
+#include "../src/ds-player.h"
 
 void browse_loop(SDL_Surface*, SDL_Renderer *rend);
 void screen_debug_init(SDL_Surface *sur, SDL_Renderer *rend, const char *arg);
@@ -30,6 +32,10 @@ static uint8_t ignore_repeat = 1, browser_mode = 0;
 
 static uint32_t xmappos, ymappos;
 static int32_t xmapdiff, ymapdiff;
+
+SDL_Renderer *main_get_rend() { return renderer; }
+SDL_Surface *main_get_screen() { return screen; }
+const float main_get_zoom() { return zoom; }
 
 const uint32_t getCameraX() { return xmappos; }
 const uint32_t getCameraY() { return ymappos; }
@@ -84,7 +90,14 @@ void handle_input() {
                 if (event.key.keysym.sym == SDLK_DOWN) { ymapdiff = 0;}
                 if (event.key.keysym.sym == SDLK_LEFT) { xmapdiff = 0;}
                 if (event.key.keysym.sym == SDLK_RIGHT) { xmapdiff = 0;}
-                if (event.key.keysym.sym == SDLK_F11) { ls_save_to_file("save01.sav"); exit(1);}
+                if (event.key.keysym.sym == SDLK_F11) {
+                    add_load_save_set_mode(ACTION_SAVE);
+                    screen_push_screen(renderer, &als_screen, 0, 0);
+                }
+                if (event.key.keysym.sym == SDLK_F12) {
+                    add_load_save_set_mode(ACTION_LOAD);
+                    screen_push_screen(renderer, &als_screen, 0, 0);
+                }
                 break;
                 break;
             case SDL_KEYDOWN:
@@ -116,9 +129,6 @@ void handle_input() {
                 handle_mouse_down(event.button.button);
                 break;
             case SDL_MOUSEBUTTONUP:
-                //if (game_loop_is_waiting_for(WAIT_NARRATE_CONTINUE)) {
-                    //game_loop_signal(WAIT_NARRATE_CONTINUE, 0);
-                //}
                 handle_mouse_up(event.button.button);
                 break;
         }
@@ -133,6 +143,16 @@ void handle_input() {
 void main_set_xscroll(int amt) { xmapdiff = amt; }
 void main_set_yscroll(int amt) { ymapdiff = amt; }
 void main_set_ignore_repeat(int repeat) { ignore_repeat = repeat; }
+
+void main_center_on_player() {
+    int w, h;
+
+    SDL_GetRendererOutputSize(renderer, &w, &h);
+    player_pos_t *pos = ds_player_get_pos(ds_player_get_active());
+
+    xmappos = pos->xpos * 16 * main_get_zoom() - w / 2;
+    ymappos = pos->ypos * 16 * main_get_zoom() - h / 2;
+}
 
 void render() {
     combat_update(dsl_region_get_current());
@@ -377,10 +397,6 @@ void game_loop() {
         }
     }
 }
-
-SDL_Renderer *main_get_rend() { return renderer; }
-SDL_Surface *main_get_screen() { return screen; }
-const float main_get_zoom() { return zoom; }
 
 void main_exit_system() {
     /*

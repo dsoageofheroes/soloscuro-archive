@@ -23,6 +23,9 @@ typedef struct dsl_region_s {
     combat_region_t cr;
 } dsl_region_t;
 
+// Until I can get rid of the misnaming
+#define ds_region_t dsl_region_t
+
 extern dsl_region_t* dsl_load_region(const int gff_file);
 extern dsl_region_t* init_region_from_gff(const int gff_file);
 extern int dsl_region_is_block(dsl_region_t *region, int row, int column);

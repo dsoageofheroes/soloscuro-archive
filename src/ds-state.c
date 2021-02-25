@@ -34,20 +34,6 @@ static int32_t dsl_global_bnums[MAX_GBIGNUMS];
 static int32_t dsl_local_bnums[MAX_LBIGNUMS];
 static char dsl_global_strs[MAX_GSTRS][STRING_SIZE];
 static int16_t dsl_gnames[MAX_GNAMES];
-static uint32_t dsl_region; // the current region id
-static uint32_t dsl_gff_index; // the current region id
-static uint32_t dsl_passive_obj;
-
-// Standard setters/getters
-void dsl_set_region(const uint32_t region) { 
-    char buf[BUF_SIZE];
-    snprintf(buf, BUF_SIZE, "rgn%x.gff", region);
-    dsl_region = region; 
-    dsl_gff_index = gff_find_index(buf);
-    dsl_passive_obj = 0;
-}
-uint32_t dsl_get_region()                  { return dsl_region; }
-uint32_t dsl_get_gff_index()               { return dsl_gff_index; }
 
 void dsl_state_init() {
     memset(dsl_global_flags, 0x0, sizeof(int8_t) * MAX_GFLAGS);
@@ -56,7 +42,6 @@ void dsl_state_init() {
     memset(dsl_global_strs, 0x0, sizeof(char) * MAX_GSTRS * STRING_SIZE);
     memset(dsl_gnames, 0x0, sizeof(int16_t) * MAX_GNAMES);
     dsl_local_clear();
-    dsl_region = 0;
 }
 
 void dsl_state_cleanup() {
@@ -485,6 +470,7 @@ static int dsl_clone(lua_State *l) {
     lua_Integer y = luaL_checkinteger(l, 4);
     lua_Integer priority = luaL_checkinteger(l, 5);
     lua_Integer placement = luaL_checkinteger(l, 6);
+    gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes;
 
     warn("Need to implement: dsl-clone: obj: " PRI_LI ", qty: " PRI_LI ", (" PRI_LI ", "
              PRI_LI ") pri: " PRI_LI ", pla:" PRI_LI "\n", obj, qty, x, y,
@@ -496,7 +482,7 @@ static int dsl_clone(lua_State *l) {
 
         if (robj) {
             if (robj->scmd == NULL) { robj->scmd = ds_scmd_empty(); }
-            port_add_obj(robj);
+            port_add_obj(robj, pal);
         }
     }
     lua_pushinteger(l, entry_id);

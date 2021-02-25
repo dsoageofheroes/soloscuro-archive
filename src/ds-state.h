@@ -23,7 +23,6 @@ void dsl_state_init();
 void dsl_state_cleanup();
 void dsl_state_register(lua_State *l);
 
-void dsl_set_region(const uint32_t region);
 uint32_t dsl_get_region();
 uint32_t dsl_get_gff_index();
 

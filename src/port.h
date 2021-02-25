@@ -35,7 +35,7 @@ extern void port_narrate_close();
 
 // Object manipulation
 extern void port_swap_objs(int obj_id, region_object_t *obj);
-extern void port_add_obj(region_object_t *obj);
+void port_add_obj(region_object_t *obj, gff_palette_t *pal);
 extern void port_animate_obj(region_object_t *obj);
 extern void port_update_obj(region_object_t *obj, const uint16_t nextx, const uint16_t nexty);
 extern int port_ask_yes_no();
