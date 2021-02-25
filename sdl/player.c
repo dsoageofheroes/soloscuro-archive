@@ -97,7 +97,8 @@ void player_update() {
     trigger_box_check(pc->xpos, pc->ypos);
     trigger_tile_check(pc->xpos, pc->ypos);
 
-    if (main_player_freeze() || direction == 0x0 || cmap_is_block(nexty + 1, nextx)) {
+    //if (main_player_freeze() || direction == 0x0 || cmap_is_block(nexty + 1, nextx)) {
+    if (main_player_freeze() || direction == 0x0 || cmap_is_block(nexty, nextx)) {
         //printf("HERE! (%d, %d, %d)  (%d, %d)\n", main_player_freeze(), direction, cmap_is_block(nexty + 1, nextx), nexty + 1, nextx);
         anims[0].x = anims[0].destx;
         anims[0].y = anims[0].desty;
@@ -122,6 +123,7 @@ void player_update() {
     anims[0].y = anims[0].desty;
     anims[0].destx = pc->xpos * 16 * 2;
     anims[0].desty = pc->ypos * 16 * 2;
+    anims[0].desty -= sprite_geth(anims[0].spr) - (16 * main_get_zoom());
 
     if (direction & PLAYER_LEFT) { 
         animate_set_animation(anims + 0, combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_LEFT), ticks_per_move);
@@ -230,20 +232,24 @@ static void load_character_sprite(SDL_Renderer *renderer, const int slot, const 
     }
 }
 
+void player_add_to_animation_list(const int slot) {
+    player_pos_t* pc = ds_player_get_pos(ds_player_get_active());
+    player_node = animate_list_add(anims + slot, player_zpos);
+    anims[slot].destx = pc->xpos * 16 * 2;
+    anims[slot].desty = pc->ypos * 16 * 2;
+    anims[slot].desty -= sprite_geth(anims[slot].spr) - (16 * main_get_zoom());
+    anims[slot].x = anims[slot].destx;
+    anims[slot].y = anims[slot].desty;
+    anims[slot].obj = &dsl_player;
+}
+
 void player_load(SDL_Renderer *renderer, const int slot, const float zoom) {
     load_character_sprite(renderer, slot, zoom);
     anims[slot].spr = players[slot].main;
     animate_set_animation(anims + slot, combat_get_scmd(COMBAT_SCMD_STAND_DOWN), ticks_per_move);
-    player_add_to_animation_list();
-}
-
-void player_add_to_animation_list() {
-    player_pos_t* pc = ds_player_get_pos(ds_player_get_active());
-    player_node = animate_list_add(anims + 0, player_zpos);
-    anims[0].destx = pc->xpos * 16 * 2;
-    anims[0].desty = pc->ypos * 16 * 2;
-    anims[0].x = anims[0].destx;
-    anims[0].y = anims[0].desty;
+    if (slot == ds_player_get_active()) {
+        player_add_to_animation_list(slot);
+    }
 }
 
 int32_t player_getx(const int slot) {

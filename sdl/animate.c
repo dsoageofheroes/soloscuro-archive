@@ -86,18 +86,13 @@ void animate_list_render(SDL_Renderer *renderer) {
 static int is_less(animate_sprite_t *a0, animate_sprite_t *a1) {
     const float zoom = 2.0;
     const int map0y = a0->obj
-        //? ((a0->obj->mapy * zoom))// - sprite_geth(a0->spr)/2))
-        ? ((a0->obj->mapy * zoom) - sprite_geth(a0->spr) )
-        //: a0->y + sprite_geth(a0->spr) / 2;
-        //: a0->y - sprite_geth(a0->spr) / 2;
-        : a0->y;
+        //? ((a0->obj->mapy * zoom) - sprite_geth(a0->spr) )
+        ? ((a0->obj->mapy) * zoom) - ((sprite_geth(a0->spr) - 16*zoom) / 2)
+        : -9999;
     const int map1y = a1->obj
-        //? ((a1->obj->mapy * zoom))// - sprite_geth(a1->spr)/2))
-        ? ((a1->obj->mapy * zoom) - sprite_geth(a0->spr) )
-        //: a1->y + sprite_geth(a1->spr) / 2;
-        //: a1->y - sprite_geth(a1->spr) / 2;
-        : a1->y;
-    //printf("%d, %d\n", map0y, map1y);
+        //? ((a1->obj->mapy * zoom) - sprite_geth(a0->spr) )
+        ? ((a1->obj->mapy) * zoom) - ((sprite_geth(a1->spr) - 16*zoom) / 2)
+        : -9999;
     return map0y < map1y;
 }
 

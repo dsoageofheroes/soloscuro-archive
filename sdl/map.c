@@ -80,7 +80,6 @@ static void map_load_current_region() {
     ids = map->region->ids;
     for (int i = 0; i < map->region->num_tiles; i++) { max_id = max_id > ids[i] ? max_id : ids[i]; }
     max_id++;
-    player_add_to_animation_list();
     map->tiles = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * max_id);
     memset(map->tiles, 0x0, sizeof(SDL_Texture*) * max_id);
 
@@ -189,6 +188,7 @@ void port_add_obj(region_object_t *obj, gff_palette_t *pal) {
     anims[anim_pos].destx = anims[anim_pos].x;
     anims[anim_pos].destx = anims[anim_pos].y;
     anims[anim_pos].move = anims[anim_pos].left_over = 0.0;
+    anims[anim_pos].obj = obj;
     anim_nodes[anim_pos] = animate_list_add(anims + anim_pos, obj->mapz);
     anim_zpos[anim_pos] = obj->mapz;
     obj->data = anims + anim_pos;
