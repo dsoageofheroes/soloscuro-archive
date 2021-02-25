@@ -7,9 +7,8 @@
 #include "../../src/ds-object.h"
 
 enum {
-    LABEL_NONE,
-    LABEL_START,
-    LABEL_NAME = LABEL_START,
+    LABEL_NONE = -1,
+    LABEL_NAME,
     LABEL_NAME_TEXT,
     LABEL_STR,
     LABEL_STR_VAL,
