@@ -891,7 +891,8 @@ int mouse_in_label(const uint32_t x, const uint32_t y) {
     {
         int font_w = label_pos[i][2];
 
-//        printf("[label = %2d] x = %3d, y = %3d - w = %3d, h = %3d - label.x = %3d, label.y = %3d\n", i, x, y, font_w, font_h, label_pos[i][0], label_pos[i][1]);
+//        printf("[label = %2d] x = %3d, y = %3d - w = %3d, h = %3d - label.x = %3d, label.y = %3d\n",
+//               i, x, y, font_w, font_h, label_pos[i][0], label_pos[i][1]);
 
         if ( (x >= label_pos[i][0] && x <= (label_pos[i][0] + font_w)) &&
              (y >= label_pos[i][1] && y <= (label_pos[i][1] + font_h)) ) {
