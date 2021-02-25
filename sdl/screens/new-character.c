@@ -887,8 +887,7 @@ int mouse_in_label(const uint32_t x, const uint32_t y) {
     int label = 0;
     int font_h = font_pixel_height(FONT_GREYLIGHT, "T"); // Height seems to be character-agnostic
 
-    for (int i = LABEL_START; i < LABEL_END; i++)
-    {
+    for (int i = LABEL_START; i < LABEL_END; i++) {
         int font_w = label_pos[i][2];
 
 //        printf("[label = %2d] x = %3d, y = %3d - w = %3d, h = %3d - label.x = %3d, label.y = %3d\n",
