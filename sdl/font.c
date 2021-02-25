@@ -70,6 +70,50 @@ uint32_t font_pixel_width(font_t font, const char *text, const uint32_t len) {
     return sum;
 }
 
+// Returns the height of the first character, as character
+// height seems to be the same value across the string.
+uint32_t font_pixel_height(font_t font, const char* text) {
+    uint32_t max_height = 0;
+
+    if (text == NULL || strlen(text) == 0) { return max_height; }
+
+    return font_loc[font][0].h;
+}
+
+// Gets the height of the tallest character in the string
+// May be redundant as cursory tests have shown the value is
+// the same for characters tested
+uint32_t font_pixel_height_max(font_t font, const char* text) {
+    uint32_t max_height = 0;
+    size_t c;
+
+    if (text == NULL) { return max_height; }
+
+    for (int i = 0; text[i] && i < strlen(text); i++) {
+        c = text[i];
+        max_height = font_loc[font][c].h > max_height ? font_loc[font][c].h : max_height;
+    }
+
+    return max_height;
+}
+
+// Gets the height of the shortest character in the string
+// May be redundant as cursory tests have shown the value is
+// the same for characters tested
+uint32_t font_pixel_height_min(font_t font, const char* text) {
+    uint32_t min_height = 0;
+    size_t c;
+
+    if (text == NULL) { return min_height; }
+
+    for (int i = 0; text[i] && i < strlen(text); i++) {
+        c = text[i];
+        min_height = min_height == 0 ? font_loc[font][c].h : font_loc[font][c].h < min_height ? font_loc[font][c].h : min_height;
+    }
+
+    return min_height;
+}
+
 void print_line_len(SDL_Renderer *renderer, font_t font, const char *text, size_t x, size_t y, const uint32_t len) {
     size_t c;
     if (text == NULL) { return; }
