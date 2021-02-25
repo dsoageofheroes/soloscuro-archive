@@ -395,7 +395,8 @@ void new_character_render(void *data, SDL_Renderer *renderer) {
     sprite_render(renderer, die[die_pos]);
     sprite_render(renderer, races[get_race_id()]);
 
-    show_psionic_label ? strcpy(sphere_text, "PSI DISCIPLINES") : strcpy(sphere_text, "CLERICAL SPHERE");
+    show_psionic_label ? strcpy(sphere_text, "PSI DISCIPLINES") :
+                         strcpy(sphere_text, "CLERICAL SPHERE");
 
     print_line_len(renderer, FONT_BLACKDARK, sphere_text, 446, 193, 1<<12);
 
@@ -412,7 +413,9 @@ void new_character_render(void *data, SDL_Renderer *renderer) {
     sprite_render(renderer, name_textbox);
 
     if (current_textbox == TEXTBOX_NAME) {
-        sprite_set_location(text_cursor, 85 + font_pixel_width(FONT_GREYLIGHT, name_text, strlen(name_text)), sprite_gety(name_textbox) + 3);
+        sprite_set_location(text_cursor,
+                            85 + font_pixel_width(FONT_GREYLIGHT, name_text, strlen(name_text)),
+                            sprite_gety(name_textbox) + 3);
 
         if (cursor_countdown == 0) {
             cursor_countdown = 60;
@@ -805,9 +808,11 @@ static void select_class(uint8_t class) {
         spell_set_psin(&psi, PSIONIC_PSYCHOKINETIC, 1);
         spell_set_psin(&psi, PSIONIC_PSYCHOMETABOLISM, 1);
         spell_set_psin(&psi, PSIONIC_TELEPATH, 1);
-    }
-    else if (!spell_has_psin(&psi, PSIONIC_PSYCHOKINETIC) && !spell_has_psin(&psi, PSIONIC_PSYCHOMETABOLISM) && !spell_has_psin(&psi, PSIONIC_TELEPATH))
+    } else if (!spell_has_psin(&psi, PSIONIC_PSYCHOKINETIC) &&
+               !spell_has_psin(&psi, PSIONIC_PSYCHOMETABOLISM) &&
+               !spell_has_psin(&psi, PSIONIC_TELEPATH)) {
         spell_set_psin(&psi, PSIONIC_PSYCHOKINETIC, 1); // Default psi discipline
+    }
 
     // Force Cleric/Druid/Ranger to have a sphere chosen
     if (is_divine_spell_user() && sphere_selection == -1)
