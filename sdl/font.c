@@ -100,6 +100,13 @@ void font_init(SDL_Renderer *renderer) {
     create_font(renderer, FONT_BLUE, 0x287DC7FF, 0x101038FF);
 }
 
+void font_render_center(SDL_Renderer *rend, font_t font, const char *str, const SDL_Rect loc) {
+    int len = strlen(str);
+    int pixel_width = (font_pixel_width(font, str, len));
+    int offset = (loc.w / 2) - (pixel_width / 2);
+    print_line_len(rend, font, str, loc.x + offset, loc.y, len);
+}
+
 void font_free(SDL_Renderer *renderer) {
     for (int i = 0; i < MAX_CHARS; i++) {
         SDL_DestroyTexture(font_table[0][i]);

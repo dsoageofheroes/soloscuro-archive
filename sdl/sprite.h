@@ -36,6 +36,7 @@ void sprite_center_spr(const int dest, const int src);
 uint32_t sprite_getx(const uint16_t id);
 uint32_t sprite_gety(const uint16_t id);
 uint32_t sprite_geth(const uint16_t id);
+uint32_t sprite_getw(const uint16_t id);
 uint32_t sprite_num_frames(const uint16_t id);
 uint32_t sprite_get_xdiff_from_start(const uint16_t id);
 // Free a sprite at an ID (do not use it again!)

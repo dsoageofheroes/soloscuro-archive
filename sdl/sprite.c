@@ -175,6 +175,12 @@ uint32_t sprite_geth(const uint16_t id) {
     return loc->h;
 }
 
+uint32_t sprite_getw(const uint16_t id) {
+    if (!valid_id(id)) { return 0; }
+    SDL_Rect *loc = (sprites[id].loc + sprites[id].pos);
+    return loc->w;
+}
+
 uint32_t sprite_num_frames(const uint16_t id) {
     if (!valid_id(id)) { return 0; }
     return sprites[id].len;

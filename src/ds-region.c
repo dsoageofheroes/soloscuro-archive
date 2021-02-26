@@ -163,9 +163,8 @@ uint16_t dsl_region_create_from_objex(dsl_region_t *reg, const int id, const int
     robj->flags = dobj.flags;
     robj->gt_idx = dobj.object_index;
     robj->btc_idx = dobj.bmp_id;
-    // For some reason x and y are reversed.
-    robj->bmpy = x - dobj.xoffset;
-    robj->bmpx = y - dobj.yoffset - dobj.zpos;
+    robj->bmpx = x - dobj.xoffset;
+    robj->bmpy = y - dobj.yoffset - dobj.zpos;
     robj->xoffset = dobj.xoffset;
     robj->yoffset = dobj.yoffset;
     robj->mapy = x - dobj.xoffset;
@@ -175,8 +174,7 @@ uint16_t dsl_region_create_from_objex(dsl_region_t *reg, const int id, const int
     robj->combat_id = 0;
     place_region_object(reg, robj, robj->mapx, robj->mapy);
     robj->rdff_type = rdff->type;
-    //robj->mapz = gm->zpos;
-    robj->mapz = 0;
+    robj->mapz = dobj.zpos;
     robj->entry_id = -1 * id;
     robj->obj_id = abs(id);
 
@@ -219,7 +217,7 @@ uint16_t dsl_region_set_hunt(dsl_region_t *reg, const int16_t obj_id) {
 
     for (int i = 0; i < reg->list->pos; i++) {
         if (reg->list->objs[i].obj_id == obj_id) {
-            debug("Setting %d to hunt.\n", obj_id);
+            debug("Setting %d to hunt(%d).\n", obj_id, reg->list->objs[i].combat_id);
             combat_set_hunt(&(reg->cr), reg->list->objs[i].combat_id);
         }
     }

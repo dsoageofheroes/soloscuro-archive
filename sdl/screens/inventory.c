@@ -187,13 +187,6 @@ static int do_slot_highlight(SDL_Renderer *renderer, const uint16_t frame, const
     return 0;
 }
 
-static void render_center(font_t font, const char *str, const SDL_Rect loc) {
-    int len = strlen(str);
-    int pixel_width = (font_pixel_width(font, str, len));
-    int offset = (loc.w / 2) - (pixel_width / 2);
-    print_line_len(rend, font, str, loc.x + offset, loc.y, len);
-}
-
 #define BUF_MAX (1<<8)
 
 static int display_attack(ds_character_t *character, ds1_item_t *item, const int xpos, const int ypos) {
@@ -362,7 +355,7 @@ void inventory_screen_render(void *data, SDL_Renderer *renderer) {
     if (sprite_in_rect(game_return, mousex, mousey)) { strcpy(description, "GAME RETURN"); }
 
     print_line_len(renderer, FONT_YELLOW, name, name_loc.x, name_loc.y, sizeof(name));
-    render_center(FONT_GREY, description, description_loc);
+    font_render_center(renderer, FONT_GREY, description, description_loc);
 
     render_character();
 

@@ -294,7 +294,7 @@ static int dsl_getX(lua_State *l) {
 
     region_list_for_each(region->list, obj) {
         if (obj->disk_idx == id) {
-            lua_pushnumber(l, obj->bmpx);
+            lua_pushnumber(l, obj->mapx);
             return 1;
         }
     }
@@ -310,7 +310,7 @@ static int dsl_getY(lua_State *l) {
 
     region_list_for_each(region->list, obj) {
         if (obj->disk_idx == id) {
-            lua_pushnumber(l, obj->bmpy);
+            lua_pushnumber(l, obj->mapy);
             return 1;
         }
     }

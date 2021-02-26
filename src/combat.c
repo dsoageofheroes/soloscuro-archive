@@ -148,11 +148,7 @@ void combat_update(dsl_region_t *reg) {
                 }
             }
             cr->robjs[i]->scmd = get_scmd(xdiff, ydiff);
-            cr->robjs[i]->mapx += xdiff;
-            cr->robjs[i]->mapy += ydiff;
-        }
-        if (cr->robjs[i]) {
-            port_update_obj(cr->robjs[i], cr->robjs[i]->mapx, cr->robjs[i]->mapy);
+            port_update_obj(cr->robjs[i], xdiff, ydiff);
         }
     }
 }
@@ -194,6 +190,7 @@ uint32_t combat_add(combat_region_t *rc, region_object_t *robj, ds1_combat_t *co
     // Force the name to be null-terminated.
     i = i >= 17 ? 16 : i;
     combat->name[i] = '\0';
+    //printf("Added %s\n", combat->name);
     rc->robjs[rc->pos] = robj;
     return rc->pos;
 }

@@ -37,7 +37,7 @@ extern void port_narrate_close();
 extern void port_swap_objs(int obj_id, region_object_t *obj);
 void port_add_obj(region_object_t *obj, gff_palette_t *pal);
 extern void port_animate_obj(region_object_t *obj);
-extern void port_update_obj(region_object_t *obj, const uint16_t nextx, const uint16_t nexty);
+extern void port_update_obj(region_object_t *obj, const uint16_t xdiff, const uint16_t ydiff);
 extern int port_ask_yes_no();
 
 extern void port_change_region(dsl_region_t *reg);
