@@ -70,6 +70,10 @@ uint32_t font_pixel_width(font_t font, const char *text, const uint32_t len) {
     return sum;
 }
 
+uint32_t font_pixel_height(font_t font) {
+    return font_loc[font]['T'].h; // font height is the same for all characters
+}
+
 void print_line_len(SDL_Renderer *renderer, font_t font, const char *text, size_t x, size_t y, const uint32_t len) {
     size_t c;
     if (text == NULL) { return; }
