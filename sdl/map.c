@@ -19,7 +19,6 @@ static map_t *cmap = NULL;
 static SDL_Renderer *cren = NULL;
 static animate_sprite_t anims[256];
 static animate_sprite_node_t *anim_nodes[256];
-static uint8_t anim_zpos[256];
 static int anim_pos = 0;
 
 static void clear_animations();
@@ -142,7 +141,7 @@ void map_load_map(SDL_Renderer *renderer, int id) {
 
 static void clear_animations() {
     for (int i = 0; i < anim_pos; i++) {
-        animate_list_remove(anim_nodes[i], anim_zpos[i]);
+        animate_list_remove(anim_nodes[i], anim_nodes[i]->anim->obj ? anim_nodes[i]->anim->obj->mapz : 0);
         sprite_free(anims[i].spr);
         anims[i].spr = SPRITE_ERROR;
     }
@@ -190,15 +189,19 @@ void port_add_obj(region_object_t *obj, gff_palette_t *pal) {
     anims[anim_pos].move = anims[anim_pos].left_over = 0.0;
     anims[anim_pos].obj = obj;
     anim_nodes[anim_pos] = animate_list_add(anims + anim_pos, obj->mapz);
-    anim_zpos[anim_pos] = obj->mapz;
     obj->data = anims + anim_pos;
     anim_pos++;
 }
 
-void port_update_obj(region_object_t *robj, const uint16_t nextx, const uint16_t nexty) {
+void port_update_obj(region_object_t *robj, const uint16_t xdiff, const uint16_t ydiff) {
     animate_sprite_t *as = (animate_sprite_t*) robj->data;
-    as->destx = nextx * main_get_zoom();
-    as->desty = nexty * main_get_zoom();
+    as->x = as->destx;
+    as->y = as->desty;
+    robj->mapx += xdiff;
+    robj->mapy += ydiff;
+    as->destx = robj->mapx * main_get_zoom();
+    as->desty = robj->mapy * main_get_zoom();
+    //as->desty -= sprite_geth(as->spr) - (8 * main_get_zoom());
     animate_set_animation(as, robj->scmd, 20);
 }
 

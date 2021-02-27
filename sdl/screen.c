@@ -10,7 +10,9 @@
 #include "screens/view-character.h"
 #include "screens/popup.h"
 #include "screens/new-character.h"
+#include "screens/combat-status.h"
 #include "../src/dsl.h"
+#include "../src/ds-region.h"
 
 static SDL_Renderer *renderer = NULL;
 static SDL_Surface *surface = NULL;
@@ -39,6 +41,15 @@ void load_screen(const char *arg) {
     }
     if (!strcmp(arg, "inv")) {
         screen_push_screen(renderer, &inventory_screen, 0, 0);
+    }
+    if (!strcmp(arg, "combat")) {
+        combat_status_t* cs = combat_status_get();
+        strcpy(cs->name, "Tex");
+        cs->current_hp = 10;
+        cs->max_hp = 20;
+        cs->status = 1;
+        cs->move = 12;
+        screen_push_screen(renderer, &combat_status_screen, 295, 5);
     }
 }
 

@@ -123,7 +123,7 @@ void player_update() {
     anims[0].y = anims[0].desty;
     anims[0].destx = pc->xpos * 16 * 2;
     anims[0].desty = pc->ypos * 16 * 2;
-    anims[0].desty -= sprite_geth(anims[0].spr) - (16 * main_get_zoom());
+    anims[0].desty -= sprite_geth(anims[0].spr) - (8 * main_get_zoom());
 
     if (direction & PLAYER_LEFT) { 
         animate_set_animation(anims + 0, combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_LEFT), ticks_per_move);
