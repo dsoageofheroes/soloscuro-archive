@@ -682,7 +682,7 @@ void new_character_render(void* data, SDL_Renderer* renderer) {
     label = &labels[LABEL_RACE];
     label->x = labels[LABEL_GENDER].x +
                labels[LABEL_GENDER].pixel_width(&labels[LABEL_GENDER]) +
-               font_pixel_width(FONT_GREYLIGHT, " ", 1); // move race label based on gender strlen
+               font_pixel_width(FONT_GREYLIGHT, " ", 1); // position based on (genderStr + " ") pixel width
     snprintf(buf, BUF_MAX, "%s", get_race_as_string());
     label->set_text(label, buf);
 
