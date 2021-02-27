@@ -402,7 +402,7 @@ static void new_character_init(SDL_Renderer* _renderer, const uint32_t x, const 
                                                                              (char*)get_gender_as_string(), FONT_GREYLIGHT,
                                                                              oX = 170, oY = 270);
 
-    snprintf(buf, BUF_MAX, "%s ", get_gender_as_string()); // Used to get how many pixels {genderStr + " "} is.
+    snprintf(buf, BUF_MAX, "%s ", get_gender_as_string()); // Used to get pixel width of (genderStr + " ")
     labels[SCREEN_NEW_CHARACTER][LABEL_RACE]           = create_label_at_pos(SCREEN_NEW_CHARACTER, LABEL_RACE,
                                                                              (char*)get_race_as_string(), FONT_GREYLIGHT,
                                                                              oX + font_pixel_width(FONT_GREYLIGHT,
@@ -487,13 +487,13 @@ static int get_race_id() { // for the large portrait
 
 static const char* get_race_as_string() {
     switch(pc.race) {
-        case RACE_HUMAN: return "HUMAN";
-        case RACE_DWARF: return "DWARF";
-        case RACE_ELF: return "ELF";
-        case RACE_HALFELF: return "HALF-ELF";
+        case RACE_HUMAN:     return "HUMAN";
+        case RACE_DWARF:     return "DWARF";
+        case RACE_ELF:       return "ELF";
+        case RACE_HALFELF:   return "HALF-ELF";
         case RACE_HALFGIANT: return "HALF-GIANT";
-        case RACE_HALFLING: return "HALFLING";
-        case RACE_MUL: return "MUL";
+        case RACE_HALFLING:  return "HALFLING";
+        case RACE_MUL:       return "MUL";
         case RACE_THRIKREEN: return "THRI-KREEN";
     }
     return "UNKNOWN";
@@ -501,25 +501,25 @@ static const char* get_race_as_string() {
 
 static const char* get_gender_as_string()
 {
-    switch(pc.race) {
-        case GENDER_MALE: return "MALE";
+    switch(pc.gender) {
+        case GENDER_MALE:   return "MALE";
         case GENDER_FEMALE: return "FEMALE";
-        case GENDER_NONE: return "NONE";       
+        case GENDER_NONE:   return "NONE";       
     }
     return "UNKNOWN";
 }
 
 static const char* get_alignment_as_string() {
     switch(pc.alignment) {
-        case LAWFUL_GOOD: return "LAWFUL GOOD";
-        case LAWFUL_NEUTRAL: return "LAWFUL NEUTRAL";
-        case LAWFUL_EVIL: return "LAWFUL EVIL";
-        case NEUTRAL_GOOD: return "NEUTRAL GOOD";
-        case TRUE_NEUTRAL: return "TRUE NEUTRAL";
-        case NEUTRAL_EVIL: return "NEUTRAL EVIL";
-        case CHAOTIC_GOOD: return "CHAOTIC GOOD";
+        case LAWFUL_GOOD:     return "LAWFUL GOOD";
+        case LAWFUL_NEUTRAL:  return "LAWFUL NEUTRAL";
+        case LAWFUL_EVIL:     return "LAWFUL EVIL";
+        case NEUTRAL_GOOD:    return "NEUTRAL GOOD";
+        case TRUE_NEUTRAL:    return "TRUE NEUTRAL";
+        case NEUTRAL_EVIL:    return "NEUTRAL EVIL";
+        case CHAOTIC_GOOD:    return "CHAOTIC GOOD";
         case CHAOTIC_NEUTRAL: return "CHAOTIC NEUTRAL";
-        case CHAOTIC_EVIL: return "CHAOTIC EVIL";
+        case CHAOTIC_EVIL:    return "CHAOTIC EVIL";
     }
     return "UNKNOWN";
 }
@@ -679,6 +679,9 @@ void new_character_render(void* data, SDL_Renderer* renderer) {
     label->set_text(label, buf);
 
     label = &labels[SCREEN_NEW_CHARACTER][LABEL_RACE];
+    snprintf(buf, BUF_MAX, "%s ", get_gender_as_string()); // for width measurement
+    label->x = labels[SCREEN_NEW_CHARACTER][LABEL_GENDER].x + 
+               font_pixel_width(FONT_GREYLIGHT, buf, strlen(buf));
     snprintf(buf, BUF_MAX, "%s", get_race_as_string());
     label->set_text(label, buf);
 
@@ -715,8 +718,8 @@ void new_character_render(void* data, SDL_Renderer* renderer) {
     label->set_text(label, buf);
 
     for (int i = 0; i < LABEL_END; i++) {
-        label_t label = labels[SCREEN_NEW_CHARACTER][i];
-        print_line_len(renderer, label.font, label.text, label.x, label.y, strlen(label.text));
+        label = &labels[SCREEN_NEW_CHARACTER][i];
+        print_line_len(renderer, label->font, label->text, label->x, label->y, strlen(label->text));
     }
 }
 
