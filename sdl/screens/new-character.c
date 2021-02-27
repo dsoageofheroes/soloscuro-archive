@@ -4,11 +4,13 @@
 #include "../../src/gfftypes.h"
 #include "narrate.h"
 #include "popup.h"
-#include "../font.h"
 #include "../sprite.h"
 #include "../../src/spells.h"
 #include "../../src/rules.h"
+#include <string.h>
 #include <time.h>
+
+#define BUF_MAX (1<<10)
 
 static uint16_t background;
 static uint16_t parchment[5];
@@ -31,7 +33,7 @@ static uint16_t exit_button;
 
 // Store this so we don't trigger mouseup events in sprites/labels we didn't mousedown in
 static uint16_t last_sprite_mousedowned;
-static uint16_t last_label_mousedowned;
+static label_t *last_label_mousedowned;
 
 static uint8_t show_psionic_label = 1;
 static int8_t sphere_selection = -1;
@@ -63,11 +65,18 @@ static char sphere_text[32];
 static char name_text[32];
 static int current_textbox;
 static int changed_name;
-static uint16_t label_pos[LABEL_END][3]; // [label_id, { x, y, font_pixel_width }]
+static label_t labels[SCREEN_END][LABEL_END];
 
 static void update_ui();
 static void select_class(uint8_t class);
 static void fix_alignment(int direction);
+static void copy_classes_string(char* storage);
+static void copy_levels_string(char* storage);
+static void copy_exp_tnl_string(char* storage);
+static void copy_dam_string(char* storage);
+static const char* get_alignment_as_string();
+static const char* get_gender_as_string();
+static const char* get_race_as_string();
 
 ds_character_t* new_character_get_pc() {
     if (!is_valid) { return NULL; }
@@ -91,6 +100,55 @@ psionic_list_t* new_character_get_psionic_list() {
 
 char* new_character_get_name() {
     return name_text;
+}
+
+void set_label_text(struct label_s* label, char* string) {
+    if (label != NULL) {
+        free(label->text);
+        label->text = (char*)malloc( (strlen(string) + 1) * sizeof(string) );
+
+        if (label->text == NULL) {
+            printf("couldn't malloc in set_label_text() - label id = %d\n", label->id);
+            return;
+        }
+
+        strcpy(label->text, string);
+    }
+}
+
+uint32_t label_pixel_width(struct label_s* label) {
+    if (label->__m_pixel_width_do_not_use == 0 || label->text != label->__m_old_text_do_not_use)
+    {
+        label->__m_old_text_do_not_use = label->text;
+        label->__m_pixel_width_do_not_use = font_pixel_width(label->font,
+                                                             label->text, strlen(label->text));
+    }
+
+    return label->__m_pixel_width_do_not_use;
+}
+
+label_t create_label(int parent, int id, char* text, font_t font) {
+    label_t new_label;
+
+    new_label.parent = parent;
+    new_label.id = id;
+    new_label.text = NULL; // must be set so we can free whenever set_label_text is called
+    new_label.set_text = &set_label_text;
+    new_label.set_text(&new_label, text);
+    new_label.font = font;
+    new_label.pixel_width = &label_pixel_width;
+    new_label.visible = 1;
+
+    return new_label;
+}
+
+label_t create_label_at_pos(int parent, int id, char* text, font_t font, int16_t x, int16_t y) {
+    label_t new_label = create_label(parent, id, text, font);
+
+    new_label.x = x;
+    new_label.y = y;
+
+    return new_label;
 }
 
 // FIXME - For DS2/DSO, there may be new random names (I don't think there are?)
@@ -208,9 +266,11 @@ static void init_pc() {
 
 static void new_character_init(SDL_Renderer* _renderer, const uint32_t x, const uint32_t y, const float _zoom) {
     gff_palette_t* pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
+    char buf[BUF_MAX];
     offsetx = x; offsety = y;
     zoom = _zoom;
     renderer = _renderer;
+    current_textbox = TEXTBOX_NONE;
 
     init_pc();
     is_valid = 0;
@@ -281,6 +341,113 @@ static void new_character_init(SDL_Renderer* _renderer, const uint32_t x, const 
     dnd2e_randomize_stats_pc(&pc);
     set_class_frames(); // go ahead and setup the new class frames
     select_class(2); // Fighter is the default class
+
+    int oX = 8, oY = 249;
+    labels[SCREEN_NEW_CHARACTER][LABEL_NAME]           = create_label_at_pos(SCREEN_NEW_CHARACTER, LABEL_NAME,
+                                                                             "NAME:", FONT_GREYLIGHT,
+                                                                             oX, oY);
+    labels[SCREEN_NEW_CHARACTER][LABEL_NAME_TEXT]      = create_label_at_pos(SCREEN_NEW_CHARACTER, LABEL_NAME_TEXT,
+                                                                             name_text, FONT_GREYLIGHT,
+                                                                             oX + 76, oY);
+
+    labels[SCREEN_NEW_CHARACTER][LABEL_STR]            = create_label_at_pos(SCREEN_NEW_CHARACTER, LABEL_STR,
+                                                                             "STR:", FONT_GREYLIGHT,
+                                                                             oX += 12, oY += 20);
+    snprintf(buf, BUF_MAX, "%d", pc.stats.str);
+    labels[SCREEN_NEW_CHARACTER][LABEL_STR_VAL]        = create_label_at_pos(SCREEN_NEW_CHARACTER, LABEL_STR_VAL,
+                                                                             buf, FONT_GREYLIGHT,
+                                                                             oX + (pc.stats.str > 9 ? 52 : 60), oY);
+    
+    labels[SCREEN_NEW_CHARACTER][LABEL_DEX]            = create_label_at_pos(SCREEN_NEW_CHARACTER, LABEL_DEX,
+                                                                             "DEX:", FONT_GREYLIGHT,
+                                                                             oX, oY += 15);
+    snprintf(buf, BUF_MAX, "%d", pc.stats.dex);
+    labels[SCREEN_NEW_CHARACTER][LABEL_DEX_VAL]        = create_label_at_pos(SCREEN_NEW_CHARACTER, LABEL_DEX_VAL,
+                                                                             buf, FONT_GREYLIGHT,
+                                                                             oX + (pc.stats.dex > 9 ? 52 : 60), oY);
+    
+    labels[SCREEN_NEW_CHARACTER][LABEL_CON]            = create_label_at_pos(SCREEN_NEW_CHARACTER, LABEL_CON,
+                                                                             "CON:", FONT_GREYLIGHT,
+                                                                             oX, oY += 15);
+    snprintf(buf, BUF_MAX, "%d", pc.stats.con);
+    labels[SCREEN_NEW_CHARACTER][LABEL_CON_VAL]        = create_label_at_pos(SCREEN_NEW_CHARACTER, LABEL_CON_VAL,
+                                                                             buf, FONT_GREYLIGHT,
+                                                                             oX + (pc.stats.con > 9 ? 52 : 60), oY);
+    
+    labels[SCREEN_NEW_CHARACTER][LABEL_INT]            = create_label_at_pos(SCREEN_NEW_CHARACTER, LABEL_INT,
+                                                                             "INT:", FONT_GREYLIGHT,
+                                                                             oX, oY += 15);
+    snprintf(buf, BUF_MAX, "%d", pc.stats.intel);
+    labels[SCREEN_NEW_CHARACTER][LABEL_INT_VAL]        = create_label_at_pos(SCREEN_NEW_CHARACTER, LABEL_INT_VAL,
+                                                                             buf, FONT_GREYLIGHT,
+                                                                             oX + (pc.stats.intel > 9 ? 52 : 60), oY);
+
+    labels[SCREEN_NEW_CHARACTER][LABEL_WIS]            = create_label_at_pos(SCREEN_NEW_CHARACTER, LABEL_WIS,
+                                                                             "WIS:", FONT_GREYLIGHT,
+                                                                             oX, oY += 15);
+    snprintf(buf, BUF_MAX, "%d", pc.stats.wis);
+    labels[SCREEN_NEW_CHARACTER][LABEL_WIS_VAL]        = create_label_at_pos(SCREEN_NEW_CHARACTER, LABEL_WIS_VAL,
+                                                                             buf, FONT_GREYLIGHT,
+                                                                             oX + (pc.stats.wis > 9 ? 52 : 60), oY);
+
+    labels[SCREEN_NEW_CHARACTER][LABEL_CHA]            = create_label_at_pos(SCREEN_NEW_CHARACTER, LABEL_CHA,
+                                                                             "CHA:", FONT_GREYLIGHT,
+                                                                             oX, oY += 15);
+    snprintf(buf, BUF_MAX, "%d", pc.stats.cha);
+    labels[SCREEN_NEW_CHARACTER][LABEL_CHA_VAL]        = create_label_at_pos(SCREEN_NEW_CHARACTER, LABEL_CHA_VAL,
+                                                                             buf, FONT_GREYLIGHT,
+                                                                             oX + (pc.stats.cha > 9 ? 52 : 60), oY);
+
+    labels[SCREEN_NEW_CHARACTER][LABEL_GENDER]         = create_label_at_pos(SCREEN_NEW_CHARACTER, LABEL_GENDER,
+                                                                             (char*)get_gender_as_string(), FONT_GREYLIGHT,
+                                                                             oX = 170, oY = 270);
+
+    snprintf(buf, BUF_MAX, "%s ", get_gender_as_string()); // Used to get how many pixels {genderStr + " "} is.
+    labels[SCREEN_NEW_CHARACTER][LABEL_RACE]           = create_label_at_pos(SCREEN_NEW_CHARACTER, LABEL_RACE,
+                                                                             (char*)get_race_as_string(), FONT_GREYLIGHT,
+                                                                             oX + font_pixel_width(FONT_GREYLIGHT,
+                                                                                                   buf, strlen(buf)),
+                                                                             oY = 270);
+
+    labels[SCREEN_NEW_CHARACTER][LABEL_ALIGNMENT]      = create_label_at_pos(SCREEN_NEW_CHARACTER, LABEL_ALIGNMENT,
+                                                                             (char*)get_alignment_as_string(),
+                                                                             FONT_GREYLIGHT,
+                                                                             oX, oY += 15);
+
+    copy_classes_string(buf);
+    labels[SCREEN_NEW_CHARACTER][LABEL_CLASSES]        = create_label_at_pos(SCREEN_NEW_CHARACTER, LABEL_CLASSES,
+                                                                             buf, FONT_GREYLIGHT,
+                                                                             oX, oY += 15);
+
+    copy_levels_string(buf);
+    labels[SCREEN_NEW_CHARACTER][LABEL_LEVELS]         = create_label_at_pos(SCREEN_NEW_CHARACTER, LABEL_LEVELS,
+                                                                             buf, FONT_GREYLIGHT,
+                                                                             oX, oY += 15);
+
+    copy_exp_tnl_string(buf);
+    labels[SCREEN_NEW_CHARACTER][LABEL_EXP_TNL]        = create_label_at_pos(SCREEN_NEW_CHARACTER, LABEL_EXP_TNL,
+                                                                             buf, FONT_GREYLIGHT,
+                                                                             oX + 70, oY);
+
+    snprintf(buf, BUF_MAX, "AC: %d", dnd2e_get_ac_pc(&pc, &inv));
+    labels[SCREEN_NEW_CHARACTER][LABEL_AC]             = create_label_at_pos(SCREEN_NEW_CHARACTER, LABEL_AC,
+                                                                             buf, FONT_GREYLIGHT,
+                                                                             oX, oY += 15);
+
+    copy_dam_string(buf);
+    labels[SCREEN_NEW_CHARACTER][LABEL_DAM]            = create_label_at_pos(SCREEN_NEW_CHARACTER, LABEL_DAM,
+                                                                             buf, FONT_GREYLIGHT,
+                                                                             oX + 70, oY);
+
+    snprintf(buf, BUF_MAX, "%d/%d", pc.base_hp, pc.high_hp);
+    labels[SCREEN_NEW_CHARACTER][LABEL_HP]             = create_label_at_pos(SCREEN_NEW_CHARACTER, LABEL_HP,
+                                                                             buf, FONT_GREYLIGHT,
+                                                                             oX += 20, oY += 15);
+
+    snprintf(buf, BUF_MAX, "%d/%d", pc.base_psp, pc.base_psp);
+    labels[SCREEN_NEW_CHARACTER][LABEL_PSP]            = create_label_at_pos(SCREEN_NEW_CHARACTER, LABEL_PSP,
+                                                                             buf, FONT_GREYLIGHT,
+                                                                             oX, oY += 15);
 }
 
 static void update_die_countdown() {
@@ -332,6 +499,16 @@ static const char* get_race_as_string() {
     return "UNKNOWN";
 }
 
+static const char* get_gender_as_string()
+{
+    switch(pc.race) {
+        case GENDER_MALE: return "MALE";
+        case GENDER_FEMALE: return "FEMALE";
+        case GENDER_NONE: return "NONE";       
+    }
+    return "UNKNOWN";
+}
+
 static const char* get_alignment_as_string() {
     switch(pc.alignment) {
         case LAWFUL_GOOD: return "LAWFUL GOOD";
@@ -374,11 +551,49 @@ static const char* get_class_name(const uint8_t class) {
     return 0; // UNKNOWN CLASS
 }
 
-#define BUF_MAX (1<<10)
+static void copy_classes_string(char* storage) {
+    int pos = 0;
+    for (int i = 0; i < 3; i++) {
+        if (pc.real_class[i] >= 0) {
+            pos += snprintf(storage + pos, BUF_MAX - pos, "%s%s", i > 0 ? "/" : "", get_class_name(pc.real_class[i]));
+        }
+    }
+    storage[pos] = '\0';
+}
 
-void new_character_render(void *data, SDL_Renderer *renderer) {
+static void copy_levels_string(char* storage) {
+    int pos = 0;
+
+    for (int i = 0; i < 3; i++) {
+        if (pc.real_class[i] >= 0) {
+            pos += snprintf(storage + pos, BUF_MAX - pos, "%s%d", i > 0 ? "/" : "", pc.level[i]);
+        }
+    }
+    storage[pos] = '\0';
+}
+
+static void copy_exp_tnl_string(char* storage) {
+    if (pc.real_class[0] > -1) {
+        snprintf(storage, BUF_MAX, "EXP: %d (%d)", pc.current_xp, dnd2e_exp_to_next_level_up(&pc));
+    }
+    else {
+        storage[0] = '\0';
+    }
+}
+
+static void copy_dam_string(char* storage) {
+    int pos = 0;
+
+    pos = snprintf(storage, BUF_MAX, "DAM: %d%s", dnd2e_get_attack_num_pc(&pc, 0) >> 1,
+                   (dnd2e_get_attack_num_pc(&pc, 0) & 0x01) ? ".5" : "");
+    pos += snprintf(storage + pos, BUF_MAX - pos, "x1D%d", dnd2e_get_attack_die_pc(&pc, 0));
+    pos += snprintf(storage + pos, BUF_MAX - pos, "+%d", dnd2e_get_attack_mod_pc(&pc, 0));
+}
+
+void new_character_render(void* data, SDL_Renderer* renderer) {
     char buf[BUF_MAX];
-    int pos;
+    label_t *label;
+
     sprite_render(renderer, background);
     for (int i = 0; i < 5; i++) {
         sprite_render(renderer, parchment[i]);
@@ -396,9 +611,9 @@ void new_character_render(void *data, SDL_Renderer *renderer) {
     sprite_render(renderer, races[get_race_id()]);
 
     show_psionic_label ? strcpy(sphere_text, "PSI DISCIPLINES") :
-                         strcpy(sphere_text, "CLERICAL SPHERE");
+        strcpy(sphere_text, "CLERICAL SPHERE");
 
-    print_line_len(renderer, FONT_BLACKDARK, sphere_text, 446, 193, 1<<12);
+    print_line_len(renderer, FONT_BLACKDARK, sphere_text, 446, 193, 1 << 12);
 
     for (int i = 0; i < 4; i++) {
         if (i < 3 && show_psionic_label) {
@@ -414,15 +629,16 @@ void new_character_render(void *data, SDL_Renderer *renderer) {
 
     if (current_textbox == TEXTBOX_NAME) {
         sprite_set_location(text_cursor,
-                            85 + font_pixel_width(FONT_GREYLIGHT, name_text, strlen(name_text)),
-                            sprite_gety(name_textbox) + 3);
+            85 + font_pixel_width(FONT_GREYLIGHT, name_text, strlen(name_text)),
+            sprite_gety(name_textbox) + 3);
 
         if (cursor_countdown == 0) {
             cursor_countdown = 60;
         }
 
         update_cursor_blink();
-    } else {
+    }
+    else {
         cursor_countdown = 0;
     }
 
@@ -430,163 +646,78 @@ void new_character_render(void *data, SDL_Renderer *renderer) {
     sprite_render(renderer, done_button);
     sprite_render(renderer, exit_button);
 
-    int oX = 8, oY = 249;
-    label_pos[LABEL_NAME][0]        = oX;
-    label_pos[LABEL_NAME][1]        = oY;
-    label_pos[LABEL_NAME_TEXT][0]   = oX + 76;
-    label_pos[LABEL_NAME_TEXT][1]   = oY;
-    label_pos[LABEL_STR][0]         = oX += 12;
-    label_pos[LABEL_STR][1]         = oY += 20;
-    label_pos[LABEL_STR_VAL][0]     = oX + (pc.stats.str > 9 ? 52 : 60);
-    label_pos[LABEL_STR_VAL][1]     = oY;
-    label_pos[LABEL_DEX][0]         = oX;
-    label_pos[LABEL_DEX][1]         = oY += 15;
-    label_pos[LABEL_DEX_VAL][0]     = oX + (pc.stats.dex > 9 ? 52 : 60);
-    label_pos[LABEL_DEX_VAL][1]     = oY;
-    label_pos[LABEL_CON][0]         = oX;
-    label_pos[LABEL_CON][1]         = oY += 15;
-    label_pos[LABEL_CON_VAL][0]     = oX + (pc.stats.con > 9 ? 52 : 60);
-    label_pos[LABEL_CON_VAL][1]     = oY;
-    label_pos[LABEL_INT][0]         = oX;
-    label_pos[LABEL_INT][1]         = oY += 15;
-    label_pos[LABEL_INT_VAL][0]     = oX + (pc.stats.intel > 9 ? 52 : 60);
-    label_pos[LABEL_INT_VAL][1]     = oY;
-    label_pos[LABEL_WIS][0]         = oX;
-    label_pos[LABEL_WIS][1]         = oY += 15;
-    label_pos[LABEL_WIS_VAL][0]     = oX + (pc.stats.wis > 9 ? 52 : 60);
-    label_pos[LABEL_WIS_VAL][1]     = oY;
-    label_pos[LABEL_CHA][0]         = oX;
-    label_pos[LABEL_CHA][1]         = oY += 15;
-    label_pos[LABEL_CHA_VAL][0]     = oX + (pc.stats.cha > 9 ? 52 : 60);
-    label_pos[LABEL_CHA_VAL][1]     = oY;
-    label_pos[LABEL_GENDER_RACE][0] = oX = 170;
-    label_pos[LABEL_GENDER_RACE][1] = oY = 270;
-    label_pos[LABEL_ALIGNMENT][0]   = oX;
-    label_pos[LABEL_ALIGNMENT][1]   = oY += 15;
-    label_pos[LABEL_CLASSES][0]     = oX;
-    label_pos[LABEL_CLASSES][1]     = oY += 15;
-    label_pos[LABEL_LEVELS][0]      = oX;
-    label_pos[LABEL_LEVELS][1]      = oY += 15;
-    label_pos[LABEL_EXP_TNL][0]     = oX + 70;
-    label_pos[LABEL_EXP_TNL][1]     = oY;
-    label_pos[LABEL_AC][0]          = oX;
-    label_pos[LABEL_AC][1]          = oY += 15;
-    label_pos[LABEL_DAM][0]         = oX + 70;
-    label_pos[LABEL_DAM][1]         = oY;
-    label_pos[LABEL_HP][0]          = oX += 15;
-    label_pos[LABEL_HP][1]          = oY += 15;
-    label_pos[LABEL_PSP][0]         = oX;
-    label_pos[LABEL_PSP][1]         = oY += 15;
-
-    snprintf(buf, BUF_MAX, "NAME:");
-    print_line_len(renderer, FONT_GREYLIGHT, buf,
-                   label_pos[LABEL_NAME][0], label_pos[LABEL_NAME][1], BUF_MAX);
-    label_pos[LABEL_NAME][2] = font_pixel_width(FONT_GREYLIGHT, buf, strlen(buf));
+    label = &labels[SCREEN_NEW_CHARACTER][LABEL_NAME_TEXT];
     snprintf(buf, BUF_MAX, "%s", name_text);
-    print_line_len(renderer, FONT_GREYLIGHT, buf,
-                   label_pos[LABEL_NAME_TEXT][0], label_pos[LABEL_NAME_TEXT][1], BUF_MAX);
-    label_pos[LABEL_NAME_TEXT][2] = font_pixel_width(FONT_GREYLIGHT, buf, strlen(buf));
-    snprintf(buf, BUF_MAX, "STR:");
-    print_line_len(renderer, FONT_GREYLIGHT, buf,
-                   label_pos[LABEL_STR][0], label_pos[LABEL_STR][1], BUF_MAX);
-    label_pos[LABEL_STR][2] = font_pixel_width(FONT_GREYLIGHT, buf, strlen(buf));
+    label->set_text(label, buf);
+
+    label = &labels[SCREEN_NEW_CHARACTER][LABEL_STR_VAL];
     snprintf(buf, BUF_MAX, "%d", pc.stats.str);
-    print_line_len(renderer, FONT_GREYLIGHT, buf,
-                   label_pos[LABEL_STR_VAL][0], label_pos[LABEL_STR_VAL][1], BUF_MAX);
-    label_pos[LABEL_STR_VAL][2] = font_pixel_width(FONT_GREYLIGHT, buf, strlen(buf));
-    snprintf(buf, BUF_MAX, "DEX:");
-    print_line_len(renderer, FONT_GREYLIGHT, buf,
-                   label_pos[LABEL_DEX][0], label_pos[LABEL_DEX][1], BUF_MAX);
-    label_pos[LABEL_DEX][2] = font_pixel_width(FONT_GREYLIGHT, buf, strlen(buf));
+    label->set_text(label, buf);
+
+    label = &labels[SCREEN_NEW_CHARACTER][LABEL_DEX_VAL];
     snprintf(buf, BUF_MAX, "%d", pc.stats.dex);
-    print_line_len(renderer, FONT_GREYLIGHT, buf,
-                   label_pos[LABEL_DEX_VAL][0], label_pos[LABEL_DEX_VAL][1], BUF_MAX);
-    label_pos[LABEL_DEX_VAL][2] = font_pixel_width(FONT_GREYLIGHT, buf, strlen(buf));
-    snprintf(buf, BUF_MAX, "CON:");
-    print_line_len(renderer, FONT_GREYLIGHT, buf,
-                   label_pos[LABEL_CON][0], label_pos[LABEL_CON][1], BUF_MAX);
-    label_pos[LABEL_CON][2] = font_pixel_width(FONT_GREYLIGHT, buf, strlen(buf));
+    label->set_text(label, buf);
+
+    label = &labels[SCREEN_NEW_CHARACTER][LABEL_CON_VAL];
     snprintf(buf, BUF_MAX, "%d", pc.stats.con);
-    print_line_len(renderer, FONT_GREYLIGHT, buf,
-                   label_pos[LABEL_CON_VAL][0], label_pos[LABEL_CON_VAL][1], BUF_MAX);
-    label_pos[LABEL_CON_VAL][2] = font_pixel_width(FONT_GREYLIGHT, buf, strlen(buf));
-    snprintf(buf, BUF_MAX, "INT:");
-    print_line_len(renderer, FONT_GREYLIGHT, buf,
-                   label_pos[LABEL_INT][0], label_pos[LABEL_INT][1], BUF_MAX);
-    label_pos[LABEL_INT][2] = font_pixel_width(FONT_GREYLIGHT, buf, strlen(buf));
+    label->set_text(label, buf);
+
+    label = &labels[SCREEN_NEW_CHARACTER][LABEL_INT_VAL];
     snprintf(buf, BUF_MAX, "%d", pc.stats.intel);
-    print_line_len(renderer, FONT_GREYLIGHT, buf,
-                   label_pos[LABEL_INT_VAL][0], label_pos[LABEL_INT_VAL][1], BUF_MAX);
-    label_pos[LABEL_INT_VAL][2] = font_pixel_width(FONT_GREYLIGHT, buf, strlen(buf));
-    snprintf(buf, BUF_MAX, "WIS:");
-    print_line_len(renderer, FONT_GREYLIGHT, buf,
-                   label_pos[LABEL_WIS][0], label_pos[LABEL_WIS][1], BUF_MAX);
-    label_pos[LABEL_WIS][2] = font_pixel_width(FONT_GREYLIGHT, buf, strlen(buf));
+    label->set_text(label, buf);
+
+    label = &labels[SCREEN_NEW_CHARACTER][LABEL_WIS_VAL];
     snprintf(buf, BUF_MAX, "%d", pc.stats.wis);
-    print_line_len(renderer, FONT_GREYLIGHT, buf,
-                   label_pos[LABEL_WIS_VAL][0], label_pos[LABEL_WIS_VAL][1], BUF_MAX);
-    label_pos[LABEL_WIS_VAL][2] = font_pixel_width(FONT_GREYLIGHT, buf, strlen(buf));
-    snprintf(buf, BUF_MAX, "CHA:");
-    print_line_len(renderer, FONT_GREYLIGHT, buf,
-                   label_pos[LABEL_CHA][0], label_pos[LABEL_CHA][1], BUF_MAX);
-    label_pos[LABEL_CHA][2] = font_pixel_width(FONT_GREYLIGHT, buf, strlen(buf));
+    label->set_text(label, buf);
+
+    label = &labels[SCREEN_NEW_CHARACTER][LABEL_CHA_VAL];
     snprintf(buf, BUF_MAX, "%d", pc.stats.cha);
-    print_line_len(renderer, FONT_GREYLIGHT, buf,
-                   label_pos[LABEL_CHA_VAL][0], label_pos[LABEL_CHA_VAL][1], BUF_MAX);
-    label_pos[LABEL_CHA_VAL][2] = font_pixel_width(FONT_GREYLIGHT, buf, strlen(buf));
-    snprintf(buf, BUF_MAX, "%s %s", pc.gender == GENDER_MALE ? "MALE" : "FEMALE", get_race_as_string());
-    print_line_len(renderer, FONT_GREYLIGHT, buf,
-                   label_pos[LABEL_GENDER_RACE][0], label_pos[LABEL_GENDER_RACE][1], BUF_MAX);
-    label_pos[LABEL_GENDER_RACE][2] = font_pixel_width(FONT_GREYLIGHT, buf, strlen(buf));
+    label->set_text(label, buf);
+
+    label = &labels[SCREEN_NEW_CHARACTER][LABEL_GENDER];
+    snprintf(buf, BUF_MAX, "%s", get_gender_as_string());
+    label->set_text(label, buf);
+
+    label = &labels[SCREEN_NEW_CHARACTER][LABEL_RACE];
+    snprintf(buf, BUF_MAX, "%s", get_race_as_string());
+    label->set_text(label, buf);
+
+    label = &labels[SCREEN_NEW_CHARACTER][LABEL_ALIGNMENT];
     snprintf(buf, BUF_MAX, "%s", get_alignment_as_string());
-    print_line_len(renderer, FONT_GREYLIGHT, buf,
-                   label_pos[LABEL_ALIGNMENT][0], label_pos[LABEL_ALIGNMENT][1], BUF_MAX);
-    label_pos[LABEL_ALIGNMENT][2] = font_pixel_width(FONT_GREYLIGHT, buf, strlen(buf));
-    pos = 0;
-    for (int i = 0; i < 3; i++) {
-        if (pc.real_class[i] >= 0) {
-            pos += snprintf(buf + pos, BUF_MAX - pos, "%s%s", i > 0 ? "/" : "", get_class_name(pc.real_class[i]));
-        }
-    }
-    buf[pos] = '\0';
-    print_line_len(renderer, FONT_GREYLIGHT, buf,
-                   label_pos[LABEL_CLASSES][0], label_pos[LABEL_CLASSES][1], BUF_MAX);
-    label_pos[LABEL_CLASSES][2] = font_pixel_width(FONT_GREYLIGHT, buf, strlen(buf));
-    pos = 0;
-    for (int i = 0; i < 3; i++) {
-        if (pc.real_class[i] >= 0) {
-            pos += snprintf(buf + pos, BUF_MAX - pos, "%s%d", i > 0 ? "/" : "", pc.level[i]);
-        }
-    }
-    buf[pos] = '\0';
-    print_line_len(renderer, FONT_GREYLIGHT, buf,
-                   label_pos[LABEL_LEVELS][0], label_pos[LABEL_LEVELS][1], BUF_MAX);
-    label_pos[LABEL_LEVELS][2] = font_pixel_width(FONT_GREYLIGHT, buf, strlen(buf));
-    if (pc.real_class[0] > -1) {
-        snprintf(buf, BUF_MAX, "EXP: %d (%d)", pc.current_xp, dnd2e_exp_to_next_level_up(&pc));
-        print_line_len(renderer, FONT_GREYLIGHT, buf,
-                       label_pos[LABEL_EXP_TNL][0], label_pos[LABEL_EXP_TNL][1], BUF_MAX);
-        label_pos[LABEL_EXP_TNL][2] = font_pixel_width(FONT_GREYLIGHT, buf, strlen(buf));
-    }
+    label->set_text(label, buf);
+
+    label = &labels[SCREEN_NEW_CHARACTER][LABEL_CLASSES];
+    copy_classes_string(buf);
+    label->set_text(label, buf);
+
+    label = &labels[SCREEN_NEW_CHARACTER][LABEL_LEVELS];
+    copy_levels_string(buf);
+    label->set_text(label, buf);
+
+    label = &labels[SCREEN_NEW_CHARACTER][LABEL_EXP_TNL];
+    copy_exp_tnl_string(buf);
+    label->set_text(label, buf);
+
+    label = &labels[SCREEN_NEW_CHARACTER][LABEL_AC];
     snprintf(buf, BUF_MAX, "AC: %d", dnd2e_get_ac_pc(&pc, &inv));
-    print_line_len(renderer, FONT_GREYLIGHT, buf,
-                   label_pos[LABEL_AC][0], label_pos[LABEL_AC][1], BUF_MAX);
-    label_pos[LABEL_AC][2] = font_pixel_width(FONT_GREYLIGHT, buf, strlen(buf));
-    pos = snprintf(buf, BUF_MAX, "DAM: %d%s", dnd2e_get_attack_num_pc(&pc, 0) >> 1,
-        (dnd2e_get_attack_num_pc(&pc, 0) & 0x01) ? ".5" : "");
-    pos += snprintf(buf + pos, BUF_MAX - pos, "x1D%d", dnd2e_get_attack_die_pc(&pc, 0));
-    pos += snprintf(buf + pos, BUF_MAX - pos, "+%d", dnd2e_get_attack_mod_pc(&pc, 0));
-    print_line_len(renderer, FONT_GREYLIGHT, buf,
-                   label_pos[LABEL_DAM][0], label_pos[LABEL_DAM][1], BUF_MAX);
-    label_pos[LABEL_DAM][2] = font_pixel_width(FONT_GREYLIGHT, buf, strlen(buf));
-    pos = snprintf(buf, BUF_MAX, "%d/%d", pc.base_hp, pc.high_hp);
-    print_line_len(renderer, FONT_GREYLIGHT, buf,
-                   label_pos[LABEL_HP][0], label_pos[LABEL_HP][1], BUF_MAX);
-    label_pos[LABEL_HP][2] = font_pixel_width(FONT_GREYLIGHT, buf, strlen(buf));
-    pos = snprintf(buf, BUF_MAX, "%d/%d", pc.base_psp, pc.base_psp);
-    print_line_len(renderer, FONT_GREYLIGHT, buf,
-                   label_pos[LABEL_PSP][0], label_pos[LABEL_PSP][1], BUF_MAX);
-    label_pos[LABEL_PSP][2] = font_pixel_width(FONT_GREYLIGHT, buf, strlen(buf));
+    label->set_text(label, buf);
+
+    label = &labels[SCREEN_NEW_CHARACTER][LABEL_DAM];
+    copy_dam_string(buf);
+    label->set_text(label, buf);
+
+    label = &labels[SCREEN_NEW_CHARACTER][LABEL_HP];
+    snprintf(buf, BUF_MAX, "%d/%d", pc.base_hp, pc.high_hp);
+    label->set_text(label, buf);
+
+    label = &labels[SCREEN_NEW_CHARACTER][LABEL_PSP];
+    snprintf(buf, BUF_MAX, "%d/%d", pc.base_psp, pc.base_psp);
+    label->set_text(label, buf);
+
+    for (int i = 0; i < LABEL_END; i++) {
+        label_t label = labels[SCREEN_NEW_CHARACTER][i];
+        print_line_len(renderer, label.font, label.text, label.x, label.y, strlen(label.text));
+    }
 }
 
 void update_stats_alignment_hp(int i, uint32_t button)
@@ -888,24 +1019,30 @@ static void fix_alignment(int direction) { // direction: -1 = previous alignment
     }
 }
 
-int mouse_in_label(const uint32_t x, const uint32_t y) {
-    int label = LABEL_NONE;
+label_t *mouse_in_label(const uint32_t x, const uint32_t y) {
     int font_h = font_pixel_height(FONT_GREYLIGHT);
 
     for (int i = 0; i < LABEL_END; i++) {
-        int font_w = label_pos[i][2];
+        label_t label = labels[SCREEN_NEW_CHARACTER][i];
+        int font_w = label.pixel_width(&label);
 
 //        printf("[label = %2d] x = %3d, y = %3d - w = %3d, h = %3d - label.x = %3d, label.y = %3d\n",
-//               i, x, y, font_w, font_h, label_pos[i][0], label_pos[i][1]);
+//               i, x, y, font_w, font_h, label.x, label.y);
 
-        if ( (x >= label_pos[i][0] && x <= (label_pos[i][0] + font_w)) &&
-             (y >= label_pos[i][1] && y <= (label_pos[i][1] + font_h)) ) {
-            label = i;
-            break;
+        if ( (x >= label.x && x <= (label.x + font_w)) &&
+             (y >= label.y && y <= (label.y + font_h)) ) {
+            return &labels[SCREEN_NEW_CHARACTER][i];
         }
     }
 
-    return label;
+    return NULL;
+}
+
+int mouse_in_region(const uint32_t mouse_x, const uint32_t mouse_y,
+                    int region_start_x, int region_start_y, int region_width, int region_height)
+{
+    return ( (mouse_x >= region_start_x && mouse_x <= (region_start_x + region_width)) &&
+             (mouse_y >= region_start_y && mouse_y <= (region_start_y + region_height)) );
 }
 
 int new_character_handle_mouse_movement(const uint32_t x, const uint32_t y) {
@@ -967,7 +1104,7 @@ int new_character_handle_mouse_down(const uint32_t button, const uint32_t x, con
     }
 
     last_sprite_mousedowned = 0;
-    last_label_mousedowned = mouse_in_label(x, y);
+    last_label_mousedowned  = mouse_in_label(x, y);
 
     if (sprite_in_rect(done_button, x, y)) {
         last_sprite_mousedowned = done_button;
@@ -1036,9 +1173,10 @@ int new_character_handle_mouse_up(const uint32_t button, const uint32_t x, const
         return 1;
     }
 
-    if (last_label_mousedowned == mouse_in_label(x, y))
+    if (last_label_mousedowned != NULL &&
+        last_label_mousedowned == mouse_in_label(x, y))
     {
-        switch (last_label_mousedowned)
+        switch (last_label_mousedowned->id)
         {
             case LABEL_STR:
             case LABEL_STR_VAL:
