@@ -681,7 +681,7 @@ void new_character_render(void* data, SDL_Renderer* renderer) {
     label = &labels[SCREEN_NEW_CHARACTER][LABEL_RACE];
     snprintf(buf, BUF_MAX, "%s ", get_gender_as_string()); // for width measurement
     label->x = labels[SCREEN_NEW_CHARACTER][LABEL_GENDER].x + 
-               font_pixel_width(FONT_GREYLIGHT, buf, strlen(buf));
+               font_pixel_width(FONT_GREYLIGHT, buf, strlen(buf)); // move label.x based on gender strlen
     snprintf(buf, BUF_MAX, "%s", get_race_as_string());
     label->set_text(label, buf);
 
@@ -1026,14 +1026,14 @@ label_t *mouse_in_label(const uint32_t x, const uint32_t y) {
     int font_h = font_pixel_height(FONT_GREYLIGHT);
 
     for (int i = 0; i < LABEL_END; i++) {
-        label_t label = labels[SCREEN_NEW_CHARACTER][i];
-        int font_w = label.pixel_width(&label);
+        label_t *label = &labels[SCREEN_NEW_CHARACTER][i];
+        int font_w = label->pixel_width(label);
 
 //        printf("[label = %2d] x = %3d, y = %3d - w = %3d, h = %3d - label.x = %3d, label.y = %3d\n",
 //               i, x, y, font_w, font_h, label.x, label.y);
 
-        if ( (x >= label.x && x <= (label.x + font_w)) &&
-             (y >= label.y && y <= (label.y + font_h)) ) {
+        if ( (x >= label->x && x <= (label->x + font_w)) &&
+             (y >= label->y && y <= (label->y + font_h)) ) {
             return &labels[SCREEN_NEW_CHARACTER][i];
         }
     }
