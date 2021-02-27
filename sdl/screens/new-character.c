@@ -1039,10 +1039,10 @@ label_t *mouse_in_label(const uint32_t x, const uint32_t y) {
 }
 
 int mouse_in_rect(const uint32_t mouse_x, const uint32_t mouse_y,
-                    int rect_start_x, int rect_start_y, int rect_end_x, int rect_end_y)
+                  int start_x, int start_y, int end_x, int end_y)
 {
-    return ( (mouse_x >= rect_start_x && mouse_x <= rect_end_x) &&
-             (mouse_y >= rect_start_y && mouse_y <= rect_end_y) );
+    return ( (mouse_x >= start_x && mouse_x <= end_x) &&
+             (mouse_y >= start_y && mouse_y <= end_y) );
 }
 
 int new_character_handle_mouse_movement(const uint32_t x, const uint32_t y) {
