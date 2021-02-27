@@ -1038,11 +1038,11 @@ label_t *mouse_in_label(const uint32_t x, const uint32_t y) {
     return NULL;
 }
 
-int mouse_in_region(const uint32_t mouse_x, const uint32_t mouse_y,
-                    int region_start_x, int region_start_y, int region_width, int region_height)
+int mouse_in_rect(const uint32_t mouse_x, const uint32_t mouse_y,
+                    int rect_start_x, int rect_start_y, int rect_end_x, int rect_end_y)
 {
-    return ( (mouse_x >= region_start_x && mouse_x <= (region_start_x + region_width)) &&
-             (mouse_y >= region_start_y && mouse_y <= (region_start_y + region_height)) );
+    return ( (mouse_x >= rect_start_x && mouse_x <= rect_end_x) &&
+             (mouse_y >= rect_start_y && mouse_y <= rect_end_y) );
 }
 
 int new_character_handle_mouse_movement(const uint32_t x, const uint32_t y) {
