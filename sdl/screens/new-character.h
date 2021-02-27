@@ -65,6 +65,7 @@ typedef struct label_s {
     int16_t y;
     uint32_t (*pixel_width)();
     void (*set_text)();
+    void (*render)();
     uint8_t visible; // 1 = Label is visible, 0 = Not visible
 } label_t;
 

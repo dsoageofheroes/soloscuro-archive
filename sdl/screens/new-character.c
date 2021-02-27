@@ -103,13 +103,19 @@ char* new_character_get_name() {
     return name_text;
 }
 
-void set_label_text(struct label_s* label, char* string) {
+void label_render(struct label_s* label, SDL_Renderer* renderer) {
+    if (label->visible) {
+        print_line_len(renderer, label->font, label->text, label->x, label->y, strlen(label->text));
+    }
+}
+
+void label_set_text(struct label_s* label, char* string) {
     if (label != NULL) {
         free(label->text);
         label->text = (char*)malloc( (strlen(string) + 1) * sizeof(string) );
 
         if (label->text == NULL) {
-            printf("couldn't malloc in set_label_text() - label id = %d\n", label->id);
+            printf("couldn't malloc in label_set_text() - label id = %d\n", label->id);
             return;
         }
 
@@ -133,12 +139,13 @@ label_t create_label(int parent, int id, char* text, font_t font) {
 
     new_label.parent = parent;
     new_label.id = id;
-    new_label.text = NULL; // must be set so we can free whenever set_label_text is called
-    new_label.set_text = &set_label_text;
+    new_label.text = NULL; // must be set so we can free whenever label_set_text is called
+    new_label.set_text = &label_set_text;
     new_label.set_text(&new_label, text);
     new_label.font = font;
     new_label.pixel_width = &label_pixel_width;
     new_label.visible = 1;
+    new_label.render = &label_render;
 
     return new_label;
 }
@@ -719,8 +726,7 @@ void new_character_render(void* data, SDL_Renderer* renderer) {
     label->set_text(label, buf);
 
     for (int i = 0; i < LABEL_END; i++) {
-        label = &labels[i];
-        print_line_len(renderer, label->font, label->text, label->x, label->y, strlen(label->text));
+        labels[i].render(&labels[i], renderer);
     }
 }
 
