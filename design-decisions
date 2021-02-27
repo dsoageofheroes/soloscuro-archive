@@ -1,0 +1,9 @@
+There are some very strange issues with how the engine and gff works. This is just some design decisions to can keep
+things straight.
+
+1) mapx and mapy are going to be the actual block so we can keep track of what block an item is in.
+2) The screen location will be map? * 16 - ?offset (? is x or y.) The offset is usually in the etab. For cloned objects it will
+need to be calculated.
+3) Because of the GPL, coordinates in the GPL (and lua) will be mapx/mapy location. These are hardcoded in many
+instances, therefore getX/getY needs to return mapx/mapy!
+4) The above should render bmpx/bmpy obsolete, so eventually get rid of it.

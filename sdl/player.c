@@ -13,8 +13,6 @@
 #include "../src/gff.h"
 #include "../src/gfftypes.h"
 
-#define MAX_PCS (4)
-
 static animate_sprite_node_t *player_node = NULL;
 static int player_zpos;
 
@@ -24,7 +22,7 @@ typedef struct player_sprites_s {
     inventory_sprites_t inv;
 } player_sprites_t;
 
-static region_object_t dsl_player;
+static region_object_t dsl_player[MAX_PCS];
 static player_sprites_t players[MAX_PCS];
 static animate_sprite_t anims[MAX_PCS];
 
@@ -45,33 +43,33 @@ void player_init() {
     }
 }
 
-void player_load_graphics(SDL_Renderer *rend) {
+void player_load_graphics(const int slot) {
     player_pos_t* pc = ds_player_get_pos(ds_player_get_active());
-    dsl_player.flags = 0;
-    dsl_player.entry_id = 0;
-    dsl_player.bmpx = 0;
-    dsl_player.bmpy = 0;
-    dsl_player.xoffset = 0;
-    dsl_player.yoffset = 0;
-    dsl_player.mapx = 30;
-    dsl_player.mapy = 10;
-    dsl_player.mapz = 0;
-    dsl_player.ht_idx = 0;
-    dsl_player.gt_idx = 0;
-    dsl_player.bmp_idx = 0;
-    dsl_player.bmp_width = 0;
-    dsl_player.bmp_height = 0;
-    dsl_player.cdelay = 0;
-    dsl_player.st_idx = 0;
-    dsl_player.sc_idx = 0;
-    dsl_player.btc_idx = 291;
-    dsl_player.disk_idx = 0;
-    dsl_player.game_time = 0;
-    dsl_player.scmd = NULL;
+    dsl_player[slot].flags = 0;
+    dsl_player[slot].entry_id = 0;
+    dsl_player[slot].bmpx = 0;
+    dsl_player[slot].bmpy = 0;
+    dsl_player[slot].xoffset = 0;
+    dsl_player[slot].yoffset = 0;
+    dsl_player[slot].mapx = 30;
+    dsl_player[slot].mapy = 10;
+    dsl_player[slot].mapz = 0;
+    dsl_player[slot].ht_idx = 0;
+    dsl_player[slot].gt_idx = 0;
+    dsl_player[slot].bmp_idx = 0;
+    dsl_player[slot].bmp_width = 0;
+    dsl_player[slot].bmp_height = 0;
+    dsl_player[slot].cdelay = 0;
+    dsl_player[slot].st_idx = 0;
+    dsl_player[slot].sc_idx = 0;
+    dsl_player[slot].btc_idx = 291;
+    dsl_player[slot].disk_idx = 0;
+    dsl_player[slot].game_time = 0;
+    dsl_player[slot].scmd = NULL;
 
     // Set initial location
-    dsl_player.mapx = pc->xpos * 16;
-    dsl_player.mapy = pc->ypos * 16;
+    dsl_player[slot].mapx = pc->xpos;
+    dsl_player[slot].mapy = pc->ypos;
 }
 
 static int ticks_per_move = 10;
@@ -79,9 +77,14 @@ static int count = 0;
 static int direction = 0x0;
 
 void player_update() {
-    player_pos_t* pc = ds_player_get_pos(ds_player_get_active());
+    int slot = ds_player_get_active();
+    player_pos_t* pc = ds_player_get_pos(slot);
     animate_shift_node(player_node, player_zpos);
+    const enum combat_turn_t combat_turn = combat_player_turn();
     if (--count > 0) { return; }
+
+    // update when we can have the player take a turn.
+    if (combat_turn != NO_COMBAT) { return; }
 
     int nextx = pc->xpos;
     int nexty = pc->ypos;
@@ -117,8 +120,8 @@ void player_update() {
     pc->xpos = nextx;
     pc->ypos = nexty;
 
-    dsl_player.mapx = pc->xpos * 16;
-    dsl_player.mapy = pc->ypos * 16;
+    dsl_player[slot].mapx = pc->xpos;
+    dsl_player[slot].mapy = pc->ypos;
     anims[0].x = anims[0].destx;
     anims[0].y = anims[0].desty;
     anims[0].destx = pc->xpos * 16 * 2;
@@ -240,11 +243,11 @@ void player_add_to_animation_list(const int slot) {
     anims[slot].desty -= sprite_geth(anims[slot].spr) - (16 * main_get_zoom());
     anims[slot].x = anims[slot].destx;
     anims[slot].y = anims[slot].desty;
-    anims[slot].obj = &dsl_player;
+    anims[slot].obj = dsl_player + slot;
 }
 
-void player_load(SDL_Renderer *renderer, const int slot, const float zoom) {
-    load_character_sprite(renderer, slot, zoom);
+void player_load(const int slot, const float zoom) {
+    load_character_sprite(main_get_rend(), slot, zoom);
     anims[slot].spr = players[slot].main;
     animate_set_animation(anims + slot, combat_get_scmd(COMBAT_SCMD_STAND_DOWN), ticks_per_move);
     if (slot == ds_player_get_active()) {
@@ -287,6 +290,11 @@ inventory_sprites_t* player_get_inventory_sprites(const int slot) {
     return &(players[slot].inv);
 }
 
+uint16_t player_get_sprite(const int slot) {
+    if (slot < 0 || slot >= MAX_PCS) { return SPRITE_ERROR; }
+    return players[slot].main;
+}
+
 void player_set_delay(const int amt) {
     if (amt < 0) { return; }
 
@@ -303,10 +311,16 @@ void player_set_move(const int amt) {
     ticks_per_move = amt;
 }
 
-void player_close() {
+void player_remove_animation() {
     if (player_node) {
         animate_list_remove(player_node, player_zpos);
+        player_node = NULL;
     }
+
+}
+
+void player_close() {
+    player_remove_animation();
 
     for (int i = 0; i < MAX_PCS; i++) {
         free_sprites(i);

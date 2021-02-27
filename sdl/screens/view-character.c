@@ -271,7 +271,7 @@ void view_character_return_control () {
             if (!ds_load_character_charsave(slot_clicked, sel)) {
                 printf("Char loading failed.\n");
             } else {
-                player_load(rend, slot_clicked, zoom);
+                player_load(slot_clicked, zoom);
             }
         }
     }

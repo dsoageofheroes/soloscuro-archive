@@ -166,8 +166,8 @@ static int uil_load_charsave(lua_State *l) {
         return 1;
     }
 
-    player_load(main_get_rend(), slot, main_get_zoom());
-    player_load_graphics(main_get_rend());
+    player_load(slot, main_get_zoom());
+    player_load_graphics(slot);
     lua_pushboolean(l, 1);
     return 1;
 }

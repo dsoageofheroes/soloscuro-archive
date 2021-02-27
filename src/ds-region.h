@@ -45,6 +45,7 @@ extern region_object_t* dsl_region_get_object(const int16_t entry_id);
 extern uint16_t dsl_region_set_hunt(dsl_region_t *reg, const int16_t obj_id);
 extern uint16_t dsl_region_set_allegiance(dsl_region_t *reg, const int16_t obj_id, const uint8_t allegiance);
 extern int dsl_region_has_object(dsl_region_t *region, int row, int column);
+int ds_region_location_blocked(dsl_region_t *reg, const int32_t x, const int32_t y);
 
 extern void dsl_region_free(dsl_region_t *region);
 

@@ -62,7 +62,7 @@ out:
     if (anim->x > anim->destx) { anim->x -= move_amt; }
     if (anim->y > anim->desty) { anim->y -= move_amt; }
 
-    //printf("anim->x = %d (move_amt = %f)\n", anim->x, move_amt);
+    //printf("%d: anim->x = %d (move_amt = %f)\n", anim->obj->combat_id, anim->x, move_amt);
     sprite_set_location(anim->spr,
         anim->x - xoffset + scmd_xoffset,
         anim->y - yoffset + anim->scmd->yoffset);
@@ -86,10 +86,12 @@ void animate_list_render(SDL_Renderer *renderer) {
 static int is_less(animate_sprite_t *a0, animate_sprite_t *a1) {
     //const float zoom = 2.0;
     if (a0->obj && a1->obj) {
-        if (a0->obj->mapy / 16 != a1->obj->mapy / 16) {
-            return a0->obj->mapy < a1->obj->mapy;
-        }
+        // Okay this is close, we probably need to include sprite height, but I need to stop messing with it...
+        int diff = (a0->obj->mapy * 16 - a0->obj->yoffset) - (a1->obj->mapy * 16 - a1->obj->yoffset);
+        if (diff) { return diff < 0; }
+
     }
+
     const int map0y = a0->obj
         //? ((a0->obj->mapy * zoom) - sprite_geth(a0->spr) )
         //? ((a0->obj->mapy) * zoom) - ((sprite_geth(a0->spr) - 16*zoom) / 2)

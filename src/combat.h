@@ -56,8 +56,18 @@ typedef struct combat_region_s {
     uint8_t in_combat_mode;
 } combat_region_t;
 
+enum combat_turn_t {
+    NO_COMBAT,
+    NONPLAYER_TURN,
+    PLAYER1_TURN,
+    PLAYER2_TURN,
+    PLAYER3_TURN,
+    PLAYER4_TURN,
+};
+
 void combat_init(combat_region_t *cr);
 void combat_free(combat_region_t *rc);
+const enum combat_turn_t combat_player_turn();
 uint32_t combat_add(combat_region_t *rc, region_object_t *robj, ds1_combat_t *combat);
 scmd_t* combat_get_scmd(const enum combat_scmd_t type);
 ds1_combat_t* combat_get_combat( combat_region_t* cr, const uint32_t combat_id);

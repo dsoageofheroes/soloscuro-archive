@@ -6,6 +6,14 @@
 #include <string.h>
 #include <stdio.h>
 
+static int in_combat = 0;
+
+const enum combat_turn_t combat_player_turn() {
+    if (!in_combat) { return NO_COMBAT; }
+
+    return NONPLAYER_TURN;
+}
+
 void combat_init(combat_region_t *cr) {
     memset(cr, 0x0, sizeof(combat_region_t));
 }
@@ -100,20 +108,71 @@ static scmd_t *combat_types[] = {
     player_move_left,
 };
 
-static scmd_t* get_scmd(const int xdiff, const int ydiff) {
+static scmd_t* get_scmd(scmd_t *current_scmd, const int xdiff, const int ydiff) {
     if (xdiff < 0) { return combat_get_scmd(COMBAT_SCMD_MOVE_LEFT); }
     if (xdiff > 0) { return combat_get_scmd(COMBAT_SCMD_MOVE_RIGHT); }
     if (ydiff < 0) { return combat_get_scmd(COMBAT_SCMD_MOVE_UP); }
     if (ydiff > 0) { return combat_get_scmd(COMBAT_SCMD_MOVE_DOWN); }
 
-    return combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
+    // xdiff and ydiff == 0.
+    if (current_scmd == combat_get_scmd(COMBAT_SCMD_MOVE_LEFT)) {
+        return combat_get_scmd(COMBAT_SCMD_STAND_LEFT);
+    } else if (current_scmd == combat_get_scmd(COMBAT_SCMD_MOVE_RIGHT)) {
+        return combat_get_scmd(COMBAT_SCMD_STAND_RIGHT);
+    } else if (current_scmd == combat_get_scmd(COMBAT_SCMD_MOVE_UP)) {
+        return combat_get_scmd(COMBAT_SCMD_STAND_UP);
+    } else if (current_scmd == combat_get_scmd(COMBAT_SCMD_MOVE_UP)) {
+        return combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
+    }
+
+    return current_scmd;
 }
 
 static int32_t ticks_per_game_round = 20;// For outside combat.
 
 static int location_is_blocked(dsl_region_t *reg, const uint32_t x, const uint32_t y) {
-    return dsl_region_is_block(reg, y, x + 1)
+    return ds_region_location_blocked(reg, x, y)
+        || dsl_region_is_block(reg, y, x + 1)
         || dsl_region_has_object(reg, x, y);
+}
+
+//TODO: Ignores walls, but that might be okay right now.
+static int calc_distance_to_player(region_object_t *robj) {
+    int xdiff = (robj->mapx - ds_player_get_pos(ds_player_get_active())->xpos);
+    int ydiff = (robj->mapy - ds_player_get_pos(ds_player_get_active())->ypos);
+
+    if (xdiff < 0) { xdiff *= -1;}
+    if (ydiff < 0) { ydiff *= -1;}
+
+    return xdiff > ydiff ? xdiff : ydiff;
+}
+
+static int enemies_alive(combat_region_t *cr) {
+    for (int i = 0; i < cr->pos + 1; i++) {
+        if (cr->combats[i].allegiance > 1) { // looks like > 1 is hostile.
+            return 1; // need to check status as well.
+        }
+    }
+    return 0;
+}
+
+static void enter_combat_mode(dsl_region_t *reg) {
+    printf("Enter combat mode.\n");
+    combat_region_t *cr = &(reg->cr);
+    if (!enemies_alive(cr)) {
+        error("Called to enter combat, but no enemies? ignoring...\n");
+        return;
+    }
+
+    in_combat = 1;
+
+    // Freeze all combats.
+    for (int i = 0; i < cr->pos + 1; i++) {
+        cr->robjs[i]->scmd = get_scmd(cr->robjs[i]->scmd, 0, 0);
+        port_update_obj(cr->robjs[i], 0, 0);
+    }
+
+    port_enter_combat();
 }
 
 void combat_update(dsl_region_t *reg) {
@@ -128,27 +187,39 @@ void combat_update(dsl_region_t *reg) {
     if (ticks_per_game_round > 0) { return; }
     ticks_per_game_round = 30;
 
+    if (in_combat) { return; }
+
     for (int i = 0; i < cr->pos + 1; i++) {
         if (cr->hunt[i]) {
-            xdiff = pc->xpos * 16 - cr->robjs[i]->mapx;
-            ydiff = pc->ypos * 16 - cr->robjs[i]->mapy;
-            xdiff = (xdiff < 0) ? -16 : (xdiff > 0) ? 16 : 0;
-            ydiff = (ydiff < 0) ? -16 : (ydiff > 0) ? 16 : 0;
-            posx = cr->robjs[i]->mapx / 16;
-            posy = cr->robjs[i]->mapy / 16;
+            xdiff = pc->xpos - cr->robjs[i]->mapx;
+            ydiff = pc->ypos - cr->robjs[i]->mapy;
+            xdiff = (xdiff < 0) ? -1 : (xdiff > 0) ? 1 : 0;
+            ydiff = (ydiff < 0) ? -1 : (ydiff > 0) ? 1 : 0;
+            posx = cr->robjs[i]->mapx;
+            posy = cr->robjs[i]->mapy;
 
-            if (location_is_blocked(reg, posx + xdiff/16, posy + ydiff/16)
+            //printf("pos = (%d, %d)\n", posx, posy);
+
+            if (location_is_blocked(reg, posx + xdiff, posy + ydiff)
                     ){
-                if (!location_is_blocked(reg, posx, posy + ydiff/16)) {
+                if (!location_is_blocked(reg, posx, posy + ydiff)) {
                     xdiff = 0;
-                } else if (!location_is_blocked(reg, posx + xdiff/16, posy)) {
+                } else if (!location_is_blocked(reg, posx + xdiff, posy)) {
                     ydiff = 0;
                 } else {
                     xdiff = ydiff = 0;
                 }
             }
-            cr->robjs[i]->scmd = get_scmd(xdiff, ydiff);
+            cr->robjs[i]->scmd = get_scmd(cr->robjs[i]->scmd, xdiff, ydiff);
+            if (calc_distance_to_player(cr->robjs[i]) < 5) {
+                enter_combat_mode(reg);
+                return;
+            }
             port_update_obj(cr->robjs[i], xdiff, ydiff);
+        } else {
+            if (cr->robjs[i]) {
+                port_update_obj(cr->robjs[i], 0, 0);
+            }
         }
     }
 }

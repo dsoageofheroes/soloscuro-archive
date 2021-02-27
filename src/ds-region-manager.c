@@ -71,6 +71,9 @@ void ds_region_load_region_from_save(const int id, const int region_id) {
                 }
                 robj->combat_id = combat_add(&(reg->cr), robj,
                 (ds1_combat_t *) (buf + sizeof(rdff_disk_object_t)));
+                //robj->mapy -= 16;//sprite_geth(anims[0].spr) - (8);
+                robj->bmpx = robj->mapx;
+                robj->bmpy = robj->mapy;
                 port_add_obj(reg->list->objs + i, pal);
                 free(buf);
             }

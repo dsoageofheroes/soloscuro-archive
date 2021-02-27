@@ -5,6 +5,8 @@
 #include "../src/combat.h"
 #include <stdint.h>
 
+#define MAX_PCS (4)
+
 typedef struct inventory_sprites_s {
     uint16_t arm;
     uint16_t ammo;
@@ -29,11 +31,12 @@ typedef struct player_s {
 
 void player_init();
 void player_close();
-void player_load_graphics(SDL_Renderer *rend);
+void player_remove_animation();
+void player_load_graphics(const int slot);
 void player_render(SDL_Renderer *rend, const int slot);
 void player_move(const uint8_t direction);
 void player_unmove(const uint8_t direction);
-void player_load(SDL_Renderer *renderer, const int slot, const float zoom);
+void player_load(const int slot, const float zoom);
 int32_t player_getx(const int slot);
 int32_t player_gety(const int slot);
 void player_center(const int i, const int x, const int y, const int w, const int h);
@@ -44,6 +47,7 @@ inventory_sprites_t* player_get_inventory_sprites(const int slot);
 void player_add_to_animation_list();
 void player_set_delay(const int amt);
 void player_set_move(const int amt);
+uint16_t player_get_sprite(const int slot);
 
 enum{PLAYER_UP = 0x01, PLAYER_DOWN = 0x02, PLAYER_LEFT = 0x04, PLAYER_RIGHT = 0x08};
 

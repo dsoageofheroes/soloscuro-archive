@@ -185,24 +185,47 @@ void port_add_obj(region_object_t *obj, gff_palette_t *pal) {
     anims[anim_pos].x = obj->bmpx * zoom;
     anims[anim_pos].y = obj->bmpy * zoom;
     anims[anim_pos].destx = anims[anim_pos].x;
-    anims[anim_pos].destx = anims[anim_pos].y;
+    anims[anim_pos].desty = anims[anim_pos].y;
     anims[anim_pos].move = anims[anim_pos].left_over = 0.0;
     anims[anim_pos].obj = obj;
     anim_nodes[anim_pos] = animate_list_add(anims + anim_pos, obj->mapz);
     obj->data = anims + anim_pos;
+    //printf("%d: %d %d %d (%d, %d)\n", obj->combat_id, obj->mapx, obj->mapy, obj->mapz, anims[anim_pos].x, anims[anim_pos].y);
+    //printf("             (%d, %d)\n", anims[anim_pos].destx, anims[anim_pos].desty);
     anim_pos++;
 }
 
 void port_update_obj(region_object_t *robj, const uint16_t xdiff, const uint16_t ydiff) {
     animate_sprite_t *as = (animate_sprite_t*) robj->data;
+    //printf("cur:%d %d\n", as->x, as->y);
+    //printf("dest: %d, %d\n", as->destx, as->desty);
     as->x = as->destx;
     as->y = as->desty;
     robj->mapx += xdiff;
     robj->mapy += ydiff;
-    as->destx = robj->mapx * main_get_zoom();
-    as->desty = robj->mapy * main_get_zoom();
+    as->destx = robj->mapx * 16 * main_get_zoom();
+    as->desty = robj->mapy * 16 * main_get_zoom();
     //as->desty -= sprite_geth(as->spr) - (8 * main_get_zoom());
     animate_set_animation(as, robj->scmd, 20);
+}
+
+void port_enter_combat() {
+    // Right now we need to migrate player to combat, we will see if that is better.
+    player_remove_animation();
+    // Need to disperse players (and setup combat items.)
+    for (int i = 0; i < MAX_PCS; i++) {
+        //player_pos_t* pc = ds_player_get_pos(i);
+        //if (pc) {
+            //combat_add(&(dsl_region_get_current()->rc), region_object_t *robj, ds1_combat_t *combat) {
+        //}
+    }
+    // bring up combat status.
+}
+
+void port_exit_combat() {
+    // condense players.
+    // remove combat status.
+    // assign experience.
 }
 
 void port_swap_objs(int obj_id, region_object_t *obj) {

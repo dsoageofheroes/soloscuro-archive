@@ -254,9 +254,10 @@ static void init(int args, char *argv[]) {
         return;
     }
 
-    //ls_load_save_file("save01.sav");
+    ls_load_save_file("save00.sav");
+    main_center_on_player();
     // Start the main game.
-    screen_push_screen(renderer, &main_screen, 0, 0);
+    //screen_push_screen(renderer, &main_screen, 0, 0);
 }
 
 static void cleanup() {

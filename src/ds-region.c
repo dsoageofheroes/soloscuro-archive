@@ -74,7 +74,8 @@ dsl_region_t* dsl_load_region(const int gff_file) {
     return ret;
 }
 
-static int location_blocked(const dsl_region_t *reg, const int32_t x, const int32_t y) {
+int ds_region_location_blocked(dsl_region_t *reg, const int32_t x, const int32_t y) {
+    //return dsl_region_is_block(reg, x, y);
     region_object_t *obj = NULL;
     region_list_for_each(reg->list, obj) {
         //printf("(%d, %d) ?= (%d, %d)\n", obj->mapx, obj->mapy, x, y);
@@ -87,41 +88,41 @@ static int location_blocked(const dsl_region_t *reg, const int32_t x, const int3
 }
 
 static void place_region_object(dsl_region_t *reg, region_object_t *robj, const int32_t x, const int32_t y) {
-    if (!location_blocked(reg, x, y)) { return; }
-    if (!location_blocked(reg, x, y + 16)) {
-        robj->mapy = y + 16;
+    if (!ds_region_location_blocked(reg, x, y)) { return; }
+    if (!ds_region_location_blocked(reg, x, y + 1)) {
+        robj->mapy = y + 1;
         return;
     }
-    if (!location_blocked(reg, x - 16, y + 16)) {
-        robj->mapx = x - 16;
-        robj->mapy = y + 16;
+    if (!ds_region_location_blocked(reg, x - 1, y + 1)) {
+        robj->mapx = x - 1;
+        robj->mapy = y + 1;
         return;
     }
-    if (!location_blocked(reg, x - 16, y)) {
-        robj->mapx = x - 16;
+    if (!ds_region_location_blocked(reg, x - 1, y)) {
+        robj->mapx = x - 1;
         return;
     }
-    if (!location_blocked(reg, x - 16, y - 16)) {
-        robj->mapx = x - 16;
-        robj->mapy = y - 16;
+    if (!ds_region_location_blocked(reg, x - 1, y - 1)) {
+        robj->mapx = x - 1;
+        robj->mapy = y - 1;
         return;
     }
-    if (!location_blocked(reg, x, y - 16)) {
-        robj->mapy = y - 16;
+    if (!ds_region_location_blocked(reg, x, y - 1)) {
+        robj->mapy = y - 1;
         return;
     }
-    if (!location_blocked(reg, x + 16, y - 16)) {
-        robj->mapx = x + 16;
-        robj->mapy = y - 16;
+    if (!ds_region_location_blocked(reg, x + 1, y - 1)) {
+        robj->mapx = x + 1;
+        robj->mapy = y - 1;
         return;
     }
-    if (!location_blocked(reg, x + 16, y)) {
-        robj->mapx = x + 16;
+    if (!ds_region_location_blocked(reg, x + 1, y)) {
+        robj->mapx = x + 1;
         return;
     }
-    if (!location_blocked(reg, x + 16, y + 16)) {
-        robj->mapx = x + 16;
-        robj->mapy = y + 16;
+    if (!ds_region_location_blocked(reg, x + 1, y + 1)) {
+        robj->mapx = x + 1;
+        robj->mapy = y + 1;
         return;
     }
 
@@ -163,16 +164,15 @@ uint16_t dsl_region_create_from_objex(dsl_region_t *reg, const int id, const int
     robj->flags = dobj.flags;
     robj->gt_idx = dobj.object_index;
     robj->btc_idx = dobj.bmp_id;
-    robj->bmpx = x - dobj.xoffset;
-    robj->bmpy = y - dobj.yoffset - dobj.zpos;
     robj->xoffset = dobj.xoffset;
     robj->yoffset = dobj.yoffset;
-    robj->mapy = x - dobj.xoffset;
-    robj->mapx = y - dobj.yoffset;
-    robj->mapx *= 16;
-    robj->mapy *= 16;
+    robj->mapx = x;
+    robj->mapy = y;
     robj->combat_id = 0;
+    robj->rdff_type = rdff->type;
     place_region_object(reg, robj, robj->mapx, robj->mapy);
+    robj->bmpx = robj->mapx * 16;
+    robj->bmpy = robj->mapy * 16;
     robj->rdff_type = rdff->type;
     robj->mapz = dobj.zpos;
     robj->entry_id = -1 * id;
@@ -248,7 +248,7 @@ region_object_t* dsl_region_find_object(const int16_t disk_idx) {
 }
 
 int dsl_region_has_object(dsl_region_t *region, int row, int column) {
-    return location_blocked(region, row * 16, column * 16);
+    return ds_region_location_blocked(region, row * 16, column * 16);
 }
 
 

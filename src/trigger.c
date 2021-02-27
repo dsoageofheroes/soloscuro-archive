@@ -252,8 +252,8 @@ void trigger_noorders(uint32_t x, uint32_t y) {
 
     while (rover) {
         region_object_t* robj = dsl_region_find_object(rover->noorders.obj);
-        //printf("%d: player (%d, %d)\n", rover->noorders.obj, x, y);
-        if (robj && rover->noorders.trigger_on_tile && (robj->mapx / 16) == x && (robj->mapy / 16) == y) {
+        //printf("%d: player (%d, %d) vs (%d, %d) \n", rover->noorders.obj, x, y, robj->mapx, robj->mapy);
+        if (robj && rover->noorders.trigger_on_tile && (robj->mapx) == x && (robj->mapy) == y) {
             rover->noorders.trigger_on_tile = 0;
             rover->noorders.need_to_run = 1;
         }

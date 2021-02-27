@@ -294,7 +294,7 @@ static int dsl_getX(lua_State *l) {
 
     region_list_for_each(region->list, obj) {
         if (obj->disk_idx == id) {
-            lua_pushnumber(l, obj->mapx);
+            lua_pushnumber(l, obj->mapx - (obj->xoffset + 15) / 16); // the +15 forces a round up.
             return 1;
         }
     }
@@ -310,7 +310,7 @@ static int dsl_getY(lua_State *l) {
 
     region_list_for_each(region->list, obj) {
         if (obj->disk_idx == id) {
-            lua_pushnumber(l, obj->mapy);
+            lua_pushnumber(l, obj->mapy - (obj->yoffset + 15) / 16); // the +15 forces a round up.
             return 1;
         }
     }
@@ -472,11 +472,12 @@ static int dsl_clone(lua_State *l) {
     lua_Integer placement = luaL_checkinteger(l, 6);
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes;
 
-    warn("Need to implement: dsl-clone: obj: " PRI_LI ", qty: " PRI_LI ", (" PRI_LI ", "
+    debug("dsl-clone: obj: " PRI_LI ", qty: " PRI_LI ", (" PRI_LI ", "
              PRI_LI ") pri: " PRI_LI ", pla:" PRI_LI "\n", obj, qty, x, y,
         priority, placement);
     uint16_t entry_id = -1;
     for (int i = 0; i < qty; i++) {
+        debug("Cloning to: %lld, %lld\n", x, y);
         entry_id = dsl_region_create_from_objex(dsl_region_get_current(), obj, x, y);
         region_object_t* robj = dsl_region_get_object(entry_id);
 
