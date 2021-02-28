@@ -13,6 +13,7 @@
 #include "../src/ds-region.h"
 #include "../src/ds-region-manager.h"
 #include "../src/ds-scmd.h"
+#include "../src/ds-player.h"
 #include "../src/dsl-var.h"
 
 static map_t *cmap = NULL;
@@ -210,15 +211,10 @@ void port_update_obj(region_object_t *robj, const uint16_t xdiff, const uint16_t
 }
 
 void port_enter_combat() {
+    //gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     // Right now we need to migrate player to combat, we will see if that is better.
     player_remove_animation();
     // Need to disperse players (and setup combat items.)
-    for (int i = 0; i < MAX_PCS; i++) {
-        //player_pos_t* pc = ds_player_get_pos(i);
-        //if (pc) {
-            //combat_add(&(dsl_region_get_current()->rc), region_object_t *robj, ds1_combat_t *combat) {
-        //}
-    }
     // bring up combat status.
 }
 

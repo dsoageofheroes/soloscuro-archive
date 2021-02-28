@@ -3,10 +3,23 @@
 #include "ds-region.h"
 #include "dsl.h"
 #include "port.h"
+#include "rules.h"
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
+
+combat_action_list_t action_list;
+
+typedef struct combat_entry_s {
+    int initiative;
+    int sub_roll; // used to break ties.
+    region_object_t *robj;
+    ds1_combat_t *combat;
+    struct combat_entry_s *next;
+} combat_entry_t;
 
 static int in_combat = 0;
+static combat_entry_t *combat_turn = NULL;//, *combat_turn_taken = NULL;
 
 const enum combat_turn_t combat_player_turn() {
     if (!in_combat) { return NO_COMBAT; }
@@ -156,7 +169,41 @@ static int enemies_alive(combat_region_t *cr) {
     return 0;
 }
 
+static int initiative_is_less(combat_entry_t *n0, combat_entry_t *n1) {
+    if (n0->initiative != n1->initiative) { return n0->initiative < n1->initiative; }
+    return n0->sub_roll < n1->sub_roll;
+}
+
+// Add to the actual combat list.
+static void add_to_combat(region_object_t *robj, ds1_combat_t *combat) {
+    combat_entry_t *node = malloc(sizeof(combat_entry_t));
+    node->robj = robj;
+    node->combat = combat;
+    node->next = combat_turn; // start up front.
+    node->initiative = dnd2e_roll_initiative(&(combat->stats));
+    node->sub_roll = dnd2e_roll_sub_roll();
+    //printf("rolled: %d (%d)\n", node->initiative, node->sub_roll);
+
+    // if the node is first.
+    if (combat_turn == NULL || initiative_is_less(node, combat_turn)) {
+        combat_turn = node;
+        return;
+    }
+
+    // Not the first, so shift now.
+    combat_entry_t *prev = combat_turn;
+    node->next = prev->next;
+    prev->next = node;
+    while(node->next && !initiative_is_less(node, node->next)) {
+        prev->next = node->next;
+        node->next = node->next->next;
+        prev->next->next = node;
+        prev = prev->next;
+    }
+}
+
 static void enter_combat_mode(dsl_region_t *reg) {
+    gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     printf("Enter combat mode.\n");
     combat_region_t *cr = &(reg->cr);
     if (!enemies_alive(cr)) {
@@ -173,9 +220,33 @@ static void enter_combat_mode(dsl_region_t *reg) {
     }
 
     port_enter_combat();
+
+    // Right now players are not part of combat, so add them!
+    for (int i = 0; i < MAX_PCS; i++) {
+        if (ds_player_exists(i)) {
+            combat_add(&(dsl_region_get_current()->cr), ds_player_get_robj(i), ds_player_get_combat(i));
+            port_add_obj(ds_player_get_robj(i), pal);
+        }
+    }
+
+    // Now lets make an initiative list
+    for (int i = 0; i < cr->pos + 1; i++) {
+        add_to_combat(cr->robjs[i], cr->combats + i);
+    }
+
+    // print to test:
+    combat_entry_t *rover = combat_turn;
+    while(rover) {
+        printf("initiative: %d (%d)\n", rover->initiative, rover->sub_roll);
+        rover = rover->next;
+    }
 }
 
-void combat_update(dsl_region_t *reg) {
+static void do_combat_rounds(ds_region_t *reg) {
+    //Need to start combat rounds.
+}
+
+void combat_update(ds_region_t *reg) {
     if (reg == NULL) { return; }
     combat_region_t *cr = &(reg->cr);
     player_pos_t* pc = ds_player_get_pos(ds_player_get_active());
@@ -187,7 +258,13 @@ void combat_update(dsl_region_t *reg) {
     if (ticks_per_game_round > 0) { return; }
     ticks_per_game_round = 30;
 
-    if (in_combat) { return; }
+    if (in_combat) {
+        for (int i = 0; i < cr->pos + 1; i++) {
+            port_update_obj(cr->robjs[i], 0, 0);
+        }
+        do_combat_rounds(reg);
+        return;
+    }
 
     for (int i = 0; i < cr->pos + 1; i++) {
         if (cr->hunt[i]) {

@@ -69,5 +69,7 @@ int16_t dnd2e_get_attack_num_pc(const ds_character_t *pc, const ds1_item_t *item
 int16_t dnd2e_get_attack_die_pc(const ds_character_t *pc, const ds1_item_t *item);
 int16_t dnd2e_get_attack_sides_pc(const ds_character_t *pc, const ds1_item_t *item);
 int16_t dnd2e_get_attack_mod_pc(const ds_character_t *pc, const ds1_item_t *item);
+int dnd2e_roll_initiative(ds_stats_t *stats);
+int dnd2e_roll_sub_roll();
 
 #endif

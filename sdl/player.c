@@ -43,6 +43,11 @@ void player_init() {
     }
 }
 
+region_object_t* player_get_robj(const int slot) {
+    if (slot < 0 || slot >= MAX_PCS) { return NULL; }
+    return dsl_player + slot;
+}
+
 void player_load_graphics(const int slot) {
     player_pos_t* pc = ds_player_get_pos(ds_player_get_active());
     dsl_player[slot].flags = 0;
@@ -65,7 +70,7 @@ void player_load_graphics(const int slot) {
     dsl_player[slot].btc_idx = 291;
     dsl_player[slot].disk_idx = 0;
     dsl_player[slot].game_time = 0;
-    dsl_player[slot].scmd = NULL;
+    dsl_player[slot].scmd = combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
 
     // Set initial location
     dsl_player[slot].mapx = pc->xpos;

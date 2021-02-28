@@ -65,6 +65,34 @@ enum combat_turn_t {
     PLAYER4_TURN,
 };
 
+enum combat_action_e {
+    CA_NONE,
+    CA_WALK_LEFT,
+    CA_WALK_RIGHT,
+    CA_WALK_UP,
+    CA_WALK_DOWN,
+    CA_WALK_UPLEFT,
+    CA_WALK_UPRIGHT,
+    CA_WALK_DOWNLEFT,
+    CA_WALK_DOWNRIGHT,
+    CA_MELEE,
+    CA_MISSILE,
+    CA_PSIONIC,
+    CA_SPELL,
+};
+
+typedef struct combat_action_s {
+    enum combat_action_e action;
+    region_object_t *target;
+} combat_action_t;
+
+#define MAX_COMBAT_ACTION (100)
+typedef struct combat_action_list_s {
+    region_object_t *robj;
+    ds1_combat_t *combat;
+    combat_action_t actions[MAX_COMBAT_ACTION];
+} combat_action_list_t;
+
 void combat_init(combat_region_t *cr);
 void combat_free(combat_region_t *rc);
 const enum combat_turn_t combat_player_turn();

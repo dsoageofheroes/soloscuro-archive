@@ -2,8 +2,11 @@
 #define DS_PLAYER_H
 
 #include "ds-object.h"
+#include "ds-region.h"
 #include "combat.h"
 #include "spells.h"
+
+#define MAX_PCS (4)
 
 typedef struct player_pos_s {
     uint16_t map;
@@ -22,6 +25,7 @@ spell_list_t* ds_player_get_spells(const int slot);
 psionic_list_t* ds_player_get_psionics(const int slot);
 player_pos_t* ds_player_get_pos(const int slot);
 ds_inventory_t* ds_player_get_inv(const int slot);
+region_object_t* ds_player_get_robj(const int slot);
 ds1_item_t* ds_player_remove_item(const int slot, const int pos);
 void ds_player_set_item(const int slot, ds1_item_t *item, const int item_slot);
 int ds_player_exists(const int slot);
