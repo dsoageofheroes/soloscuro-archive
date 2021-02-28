@@ -11,6 +11,9 @@
 #include <string.h>
 #include <stdlib.h>
 
+// A hack, but inclue base for default procedures (can be overwritten with #defs
+#include "base.c"
+
 void setUp() {
     gff_init();
     gff_load_directory("/home/pwest/dosbox/DARKSUN");
@@ -204,8 +207,23 @@ void create_players() {
     ds_player_get_pos(0)->ypos = 30;
     ds_player_get_pos(0)->zpos = 0;
     ds_player_get_pos(1)->map = 42;
+    ds_player_get_pos(1)->xpos = 31;
+    ds_player_get_pos(1)->ypos = 30;
     ds_player_get_pos(2)->map = 42;
+    ds_player_get_pos(2)->xpos = 31;
+    ds_player_get_pos(2)->ypos = 31;
     ds_player_get_pos(3)->map = 42;
+    ds_player_get_pos(3)->xpos = 30;
+    ds_player_get_pos(3)->ypos = 29;
+
+    ds_player_get_robj(0)->mapx = ds_player_get_pos(0)->xpos;
+    ds_player_get_robj(0)->mapy = ds_player_get_pos(0)->ypos;
+    ds_player_get_robj(1)->mapx = ds_player_get_pos(1)->xpos;
+    ds_player_get_robj(1)->mapy = ds_player_get_pos(1)->ypos;
+    ds_player_get_robj(2)->mapx = ds_player_get_pos(2)->xpos;
+    ds_player_get_robj(2)->mapy = ds_player_get_pos(2)->ypos;
+    ds_player_get_robj(3)->mapx = ds_player_get_pos(3)->xpos;
+    ds_player_get_robj(3)->mapy = ds_player_get_pos(3)->ypos;
 }
 
 static region_object_t *monsters[100];
@@ -244,6 +262,7 @@ static void create_basic_monsters(dsl_region_t *reg) {
 void test_basic(void) {
     srand(200);
     create_players();
+    combat_action_t player_action;
     ds_region_t* reg = ds_region_load_region(42);
     create_basic_monsters(reg);
 
@@ -258,6 +277,27 @@ void test_basic(void) {
     //We should be in combat now.
     TEST_ASSERT(NO_COMBAT != combat_player_turn()); 
     printf("%d, %d\n", monsters[0]->mapx, monsters[0]->mapy);
+    TEST_ASSERT(PLAYER3_TURN == combat_player_turn());
+    // Wait a round
+    for (int i = 0; i < 1 * 30; i++) {
+        combat_update(reg);
+    }
+
+    player_action.action = CA_GUARD;
+    combat_player_action(player_action);
+    // Wait a round
+    for (int i = 0; i < 1 * 30; i++) {
+        combat_update(reg);
+    }
+    TEST_ASSERT(NONPLAYER_TURN == combat_player_turn());
+    for (int i = 0; i < 7 * 30; i++) {
+        combat_update(reg);
+        TEST_ASSERT(NONPLAYER_TURN == combat_player_turn());
+    }
+    // Should be attack.
+    for (int i = 0; i < 8 * 30; i++) {
+        combat_update(reg);
+    }
     //void combat_set_hunt(combat_region_t *cr, const uint32_t combat_id);
 
     //TEST_ASSERT_EQUAL_INT(0, ds_player_get_pos(0)->zpos);

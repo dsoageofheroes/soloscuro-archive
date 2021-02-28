@@ -25,7 +25,7 @@ lua-test: libds.so bin
 	$(CC) $(CFLAGS) test/lua-test.c -o bin/lua-test -lds -llua5.3
 
 %test: bin libds.so libxmimidi.so
-	$(CC) $(CFLAGS) test/$@.c test/unity.c test/base.c -o bin/$@ -lds -llua5.3
+	$(CC) $(CFLAGS) test/$@.c test/unity.c -o bin/$@ -lds -llua5.3
 	LD_LIBRARY_PATH=./ bin/$@
 
 %test-lua: bin

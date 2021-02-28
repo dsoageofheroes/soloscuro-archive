@@ -79,18 +79,21 @@ enum combat_action_e {
     CA_MISSILE,
     CA_PSIONIC,
     CA_SPELL,
+    CA_WAIT,
+    CA_GUARD,
 };
 
 typedef struct combat_action_s {
     enum combat_action_e action;
-    region_object_t *target;
+    region_object_t *target_robj;
+    ds1_combat_t *target_combat;
 } combat_action_t;
 
-#define MAX_COMBAT_ACTION (100)
+#define MAX_COMBAT_ACTIONS (100)
 typedef struct combat_action_list_s {
     region_object_t *robj;
     ds1_combat_t *combat;
-    combat_action_t actions[MAX_COMBAT_ACTION];
+    combat_action_t actions[MAX_COMBAT_ACTIONS];
 } combat_action_list_t;
 
 void combat_init(combat_region_t *cr);
@@ -100,5 +103,6 @@ uint32_t combat_add(combat_region_t *rc, region_object_t *robj, ds1_combat_t *co
 scmd_t* combat_get_scmd(const enum combat_scmd_t type);
 ds1_combat_t* combat_get_combat( combat_region_t* cr, const uint32_t combat_id);
 void combat_set_hunt(combat_region_t *cr, const uint32_t combat_id);
+void combat_player_action(const combat_action_t action);
 
 #endif

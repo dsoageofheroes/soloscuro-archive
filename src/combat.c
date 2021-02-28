@@ -8,21 +8,37 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-combat_action_list_t action_list;
+//static combat_action_list_t action_list;
+static int current_player = 0;
+static int wait_on_player = 0;
+static combat_action_t monster_actions[MAX_COMBAT_ACTIONS]; // list of actions for a monster's turn.
+static int monster_step = -1; // keep track of what step of the action the monster is on.
+//static int monster_move = -1;
 
 typedef struct combat_entry_s {
     int initiative;
     int sub_roll; // used to break ties.
+    combat_action_t current_action;
     region_object_t *robj;
     ds1_combat_t *combat;
     struct combat_entry_s *next;
 } combat_entry_t;
 
+// For BFS
+typedef struct action_node_s {
+    int num_moves;
+    uint16_t x, y;
+    combat_action_t actions[MAX_COMBAT_ACTIONS];
+    struct action_node_s *next;
+} action_node_t;
+
 static int in_combat = 0;
-static combat_entry_t *combat_turn = NULL;//, *combat_turn_taken = NULL;
+static combat_entry_t *combat_order = NULL;
+static combat_entry_t *current_turn = NULL;
 
 const enum combat_turn_t combat_player_turn() {
     if (!in_combat) { return NO_COMBAT; }
+    if (current_player >= 0) { return PLAYER1_TURN + current_player; }
 
     return NONPLAYER_TURN;
 }
@@ -179,19 +195,20 @@ static void add_to_combat(region_object_t *robj, ds1_combat_t *combat) {
     combat_entry_t *node = malloc(sizeof(combat_entry_t));
     node->robj = robj;
     node->combat = combat;
-    node->next = combat_turn; // start up front.
+    node->next = combat_order; // start up front.
     node->initiative = dnd2e_roll_initiative(&(combat->stats));
     node->sub_roll = dnd2e_roll_sub_roll();
+    node->current_action.action = CA_NONE;// Means they need to take their turn.
     //printf("rolled: %d (%d)\n", node->initiative, node->sub_roll);
 
     // if the node is first.
-    if (combat_turn == NULL || initiative_is_less(node, combat_turn)) {
-        combat_turn = node;
+    if (combat_order == NULL || initiative_is_less(node, combat_order)) {
+        combat_order = node;
         return;
     }
 
     // Not the first, so shift now.
-    combat_entry_t *prev = combat_turn;
+    combat_entry_t *prev = combat_order;
     node->next = prev->next;
     prev->next = node;
     while(node->next && !initiative_is_less(node, node->next)) {
@@ -234,16 +251,213 @@ static void enter_combat_mode(dsl_region_t *reg) {
         add_to_combat(cr->robjs[i], cr->combats + i);
     }
 
-    // print to test:
-    combat_entry_t *rover = combat_turn;
+    // print to debug:
+    combat_entry_t *rover = combat_order;
     while(rover) {
         printf("initiative: %d (%d)\n", rover->initiative, rover->sub_roll);
         rover = rover->next;
     }
 }
 
+static int which_player(combat_entry_t *node) {
+    for (int i = 0; i < MAX_PCS; i++) {
+        region_object_t *player = ds_player_get_robj(i);
+        if (player == node->robj) { // Warning: pointer test, but be same robj, not just a clone.
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+static void next_turn() {
+    if (!current_turn) { return; }
+
+    current_turn = current_turn->next;
+    wait_on_player = 0;
+}
+
+void combat_player_action(const combat_action_t action) {
+    if (!wait_on_player || !current_turn) { return; }
+
+    current_turn->current_action = action;
+
+    switch(action.action) {
+        case CA_GUARD: next_turn(); break;
+        default:
+            error("Unknown action %d\n", action.action);
+    }
+}
+
+static void queue_add(action_node_t **head, action_node_t **tail, action_node_t *current, const enum combat_action_e action) {
+    if (current->num_moves > 11) { return; }
+    action_node_t *new = malloc(sizeof(action_node_t));
+    memcpy(new, current, sizeof(action_node_t));
+    new->actions[new->num_moves].action = action;
+    new->next = NULL;
+    new->num_moves++;
+
+    switch (action) {
+        case CA_WALK_LEFT: new->x -= 1; break;
+        case CA_WALK_RIGHT: new->x += 1; break;
+        case CA_WALK_UP: new->y -= 1; break;
+        case CA_WALK_DOWN: new->y += 1; break;
+        case CA_WALK_UPLEFT: new->x -= 1; new->y -= 1; break;
+        case CA_WALK_UPRIGHT: new->x += 1; new->y -= 1; break;
+        case CA_WALK_DOWNLEFT: new->x -= 1; new->y += 1; break;
+        case CA_WALK_DOWNRIGHT: new->x += 1; new->y += 1; break;
+        default: 
+            break; // Do nothing right now...
+    }
+
+    if (!*tail) {
+        *head = *tail = new;
+    } else {
+        (*tail)->next = new;
+        *tail = new;
+    }
+}
+
+static int player_exists_in_pos(ds_region_t *reg, const uint16_t x, const uint16_t y) {
+    for (int i = 0; i < MAX_PCS; i++) {
+        if (!ds_player_exists(i)) { continue; }
+        region_object_t *player = ds_player_get_robj(i);
+        //printf("(%d, %d) -> player(%d, %d)\n", x, y, player->mapx, player->mapy);
+        if (player->mapx == x && player->mapy == y) { return i; }
+    }
+
+    return -1;
+}
+
+static int player_to_attack(ds_region_t *reg, action_node_t *node) {
+    int player = -1;
+    if (!node) { return -1; }
+    if ((player = player_exists_in_pos(reg, node->x + 1, node->y + 0)) != -1) { return player; }
+    if ((player = player_exists_in_pos(reg, node->x - 1, node->y + 0)) != -1) { return player; }
+    if ((player = player_exists_in_pos(reg, node->x + 1, node->y + 1)) != -1) { return player; }
+    if ((player = player_exists_in_pos(reg, node->x - 1, node->y + 1)) != -1) { return player; }
+    if ((player = player_exists_in_pos(reg, node->x + 1, node->y - 1)) != -1) { return player; }
+    if ((player = player_exists_in_pos(reg, node->x - 1, node->y - 1)) != -1) { return player; }
+    if ((player = player_exists_in_pos(reg, node->x + 0, node->y - 1)) != -1) { return player; }
+    if ((player = player_exists_in_pos(reg, node->x + 0, node->y + 1)) != -1) { return player; }
+    return -1;
+}
+
+static void generate_monster_actions(ds_region_t *reg) {
+    // Start of AI, lets just go to the closest PC and attack.
+    static uint8_t visit_flags[MAP_ROWS][MAP_COLUMNS];
+    int player;
+    memset(monster_actions, 0x0, sizeof(combat_action_t) * MAX_COMBAT_ACTIONS);
+    memset(visit_flags, 0x0, sizeof(uint8_t) * MAP_ROWS * MAP_COLUMNS);
+    action_node_t *rover = malloc(sizeof(action_node_t));
+    memset(rover, 0x0, sizeof(action_node_t));
+    action_node_t *queue_head, *queue_tail;
+    queue_head = queue_tail = rover;
+    rover->num_moves = 0;
+    rover->x = current_turn->robj->mapx;
+    rover->y = current_turn->robj->mapy;
+    //printf("player = %d, name = %s\n", current_player, current_turn->combat->name);
+
+    // BFS
+    while (queue_head) {
+        rover = queue_head;
+        queue_head = queue_head->next;
+        if (!queue_head) { queue_tail = NULL; }
+        if (visit_flags[rover->x][rover->y]) { free(rover); continue; }
+        visit_flags[rover->x][rover->y] = 1;// Mark as visited.
+
+        if ((player = player_to_attack(reg, rover)) != -1) {
+            printf("CAN ATTACK!\n");
+            for(int i = 0; i < rover->num_moves; i++) {
+                monster_actions[i] = rover->actions[i];
+                printf("move %d: %d\n", i, rover->actions[i].action);
+            }
+            monster_actions[rover->num_moves].action = CA_MELEE;
+            monster_actions[rover->num_moves].target_combat = ds_player_get_combat(player);
+            monster_actions[rover->num_moves].target_robj = ds_player_get_robj(player);
+            //Free up the queue.
+            free(rover);
+            while(queue_head) {
+                rover = queue_head;
+                queue_head = queue_head->next;
+                free(rover);
+            }
+            queue_tail = NULL;
+            return;
+        }
+
+        queue_add(&queue_head, &queue_tail, rover, CA_WALK_LEFT);
+        queue_add(&queue_head, &queue_tail, rover, CA_WALK_RIGHT);
+        queue_add(&queue_head, &queue_tail, rover, CA_WALK_UP);
+        queue_add(&queue_head, &queue_tail, rover, CA_WALK_DOWN);
+        queue_add(&queue_head, &queue_tail, rover, CA_WALK_UPLEFT);
+        queue_add(&queue_head, &queue_tail, rover, CA_WALK_UPRIGHT);
+        queue_add(&queue_head, &queue_tail, rover, CA_WALK_DOWNLEFT);
+        queue_add(&queue_head, &queue_tail, rover, CA_WALK_DOWNRIGHT);
+        free(rover);
+    }
+
+    printf("NEED TO move and guard!\n");
+    //typedef struct action_node_s {
+        //combat_action_t action;
+        //struct action_node_s *next;
+    //} action_node_t;
+}
+
+static void set_current_scmd(ds_region_t *reg) {
+    combat_action_t *action = monster_actions + monster_step;
+    uint16_t xdiff = 0, ydiff = 0;
+
+    switch (action->action) {
+        case CA_WALK_LEFT: xdiff = -1; ydiff = 0; break;
+        case CA_WALK_RIGHT: xdiff = 1; ydiff = 0; break;
+        case CA_WALK_UP: xdiff = 0; ydiff = -1; break;
+        case CA_WALK_DOWN: xdiff = 0; ydiff = 1; break;
+        case CA_WALK_UPLEFT: xdiff = -1; ydiff = -1; break;
+        case CA_WALK_UPRIGHT: xdiff = 1; ydiff = -1; break;
+        case CA_WALK_DOWNLEFT: xdiff = -1; ydiff = 1; break;
+        case CA_WALK_DOWNRIGHT: xdiff = 1; ydiff = 1; break;
+        default: break;
+    }
+
+    printf("(%d, %d) applying xdiff = %d, ydiff = %d\n", current_turn->robj->mapx, current_turn->robj->mapy, xdiff, ydiff);
+    current_turn->robj->scmd = get_scmd(current_turn->robj->scmd, xdiff, ydiff);
+    port_update_obj(current_turn->robj, xdiff, ydiff);
+//static combat_action_t monster_actions[MAX_COMBAT_ACTIONS]; // list of actions for a monster's turn.
+}
+
+static void check_and_perform_attack(ds_region_t *reg) {
+    combat_action_t *action = monster_actions + monster_step;
+    switch (action->action) {
+        case CA_MELEE:
+            break;
+        default:
+            break;
+    }
+}
+
 static void do_combat_rounds(ds_region_t *reg) {
+    if (wait_on_player) { return; }
     //Need to start combat rounds.
+    if (!current_turn) { current_turn = combat_order; }
+
+    current_player = which_player(current_turn);
+    printf("player = %d, name = %s\n", current_player, current_turn->combat->name);
+    if (current_player >= 0) {
+        wait_on_player = 1;
+        return; // Need to wait on player input.
+    }
+
+    // Monster time.
+    if (monster_step < 0) {
+        generate_monster_actions(reg);
+        monster_step = 0;
+    }
+
+    set_current_scmd(reg);
+
+    check_and_perform_attack(reg);
+    monster_step++;
 }
 
 void combat_update(ds_region_t *reg) {
