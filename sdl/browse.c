@@ -773,10 +773,12 @@ static void print_item(ds1_item_t item, int pos) {
 #define RDFF_MAX (1<<12)
 static void render_entry_rdff() {
     char buf[BUF_MAX];
+    uint32_t len = 0;
     render_entry_header();
     so_object_t *so = NULL;
     rdff_disk_object_t rdff_buf[RDFF_MAX];
     rdff_disk_object_t *rdff = rdff_buf;
+    rdff_disk_object_t *next = rdff;
     gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_RDFF, res_ids[res_idx]);
 
     if (chunk.length > RDFF_MAX * sizeof(rdff_disk_object_t)) {
@@ -818,6 +820,18 @@ static void render_entry_rdff() {
             print_line_len(renderer, 0, buf, 320, 220, 128);
             break;
     }
+    printf("chunk.length = %d\n", chunk.length);
+    // There appears to be more, but I don't know them all...
+    printf("---------START-------------, total len = %d\n", chunk.length);
+    len += sizeof(rdff_disk_object_t) + next->len;
+    //len = rdff->index + sizeof(rdff_disk_object_t);
+    //while (len < chunk.length) {
+    for (int i = 0; i < 5; i++) {
+        next = (rdff_disk_object_t*)((char*)(rdff_buf) + len);
+        len += sizeof(rdff_disk_object_t) + next->len;
+        printf("next = {blockNum = %d, len = %d, type = %d, index = %d}\n", next->blocknum, next->len, next->type, next->index);
+    }
+    //next = (rdff_disk_object_t*)(((char*)next) + sizeof(rdff_disk_object_t) + next->len);
     /*
     rdff++;
     while (rdff->load_action != -1 && rdff->load_action < 5) {

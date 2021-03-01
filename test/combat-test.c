@@ -294,11 +294,28 @@ void test_basic(void) {
         combat_update(reg);
         TEST_ASSERT(NONPLAYER_TURN == combat_player_turn());
     }
-    // Should be attack.
-    for (int i = 0; i < 8 * 30; i++) {
+    //Attack
+    for (int i = 0; i < 1 * 30; i++) {
         combat_update(reg);
     }
+    for (int i = 0; i < 1 * 30; i++) {
+        combat_update(reg);
+    }
+    TEST_ASSERT(PLAYER2_TURN == combat_player_turn());
+    player_action.action = CA_GUARD;
+    combat_player_action(player_action);
+    for (int i = 0; i < 200 * 30; i++) {
+        //if (combat_player_turn() != NONPLAYER_TURN) {
+            player_action.action = CA_GUARD;
+            combat_player_action(player_action);
+        //}
+        combat_update(reg);
+    }
+    /*
+    */
     //void combat_set_hunt(combat_region_t *cr, const uint32_t combat_id);
+    printf("turn: %d\n", combat_player_turn());
+    TEST_ASSERT(NO_COMBAT == combat_player_turn());
 
     //TEST_ASSERT_EQUAL_INT(0, ds_player_get_pos(0)->zpos);
 }

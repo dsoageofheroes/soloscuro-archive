@@ -183,6 +183,10 @@ uint16_t dsl_region_create_from_objex(dsl_region_t *reg, const int id, const int
             robj->scmd = combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
             robj->combat_id = combat_add(&(reg->cr), robj, (ds1_combat_t *) (rdff + 1));
             break;
+        case CHAR_OBJECT:
+            printf("CHAR OBJECT!!!!!\n");
+            exit(1);
+            break;
     }
 
     reg->list->pos++;

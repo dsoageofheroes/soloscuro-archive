@@ -33,8 +33,11 @@ typedef struct action_node_s {
 } action_node_t;
 
 static int in_combat = 0;
+static int need_to_cleanup = 0; // combat is over, but things aren't clean yet...
 static combat_entry_t *combat_order = NULL;
 static combat_entry_t *current_turn = NULL;
+
+static int is_combat_over(ds_region_t *reg);
 
 const enum combat_turn_t combat_player_turn() {
     if (!in_combat) { return NO_COMBAT; }
@@ -329,19 +332,64 @@ static int player_exists_in_pos(ds_region_t *reg, const uint16_t x, const uint16
     return -1;
 }
 
+// This needs to be fixed becuase of our combat regions are made...
+static ds1_combat_t* find_combat(ds1_combat_t *combat) {
+    combat_entry_t *rover = combat_order;
+    while(rover) {
+        if (!strcmp(rover->combat->name, combat->name)) { return rover->combat; }
+        rover = rover->next;
+    }
+    
+    return NULL;
+}
+
 static int player_to_attack(ds_region_t *reg, action_node_t *node) {
     int player = -1;
     if (!node) { return -1; }
-    if ((player = player_exists_in_pos(reg, node->x + 1, node->y + 0)) != -1) { return player; }
-    if ((player = player_exists_in_pos(reg, node->x - 1, node->y + 0)) != -1) { return player; }
-    if ((player = player_exists_in_pos(reg, node->x + 1, node->y + 1)) != -1) { return player; }
-    if ((player = player_exists_in_pos(reg, node->x - 1, node->y + 1)) != -1) { return player; }
-    if ((player = player_exists_in_pos(reg, node->x + 1, node->y - 1)) != -1) { return player; }
-    if ((player = player_exists_in_pos(reg, node->x - 1, node->y - 1)) != -1) { return player; }
-    if ((player = player_exists_in_pos(reg, node->x + 0, node->y - 1)) != -1) { return player; }
-    if ((player = player_exists_in_pos(reg, node->x + 0, node->y + 1)) != -1) { return player; }
+    if ((player = player_exists_in_pos(reg, node->x + 1, node->y + 0)) != -1) {
+        if (find_combat(ds_player_get_combat(player))->status != COMBAT_STATUS_DYING) {
+            return player;
+        }
+    }
+    if ((player = player_exists_in_pos(reg, node->x - 1, node->y + 0)) != -1) {
+        if (find_combat(ds_player_get_combat(player))->status != COMBAT_STATUS_DYING) {
+            return player;
+        }
+    }
+    if ((player = player_exists_in_pos(reg, node->x + 1, node->y + 1)) != -1) {
+        if (find_combat(ds_player_get_combat(player))->status != COMBAT_STATUS_DYING) {
+            return player;
+        }
+    }
+    if ((player = player_exists_in_pos(reg, node->x - 1, node->y + 1)) != -1) {
+        if (find_combat(ds_player_get_combat(player))->status != COMBAT_STATUS_DYING) {
+            return player;
+        }
+    }
+    if ((player = player_exists_in_pos(reg, node->x + 1, node->y - 1)) != -1) {
+        if (find_combat(ds_player_get_combat(player))->status != COMBAT_STATUS_DYING) {
+            return player;
+        }
+    }
+    if ((player = player_exists_in_pos(reg, node->x - 1, node->y - 1)) != -1) {
+        if (find_combat(ds_player_get_combat(player))->status != COMBAT_STATUS_DYING) {
+            return player;
+        }
+    }
+    if ((player = player_exists_in_pos(reg, node->x + 0, node->y - 1)) != -1) {
+        if (find_combat(ds_player_get_combat(player))->status != COMBAT_STATUS_DYING) {
+            return player;
+        }
+    }
+    if ((player = player_exists_in_pos(reg, node->x + 0, node->y + 1)) != -1) {
+        if (find_combat(ds_player_get_combat(player))->status != COMBAT_STATUS_DYING) {
+            return player;
+        }
+    }
+
     return -1;
 }
+
 
 static void generate_monster_actions(ds_region_t *reg) {
     // Start of AI, lets just go to the closest PC and attack.
@@ -373,7 +421,8 @@ static void generate_monster_actions(ds_region_t *reg) {
                 printf("move %d: %d\n", i, rover->actions[i].action);
             }
             monster_actions[rover->num_moves].action = CA_MELEE;
-            monster_actions[rover->num_moves].target_combat = ds_player_get_combat(player);
+            //monster_actions[rover->num_moves].target_combat = ds_player_get_combat(player);
+            monster_actions[rover->num_moves].target_combat = find_combat(ds_player_get_combat(player));
             monster_actions[rover->num_moves].target_robj = ds_player_get_robj(player);
             //Free up the queue.
             free(rover);
@@ -426,10 +475,33 @@ static void set_current_scmd(ds_region_t *reg) {
 //static combat_action_t monster_actions[MAX_COMBAT_ACTIONS]; // list of actions for a monster's turn.
 }
 
+static void end_turn() {
+    monster_step = -1;
+    current_turn = current_turn->next;
+    if (!current_turn) { current_turn = combat_order; }
+}
+
 static void check_and_perform_attack(ds_region_t *reg) {
     combat_action_t *action = monster_actions + monster_step;
     switch (action->action) {
         case CA_MELEE:
+            // DS Engine: Attacks usually based on weapons. If none, then bare hand.
+            //            Monster's base weapon are considered plus for
+            //            level 0-4: regular
+            //            level 5-6: +1
+            //            level 6-7: +2
+            //            level 8-9: +3
+            //            level 10+: +4
+            // It appears that I need to load the monster data for charrecs to calc numdice, numattacks, adds, etc...
+            // For Now, 1d6, always hits. Need to add thaco calculation.
+            printf("hp before: %d\n", action->target_combat->hp);
+            action->target_combat->hp -= 1 + (rand() % 6);
+            printf("hp after: %d\n", action->target_combat->hp);
+            if (action->target_combat->hp <= 0) {
+                printf("DYING\n");
+                action->target_combat->status = COMBAT_STATUS_DYING;
+            }
+            end_turn();
             break;
         default:
             break;
@@ -450,6 +522,7 @@ static void do_combat_rounds(ds_region_t *reg) {
 
     // Monster time.
     if (monster_step < 0) {
+        printf("BLAH!\n");
         generate_monster_actions(reg);
         monster_step = 0;
     }
@@ -457,7 +530,31 @@ static void do_combat_rounds(ds_region_t *reg) {
     set_current_scmd(reg);
 
     check_and_perform_attack(reg);
+    if (monster_step < 0) { return; } // turn ended
     monster_step++;
+}
+
+static int is_combat_over(ds_region_t *reg) {
+    combat_entry_t *rover = combat_order;
+    uint8_t forces[10]; // represent each opposing force.
+    uint8_t num_types = 0;
+    memset(forces, 0x0, sizeof(forces));
+
+    while (rover) {
+        //printf("%s: alliegiance %d, hp: %d\n", rover->combat->name, rover->combat->allegiance, rover->combat->hp);
+
+        if (rover->combat->allegiance < 10
+                && rover->combat->status != COMBAT_STATUS_DYING) {
+            forces[rover->combat->allegiance]++;
+        }
+        rover = rover->next;
+    }
+
+    for (int i = 0; i < 10; i++) {
+        num_types += (forces[i] > 0) ? 1 : 0;
+    }
+
+    return num_types < 2;
 }
 
 void combat_update(ds_region_t *reg) {
@@ -472,12 +569,21 @@ void combat_update(ds_region_t *reg) {
     if (ticks_per_game_round > 0) { return; }
     ticks_per_game_round = 30;
 
+    if (need_to_cleanup) { return; }
+
     if (in_combat) {
-        for (int i = 0; i < cr->pos + 1; i++) {
-            port_update_obj(cr->robjs[i], 0, 0);
+        in_combat = !is_combat_over(reg); // Just to check
+        if (in_combat) {
+            for (int i = 0; i < cr->pos + 1; i++) {
+                port_update_obj(cr->robjs[i], 0, 0);
+            }
+            do_combat_rounds(reg);
+            return;
         }
-        do_combat_rounds(reg);
+        need_to_cleanup = 1;
+        printf("HERE!!!!!!!!!!!!!!!!!\n");
         return;
+        // We were in combat but now it is over. Need to clean up.
     }
 
     for (int i = 0; i < cr->pos + 1; i++) {

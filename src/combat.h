@@ -21,6 +21,18 @@ enum combat_scmd_t {
     COMBAT_SCMD_PLAYER_MOVE_LEFT,
 };
 
+enum {
+    COMBAT_STATUS_OK          = 1,
+    COMBAT_STATUS_STUNNED     = 2,
+    COMBAT_STATUS_UNCONSCIOUS = 3,
+    COMBAT_STATUS_DYING       = 4,
+    COMBAT_STATUS_ANIMATED    = 5,
+    COMBAT_STATUS_PETRIFIED   = 6,
+    COMBAT_STATUS_DEAD        = 7,
+    COMBAT_STATUS_GONE        = 8,
+    COMBAT_STATUS_MAX
+};
+
 typedef struct _ds_combat_t {
     int16_t hp; // At byte pos 0, confirmed
     int16_t psp; // 2, confirmed

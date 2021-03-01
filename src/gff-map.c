@@ -181,6 +181,10 @@ so_object_t* gff_create_object(char *data, rdff_disk_object_t *entry, int16_t id
             printf("script_id = %d\n", diskobject->script_id);
             */
             break;
+        case CHAR_OBJECT:
+            printf("CHARACTER!!!!!!!!!!!!!!!!!!!!\n");
+            exit(1);
+            break;
         case MINI_OBJECT:
             printf("MINI\n");
             break;
@@ -188,6 +192,7 @@ so_object_t* gff_create_object(char *data, rdff_disk_object_t *entry, int16_t id
             printf("-----------UNKNOWN ITEM TYPE: %d\n", entry->type);
             break;
     }
+
     return obj;
 }
 

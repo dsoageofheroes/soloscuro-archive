@@ -92,6 +92,7 @@ enum {
     ITEM_OBJECT   = 1,
     COMBAT_OBJECT = 2,
     CHAR_OBJECT   = 3,
+    ITEM1R_OBJECT = 4,
     MINI_OBJECT   = 5,
 };
 
@@ -111,18 +112,6 @@ typedef struct _so_object_t {
 } so_object_t;
 
 #define NULL_OBJECT (9999) // why 9999?  I dunno!
-
-enum {
-    COMBAT_STATUS_OK          = 1,
-    COMBAT_STATUS_STUNNED     = 2,
-    COMBAT_STATUS_UNCONSCIOUS = 3,
-    COMBAT_STATUS_DYING       = 4,
-    COMBAT_STATUS_ANIMATED    = 5,
-    COMBAT_STATUS_PETRIFIED   = 6,
-    COMBAT_STATUS_DEAD        = 7,
-    COMBAT_STATUS_GONE        = 8,
-    COMBAT_STATUS_MAX
-};
 
 //int gff_load_map_tile_ids(int gff_file, int res_id);
 //int gff_load_map_flags(int gff_file, int res_id);
