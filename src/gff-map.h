@@ -91,8 +91,8 @@ enum {
 enum {
     ITEM_OBJECT   = 1,
     COMBAT_OBJECT = 2,
-    CHAR_OBJECT   = 3,
-    ITEM1R_OBJECT = 4,
+    CHAR_OBJECT   = 4,
+    ITEM1R_OBJECT = 3,
     MINI_OBJECT   = 5,
 };
 

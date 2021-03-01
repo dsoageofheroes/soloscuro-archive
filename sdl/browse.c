@@ -803,7 +803,7 @@ static void render_entry_rdff() {
     print_line_len(renderer, 0, "-----------------------", 320, 160, 128);
     print_line_len(renderer, 0, "Jumping to entry:", 320, 180, 128);
 
-    switch(rdff->type) {
+    switch(rdff->load_action) {
         case RDFF_OBJECT:
         case RDFF_CONTAINER: // I don't know the different between Container and Object!
             rdff++;
@@ -824,12 +824,34 @@ static void render_entry_rdff() {
     // There appears to be more, but I don't know them all...
     printf("---------START-------------, total len = %d\n", chunk.length);
     len += sizeof(rdff_disk_object_t) + next->len;
+    len = 0;
     //len = rdff->index + sizeof(rdff_disk_object_t);
     //while (len < chunk.length) {
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 305 && len < chunk.length; i++) {
         next = (rdff_disk_object_t*)((char*)(rdff_buf) + len);
+        switch(next->load_action) {
+            case RDFF_OBJECT:
+                printf("OBJECT\n");
+                break;
+            case RDFF_CONTAINER:
+                printf("CONTAINER\n");
+                break;
+            case RDFF_DATA:
+                printf("DATA\n");
+                if (next->type == CHAR_OBJECT) {
+                    ds_character_t *ch = (ds_character_t*)((char*)(rdff_buf) + len + sizeof(rdff_disk_object_t));
+                    printf("ch: base_move = %d, ac = %d\n", ch->base_move, ch->base_ac);
+                }
+                break;
+            case RDFF_NEXT:
+                printf("NEXT\n");
+                break;
+            case RDFF_END:
+                printf("END\n");
+                break;
+        }
         len += sizeof(rdff_disk_object_t) + next->len;
-        printf("next = {blockNum = %d, len = %d, type = %d, index = %d}\n", next->blocknum, next->len, next->type, next->index);
+        printf("next = {la = %d, blockNum = %d, len = %d, type = %d, index = %d}\n", next->load_action, next->blocknum, next->len, next->type, next->index);
     }
     //next = (rdff_disk_object_t*)(((char*)next) + sizeof(rdff_disk_object_t) + next->len);
     /*

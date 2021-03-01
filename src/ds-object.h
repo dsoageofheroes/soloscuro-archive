@@ -184,7 +184,7 @@ typedef struct _ds_character_s {
     ds_stats_t stats;    // confirmed
     int8_t real_class[3]; // confirmed
     uint8_t level[3];      // confirmed
-    uint8_t base_ac;      //confirmed
+    int8_t base_ac;      //confirmed
     uint8_t base_move;      //confirmed
     uint8_t magic_resistance;      //confirmed
     uint8_t num_blows;     //confirmed, blow type?

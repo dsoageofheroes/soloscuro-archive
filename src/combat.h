@@ -2,6 +2,7 @@
 #define DS_COMBAT_H
 
 #include "ds-object.h"
+#include "spells.h"
 
 #define MAX_COMBAT_OBJS (200)
 #define COMBAT_ERROR    (9999)
