@@ -1,4 +1,4 @@
-#include "ds-region-manager.h"
+#include "region-manager.h"
 #include "gff.h"
 #include "gfftypes.h"
 #include "ds-player.h"

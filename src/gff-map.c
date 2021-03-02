@@ -4,7 +4,7 @@
 #include "gff.h"
 #include "gfftypes.h"
 #include "dsl.h"
-#include "ds-region.h"
+#include "region.h"
 
 int gff_read_object(int object_index, disk_object_t *disk_obj) {
 

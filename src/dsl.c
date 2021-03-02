@@ -4,7 +4,7 @@
 #include "dsl.h"
 #include "dsl-manager.h"
 #include "ds-item.h"
-#include "ds-region-manager.h"
+#include "region-manager.h"
 #include "ds-state.h"
 #include "ds-string.h"
 #include "dsl-var.h"

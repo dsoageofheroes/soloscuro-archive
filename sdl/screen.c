@@ -12,7 +12,7 @@
 #include "screens/new-character.h"
 #include "screens/combat-status.h"
 #include "../src/dsl.h"
-#include "../src/ds-region.h"
+#include "../src/region.h"
 
 static SDL_Renderer *renderer = NULL;
 static SDL_Surface *surface = NULL;

@@ -1,7 +1,7 @@
 #include "dsl.h"
 #include "dsl-manager.h"
 #include "ds-narrate.h"
-#include "ds-region.h"
+#include "region.h"
 #include "ds-state.h"
 #include "../sdl/gameloop.h"
 #include "port.h"

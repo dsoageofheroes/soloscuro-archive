@@ -1,6 +1,6 @@
 #include "combat.h"
 #include "ds-player.h"
-#include "ds-region.h"
+#include "region.h"
 #include "dsl.h"
 #include "port.h"
 #include "rules.h"

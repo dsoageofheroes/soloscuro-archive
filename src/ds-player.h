@@ -2,7 +2,7 @@
 #define DS_PLAYER_H
 
 #include "ds-object.h"
-#include "ds-region.h"
+#include "region.h"
 #include "combat.h"
 #include "spells.h"
 

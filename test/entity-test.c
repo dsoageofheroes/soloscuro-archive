@@ -31,12 +31,12 @@ void test_basic(void) {
     TEST_ASSERT_EQUAL_INT(12, slig->stats.cha);
     TEST_ASSERT_EQUAL_INT(3, slig->stats.base_ac);
     TEST_ASSERT_EQUAL_INT(9, slig->stats.base_move);
-    TEST_ASSERT_EQUAL_INT(4, slig->stats.attacks[0].num_attacks);
+    TEST_ASSERT_EQUAL_INT(4, slig->stats.attacks[0].number);
     TEST_ASSERT_EQUAL_INT(1, slig->stats.attacks[0].num_dice);
-    TEST_ASSERT_EQUAL_INT(4, slig->stats.attacks[0].num_sides);
-    TEST_ASSERT_EQUAL_INT(0, slig->stats.attacks[0].num_bonuses);
-    TEST_ASSERT_EQUAL_INT(0, slig->stats.attacks[1].num_attacks);
-    TEST_ASSERT_EQUAL_INT(0, slig->stats.attacks[2].num_attacks);
+    TEST_ASSERT_EQUAL_INT(4, slig->stats.attacks[0].sides);
+    TEST_ASSERT_EQUAL_INT(0, slig->stats.attacks[0].bonus);
+    TEST_ASSERT_EQUAL_INT(0, slig->stats.attacks[1].number);
+    TEST_ASSERT_EQUAL_INT(0, slig->stats.attacks[2].number);
 }
 
 int main(void) {

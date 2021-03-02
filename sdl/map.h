@@ -3,7 +3,7 @@
 
 #include <SDL2/SDL.h>
 #include "animate.h"
-#include "../src/ds-region.h"
+#include "../src/region.h"
 #include "screen-manager.h"
 
 typedef struct map_s {

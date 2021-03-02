@@ -8,7 +8,7 @@
 #include "font.h"
 #include "../src/dsl.h"
 #include "../src/ds-player.h"
-#include "../src/ds-region.h"
+#include "../src/region.h"
 
 #define MAX_SCREENS (10)
 

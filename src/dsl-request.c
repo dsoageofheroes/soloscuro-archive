@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include "dsl.h"
-#include "ds-region.h"
+#include "region.h"
 #include "ds-state.h"
 #include "port.h"
 #include "trigger.h"

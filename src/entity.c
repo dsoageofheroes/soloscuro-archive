@@ -14,7 +14,7 @@ static void apply_combat(dude_t *dude, ds1_combat_t *combat) {
     dude->stats.hp = combat->hp;
     dude->stats.psp = combat->psp;
     dude->stats.special_defense = combat->special_defense;
-    dude->stats.attacks[0].special_attack = combat->special_attack;
+    dude->stats.attacks[0].special = combat->special_attack;
     dude->allegiance = combat->allegiance;
     dude->combat_flags = combat->flags;
     dude->stats.str = combat->stats.str;
@@ -32,7 +32,7 @@ static void apply_character(dude_t *dude, ds_character_t *ch) {
     dude->class[0].high_xp = ch->high_xp;
     dude->stats.hp = ch->base_hp;
     dude->stats.high_hp = ch->high_hp;
-    dude->stats.high_psp = ch->base_psp;// TODO: runs some test to make sure this is right.
+    dude->stats.high_psp = ch->base_psp;// TODO: run some tests to make sure this is right.
     dude->race = ch->race;
     dude->gender = ch->gender;
     dude->alignment = ch->alignment;
@@ -46,10 +46,10 @@ static void apply_character(dude_t *dude, ds_character_t *ch) {
         dude->class[i].class = ch->real_class[i];
         dude->class[i].level = ch->level[i];
         dude->class[i].high_level = ch->high_level[i];
-        dude->stats.attacks[i].num_attacks = ch->num_attacks[i];
+        dude->stats.attacks[i].number = ch->num_attacks[i];
         dude->stats.attacks[i].num_dice = ch->num_dice[i];
-        dude->stats.attacks[i].num_sides = ch->num_sides[i];
-        dude->stats.attacks[i].num_bonuses = ch->num_bonuses[i];
+        dude->stats.attacks[i].sides = ch->num_sides[i];
+        dude->stats.attacks[i].bonus = ch->num_bonuses[i];
     }
     dude->stats.base_ac = ch->base_ac;
     dude->stats.base_move = ch->base_move;
@@ -127,6 +127,7 @@ entity_t* entity_create_from_objex(const int id) {
                 warn("mini loading from rdff not implemented.\n");
                 break;
         }
+
         rdff_pos += sizeof(rdff_disk_object_t) + rdff->len;
         rdff = (rdff_disk_object_t*) (buf + rdff_pos);
     }
@@ -138,4 +139,13 @@ error:
     if (dude) { free(dude); }
     if (buf) { free(buf); }
     return NULL;
+}
+
+void entity_free(entity_t *dude) {
+    if (dude->name) {
+        free(dude->name);
+        dude->name = NULL;
+    }
+
+    free(dude); // Dude has got to be free!
 }

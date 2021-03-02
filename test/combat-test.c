@@ -6,8 +6,8 @@
 #include "../src/ds-load-save.h"
 #include "../src/ds-player.h"
 #include "../src/ds-state.h"
-#include "../src/ds-region.h"
-#include "../src/ds-region-manager.h"
+#include "../src/region.h"
+#include "../src/region-manager.h"
 #include <string.h>
 #include <stdlib.h>
 

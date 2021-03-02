@@ -17,11 +17,11 @@ typedef struct saving_throws_s {
 } saving_throws_t;
 
 typedef struct innate_attack_s {
-    uint8_t num_attacks;
+    uint8_t number;
     uint8_t num_dice;
-    uint8_t num_sides;
-    uint8_t num_bonuses;
-    uint32_t special_attack;
+    uint8_t sides;
+    uint8_t bonus;
+    uint32_t special;
 } innate_attack_t;
 
 typedef struct stats_s {
@@ -93,5 +93,6 @@ typedef struct entity_s {
 typedef entity_t dude_t;
 
 extern entity_t* entity_create_from_objex(const int id);
+extern void entity_free(entity_t *entity);
 
 #endif

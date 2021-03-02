@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "../src/dsl.h"
-#include "../src/ds-region.h"
+#include "../src/region.h"
 #include "../src/gff.h"
 #include "../src/gff-map.h"
 #include "../src/gff-image.h"

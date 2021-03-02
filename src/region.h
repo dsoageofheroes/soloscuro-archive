@@ -7,6 +7,8 @@
 #include "../src/gff-map.h"
 #include "ds-object.h"
 #include "combat.h"
+#include "passive.h"
+#include "entity-list.h"
 
 typedef struct dsl_region_s {
     gff_map_object_t *entry_table;
@@ -25,6 +27,7 @@ typedef struct dsl_region_s {
 
 // Until I can get rid of the misnaming
 #define ds_region_t dsl_region_t
+
 
 extern dsl_region_t* dsl_load_region(const int gff_file);
 extern dsl_region_t* init_region_from_gff(const int gff_file);
@@ -51,5 +54,26 @@ extern void dsl_region_free(dsl_region_t *region);
 
 // external functions...
 extern void combat_update(dsl_region_t *reg);
+
+// New interface.
+#define MAX_PASSIVES (1<<10)
+
+typedef struct region_s {
+    gff_map_object_t *entry_table;
+    //uint32_t *ids;
+    uint8_t flags[MAP_ROWS][MAP_COLUMNS];
+    uint8_t tile_ids[MAP_ROWS][MAP_COLUMNS];
+    uint32_t num_tiles;
+    //uint32_t entry_size;
+    uint32_t palette_id;
+    //uint32_t flags_size, tile_ids_size;
+    uint32_t gff_file;
+    uint32_t map_id;
+    passive_t passives[MAX_PASSIVES];
+    entity_list_t *entities;
+} region_t;
+
+region_t* region_create(const int gff_file);
+void region_free(region_t *region);
 
 #endif

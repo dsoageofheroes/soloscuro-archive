@@ -1,6 +1,6 @@
 #include "dsl.h"
 #include "ds-player.h"
-#include "ds-region.h"
+#include "region.h"
 #include "gff-map.h"
 #include "gff.h"
 #include "gfftypes.h"
@@ -8,9 +8,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-static void dsl_load_map_tile_ids(dsl_region_t* region);
-static void dsl_load_map_flags(dsl_region_t *region);
-static dsl_region_t *cregion = NULL;
+static void load_tile_ids(region_t *reg);
+static void load_map_flags(region_t *reg);
+
+#define GMAP_MAX (MAP_ROWS * MAP_COLUMNS)
 
 static int is_region(const int gff_idx) {
     int has_rmap = 0, has_gmap = 0, has_tile = 0, has_etab = 0;
@@ -27,6 +28,101 @@ static int is_region(const int gff_idx) {
 
     return has_rmap && has_gmap && has_tile && has_etab;
 }
+
+region_t* region_create(const int gff_file) {
+    if (!is_region(gff_file)) { return NULL; } // guard
+
+    uint32_t *tids = NULL;
+    region_t *reg = calloc(1, sizeof(region_t));
+
+    reg->gff_file = gff_file;
+    reg->entities = entity_list_create();
+
+    tids = gff_get_id_list(reg->gff_file, GFF_ETAB); // temporary to find current id for palette!
+    if (!tids) { error("Unable to find current id for map\n"); return NULL; }
+    reg->map_id = *tids;
+    free(tids);
+
+    gff_chunk_header_t chunk = gff_find_chunk_header(reg->gff_file, GFF_ETAB, reg->map_id);
+    reg->entry_table = malloc(chunk.length);
+    if (!reg->entry_table) {
+        error("Unable to malloc entry table for region!\n");
+        free(reg);
+        return NULL;
+    }
+    gff_read_chunk(reg->gff_file, &chunk, reg->entry_table, chunk.length);
+    open_files[reg->gff_file].num_objects = chunk.length / sizeof(gff_map_object_t);
+    reg->palette_id = gff_get_palette_id(DSLDATA_GFF_INDEX, reg->map_id - 1);
+    //reg->ids = gff_get_id_list(reg->gff_file, GFF_TILE);
+
+    //TODO Finish region_create!
+    load_tile_ids(reg);
+    load_map_flags(reg);
+
+    return reg;
+}
+
+void region_free(region_t *reg) {
+    if (!reg) { return; }
+
+    if (reg->entities) {
+        entity_list_free(reg->entities);
+        reg->entities = NULL;
+    }
+
+    if (reg->entry_table) {
+        free(reg->entry_table);
+        reg->entry_table = NULL;
+    }
+}
+
+static void load_tile_ids(region_t *reg) {
+    unsigned int *rmap_ids = gff_get_id_list(reg->gff_file, GFF_RMAP);
+    unsigned char *data;
+    
+    gff_chunk_header_t chunk = gff_find_chunk_header(reg->gff_file, GFF_RMAP, rmap_ids[0]);
+    data = malloc(chunk.length);
+    if (!data) {
+        error ("unable to allocate data for rmap\n");
+        goto out;
+    }
+    if (!gff_read_chunk(reg->gff_file, &chunk, data, chunk.length)) {
+        error ("Unable to read RMAP!\n");
+        goto out;
+    }
+
+    reg->num_tiles = gff_get_resource_length(reg->gff_file, GFF_TILE);
+    memcpy(reg->tile_ids, data, chunk.length);
+
+    free(data);
+
+out:
+    free(rmap_ids);
+}
+
+static void load_map_flags(region_t *reg) {
+    unsigned int *gmap_ids = gff_get_id_list(reg->gff_file, GFF_GMAP);
+    gff_chunk_header_t chunk = gff_find_chunk_header(reg->gff_file, GFF_GMAP, gmap_ids[0]);
+
+    if (chunk.length > GMAP_MAX) {
+        error ("chunk.length (%d) is grater that GMAP_MAX(%d)\n", chunk.length, GMAP_MAX);
+        exit(1);
+    }
+
+    if (!gff_read_chunk(reg->gff_file, &chunk, reg->flags, chunk.length)) {
+        error ("Unable to read GFF_GMAP chunk!\n");
+        goto out;
+    }
+
+out:
+    free(gmap_ids);
+}
+
+// Below is to be DEPRECATED
+
+static void dsl_load_map_tile_ids(dsl_region_t* region);
+static void dsl_load_map_flags(dsl_region_t *region);
+static dsl_region_t *cregion = NULL;
 
 dsl_region_t* init_region_from_gff(const int gff_file) {
     if (!is_region(gff_file)) { return NULL; } // guard
@@ -289,8 +385,6 @@ unsigned char* dsl_load_object_bmp(dsl_region_t *region, const uint32_t id, cons
             (int32_t*)&(obj->bmp_width), (int32_t*)&(obj->bmp_height), bmp_id, 
             region->palette_id);
 }
-
-#define GMAP_MAX (1<<14)
 
 static void dsl_load_map_flags(dsl_region_t *region) {
     unsigned int *gmap_ids = gff_get_id_list(region->gff_file, GFF_GMAP);

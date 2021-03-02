@@ -1,7 +1,7 @@
 #include "dsl.h"
 #include "dsl-manager.h"
 #include "ds-state.h"
-#include "ds-region.h"
+#include "region.h"
 #include "replay.h"
 #include "trigger.h"
 #include <stdlib.h>

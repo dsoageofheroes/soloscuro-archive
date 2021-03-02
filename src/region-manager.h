@@ -1,7 +1,7 @@
 #ifndef REGION_MANAGER_H
 #define REGION_MANAGER_H
 
-#include "ds-region.h"
+#include "region.h"
 
 void ds_region_manager_init();
 void ds_region_manager_cleanup();
