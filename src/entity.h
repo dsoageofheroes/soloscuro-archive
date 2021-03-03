@@ -7,7 +7,7 @@
 #include "gff-map.h"
 #include "spells.h"
 
-typedef uint64_t ability_set_t;
+//typedef uint64_t ability_set_t;
 
 // Alternative ability_set for evaluation
 /*
@@ -27,11 +27,12 @@ struct psi_abilities_s {
     unsigned int telepathy        : 1;
 };
 
-struct ability_set_s {
+typedef struct ability_set_s {
+    unsigned int hunt             : 1;
     struct psi_abilities_s psi;
     //struct spell_abilities_s spells; // NOT shown
     //struct class_abilities_s class;  // Not shown
-};
+} ability_set_t;
 
 typedef struct saving_throws_s {
     uint8_t paralysis;

@@ -17,7 +17,7 @@ void entity_list_remove(entity_list_t *list, entity_list_node_t *node);
 void entity_list_load_etab(entity_list_t *list, const int gff_idx, const int map_id);
 
 #define entity_list_for_each(el, obj) \
-    obj = el ? (*el)->entity : NULL; \
+    obj = (el && *el) ? (*el)->entity : NULL; \
     for (entity_list_node_t *__el_rover = (*el); __el_rover;\
         __el_rover = __el_rover->next, obj = __el_rover ? __el_rover->entity : NULL)
 

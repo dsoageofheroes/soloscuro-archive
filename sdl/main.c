@@ -14,6 +14,7 @@
 #include "../src/dsl.h"
 #include "../src/dsl-manager.h"
 #include "../src/replay.h"
+#include "../src/region-manager.h"
 #include "../src/ds-load-save.h"
 #include "../src/ds-player.h"
 
@@ -155,7 +156,7 @@ void main_center_on_player() {
 }
 
 void render() {
-    combat_update(dsl_region_get_current());
+    combat_update(region_manager_get_current());
     screen_render(renderer, xmappos, ymappos);
 }
 

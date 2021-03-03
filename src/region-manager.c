@@ -74,7 +74,7 @@ ds_region_t* ds_region_load_region(const int region_id) {
 void ds_region_load_region_from_save(const int id, const int region_id) {
     char gff_name[32];
     char *buf = NULL;
-    gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes;
+    //gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes;
 
     snprintf(gff_name, 32, "rgn%x.gff", id);
     int gff_index = gff_find_index(gff_name);
@@ -92,6 +92,7 @@ void ds_region_load_region_from_save(const int id, const int region_id) {
     }
 
     // TODO: clean this up.
+    /*
     for (int i = 0; i < MAX_REGION_OBJS; i++) {
         //printf("reg->list->objs[i].entry_id = %d, %d\n", reg->list->objs[i].entry_id, reg->list->objs[i].combat_id);
         region_object_t *robj = reg->list->objs + i;
@@ -121,6 +122,7 @@ void ds_region_load_region_from_save(const int id, const int region_id) {
         }
         robj->data = NULL;
     }
+    */
 
     chunk = gff_find_chunk_header(id, GFF_RDAT, region_id);
     buf = malloc(chunk.length);

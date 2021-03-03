@@ -51,8 +51,6 @@ int ds_region_location_blocked(dsl_region_t *reg, const int32_t x, const int32_t
 
 extern void dsl_region_free(dsl_region_t *region);
 
-// external functions...
-extern void combat_update(dsl_region_t *reg);
 
 // New interface.
 #define MAX_PASSIVES (1<<10)
@@ -70,12 +68,18 @@ typedef struct region_s {
     uint32_t map_id;
     passive_t passives[MAX_PASSIVES];
     entity_list_t *entities;
+    combat_region_t cr;
 } region_t;
 
-region_t* region_create(const int gff_file);
-void region_free(region_t *region);
-int region_get_tile(const region_t *reg, const uint32_t image_id,
+// external functions...
+extern void combat_update(region_t *reg);
+
+extern region_t* region_create(const int gff_file);
+extern void region_free(region_t *region);
+extern int region_get_tile(const region_t *reg, const uint32_t image_id,
         uint32_t *w, uint32_t *h, unsigned char **data);
-entity_t* region_find_entity_by_id(region_t *reg, const int id);
+extern entity_t* region_find_entity_by_id(region_t *reg, const int id);
+extern void region_move_to_nearest(const region_t *reg, entity_t *entity);
+extern int region_location_blocked(const region_t *reg, const int32_t x, const int32_t y);
 
 #endif

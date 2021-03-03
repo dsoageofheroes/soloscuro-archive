@@ -1,8 +1,10 @@
+#include "combat.h"
 #include "dsl.h"
 #include "entity.h"
 #include "gff.h"
 #include "gfftypes.h"
 #include "gff-map.h"
+#include "region-manager.h"
 #include <stdlib.h>
 #include <string.h>
 

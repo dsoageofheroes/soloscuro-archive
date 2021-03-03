@@ -10,10 +10,9 @@
 
 //static combat_action_list_t action_list;
 static int current_player = 0;
-static int wait_on_player = 0;
-static combat_action_t monster_actions[MAX_COMBAT_ACTIONS]; // list of actions for a monster's turn.
-static int monster_step = -1; // keep track of what step of the action the monster is on.
-//static int monster_move = -1;
+//static int wait_on_player = 0;
+//static combat_action_t monster_actions[MAX_COMBAT_ACTIONS]; // list of actions for a monster's turn.
+//static int monster_step = -1; // keep track of what step of the action the monster is on.
 
 typedef struct combat_entry_s {
     int initiative;
@@ -21,6 +20,7 @@ typedef struct combat_entry_s {
     combat_action_t current_action;
     region_object_t *robj;
     ds1_combat_t *combat;
+    entity_t *entity;
     struct combat_entry_s *next;
 } combat_entry_t;
 
@@ -34,10 +34,10 @@ typedef struct action_node_s {
 
 static int in_combat = 0;
 static int need_to_cleanup = 0; // combat is over, but things aren't clean yet...
-static combat_entry_t *combat_order = NULL;
-static combat_entry_t *current_turn = NULL;
+//static combat_entry_t *combat_order = NULL;
+//static combat_entry_t *current_turn = NULL;
 
-static int is_combat_over(ds_region_t *reg);
+//static int is_combat_over(ds_region_t *reg);
 
 const enum combat_turn_t combat_player_turn() {
     if (!in_combat) { return NO_COMBAT; }
@@ -48,9 +48,12 @@ const enum combat_turn_t combat_player_turn() {
 
 void combat_init(combat_region_t *cr) {
     memset(cr, 0x0, sizeof(combat_region_t));
+    cr->combatants = entity_list_create();
 }
 
-void combat_free(combat_region_t *rc) {
+void combat_free(combat_region_t *cr) {
+    entity_list_free(cr->combatants);
+    free(cr->combatants);
 }
 
 static scmd_t combat_move_down[] = {
@@ -162,16 +165,10 @@ static scmd_t* get_scmd(scmd_t *current_scmd, const int xdiff, const int ydiff) 
 
 static int32_t ticks_per_game_round = 20;// For outside combat.
 
-static int location_is_blocked(dsl_region_t *reg, const uint32_t x, const uint32_t y) {
-    return ds_region_location_blocked(reg, x, y)
-        || dsl_region_is_block(reg, y, x + 1)
-        || dsl_region_has_object(reg, x, y);
-}
-
 //TODO: Ignores walls, but that might be okay right now.
-static int calc_distance_to_player(region_object_t *robj) {
-    int xdiff = (robj->mapx - ds_player_get_pos(ds_player_get_active())->xpos);
-    int ydiff = (robj->mapy - ds_player_get_pos(ds_player_get_active())->ypos);
+static int calc_distance_to_player(entity_t *entity) {
+    int xdiff = (entity->mapx - ds_player_get_pos(ds_player_get_active())->xpos);
+    int ydiff = (entity->mapy - ds_player_get_pos(ds_player_get_active())->ypos);
 
     if (xdiff < 0) { xdiff *= -1;}
     if (ydiff < 0) { ydiff *= -1;}
@@ -179,6 +176,7 @@ static int calc_distance_to_player(region_object_t *robj) {
     return xdiff > ydiff ? xdiff : ydiff;
 }
 
+/*
 static int enemies_alive(combat_region_t *cr) {
     for (int i = 0; i < cr->pos + 1; i++) {
         if (cr->combats[i].allegiance > 1) { // looks like > 1 is hostile.
@@ -223,7 +221,7 @@ static void add_to_combat(region_object_t *robj, ds1_combat_t *combat) {
 }
 
 static void enter_combat_mode(dsl_region_t *reg) {
-    gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
+    //gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     printf("Enter combat mode.\n");
     combat_region_t *cr = &(reg->cr);
     if (!enemies_alive(cr)) {
@@ -244,8 +242,10 @@ static void enter_combat_mode(dsl_region_t *reg) {
     // Right now players are not part of combat, so add them!
     for (int i = 0; i < MAX_PCS; i++) {
         if (ds_player_exists(i)) {
-            combat_add(&(dsl_region_get_current()->cr), ds_player_get_robj(i), ds_player_get_combat(i));
-            port_add_obj(ds_player_get_robj(i), pal);
+            printf("NEED TO IMPLEMENT COMBAT ENTRY!!!\n");
+            exit(1);
+            //combat_add(&(dsl_region_get_current()->cr), ds_player_get_robj(i), ds_player_get_combat(i));
+            //port_add_obj(ds_player_get_robj(i), pal);
         }
     }
 
@@ -389,7 +389,6 @@ static int player_to_attack(ds_region_t *reg, action_node_t *node) {
 
     return -1;
 }
-
 
 static void generate_monster_actions(ds_region_t *reg) {
     // Start of AI, lets just go to the closest PC and attack.
@@ -556,8 +555,9 @@ static int is_combat_over(ds_region_t *reg) {
 
     return num_types < 2;
 }
+*/
 
-void combat_update(ds_region_t *reg) {
+void combat_update(region_t *reg) {
     if (reg == NULL) { return; }
     combat_region_t *cr = &(reg->cr);
     player_pos_t* pc = ds_player_get_pos(ds_player_get_active());
@@ -571,6 +571,7 @@ void combat_update(ds_region_t *reg) {
 
     if (need_to_cleanup) { return; }
 
+    /*
     if (in_combat) {
         in_combat = !is_combat_over(reg); // Just to check
         if (in_combat) {
@@ -581,41 +582,40 @@ void combat_update(ds_region_t *reg) {
             return;
         }
         need_to_cleanup = 1;
-        printf("HERE!!!!!!!!!!!!!!!!!\n");
         return;
         // We were in combat but now it is over. Need to clean up.
     }
+    */
 
-    for (int i = 0; i < cr->pos + 1; i++) {
-        if (cr->hunt[i]) {
-            xdiff = pc->xpos - cr->robjs[i]->mapx;
-            ydiff = pc->ypos - cr->robjs[i]->mapy;
+    dude_t *bad_dude = NULL;
+    entity_list_for_each(reg->cr.combatants, bad_dude) {
+        if (bad_dude->abilities.hunt) {
+            xdiff = pc->xpos - bad_dude->mapx;
+            ydiff = pc->ypos - bad_dude->mapy;
             xdiff = (xdiff < 0) ? -1 : (xdiff > 0) ? 1 : 0;
             ydiff = (ydiff < 0) ? -1 : (ydiff > 0) ? 1 : 0;
-            posx = cr->robjs[i]->mapx;
-            posy = cr->robjs[i]->mapy;
+            posx = bad_dude->mapx;
+            posy = bad_dude->mapy;
 
-            //printf("pos = (%d, %d)\n", posx, posy);
-
-            if (location_is_blocked(reg, posx + xdiff, posy + ydiff)
+            if (region_location_blocked(reg, posx + xdiff, posy + ydiff)
                     ){
-                if (!location_is_blocked(reg, posx, posy + ydiff)) {
+                if (!region_location_blocked(reg, posx, posy + ydiff)) {
                     xdiff = 0;
-                } else if (!location_is_blocked(reg, posx + xdiff, posy)) {
+                } else if (!region_location_blocked(reg, posx + xdiff, posy)) {
                     ydiff = 0;
                 } else {
                     xdiff = ydiff = 0;
                 }
             }
-            cr->robjs[i]->scmd = get_scmd(cr->robjs[i]->scmd, xdiff, ydiff);
-            if (calc_distance_to_player(cr->robjs[i]) < 5) {
-                enter_combat_mode(reg);
+            bad_dude->sprite.scmd = get_scmd(bad_dude->sprite.scmd, xdiff, ydiff);
+            if (calc_distance_to_player(bad_dude) < 5) {
+                //enter_combat_mode(reg);
                 return;
             }
-            port_update_obj(cr->robjs[i], xdiff, ydiff);
+            port_update_entity(bad_dude, xdiff, ydiff);
         } else {
-            if (cr->robjs[i]) {
-                port_update_obj(cr->robjs[i], 0, 0);
+            if (bad_dude) {
+                port_update_entity(bad_dude, 0, 0);
             }
         }
     }
@@ -623,16 +623,6 @@ void combat_update(ds_region_t *reg) {
 
 scmd_t* combat_get_scmd(const enum combat_scmd_t type) {
     return combat_types[type];
-}
-
-static uint32_t find_next_pos(combat_region_t *rc) {
-    size_t searched = 0;
-    while (rc->combats[rc->pos].hp) {
-        rc->pos = (rc->pos + 1) % MAX_COMBAT_OBJS;
-        searched++;
-        if (searched > MAX_COMBAT_OBJS) { return COMBAT_ERROR; }
-    }
-    return rc->pos;
 }
 
 ds1_combat_t* combat_get_combat( combat_region_t* cr, const uint32_t combat_id) {
@@ -646,19 +636,13 @@ void combat_set_hunt(combat_region_t *cr, const uint32_t combat_id) {
 }
 
 // This does not force into combat mode, simply add a combat to the current region.
-uint32_t combat_add(combat_region_t *rc, region_object_t *robj, ds1_combat_t *combat) {
-    size_t i;
-    if (!rc || !robj || !combat) { return COMBAT_ERROR; }
-    if (find_next_pos(rc) == COMBAT_ERROR) { return COMBAT_ERROR; }
+//uint32_t combat_add(combat_region_t *rc, region_object_t *robj, ds1_combat_t *combat) {
+uint32_t combat_add(combat_region_t *rc, entity_t *entity) {
+    if (!rc || !entity) { return 0; }
 
-    memcpy(rc->combats + rc->pos, combat, sizeof(ds1_combat_t) - 16); // Don't copy the name over!
-    for (i = 0; i < 17 && combat->name[i]; i++) {
-        rc->combats[rc->pos].name[i] = combat->name[i];
-    }
     // Force the name to be null-terminated.
-    i = i >= 17 ? 16 : i;
-    combat->name[i] = '\0';
     //printf("Added %s\n", combat->name);
-    rc->robjs[rc->pos] = robj;
-    return rc->pos;
+    entity_list_add(rc->combatants, entity);
+    //rc->robjs[rc->pos] = robj;
+    return 1;
 }

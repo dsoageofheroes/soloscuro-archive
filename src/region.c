@@ -60,6 +60,7 @@ region_t* region_create(const int gff_file) {
     load_tile_ids(reg);
     load_map_flags(reg);
     load_passives(reg, reg->gff_file, reg->map_id);
+    combat_init(&(reg->cr));
     //region_list_load_objs(ret->list, ret->gff_file, ret->map_id);
 
     return reg;
@@ -222,6 +223,19 @@ dsl_region_t* dsl_load_region(const int gff_file) {
     return ret;
 }
 
+int region_location_blocked(const region_t *reg, const int32_t x, const int32_t y) {
+    dude_t *dude = NULL;
+    //if (reg->flags[x][y]) { return 1; }
+    entity_list_for_each(reg->entities, dude) {
+        //printf("(%d, %d) ?= (%d, %d)\n", obj->mapx, obj->mapy, x, y);
+        if (dude->mapx == x && dude->mapy == y) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
 int ds_region_location_blocked(dsl_region_t *reg, const int32_t x, const int32_t y) {
     //return dsl_region_is_block(reg, x, y);
     region_object_t *obj = NULL;
@@ -271,6 +285,50 @@ static void place_region_object(dsl_region_t *reg, region_object_t *robj, const 
     if (!ds_region_location_blocked(reg, x + 1, y + 1)) {
         robj->mapx = x + 1;
         robj->mapy = y + 1;
+        return;
+    }
+
+    error("Unable to place object, please update place_region_object!\n");
+    exit(1);
+}
+
+void region_move_to_nearest(const region_t *reg, entity_t *entity) {
+    //if (!region_location_blocked(reg, entity->mapx, entity->mapy)) { return; }
+    printf("Tyring to place: %d, %d\n", entity->mapx, entity->mapy);
+    if (!region_location_blocked(reg, entity->mapx, entity->mapy + 1)) {
+        entity->mapy = entity->mapy + 1;
+        return;
+    }
+    if (!region_location_blocked(reg, entity->mapx - 1, entity->mapy + 1)) {
+        entity->mapx = entity->mapx - 1;
+        entity->mapy = entity->mapy + 1;
+        return;
+    }
+    if (!region_location_blocked(reg, entity->mapx - 1, entity->mapy)) {
+        entity->mapx = entity->mapx - 1;
+        return;
+    }
+    if (!region_location_blocked(reg, entity->mapx - 1, entity->mapy - 1)) {
+        entity->mapx = entity->mapx - 1;
+        entity->mapy = entity->mapy - 1;
+        return;
+    }
+    if (!region_location_blocked(reg, entity->mapx, entity->mapy - 1)) {
+        entity->mapy = entity->mapy - 1;
+        return;
+    }
+    if (!region_location_blocked(reg, entity->mapx + 1, entity->mapy - 1)) {
+        entity->mapx = entity->mapx + 1;
+        entity->mapy = entity->mapy - 1;
+        return;
+    }
+    if (!region_location_blocked(reg, entity->mapx + 1, entity->mapy)) {
+        entity->mapx = entity->mapx + 1;
+        return;
+    }
+    if (!region_location_blocked(reg, entity->mapx + 1, entity->mapy + 1)) {
+        entity->mapx = entity->mapx + 1;
+        entity->mapy = entity->mapy + 1;
         return;
     }
 
@@ -329,7 +387,9 @@ uint16_t dsl_region_create_from_objex(dsl_region_t *reg, const int id, const int
     switch(rdff->type) {
         case COMBAT_OBJECT:
             robj->scmd = combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
-            robj->combat_id = combat_add(&(reg->cr), robj, (ds1_combat_t *) (rdff + 1));
+            //robj->combat_id = combat_add(&(reg->cr), robj, (ds1_combat_t *) (rdff + 1));
+            printf("ERROR: DEPRECATED FUNCTION called\n");
+            exit(1);
             break;
         case CHAR_OBJECT:
             printf("CHAR OBJECT!!!!!\n");

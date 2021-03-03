@@ -635,24 +635,29 @@ int16_t request_to_do(int16_t name, int16_t rectype, int (*request_proc)(int16_t
 }
 
 int req_animation(int16_t object, long notused1, long notused2) {
-    debug("Need to request animation on %d\n", object);
+    debug("Request animation on %d\n", object);
     dude_t *dude = region_find_entity_by_id(region_manager_get_current(), object);
     dsl_set_gname(GNAME_PASSIVE, object);
+
     if (dude) {
         port_animate_entity(dude);
     } else {
         error("Unable to find object %d\n", object);
     }
+
     return 0;
 }
 
 int req_set_allegiance(int16_t object, long allegiance, long notused2) {
-    region_object_t* robj = dsl_region_get_object(object);
+    dude_t *dude = NULL;
 
-    if (robj) {
-        dsl_region_set_allegiance(dsl_region_get_current(), robj->obj_id, allegiance);
-    } else {
-        error("error: Unable to find object: %d\n", object);
+    entity_list_for_each(region_manager_get_current()->entities, dude) {
+        if (dude->ds_id == object) {
+            dude->allegiance = allegiance;
+            combat_add(&(region_manager_get_current()->cr), dude);
+        } else {
+            error("error: Unable to find object: %d\n", object);
+        }
     }
 
     return object;

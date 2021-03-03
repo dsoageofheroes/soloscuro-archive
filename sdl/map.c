@@ -212,6 +212,20 @@ void port_add_obj(region_object_t *obj, gff_palette_t *pal) {
     anim_pos++;
 }
 
+void port_update_entity(entity_t *entity, const uint16_t xdiff, const uint16_t ydiff) {
+    animate_sprite_t *as = (animate_sprite_t*) entity->sprite.data;
+    //printf("cur:%d %d\n", as->x, as->y);
+    //printf("dest: %d, %d\n", as->destx, as->desty);
+    as->x = as->destx;
+    as->y = as->desty;
+    entity->mapx += xdiff;
+    entity->mapy += ydiff;
+    as->destx = entity->mapx * 16 * main_get_zoom();
+    as->desty = entity->mapy * 16 * main_get_zoom();
+    //as->desty -= sprite_geth(as->spr) - (8 * main_get_zoom());
+    animate_set_animation(as, entity->sprite.scmd, 20);
+}
+
 void port_update_obj(region_object_t *robj, const uint16_t xdiff, const uint16_t ydiff) {
     animate_sprite_t *as = (animate_sprite_t*) robj->data;
     //printf("cur:%d %d\n", as->x, as->y);

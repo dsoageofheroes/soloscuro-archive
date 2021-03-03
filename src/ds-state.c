@@ -490,6 +490,7 @@ static int dsl_clone(lua_State *l) {
 
         if (dude) {
             if (dude->sprite.scmd == NULL) { dude->sprite.scmd = ds_scmd_empty(); }
+            region_move_to_nearest(region_manager_get_current(), dude);
             entity_list_add(region_manager_get_current()->entities, dude);
             port_add_entity(dude, pal);
         }
@@ -501,16 +502,14 @@ static int dsl_clone(lua_State *l) {
 
 static int dsl_hunt(lua_State *l) {
     lua_Integer obj = luaL_checkinteger(l, 1);
+    dude_t *dude = NULL;
 
-    debug("Need to let " PRI_LI " hunt.\n", obj);
-    // Need to get actual id of obj first.
-    region_object_t* robj = dsl_region_get_object(obj);
-    //dsl_region_set_hunt(dsl_region_get_current(), obj);
-    if (robj) {
-        dsl_region_set_hunt(dsl_region_get_current(), robj->obj_id);
-    } else {
-        error("unable to find an object for entry " PRI_LI "\n", obj);
+    entity_list_for_each(region_manager_get_current()->entities, dude) {
+        if (dude->ds_id == (int)obj) {
+            dude->abilities.hunt = 1;
+        } 
     }
+
     return 0;
 }
 
