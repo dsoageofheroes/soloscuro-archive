@@ -2,6 +2,7 @@
 #include "dsl-manager.h"
 #include "ds-state.h"
 #include "region.h"
+#include "region-manager.h"
 #include "replay.h"
 #include "trigger.h"
 #include <stdlib.h>
@@ -251,9 +252,9 @@ void trigger_noorders(uint32_t x, uint32_t y) {
     trigger_node_t *rover = noorders_list;
 
     while (rover) {
-        region_object_t* robj = dsl_region_find_object(rover->noorders.obj);
+        dude_t *dude = region_find_entity_by_id(region_manager_get_current(), rover->noorders.obj);
         //printf("%d: player (%d, %d) vs (%d, %d) \n", rover->noorders.obj, x, y, robj->mapx, robj->mapy);
-        if (robj && rover->noorders.trigger_on_tile && (robj->mapx) == x && (robj->mapy) == y) {
+        if (dude && rover->noorders.trigger_on_tile && (dude->mapx) == x && (dude->mapy) == y) {
             rover->noorders.trigger_on_tile = 0;
             rover->noorders.need_to_run = 1;
         }

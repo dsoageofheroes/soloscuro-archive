@@ -51,8 +51,7 @@ void map_free(map_t *map) {
 }
 
 int cmap_is_block(const int row, const int column) {
-    if (!cmap) { return 0; }
-    return dsl_region_is_block(cmap->region, row, column);
+    return region_manager_get_current()->flags[row][column];
 }
 
 int cmap_is_actor(const int row, const int column) {
@@ -72,7 +71,7 @@ static void map_load_current_region() {
     uint32_t width, height;
     size_t max_id = 0;
     unsigned char *data;
-    region_object_t *obj;
+    //region_object_t *obj;
     gff_palette_t *pal;
     map_t *map = cmap;
 
@@ -94,14 +93,9 @@ static void map_load_current_region() {
         free(data);
     }
 
-    //dude_t *dude;
-    //entity_list_for_each(map->new_region->entities, dude) {
-        //port_add_entity(dude, pal);
-    //}
-
-    region_list_for_each(map->region->list, obj) {
-        //printf("(%d, %d, %d), scmd = %p, bmp = %d\n", obj->mapx, obj->mapy, obj->mapz, obj->scmd, obj->btc_idx);
-        port_add_obj(obj, pal);
+    dude_t *dude;
+    entity_list_for_each(map->new_region->entities, dude) {
+        port_add_entity(dude, pal);
     }
 
     cmap = map;
@@ -132,11 +126,6 @@ void map_load_map(SDL_Renderer *renderer, int id) {
     if (!cmap) { cmap = create_map(); }
 
     cren = renderer;
-    ds_region_t* reg = ds_region_get_region(id);
-
-    if (!reg) {
-        cmap->region = ds_region_load_region(id);
-    }
     cmap->new_region = region_manager_get_region(id);
 
     map_load_current_region();
@@ -187,13 +176,15 @@ void port_add_entity(entity_t *entity, gff_palette_t *pal) {
         sprite_new(cren, pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP, entity->sprite.bmp_id);
     anims[anim_pos].delay = 0;
     anims[anim_pos].pos = 0;
-    anims[anim_pos].x = entity->mapx * 16 * zoom;
-    anims[anim_pos].y = entity->mapy * 16 * zoom;
+    anims[anim_pos].x = (entity->mapx * 16 + entity->sprite.xoffset) * zoom;
+    anims[anim_pos].y = (entity->mapy * 16 + entity->sprite.yoffset + entity->mapz) * zoom;
     anims[anim_pos].destx = anims[anim_pos].x;
     anims[anim_pos].desty = anims[anim_pos].y;
     anims[anim_pos].move = anims[anim_pos].left_over = 0.0;
     anims[anim_pos].entity = entity;
     anim_nodes[anim_pos] = animate_list_add(anims + anim_pos, entity->mapz);
+    entity->sprite.data = anims + anim_pos;
+    anim_nodes[anim_pos]->anim->entity = entity;
     //entity->data = anims + anim_pos;
     //printf("%d: %d %d %d (%d, %d)\n", obj->combat_id, obj->mapx, obj->mapy, obj->mapz, anims[anim_pos].x, anims[anim_pos].y);
     //printf("             (%d, %d)\n", anims[anim_pos].destx, anims[anim_pos].desty);
@@ -249,6 +240,19 @@ void port_exit_combat() {
     // assign experience.
 }
 
+void port_swap_enitity(int obj_id, entity_t *dude) {
+    animate_sprite_t *as = (animate_sprite_t*) dude->sprite.data;
+    gff_palette_t *pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + cmap->new_region->map_id - 1;
+    const int zoom = 2.0;
+
+    if (as) {
+        sprite_free(as->spr);
+        as->spr = sprite_new(cren, pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP, dude->sprite.bmp_id);
+    } else {
+        error("Unable to find animation for obj_id!\n");
+    }
+}
+
 void port_swap_objs(int obj_id, region_object_t *obj) {
     animate_sprite_t *as = (animate_sprite_t*) obj->data;
     gff_palette_t *pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + cmap->region->map_id - 1;
@@ -263,16 +267,16 @@ void port_swap_objs(int obj_id, region_object_t *obj) {
 }
 
 #define CLICKABLE (0x10)
-
-region_object_t* get_object_at_location(const uint32_t x, const uint32_t y) {
-    region_object_t *obj = NULL;
+entity_t* get_entity_at_location(const uint32_t x, const uint32_t y) {
+    entity_t *dude = NULL;
     if (!cmap) { return 0; }
 
-    region_list_for_each(cmap->region->list, obj) {
-        animate_sprite_t *as = obj->data;
-        if (as && obj->flags & CLICKABLE) {
+    entity_list_for_each(cmap->new_region->entities, dude) {
+        animate_sprite_t *as = dude->sprite.data;
+        //printf("%d: %d, %d (%d, %d)\n", dude->ds_id, dude->mapx * 16, dude->mapy * 16, x, y);
+        if (as && dude->object_flags & CLICKABLE) {
             if (sprite_in_rect(as->spr, x, y)) {
-                return obj;
+                return dude;
             }
         }
     }
@@ -281,26 +285,27 @@ region_object_t* get_object_at_location(const uint32_t x, const uint32_t y) {
 }
 
 int map_handle_mouse(const uint32_t x, const uint32_t y) {
-    region_object_t *obj = NULL;
+    //region_object_t *obj = NULL;
 
     if (!cmap) { return 0; }
-    obj = get_object_at_location(x, y);
+    //obj = get_object_at_location(x, y);
 
-    if (obj) {
-        //debug("found @ %d, need to change icon\n", obj_id);
-    }
+    //if (obj) {
+        ////debug("found @ %d, need to change icon\n", obj_id);
+    //}
 
     return 1; // map always intercepts the mouse...
 }
 
 int map_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
-    region_object_t *obj = NULL;
+    dude_t *dude = NULL;
 
     if (!cmap) { return 0; }
 
-    if ((obj = get_object_at_location(x, y))) {
-        talk_click(obj->disk_idx);
+    if ((dude = get_entity_at_location(x, y))) {
+        talk_click(dude->ds_id);
     }
+    //printf("No dude there bruh.\n");
 
     return 1; // map always intercepts the mouse...
 }

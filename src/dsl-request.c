@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "dsl.h"
 #include "region.h"
+#include "region-manager.h"
 #include "ds-state.h"
 #include "port.h"
 #include "trigger.h"
@@ -183,10 +184,11 @@ uint32_t dsl_request_impl(int16_t token, int16_t name,
             if (!gff_read_object(num1, &dobj)) {
                 error("Unable to satisfy REQUEST_SWAP, not obj: %d\n", num1);
             }
-            region_object_t* robj = dsl_region_find_object(name);
-            robj->btc_idx = dobj.bmp_id;
+            region_t *reg = region_manager_get_current();
+            dude_t *dude = region_find_entity_by_id(reg, name);
+            dude->sprite.bmp_id = dobj.bmp_id;
             trigger_object_clear(name);
-            port_swap_objs(name, robj);
+            port_swap_enitity(name, dude);
             break;
         case REQUEST_SET_BLOCK:
             debug("Need to set (BLOCK) the bit flags for %d map position (%d, %d) to %d & commit!\n", name, num1, num2, GB_BLOCK);
@@ -634,10 +636,10 @@ int16_t request_to_do(int16_t name, int16_t rectype, int (*request_proc)(int16_t
 
 int req_animation(int16_t object, long notused1, long notused2) {
     debug("Need to request animation on %d\n", object);
-    region_object_t* robj = dsl_region_find_object(object);
+    dude_t *dude = region_find_entity_by_id(region_manager_get_current(), object);
     dsl_set_gname(GNAME_PASSIVE, object);
-    if (robj) {
-        port_animate_obj(robj);
+    if (dude) {
+        port_animate_entity(dude);
     } else {
         error("Unable to find object %d\n", object);
     }

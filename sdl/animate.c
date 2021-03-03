@@ -45,7 +45,7 @@ static SDL_RendererFlip animate_tick(animate_sprite_t *anim, const uint32_t xoff
 out:
     scmd_xoffset = anim->scmd->xoffset;
     if (anim->scmd[pos].flags & SCMD_XMIRROR
-        || (anim->obj && anim->obj->scmd_flags & 0x80)) {
+        || (anim->entity && anim->entity->sprite.flags & 0x80)) {
         scmd_xoffset -= sprite_get_xdiff_from_start(anim->spr);
         flip |= SDL_FLIP_HORIZONTAL;
     }
@@ -84,32 +84,36 @@ void animate_list_render(SDL_Renderer *renderer) {
 
 // The assembly makes even less sense...
 static int is_less(animate_sprite_t *a0, animate_sprite_t *a1) {
-    //const float zoom = 2.0;
-    if (a0->entity && a1->entity) {
-        // Okay this is close, we probably need to include sprite height, but I need to stop messing with it...
-        int diff = (a0->entity->mapy * 16 - a0->entity->sprite.yoffset) - (a1->entity->mapy * 16 - a1->entity->sprite.yoffset);
-        if (diff) { return diff < 0; }
-    }
+    const int map0y = a0->entity
+        ? (a0->entity->mapy * 16 - a0->entity->sprite.yoffset)
+        //: (a0->obj)
+        //? ((a0->obj->mapy + 1) * 16 + a0->obj->yoffset)
+        : 9999;
 
-    if (a0->obj && a1->obj) {
-        // Okay this is close, we probably need to include sprite height, but I need to stop messing with it...
-        int diff = (a0->obj->mapy * 16 - a0->obj->yoffset) - (a1->obj->mapy * 16 - a1->obj->yoffset);
-        if (diff) { return diff < 0; }
+    const int map1y = a1->entity
+        ? (a1->entity->mapy * 16 - a1->entity->sprite.yoffset)
+        //: (a1->obj)
+        //? ((a1->obj->mapy + 1) * 16 + a1->obj->yoffset)
+        : 9999;
 
-    }
 
-    const int map0y = a0->obj
+    /*
+    const int map0y = a0->entity
         //? ((a0->obj->mapy * zoom) - sprite_geth(a0->spr) )
         //? ((a0->obj->mapy) * zoom) - ((sprite_geth(a0->spr) - 16*zoom) / 2)
         ? ((sprite_geth(a0->spr)))
         //? ((a0->obj->mapy) * zoom)
         : -9999;
-    const int map1y = a1->obj
+    const int map1y = a1->entity
         //? ((a1->obj->mapy * zoom) - sprite_geth(a0->spr) )
         //? ((a1->obj->mapy) * zoom) - ((sprite_geth(a1->spr) - 16*zoom) / 2)
         ? ((sprite_geth(a1->spr)))
         //? ((a1->obj->mapy) * zoom)
         : -9999;
+        */
+    //printf("%p, %p\n", a0->obj, a1->obj);
+    //printf("%d, %d\n", map0y, map1y);
+    //printf("%p, %p\n", a0->entity, a1->entity);
     return map0y < map1y;
 }
 
@@ -203,7 +207,26 @@ void animate_close() {
     memset(animate_list, 0x0, sizeof(animate_sprite_node_t*) * MAX_ZPOS);
 }
 
+void port_animate_entity(entity_t *dude) {
+    animate_sprite_t *anim = dude->sprite.data;
+
+    // In case we are in the middle of an animation, skip past it.
+    while (! (anim->scmd[anim->pos].flags & SCMD_LAST) && anim->pos < SCMD_MAX_SIZE) {
+        anim->pos++;
+    }
+    if (anim->pos == SCMD_MAX_SIZE) { anim->pos = 0; }
+    // No increment and loop if needed
+    anim->pos++;
+    while (! (anim->scmd[anim->pos].flags & SCMD_LAST) && anim->pos < SCMD_MAX_SIZE) {
+        anim->pos++;
+    }
+    if (anim->pos == SCMD_MAX_SIZE) { anim->pos = 0; }
+}
+
+// Below to be deprecated
 void port_animate_obj(region_object_t *robj) {
+    printf("ANIMATE OBJ\n");
+    //exit(1);
     animate_sprite_t *anim = robj->data;
 
     // In case we are in the middle of an animation, skip past it.

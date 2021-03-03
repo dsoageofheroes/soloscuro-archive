@@ -76,5 +76,6 @@ region_t* region_create(const int gff_file);
 void region_free(region_t *region);
 int region_get_tile(const region_t *reg, const uint32_t image_id,
         uint32_t *w, uint32_t *h, unsigned char **data);
+entity_t* region_find_entity_by_id(region_t *reg, const int id);
 
 #endif

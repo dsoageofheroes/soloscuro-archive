@@ -160,6 +160,16 @@ static void load_passives(region_t *reg, const int gff_idx, const int map_id) {
     }
 }
 
+entity_t* region_find_entity_by_id(region_t *reg, const int id) {
+    dude_t *dude = NULL;
+
+    entity_list_for_each(reg->entities, dude)  {
+        if (dude->ds_id == id) { return dude; }
+    }
+
+    return NULL;
+}
+
 // Below is to be DEPRECATED
 
 static void dsl_load_map_tile_ids(dsl_region_t* region);
@@ -203,7 +213,7 @@ dsl_region_t* dsl_load_region(const int gff_file) {
     dsl_region_t *ret = init_region_from_gff(gff_file);
     if (!ret) { return NULL; }
 
-    region_list_load_objs(ret->list, ret->gff_file, ret->map_id);
+    //region_list_load_objs(ret->list, ret->gff_file, ret->map_id);
 
     for (int i = 0; i < 4; i++) {
         ds_player_get_pos(i)->map = ret->map_id;

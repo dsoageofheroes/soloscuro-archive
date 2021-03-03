@@ -10,13 +10,12 @@ extern char *strdup(const char *s); // Not in standard.
 
 static void apply_combat(dude_t *dude, ds1_combat_t *combat) {
     // Not used from combat: char_index, id, read_item_index, weapon_index, pack_index, icon
-    //                       ac, move, status, thac0, priority.
+    //                       ac, move, status, thac0, priority, flags
     dude->stats.hp = combat->hp;
     dude->stats.psp = combat->psp;
     dude->stats.special_defense = combat->special_defense;
     dude->stats.attacks[0].special = combat->special_attack;
     dude->allegiance = combat->allegiance;
-    dude->combat_flags = combat->flags;
     dude->stats.str = combat->stats.str;
     dude->stats.dex = combat->stats.dex;
     dude->stats.con = combat->stats.con;
@@ -90,13 +89,14 @@ entity_t* entity_create_from_objex(const int id) {
         goto error;
     }
 
-    dude->combat_flags = dobj.flags; // gets overwritten by combat.
+    dude->object_flags = dobj.flags;
     dude->sprite.bmp_id = dobj.bmp_id;
     dude->sprite.xoffset = dobj.xoffset;
     dude->sprite.yoffset = dobj.yoffset;
     dude->mapx = dobj.xpos;
     dude->mapy = dobj.ypos;
     dude->mapz = dobj.zpos;
+    dude->ds_id = id;
 
     // This should be done in the region, right now we are just manufacturing an entity.
     // Notes for later:
@@ -147,22 +147,18 @@ entity_t* entity_create_from_etab(gff_map_object_t *entry_table, uint32_t id) {
     disk_object_t disk_object;
 
     gff_read_object(gm->index, &disk_object);
-    //dude->disk_idx = gm->index;
-    dude->combat_flags = disk_object.flags;
-    //dude->gt_idx = disk_object.object_index;
+    dude->object_flags = disk_object.flags;
     dude->sprite.bmp_id = disk_object.bmp_id;
-    //dude->bmpx = gm->xpos - disk_object.xoffset;
-    //dude->bmpy = gm->ypos - disk_object.yoffset - disk_object.zpos;
-    dude->sprite.xoffset = disk_object.xoffset;
-    dude->sprite.yoffset = disk_object.yoffset;
-    dude->mapx = (gm->xpos + disk_object.xoffset) / 16;
-    dude->mapy = (gm->ypos + disk_object.yoffset - disk_object.zpos) / 16;
+    dude->ds_id = gm->index;
+
+    dude->mapx = (gm->xpos) / 16;
+    dude->mapy = (gm->ypos) / 16;
+    dude->sprite.xoffset = -disk_object.xoffset +
+        ((gm->xpos) % 16);
+    dude->sprite.yoffset = -disk_object.yoffset  - disk_object.zpos +
+        ((gm->ypos)) % 16;
     dude->mapz = gm->zpos;
-    //dude->entry_id = id;
-    //dude->combat_id = COMBAT_ERROR;
     dude->sprite.flags = gm->flags;
-    //dude->obj_id = abs(gm->index);
-    //printf("->%d, %d\n", dsl_object->mapx, dsl_object->mapy);
 
     return dude;
 }

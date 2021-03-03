@@ -38,6 +38,8 @@ extern void port_enter_combat();
 extern void port_exit_combat();
 
 extern void port_add_entity(entity_t *entity, gff_palette_t *pal);
+extern void port_animate_entity(entity_t *obj);
+extern void port_swap_enitity(int obj_id, entity_t *dude);
 
 //TODO: Deprecate
 // Object manipulation

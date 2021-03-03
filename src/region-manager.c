@@ -10,8 +10,9 @@
 
 #define MAX_REGIONS (100)
 
-ds_region_t *ds_regions[MAX_REGIONS];
-region_t *regions[MAX_REGIONS];
+static ds_region_t *ds_regions[MAX_REGIONS];
+static region_t *regions[MAX_REGIONS];
+static int current_region = 0; // will need to eliminate for server code.
 
 void region_manager_init() {
     memset(ds_regions, 0x0, sizeof(ds_regions));
@@ -38,9 +39,16 @@ region_t* region_manager_get_region(const int region_id) {
         if (gff_index < 0 ) { return NULL; }
 
         regions[region_id] = region_create(gff_index);
+        entity_list_load_etab(regions[region_id]->entities, gff_index, region_id);
     }
 
+    current_region = region_id;
+
     return regions[region_id];
+}
+
+region_t* region_manager_get_current() {
+    return regions[current_region];
 }
 
 // Deprecated API:

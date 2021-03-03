@@ -7,6 +7,7 @@
 #include "port.h"
 #include "ds-scmd.h"
 #include "replay.h"
+#include "region-manager.h"
 #include "trigger.h"
 #include <lua5.3/lualib.h>
 #include <lua5.3/lauxlib.h>
@@ -289,12 +290,12 @@ static int is_true(lua_State *l) {
 
 static int dsl_getX(lua_State *l) {
     lua_Integer id = luaL_checkinteger(l, 1);
-    dsl_region_t *region = dsl_region_get_current();
-    region_object_t *obj = NULL;
+    region_t *reg = region_manager_get_current();
+    dude_t *dude = NULL;
 
-    region_list_for_each(region->list, obj) {
-        if (obj->disk_idx == id) {
-            lua_pushnumber(l, obj->mapx - (obj->xoffset + 15) / 16); // the +15 forces a round up.
+    entity_list_for_each(reg->entities, dude) {
+        if (dude->ds_id == id) {
+            lua_pushnumber(l, dude->mapx - (dude->sprite.xoffset + 15) / 16); // the +15 forces a round up.
             return 1;
         }
     }
@@ -305,12 +306,12 @@ static int dsl_getX(lua_State *l) {
 
 static int dsl_getY(lua_State *l) {
     lua_Integer id = luaL_checkinteger(l, 1);
-    dsl_region_t *region = dsl_region_get_current();
-    region_object_t *obj = NULL;
+    region_t *reg = region_manager_get_current();
+    dude_t *dude = NULL;
 
-    region_list_for_each(region->list, obj) {
-        if (obj->disk_idx == id) {
-            lua_pushnumber(l, obj->mapy - (obj->yoffset + 15) / 16); // the +15 forces a round up.
+    entity_list_for_each(reg->entities, dude) {
+        if (dude->ds_id == id) {
+            lua_pushnumber(l, dude->mapy - (dude->sprite.yoffset + 15) / 16); // the +15 forces a round up.
             return 1;
         }
     }
@@ -470,22 +471,30 @@ static int dsl_clone(lua_State *l) {
     lua_Integer y = luaL_checkinteger(l, 4);
     lua_Integer priority = luaL_checkinteger(l, 5);
     lua_Integer placement = luaL_checkinteger(l, 6);
+    int16_t entry_id = -1;
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes;
 
     debug("dsl-clone: obj: " PRI_LI ", qty: " PRI_LI ", (" PRI_LI ", "
              PRI_LI ") pri: " PRI_LI ", pla:" PRI_LI "\n", obj, qty, x, y,
         priority, placement);
-    uint16_t entry_id = -1;
-    for (int i = 0; i < qty; i++) {
-        debug("Cloning to: %lld, %lld\n", x, y);
-        entry_id = dsl_region_create_from_objex(dsl_region_get_current(), obj, x, y);
-        region_object_t* robj = dsl_region_get_object(entry_id);
 
-        if (robj) {
-            if (robj->scmd == NULL) { robj->scmd = ds_scmd_empty(); }
-            port_add_obj(robj, pal);
+    for (int i = 0; i < qty; i++) {
+        debug("Cloning %d to: %lld, %lld\n", obj, x, y);
+
+        dude_t *dude = entity_create_from_objex(obj);
+        dude->mapx = x;
+        dude->mapy = y;
+        dude->sprite.xoffset = 0;
+        dude->sprite.yoffset = 0;
+        entry_id = dude->ds_id;
+
+        if (dude) {
+            if (dude->sprite.scmd == NULL) { dude->sprite.scmd = ds_scmd_empty(); }
+            entity_list_add(region_manager_get_current()->entities, dude);
+            port_add_entity(dude, pal);
         }
     }
+
     lua_pushinteger(l, entry_id);
     return 1;
 }

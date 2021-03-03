@@ -85,6 +85,8 @@ void region_list_free(region_list_t *rl) {
 }
 
 static void load_object_from_etab(region_object_t *dsl_object, gff_map_object_t *entry_table, uint32_t id) {
+    printf("LOAD OBJECT FROM ETAB\n");
+    exit(1);
     const gff_map_object_t *gm = entry_table + id;
     disk_object_t disk_object;
     gff_read_object(gm->index, &disk_object);

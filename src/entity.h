@@ -7,7 +7,31 @@
 #include "gff-map.h"
 #include "spells.h"
 
-typedef uint16_t psi_group_t;
+typedef uint64_t ability_set_t;
+
+// Alternative ability_set for evaluation
+/*
+struct ability_set_s {
+    unsigned int psychokinesis    : 1;
+    unsigned int psychometabolism : 1;
+    unsigned int telepathy        : 1;
+    //... keep added different abilities, magic schools, spheres, etc...
+};
+*/
+
+//nested version:
+
+struct psi_abilities_s {
+    unsigned int psychokinesis    : 1;
+    unsigned int psychometabolism : 1;
+    unsigned int telepathy        : 1;
+};
+
+struct ability_set_s {
+    struct psi_abilities_s psi;
+    //struct spell_abilities_s spells; // NOT shown
+    //struct class_abilities_s class;  // Not shown
+};
 
 typedef struct saving_throws_s {
     uint8_t paralysis;
@@ -69,22 +93,23 @@ typedef struct class_s {
 
 typedef struct entity_s {
     char *name;
+    int16_t ds_id;     // This is the darksun/GPL id
     uint8_t size;
     uint8_t race;
     uint8_t gender;
     uint8_t alignment;
     int8_t allegiance;
-    int8_t combat_flags;
+    int8_t object_flags;
     uint16_t region;
     uint16_t mapx;      // object's x position in the region
     uint16_t mapy;      // object's y position in the region
     int16_t mapz;       // object's z position in the region
     uint16_t sound_fx;
     uint16_t attack_sound;
-    class_t class[3];
     stats_t stats;
+    class_t class[3];
     sprite_info_t sprite;
-    psi_group_t psi;
+    ability_set_t abilities;
     ds_inventory_t *inv;
     spell_list_t *spells;
     psionic_list_t *psionics;
