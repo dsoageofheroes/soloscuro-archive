@@ -141,6 +141,32 @@ error:
     return NULL;
 }
 
+entity_t* entity_create_from_etab(gff_map_object_t *entry_table, uint32_t id) {
+    dude_t *dude = calloc(1, sizeof(dude_t));
+    const gff_map_object_t *gm = entry_table + id;
+    disk_object_t disk_object;
+
+    gff_read_object(gm->index, &disk_object);
+    //dude->disk_idx = gm->index;
+    dude->combat_flags = disk_object.flags;
+    //dude->gt_idx = disk_object.object_index;
+    dude->sprite.bmp_id = disk_object.bmp_id;
+    //dude->bmpx = gm->xpos - disk_object.xoffset;
+    //dude->bmpy = gm->ypos - disk_object.yoffset - disk_object.zpos;
+    dude->sprite.xoffset = disk_object.xoffset;
+    dude->sprite.yoffset = disk_object.yoffset;
+    dude->mapx = (gm->xpos + disk_object.xoffset) / 16;
+    dude->mapy = (gm->ypos + disk_object.yoffset - disk_object.zpos) / 16;
+    dude->mapz = gm->zpos;
+    //dude->entry_id = id;
+    //dude->combat_id = COMBAT_ERROR;
+    dude->sprite.flags = gm->flags;
+    //dude->obj_id = abs(gm->index);
+    //printf("->%d, %d\n", dsl_object->mapx, dsl_object->mapy);
+
+    return dude;
+}
+
 void entity_free(entity_t *dude) {
     if (dude->name) {
         free(dude->name);

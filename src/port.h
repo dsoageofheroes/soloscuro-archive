@@ -33,14 +33,18 @@ extern int8_t port_narrate_open(int16_t action, const char *text, int16_t index)
 extern void port_narrate_clear();
 extern void port_narrate_close();
 
+extern int port_ask_yes_no();
+extern void port_enter_combat();
+extern void port_exit_combat();
+
+extern void port_add_entity(entity_t *entity, gff_palette_t *pal);
+
+//TODO: Deprecate
 // Object manipulation
 extern void port_swap_objs(int obj_id, region_object_t *obj);
 extern void port_add_obj(region_object_t *obj, gff_palette_t *pal);
 extern void port_animate_obj(region_object_t *obj);
 extern void port_update_obj(region_object_t *obj, const uint16_t xdiff, const uint16_t ydiff);
-extern int port_ask_yes_no();
-extern void port_enter_combat();
-extern void port_exit_combat();
 
 extern void port_change_region(dsl_region_t *reg);
 

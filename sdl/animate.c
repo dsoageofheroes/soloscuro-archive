@@ -85,6 +85,12 @@ void animate_list_render(SDL_Renderer *renderer) {
 // The assembly makes even less sense...
 static int is_less(animate_sprite_t *a0, animate_sprite_t *a1) {
     //const float zoom = 2.0;
+    if (a0->entity && a1->entity) {
+        // Okay this is close, we probably need to include sprite height, but I need to stop messing with it...
+        int diff = (a0->entity->mapy * 16 - a0->entity->sprite.yoffset) - (a1->entity->mapy * 16 - a1->entity->sprite.yoffset);
+        if (diff) { return diff < 0; }
+    }
+
     if (a0->obj && a1->obj) {
         // Okay this is close, we probably need to include sprite height, but I need to stop messing with it...
         int diff = (a0->obj->mapy * 16 - a0->obj->yoffset) - (a1->obj->mapy * 16 - a1->obj->yoffset);

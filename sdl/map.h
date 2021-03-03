@@ -8,6 +8,7 @@
 
 typedef struct map_s {
     dsl_region_t *region;
+    region_t *new_region; // need to change to region eventually
     SDL_Texture **tiles;
 } map_t;
 

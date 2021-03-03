@@ -14,6 +14,7 @@ entity_list_t* entity_list_create();
 void entity_list_free(entity_list_t *list);
 void entity_list_add(entity_list_t *list, entity_t *entity);
 void entity_list_remove(entity_list_t *list, entity_list_node_t *node);
+void entity_list_load_etab(entity_list_t *list, const int gff_idx, const int map_id);
 
 #define entity_list_for_each(el, obj) \
     obj = el ? (*el)->entity : NULL; \

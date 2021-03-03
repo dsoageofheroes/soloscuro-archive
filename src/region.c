@@ -10,6 +10,7 @@
 
 static void load_tile_ids(region_t *reg);
 static void load_map_flags(region_t *reg);
+static void load_passives(region_t *reg, const int gff_idx, const int map_id);
 
 #define GMAP_MAX (MAP_ROWS * MAP_COLUMNS)
 
@@ -58,6 +59,8 @@ region_t* region_create(const int gff_file) {
     //TODO Finish region_create!
     load_tile_ids(reg);
     load_map_flags(reg);
+    load_passives(reg, reg->gff_file, reg->map_id);
+    //region_list_load_objs(ret->list, ret->gff_file, ret->map_id);
 
     return reg;
 }
@@ -74,6 +77,22 @@ void region_free(region_t *reg) {
         free(reg->entry_table);
         reg->entry_table = NULL;
     }
+
+    if (reg->tile_ids) {
+        free(reg->tile_ids);
+        reg->tile_ids = NULL;
+    }
+}
+
+int region_get_tile(const region_t *reg, const uint32_t image_id,
+        uint32_t *w, uint32_t *h, unsigned char **data) {
+    if (!data) { return 0; }
+    *w = get_frame_width(reg->gff_file, GFF_TILE, reg->tile_ids[image_id], 0);
+    *h = get_frame_height(reg->gff_file, GFF_TILE, reg->tile_ids[image_id], 0);
+    *data = get_frame_rgba_with_palette(reg->gff_file, GFF_TILE, reg->tile_ids[image_id], 0, reg->palette_id);
+    if (!data) { return 0; }
+
+    return 1;
 }
 
 static void load_tile_ids(region_t *reg) {
@@ -92,9 +111,10 @@ static void load_tile_ids(region_t *reg) {
     }
 
     reg->num_tiles = gff_get_resource_length(reg->gff_file, GFF_TILE);
-    memcpy(reg->tile_ids, data, chunk.length);
+    memcpy(reg->tiles, data, chunk.length);
 
     free(data);
+    reg->tile_ids = gff_get_id_list(reg->gff_file, GFF_TILE);
 
 out:
     free(rmap_ids);
@@ -116,6 +136,28 @@ static void load_map_flags(region_t *reg) {
 
 out:
     free(gmap_ids);
+}
+
+static void load_passives(region_t *reg, const int gff_idx, const int map_id) {
+    if (!open_files[gff_idx].entry_table) {
+        gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_ETAB, map_id);
+        open_files[gff_idx].entry_table = malloc(chunk.length);
+        if (!open_files[gff_idx].entry_table) {
+            error ("unable to malloc for entry table!\n");
+            exit(1);
+        }
+        gff_read_chunk(gff_idx, &chunk, open_files[gff_idx].entry_table, chunk.length);
+    }
+    //gff_map_object_t *entry_table = open_files[gff_idx].entry_table;
+    //gff_map_object_t *entry_table = reg->entry_table;
+    int len = gff_map_get_num_objects(gff_idx, map_id);
+    //memset(&reg->passives, 0x0, sizeof(passive_t) * MAX_REGION_OBJS);
+
+    for (int i = 0; i < len; i++) {
+        //load_object_from_etab(rl->objs + i, entry_table, i);
+        passive_load_from_etab(reg->passives + i, reg->entry_table, i);
+        reg->passives[i].scmd = gff_map_get_object_scmd(gff_idx, map_id, i, 0);
+    }
 }
 
 // Below is to be DEPRECATED

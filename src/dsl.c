@@ -48,7 +48,7 @@ void dsl_init() {
     dsl_object_init();
     trigger_init();
     dsl_manager_init();
-    ds_region_manager_init();
+    region_manager_init();
     info("Running Master DSL #99.\n");
     //dsl_execute_subroutine(99, 0, 1);
     dsl_lua_execute_script(99, 0, 1);
@@ -75,5 +75,5 @@ void dsl_cleanup() {
     dsl_manager_cleanup();
     ds_item_close();
     trigger_cleanup();
-    ds_region_manager_cleanup();
+    region_manager_cleanup();
 }

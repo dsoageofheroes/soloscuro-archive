@@ -10,11 +10,44 @@
 
 #define MAX_REGIONS (100)
 
-ds_region_t *regions[MAX_REGIONS];
+ds_region_t *ds_regions[MAX_REGIONS];
+region_t *regions[MAX_REGIONS];
+
+void region_manager_init() {
+    memset(ds_regions, 0x0, sizeof(ds_regions));
+    memset(regions, 0x0, sizeof(regions));
+}
+
+void region_manager_cleanup() {
+    for (int i = 0; i < MAX_REGIONS; i++) {
+        if (regions[i]) {
+            region_free(regions[i]);
+            free(regions[i]);
+            regions[i] = NULL;
+        }
+    }
+    memset(regions, 0x0, sizeof(regions));
+}
+
+region_t* region_manager_get_region(const int region_id) {
+    char gff_name[32];
+
+    if (!regions[region_id]) {
+        snprintf(gff_name, 32, "rgn%x.gff", region_id);
+        int gff_index = gff_find_index(gff_name);
+        if (gff_index < 0 ) { return NULL; }
+
+        regions[region_id] = region_create(gff_index);
+    }
+
+    return regions[region_id];
+}
+
+// Deprecated API:
 
 ds_region_t* ds_region_get_region(const int region_id) {
     if (region_id < 0 || region_id >= MAX_REGIONS) { return NULL; }
-    return regions[region_id];
+    return ds_regions[region_id];
 }
 
 ds_region_t* ds_region_load_region(const int region_id) {
@@ -25,9 +58,9 @@ ds_region_t* ds_region_load_region(const int region_id) {
     int index = gff_find_index(gff_name);
     if (index < 0 ) { return 0; }
 
-    regions[region_id] = dsl_load_region(index);
+    ds_regions[region_id] = dsl_load_region(index);
 
-    return regions[region_id];
+    return ds_regions[region_id];
 }
 
 void ds_region_load_region_from_save(const int id, const int region_id) {
@@ -111,13 +144,5 @@ void ds_region_load_region_from_save(const int id, const int region_id) {
     dsl_deserialize_locals(buf);
     free(buf);
 
-    regions[region_id] = reg;
+    ds_regions[region_id] = reg;
 }
-
-void ds_region_manager_init() {
-    memset(regions, 0x0, sizeof(regions));
-}
-
-void ds_region_manager_cleanup() {
-}
-

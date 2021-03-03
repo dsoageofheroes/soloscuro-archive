@@ -1,5 +1,6 @@
 #include "passive.h"
 #include <string.h>
+#include <stdio.h>
 
 void passive_load_from_etab(passive_t *passive, gff_map_object_t *entry_table, uint32_t id) {
     const gff_map_object_t *gm = entry_table + id;

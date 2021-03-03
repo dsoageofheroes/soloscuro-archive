@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include "ds-scmd.h"
 #include "ds-item.h"
+#include "gff-map.h"
 #include "spells.h"
 
 typedef uint16_t psi_group_t;
@@ -48,6 +49,7 @@ typedef struct sprite_info_s {
     int16_t bmp_id;     // Which bmp this is.
     int16_t xoffset;    // bitmap offset x
     int16_t yoffset;    // bitmap offset y
+    uint16_t flags;     // sprite/scmd flags
     scmd_t *scmd;       // the animation script
     void *data;         // used for special data the UI needs (IE: SDL.)
 } sprite_info_t;
@@ -93,6 +95,7 @@ typedef struct entity_s {
 typedef entity_t dude_t;
 
 extern entity_t* entity_create_from_objex(const int id);
+extern entity_t* entity_create_from_etab(gff_map_object_t *entry_table, uint32_t id);
 extern void entity_free(entity_t *entity);
 
 #endif

@@ -5,6 +5,7 @@
 #include <SDL2/SDL.h>
 #include "../src/ds-object.h"
 #include "../src/ds-scmd.h"
+#include "../src/entity.h"
 #include "map.h"
 
 typedef struct animate_sprite_s {
@@ -15,6 +16,7 @@ typedef struct animate_sprite_s {
     uint16_t x, y;
     uint16_t destx, desty;
     region_object_t *obj;
+    entity_t *entity;
     float move, left_over; // see animate_tick for left_over
 } animate_sprite_t;
 

@@ -43,8 +43,31 @@ void test_basic(void) {
     entity_free(screamer_beatle);
 }
 
+void test_load_etab(void) {
+    char gff_name[32];
+    dude_t *dude;
+    size_t xsum = 0;
+    size_t ysum = 0;
+    entity_list_t *list = entity_list_create();
+
+    snprintf(gff_name, 32, "rgn%x.gff", 42);
+    int gff_index = gff_find_index(gff_name);
+    entity_list_load_etab(list, gff_index, 42);
+
+    entity_list_for_each(list, dude) {
+        xsum += dude->mapx;
+        ysum += dude->mapy;
+    }
+
+    TEST_ASSERT_EQUAL_INT(3222, xsum);
+    TEST_ASSERT_EQUAL_INT(2501, ysum);
+
+    entity_list_free(list);
+}
+
 int main(void) {
     UNITY_BEGIN();
     RUN_TEST(test_basic);
+    RUN_TEST(test_load_etab);
     return UNITY_END();
 }

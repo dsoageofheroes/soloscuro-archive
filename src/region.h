@@ -28,7 +28,6 @@ typedef struct dsl_region_s {
 // Until I can get rid of the misnaming
 #define ds_region_t dsl_region_t
 
-
 extern dsl_region_t* dsl_load_region(const int gff_file);
 extern dsl_region_t* init_region_from_gff(const int gff_file);
 extern int dsl_region_is_block(dsl_region_t *region, int row, int column);
@@ -60,9 +59,9 @@ extern void combat_update(dsl_region_t *reg);
 
 typedef struct region_s {
     gff_map_object_t *entry_table;
-    //uint32_t *ids;
     uint8_t flags[MAP_ROWS][MAP_COLUMNS];
-    uint8_t tile_ids[MAP_ROWS][MAP_COLUMNS];
+    uint8_t tiles[MAP_ROWS][MAP_COLUMNS];
+    uint32_t *tile_ids;
     uint32_t num_tiles;
     //uint32_t entry_size;
     uint32_t palette_id;
@@ -75,5 +74,7 @@ typedef struct region_s {
 
 region_t* region_create(const int gff_file);
 void region_free(region_t *region);
+int region_get_tile(const region_t *reg, const uint32_t image_id,
+        uint32_t *w, uint32_t *h, unsigned char **data);
 
 #endif
