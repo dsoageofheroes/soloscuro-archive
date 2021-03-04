@@ -76,8 +76,7 @@ enum combat_action_e {
 
 typedef struct combat_action_s {
     enum combat_action_e action;
-    region_object_t *target_robj;
-    ds1_combat_t *target_combat;
+    entity_t *target;
 } combat_action_t;
 
 #define MAX_COMBAT_ACTIONS (100)

@@ -1,5 +1,5 @@
-#include "rules.h"
 #include "gff.h"
+#include "rules.h"
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -1001,8 +1001,8 @@ int16_t dnd2e_get_thac0_pc(ds_character_t *pc) {
 
 // Missle modification is in original DS engine, so is d10. Although DS was highest goes first, we are lowest.
 // TODO: Add mods for race, spell efects, etc...
-int dnd2e_roll_initiative(ds_stats_t *stats) {
-    return (rand() % 10) - dex_mods[stats->dex][DEX_MISSILE];
+int dnd2e_roll_initiative(entity_t *entity) {
+    return (rand() % 10) - dex_mods[entity->stats.dex][DEX_MISSILE];
 }
 int dnd2e_roll_sub_roll() {
     return rand();

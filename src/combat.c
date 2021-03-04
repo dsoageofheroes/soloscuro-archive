@@ -10,16 +10,14 @@
 
 //static combat_action_list_t action_list;
 static int current_player = 0;
-//static int wait_on_player = 0;
-//static combat_action_t monster_actions[MAX_COMBAT_ACTIONS]; // list of actions for a monster's turn.
-//static int monster_step = -1; // keep track of what step of the action the monster is on.
+static int wait_on_player = 0;
+static combat_action_t monster_actions[MAX_COMBAT_ACTIONS]; // list of actions for a monster's turn.
+static int monster_step = -1; // keep track of what step of the action the monster is on.
 
 typedef struct combat_entry_s {
     int initiative;
     int sub_roll; // used to break ties.
     combat_action_t current_action;
-    region_object_t *robj;
-    ds1_combat_t *combat;
     entity_t *entity;
     struct combat_entry_s *next;
 } combat_entry_t;
@@ -34,10 +32,10 @@ typedef struct action_node_s {
 
 static int in_combat = 0;
 static int need_to_cleanup = 0; // combat is over, but things aren't clean yet...
-//static combat_entry_t *combat_order = NULL;
-//static combat_entry_t *current_turn = NULL;
+static combat_entry_t *combat_order = NULL;
+static combat_entry_t *current_turn = NULL;
 
-//static int is_combat_over(ds_region_t *reg);
+static int is_combat_over(region_t *reg);
 
 const enum combat_turn_t combat_player_turn() {
     if (!in_combat) { return NO_COMBAT; }
@@ -167,19 +165,28 @@ static int32_t ticks_per_game_round = 20;// For outside combat.
 
 //TODO: Ignores walls, but that might be okay right now.
 static int calc_distance_to_player(entity_t *entity) {
-    int xdiff = (entity->mapx - ds_player_get_pos(ds_player_get_active())->xpos);
-    int ydiff = (entity->mapy - ds_player_get_pos(ds_player_get_active())->ypos);
+    int min = 9999999;
+    int max;
 
-    if (xdiff < 0) { xdiff *= -1;}
-    if (ydiff < 0) { ydiff *= -1;}
+    for (int i = 0; i < MAX_PCS; i++) {
+        if (player_exists(i)) {
+            entity_t *dude = player_get_entity(i);
+            int xdiff = (entity->mapx - dude->mapx);
+            int ydiff = (entity->mapy - dude->mapy);
+            if (xdiff < 0) { xdiff *= -1;}
+            if (ydiff < 0) { ydiff *= -1;}
+            max = (xdiff > ydiff) ? xdiff : ydiff;
+            min = (min < max) ? min : max;
+        }
+    }
 
-    return xdiff > ydiff ? xdiff : ydiff;
+    return min;
 }
 
-/*
 static int enemies_alive(combat_region_t *cr) {
-    for (int i = 0; i < cr->pos + 1; i++) {
-        if (cr->combats[i].allegiance > 1) { // looks like > 1 is hostile.
+    dude_t *enemy = NULL;
+    entity_list_for_each(cr->combatants, enemy) {
+        if (enemy->allegiance > 1) { // looks like > 1 is hostile.
             return 1; // need to check status as well.
         }
     }
@@ -192,12 +199,11 @@ static int initiative_is_less(combat_entry_t *n0, combat_entry_t *n1) {
 }
 
 // Add to the actual combat list.
-static void add_to_combat(region_object_t *robj, ds1_combat_t *combat) {
+static void add_to_combat(entity_t *entity) {
     combat_entry_t *node = malloc(sizeof(combat_entry_t));
-    node->robj = robj;
-    node->combat = combat;
+    node->entity = entity;
     node->next = combat_order; // start up front.
-    node->initiative = dnd2e_roll_initiative(&(combat->stats));
+    node->initiative = dnd2e_roll_initiative(entity);
     node->sub_roll = dnd2e_roll_sub_roll();
     node->current_action.action = CA_NONE;// Means they need to take their turn.
     //printf("rolled: %d (%d)\n", node->initiative, node->sub_roll);
@@ -220,9 +226,18 @@ static void add_to_combat(region_object_t *robj, ds1_combat_t *combat) {
     }
 }
 
-static void enter_combat_mode(dsl_region_t *reg) {
+static void enter_combat_mode(region_t *reg) {
     //gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     printf("Enter combat mode.\n");
+    entity_t *combatant = NULL;
+    // Right now players are not part of combat, so add them!
+    for (int i = 0; i < MAX_PCS; i++) {
+        if (ds_player_exists(i)) {
+            printf("Adding %d\n", i);
+            combat_add(&(reg->cr), player_get_entity(i));
+        }
+    }
+
     combat_region_t *cr = &(reg->cr);
     if (!enemies_alive(cr)) {
         error("Called to enter combat, but no enemies? ignoring...\n");
@@ -232,26 +247,16 @@ static void enter_combat_mode(dsl_region_t *reg) {
     in_combat = 1;
 
     // Freeze all combats.
-    for (int i = 0; i < cr->pos + 1; i++) {
-        cr->robjs[i]->scmd = get_scmd(cr->robjs[i]->scmd, 0, 0);
-        port_update_obj(cr->robjs[i], 0, 0);
+    entity_list_for_each(cr->combatants, combatant) {
+        port_update_entity(combatant, 0, 0);
     }
 
     port_enter_combat();
 
-    // Right now players are not part of combat, so add them!
-    for (int i = 0; i < MAX_PCS; i++) {
-        if (ds_player_exists(i)) {
-            printf("NEED TO IMPLEMENT COMBAT ENTRY!!!\n");
-            exit(1);
-            //combat_add(&(dsl_region_get_current()->cr), ds_player_get_robj(i), ds_player_get_combat(i));
-            //port_add_obj(ds_player_get_robj(i), pal);
-        }
-    }
-
     // Now lets make an initiative list
-    for (int i = 0; i < cr->pos + 1; i++) {
-        add_to_combat(cr->robjs[i], cr->combats + i);
+    dude_t *dude = NULL;
+    entity_list_for_each(cr->combatants, dude) {
+        add_to_combat(dude);
     }
 
     // print to debug:
@@ -264,8 +269,8 @@ static void enter_combat_mode(dsl_region_t *reg) {
 
 static int which_player(combat_entry_t *node) {
     for (int i = 0; i < MAX_PCS; i++) {
-        region_object_t *player = ds_player_get_robj(i);
-        if (player == node->robj) { // Warning: pointer test, but be same robj, not just a clone.
+        entity_t *player = player_get_entity(i);
+        if (player == node->entity) { // Warning: pointer test, be teh same, not just a clone.
             return i;
         }
     }
@@ -321,79 +326,68 @@ static void queue_add(action_node_t **head, action_node_t **tail, action_node_t 
     }
 }
 
-static int player_exists_in_pos(ds_region_t *reg, const uint16_t x, const uint16_t y) {
+static entity_t* player_exists_in_pos(region_t *reg, const uint16_t x, const uint16_t y) {
     for (int i = 0; i < MAX_PCS; i++) {
         if (!ds_player_exists(i)) { continue; }
-        region_object_t *player = ds_player_get_robj(i);
+        entity_t *player = player_get_entity(i);
         //printf("(%d, %d) -> player(%d, %d)\n", x, y, player->mapx, player->mapy);
-        if (player->mapx == x && player->mapy == y) { return i; }
+        if (player->mapx == x && player->mapy == y) { return player; }
     }
 
-    return -1;
-}
-
-// This needs to be fixed becuase of our combat regions are made...
-static ds1_combat_t* find_combat(ds1_combat_t *combat) {
-    combat_entry_t *rover = combat_order;
-    while(rover) {
-        if (!strcmp(rover->combat->name, combat->name)) { return rover->combat; }
-        rover = rover->next;
-    }
-    
     return NULL;
 }
 
-static int player_to_attack(ds_region_t *reg, action_node_t *node) {
-    int player = -1;
-    if (!node) { return -1; }
-    if ((player = player_exists_in_pos(reg, node->x + 1, node->y + 0)) != -1) {
-        if (find_combat(ds_player_get_combat(player))->status != COMBAT_STATUS_DYING) {
+static entity_t* player_to_attack(region_t *reg, action_node_t *node) {
+    entity_t *player = NULL;
+    if (!node) { return NULL; }
+    if ((player = player_exists_in_pos(reg, node->x + 1, node->y + 0)) != NULL) {
+        if (player->combat_status != COMBAT_STATUS_DYING) {
             return player;
         }
     }
-    if ((player = player_exists_in_pos(reg, node->x - 1, node->y + 0)) != -1) {
-        if (find_combat(ds_player_get_combat(player))->status != COMBAT_STATUS_DYING) {
+    if ((player = player_exists_in_pos(reg, node->x - 1, node->y + 0)) != NULL) {
+        if (player->combat_status != COMBAT_STATUS_DYING) {
             return player;
         }
     }
-    if ((player = player_exists_in_pos(reg, node->x + 1, node->y + 1)) != -1) {
-        if (find_combat(ds_player_get_combat(player))->status != COMBAT_STATUS_DYING) {
+    if ((player = player_exists_in_pos(reg, node->x + 1, node->y + 1)) != NULL) {
+        if (player->combat_status != COMBAT_STATUS_DYING) {
             return player;
         }
     }
-    if ((player = player_exists_in_pos(reg, node->x - 1, node->y + 1)) != -1) {
-        if (find_combat(ds_player_get_combat(player))->status != COMBAT_STATUS_DYING) {
+    if ((player = player_exists_in_pos(reg, node->x - 1, node->y + 1)) != NULL) {
+        if (player->combat_status != COMBAT_STATUS_DYING) {
             return player;
         }
     }
-    if ((player = player_exists_in_pos(reg, node->x + 1, node->y - 1)) != -1) {
-        if (find_combat(ds_player_get_combat(player))->status != COMBAT_STATUS_DYING) {
+    if ((player = player_exists_in_pos(reg, node->x + 1, node->y - 1)) != NULL) {
+        if (player->combat_status != COMBAT_STATUS_DYING) {
             return player;
         }
     }
-    if ((player = player_exists_in_pos(reg, node->x - 1, node->y - 1)) != -1) {
-        if (find_combat(ds_player_get_combat(player))->status != COMBAT_STATUS_DYING) {
+    if ((player = player_exists_in_pos(reg, node->x - 1, node->y - 1)) != NULL) {
+        if (player->combat_status != COMBAT_STATUS_DYING) {
             return player;
         }
     }
-    if ((player = player_exists_in_pos(reg, node->x + 0, node->y - 1)) != -1) {
-        if (find_combat(ds_player_get_combat(player))->status != COMBAT_STATUS_DYING) {
+    if ((player = player_exists_in_pos(reg, node->x + 0, node->y - 1)) != NULL) {
+        if (player->combat_status != COMBAT_STATUS_DYING) {
             return player;
         }
     }
-    if ((player = player_exists_in_pos(reg, node->x + 0, node->y + 1)) != -1) {
-        if (find_combat(ds_player_get_combat(player))->status != COMBAT_STATUS_DYING) {
+    if ((player = player_exists_in_pos(reg, node->x + 0, node->y + 1)) != NULL) {
+        if (player->combat_status != COMBAT_STATUS_DYING) {
             return player;
         }
     }
 
-    return -1;
+    return NULL;
 }
 
-static void generate_monster_actions(ds_region_t *reg) {
+static void generate_monster_actions(region_t *reg) {
     // Start of AI, lets just go to the closest PC and attack.
     static uint8_t visit_flags[MAP_ROWS][MAP_COLUMNS];
-    int player;
+    entity_t *player;
     memset(monster_actions, 0x0, sizeof(combat_action_t) * MAX_COMBAT_ACTIONS);
     memset(visit_flags, 0x0, sizeof(uint8_t) * MAP_ROWS * MAP_COLUMNS);
     action_node_t *rover = malloc(sizeof(action_node_t));
@@ -401,8 +395,8 @@ static void generate_monster_actions(ds_region_t *reg) {
     action_node_t *queue_head, *queue_tail;
     queue_head = queue_tail = rover;
     rover->num_moves = 0;
-    rover->x = current_turn->robj->mapx;
-    rover->y = current_turn->robj->mapy;
+    rover->x = current_turn->entity->mapx;
+    rover->y = current_turn->entity->mapy;
     //printf("player = %d, name = %s\n", current_player, current_turn->combat->name);
 
     // BFS
@@ -413,16 +407,14 @@ static void generate_monster_actions(ds_region_t *reg) {
         if (visit_flags[rover->x][rover->y]) { free(rover); continue; }
         visit_flags[rover->x][rover->y] = 1;// Mark as visited.
 
-        if ((player = player_to_attack(reg, rover)) != -1) {
+        if ((player = player_to_attack(reg, rover)) != NULL) {
             printf("CAN ATTACK!\n");
             for(int i = 0; i < rover->num_moves; i++) {
                 monster_actions[i] = rover->actions[i];
                 printf("move %d: %d\n", i, rover->actions[i].action);
             }
             monster_actions[rover->num_moves].action = CA_MELEE;
-            //monster_actions[rover->num_moves].target_combat = ds_player_get_combat(player);
-            monster_actions[rover->num_moves].target_combat = find_combat(ds_player_get_combat(player));
-            monster_actions[rover->num_moves].target_robj = ds_player_get_robj(player);
+            monster_actions[rover->num_moves].target = player;
             //Free up the queue.
             free(rover);
             while(queue_head) {
@@ -446,13 +438,9 @@ static void generate_monster_actions(ds_region_t *reg) {
     }
 
     printf("NEED TO move and guard!\n");
-    //typedef struct action_node_s {
-        //combat_action_t action;
-        //struct action_node_s *next;
-    //} action_node_t;
 }
 
-static void set_current_scmd(ds_region_t *reg) {
+static void set_current_scmd(region_t *reg) {
     combat_action_t *action = monster_actions + monster_step;
     uint16_t xdiff = 0, ydiff = 0;
 
@@ -468,10 +456,9 @@ static void set_current_scmd(ds_region_t *reg) {
         default: break;
     }
 
-    printf("(%d, %d) applying xdiff = %d, ydiff = %d\n", current_turn->robj->mapx, current_turn->robj->mapy, xdiff, ydiff);
-    current_turn->robj->scmd = get_scmd(current_turn->robj->scmd, xdiff, ydiff);
-    port_update_obj(current_turn->robj, xdiff, ydiff);
-//static combat_action_t monster_actions[MAX_COMBAT_ACTIONS]; // list of actions for a monster's turn.
+    //printf("(%d, %d) applying xdiff = %d, ydiff = %d\n", current_turn->entity->mapx, current_turn->entity->mapy, xdiff, ydiff);
+    current_turn->entity->sprite.scmd = get_scmd(current_turn->entity->sprite.scmd, xdiff, ydiff);
+    port_update_entity(current_turn->entity, xdiff, ydiff);
 }
 
 static void end_turn() {
@@ -480,7 +467,7 @@ static void end_turn() {
     if (!current_turn) { current_turn = combat_order; }
 }
 
-static void check_and_perform_attack(ds_region_t *reg) {
+static void check_and_perform_attack(region_t *reg) {
     combat_action_t *action = monster_actions + monster_step;
     switch (action->action) {
         case CA_MELEE:
@@ -493,12 +480,11 @@ static void check_and_perform_attack(ds_region_t *reg) {
             //            level 10+: +4
             // It appears that I need to load the monster data for charrecs to calc numdice, numattacks, adds, etc...
             // For Now, 1d6, always hits. Need to add thaco calculation.
-            printf("hp before: %d\n", action->target_combat->hp);
-            action->target_combat->hp -= 1 + (rand() % 6);
-            printf("hp after: %d\n", action->target_combat->hp);
-            if (action->target_combat->hp <= 0) {
-                printf("DYING\n");
-                action->target_combat->status = COMBAT_STATUS_DYING;
+            action->target->stats.hp -= 1 + (rand() % 6);
+            //printf("hp after: %d\n", action->target->stats.hp);
+            if (action->target->stats.hp <= 0) {
+                //printf("DYING\n");
+                action->target->combat_status = COMBAT_STATUS_DYING;
             }
             end_turn();
             break;
@@ -507,13 +493,13 @@ static void check_and_perform_attack(ds_region_t *reg) {
     }
 }
 
-static void do_combat_rounds(ds_region_t *reg) {
+static void do_combat_rounds(region_t *reg) {
     if (wait_on_player) { return; }
     //Need to start combat rounds.
     if (!current_turn) { current_turn = combat_order; }
 
     current_player = which_player(current_turn);
-    printf("player = %d, name = %s\n", current_player, current_turn->combat->name);
+    printf("player = %d, name = %s\n", current_player, current_turn->entity->name);
     if (current_player >= 0) {
         wait_on_player = 1;
         return; // Need to wait on player input.
@@ -533,7 +519,7 @@ static void do_combat_rounds(ds_region_t *reg) {
     monster_step++;
 }
 
-static int is_combat_over(ds_region_t *reg) {
+static int is_combat_over(region_t *reg) {
     combat_entry_t *rover = combat_order;
     uint8_t forces[10]; // represent each opposing force.
     uint8_t num_types = 0;
@@ -541,10 +527,9 @@ static int is_combat_over(ds_region_t *reg) {
 
     while (rover) {
         //printf("%s: alliegiance %d, hp: %d\n", rover->combat->name, rover->combat->allegiance, rover->combat->hp);
-
-        if (rover->combat->allegiance < 10
-                && rover->combat->status != COMBAT_STATUS_DYING) {
-            forces[rover->combat->allegiance]++;
+        if (rover->entity->allegiance < 10
+                && rover->entity->combat_status != COMBAT_STATUS_DYING) {
+            forces[rover->entity->allegiance]++;
         }
         rover = rover->next;
     }
@@ -555,7 +540,6 @@ static int is_combat_over(ds_region_t *reg) {
 
     return num_types < 2;
 }
-*/
 
 void combat_update(region_t *reg) {
     if (reg == NULL) { return; }
@@ -571,7 +555,6 @@ void combat_update(region_t *reg) {
 
     if (need_to_cleanup) { return; }
 
-    /*
     if (in_combat) {
         in_combat = !is_combat_over(reg); // Just to check
         if (in_combat) {
@@ -585,13 +568,12 @@ void combat_update(region_t *reg) {
         return;
         // We were in combat but now it is over. Need to clean up.
     }
-    */
 
     dude_t *bad_dude = NULL;
     entity_list_for_each(reg->cr.combatants, bad_dude) {
         if (bad_dude->abilities.hunt) {
-            xdiff = pc->xpos - bad_dude->mapx;
-            ydiff = pc->ypos - bad_dude->mapy;
+            xdiff = player_get_entity(ds_player_get_active())->mapx - bad_dude->mapx;
+            ydiff = player_get_entity(ds_player_get_active())->mapy - bad_dude->mapy;
             xdiff = (xdiff < 0) ? -1 : (xdiff > 0) ? 1 : 0;
             ydiff = (ydiff < 0) ? -1 : (ydiff > 0) ? 1 : 0;
             posx = bad_dude->mapx;
@@ -609,7 +591,7 @@ void combat_update(region_t *reg) {
             }
             bad_dude->sprite.scmd = get_scmd(bad_dude->sprite.scmd, xdiff, ydiff);
             if (calc_distance_to_player(bad_dude) < 5) {
-                //enter_combat_mode(reg);
+                enter_combat_mode(reg);
                 return;
             }
             port_update_entity(bad_dude, xdiff, ydiff);
@@ -636,13 +618,9 @@ void combat_set_hunt(combat_region_t *cr, const uint32_t combat_id) {
 }
 
 // This does not force into combat mode, simply add a combat to the current region.
-//uint32_t combat_add(combat_region_t *rc, region_object_t *robj, ds1_combat_t *combat) {
 uint32_t combat_add(combat_region_t *rc, entity_t *entity) {
     if (!rc || !entity) { return 0; }
 
-    // Force the name to be null-terminated.
-    //printf("Added %s\n", combat->name);
     entity_list_add(rc->combatants, entity);
-    //rc->robjs[rc->pos] = robj;
     return 1;
 }

@@ -23,7 +23,6 @@ typedef struct player_sprites_s {
 } player_sprites_t;
 
 static region_object_t dsl_player[MAX_PCS];
-static entity_t *player_entity[MAX_PCS];
 static player_sprites_t players[MAX_PCS];
 static animate_sprite_t anims[MAX_PCS];
 
@@ -36,9 +35,7 @@ void player_init() {
     player_zpos = 0;
     memset(players, 0x00, sizeof(player_sprites_t) * MAX_PCS);
     memset(anims, 0x00, sizeof(animate_sprite_t) * MAX_PCS);
-    memset(player_entity, 0x0, sizeof(player_entity));
     for (int i = 0; i < 4; i++) {
-        player_entity[i] = calloc(1, sizeof(entity_t));
         players[i].main = players[i].port = SPRITE_ERROR;
         for (int j = 0; j < sizeof(inventory_sprites_t) / sizeof(sprite_t); j++) {
             ((sprite_t*)&(players[i].inv))[j] = SPRITE_ERROR;
@@ -51,16 +48,12 @@ region_object_t* player_get_robj(const int slot) {
     return dsl_player + slot;
 }
 
-entity_t* player_get_entity(const int slot) {
-    if (slot < 0 || slot >= MAX_PCS) { return NULL; }
-    return player_entity[slot];
-}
-
 void player_load_graphics(const int slot) {
     player_pos_t* pc = ds_player_get_pos(ds_player_get_active());
-    player_entity[slot]->mapx = 30;
-    player_entity[slot]->mapy = 30;
-    player_entity[slot]->sprite.scmd = combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
+    dude_t *dude = player_get_entity(slot);
+    dude->mapx = 30;
+    dude->mapy = 30;
+    dude->sprite.scmd = combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
 
     dsl_player[slot].flags = 0;
     dsl_player[slot].entry_id = 0;
@@ -139,8 +132,9 @@ void player_update() {
 
     dsl_player[slot].mapx = pc->xpos;
     dsl_player[slot].mapy = pc->ypos;
-    player_entity[slot]->mapx = pc->xpos;
-    player_entity[slot]->mapy = pc->ypos;
+    dude_t *dude = player_get_entity(slot);
+    dude->mapx = pc->xpos;
+    dude->mapy = pc->ypos;
     anims[0].x = anims[0].destx;
     anims[0].y = anims[0].desty;
     anims[0].destx = pc->xpos * 16 * 2;
@@ -263,7 +257,7 @@ void player_add_to_animation_list(const int slot) {
     anims[slot].x = anims[slot].destx;
     anims[slot].y = anims[slot].desty;
     //anims[slot].obj = dsl_player + slot;
-    anims[slot].entity = player_entity[slot];
+    anims[slot].entity = player_get_entity(slot);
 }
 
 void player_load(const int slot, const float zoom) {

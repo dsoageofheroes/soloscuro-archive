@@ -33,6 +33,21 @@ void port_update_obj(region_object_t *obj, const uint16_t xdiff, const uint16_t 
     obj->mapy += ydiff;
 }
 
+void port_add_entity(entity_t *entity, gff_palette_t *pal) {
+}
+
+void port_animate_entity(entity_t *obj) {
+}
+
+void port_swap_enitity(int obj_id, entity_t *dude) {
+}
+
+void port_update_entity(entity_t *entity, const uint16_t xdiff, const uint16_t ydiff) {
+    if (!entity) { return; }
+    entity->mapx += xdiff;
+    entity->mapy += ydiff;
+}
+
 int port_ask_yes_no() {
     return 1;
 }

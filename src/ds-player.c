@@ -19,6 +19,8 @@ typedef struct player_s {
     region_object_t robj;
 } player_t;
 
+static entity_t *players[MAX_PCS] = {NULL, NULL, NULL, NULL};
+
 #define BUF_MAX (1<<12)
 
 static player_t pc[MAX_PCS];
@@ -29,6 +31,9 @@ void ds_player_init() {
 
     // Setup the slots for reading/writing
     for (int i = 0; i < MAX_PCS; i++) {
+        if (!players[i]) {
+            players[i] = calloc(1, sizeof(entity_t));
+        }
         ds1_item_t *item = (ds1_item_t*)&(pc[i].inv);
         for (int j = 0; j < 26; j++) {
             item[j].slot = j;
@@ -107,6 +112,14 @@ int ds_player_replace(const int slot, ds_character_t *ch, psin_t *psi, spell_lis
     return 1;
 }
 
+entity_t* player_get_entity(const int slot) {
+    if (slot < 0 || slot >= MAX_PCS) { return NULL; }
+    if (!players[slot]) {
+        players[slot] = calloc(1, sizeof(entity_t));
+    }
+    return players[slot];
+}
+
 ds1_item_t* ds_player_remove_item(const int slot, const int pos) {
     if (slot < 0 || slot >= MAX_PCS) { return NULL; }
     if (pos < 0 || pos >= 26) { return NULL; }
@@ -130,9 +143,14 @@ void ds_player_set_item(const int slot, ds1_item_t *item, const int item_slot) {
     memcpy(player_item, item, sizeof(ds1_item_t));
 }
 
+int player_exists(const int slot) {
+    if (slot < 0 || slot >= MAX_PCS) { return 0; }
+    return (player_get_entity(slot)->name != NULL);
+}
+
 int ds_player_exists(const int slot) {
     if (slot < 0 || slot >= MAX_PCS) { return 0; }
-    return pc[slot].combat.name[0];
+    return (player_get_entity(slot)->name != NULL);
 }
 
 ds1_combat_t* ds_player_get_combat(const int slot) {

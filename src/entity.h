@@ -107,6 +107,7 @@ typedef struct entity_s {
     int16_t mapz;       // object's z position in the region
     uint16_t sound_fx;
     uint16_t attack_sound;
+    uint16_t combat_status;
     stats_t stats;
     class_t class[3];
     sprite_info_t sprite;
