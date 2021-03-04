@@ -143,6 +143,47 @@ error:
     return NULL;
 }
 
+#define BUF_MAX (1<<14)
+void entity_load_from_gff(entity_t *entity, const int gff_idx, const int player, const int res_id) {
+    char buf[BUF_MAX];
+    rdff_header_t *rdff;
+    size_t offset = 0;
+    int num_items;
+    ds1_item_t *pc_items = (ds1_item_t*)&(entity->inventory);
+    gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_CHAR, res_id);
+    if (gff_read_chunk(gff_idx, &chunk, &buf, sizeof(buf)) < 34) { return; }
+
+    rdff = (rdff_disk_object_t*) (buf);
+    num_items = rdff->blocknum - 2;
+    offset += sizeof(rdff_disk_object_t);
+    //memcpy(ds_player_get_combat(player), buf + offset, sizeof(ds1_combat_t));
+    apply_combat(entity, (ds1_combat_t*)(buf + offset));
+    offset += rdff->len;
+
+    rdff = (rdff_disk_object_t*) (buf + offset);
+    offset += sizeof(rdff_disk_object_t);
+    //memcpy(ds_player_get_char(player), buf + offset, sizeof(ds_character_t));
+    apply_character(entity, (ds_character_t*)(buf + offset));
+    offset += rdff->len;
+
+    for (int i = 0; i < num_items; i++) {
+        rdff = (rdff_disk_object_t*) (buf + offset);
+        offset += sizeof(rdff_disk_object_t);
+        int slot = ((ds1_item_t*)(buf + offset))->slot;
+        memcpy(pc_items + slot, buf + offset, sizeof(ds1_item_t));
+        offset += rdff->len;
+    }
+
+    chunk = gff_find_chunk_header(gff_idx, GFF_PSIN, res_id);
+    //if (!gff_read_chunk(gff_idx, &chunk, ds_player_get_psi(player), sizeof(psin_t))) { return; }
+
+    chunk = gff_find_chunk_header(gff_idx, GFF_SPST, res_id);
+    //if (!gff_read_chunk(gff_idx, &chunk, ds_player_get_spells(player), sizeof(spell_list_t))) { return; }
+
+    chunk = gff_find_chunk_header(gff_idx, GFF_PSST, res_id);
+    //if (!gff_read_chunk(gff_idx, &chunk, ds_player_get_psionics(player), sizeof(psionic_list_t))) { return; }
+}
+
 entity_t* entity_create_from_etab(gff_map_object_t *entry_table, uint32_t id) {
     dude_t *dude = calloc(1, sizeof(dude_t));
     const gff_map_object_t *gm = entry_table + id;

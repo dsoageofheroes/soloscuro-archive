@@ -177,6 +177,8 @@ static int load_player(const int id, const int player, const int res_id) {
     gff_chunk_header_t chunk = gff_find_chunk_header(id, GFF_CHAR, res_id);
     if (gff_read_chunk(id, &chunk, &buf, sizeof(buf)) < 34) { return 0; }
 
+    entity_load_from_gff(player_get_entity(player), id, player, res_id);
+
     rdff = (rdff_disk_object_t*) (buf);
     num_items = rdff->blocknum - 2;
     offset += sizeof(rdff_disk_object_t);
@@ -204,6 +206,7 @@ static int load_player(const int id, const int player, const int res_id) {
 
     chunk = gff_find_chunk_header(id, GFF_PSST, res_id);
     if (!gff_read_chunk(id, &chunk, ds_player_get_psionics(player), sizeof(psionic_list_t))) { return 0;}
+
 
     return 1;
 }

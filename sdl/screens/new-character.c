@@ -6,6 +6,7 @@
 #include "popup.h"
 #include "../sprite.h"
 #include "../../src/spells.h"
+#include "../../src/ds-player.h"
 #include "../../src/rules.h"
 #include <string.h>
 #include <time.h>
@@ -54,6 +55,7 @@ static int race_sprite_ids[]         = { 2095, 2099, 2055, 2053, 2061, 2059, 209
 
 static int offsetx, offsety;
 static float zoom;
+static entity_t *player = NULL;;
 static SDL_Renderer *renderer;
 static ds_character_t pc; // the character we are creating.
 static ds_inventory_t inv; // the inventory
@@ -270,6 +272,7 @@ static void init_pc() {
     memset(&psionics, 0x0, sizeof(psionics));
     pc.allegiance = 1;
     get_random_name();
+    player = player_get_entity(0);
 }
 
 static void new_character_init(SDL_Renderer* _renderer, const uint32_t x, const uint32_t y, const float _zoom) {
@@ -592,10 +595,10 @@ static void copy_exp_tnl_string(char* storage) {
 static void copy_dam_string(char* storage) {
     int pos = 0;
 
-    pos = snprintf(storage, BUF_MAX, "DAM: %d%s", dnd2e_get_attack_num_pc(&pc, 0) >> 1,
-                   (dnd2e_get_attack_num_pc(&pc, 0) & 0x01) ? ".5" : "");
-    pos += snprintf(storage + pos, BUF_MAX - pos, "x1D%d", dnd2e_get_attack_die_pc(&pc, 0));
-    pos += snprintf(storage + pos, BUF_MAX - pos, "+%d", dnd2e_get_attack_mod_pc(&pc, 0));
+    pos = snprintf(storage, BUF_MAX, "DAM: %d%s", dnd2e_get_attack_num_pc(player, 0) >> 1,
+                   (dnd2e_get_attack_num_pc(player, 0) & 0x01) ? ".5" : "");
+    pos += snprintf(storage + pos, BUF_MAX - pos, "x1D%d", dnd2e_get_attack_die_pc(player, 0));
+    pos += snprintf(storage + pos, BUF_MAX - pos, "+%d", dnd2e_get_attack_mod_pc(player, 0));
 }
 
 void new_character_render(void* data, SDL_Renderer* renderer) {

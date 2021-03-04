@@ -112,7 +112,7 @@ typedef struct entity_s {
     class_t class[3];
     sprite_info_t sprite;
     ability_set_t abilities;
-    ds_inventory_t *inv;
+    ds_inventory_t *inventory;
     spell_list_t *spells;
     psionic_list_t *psionics;
     effect_node_t *effects;
@@ -124,5 +124,6 @@ typedef entity_t dude_t;
 extern entity_t* entity_create_from_objex(const int id);
 extern entity_t* entity_create_from_etab(gff_map_object_t *entry_table, uint32_t id);
 extern void entity_free(entity_t *entity);
+extern void entity_load_from_gff(entity_t *entity, const int gff_idx, const int player, const int res_id);
 
 #endif

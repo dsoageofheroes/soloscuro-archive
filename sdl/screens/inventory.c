@@ -189,7 +189,7 @@ static int do_slot_highlight(SDL_Renderer *renderer, const uint16_t frame, const
 
 #define BUF_MAX (1<<8)
 
-static int display_attack(ds_character_t *character, ds1_item_t *item, const int xpos, const int ypos) {
+static int display_attack(entity_t *entity, ds1_item_t *item, const int xpos, const int ypos) {
     char buf[BUF_MAX];
     int pos = 0;
     if (item->id == 0) { return 0; }
@@ -198,17 +198,17 @@ static int display_attack(ds_character_t *character, ds1_item_t *item, const int
 
     print_line_len(rend, FONT_YELLOW, ds_item_name(item->name_idx), 235 * zoom, ypos * zoom, BUF_MAX);
 
-    uint16_t num_attacks = dnd2e_get_attack_num_pc(character, item);
+    uint16_t num_attacks = dnd2e_get_attack_num_pc(entity, item);
     if (num_attacks > 2) {
         pos += snprintf(buf, BUF_MAX, "%d%sx",
             num_attacks >> 1, // num_attacks is half-attacks.
             (num_attacks & 0x01) ? ".5" : "");
     }
     snprintf(buf + pos, BUF_MAX - pos, "%dD%d%s%d\n", 
-        dnd2e_get_attack_die_pc(character, item),
-        dnd2e_get_attack_sides_pc(character, item),
+        dnd2e_get_attack_die_pc(entity, item),
+        dnd2e_get_attack_sides_pc(entity, item),
         "+",
-        dnd2e_get_attack_mod_pc(character, item));
+        dnd2e_get_attack_mod_pc(entity, item));
 
     print_line_len(rend, FONT_YELLOW, buf, 235 * zoom, (ypos + 7) * zoom, BUF_MAX);
     return 1;
@@ -216,11 +216,13 @@ static int display_attack(ds_character_t *character, ds1_item_t *item, const int
 
 static void render_character() {
     char buf[BUF_MAX];
-    ds1_combat_t* combat = ds_player_get_combat(char_selected);
-    ds_character_t* character = ds_player_get_char(char_selected);
+    //ds1_combat_t* combat = ds_player_get_combat(char_selected);
+    //ds_character_t* character = ds_player_get_char(char_selected);
     ds_inventory_t* player_items = ds_player_get_inv(char_selected);
-    strcpy(name, combat->name);
-    if (name[0] == '\0') { return; } // no character.
+    entity_t *player = player_get_entity(char_selected);
+
+    if (player->name == NULL) { return; } // no character.
+    strcpy(name, player->name);
 
     print_line_len(rend, FONT_YELLOW, "STR:", 235 * zoom, 53 * zoom, BUF_MAX);
     print_line_len(rend, FONT_YELLOW, "DEX:", 235 * zoom, 60 * zoom, BUF_MAX);
@@ -228,29 +230,29 @@ static void render_character() {
     print_line_len(rend, FONT_YELLOW, "INT:", 235 * zoom, 74 * zoom, BUF_MAX);
     print_line_len(rend, FONT_YELLOW, "WIS:", 235 * zoom, 81 * zoom, BUF_MAX);
     print_line_len(rend, FONT_YELLOW, "CHA:", 235 * zoom, 88 * zoom, BUF_MAX);
-    snprintf(buf, BUF_MAX, "%d\n", combat->stats.str);
+    snprintf(buf, BUF_MAX, "%d\n", player->stats.str);
     print_line_len(rend, FONT_YELLOW, buf, 260 * zoom, 53 * zoom, BUF_MAX);
-    snprintf(buf, BUF_MAX, "%d\n", combat->stats.dex);
+    snprintf(buf, BUF_MAX, "%d\n", player->stats.dex);
     print_line_len(rend, FONT_YELLOW, buf, 260 * zoom, 60 * zoom, BUF_MAX);
-    snprintf(buf, BUF_MAX, "%d\n", combat->stats.con);
+    snprintf(buf, BUF_MAX, "%d\n", player->stats.con);
     print_line_len(rend, FONT_YELLOW, buf, 260 * zoom, 67 * zoom, BUF_MAX);
-    snprintf(buf, BUF_MAX, "%d\n", combat->stats.intel);
+    snprintf(buf, BUF_MAX, "%d\n", player->stats.intel);
     print_line_len(rend, FONT_YELLOW, buf, 260 * zoom, 74 * zoom, BUF_MAX);
-    snprintf(buf, BUF_MAX, "%d\n", combat->stats.wis);
+    snprintf(buf, BUF_MAX, "%d\n", player->stats.wis);
     print_line_len(rend, FONT_YELLOW, buf, 260 * zoom, 81 * zoom, BUF_MAX);
-    snprintf(buf, BUF_MAX, "%d\n", combat->stats.cha);
+    snprintf(buf, BUF_MAX, "%d\n", player->stats.cha);
     print_line_len(rend, FONT_YELLOW, buf, 260 * zoom, 88 * zoom, BUF_MAX);
 
-    snprintf(buf, BUF_MAX, "PSI:  %d/%d\n", combat->psp, character->base_psp);
+    snprintf(buf, BUF_MAX, "PSI:  %d/%d\n", player->stats.psp, player->stats.high_psp);
     print_line_len(rend, FONT_YELLOW, buf, 235 * zoom, 100 * zoom, BUF_MAX);
 
     snprintf(buf, BUF_MAX, "AC: %d\n", ds_player_get_ac(char_selected));
     print_line_len(rend, FONT_YELLOW, buf, 235 * zoom, 115 * zoom, BUF_MAX);
 
     int ypos = 125;
-    ypos += display_attack(character, &(player_items->missile), 235, ypos) ? 14 : 0;
-    ypos += display_attack(character, &(player_items->hand0), 235, ypos) ? 14 : 0;
-    ypos += display_attack(character, &(player_items->hand1), 235, ypos) ? 14 : 0;
+    ypos += display_attack(player, &(player_items->missile), 235, ypos) ? 14 : 0;
+    ypos += display_attack(player, &(player_items->hand0), 235, ypos) ? 14 : 0;
+    ypos += display_attack(player, &(player_items->hand1), 235, ypos) ? 14 : 0;
 }
 
 static void render_backpack_slot(const int slot, const int frame, const int x, const int y, uint16_t *inv_sprs_list) {
