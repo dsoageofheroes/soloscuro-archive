@@ -183,48 +183,48 @@ static void free_sprites(const int slot) {
 static void load_character_sprite(SDL_Renderer *renderer, const int slot, const float zoom) {
     if (slot < 0 || slot >= MAX_PCS) { return; }
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
-    ds_character_t *ch = ds_player_get_char(slot);
+    dude_t *dude = player_get_entity(slot);
     ds1_item_t *inv = (ds1_item_t*)ds_player_get_inv(slot);
     sprite_t *inv_sprs = (sprite_t*)&(players[slot].inv);
 
     free_sprites(slot);
 
-    switch(ch->race) {
+    switch(dude->race) {
         case RACE_HALFELF:
             players[slot].port = sprite_new(renderer, pal, 0, 0,
-                zoom, RESOURCE_GFF_INDEX, GFF_BMP, ch->gender == GENDER_MALE ? 20006 : 20007);
+                zoom, RESOURCE_GFF_INDEX, GFF_BMP, dude->gender == GENDER_MALE ? 20006 : 20007);
             players[slot].main = sprite_new(renderer, pal, 0, 0,
-                zoom, OBJEX_GFF_INDEX, GFF_BMP, (ch->gender == GENDER_MALE) ? 2095 : 2099);
+                zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2095 : 2099);
             break;
         case RACE_HUMAN:
             players[slot].port = sprite_new(renderer, pal, 0, 0,
-                zoom, RESOURCE_GFF_INDEX, GFF_BMP, ch->gender == GENDER_MALE ? 20000 : 20001);
+                zoom, RESOURCE_GFF_INDEX, GFF_BMP, dude->gender == GENDER_MALE ? 20000 : 20001);
             players[slot].main = sprite_new(renderer, pal, 0, 0,
-                zoom, OBJEX_GFF_INDEX, GFF_BMP, (ch->gender == GENDER_MALE) ? 2095 : 2099);
+                zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2095 : 2099);
             break;
         case RACE_DWARF:
             players[slot].port = sprite_new(renderer, pal, 0, 0,
-                zoom, RESOURCE_GFF_INDEX, GFF_BMP, ch->gender == GENDER_MALE ? 20002 : 20003);
+                zoom, RESOURCE_GFF_INDEX, GFF_BMP, dude->gender == GENDER_MALE ? 20002 : 20003);
             players[slot].main = sprite_new(renderer, pal, 0, 0,
-                zoom, OBJEX_GFF_INDEX, GFF_BMP, (ch->gender == GENDER_MALE) ? 2055 : 2053);
+                zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2055 : 2053);
             break;
         case RACE_ELF:
             players[slot].port = sprite_new(renderer, pal, 0, 0,
-                zoom, RESOURCE_GFF_INDEX, GFF_BMP, ch->gender == GENDER_MALE ? 20004 : 20005);
+                zoom, RESOURCE_GFF_INDEX, GFF_BMP, dude->gender == GENDER_MALE ? 20004 : 20005);
             players[slot].main = sprite_new(renderer, pal, 0, 0,
-                zoom, OBJEX_GFF_INDEX, GFF_BMP, (ch->gender == GENDER_MALE) ? 2061 : 2059);
+                zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2061 : 2059);
             break;
         case RACE_HALFGIANT:
             players[slot].port = sprite_new(renderer, pal, 0, 0,
-                zoom, RESOURCE_GFF_INDEX, GFF_BMP, ch->gender == GENDER_MALE ? 20008 : 20009);
+                zoom, RESOURCE_GFF_INDEX, GFF_BMP, dude->gender == GENDER_MALE ? 20008 : 20009);
             players[slot].main = sprite_new(renderer, pal, 0, 0,
-                zoom, OBJEX_GFF_INDEX, GFF_BMP, (ch->gender == GENDER_MALE) ? 2072 : 2074);
+                zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2072 : 2074);
             break;
         case RACE_HALFLING:
             players[slot].port = sprite_new(renderer, pal, 0, 0,
-                zoom, RESOURCE_GFF_INDEX, GFF_BMP, ch->gender == GENDER_MALE ? 20010 : 20011);
+                zoom, RESOURCE_GFF_INDEX, GFF_BMP, dude->gender == GENDER_MALE ? 20010 : 20011);
             players[slot].main = sprite_new(renderer, pal, 0, 0,
-                zoom, OBJEX_GFF_INDEX, GFF_BMP, (ch->gender == GENDER_MALE) ? 2068 : 2070);
+                zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2068 : 2070);
             break;
         case RACE_MUL:
             players[slot].port = sprite_new(renderer, pal, 0, 0,
@@ -256,6 +256,7 @@ void player_add_to_animation_list(const int slot) {
     anims[slot].desty -= sprite_geth(anims[slot].spr) - (16 * main_get_zoom());
     anims[slot].x = anims[slot].destx;
     anims[slot].y = anims[slot].desty;
+    printf("%d\n", anims[slot].spr);
     //anims[slot].obj = dsl_player + slot;
     anims[slot].entity = player_get_entity(slot);
 }

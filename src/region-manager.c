@@ -43,6 +43,9 @@ region_t* region_manager_get_region(const int region_id) {
     }
 
     current_region = region_id;
+	for (int i = 0; i < MAX_PCS; i++) {
+        player_get_entity(i)->region = region_id;
+    }
 
     return regions[region_id];
 }

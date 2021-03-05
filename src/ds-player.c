@@ -32,7 +32,7 @@ void ds_player_init() {
     // Setup the slots for reading/writing
     for (int i = 0; i < MAX_PCS; i++) {
         if (!players[i]) {
-            players[i] = calloc(1, sizeof(entity_t));
+            players[i] = player_get_entity(i);
         }
         ds1_item_t *item = (ds1_item_t*)&(pc[i].inv);
         for (int j = 0; j < 26; j++) {
@@ -116,6 +116,7 @@ entity_t* player_get_entity(const int slot) {
     if (slot < 0 || slot >= MAX_PCS) { return NULL; }
     if (!players[slot]) {
         players[slot] = calloc(1, sizeof(entity_t));
+        players[slot]->inventory = calloc(1, sizeof(ds_inventory_t));
     }
     return players[slot];
 }

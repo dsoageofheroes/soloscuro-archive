@@ -149,20 +149,18 @@ void entity_load_from_gff(entity_t *entity, const int gff_idx, const int player,
     rdff_header_t *rdff;
     size_t offset = 0;
     int num_items;
-    ds1_item_t *pc_items = (ds1_item_t*)&(entity->inventory);
+    ds1_item_t *pc_items = (ds1_item_t*)(entity->inventory);
     gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_CHAR, res_id);
     if (gff_read_chunk(gff_idx, &chunk, &buf, sizeof(buf)) < 34) { return; }
 
     rdff = (rdff_disk_object_t*) (buf);
     num_items = rdff->blocknum - 2;
     offset += sizeof(rdff_disk_object_t);
-    //memcpy(ds_player_get_combat(player), buf + offset, sizeof(ds1_combat_t));
     apply_combat(entity, (ds1_combat_t*)(buf + offset));
     offset += rdff->len;
 
     rdff = (rdff_disk_object_t*) (buf + offset);
     offset += sizeof(rdff_disk_object_t);
-    //memcpy(ds_player_get_char(player), buf + offset, sizeof(ds_character_t));
     apply_character(entity, (ds_character_t*)(buf + offset));
     offset += rdff->len;
 

@@ -70,7 +70,7 @@ void screen_push_screen(SDL_Renderer *renderer, sops_t *screen, const uint32_t x
     screen_load_screen(renderer, screen_pos++, screen, x, y);
 }
 
-void port_change_region(dsl_region_t *reg) {
+void port_change_region(region_t *reg) {
     player_load(ds_player_get_active(), main_get_zoom());
     map_load_region(reg, main_get_rend());
 }

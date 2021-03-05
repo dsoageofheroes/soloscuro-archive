@@ -42,13 +42,13 @@ extern void port_animate_entity(entity_t *obj);
 extern void port_swap_enitity(int obj_id, entity_t *dude);
 extern void port_update_entity(entity_t *entity, const uint16_t xdiff, const uint16_t ydiff);
 
+extern void port_change_region(region_t *reg);
+
 //TODO: Deprecate
 // Object manipulation
 extern void port_swap_objs(int obj_id, region_object_t *obj);
 extern void port_add_obj(region_object_t *obj, gff_palette_t *pal);
 extern void port_animate_obj(region_object_t *obj);
 extern void port_update_obj(region_object_t *obj, const uint16_t xdiff, const uint16_t ydiff);
-
-extern void port_change_region(dsl_region_t *reg);
 
 #endif

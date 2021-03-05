@@ -107,13 +107,13 @@ static map_t *create_map() {
     return ret;
 }
 
-void map_load_region(dsl_region_t *reg, SDL_Renderer *renderer) {
+void map_load_region(region_t *reg, SDL_Renderer *renderer) {
     map_free(cmap);
     if (!cmap) { cmap = create_map(); }
     map_init(cmap);
     cren = renderer;
-    cmap->region = reg;
-    cmap->new_region = region_manager_get_region(reg->map_id);
+    cmap->new_region = reg;
+    //cmap->new_region = region_manager_get_region(reg->map_id);
     map_load_current_region();
 
     // TODO: NEED TO CLEAR ALL SCREENS

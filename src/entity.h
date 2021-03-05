@@ -6,6 +6,7 @@
 #include "ds-item.h"
 #include "gff-map.h"
 #include "spells.h"
+#include "item.h"
 
 //typedef uint64_t ability_set_t;
 
@@ -79,11 +80,6 @@ typedef struct sprite_info_s {
     void *data;         // used for special data the UI needs (IE: SDL.)
 } sprite_info_t;
 
-typedef struct effect_node_s {
-    uint32_t effect;
-    struct effect_node_s *next;
-} effect_node_t;
-
 typedef struct class_s {
     uint32_t current_xp;
     uint32_t high_xp;    // for level drain.
@@ -112,6 +108,7 @@ typedef struct entity_s {
     class_t class[3];
     sprite_info_t sprite;
     ability_set_t abilities;
+    effect_node_t *effects; // anything currently affecting the entity.
     ds_inventory_t *inventory;
     spell_list_t *spells;
     psionic_list_t *psionics;

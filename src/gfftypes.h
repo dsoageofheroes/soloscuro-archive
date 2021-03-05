@@ -100,5 +100,6 @@
 #define GFF_ROBJ GFFTYPE('R','O','B','J') // save entry region (not part of original engine.)
 #define GFF_TRIG GFFTYPE('T','R','I','G') // save entry triggers (not part of original engine.)
 #define GFF_GDAT GFFTYPE('G','D','A','T') // save entry GPL data (not part of original engine.)
+#define GFF_PLAY GFFTYPE('P','L','A','Y') // save entry player data (not part of original engine.)
 
 #endif
