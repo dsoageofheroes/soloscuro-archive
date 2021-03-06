@@ -16,6 +16,14 @@ void entity_list_free(entity_list_t *list) {
     free(list);
 }
 
+void entity_list_free_all(entity_list_t *list) {
+    while (*list) {
+        entity_free((*list)->entity);
+        entity_list_remove(list, *list);
+    }
+    free(list);
+}
+
 void entity_list_add(entity_list_t *list, entity_t *entity) {
     if (!list) { return; }
     entity_list_node_t *node = malloc(sizeof(entity_list_node_t));
@@ -62,16 +70,11 @@ void entity_list_load_etab(entity_list_t *list, const int gff_idx, const int map
         gff_read_chunk(gff_idx, &chunk, open_files[gff_idx].entry_table, chunk.length);
         open_files[gff_idx].num_objects = chunk.length / sizeof(gff_map_object_t);
     }
-    //gff_map_object_t *entry_table = open_files[gff_idx].entry_table;
-    int num_objs = gff_map_get_num_objects(gff_idx, map_id);
-    //rl->pos = gff_map_get_num_objects(gff_idx, map_id);
-    //memset(&rl->objs, 0x0, sizeof(region_object_t) * MAX_REGION_OBJS);
 
-    //for (int i = 0; i < rl->pos; i++) {
+    int num_objs = gff_map_get_num_objects(gff_idx, map_id);
+
     for (int i = 0; i < num_objs; i++) {
-        //load_object_from_etab(rl->objs + i, entry_table, i);
         dude_t *dude = entity_create_from_etab(open_files[gff_idx].entry_table, i);
-        //rl->objs[i].scmd = gff_map_get_object_scmd(gff_idx, map_id, i, 0);
         dude->sprite.scmd = gff_map_get_object_scmd(gff_idx, map_id, i, 0);
         entity_list_add(list, dude);
     }

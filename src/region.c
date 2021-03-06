@@ -70,7 +70,7 @@ void region_free(region_t *reg) {
     if (!reg) { return; }
 
     if (reg->entities) {
-        entity_list_free(reg->entities);
+        entity_list_free_all(reg->entities);
         reg->entities = NULL;
     }
 

@@ -72,6 +72,7 @@ enum combat_action_e {
     CA_SPELL,
     CA_WAIT,
     CA_GUARD,
+    CA_END,
 };
 
 typedef struct combat_action_s {
@@ -92,6 +93,7 @@ const enum combat_turn_t combat_player_turn();
 uint32_t combat_add(combat_region_t *rc, entity_t *entity);
 scmd_t* combat_get_scmd(const enum combat_scmd_t type);
 ds1_combat_t* combat_get_combat( combat_region_t* cr, const uint32_t combat_id);
+entity_t* combat_get_current(combat_region_t *cr);
 void combat_set_hunt(combat_region_t *cr, const uint32_t combat_id);
 void combat_player_action(const combat_action_t action);
 

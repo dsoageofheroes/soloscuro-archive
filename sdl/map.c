@@ -5,6 +5,7 @@
 #include "main.h"
 #include "player.h"
 #include "screens/narrate.h"
+#include "screens/combat-status.h"
 #include "../src/dsl.h"
 #include "../src/port.h"
 #include "../src/trigger.h"
@@ -134,9 +135,10 @@ void map_load_map(SDL_Renderer *renderer, int id) {
 
 static void clear_animations() {
     for (int i = 0; i < anim_pos; i++) {
-        animate_list_remove(anim_nodes[i], anim_nodes[i]->anim->obj ? anim_nodes[i]->anim->obj->mapz : 0);
+        animate_list_remove(anim_nodes[i], anim_nodes[i]->anim->entity ? anim_nodes[i]->anim->entity->mapz : 0);
         sprite_free(anims[i].spr);
         anims[i].spr = SPRITE_ERROR;
+        anim_nodes[i] = NULL;
     }
 
     anim_pos = 0;
@@ -174,6 +176,10 @@ void port_add_entity(entity_t *entity, gff_palette_t *pal) {
     anims[anim_pos].scmd = entity->sprite.scmd;
     anims[anim_pos].spr =
         sprite_new(cren, pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP, entity->sprite.bmp_id);
+    if (entity->name) { // If it is a combat entity, then we need to add the combat sprites
+        sprite_append(anims[anim_pos].spr, cren, pal, 0, 0, zoom,
+            OBJEX_GFF_INDEX, GFF_BMP, entity->sprite.bmp_id + 1);
+    }
     anims[anim_pos].delay = 0;
     anims[anim_pos].pos = 0;
     anims[anim_pos].x = (entity->mapx * 16 + entity->sprite.xoffset) * zoom;
@@ -243,9 +249,15 @@ void port_update_obj(region_object_t *robj, const uint16_t xdiff, const uint16_t
 void port_enter_combat() {
     //gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     // Right now we need to migrate player to combat, we will see if that is better.
-    player_remove_animation();
+    //player_remove_animation();
     // Need to disperse players (and setup combat items.)
     // bring up combat status.
+    screen_push_screen(main_get_rend(), &combat_status_screen, 295, 5);
+    for (int i = 0; i < 4; i++) {
+        if (i != ds_player_get_active()) {
+            player_add_to_animation_list(i);
+        }
+    }
 }
 
 void port_exit_combat() {

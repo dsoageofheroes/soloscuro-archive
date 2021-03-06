@@ -25,6 +25,10 @@ uint16_t sprite_create(SDL_Renderer *renderer, SDL_Rect *initial,
 uint16_t sprite_new(SDL_Renderer *renderer, gff_palette_t *pal,
         const int offsetx, const int offsety, const float zoom,
         const int gff_idx, const int type_id, const int res_id);
+uint16_t sprite_append(uint16_t sprite_id, SDL_Renderer *renderer,
+        gff_palette_t *pal,
+        const int offsetx, const int offsety, const float zoom,
+        const int gff_idx, const int type_id, const int res_id);
 void sprite_render(SDL_Renderer *renderer, const uint16_t sprite_id);
 void sprite_render_flip(SDL_Renderer *renderer, const uint16_t sprite_id, SDL_RendererFlip flip);
 uint16_t sprite_get_frame(const uint16_t id);

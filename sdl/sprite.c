@@ -5,6 +5,11 @@
 static sprite_t sprites[MAX_SPRITES];
 static uint16_t sprite_pos;
 
+static uint16_t sprite_append_full(uint16_t sprite_id, SDL_Renderer *renderer, SDL_Rect *initial,
+        gff_palette_t *pal,
+        const int offsetx, const int offsety, const float zoom,
+        const int gff_idx, const int type_id, const int res_id);
+
 void sprite_init() {
     memset(sprites, 0x0, sizeof(sprite_t) * MAX_SPRITES);
     sprite_pos = 0;
@@ -76,11 +81,39 @@ uint16_t sprite_create(SDL_Renderer *renderer, SDL_Rect *initial,
     int sprite_id = get_next_sprite_id();
     if (sprite_id == SPRITE_ERROR) { return sprite_id; }
 
+    sprite_append_full(sprite_id, renderer, initial, pal,
+        offsetx, offsety, zoom, gff_idx, type_id, res_id);
+
     sprite = sprites + sprite_id;
+    sprite->pos = 0;
+    sprite->in_use = 1;
+
+    return sprite_id;
+}
+
+uint16_t sprite_append(uint16_t sprite_id, SDL_Renderer *renderer,
+        gff_palette_t *pal,
+        const int offsetx, const int offsety, const float zoom,
+        const int gff_idx, const int type_id, const int res_id) {
+    SDL_Rect tmp = {offsetx, offsety, 0, 0};
+    return sprite_append_full(sprite_id, renderer, &tmp, pal, 0, 0, zoom, gff_idx, type_id, res_id);
+}
+
+// Create a sprite and return its ID
+static uint16_t sprite_append_full(uint16_t sprite_id, SDL_Renderer *renderer, SDL_Rect *initial,
+        gff_palette_t *pal,
+        const int offsetx, const int offsety, const float zoom,
+        const int gff_idx, const int type_id, const int res_id) {
+
+    size_t append_start = 0;
+    if (sprite_id == SPRITE_ERROR) { return sprite_id; }
+    sprite_t *sprite = sprites + sprite_id;
+
     //printf("%d, %d, %d\n", gff_idx, type_id, res_id);
-    sprite->len = get_frame_count(gff_idx, type_id, res_id);
-    sprite->loc = malloc(sizeof(SDL_Rect) * sprite->len);
-    for (int i = 0; i < sprite->len; i++) {
+    append_start = sprite->len;
+    sprite->len += get_frame_count(gff_idx, type_id, res_id);
+    sprite->loc = realloc(sprite->loc, sizeof(SDL_Rect) * sprite->len);
+    for (int i = append_start; i < sprite->len; i++) {
         *(sprite->loc + i) = apply_params(*initial, offsetx, offsetx);
     }
     //printf("frame out: %d\n", sprite->len);
@@ -88,17 +121,15 @@ uint16_t sprite_create(SDL_Renderer *renderer, SDL_Rect *initial,
     // TODO: PERFORMANCE, create 1 large texture of multiple frames, which also eliminates a malloc...
     // TODO: alternatively, create a function to manually load the frames at once,
     //       instead of reading each frame from disk one at a time.
-    sprite->tex = malloc(sizeof(SDL_Texture*) * sprite->len);
-    for (int i = 0; i < sprite->len; i++) {
-        sprite->tex[i] = create_texture(renderer, gff_idx, type_id, res_id, i, pal, (sprite->loc + i));
+    sprite->tex = realloc(sprite->tex, sizeof(SDL_Texture*) * sprite->len);
+    for (int i = append_start; i < sprite->len; i++) {
+        sprite->tex[i] = create_texture(renderer, gff_idx, type_id, res_id, i - append_start, pal, (sprite->loc + i));
         //printf("->{%d, %d, %d, %d}\n", sprite->loc.x, sprite->loc.y, sprite->loc.w, sprite->loc.h);
     }
 
-    for (int i = 0; i < sprite->len; i++) {
+    for (int i = append_start; i < sprite->len; i++) {
         set_zoom((sprite->loc + i), zoom);
     }
-    sprite->pos = 0;
-    sprite->in_use = 1;
 
     return sprite_id;
 }

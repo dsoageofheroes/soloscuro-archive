@@ -6,6 +6,7 @@
 #include "../font.h"
 #include "../../src/gff.h"
 #include "../../src/gfftypes.h"
+#include "../../src/region-manager.h"
 #include <string.h>
 
 static uint16_t background;
@@ -35,11 +36,25 @@ void combat_status_init(SDL_Renderer *renderer, const uint32_t x, const uint32_t
     background = sprite_new(renderer, pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 5016);
 }
 
+static void get_status() {
+    entity_t* dude = combat_get_current(&(region_manager_get_current()->cr));
+
+    if (dude) {
+        strcpy(combat_status.name, dude->name);
+        combat_status.current_hp = dude->stats.hp;
+        combat_status.max_hp = dude->stats.high_hp;
+        combat_status.status = 1;// Need to fix.
+        combat_status.move = dude->stats.move;
+    }
+}
+
 void combat_status_render(void *data, SDL_Renderer *renderer) {
     sprite_render(renderer, background);
     float zoom = main_get_zoom();
     SDL_Rect loc;
     char buf[128];
+
+    get_status();
 
     loc.x = xoffset;
     loc.y = yoffset + 2 * zoom;

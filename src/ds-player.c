@@ -26,6 +26,12 @@ static entity_t *players[MAX_PCS] = {NULL, NULL, NULL, NULL};
 static player_t pc[MAX_PCS];
 static int active = 0;
 
+void player_cleanup() {
+    for (int i = 0; i < MAX_PCS; i++) {
+        entity_free(players[i]);
+    }
+}
+
 void ds_player_init() {
     memset(pc, 0x0, MAX_PCS * sizeof(player_t));
 

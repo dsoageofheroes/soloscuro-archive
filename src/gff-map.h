@@ -95,6 +95,7 @@ enum {
     ITEM1R_OBJECT = 3,
     MINI_OBJECT   = 5,
     PLAYER_OBJECT = 6,
+    ENTITY_NAME   = 7,
 };
 
 // Types of Sol Oscuro objects

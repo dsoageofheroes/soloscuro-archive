@@ -24,6 +24,7 @@ static void apply_combat(dude_t *dude, ds1_combat_t *combat) {
     dude->stats.intel = combat->stats.intel;
     dude->stats.wis = combat->stats.wis;
     dude->stats.cha = combat->stats.cha;
+    if (dude->name) { free (dude->name); }
     dude->name = strdup(combat->name);
 }
 
@@ -205,6 +206,7 @@ entity_t* entity_create_from_etab(gff_map_object_t *entry_table, uint32_t id) {
 }
 
 void entity_free(entity_t *dude) {
+    if (!dude) { return; }
     if (dude->name) {
         free(dude->name);
         dude->name = NULL;

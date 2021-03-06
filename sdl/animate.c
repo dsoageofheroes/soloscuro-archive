@@ -197,7 +197,10 @@ void animate_init() {
 void animate_clear() {
     for (int i = 0; i < MAX_ZPOS; i++) {
         while(animate_list[i]) {
-            animate_list_remove(animate_list[i], i);
+            if (animate_list[i]) {
+                animate_list_remove(animate_list[i], i);
+            }
+            animate_list[i] = NULL;
         }
     }
 }

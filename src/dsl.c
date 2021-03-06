@@ -76,4 +76,5 @@ void dsl_cleanup() {
     ds_item_close();
     trigger_cleanup();
     region_manager_cleanup();
+    player_cleanup();
 }

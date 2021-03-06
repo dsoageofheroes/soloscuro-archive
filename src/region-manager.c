@@ -23,6 +23,7 @@ void region_manager_cleanup() {
     for (int i = 0; i < MAX_REGIONS; i++) {
         if (regions[i]) {
             region_free(regions[i]);
+            combat_free(&(regions[i]->cr));
             free(regions[i]);
             regions[i] = NULL;
         }

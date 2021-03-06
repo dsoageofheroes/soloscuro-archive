@@ -23,14 +23,19 @@ struct ability_set_s {
 //nested version:
 
 struct psi_abilities_s {
+    unsigned int detonate         : 1;
+};
+
+typedef struct class_abilities_s {
     unsigned int psychokinesis    : 1;
     unsigned int psychometabolism : 1;
     unsigned int telepathy        : 1;
-};
+} class_abilities_t;
 
 typedef struct ability_set_s {
     unsigned int hunt             : 1;
     struct psi_abilities_s psi;
+    class_abilities_t class;
     //struct spell_abilities_s spells; // NOT shown
     //struct class_abilities_s class;  // Not shown
 } ability_set_t;
@@ -63,6 +68,7 @@ typedef struct stats_s {
     int16_t psp;
     int16_t high_psp;
     int8_t base_ac; // before applying any modifiers.
+    int8_t move;
     int8_t base_move;
     int8_t base_thac0;
     uint8_t magic_resistance;
@@ -112,7 +118,6 @@ typedef struct entity_s {
     ds_inventory_t *inventory;
     spell_list_t *spells;
     psionic_list_t *psionics;
-    effect_node_t *effects;
 } entity_t;
 
 // For the lolz
