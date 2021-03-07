@@ -79,12 +79,12 @@ uint16_t sprite_create(SDL_Renderer *renderer, SDL_Rect *initial,
 
     sprite_t *sprite;
     int sprite_id = get_next_sprite_id();
+    sprite = sprites + sprite_id;
     if (sprite_id == SPRITE_ERROR) { return sprite_id; }
 
     sprite_append_full(sprite_id, renderer, initial, pal,
         offsetx, offsety, zoom, gff_idx, type_id, res_id);
 
-    sprite = sprites + sprite_id;
     sprite->pos = 0;
     sprite->in_use = 1;
 

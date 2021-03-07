@@ -29,9 +29,7 @@ static animate_sprite_t anims[MAX_PCS];
 #define sprite_t uint16_t
 
 void player_init() {
-    player_pos_t* pc = ds_player_get_pos(ds_player_get_active());
-    pc->xpos = 30;
-    pc->ypos = 10;
+    dude_t *dude = player_get_entity(ds_player_get_active());
     player_zpos = 0;
     memset(players, 0x00, sizeof(player_sprites_t) * MAX_PCS);
     memset(anims, 0x00, sizeof(animate_sprite_t) * MAX_PCS);
@@ -41,6 +39,8 @@ void player_init() {
             ((sprite_t*)&(players[i].inv))[j] = SPRITE_ERROR;
         }
     }
+    dude->mapx = 30;
+    dude->mapy = 10;
 }
 
 region_object_t* player_get_robj(const int slot) {
@@ -49,10 +49,9 @@ region_object_t* player_get_robj(const int slot) {
 }
 
 void player_load_graphics(const int slot) {
-    player_pos_t* pc = ds_player_get_pos(ds_player_get_active());
     dude_t *dude = player_get_entity(slot);
     dude->mapx = 30;
-    dude->mapy = 30;
+    dude->mapy = 10;
     dude->sprite.scmd = combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
 
     dsl_player[slot].flags = 0;
@@ -78,8 +77,8 @@ void player_load_graphics(const int slot) {
     dsl_player[slot].scmd = combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
 
     // Set initial location
-    dsl_player[slot].mapx = pc->xpos;
-    dsl_player[slot].mapy = pc->ypos;
+    dsl_player[slot].mapx = dude->mapx;
+    dsl_player[slot].mapy = dude->mapy;
 }
 
 static int ticks_per_move = 10;
@@ -88,7 +87,7 @@ static int direction = 0x0;
 
 void player_update() {
     int slot = ds_player_get_active();
-    player_pos_t* pc = ds_player_get_pos(slot);
+    entity_t *dude = player_get_entity(slot);
     animate_shift_node(player_node, player_zpos);
     const enum combat_turn_t combat_turn = combat_player_turn();
     if (--count > 0) { return; }
@@ -96,8 +95,8 @@ void player_update() {
     // update when we can have the player take a turn.
     if (combat_turn != NO_COMBAT) { return; }
 
-    int nextx = pc->xpos;
-    int nexty = pc->ypos;
+    int nextx = dude->mapx;
+    int nexty = dude->mapy;
     if (direction & PLAYER_UP) { nexty -= 1; }
     if (direction & PLAYER_DOWN) { nexty += 1; }
     if (direction & PLAYER_LEFT) { nextx -= 1; }
@@ -105,10 +104,11 @@ void player_update() {
     //debug ("tile @ (%d, %d) = %d\n", pc->xpos, pc->ypos, cmap_is_block(pc->xpos, pc->ypos));
 
     if (!narrate_is_open()) {
-        trigger_noorders(pc->xpos, pc->ypos);
+        //trigger_noorders(pc->xpos, pc->ypos);
+        trigger_noorders(dude->mapx, dude->mapy);
     }
-    trigger_box_check(pc->xpos, pc->ypos);
-    trigger_tile_check(pc->xpos, pc->ypos);
+    trigger_box_check(dude->mapx, dude->mapy);
+    trigger_tile_check(dude->mapx, dude->mapy);
 
     //printf("HERE: %d %d %d\n", main_player_freeze(), direction, cmap_is_block(nexty, nextx));
     if (main_player_freeze() || direction == 0x0 || cmap_is_block(nexty, nextx)) {
@@ -127,19 +127,17 @@ void player_update() {
         return;
     }
 
-    pc->xpos = nextx;
-    pc->ypos = nexty;
+    dude->mapx = nextx;
+    dude->mapy = nexty;
 
-    dsl_player[slot].mapx = pc->xpos;
-    dsl_player[slot].mapy = pc->ypos;
-    dude_t *dude = player_get_entity(slot);
-    dude->mapx = pc->xpos;
-    dude->mapy = pc->ypos;
+    dsl_player[slot].mapx = dude->mapx;
+    dsl_player[slot].mapy = dude->mapy;
     anims[0].x = anims[0].destx;
     anims[0].y = anims[0].desty;
-    anims[0].destx = pc->xpos * 16 * 2;
-    anims[0].desty = pc->ypos * 16 * 2;
+    anims[0].destx = dude->mapx * 16 * main_get_zoom();
+    anims[0].desty = dude->mapy * 16 * main_get_zoom();
     anims[0].desty -= sprite_geth(anims[0].spr) - (8 * main_get_zoom());
+    //printf("Going to: (%d, %d) -> %d, %d\n", anims[0].x, anims[0].y, anims[0].destx, anims[0].desty);
 
     if (direction & PLAYER_LEFT) { 
         animate_set_animation(anims + 0, combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_LEFT), ticks_per_move);
@@ -265,13 +263,15 @@ static void load_character_sprite(SDL_Renderer *renderer, const int slot, const 
 }
 
 void player_add_to_animation_list(const int slot) {
-    player_pos_t* pc = ds_player_get_pos(ds_player_get_active());
+    entity_t *dude = player_get_entity(slot);
+    if (!dude->name) { return; } // !player_exists
     player_node = animate_list_add(anims + slot, player_zpos);
-    anims[slot].destx = pc->xpos * 16 * 2;
-    anims[slot].desty = pc->ypos * 16 * 2;
+    anims[slot].destx = dude->mapx * 16 * main_get_zoom();
+    anims[slot].desty = dude->mapy * 16 * main_get_zoom();
     anims[slot].desty -= sprite_geth(anims[slot].spr) - (16 * main_get_zoom());
     anims[slot].x = anims[slot].destx;
     anims[slot].y = anims[slot].desty;
+    printf("%d, %d\n", anims[slot].x, anims[slot].y);
     anims[slot].entity = player_get_entity(slot);
     anims[slot].entity->sprite.data = anims + slot;
 }

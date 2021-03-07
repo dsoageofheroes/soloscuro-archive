@@ -23,6 +23,10 @@ enum combat_scmd_t {
     COMBAT_SCMD_PLAYER_MOVE_UP,
     COMBAT_SCMD_PLAYER_MOVE_RIGHT,
     COMBAT_SCMD_PLAYER_MOVE_LEFT,
+    COMBAT_SCMD_MELEE_DOWN,
+    COMBAT_SCMD_MELEE_UP,
+    COMBAT_SCMD_MELEE_RIGHT,
+    COMBAT_SCMD_MELEE_LEFT,
 };
 
 enum {
@@ -72,12 +76,16 @@ enum combat_action_e {
     CA_SPELL,
     CA_WAIT,
     CA_GUARD,
+    CA_RED_DAMAGE,
+    CA_GREEN_DAMAGE,
     CA_END,
 };
 
 typedef struct combat_action_s {
     enum combat_action_e action;
+    entity_t *source;
     entity_t *target;
+    int32_t amt;
 } combat_action_t;
 
 #define MAX_COMBAT_ACTIONS (100)

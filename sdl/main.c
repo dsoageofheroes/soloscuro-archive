@@ -34,6 +34,8 @@ static uint8_t ignore_repeat = 1, browser_mode = 0;
 static uint32_t xmappos, ymappos;
 static int32_t xmapdiff, ymapdiff;
 
+static uint8_t player_directions[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
 SDL_Renderer *main_get_rend() { return renderer; }
 SDL_Surface *main_get_screen() { return screen; }
 const float main_get_zoom() { return zoom; }
@@ -73,6 +75,28 @@ void main_exit_game() {
     game_loop_signal(WAIT_FINAL, 0);
 }
 
+static void main_combat_update() {
+    combat_action_t player_action;
+    player_action.action = CA_NONE;
+    switch(combat_player_turn()) {
+        case PLAYER1_TURN:
+        case PLAYER2_TURN:
+        case PLAYER3_TURN:
+        case PLAYER4_TURN:
+            if (player_directions[1]) { player_action.action = CA_WALK_DOWNLEFT; }
+            if (player_directions[2]) { player_action.action = CA_WALK_DOWN; }
+            if (player_directions[3]) { player_action.action = CA_WALK_DOWNRIGHT; }
+            if (player_directions[4]) { player_action.action = CA_WALK_LEFT; }
+            if (player_directions[6]) { player_action.action = CA_WALK_RIGHT; }
+            if (player_directions[7]) { player_action.action = CA_WALK_UPLEFT; }
+            if (player_directions[8]) { player_action.action = CA_WALK_UP; }
+            if (player_directions[9]) { player_action.action = CA_WALK_UPRIGHT; }
+            combat_player_action(player_action);
+            break;
+        default: break;
+    }
+}
+
 void handle_input() {
     SDL_Event event;
     while (SDL_PollEvent(&event) != 0) {
@@ -91,6 +115,14 @@ void handle_input() {
                 if (event.key.keysym.sym == SDLK_DOWN) { ymapdiff = 0;}
                 if (event.key.keysym.sym == SDLK_LEFT) { xmapdiff = 0;}
                 if (event.key.keysym.sym == SDLK_RIGHT) { xmapdiff = 0;}
+                if (event.key.keysym.sym == SDLK_KP_1) { player_directions[1] = 0; }
+                if (event.key.keysym.sym == SDLK_KP_2) { player_directions[2] = 0; }
+                if (event.key.keysym.sym == SDLK_KP_3) { player_directions[3] = 0; }
+                if (event.key.keysym.sym == SDLK_KP_4) { player_directions[4] = 0; }
+                if (event.key.keysym.sym == SDLK_KP_6) { player_directions[6] = 0; }
+                if (event.key.keysym.sym == SDLK_KP_7) { player_directions[7] = 0; }
+                if (event.key.keysym.sym == SDLK_KP_8) { player_directions[8] = 0; }
+                if (event.key.keysym.sym == SDLK_KP_9) { player_directions[9] = 0; }
                 if (event.key.keysym.sym == SDLK_F11) {
                     add_load_save_set_mode(ACTION_SAVE);
                     screen_push_screen(renderer, &als_screen, 0, 0);
@@ -118,6 +150,14 @@ void handle_input() {
                 if (event.key.keysym.sym == SDLK_DOWN) { ymapdiff = 2;}
                 if (event.key.keysym.sym == SDLK_LEFT) { xmapdiff = -2;}
                 if (event.key.keysym.sym == SDLK_RIGHT) { xmapdiff = 2;}
+                if (event.key.keysym.sym == SDLK_KP_1) { player_directions[1] = 1; }
+                if (event.key.keysym.sym == SDLK_KP_2) { player_directions[2] = 1; }
+                if (event.key.keysym.sym == SDLK_KP_3) { player_directions[3] = 1; }
+                if (event.key.keysym.sym == SDLK_KP_4) { player_directions[4] = 1; }
+                if (event.key.keysym.sym == SDLK_KP_6) { player_directions[6] = 1; }
+                if (event.key.keysym.sym == SDLK_KP_7) { player_directions[7] = 1; }
+                if (event.key.keysym.sym == SDLK_KP_8) { player_directions[8] = 1; }
+                if (event.key.keysym.sym == SDLK_KP_9) { player_directions[9] = 1; }
                 break;
             case SDL_MOUSEMOTION:
                 handle_mouse_motion();
@@ -139,6 +179,7 @@ void handle_input() {
     ymappos += ymapdiff;
     handle_mouse_motion();
     player_update();
+    main_combat_update();
 }
 
 void main_set_xscroll(int amt) { xmapdiff = amt; }
@@ -149,10 +190,10 @@ void main_center_on_player() {
     int w, h;
 
     SDL_GetRendererOutputSize(renderer, &w, &h);
-    player_pos_t *pos = ds_player_get_pos(ds_player_get_active());
+    dude_t *dude = player_get_entity(ds_player_get_active());
 
-    xmappos = pos->xpos * 16 * main_get_zoom() - w / 2;
-    ymappos = pos->ypos * 16 * main_get_zoom() - h / 2;
+    xmappos = dude->mapx * 16 * main_get_zoom() - w / 2;
+    ymappos = dude->mapy * 16 * main_get_zoom() - h / 2;
 }
 
 void render() {

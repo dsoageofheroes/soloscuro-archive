@@ -75,7 +75,6 @@ static void create_combat(ds_character_t *pc, char *name, ds1_combat_t *combat) 
 static void create_region(const int slot, ds_character_t *ch) {
     region_object_t *robj = &(pc[slot].robj);
     memset(robj, 0x0, sizeof(region_object_t));
-    player_pos_t* pc = ds_player_get_pos(slot);
     robj->flags = 0;
     robj->entry_id = 0;
     robj->bmpx = 0;
@@ -95,10 +94,6 @@ static void create_region(const int slot, ds_character_t *ch) {
     robj->disk_idx = 0;
     robj->game_time = 0;
     robj->scmd = combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
-
-    // Set initial location
-    robj->mapx = pc->xpos;
-    robj->mapy = pc->ypos;
 }
 
 int ds_player_replace(const int slot, ds_character_t *ch, psin_t *psi, spell_list_t *spells,

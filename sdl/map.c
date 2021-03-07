@@ -186,6 +186,9 @@ void port_add_entity(entity_t *entity, gff_palette_t *pal) {
     anims[anim_pos].y = (entity->mapy * 16 + entity->sprite.yoffset + entity->mapz) * zoom;
     anims[anim_pos].destx = anims[anim_pos].x;
     anims[anim_pos].desty = anims[anim_pos].y;
+    if (entity->name) {
+        anims[anim_pos].desty -= sprite_geth(anims[anim_pos].spr) - (8 * main_get_zoom());
+    }
     anims[anim_pos].move = anims[anim_pos].left_over = 0.0;
     anims[anim_pos].entity = entity;
     anim_nodes[anim_pos] = animate_list_add(anims + anim_pos, entity->mapz);
@@ -218,6 +221,12 @@ void port_add_obj(region_object_t *obj, gff_palette_t *pal) {
     anim_pos++;
 }
 
+static void entity_instant_move(entity_t *entity) {
+    animate_sprite_t *as = (animate_sprite_t*) entity->sprite.data;
+    as->x = as->destx;
+    as->y = as->desty;
+}
+
 void port_update_entity(entity_t *entity, const uint16_t xdiff, const uint16_t ydiff) {
     animate_sprite_t *as = (animate_sprite_t*) entity->sprite.data;
     //printf("cur:%d %d\n", as->x, as->y);
@@ -228,7 +237,7 @@ void port_update_entity(entity_t *entity, const uint16_t xdiff, const uint16_t y
     entity->mapy += ydiff;
     as->destx = entity->mapx * 16 * main_get_zoom();
     as->desty = entity->mapy * 16 * main_get_zoom();
-    //as->desty -= sprite_geth(as->spr) - (8 * main_get_zoom());
+    as->desty -= sprite_geth(as->spr) - (8 * main_get_zoom());
     animate_set_animation(as, entity->sprite.scmd, 20);
 }
 
@@ -253,9 +262,16 @@ void port_enter_combat() {
     // Need to disperse players (and setup combat items.)
     // bring up combat status.
     screen_push_screen(main_get_rend(), &combat_status_screen, 295, 5);
+    dude_t *main_player = player_get_entity(ds_player_get_active());
     for (int i = 0; i < 4; i++) {
-        if (i != ds_player_get_active()) {
+        dude_t *next_player = player_get_entity(i);
+        if (i != ds_player_get_active() && next_player->name) { // next_player exists.
             player_add_to_animation_list(i);
+            next_player->mapx = main_player->mapx;
+            next_player->mapy = main_player->mapy;
+            region_move_to_nearest(region_manager_get_current(), next_player);
+            port_update_entity(next_player, 0, 0);
+            entity_instant_move(next_player);
         }
     }
 }

@@ -271,15 +271,9 @@ int ls_load_save_file(const char *path) {
         if (!load_player(id, i, i)) { return 0; }
     }
 
-    gff_chunk_header_t chunk = gff_find_chunk_header(id, GFF_POS, 0);
-    if (gff_read_chunk(id, &chunk, ds_player_get_pos(0), sizeof(player_pos_t)) < 1) { return 0; }
-    if (gff_read_chunk(id, &chunk, ds_player_get_pos(1), sizeof(player_pos_t)) < 1) { return 0; }
-    if (gff_read_chunk(id, &chunk, ds_player_get_pos(2), sizeof(player_pos_t)) < 1) { return 0; }
-    if (gff_read_chunk(id, &chunk, ds_player_get_pos(3), sizeof(player_pos_t)) < 1) { return 0; }
-
     load_regions(id);
 
-    chunk = gff_find_chunk_header(id, GFF_GDAT, 99);
+    gff_chunk_header_t chunk = gff_find_chunk_header(id, GFF_GDAT, 99);
     buf = malloc(chunk.length);
     if (!gff_read_chunk(id, &chunk, buf, chunk.length)) {
         printf("Error loading file.\n");

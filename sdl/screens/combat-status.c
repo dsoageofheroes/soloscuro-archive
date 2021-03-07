@@ -1,6 +1,7 @@
 #include "combat-status.h"
 #include "popup.h"
 #include "narrate.h"
+#include "../animate.h"
 #include "../main.h"
 #include "../sprite.h"
 #include "../font.h"
@@ -12,6 +13,9 @@
 static uint16_t background;
 static combat_status_t combat_status;
 static uint32_t xoffset, yoffset;
+static uint16_t combat_attacks;
+static int show_attack = 0;
+static int damage_amount = 0;
 
 combat_status_t* combat_status_get() { return &combat_status; }
 
@@ -34,6 +38,7 @@ void combat_status_init(SDL_Renderer *renderer, const uint32_t x, const uint32_t
     yoffset = y * main_get_zoom();
 
     background = sprite_new(renderer, pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 5016);
+    combat_attacks = sprite_new(renderer, pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 5014);
 }
 
 static void get_status() {
@@ -71,6 +76,29 @@ void combat_status_render(void *data, SDL_Renderer *renderer) {
     loc.y += 6 * zoom;
     snprintf(buf, 127, "Move : %d", combat_status.move);
     font_render_center(renderer, FONT_GREYLIGHT, buf, loc);
+
+    if (show_attack) {
+        sprite_render(renderer, combat_attacks);
+        loc.x = sprite_getx(combat_attacks);
+        loc.y = sprite_gety(combat_attacks)
+            + sprite_geth(combat_attacks) / 2
+            - 8 / 2 * main_get_zoom(); // last one is font size / 2
+        loc.w = sprite_getw(combat_attacks);
+        snprintf(buf, 128, "%d", damage_amount);
+        font_render_center(renderer, FONT_GREYLIGHT, buf, loc);
+    }
+}
+
+void port_combat_action(combat_action_t *ca) {
+    if (ca->action == CA_RED_DAMAGE) {
+        animate_sprite_t *anim = ca->target->sprite.data;
+        sprite_center_spr(combat_attacks, anim->spr);
+        show_attack = 1;
+        damage_amount = ca->amt;
+        return;
+    }
+
+    show_attack = 0;
 }
 
 int combat_status_handle_mouse_movement(const uint32_t x, const uint32_t y) {

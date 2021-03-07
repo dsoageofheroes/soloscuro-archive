@@ -1,4 +1,5 @@
 #include "combat.h"
+#include "combat-animation.h"
 #include "ds-player.h"
 #include "region.h"
 #include "dsl.h"
@@ -8,11 +9,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-//static combat_action_list_t action_list;
 static int current_player = 0;
 static int wait_on_player = 0;
 static combat_action_t monster_actions[MAX_COMBAT_ACTIONS]; // list of actions for a monster's turn.
 static int monster_step = -1; // keep track of what step of the action the monster is on.
+static enum combat_action_e player_action;
 
 typedef struct combat_entry_s {
     int initiative;
@@ -62,113 +63,6 @@ void combat_free(combat_region_t *cr) {
     //}
 }
 
-static scmd_t combat_move_down[] = {
-    {.bmp_idx = 3, .delay = 7, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 4, .delay = 8, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 5, .delay = 8, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 6, .delay = 7, .flags = SCMD_JUMP, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-};
-
-static scmd_t combat_move_up[] = {
-    {.bmp_idx = 7, .delay = 7, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 8, .delay = 8, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 9, .delay = 8, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 10, .delay = 7, .flags = SCMD_JUMP, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-};
-
-static scmd_t combat_move_right[] = {
-    {.bmp_idx = 11, .delay = 7, .flags = 0x0, .xoffset = 9, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 12, .delay = 8, .flags = 0x0, .xoffset = 4, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 13, .delay = 8, .flags = 0x0, .xoffset = 8, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 14, .delay = 7, .flags = SCMD_JUMP, .xoffset = 3, .yoffset = 0, 0, 0, 0},
-};
-
-static scmd_t combat_move_left[] = {
-    {.bmp_idx = 11, .delay = 7, .flags = SCMD_XMIRROR, .xoffset = -9, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 12, .delay = 8, .flags = SCMD_XMIRROR, .xoffset = -4, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 13, .delay = 8, .flags = SCMD_XMIRROR, .xoffset = -8, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 14, .delay = 7, .flags = SCMD_XMIRROR | SCMD_JUMP, .xoffset = -3, .yoffset = 0, 0, 0, 0},
-};
-
-static scmd_t player_move_down[] = {
-    {.bmp_idx = 3, .delay = 7, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 4, .delay = 8, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 5, .delay = 8, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 6, .delay = 7, .flags = SCMD_JUMP, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-};
-
-static scmd_t player_move_up[] = {
-    {.bmp_idx = 7, .delay = 7, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 8, .delay = 8, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 9, .delay = 8, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 10, .delay = 7, .flags = SCMD_JUMP, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-};
-
-static scmd_t player_move_right[] = {
-    {.bmp_idx = 11, .delay = 7, .flags = 0x0, .xoffset = 9, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 12, .delay = 8, .flags = 0x0, .xoffset = 4, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 13, .delay = 8, .flags = 0x0, .xoffset = 8, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 14, .delay = 7, .flags = SCMD_JUMP, .xoffset = 3, .yoffset = 0, 0, 0, 0},
-};
-
-static scmd_t player_move_left[] = {
-    {.bmp_idx = 11, .delay = 7, .flags = SCMD_XMIRROR, .xoffset = -9, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 12, .delay = 8, .flags = SCMD_XMIRROR, .xoffset = -4, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 13, .delay = 8, .flags = SCMD_XMIRROR, .xoffset = -8, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 14, .delay = 7, .flags = SCMD_XMIRROR | SCMD_JUMP, .xoffset = -3, .yoffset = 0, 0, 0, 0},
-};
-
-static scmd_t combat_stand_down[] = {
-    {.bmp_idx = 0, .delay = 0, .flags = SCMD_LAST, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-};
-
-static scmd_t combat_stand_up[] = {
-    {.bmp_idx = 1, .delay = 0, .flags = SCMD_LAST, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-};
-
-static scmd_t combat_stand_right[] = {
-    {.bmp_idx = 2, .delay = 0, .flags = SCMD_LAST, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-};
-
-static scmd_t combat_stand_left[] = {
-    {.bmp_idx = 2, .delay = 0, .flags = SCMD_XMIRROR | SCMD_LAST, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-};
-
-static scmd_t *combat_types[] = {
-    combat_stand_down,
-    combat_stand_up,
-    combat_stand_right,
-    combat_stand_left,
-    combat_move_down,
-    combat_move_up,
-    combat_move_right,
-    combat_move_left,
-    player_move_down,
-    player_move_up,
-    player_move_right,
-    player_move_left,
-};
-
-static scmd_t* get_scmd(scmd_t *current_scmd, const int xdiff, const int ydiff) {
-    if (xdiff < 0) { return combat_get_scmd(COMBAT_SCMD_MOVE_LEFT); }
-    if (xdiff > 0) { return combat_get_scmd(COMBAT_SCMD_MOVE_RIGHT); }
-    if (ydiff < 0) { return combat_get_scmd(COMBAT_SCMD_MOVE_UP); }
-    if (ydiff > 0) { return combat_get_scmd(COMBAT_SCMD_MOVE_DOWN); }
-
-    // xdiff and ydiff == 0.
-    if (current_scmd == combat_get_scmd(COMBAT_SCMD_MOVE_LEFT)) {
-        return combat_get_scmd(COMBAT_SCMD_STAND_LEFT);
-    } else if (current_scmd == combat_get_scmd(COMBAT_SCMD_MOVE_RIGHT)) {
-        return combat_get_scmd(COMBAT_SCMD_STAND_RIGHT);
-    } else if (current_scmd == combat_get_scmd(COMBAT_SCMD_MOVE_UP)) {
-        return combat_get_scmd(COMBAT_SCMD_STAND_UP);
-    } else if (current_scmd == combat_get_scmd(COMBAT_SCMD_MOVE_UP)) {
-        return combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
-    }
-
-    return current_scmd;
-}
-
 static int32_t ticks_per_game_round = 20;// For outside combat.
 
 //TODO: Ignores walls, but that might be okay right now.
@@ -176,17 +70,17 @@ static int calc_distance_to_player(entity_t *entity) {
     int min = 9999999;
     int max;
 
-    for (int i = 0; i < MAX_PCS; i++) {
-        if (player_exists(i)) {
-            entity_t *dude = player_get_entity(i);
+    //for (int i = 0; i < MAX_PCS; i++) {
+        //if (player_exists(i)) {
+            entity_t *dude = player_get_entity(ds_player_get_active());
             int xdiff = (entity->mapx - dude->mapx);
             int ydiff = (entity->mapy - dude->mapy);
             if (xdiff < 0) { xdiff *= -1;}
             if (ydiff < 0) { ydiff *= -1;}
             max = (xdiff > ydiff) ? xdiff : ydiff;
             min = (min < max) ? min : max;
-        }
-    }
+        //}
+    //}
 
     return min;
 }
@@ -214,7 +108,6 @@ static void add_to_combat(entity_t *entity) {
     node->initiative = dnd2e_roll_initiative(entity);
     node->sub_roll = dnd2e_roll_sub_roll();
     node->current_action.action = CA_NONE;// Means they need to take their turn.
-    //printf("rolled: %d (%d)\n", node->initiative, node->sub_roll);
 
     // if the node is first.
     if (combat_order == NULL || initiative_is_less(node, combat_order)) {
@@ -248,13 +141,13 @@ static void enter_combat_mode(region_t *reg) {
 
     // Freeze all combats.
     entity_list_for_each(cr->combatants, combatant) {
-        combatant->sprite.scmd = get_scmd(combatant->sprite.scmd, 0, 0);
+        combatant->sprite.scmd = combat_animation_get_scmd(combatant->sprite.scmd, 0, 0, CA_NONE);
         port_update_entity(combatant, 0, 0);
     }
 
     // Right now players are not part of combat, so add them!
     for (int i = 0; i < MAX_PCS; i++) {
-        if (ds_player_exists(i)) {
+        if (ds_player_exists(i) && i != ds_player_get_active()) {
             combat_add(&(reg->cr), player_get_entity(i));
         }
     }
@@ -285,27 +178,13 @@ static int which_player(combat_entry_t *node) {
     return -1;
 }
 
-static void next_turn() {
-    if (!current_turn) { return; }
-
-    current_turn = current_turn->next;
-    wait_on_player = 0;
-}
-
 void combat_player_action(const combat_action_t action) {
     if (!wait_on_player || !current_turn) { return; }
 
-    current_turn->current_action = action;
-
-    switch(action.action) {
-        case CA_GUARD: next_turn(); break;
-        default:
-            error("Unknown action %d\n", action.action);
-    }
+    player_action = action.action;
 }
 
 static void queue_add(action_node_t **head, action_node_t **tail, action_node_t *current, const enum combat_action_e action) {
-    if (current->num_moves > 11) { return; }
     action_node_t *new = malloc(sizeof(action_node_t));
     memcpy(new, current, sizeof(action_node_t));
     new->actions[new->num_moves].action = action;
@@ -391,6 +270,19 @@ static entity_t* player_to_attack(region_t *reg, action_node_t *node) {
     return NULL;
 }
 
+static int combat_location_blocked(const region_t *reg, entity_t *entity, const int32_t x, const int32_t y) {
+    dude_t *dude = NULL;
+    //if (reg->flags[x][y]) { return 1; }
+    entity_list_for_each(reg->cr.combatants, dude) {
+        //printf("(%s: %d, %d) ?= (%s: %d, %d)\n", dude->name, dude->mapx, dude->mapy, entity->name, entity->mapx, entity->mapy);
+        if (dude != entity && dude->mapx == x && dude->mapy == y) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
 static void generate_monster_actions(region_t *reg) {
     // Start of AI, lets just go to the closest PC and attack.
     static uint8_t visit_flags[MAP_ROWS][MAP_COLUMNS];
@@ -412,6 +304,7 @@ static void generate_monster_actions(region_t *reg) {
         queue_head = queue_head->next;
         if (!queue_head) { queue_tail = NULL; }
         if (visit_flags[rover->x][rover->y]) { free(rover); continue; }
+        if (combat_location_blocked(reg, current_turn->entity, rover->x, rover->y)) { free(rover); continue; }
         visit_flags[rover->x][rover->y] = 1;// Mark as visited.
 
         if ((player = player_to_attack(reg, rover)) != NULL) {
@@ -450,11 +343,10 @@ static void generate_monster_actions(region_t *reg) {
     printf("NEED TO move and guard!\n");
 }
 
-static void set_current_scmd(region_t *reg) {
-    combat_action_t *action = monster_actions + monster_step;
+static void apply_action_animation(const enum combat_action_e action) {
     int16_t xdiff = 0, ydiff = 0;
 
-    switch (action->action) {
+    switch (action) {
         case CA_WALK_LEFT: xdiff = -1; ydiff = 0; break;
         case CA_WALK_RIGHT: xdiff = 1; ydiff = 0; break;
         case CA_WALK_UP: xdiff = 0; ydiff = -1; break;
@@ -467,7 +359,8 @@ static void set_current_scmd(region_t *reg) {
     }
 
     //printf("(%d, %d) applying xdiff = %d, ydiff = %d\n", current_turn->entity->mapx, current_turn->entity->mapy, xdiff, ydiff);
-    current_turn->entity->sprite.scmd = get_scmd(current_turn->entity->sprite.scmd, xdiff, ydiff);
+    current_turn->entity->sprite.scmd = combat_animation_get_scmd(current_turn->entity->sprite.scmd,
+            xdiff, ydiff, CA_NONE);
     port_update_entity(current_turn->entity, xdiff, ydiff);
 }
 
@@ -478,6 +371,7 @@ static void end_turn() {
 }
 
 static void check_and_perform_attack(region_t *reg) {
+    int amt = 0;
     combat_action_t *action = monster_actions + monster_step;
     switch (action->action) {
         case CA_MELEE:
@@ -490,28 +384,69 @@ static void check_and_perform_attack(region_t *reg) {
             //            level 10+: +4
             // Monster data should not be in the entity.
             // For Now, 1d6, always hits. Need to add thac0 calculation.
-            action->target->stats.hp -= 1 + (rand() % 6);
+            amt = 1 + (rand() % 6);
+            action->target->stats.hp -= amt;
             //printf("hp after: %d\n", action->target->stats.hp);
             if (action->target->stats.hp <= 0) {
                 //printf("DYING\n");
                 action->target->combat_status = COMBAT_STATUS_DYING;
             }
-            end_turn();
+            combat_animation_add(CA_MELEE, current_turn->entity, NULL, 0);
+            combat_animation_add(CA_RED_DAMAGE, current_turn->entity, action->target, amt);
             break;
         default:
             break;
     }
 }
 
+static void move_entity(entity_t *entity, const enum combat_action_e action) {
+    switch(action) {
+        case CA_NONE:
+            entity->sprite.scmd = combat_animation_get_scmd(entity->sprite.scmd, 0, 0, CA_NONE);
+            port_update_entity(entity, 0, 0);
+            break;
+        case CA_WALK_DOWNLEFT:
+        case CA_WALK_DOWN:
+        case CA_WALK_DOWNRIGHT:
+        case CA_WALK_UPLEFT:
+        case CA_WALK_UP:
+        case CA_WALK_UPRIGHT:
+        case CA_WALK_LEFT:
+        case CA_WALK_RIGHT:
+            if (entity->stats.move) {
+                entity->stats.move--;
+                apply_action_animation(action);
+            }
+            break;
+        default:
+            warn("Unimplemented action: %d\n", action);
+            break;
+    }
+}
+
+static void next_round() {
+    combat_entry_t *rover = combat_order;
+
+    while (rover) {
+        rover->entity->stats.move = rover->entity->stats.base_move;
+        rover = rover->next;
+    }
+
+    current_turn = combat_order;
+}
+
 static void do_combat_rounds(region_t *reg) {
-    if (wait_on_player) { return; }
     //Need to start combat rounds.
-    if (!current_turn) { current_turn = combat_order; }
+    if (!current_turn) {
+        next_round();
+    }
+    entity_t *monster = current_turn->entity;
 
     current_player = which_player(current_turn);
-    printf("player = %d, name = %s\n", current_player, current_turn->entity->name);
+    //printf("player = %d, name = %s\n", current_player, current_turn->entity->name);
     if (current_player >= 0) {
         wait_on_player = 1;
+        move_entity(player_get_entity(current_player), player_action);
         return; // Need to wait on player input.
     }
 
@@ -521,10 +456,11 @@ static void do_combat_rounds(region_t *reg) {
         monster_step = 0;
     }
 
-    set_current_scmd(reg);
+    apply_action_animation(monster_actions[monster_step].action);
 
     check_and_perform_attack(reg);
     if (monster_step < 0) { return; } // turn ended
+    monster->stats.move--;
     monster_step++;
 }
 
@@ -550,6 +486,15 @@ static int is_combat_over(region_t *reg) {
     return num_types < 2;
 }
 
+// decide if the current turn is over and ready next.
+static void check_current_turn() {
+    if (!combat_animation_has_more()) {
+        end_turn();
+    }
+}
+
+static combat_action_t clear = { CA_NONE, NULL, NULL, 0 };
+
 void combat_update(region_t *reg) {
     if (reg == NULL) { return; }
     combat_region_t *cr = &(reg->cr);
@@ -564,6 +509,11 @@ void combat_update(region_t *reg) {
     if (need_to_cleanup) { return; }
 
     if (in_combat) {
+        if (combat_animation_execute()) {
+            check_current_turn();
+            return;
+        }
+        port_combat_action(&clear);
         in_combat = !is_combat_over(reg); // Just to check
         if (in_combat) {
             entity_t *combatant = NULL;
@@ -598,7 +548,7 @@ void combat_update(region_t *reg) {
                     xdiff = ydiff = 0;
                 }
             }
-            bad_dude->sprite.scmd = get_scmd(bad_dude->sprite.scmd, xdiff, ydiff);
+            bad_dude->sprite.scmd = combat_animation_get_scmd(bad_dude->sprite.scmd, xdiff, ydiff, CA_NONE);
             if (calc_distance_to_player(bad_dude) < 5) {
                 enter_combat_mode(reg);
                 return;
@@ -610,10 +560,6 @@ void combat_update(region_t *reg) {
             }
         }
     }
-}
-
-scmd_t* combat_get_scmd(const enum combat_scmd_t type) {
-    return combat_types[type];
 }
 
 ds1_combat_t* combat_get_combat( combat_region_t* cr, const uint32_t combat_id) {
