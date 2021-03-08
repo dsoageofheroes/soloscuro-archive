@@ -6,6 +6,7 @@
 #include <string.h>
 #include "gff.h"
 #include "gfftypes.h"
+#include "combat.h"
 
 #define MAX_COMBATS    (1024)
 #define MAX_ITEMS      (1024)

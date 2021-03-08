@@ -32,9 +32,9 @@ typedef struct action_node_s {
 } action_node_t;
 
 static int in_combat = 0;
-static int need_to_cleanup = 0; // combat is over, but things aren't clean yet...
 static combat_entry_t *combat_order = NULL;
 static combat_entry_t *current_turn = NULL;
+static combat_entry_t *defeated = NULL;
 
 static int is_combat_over(region_t *reg);
 
@@ -147,7 +147,7 @@ static void enter_combat_mode(region_t *reg) {
 
     // Right now players are not part of combat, so add them!
     for (int i = 0; i < MAX_PCS; i++) {
-        if (ds_player_exists(i) && i != ds_player_get_active()) {
+        if (ds_player_exists(i)) {
             combat_add(&(reg->cr), player_get_entity(i));
         }
     }
@@ -158,11 +158,13 @@ static void enter_combat_mode(region_t *reg) {
     }
 
     // print to debug:
+    /*
     combat_entry_t *rover = combat_order;
     while(rover) {
-        //printf("initiative: %d (%d)\n", rover->initiative, rover->sub_roll);
+        printf("%s: %p\n", rover->entity->name, rover->entity->sprite.scmd);
         rover = rover->next;
     }
+    */
 
     port_enter_combat();
 }
@@ -270,17 +272,17 @@ static entity_t* player_to_attack(region_t *reg, action_node_t *node) {
     return NULL;
 }
 
-static int combat_location_blocked(const region_t *reg, entity_t *entity, const int32_t x, const int32_t y) {
+static entity_t* entity_at_location(const region_t *reg, entity_t *entity, const int32_t x, const int32_t y) {
     dude_t *dude = NULL;
     //if (reg->flags[x][y]) { return 1; }
     entity_list_for_each(reg->cr.combatants, dude) {
         //printf("(%s: %d, %d) ?= (%s: %d, %d)\n", dude->name, dude->mapx, dude->mapy, entity->name, entity->mapx, entity->mapy);
         if (dude != entity && dude->mapx == x && dude->mapy == y) {
-            return 1;
+            return dude;
         }
     }
 
-    return 0;
+    return NULL;
 }
 
 static void generate_monster_actions(region_t *reg) {
@@ -304,14 +306,13 @@ static void generate_monster_actions(region_t *reg) {
         queue_head = queue_head->next;
         if (!queue_head) { queue_tail = NULL; }
         if (visit_flags[rover->x][rover->y]) { free(rover); continue; }
-        if (combat_location_blocked(reg, current_turn->entity, rover->x, rover->y)) { free(rover); continue; }
+        if (entity_at_location(reg, current_turn->entity, rover->x, rover->y) != NULL) { free(rover); continue; }
         visit_flags[rover->x][rover->y] = 1;// Mark as visited.
 
         if ((player = player_to_attack(reg, rover)) != NULL) {
-            printf("CAN ATTACK!\n");
             for(int i = 0; i < rover->num_moves; i++) {
                 monster_actions[i] = rover->actions[i];
-                printf("move %d: %d\n", i, rover->actions[i].action);
+                //printf("move %d: %d\n", i, rover->actions[i].action);
             }
             monster_actions[rover->num_moves].action = CA_MELEE;
             monster_actions[rover->num_moves].target = player;
@@ -367,7 +368,50 @@ static void apply_action_animation(const enum combat_action_e action) {
 static void end_turn() {
     monster_step = -1;
     current_turn = current_turn->next;
-    if (!current_turn) { current_turn = combat_order; }
+    /*
+    combat_entry_t *rover = current_turn;
+    printf("Current Order:\n");
+    while (rover) {
+        printf("%s\n", rover->entity->name);
+        rover = rover->next;
+    }
+    */
+    player_action = CA_NONE;
+}
+
+extern void combat_is_defeated(region_t *reg, entity_t *dude) {
+    combat_entry_t *prev = NULL;
+    combat_entry_t *rover = combat_order;
+    if (!dude) { return; }
+
+    while (rover && rover->entity != dude) { // Warning: pointer comparison
+        prev = rover;
+        rover = rover->next;
+    }
+
+    if (!rover) {
+        error ("Unable to remove %s from combat.\n", dude->name);
+        return;
+    }
+
+    // You defeated yourself...
+    if (current_turn && current_turn->entity == dude) {
+        current_turn = prev;
+    }
+
+    if (prev) {
+        prev->next = rover->next;
+    } else {
+        combat_order = combat_order->next;
+    }
+
+    rover->next = defeated;
+    if (defeated) { defeated->next = rover; }
+
+    entity_list_remove(reg->cr.combatants, entity_list_find(reg->cr.combatants, dude));
+
+    port_remove_entity(dude);
+
 }
 
 static void check_and_perform_attack(region_t *reg) {
@@ -382,15 +426,18 @@ static void check_and_perform_attack(region_t *reg) {
             //            level 6-7: +2
             //            level 8-9: +3
             //            level 10+: +4
-            // Monster data should not be in the entity.
+            // Monster data should be in the entity.
             // For Now, 1d6, always hits. Need to add thac0 calculation.
             amt = 1 + (rand() % 6);
             action->target->stats.hp -= amt;
             //printf("hp after: %d\n", action->target->stats.hp);
+            /*
             if (action->target->stats.hp <= 0) {
                 //printf("DYING\n");
                 action->target->combat_status = COMBAT_STATUS_DYING;
+                combat_is_defeated(reg, action->target);
             }
+            */
             combat_animation_add(CA_MELEE, current_turn->entity, NULL, 0);
             combat_animation_add(CA_RED_DAMAGE, current_turn->entity, action->target, amt);
             break;
@@ -399,11 +446,41 @@ static void check_and_perform_attack(region_t *reg) {
     }
 }
 
-static void move_entity(entity_t *entity, const enum combat_action_e action) {
+static entity_t* entity_in_way(region_t *reg, entity_t *entity, const enum combat_action_e action) {
+    int xdiff = 0, ydiff = 0;
+
+    switch(action) {
+        case CA_WALK_DOWNLEFT:  xdiff = -1; ydiff = 1; break;
+        case CA_WALK_DOWN:      xdiff = 0; ydiff = 1; break;
+        case CA_WALK_DOWNRIGHT: xdiff = 1; ydiff = 1; break;
+        case CA_WALK_UPLEFT:    xdiff = -1; ydiff = -1; break;
+        case CA_WALK_UP:        xdiff = 0; ydiff = -1; break;
+        case CA_WALK_UPRIGHT:   xdiff = 1; ydiff = -1; break;
+        case CA_WALK_LEFT:      xdiff = -1; ydiff = 0; break;
+        case CA_WALK_RIGHT:     xdiff = 1; ydiff = 0; break;
+        default:
+            return NULL;
+    }
+
+    return entity_at_location(reg, entity, entity->mapx + xdiff, entity->mapy + ydiff);
+}
+
+static void player_melee(region_t *reg, entity_t* entity, entity_t *enemy) {
+    //int amt = 1 + (rand() % 6);
+    int amt = 100; // FTW!
+    combat_animation_add(CA_MELEE, current_turn->entity, NULL, 0);
+    combat_animation_add(CA_RED_DAMAGE, current_turn->entity, enemy, amt);
+    wait_on_player = 0;
+}
+
+static void move_entity(region_t *reg, entity_t *entity, const enum combat_action_e action) {
+    entity_t *enemy;
+
     switch(action) {
         case CA_NONE:
             entity->sprite.scmd = combat_animation_get_scmd(entity->sprite.scmd, 0, 0, CA_NONE);
             port_update_entity(entity, 0, 0);
+            ticks_per_game_round = 0;
             break;
         case CA_WALK_DOWNLEFT:
         case CA_WALK_DOWN:
@@ -413,10 +490,17 @@ static void move_entity(entity_t *entity, const enum combat_action_e action) {
         case CA_WALK_UPRIGHT:
         case CA_WALK_LEFT:
         case CA_WALK_RIGHT:
+            enemy = entity_in_way(reg, entity, action);
+            if (enemy && enemy->allegiance != entity->allegiance) {
+                entity->sprite.scmd = combat_animation_face_direction(entity->sprite.scmd, action);
+                player_melee(reg, entity, enemy);
+                return;
+            }
             if (entity->stats.move) {
                 entity->stats.move--;
                 apply_action_animation(action);
             }
+            ticks_per_game_round = 30;
             break;
         default:
             warn("Unimplemented action: %d\n", action);
@@ -446,7 +530,7 @@ static void do_combat_rounds(region_t *reg) {
     //printf("player = %d, name = %s\n", current_player, current_turn->entity->name);
     if (current_player >= 0) {
         wait_on_player = 1;
-        move_entity(player_get_entity(current_player), player_action);
+        move_entity(reg, player_get_entity(current_player), player_action);
         return; // Need to wait on player input.
     }
 
@@ -493,6 +577,17 @@ static void check_current_turn() {
     }
 }
 
+static void do_player_turn(region_t *reg) {
+    if (ticks_per_game_round > 0) {
+        ticks_per_game_round--;
+        return;
+    }
+
+    move_entity(reg, player_get_entity(current_player), player_action);
+    // Players move quicker.
+    if (ticks_per_game_round > 0) { ticks_per_game_round = 20; }
+}
+
 static combat_action_t clear = { CA_NONE, NULL, NULL, 0 };
 
 void combat_update(region_t *reg) {
@@ -502,28 +597,35 @@ void combat_update(region_t *reg) {
     int xdiff, ydiff;
     int posx, posy;
 
+    if (wait_on_player) {
+        do_player_turn(reg);
+        return;
+    }
+
     ticks_per_game_round--;
     if (ticks_per_game_round > 0) { return; }
     ticks_per_game_round = 30;
 
-    if (need_to_cleanup) { return; }
-
     if (in_combat) {
-        if (combat_animation_execute()) {
+        if (combat_animation_execute(reg)) {
             check_current_turn();
             return;
         }
         port_combat_action(&clear);
         in_combat = !is_combat_over(reg); // Just to check
+        entity_t *combatant = NULL;
         if (in_combat) {
-            entity_t *combatant = NULL;
             entity_list_for_each(reg->cr.combatants, combatant) {
                 port_update_entity(combatant, 0, 0);
             }
             do_combat_rounds(reg);
             return;
+        } else {
+            entity_list_for_each(reg->cr.combatants, combatant) {
+                entity_list_remove(reg->cr.combatants, entity_list_find(reg->cr.combatants, combatant));
+            }
+            port_exit_combat();
         }
-        need_to_cleanup = 1;
         return;
         // We were in combat but now it is over. Need to clean up.
     }
@@ -560,11 +662,6 @@ void combat_update(region_t *reg) {
             }
         }
     }
-}
-
-ds1_combat_t* combat_get_combat( combat_region_t* cr, const uint32_t combat_id) {
-    if (!cr || combat_id < 0 || combat_id >= MAX_COMBAT_OBJS) { return NULL; }
-    return cr->combats + combat_id;
 }
 
 void combat_set_hunt(combat_region_t *cr, const uint32_t combat_id) {

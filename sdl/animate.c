@@ -15,7 +15,6 @@ static animate_sprite_node_t *animate_list[MAX_ZPOS];
 static SDL_RendererFlip animate_tick(animate_sprite_t *anim, const uint32_t xoffset, const uint32_t yoffset) {
     size_t pos = anim->pos;
     SDL_RendererFlip flip = 0;
-    int32_t scmd_xoffset = 0;
 
     sprite_set_frame(anim->spr, anim->scmd[pos].bmp_idx);
     if (anim->scmd[pos].flags & SCMD_LAST) { goto out; }
@@ -43,10 +42,8 @@ static SDL_RendererFlip animate_tick(animate_sprite_t *anim, const uint32_t xoff
     anim->delay--;
 
 out:
-    scmd_xoffset = anim->scmd->xoffset;
     if (anim->scmd[pos].flags & SCMD_XMIRROR
         || (anim->entity && anim->entity->sprite.flags & 0x80)) {
-        scmd_xoffset -= sprite_get_xdiff_from_start(anim->spr);
         flip |= SDL_FLIP_HORIZONTAL;
     }
     if (anim->scmd[pos].flags & SCMD_YMIRROR) {
@@ -64,8 +61,8 @@ out:
 
     //printf("%d: anim->x = %d (move_amt = %f)\n", anim->obj->combat_id, anim->x, move_amt);
     sprite_set_location(anim->spr,
-        anim->x - xoffset + scmd_xoffset,
-        anim->y - yoffset + anim->scmd->yoffset);
+        anim->x - xoffset, // + scmd_xoffset,
+        anim->y - yoffset); // + anim->scmd->yoffset);
 
     return flip;
 }
@@ -187,7 +184,6 @@ void animate_set_animation(animate_sprite_t *as, scmd_t *scmd, const uint32_t ti
     as->move = distance == 0 ? 0 : distance / ((float)ticks_per_move * 2);
 
     sprite_set_frame(as->spr, as->scmd->bmp_idx);
-    sprite_set_location(as->spr, as->x, as->y);
 }
 
 void animate_init() {

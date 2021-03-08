@@ -6,8 +6,9 @@
 #include <stdint.h>
 #include "../src/gff-map.h"
 #include "ds-object.h"
-#include "combat.h"
+#include "combat-region.h"
 #include "passive.h"
+#include "entity.h"
 #include "entity-list.h"
 
 typedef struct dsl_region_s {
@@ -45,8 +46,6 @@ extern uint16_t dsl_region_create_from_objex(dsl_region_t *reg, const int id, co
 extern region_object_t* dsl_region_find_object(const int16_t entry_id);
 extern region_object_t* dsl_region_get_object(const int16_t entry_id);
 extern uint16_t dsl_region_set_hunt(dsl_region_t *reg, const int16_t obj_id);
-extern uint16_t dsl_region_set_allegiance(dsl_region_t *reg, const int16_t obj_id, const uint8_t allegiance);
-extern int dsl_region_has_object(dsl_region_t *region, int row, int column);
 int ds_region_location_blocked(dsl_region_t *reg, const int32_t x, const int32_t y);
 
 extern void dsl_region_free(dsl_region_t *region);
@@ -81,5 +80,6 @@ extern int region_get_tile(const region_t *reg, const uint32_t image_id,
 extern entity_t* region_find_entity_by_id(region_t *reg, const int id);
 extern void region_move_to_nearest(const region_t *reg, entity_t *entity);
 extern int region_location_blocked(const region_t *reg, const int32_t x, const int32_t y);
+extern void region_remove_entity(region_t *reg, entity_t *entity);
 
 #endif

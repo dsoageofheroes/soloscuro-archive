@@ -66,6 +66,10 @@ region_t* region_create(const int gff_file) {
     return reg;
 }
 
+extern void region_remove_entity(region_t *reg, entity_t *entity) {
+    entity_list_remove(reg->entities, entity_list_find(reg->entities, entity));
+}
+
 void region_free(region_t *reg) {
     if (!reg) { return; }
 
@@ -294,7 +298,7 @@ static void place_region_object(dsl_region_t *reg, region_object_t *robj, const 
 
 void region_move_to_nearest(const region_t *reg, entity_t *entity) {
     //if (!region_location_blocked(reg, entity->mapx, entity->mapy)) { return; }
-    printf("Tyring to place: %d, %d\n", entity->mapx, entity->mapy);
+    //printf("Tyring to place: %d, %d\n", entity->mapx, entity->mapy);
     if (!region_location_blocked(reg, entity->mapx, entity->mapy + 1)) {
         entity->mapy = entity->mapy + 1;
         return;
@@ -434,29 +438,6 @@ uint16_t dsl_region_set_hunt(dsl_region_t *reg, const int16_t obj_id) {
         }
     }
     return reg->list->objs[obj_id].combat_id;
-}
-
-uint16_t dsl_region_set_allegiance(dsl_region_t *reg, const int16_t obj_id, const uint8_t allegiance) {
-    if (!reg || obj_id == COMBAT_ERROR) { return COMBAT_ERROR; }
-
-    for (int i = 0; i < reg->list->pos; i++) {
-        if (reg->list->objs[i].obj_id == obj_id) {
-            debug("Setting allegiance of %d to %d\n", obj_id, allegiance);
-            ds1_combat_t* combat = combat_get_combat(&(reg->cr), reg->list->objs[i].combat_id);
-            combat->allegiance = allegiance;
-        }
-    }
-    return reg->list->objs[obj_id].combat_id;
-}
-
-region_object_t* dsl_region_find_object(const int16_t disk_idx) {
-    region_object_t *obj = NULL;
-
-    region_list_for_each(cregion->list, obj) {
-        if (obj->disk_idx == disk_idx) { return obj; }
-    }
-
-    return NULL;
 }
 
 int dsl_region_has_object(dsl_region_t *region, int row, int column) {

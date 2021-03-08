@@ -4,10 +4,10 @@
 #include "ds-object.h"
 #include "spells.h"
 #include "entity.h"
+#include "region.h"
 #include "entity-list.h"
 #include "ds-combat.h"
 
-#define MAX_COMBAT_OBJS (200)
 #define COMBAT_ERROR    (9999)
 
 enum combat_scmd_t {
@@ -40,16 +40,6 @@ enum {
     COMBAT_STATUS_GONE        = 8,
     COMBAT_STATUS_MAX
 };
-
-// Represents all combatants in the entire region.
-typedef struct combat_region_s {
-    ds1_combat_t combats[MAX_COMBAT_OBJS];
-    region_object_t *robjs[MAX_COMBAT_OBJS];
-    entity_list_t *combatants;
-    uint8_t hunt[MAX_COMBAT_OBJS];
-    uint32_t pos;
-    uint8_t in_combat_mode;
-} combat_region_t;
 
 enum combat_turn_t {
     NO_COMBAT,
@@ -100,9 +90,11 @@ void combat_free(combat_region_t *rc);
 const enum combat_turn_t combat_player_turn();
 uint32_t combat_add(combat_region_t *rc, entity_t *entity);
 scmd_t* combat_get_scmd(const enum combat_scmd_t type);
-ds1_combat_t* combat_get_combat( combat_region_t* cr, const uint32_t combat_id);
 entity_t* combat_get_current(combat_region_t *cr);
-void combat_set_hunt(combat_region_t *cr, const uint32_t combat_id);
-void combat_player_action(const combat_action_t action);
+extern void combat_set_hunt(combat_region_t *cr, const uint32_t combat_id);
+extern void combat_player_action(const combat_action_t action);
+
+// pre-processor ordering.
+extern void combat_is_defeated(region_t *reg, entity_t *dude);
 
 #endif

@@ -13,7 +13,7 @@
 #include "../src/gff.h"
 #include "../src/gfftypes.h"
 
-static animate_sprite_node_t *player_node = NULL;
+static animate_sprite_node_t *player_node[MAX_PCS] = {NULL, NULL, NULL, NULL} ;
 static int player_zpos;
 
 typedef struct player_sprites_s {
@@ -22,7 +22,6 @@ typedef struct player_sprites_s {
     inventory_sprites_t inv;
 } player_sprites_t;
 
-static region_object_t dsl_player[MAX_PCS];
 static player_sprites_t players[MAX_PCS];
 static animate_sprite_t anims[MAX_PCS];
 
@@ -43,42 +42,11 @@ void player_init() {
     dude->mapy = 10;
 }
 
-region_object_t* player_get_robj(const int slot) {
-    if (slot < 0 || slot >= MAX_PCS) { return NULL; }
-    return dsl_player + slot;
-}
-
 void player_load_graphics(const int slot) {
     dude_t *dude = player_get_entity(slot);
     dude->mapx = 30;
     dude->mapy = 10;
     dude->sprite.scmd = combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
-
-    dsl_player[slot].flags = 0;
-    dsl_player[slot].entry_id = 0;
-    dsl_player[slot].bmpx = 0;
-    dsl_player[slot].bmpy = 0;
-    dsl_player[slot].xoffset = 0;
-    dsl_player[slot].yoffset = 0;
-    dsl_player[slot].mapx = 30;
-    dsl_player[slot].mapy = 10;
-    dsl_player[slot].mapz = 0;
-    dsl_player[slot].ht_idx = 0;
-    dsl_player[slot].gt_idx = 0;
-    dsl_player[slot].bmp_idx = 0;
-    dsl_player[slot].bmp_width = 0;
-    dsl_player[slot].bmp_height = 0;
-    dsl_player[slot].cdelay = 0;
-    dsl_player[slot].st_idx = 0;
-    dsl_player[slot].sc_idx = 0;
-    dsl_player[slot].btc_idx = 291;
-    dsl_player[slot].disk_idx = 0;
-    dsl_player[slot].game_time = 0;
-    dsl_player[slot].scmd = combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
-
-    // Set initial location
-    dsl_player[slot].mapx = dude->mapx;
-    dsl_player[slot].mapy = dude->mapy;
 }
 
 static int ticks_per_move = 10;
@@ -88,7 +56,7 @@ static int direction = 0x0;
 void player_update() {
     int slot = ds_player_get_active();
     entity_t *dude = player_get_entity(slot);
-    animate_shift_node(player_node, player_zpos);
+    animate_shift_node(player_node[slot], player_zpos);
     const enum combat_turn_t combat_turn = combat_player_turn();
     if (--count > 0) { return; }
 
@@ -130,11 +98,10 @@ void player_update() {
     dude->mapx = nextx;
     dude->mapy = nexty;
 
-    dsl_player[slot].mapx = dude->mapx;
-    dsl_player[slot].mapy = dude->mapy;
     anims[0].x = anims[0].destx;
     anims[0].y = anims[0].desty;
     anims[0].destx = dude->mapx * 16 * main_get_zoom();
+    anims[0].destx -= sprite_getw(anims[0].spr) / 2;
     anims[0].desty = dude->mapy * 16 * main_get_zoom();
     anims[0].desty -= sprite_geth(anims[0].spr) - (8 * main_get_zoom());
     //printf("Going to: (%d, %d) -> %d, %d\n", anims[0].x, anims[0].y, anims[0].destx, anims[0].desty);
@@ -262,10 +229,20 @@ static void load_character_sprite(SDL_Renderer *renderer, const int slot, const 
     }
 }
 
+extern void player_condense() {
+    for (int i = 0; i < MAX_PCS; i++) {
+        if (i != ds_player_get_active() && player_get_entity(i)->name) {
+            //animate_list_remove(player_node[i]);
+            animate_list_remove(player_node[i], player_zpos);
+            player_node[i] = NULL;
+        }
+    }
+}
+
 void player_add_to_animation_list(const int slot) {
     entity_t *dude = player_get_entity(slot);
     if (!dude->name) { return; } // !player_exists
-    player_node = animate_list_add(anims + slot, player_zpos);
+    player_node[slot] = animate_list_add(anims + slot, player_zpos);
     anims[slot].destx = dude->mapx * 16 * main_get_zoom();
     anims[slot].desty = dude->mapy * 16 * main_get_zoom();
     anims[slot].desty -= sprite_geth(anims[slot].spr) - (16 * main_get_zoom());
@@ -342,11 +319,12 @@ void player_set_move(const int amt) {
 }
 
 void player_remove_animation() {
-    if (player_node) {
-        animate_list_remove(player_node, player_zpos);
-        player_node = NULL;
+    for (int i = 0; i < MAX_PCS; i++) {
+        if (player_node[i]) {
+            animate_list_remove(player_node[i], player_zpos);
+            player_node[i] = NULL;
+        }
     }
-
 }
 
 void player_close() {

@@ -4,6 +4,7 @@
 #include "port.h"
 #include <stdlib.h>
 
+static combat_animation_node_t *last;
 static combat_animation_node_t *next_animation_head = NULL, *next_animation_tail = NULL;
 
 static scmd_t combat_move_down[] = {
@@ -168,6 +169,25 @@ static scmd_t* get_combat_scmd(scmd_t *current_scmd, enum combat_action_e action
     return current_scmd;
 }
 
+scmd_t* combat_animation_face_direction(scmd_t *current_scmd, const enum combat_action_e action) {
+    switch (action) {
+        case CA_WALK_DOWNLEFT:
+        case CA_WALK_UPLEFT:
+        case CA_WALK_LEFT:
+            return combat_get_scmd(COMBAT_SCMD_STAND_LEFT);
+        case CA_WALK_DOWNRIGHT:
+        case CA_WALK_UPRIGHT:
+        case CA_WALK_RIGHT:
+            return combat_get_scmd(COMBAT_SCMD_STAND_RIGHT);
+        case CA_WALK_UP:
+            return combat_get_scmd(COMBAT_SCMD_STAND_UP);
+        case CA_WALK_DOWN:
+            return combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
+        default:
+            return current_scmd;
+    }
+}
+
 scmd_t* combat_animation_get_scmd(scmd_t *current_scmd, const int xdiff, const int ydiff,
         const enum combat_action_e action) {
     current_scmd = get_scmd(current_scmd, xdiff, ydiff);
@@ -194,10 +214,32 @@ int combat_animation_has_more() {
     return next_animation_head != NULL;
 }
 
-int combat_animation_execute() {
-    if (!next_animation_head) { return 0; }
+static void apply_last(region_t *reg) {
+    // This comes from last.
+    switch(last->ca.action) {
+        case CA_RED_DAMAGE:
+            last->ca.target->stats.hp -= last->ca.amt;
+            if (last->ca.target->stats.hp <= 0) {
+                //printf("DYING\n");
+                last->ca.target->combat_status = COMBAT_STATUS_DYING;
+                combat_is_defeated(reg, last->ca.target);
+            }
+            break;
+        default:
+            break;
+    }
+}
+
+int combat_animation_execute(region_t *reg) {
+    if (!next_animation_head) {
+        if (last) { // we just finished.
+            apply_last(reg);
+            free(last);
+            last = NULL;
+        }
+        return 0;
+    }
     entity_t *source = next_animation_head->ca.source;
-    combat_animation_node_t *todelete = next_animation_head;
 
     switch(next_animation_head->ca.action) {
         case CA_MELEE:
@@ -214,9 +256,10 @@ int combat_animation_execute() {
             break;
     }
 
+    if (last) { free(last); }
+    last = next_animation_head;
     next_animation_head = next_animation_head->next;
     if (!next_animation_head) { next_animation_tail = NULL; }
-    free(todelete);
 
     return 1;
 }

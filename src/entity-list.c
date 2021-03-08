@@ -51,10 +51,25 @@ void entity_list_remove(entity_list_t *list, entity_list_node_t *node) {
         return;
     }
 
-    node->next->prev = node->prev;
+    if (node->next) {
+        node->next->prev = node->prev;
+    }
     node->prev->next = node->next;
 
     free(node);
+}
+
+entity_list_node_t* entity_list_find(entity_list_t *list, entity_t *entity) {
+    entity_list_node_t* rover = *list;
+
+    while(rover) {
+        if (rover->entity == entity) {
+            return rover;
+        }
+        rover = rover->next;
+    }
+
+    return NULL;
 }
 
 void entity_list_load_etab(entity_list_t *list, const int gff_idx, const int map_id) {

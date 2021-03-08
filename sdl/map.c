@@ -16,10 +16,12 @@
 #include "../src/ds-player.h"
 #include "../src/dsl-var.h"
 
+#define MAX_ANIMS (256)
+
 static map_t *cmap = NULL;
 static SDL_Renderer *cren = NULL;
-static animate_sprite_t anims[256];
-static animate_sprite_node_t *anim_nodes[256];
+static animate_sprite_t anims[MAX_ANIMS];
+static animate_sprite_node_t *anim_nodes[MAX_ANIMS];
 static int anim_pos = 0;
 
 static void clear_animations();
@@ -135,10 +137,12 @@ void map_load_map(SDL_Renderer *renderer, int id) {
 
 static void clear_animations() {
     for (int i = 0; i < anim_pos; i++) {
-        animate_list_remove(anim_nodes[i], anim_nodes[i]->anim->entity ? anim_nodes[i]->anim->entity->mapz : 0);
-        sprite_free(anims[i].spr);
-        anims[i].spr = SPRITE_ERROR;
-        anim_nodes[i] = NULL;
+        if (anim_nodes[i]) {
+            animate_list_remove(anim_nodes[i], anim_nodes[i]->anim->entity ? anim_nodes[i]->anim->entity->mapz : 0);
+            sprite_free(anims[i].spr);
+            anims[i].spr = SPRITE_ERROR;
+            anim_nodes[i] = NULL;
+        }
     }
 
     anim_pos = 0;
@@ -185,6 +189,8 @@ void port_add_entity(entity_t *entity, gff_palette_t *pal) {
     anims[anim_pos].x = (entity->mapx * 16 + entity->sprite.xoffset) * zoom;
     anims[anim_pos].y = (entity->mapy * 16 + entity->sprite.yoffset + entity->mapz) * zoom;
     anims[anim_pos].destx = anims[anim_pos].x;
+    anims[anim_pos].destx -= sprite_getw(anims[anim_pos].spr) / 2;
+    //anims[anim_pos].destx -= (8 * main_get_zoom());
     anims[anim_pos].desty = anims[anim_pos].y;
     if (entity->name) {
         anims[anim_pos].desty -= sprite_geth(anims[anim_pos].spr) - (8 * main_get_zoom());
@@ -200,25 +206,16 @@ void port_add_entity(entity_t *entity, gff_palette_t *pal) {
     anim_pos++;
 }
 
-void port_add_obj(region_object_t *obj, gff_palette_t *pal) {
-    const float zoom = main_get_zoom();
-
-    anims[anim_pos].scmd = obj->scmd;
-    anims[anim_pos].spr = 
-        sprite_new(cren, pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP, obj->btc_idx);
-    anims[anim_pos].delay = 0;
-    anims[anim_pos].pos = 0;
-    anims[anim_pos].x = obj->bmpx * zoom;
-    anims[anim_pos].y = obj->bmpy * zoom;
-    anims[anim_pos].destx = anims[anim_pos].x;
-    anims[anim_pos].desty = anims[anim_pos].y;
-    anims[anim_pos].move = anims[anim_pos].left_over = 0.0;
-    anims[anim_pos].obj = obj;
-    anim_nodes[anim_pos] = animate_list_add(anims + anim_pos, obj->mapz);
-    obj->data = anims + anim_pos;
-    //printf("%d: %d %d %d (%d, %d)\n", obj->combat_id, obj->mapx, obj->mapy, obj->mapz, anims[anim_pos].x, anims[anim_pos].y);
-    //printf("             (%d, %d)\n", anims[anim_pos].destx, anims[anim_pos].desty);
-    anim_pos++;
+void port_remove_entity(entity_t *entity) {
+    region_remove_entity(region_manager_get_current(), entity);
+    for (int i = 0; i < MAX_ANIMS; i++) {
+        if (anim_nodes[i] && anim_nodes[i]->anim && anim_nodes[i]->anim->entity == entity) {
+            animate_list_remove(anim_nodes[i], anim_nodes[i]->anim->entity ? anim_nodes[i]->anim->entity->mapz : 0);
+            sprite_free(anims[i].spr);
+            //free(anim_nodes[i]);
+            anim_nodes[i] = NULL;
+        }
+    }
 }
 
 static void entity_instant_move(entity_t *entity) {
@@ -237,22 +234,10 @@ void port_update_entity(entity_t *entity, const uint16_t xdiff, const uint16_t y
     entity->mapy += ydiff;
     as->destx = entity->mapx * 16 * main_get_zoom();
     as->desty = entity->mapy * 16 * main_get_zoom();
+    //as->destx -= sprite_getw(as->spr) / 2;
+    as->destx -= (8 * main_get_zoom());
     as->desty -= sprite_geth(as->spr) - (8 * main_get_zoom());
     animate_set_animation(as, entity->sprite.scmd, 20);
-}
-
-void port_update_obj(region_object_t *robj, const uint16_t xdiff, const uint16_t ydiff) {
-    animate_sprite_t *as = (animate_sprite_t*) robj->data;
-    //printf("cur:%d %d\n", as->x, as->y);
-    //printf("dest: %d, %d\n", as->destx, as->desty);
-    as->x = as->destx;
-    as->y = as->desty;
-    robj->mapx += xdiff;
-    robj->mapy += ydiff;
-    as->destx = robj->mapx * 16 * main_get_zoom();
-    as->desty = robj->mapy * 16 * main_get_zoom();
-    //as->desty -= sprite_geth(as->spr) - (8 * main_get_zoom());
-    animate_set_animation(as, robj->scmd, 20);
 }
 
 void port_enter_combat() {
@@ -278,7 +263,9 @@ void port_enter_combat() {
 
 void port_exit_combat() {
     // condense players.
+    player_condense();
     // remove combat status.
+    screen_pop();
     // assign experience.
 }
 
