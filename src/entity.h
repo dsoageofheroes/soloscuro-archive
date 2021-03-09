@@ -53,15 +53,6 @@ typedef struct stats_s {
     saving_throws_t saves;
 } stats_t;
 
-typedef struct sprite_info_s {
-    int16_t bmp_id;     // Which bmp this is.
-    int16_t xoffset;    // bitmap offset x
-    int16_t yoffset;    // bitmap offset y
-    uint16_t flags;     // sprite/scmd flags
-    scmd_t *scmd;       // the animation script
-    void *data;         // used for special data the UI needs (IE: SDL.)
-} sprite_info_t;
-
 typedef struct class_s {
     uint32_t current_xp;
     uint32_t high_xp;    // for level drain.
@@ -93,7 +84,7 @@ typedef struct entity_s {
     ability_set_t abilities;
     effect_node_t *effects; // anything currently affecting the entity.
     ds_inventory_t *inventory;
-    inventory_t *inv; // NULL means that there is no inventory on this entity (IE: some monsters.)
+    item_t *inv; // NULL means that there is no inventory on this entity (IE: some monsters.)
     //spell_list_t *spells;
     //psionic_list_t *psionics;
 } entity_t;

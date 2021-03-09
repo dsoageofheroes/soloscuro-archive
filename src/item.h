@@ -1,12 +1,68 @@
 #ifndef ITEM_H
-#define  ITEM_H
+#define ITEM_H
 
 #include <stdint.h>
+#include "ds-scmd.h"
+
+// First the DS1 items structs
+typedef struct _ds1_item_t { // Not confirmed at all...
+    int16_t  id; // 0, confirmed (but is negative...), is the OJFF entry
+    uint16_t quantity; // confirmed, 0 mean no need.
+    int16_t  next;  // 4, for some internal book keeping.
+    uint16_t value; // 6, confirmed
+    int16_t  pack_index;
+    int16_t  item_index; // Correct, maps into it1r.
+    int16_t  icon;
+    uint16_t charges;
+    uint8_t  data0;
+    uint8_t  slot;     // confirmed
+    uint8_t  name_idx; //confirmed
+    int8_t   bonus;
+    uint16_t priority;
+    int8_t   special;
+} __attribute__ ((__packed__)) ds1_item_t;
+
+typedef struct ds_item1r_s {
+    uint8_t weapon_type;
+    uint8_t data0; // always 0, probably structure alignment byte.
+    uint16_t damage_type;
+    uint8_t weight;
+    uint16_t data1;
+    uint8_t base_hp;
+    uint8_t material;
+    uint8_t placement;
+    uint8_t range;// Need to confirm
+    uint8_t num_attacks;
+    uint8_t sides;
+    uint8_t dice;
+    int8_t mod;
+    uint8_t flags;
+    uint16_t legal_class;
+    int8_t base_AC;
+    uint8_t data2; // padding?
+} __attribute__ ((__packed__)) ds_item1r_t;
+
+typedef struct _item_name_t {
+    char name[25];
+} item_name_t;
+
+//End of DS1 item structs
+
+// Regular items.
+
+typedef struct sprite_info_s {
+    int16_t bmp_id;     // Which bmp this is.
+    int16_t xoffset;    // bitmap offset x
+    int16_t yoffset;    // bitmap offset y
+    uint16_t flags;     // sprite/scmd flags
+    scmd_t *scmd;       // the animation script
+    void *data;         // used for special data the UI needs (IE: SDL.)
+} sprite_info_t;
 
 typedef enum item_type_e {
-    CONSUMABLE,
-    WEAPON,
-    ARMOR
+    ITEM_CONSUMABLE,
+    ITEM_WEAPON,
+    ITEM_ARMOR
 } item_type_t;
 
 typedef struct effect_node_s {
@@ -26,9 +82,11 @@ typedef struct item_attack_s {
     uint16_t damage_type;
 } item_attack_t;
 
+#define ITEM_NAME_MAX (32)
+
 typedef struct item_s { 
     int16_t          ds_id;
-    char             *name;
+    char             name[ITEM_NAME_MAX];
     item_type_t      type;
     uint16_t         quantity;
     uint16_t         value;
@@ -39,6 +97,7 @@ typedef struct item_s {
     uint8_t          material;
     int8_t           ac;
     item_attack_t    attack;
+    sprite_info_t    sprite;
     effect_node_t    *effect;
 } item_t;
 
@@ -59,5 +118,9 @@ typedef struct inventory_s {
     item_t foot;
     item_t bp[12];
 } inventory_t;
+
+
+// DS1 specific functions
+void item_convert_from_ds1(item_t *item, const ds1_item_t *ds1_item);
 
 #endif

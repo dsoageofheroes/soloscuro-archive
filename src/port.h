@@ -46,5 +46,6 @@ extern void port_update_entity(entity_t *entity, const uint16_t xdiff, const uin
 
 extern void port_change_region(region_t *reg);
 extern void port_combat_action(combat_action_t *ca);
+extern void port_load_item(item_t *item);
 
 #endif

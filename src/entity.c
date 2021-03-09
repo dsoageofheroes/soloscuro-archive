@@ -165,10 +165,15 @@ void entity_load_from_gff(entity_t *entity, const int gff_idx, const int player,
     apply_character(entity, (ds_character_t*)(buf + offset));
     offset += rdff->len;
 
+    if (!entity->inv) {
+        entity->inv = calloc(1, sizeof(inventory_t));
+    }
+
     for (int i = 0; i < num_items; i++) {
         rdff = (rdff_disk_object_t*) (buf + offset);
         offset += sizeof(rdff_disk_object_t);
         int slot = ((ds1_item_t*)(buf + offset))->slot;
+        item_convert_from_ds1(entity->inv + slot, (ds1_item_t*)(buf + offset));
         memcpy(pc_items + slot, buf + offset, sizeof(ds1_item_t));
         offset += rdff->len;
     }

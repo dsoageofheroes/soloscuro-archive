@@ -298,6 +298,16 @@ int map_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_
     return 1; // map always intercepts the mouse...
 }
 
+extern void port_load_item(item_t *item) {
+    //warn("Need to load item %d.\n", item->ds_id);
+    animate_sprite_t *as = calloc(1, sizeof(animate_sprite_t));
+    item->sprite.data = as;
+    gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
+    as->spr = sprite_new(main_get_rend(), pal, 0, 0, main_get_zoom(),
+            OBJEX_GFF_INDEX, GFF_BMP, item->sprite.bmp_id);
+    as->entity = NULL;
+}
+
 sops_t map_screen = {
     .init = NULL,
     .cleanup = map_cleanup,

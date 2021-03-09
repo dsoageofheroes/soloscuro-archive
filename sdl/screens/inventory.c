@@ -279,6 +279,8 @@ void inventory_screen_render(void *data, SDL_Renderer *renderer) {
     description[0] = '\0';
     inventory_sprites_t *inv_sprs = player_get_inventory_sprites(char_selected);
     uint16_t *inv_sprs_list = (uint16_t*)inv_sprs;
+    item_t *items = player_get_entity(char_selected)->inv;
+    animate_sprite_t *as = NULL;
 
     sprite_render(renderer, panel);
     sprite_render(renderer, parchment);
@@ -324,9 +326,18 @@ void inventory_screen_render(void *data, SDL_Renderer *renderer) {
     }
 
     for (int i = 9; i < 23; i++) {
+        as = items[i - 9].sprite.data;
+        printf("%d: as = %p\n", i, as);
         sprite_set_frame(slots, i);
         int32_t x = sprite_getx(slots);
         int32_t y = sprite_gety(slots);
+        //if (as) {
+            //sprite_set_frame(slots, 2);
+            //sprite_set_location(slots, x, y);
+            //sprite_render(renderer, slots);
+            //sprite_center_spr(as->spr, slots);
+            //sprite_render(renderer, as->spr);
+        //} else {
         if (inv_sprs_list[i - 9] == SPRITE_ERROR) {
             sprite_render(renderer, slots);
         } else {
@@ -336,6 +347,7 @@ void inventory_screen_render(void *data, SDL_Renderer *renderer) {
             sprite_center_spr(inv_sprs_list[i - 9], slots);
             sprite_render(renderer, inv_sprs_list[i - 9]);
         }
+        //}
         do_slot_highlight(renderer, i, i - 9);
         if (ds_item_allowed_in_slot(mouse_get_item(), i - 9)) {
             sprite_set_frame(slots, sprite_in_rect(slots, mousex, mousey) ? 8 : 4);
