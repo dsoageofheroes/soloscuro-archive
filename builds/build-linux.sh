@@ -17,6 +17,6 @@ locate SDL2.so | grep "usr/lib" | xargs -I {} cp {} staging/
 locate -b "\liblua5.3.so" | grep "usr/lib" | xargs -I {} cp {} staging/
 cp linux/* staging/
 cd staging
-zip ${FILE_NAME} *
+zip -r ${FILE_NAME} *
 mv ${FILE_NAME} ${INSTALL_PATH}
 cd ..
