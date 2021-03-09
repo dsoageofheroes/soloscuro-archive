@@ -15,7 +15,6 @@ typedef struct animate_sprite_s {
     uint16_t pos;
     uint16_t x, y;
     uint16_t destx, desty;
-    region_object_t *obj;
     entity_t *entity;
     float move, left_over; // see animate_tick for left_over
 } animate_sprite_t;
@@ -30,7 +29,6 @@ void animate_init();
 void animate_clear();
 void animate_close();
 
-// NEW INTERFACE:
 void animate_list_render(SDL_Renderer *renderer);
 animate_sprite_node_t *animate_list_add(animate_sprite_t *anim, const int zpos);
 void animate_list_remove(animate_sprite_node_t *node, const int zpos);

@@ -109,48 +109,6 @@
 
 struct animate_s;
 
-typedef struct region_object_s {
-    uint8_t flags;      // flags
-    uint16_t entry_id;  // object entry table index / map id?
-    int16_t bmpx;       // bitmap's x coordinate
-    int16_t bmpy;       // bitmap's y coordinate
-    int8_t xoffset;     // bitmap offset x
-    int16_t yoffset;    // bitmap offset y
-    uint16_t mapx;      // object's x position in the region
-    uint16_t mapy;      // object's y position in the region
-    int8_t mapz;        // object's z position in the region
-    uint8_t ht_idx;     // height table index
-    uint16_t gt_idx;    // graph table index
-    uint8_t bmp_idx;    // current bmp for the script
-    uint8_t bmp_width;  // bitmap width
-    uint8_t bmp_height; // bitmap height
-    uint8_t cdelay;     // init to zero, modified by script handler
-    int16_t st_idx;     // script table index
-    uint8_t sc_idx;     // script command index
-    uint16_t btc_idx;   // bitmap table chunk index
-    int16_t disk_idx;   // disk index
-    int32_t game_time;  // game time for animating
-    uint16_t scmd_flags;//
-    uint8_t rdff_type;
-    uint16_t combat_id;
-    uint16_t obj_id;
-    scmd_t *scmd;       // the script
-    void *data;         // used for special data the UI needs.
-} region_object_t;
-
-typedef struct _region_list_s {
-    int pos;
-    region_object_t objs[MAX_REGION_OBJS];
-} region_list_t;
-
-region_object_t* __region_list_get_next(region_list_t *rl, int *i); // private, do not modify/use!
-
-// PERFORMANCE FIXME: should only go through needed objects, possibly quad-tree.
-#define region_list_for_each(rl, obj) \
-    int __RL_I = 0; \
-    for (obj = __region_list_get_next(rl, &__RL_I); obj != NULL;\
-        __RL_I++, obj = __region_list_get_next(rl, &__RL_I))
-
 typedef struct _ds_stats_t {
     uint8_t str;
     uint8_t dex;
@@ -261,10 +219,5 @@ void dsl_object_cleanup();
 
 ds_character_t* dsl_get_character(const int id);
 int dsl_valid_character_id(const int id);
-
-region_list_t* region_list_create();
-void region_list_free(region_list_t *rl);
-void region_list_load_objs(region_list_t *rl, const int gff_file, const int map_id);
-#define region_list_get_object(rl, i) (rl->objs + i)
 
 #endif

@@ -53,7 +53,6 @@ static void map_load_current_region() {
     uint32_t width, height;
     size_t max_id = 0;
     unsigned char *data;
-    //region_object_t *obj;
     gff_palette_t *pal;
     map_t *map = cmap;
 
@@ -279,14 +278,9 @@ entity_t* get_entity_at_location(const uint32_t x, const uint32_t y) {
 }
 
 int map_handle_mouse(const uint32_t x, const uint32_t y) {
-    //region_object_t *obj = NULL;
-
     if (!cmap) { return 0; }
-    //obj = get_object_at_location(x, y);
 
-    //if (obj) {
-        ////debug("found @ %d, need to change icon\n", obj_id);
-    //}
+    // Need to get entity and highlight?
 
     return 1; // map always intercepts the mouse...
 }

@@ -80,7 +80,6 @@ typedef struct combat_action_s {
 
 #define MAX_COMBAT_ACTIONS (100)
 typedef struct combat_action_list_s {
-    region_object_t *robj;
     ds1_combat_t *combat;
     combat_action_t actions[MAX_COMBAT_ACTIONS];
 } combat_action_list_t;

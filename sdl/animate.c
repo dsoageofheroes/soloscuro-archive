@@ -221,22 +221,3 @@ void port_animate_entity(entity_t *dude) {
     }
     if (anim->pos == SCMD_MAX_SIZE) { anim->pos = 0; }
 }
-
-// Below to be deprecated
-void port_animate_obj(region_object_t *robj) {
-    printf("ANIMATE OBJ\n");
-    //exit(1);
-    animate_sprite_t *anim = robj->data;
-
-    // In case we are in the middle of an animation, skip past it.
-    while (! (anim->scmd[anim->pos].flags & SCMD_LAST) && anim->pos < SCMD_MAX_SIZE) {
-        anim->pos++;
-    }
-    if (anim->pos == SCMD_MAX_SIZE) { anim->pos = 0; }
-    // No increment and loop if needed
-    anim->pos++;
-    while (! (anim->scmd[anim->pos].flags & SCMD_LAST) && anim->pos < SCMD_MAX_SIZE) {
-        anim->pos++;
-    }
-    if (anim->pos == SCMD_MAX_SIZE) { anim->pos = 0; }
-}

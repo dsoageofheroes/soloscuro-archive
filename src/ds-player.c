@@ -16,7 +16,6 @@ typedef struct player_s {
     psionic_list_t psionics;
     player_pos_t pos;
     ds_inventory_t inv;
-    region_object_t robj;
 } player_t;
 
 static entity_t *players[MAX_PCS] = {NULL, NULL, NULL, NULL};
@@ -72,30 +71,6 @@ static void create_combat(ds_character_t *pc, char *name, ds1_combat_t *combat) 
     combat->name[15] = '\0';
 }
 
-static void create_region(const int slot, ds_character_t *ch) {
-    region_object_t *robj = &(pc[slot].robj);
-    memset(robj, 0x0, sizeof(region_object_t));
-    robj->flags = 0;
-    robj->entry_id = 0;
-    robj->bmpx = 0;
-    robj->bmpy = 0;
-    robj->xoffset = 0;
-    robj->yoffset = 0;
-    robj->mapz = 0;
-    robj->ht_idx = 0;
-    robj->gt_idx = 0;
-    robj->bmp_idx = 0;
-    robj->bmp_width = 0;
-    robj->bmp_height = 0;
-    robj->cdelay = 0;
-    robj->st_idx = 0;
-    robj->sc_idx = 0;
-    robj->btc_idx = 291;
-    robj->disk_idx = 0;
-    robj->game_time = 0;
-    robj->scmd = combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
-}
-
 int ds_player_replace(const int slot, ds_character_t *ch, psin_t *psi, ssi_spell_list_t *spells,
         psionic_list_t *psionics, ds_inventory_t *inv, char *name) {
     ds1_combat_t combat;
@@ -103,7 +78,6 @@ int ds_player_replace(const int slot, ds_character_t *ch, psin_t *psi, ssi_spell
 
     memcpy(&(pc[slot].ch), ch, sizeof(ds_character_t));
     create_combat(ch, name, &combat);
-    create_region(slot, ch);
     memcpy(&(pc[slot].combat), &combat, sizeof(ds1_combat_t));
     memcpy(&(pc[slot].psi), psi, sizeof(psin_t));
     memcpy(&(pc[slot].spells), spells, sizeof(ssi_spell_list_t));
@@ -188,11 +162,6 @@ player_pos_t* ds_player_get_pos(const int slot) {
 ds_inventory_t* ds_player_get_inv(const int slot) {
     if (slot < 0 || slot >= MAX_PCS) { return NULL; }
     return &(pc[slot].inv);
-}
-
-region_object_t* ds_player_get_robj(const int slot) {
-    if (slot < 0 || slot >= MAX_PCS) { return NULL; }
-    return &(pc[slot].robj);
 }
 
 int ds_player_get_active() {

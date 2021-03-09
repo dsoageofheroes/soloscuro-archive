@@ -258,6 +258,6 @@ extern void region_move_to_nearest(const region_t *reg, entity_t *entity) {
         return;
     }
 
-    error("Unable to place object, please update place_region_object!\n");
+    error("Unable to place object, please update region_move_to_nearest!\n");
     exit(1);
 }
