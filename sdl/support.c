@@ -73,8 +73,8 @@ static void write_image(const char *base_path, const int gff_idx, const int type
         uint16_t w = get_frame_width(gff_idx, type_id, res_id, cframe);
         uint16_t h = get_frame_height(gff_idx, type_id, res_id, cframe);
         snprintf(filename, 1<<10, "%s/%d-%s-res%d-frame%d.bmp", base_path, gff_idx, type, res_id, cframe);
-        //printf("%s  (%p)\n", filename, data);
-        FILE *file = fopen(filename, "w");
+        printf("%s  (%p)\n", filename, data);
+        FILE *file = fopen(filename, "w+");
         bmp_ptr[0] = sizeof(bmp_header) + 32 * w * h; // size
         bmp_ptr[4] = w;
         bmp_ptr[5] = h;

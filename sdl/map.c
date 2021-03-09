@@ -39,34 +39,13 @@ void map_cleanup() {
 
 void map_free(map_t *map) {
     if (!map) { return; }
-    if (map->tiles) {
-        for (int i = 0; i < cmap->new_region->num_tiles; i++) {
-            if (map->tiles[i]) {
-                SDL_DestroyTexture(map->tiles[i]);
-            }
-        }
-        free(map->tiles);
-        map->tiles = NULL;
-    }
-    region_free(map->new_region);
-    dsl_region_free(map->region);
+    region_free(map->region);
     free(map);
 }
 
 int cmap_is_block(const int row, const int column) {
     return region_manager_get_current()->flags[row][column];
 }
-
-int cmap_is_actor(const int row, const int column) {
-    if (!cmap) { return 0; }
-    return dsl_region_is_actor(cmap->region, row, column);
-}
-
-int cmap_is_danger(const int row, const int column) {
-    if (!cmap) { return 0; }
-    return dsl_region_is_danger(cmap->region, row, column);
-}
-
 
 static void map_load_current_region() {
     SDL_Surface* tile = NULL;
@@ -78,15 +57,15 @@ static void map_load_current_region() {
     gff_palette_t *pal;
     map_t *map = cmap;
 
-    pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + map->new_region->map_id - 1;
-    ids = cmap->new_region->tile_ids;
-    for (int i = 0; i < map->new_region->num_tiles; i++) { max_id = max_id > ids[i] ? max_id : ids[i]; }
+    pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + map->region->map_id - 1;
+    ids = cmap->region->tile_ids;
+    for (uint32_t i = 0; i < map->region->num_tiles; i++) { max_id = max_id > ids[i] ? max_id : ids[i]; }
     max_id++;
     map->tiles = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * max_id);
     memset(map->tiles, 0x0, sizeof(SDL_Texture*) * max_id);
 
-    for (int i = 0; i < map->new_region->num_tiles; i++) {
-        region_get_tile(map->new_region, i, &width, &height, &data);
+    for (uint32_t i = 0; i < map->region->num_tiles; i++) {
+        region_get_tile(map->region, i, &width, &height, &data);
 
         tile = SDL_CreateRGBSurfaceFrom(data, width, height, 32, 4*width, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
 
@@ -97,7 +76,7 @@ static void map_load_current_region() {
     }
 
     dude_t *dude;
-    entity_list_for_each(map->new_region->entities, dude) {
+    entity_list_for_each(map->region->entities, dude) {
         port_add_entity(dude, pal);
     }
 
@@ -115,8 +94,8 @@ void map_load_region(region_t *reg, SDL_Renderer *renderer) {
     if (!cmap) { cmap = create_map(); }
     map_init(cmap);
     cren = renderer;
-    cmap->new_region = reg;
-    //cmap->new_region = region_manager_get_region(reg->map_id);
+    cmap->region = reg;
+    //cmap->region = region_manager_get_region(reg->map_id);
     map_load_current_region();
 
     // TODO: NEED TO CLEAR ALL SCREENS
@@ -129,7 +108,7 @@ void map_load_map(SDL_Renderer *renderer, int id) {
     if (!cmap) { cmap = create_map(); }
 
     cren = renderer;
-    cmap->new_region = region_manager_get_region(id);
+    cmap->region = region_manager_get_region(id);
 
     map_load_current_region();
     dsl_change_region(42);
@@ -161,8 +140,7 @@ void map_render(void *data, SDL_Renderer *renderer) {
 
     for (int x = 0; x < 98; x++) {
         for (int y = 0; y < 128; y++) {
-            //tile_id = region_tile_id(cmap->region, x, y);
-            tile_id = cmap->new_region->tiles[x][y];
+            tile_id = cmap->region->tiles[x][y];
             if (tile_id >= 0) {
                SDL_RenderCopy(renderer, map->tiles[tile_id], NULL, &tile_loc);
                tile_loc.x += stretch * 16;
@@ -271,7 +249,7 @@ void port_exit_combat() {
 
 void port_swap_enitity(int obj_id, entity_t *dude) {
     animate_sprite_t *as = (animate_sprite_t*) dude->sprite.data;
-    gff_palette_t *pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + cmap->new_region->map_id - 1;
+    gff_palette_t *pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + cmap->region->map_id - 1;
     const int zoom = 2.0;
 
     if (as) {
@@ -282,25 +260,12 @@ void port_swap_enitity(int obj_id, entity_t *dude) {
     }
 }
 
-void port_swap_objs(int obj_id, region_object_t *obj) {
-    animate_sprite_t *as = (animate_sprite_t*) obj->data;
-    gff_palette_t *pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + cmap->region->map_id - 1;
-    const int zoom = 2.0;
-
-    if (as) {
-        sprite_free(as->spr);
-        as->spr = sprite_new(cren, pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP, obj->btc_idx);
-    } else {
-        error("Unable to find animation for obj_id!\n");
-    }
-}
-
 #define CLICKABLE (0x10)
 entity_t* get_entity_at_location(const uint32_t x, const uint32_t y) {
     entity_t *dude = NULL;
     if (!cmap) { return 0; }
 
-    entity_list_for_each(cmap->new_region->entities, dude) {
+    entity_list_for_each(cmap->region->entities, dude) {
         animate_sprite_t *as = dude->sprite.data;
         //printf("%d: %d, %d (%d, %d)\n", dude->ds_id, dude->mapx * 16, dude->mapy * 16, x, y);
         if (as && dude->object_flags & CLICKABLE) {

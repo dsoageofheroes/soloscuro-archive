@@ -10,12 +10,10 @@
 
 #define MAX_REGIONS (100)
 
-static ds_region_t *ds_regions[MAX_REGIONS];
 static region_t *regions[MAX_REGIONS];
 static int current_region = 0; // will need to eliminate for server code.
 
 void region_manager_init() {
-    memset(ds_regions, 0x0, sizeof(ds_regions));
     memset(regions, 0x0, sizeof(regions));
 }
 
@@ -57,24 +55,6 @@ region_t* region_manager_get_current() {
 
 // Deprecated API:
 
-ds_region_t* ds_region_get_region(const int region_id) {
-    if (region_id < 0 || region_id >= MAX_REGIONS) { return NULL; }
-    return ds_regions[region_id];
-}
-
-ds_region_t* ds_region_load_region(const int region_id) {
-    if (region_id < 0 || region_id >= MAX_REGIONS) { return NULL; }
-    char gff_name[32];
-
-    snprintf(gff_name, 32, "rgn%x.gff", region_id);
-    int index = gff_find_index(gff_name);
-    if (index < 0 ) { return 0; }
-
-    ds_regions[region_id] = dsl_load_region(index);
-
-    return ds_regions[region_id];
-}
-
 void ds_region_load_region_from_save(const int id, const int region_id) {
     char gff_name[32];
     char *buf = NULL;
@@ -84,16 +64,16 @@ void ds_region_load_region_from_save(const int id, const int region_id) {
     int gff_index = gff_find_index(gff_name);
     if (gff_index < 0 ) { return; }
 
-    dsl_region_t *reg = NULL;
+    //dsl_region_t *reg = NULL;
     //player_pos_t *player = ds_player_get_pos(ds_player_get_active());
 
     gff_chunk_header_t chunk = gff_find_chunk_header(id, GFF_ROBJ, region_id);
-    reg = dsl_load_region(gff_index);
+    //reg = dsl_load_region(gff_index);
 
-    if (gff_read_chunk(id, &chunk, reg->list, chunk.length) < chunk.length) {
-        printf("ERROR READING!\n");
-        return ;
-    }
+    //if (gff_read_chunk(id, &chunk, reg->list, chunk.length) < chunk.length) {
+        //printf("ERROR READING!\n");
+        //return ;
+    //}
 
     // TODO: clean this up.
     /*
@@ -134,10 +114,10 @@ void ds_region_load_region_from_save(const int id, const int region_id) {
         printf("Error loading file.\n");
         exit(1);
     }
-    memcpy(reg->flags, buf, sizeof(reg->flags));
-    buf += sizeof(reg->flags);
-    memcpy(&(reg->cr.hunt), &(((combat_region_t*)buf)->hunt), sizeof(reg->cr.hunt));
-    buf -= sizeof(reg->flags);
+    //memcpy(reg->flags, buf, sizeof(reg->flags));
+    //buf += sizeof(reg->flags);
+    //memcpy(&(reg->cr.hunt), &(((combat_region_t*)buf)->hunt), sizeof(reg->cr.hunt));
+    //buf -= sizeof(reg->flags);
     free(buf);
 
     chunk = gff_find_chunk_header(id, GFF_GDAT, 99);
@@ -158,5 +138,5 @@ void ds_region_load_region_from_save(const int id, const int region_id) {
     dsl_deserialize_locals(buf);
     free(buf);
 
-    ds_regions[region_id] = reg;
+    //ds_regions[region_id] = reg;
 }

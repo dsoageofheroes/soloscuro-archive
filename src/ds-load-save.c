@@ -163,7 +163,7 @@ void ls_save_to_file(const char *path) {
     for (int i = 0; i < 4; i++) {
         gff_add_chunk(id, GFF_PSIN, i, (char*)ds_player_get_psi(i), sizeof(psin_t));
         gff_add_chunk(id, GFF_PSST, i, (char*)ds_player_get_psionics(i), sizeof(psionic_list_t));
-        gff_add_chunk(id, GFF_SPST, i, (char*)ds_player_get_spells(i), sizeof(spell_list_t));
+        gff_add_chunk(id, GFF_SPST, i, (char*)ds_player_get_spells(i), sizeof(ssi_spell_list_t));
         add_player_to_save(id, i);
     }
 
@@ -215,14 +215,14 @@ static int load_player(const int id, const int player, const int res_id) {
         if (dude->name) { free(dude->name); }
         if (dude->effects) { free(dude->effects); }
         if (dude->inventory) { free(dude->inventory); }
-        if (dude->spells) { free(dude->spells); }
-        if (dude->psionics) { free(dude->psionics); }
+        //if (dude->spells) { free(dude->spells); }
+        //if (dude->psionics) { free(dude->psionics); }
         memcpy(dude, buf + offset, sizeof(entity_t));
         dude->name = NULL;
         dude->effects = NULL; // anything currently affecting the entity.
         dude->inventory = NULL;
-        dude->spells = NULL;
-        dude->psionics = NULL;
+        //dude->spells = NULL;
+        //dude->psionics = NULL;
         dude->sprite.scmd = combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
         offset += rdff->len;
     }
@@ -247,7 +247,7 @@ static int load_player(const int id, const int player, const int res_id) {
     if (!gff_read_chunk(id, &chunk, ds_player_get_psi(player), sizeof(psin_t))) { return 0; }
 
     chunk = gff_find_chunk_header(id, GFF_SPST, res_id);
-    if (!gff_read_chunk(id, &chunk, ds_player_get_spells(player), sizeof(spell_list_t))) { return 0;}
+    if (!gff_read_chunk(id, &chunk, ds_player_get_spells(player), sizeof(ssi_spell_list_t))) { return 0;}
 
     chunk = gff_find_chunk_header(id, GFF_PSST, res_id);
     if (!gff_read_chunk(id, &chunk, ds_player_get_psionics(player), sizeof(psionic_list_t))) { return 0;}

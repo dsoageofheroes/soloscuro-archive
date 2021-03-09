@@ -12,7 +12,7 @@ typedef struct player_s {
     ds_character_t ch;
     ds1_combat_t combat;
     psin_t psi;
-    spell_list_t spells;
+    ssi_spell_list_t spells;
     psionic_list_t psionics;
     player_pos_t pos;
     ds_inventory_t inv;
@@ -96,7 +96,7 @@ static void create_region(const int slot, ds_character_t *ch) {
     robj->scmd = combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
 }
 
-int ds_player_replace(const int slot, ds_character_t *ch, psin_t *psi, spell_list_t *spells,
+int ds_player_replace(const int slot, ds_character_t *ch, psin_t *psi, ssi_spell_list_t *spells,
         psionic_list_t *psionics, ds_inventory_t *inv, char *name) {
     ds1_combat_t combat;
     if (slot < 0 || slot >= MAX_PCS) { return 0; }
@@ -106,7 +106,7 @@ int ds_player_replace(const int slot, ds_character_t *ch, psin_t *psi, spell_lis
     create_region(slot, ch);
     memcpy(&(pc[slot].combat), &combat, sizeof(ds1_combat_t));
     memcpy(&(pc[slot].psi), psi, sizeof(psin_t));
-    memcpy(&(pc[slot].spells), spells, sizeof(spell_list_t));
+    memcpy(&(pc[slot].spells), spells, sizeof(ssi_spell_list_t));
     memcpy(&(pc[slot].psionics), psionics, sizeof(psionic_list_t));
     memcpy(&(pc[slot].inv), inv, sizeof(ds_inventory_t));
 
@@ -170,7 +170,7 @@ psin_t* ds_player_get_psi(const int slot) {
     return &(pc[slot].psi);
 }
 
-spell_list_t* ds_player_get_spells(const int slot) {
+ssi_spell_list_t* ds_player_get_spells(const int slot) {
     if (slot < 0 || slot >= MAX_PCS) { return NULL; }
     return &(pc[slot].spells);
 }

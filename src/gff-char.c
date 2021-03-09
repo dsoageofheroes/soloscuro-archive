@@ -86,7 +86,7 @@ static void write_CHAR_entry(gff_chunk_header_t chunk, ds_character_t *pc, ds1_c
     free(buf);
 }
 
-int gff_char_add_character(ds_character_t *pc, psin_t *psi, spell_list_t *spells, psionic_list_t *psionics, char *name) {
+int gff_char_add_character(ds_character_t *pc, psin_t *psi, ssi_spell_list_t *spells, psionic_list_t *psionics, char *name) {
     ds1_combat_t combat;
     uint32_t res_ids[1<<10];
     int16_t max_id = 1;
@@ -114,7 +114,7 @@ int gff_char_add_character(ds_character_t *pc, psin_t *psi, spell_list_t *spells
     if (open_slot == -1) {
         gff_add_chunk(CHARSAVE_GFF_INDEX, GFF_CHAR, id, (char*)res_ids, 1<<10);
         gff_add_chunk(CHARSAVE_GFF_INDEX, GFF_PSST, id, (char*)res_ids, sizeof(psionic_list_t));
-        gff_add_chunk(CHARSAVE_GFF_INDEX, GFF_SPST, id, (char*)res_ids, sizeof(spell_list_t));
+        gff_add_chunk(CHARSAVE_GFF_INDEX, GFF_SPST, id, (char*)res_ids, sizeof(ssi_spell_list_t));
         gff_add_chunk(CHARSAVE_GFF_INDEX, GFF_PSIN, id, (char*)res_ids, sizeof(psin_t));
         gff_add_chunk(CHARSAVE_GFF_INDEX, GFF_CACT, id, (char*)res_ids, 2);
         replace_id = open_slot = id;

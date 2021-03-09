@@ -2,9 +2,17 @@
 #define SPELL_H
 
 #include <stdint.h>
+#include "psionic.h"
 
 #define MAX_SPELLS (8*138)
 #define MAX_PSIONICS (34)
+
+typedef struct spell_s {
+    char *name;
+    uint32_t icon;
+    uint32_t spell_text_id;
+    // More to come.
+} spell_t;
 
 enum {
     PSIONIC_PSYCHOKINETIC,
@@ -211,17 +219,9 @@ enum {
     UNKNOWN_INCREASE_CHARISMA,
 };
 
-typedef struct psin_s {
-    uint8_t types[7];
-} psin_t;
-
-typedef struct spell_list_s {
+typedef struct ssi_spell_list_s {
     uint8_t spells[MAX_SPELLS/8];
-} spell_list_t;
-
-typedef struct psionic_list_s {
-    uint8_t psionics[34];
-} psionic_list_t;
+} ssi_spell_list_t;
 
 void spell_get_psionic_name(uint8_t psi, char name[32]);
 void spell_get_wizard_name(uint8_t spell, char name[32]);
@@ -231,7 +231,10 @@ void spell_set_psin(psin_t *psin, const uint8_t psi, const int on);
 int spell_has_psin(psin_t *psin, const uint8_t psi);
 void spell_set_psionic(psionic_list_t *psi, uint16_t power);
 int spell_has_psionic(psionic_list_t *psi, uint16_t power);
-void spell_set_spell(spell_list_t *psi, uint16_t spell);
-int spell_has_spell(spell_list_t *psi, uint16_t spell);
+void spell_set_spell(ssi_spell_list_t *psi, uint16_t spell);
+int spell_has_spell(ssi_spell_list_t *psi, uint16_t spell);
+
+// NEW INTERFACE
+extern spell_t* spell_get_spell(const uint16_t id);
 
 #endif

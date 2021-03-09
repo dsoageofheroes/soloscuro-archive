@@ -248,7 +248,7 @@ void view_character_return_control () {
     } else if (last_selection == SELECT_NEW) {
         ds_character_t *pc = new_character_get_pc();
         psin_t* psi = new_character_get_psin();
-        spell_list_t* spells = new_character_get_spell_list();
+        ssi_spell_list_t* spells = new_character_get_spell_list();
         psionic_list_t* psionics = new_character_get_psionic_list();
         char *name = new_character_get_name();
         if (pc && psi && spells && psionics) {

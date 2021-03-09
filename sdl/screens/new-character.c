@@ -60,7 +60,7 @@ static SDL_Renderer *renderer;
 static ds_character_t pc; // the character we are creating.
 static ds_inventory_t inv; // the inventory
 static psin_t psi; // psi group
-static spell_list_t spells;
+static ssi_spell_list_t spells;
 static psionic_list_t psionics;
 static uint8_t is_valid;
 static char sphere_text[32];
@@ -91,7 +91,7 @@ psin_t* new_character_get_psin() {
     return &psi;
 }
 
-spell_list_t* new_character_get_spell_list() {
+ssi_spell_list_t* new_character_get_spell_list() {
     if (!is_valid) { return NULL; }
     return &spells;
 }

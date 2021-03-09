@@ -10,6 +10,7 @@
 #include "../src/gff-map.h"
 #include "../src/gff-image.h"
 #include "../src/spells.h"
+#include "../src/region-manager.h"
 
 #define BUF_MAX (1<<12)
 #define RES_MAX (1<<14)
@@ -899,7 +900,7 @@ static void render_entry_font() {
     }
 }
 
-static dsl_region_t *region;
+static region_t *region;
 static void render_entry_rmap() {
     render_entry_header();
     static char *cfile = NULL;
@@ -933,19 +934,20 @@ static void render_entry_rmap() {
             error("cfile is null!\n");
             exit(1);
         }
-        region = dsl_load_region(gff_idx);
+        region = region_manager_get_region(res_ids[res_idx]);
         tiles_len = region->num_tiles + 1;
         tiles = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * (tiles_len));
         memset(tiles, 0x0, sizeof(SDL_Texture*) * tiles_len);
-        for (int i = 0; i < region->num_tiles; i++) {
-            dsl_region_get_tile(region, i, &width, &height, &data);
+        for (uint32_t i = 0; i < region->num_tiles; i++) {
+            region_get_tile(region, i, &width, &height, &data);
 
             tile = SDL_CreateRGBSurfaceFrom(data, width, height, 32, 4*width, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
-            if (region->ids[i] > (tiles_len)) {
-                error ("region->ids[%d] is out of bounds!\n", i);
-                exit(1);
-            }
-            tiles[region->ids[i]] = SDL_CreateTextureFromSurface(renderer, tile);
+            //if (region->ids[i] > (tiles_len)) {
+                //error ("region->ids[%d] is out of bounds!\n", i);
+                //exit(1);
+            //}
+            //tiles[region->ids[i]] = SDL_CreateTextureFromSurface(renderer, tile);
+            tiles[region->tile_ids[i]] = SDL_CreateTextureFromSurface(renderer, tile);
             SDL_FreeSurface(tile);
 
             free(data);
@@ -957,7 +959,6 @@ static void render_entry_rmap() {
             exit(1);
         }
 
-        region->flags_size = chunk.length;
         free(gmap_ids);
     }
 
@@ -971,7 +972,8 @@ static void render_entry_rmap() {
     if (mapy >= MAP_COLUMNS) { mapy = MAP_COLUMNS; }
     for (int i = mapx; i < MAP_ROWS; i++) {
         for (int j = mapy; j < MAP_COLUMNS; j++) {
-            SDL_RenderCopy(renderer, tiles[region->tile_ids[i][j]], NULL, &loc);
+            size_t tile_id = region->tiles[i][j];
+            SDL_RenderCopy(renderer, tiles[tile_id], NULL, &loc);
             loc.x += loc.w;
         }
         loc.y += loc.h;
@@ -985,11 +987,11 @@ static void render_entry_gmap() {
 
     for (int i = mapx; i < MAP_ROWS; i++) {
         for (int j = mapy; j < MAP_COLUMNS; j++) {
-            if (dsl_region_is_block(region, i, j)) {
+            if (region_is_block(region, i, j)) {
                 //printf("(%d, %d)\n, ", i, j);
                 SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, SDL_ALPHA_OPAQUE);
-            } else if (dsl_region_is_actor(region, i, j)) {
-                SDL_SetRenderDrawColor(renderer, 0x00, 0xFF, 0x00, SDL_ALPHA_OPAQUE);
+            /*} else if (dsl_region_is_actor(region, i, j)) {
+                SDL_SetRenderDrawColor(renderer, 0x00, 0xFF, 0x00, SDL_ALPHA_OPAQUE);*/
             } else { continue; }
             points[0].x = 320 + (j - mapy) * 16 * zoom;
             points[0].y = 40  + (i - mapx) * 16 * zoom;
@@ -1058,7 +1060,7 @@ static void render_entry_spst() {
     char name[32];
     char buf[BUF_MAX];
     size_t pos;
-    spell_list_t spells;
+    ssi_spell_list_t spells;
     gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_SPST, res_ids[res_idx]);
     gff_read_chunk(gff_idx, &chunk, &spells, sizeof(spells));
     render_entry_header();

@@ -6,36 +6,12 @@
 #include "ds-item.h"
 #include "gff-map.h"
 #include "spells.h"
+#include "psionic.h"
 #include "item.h"
-
-//typedef uint64_t ability_set_t;
-
-// Alternative ability_set for evaluation
-/*
-struct ability_set_s {
-    unsigned int psychokinesis    : 1;
-    unsigned int psychometabolism : 1;
-    unsigned int telepathy        : 1;
-    //... keep added different abilities, magic schools, spheres, etc...
-};
-*/
-
-//nested version:
-
-struct psi_abilities_s {
-    unsigned int detonate         : 1;
-};
-
-typedef struct class_abilities_s {
-    unsigned int psychokinesis    : 1;
-    unsigned int psychometabolism : 1;
-    unsigned int telepathy        : 1;
-} class_abilities_t;
 
 typedef struct ability_set_s {
     unsigned int hunt             : 1;
-    struct psi_abilities_s psi;
-    class_abilities_t class;
+    psi_abilities_t psi;
     //struct spell_abilities_s spells; // NOT shown
     //struct class_abilities_s class;  // Not shown
 } ability_set_t;
@@ -92,6 +68,7 @@ typedef struct class_s {
     int8_t class;
     uint8_t level;
     uint8_t high_level; // for level drain.
+    psi_abilities_t psi;
 } class_t;
 
 typedef struct entity_s {
@@ -116,8 +93,9 @@ typedef struct entity_s {
     ability_set_t abilities;
     effect_node_t *effects; // anything currently affecting the entity.
     ds_inventory_t *inventory;
-    spell_list_t *spells;
-    psionic_list_t *psionics;
+    inventory_t *inv; // NULL means that there is no inventory on this entity (IE: some monsters.)
+    //spell_list_t *spells;
+    //psionic_list_t *psionics;
 } entity_t;
 
 // For the lolz

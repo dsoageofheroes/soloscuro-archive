@@ -7,8 +7,7 @@
 #include "screen-manager.h"
 
 typedef struct map_s {
-    dsl_region_t *region;
-    region_t *new_region; // need to change to region eventually
+    region_t *region;
     SDL_Texture **tiles;
 } map_t;
 

@@ -192,12 +192,12 @@ uint32_t dsl_request_impl(int16_t token, int16_t name,
             break;
         case REQUEST_SET_BLOCK:
             debug("Need to set (BLOCK) the bit flags for %d map position (%d, %d) to %d & commit!\n", name, num1, num2, GB_BLOCK);
-            dsl_region_set_block(dsl_region_get_current(), num2, num1, MAP_BLOCK);
+            region_set_block(region_manager_get_current(), num2, num1, MAP_BLOCK);
             trigger_enable_object(name);
             break;
         case REQUEST_CLEAR_BLOCK:
             debug("I need to clear (UNBLOCK) the block at (%d, %d) with flags %d\n", num1, num2, GB_BLOCK);
-            dsl_region_clear_block(dsl_region_get_current(), num2, num1, MAP_BLOCK);
+            region_clear_block(region_manager_get_current(), num2, num1, MAP_BLOCK);
             break;
         case REQUEST_SET_LOS:
             debug("request SET_LOS not implemented\n");
@@ -655,8 +655,6 @@ int req_set_allegiance(int16_t object, long allegiance, long notused2) {
         if (dude->ds_id == object) {
             dude->allegiance = allegiance;
             combat_add(&(region_manager_get_current()->cr), dude);
-        } else {
-            error("error: Unable to find object: %d\n", object);
         }
     }
 

@@ -72,7 +72,7 @@ typedef struct label_s {
 
 ds_character_t *new_character_get_pc();
 psin_t* new_character_get_psin();
-spell_list_t* new_character_get_spell_list();
+ssi_spell_list_t* new_character_get_spell_list();
 psionic_list_t* new_character_get_psionic_list();
 char* new_character_get_name();
 
