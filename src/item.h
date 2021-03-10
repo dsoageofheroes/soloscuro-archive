@@ -119,6 +119,11 @@ typedef struct inventory_s {
     item_t bp[12];
 } inventory_t;
 
+#define ITEM_SLOT_MAX (sizeof(inventory_t) / sizeof(item_t))
+
+extern int item_allowed_in_slot(item_t *item, const int slot);
+extern void item_free(item_t *item);
+extern item_t* item_dup(item_t *item);
 
 // DS1 specific functions
 void item_convert_from_ds1(item_t *item, const ds1_item_t *ds1_item);

@@ -2,6 +2,7 @@
 #define ENTITY_H
 
 #include <stdint.h>
+#include <stdlib.h>
 #include "ds-scmd.h"
 #include "ds-item.h"
 #include "gff-map.h"
@@ -96,5 +97,7 @@ extern entity_t* entity_create_from_objex(const int id);
 extern entity_t* entity_create_from_etab(gff_map_object_t *entry_table, uint32_t id);
 extern void entity_free(entity_t *entity);
 extern void entity_load_from_gff(entity_t *entity, const int gff_idx, const int player, const int res_id);
+extern void entity_copy_item(entity_t *entity, item_t *item, const size_t slot);
+extern void entity_clear_item(entity_t *entity, const size_t slot);
 
 #endif

@@ -6,9 +6,9 @@
 #include "sprite.h"
 
 void mouse_init(SDL_Renderer *rend);
-void mouse_set_as_item(ds1_item_t *item, uint16_t spr);
-ds1_item_t* mouse_retreive_item(uint16_t *spr);
-ds1_item_t* mouse_get_item();
+void mouse_set_as_item(item_t *item);
+void mouse_free_item();
+item_t* mouse_get_item();
 void mouse_free();
 
 #endif

@@ -1,11 +1,11 @@
 #include "combat.h"
+#include "item.h"
 #include "dsl.h"
 #include "entity.h"
 #include "gff.h"
 #include "gfftypes.h"
 #include "gff-map.h"
 #include "region-manager.h"
-#include <stdlib.h>
 #include <string.h>
 
 extern char *strdup(const char *s); // Not in standard.
@@ -208,6 +208,16 @@ entity_t* entity_create_from_etab(gff_map_object_t *entry_table, uint32_t id) {
     dude->sprite.flags = gm->flags;
 
     return dude;
+}
+
+extern void entity_copy_item(entity_t *entity, item_t *item, const size_t slot) {
+    if (!entity || !item || slot < 0 || slot >= ITEM_SLOT_MAX) {return;}
+    //TODO: Take care of effects!
+    memcpy(entity->inv + slot, item, sizeof(item_t));
+}
+
+extern void entity_clear_item(entity_t *entity, const size_t slot) {
+    memset(entity->inv + slot, 0x0, sizeof(item_t));
 }
 
 void entity_free(entity_t *dude) {

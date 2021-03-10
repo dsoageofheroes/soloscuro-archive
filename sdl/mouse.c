@@ -1,4 +1,5 @@
 #include "mouse.h"
+#include "animate.h"
 #include "../src/dsl.h"
 #include "../src/gff.h"
 #include "../src/gfftypes.h"
@@ -18,8 +19,7 @@ const static size_t ds1_icon_res[] = {
 
 static SDL_Cursor **cursors;
 static int num_cursors;
-static ds1_item_t *item_data;
-static uint16_t item_spr;
+static item_t *item_data;
 static SDL_Cursor *item_cursor;
 
 static SDL_Cursor* create_cursor(const int gff_idx, const int type_idx, const size_t res_id) {
@@ -67,7 +67,6 @@ void mouse_init(SDL_Renderer *rend) {
     SDL_SetCursor(cursors[0]);
 
     item_data = NULL;
-    item_spr = SPRITE_ERROR;
     item_cursor = NULL;
 }
 
@@ -85,37 +84,30 @@ void mouse_free() {
     if (item_data) {
         free(item_data);
         item_data = NULL;
-        sprite_free(item_spr);
-        item_spr = SPRITE_ERROR;
     }
 }
 
-void mouse_set_as_item(ds1_item_t *item, uint16_t spr) {
-    if (item_data) { return; } // We don't take an item if we already have one.
+void mouse_set_as_item(item_t *item) {
+    if (item_data) { 
+        item_free(item_data);
+        item_data = NULL;
+    }
 
-    item_data = item;
-    item_spr = spr;
+    item_data = item_dup(item);
 
     // Unforutnately, in SDL you are suppose to use a surface for the cursor.
     // So, we will store the texture for later and load the mouse as a surface.
     if (item_cursor) { SDL_FreeCursor(item_cursor); }
-    item_cursor = create_cursor(OBJEX_GFF_INDEX, GFF_BMP, ds_item_get_bmp_id(item));
+    item_cursor = create_cursor(OBJEX_GFF_INDEX, GFF_BMP, item->sprite.bmp_id);
     SDL_SetCursor(item_cursor);
 }
 
-ds1_item_t* mouse_get_item() {
+item_t* mouse_get_item() {
     return item_data;
 }
 
-ds1_item_t* mouse_retreive_item(uint16_t *spr) {
-    ds1_item_t *ret = item_data;
-    if (!item_data) { return NULL; }
-
-    *spr = item_spr;
-    SDL_SetCursor(cursors[0]);
-    SDL_FreeCursor(item_cursor);
-    item_cursor = NULL;
+void mouse_free_item() {
     item_data = NULL;
-
-    return ret;
+    if (item_cursor) { SDL_FreeCursor(item_cursor); }
+    SDL_SetCursor(cursors[0]);
 }

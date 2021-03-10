@@ -57,3 +57,51 @@ void item_convert_from_ds1(item_t *item, const ds1_item_t *ds1_item) {
 
     port_load_item(item);
 }
+
+int item_allowed_in_slot(item_t *item, const int slot) {
+    if (!item || slot < 0 || slot > 25) { return 0; }
+
+    if (slot > 13) { return 1; } // backpack is always okay!
+
+    switch (item->placement) {
+        case 1: // Chest
+            return slot == SLOT_CHEST;
+        case 2: // Waist
+            return slot == SLOT_WAIST;
+        case 3: // ARM
+            return slot == SLOT_ARM;
+        case 4: // FOOT
+            return slot == SLOT_FOOT;
+        case 5: // HAND
+            return slot == SLOT_HAND0 || slot == SLOT_HAND1;
+        case 6: // HEAD
+            return slot == SLOT_HEAD;
+        case 7: // NECK
+            return slot == SLOT_NECK;
+        case 8: // CLOAK
+            return slot == SLOT_CLOAK;
+        case 9: // FINGER
+            return slot == SLOT_FINGER0 || slot == SLOT_FINGER1;
+        case 10: // LEGS
+            return slot == SLOT_LEGS;
+        case 11: // AMMO
+            return slot == SLOT_AMMO;
+        case 12: // MISSILE
+            return slot == SLOT_MISSILE;
+    }
+
+    return 0;
+}
+
+extern item_t* item_dup(item_t *item) {
+    item_t *ret = malloc(sizeof(item_t));
+    memcpy(ret, item, sizeof(item_t));
+    return ret;
+}
+
+
+void item_free(item_t *item) {
+    if (item) {
+        free(item);
+    }
+}
