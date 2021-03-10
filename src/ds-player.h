@@ -37,7 +37,7 @@ int ds_player_get_ac(const int slot);
 int ds_player_get_active();
 
 // New Interface
-int player_exists(const int slot);
-entity_t* player_get_entity(const int slot);
-void player_cleanup();
+extern int player_exists(const int slot);
+extern entity_t* player_get_entity(const int slot);
+extern void player_cleanup();
 #endif

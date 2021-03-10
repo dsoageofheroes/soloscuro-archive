@@ -30,10 +30,17 @@ void item_convert_from_ds1(item_t *item, const ds1_item_t *ds1_item) {
     item->ds_id = ds1_item->id;
     strncpy(item->name, ds_item_name(ds1_item->name_idx), ITEM_NAME_MAX - 1);
 
-    if (ds1_item1r->weapon_type) {
-        item->type = ITEM_WEAPON;
-    } else if (ds1_item1r->flags & DS1_ARMOR_FLAG) {
+    //printf("%s-------------->%d, %d\n", item->name, ds1_item1r->weapon_type, ds1_item1r->flags);
+    if (ds1_item1r->flags & DS1_ARMOR_FLAG) {
         item->type = ITEM_ARMOR;
+    } else if (ds1_item1r->weapon_type & DS1_WEAPON_MELEE) {
+        item->type = ITEM_MELEE;
+    } else if (ds1_item1r->weapon_type & DS1_WEAPON_MISSILE) {
+        if (ds1_item1r->weapon_type & DS1_WEAPON_THROWN) {
+            item->type = ITEM_MISSILE_THROWN;
+        } else {
+            item->type = ITEM_MISSILE_USE_AMMO;
+        }
     } else {
         item->type = ITEM_CONSUMABLE;
     }
@@ -41,7 +48,6 @@ void item_convert_from_ds1(item_t *item, const ds1_item_t *ds1_item) {
     item->quantity = ds1_item->quantity;
     item->value = ds1_item->value;
     item->charges = ds1_item->charges;
-    //item->icon = ds1_item->icon; // TODO:probably should look into this...
     item->legal_class = ds1_item1r->legal_class;
     item->placement = ds1_item1r->placement;
     item->weight = ds1_item1r->weight;

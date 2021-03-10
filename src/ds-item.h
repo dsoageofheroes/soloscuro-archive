@@ -5,7 +5,12 @@
 
 #include "item.h"
 
-#define DS1_ARMOR_FLAG (1<<7)
+#define DS1_WEAPON_MELEE     (1<<0)
+#define DS1_WEAPON_MISSILE   (1<<1)
+#define DS1_WEAPON_SHIELD    (1<<2)
+#define DS1_WEAPON_USE_AMMO  (1<<3)
+#define DS1_WEAPON_THROWN    (1<<4)
+#define DS1_ARMOR_FLAG       (1<<7)
 
 enum {
     SLOT_ARM, SLOT_AMMO, SLOT_MISSILE, SLOT_HAND0, SLOT_FINGER0, SLOT_WAIST,

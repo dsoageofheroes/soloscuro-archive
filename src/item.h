@@ -61,7 +61,9 @@ typedef struct sprite_info_s {
 
 typedef enum item_type_e {
     ITEM_CONSUMABLE,
-    ITEM_WEAPON,
+    ITEM_MELEE,
+    ITEM_MISSILE_THROWN,
+    ITEM_MISSILE_USE_AMMO,
     ITEM_ARMOR
 } item_type_t;
 

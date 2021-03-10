@@ -181,35 +181,43 @@ static int do_slot_highlight(SDL_Renderer *renderer, const uint16_t frame, const
 
 #define BUF_MAX (1<<8)
 
-static int display_attack(entity_t *entity, ds1_item_t *item, const int xpos, const int ypos) {
+static int display_attack(entity_t *entity, item_t *item, const int xpos, const int ypos) {
     char buf[BUF_MAX];
     int pos = 0;
-    if (item->id == 0) { return 0; }
-    const ds_item1r_t *it1r = ds_get_item1r(item->item_index);
-    if (it1r->weapon_type != 1 && it1r->weapon_type != 2) { return 0; } // not a weapon.
+    int offset = 0;
 
-    print_line_len(rend, FONT_YELLOW, ds_item_name(item->name_idx), 235 * zoom, ypos * zoom, BUF_MAX);
+    if (item && item->type != ITEM_MELEE && item->type != ITEM_MISSILE_THROWN
+            && item->type != ITEM_MISSILE_USE_AMMO) { return 0;}
+
+    if (item == NULL) {
+        pos += snprintf(buf, BUF_MAX, "<");
+    } else {
+        print_line_len(rend, FONT_YELLOW, item->name, 235 * zoom, ypos * zoom, BUF_MAX);
+        offset += 7;
+    }
 
     uint16_t num_attacks = dnd2e_get_attack_num_pc(entity, item);
-    if (num_attacks > 2) {
-        pos += snprintf(buf, BUF_MAX, "%d%sx",
-            num_attacks >> 1, // num_attacks is half-attacks.
-            (num_attacks & 0x01) ? ".5" : "");
-    }
-    snprintf(buf + pos, BUF_MAX - pos, "%dD%d%s%d\n", 
+    pos += snprintf(buf + pos, BUF_MAX - pos, "%d%sx",
+        num_attacks >> 1, // num_attacks is half-attacks.
+        (num_attacks & 0x01) ? ".5" : "");
+    pos += snprintf(buf + pos, BUF_MAX - pos, "%dD%d%s%d\n", 
         dnd2e_get_attack_die_pc(entity, item),
         dnd2e_get_attack_sides_pc(entity, item),
         "+",
         dnd2e_get_attack_mod_pc(entity, item));
 
-    print_line_len(rend, FONT_YELLOW, buf, 235 * zoom, (ypos + 7) * zoom, BUF_MAX);
-    return 1;
+    if (item == NULL) {
+        pos += snprintf(buf + pos, BUF_MAX - pos, ">");
+    }
+
+    print_line_len(rend, FONT_YELLOW, buf, 235 * zoom, (ypos + offset) * zoom, BUF_MAX);
+    return offset + 7;
 }
 
 static void render_character() {
     char buf[BUF_MAX];
-    ds_inventory_t* player_items = ds_player_get_inv(char_selected);
     entity_t *player = player_get_entity(char_selected);
+    inventory_t *player_items = (inventory_t*)player->inv;
 
     if (player->name == NULL) { return; } // no character.
     strcpy(name, player->name);
@@ -236,13 +244,21 @@ static void render_character() {
     snprintf(buf, BUF_MAX, "PSI:  %d/%d\n", player->stats.psp, player->stats.high_psp);
     print_line_len(rend, FONT_YELLOW, buf, 235 * zoom, 100 * zoom, BUF_MAX);
 
-    snprintf(buf, BUF_MAX, "AC: %d\n", ds_player_get_ac(char_selected));
+    snprintf(buf, BUF_MAX, "AC: %d\n", dnd2e_calc_ac(player));
     print_line_len(rend, FONT_YELLOW, buf, 235 * zoom, 115 * zoom, BUF_MAX);
 
     int ypos = 125;
-    ypos += display_attack(player, &(player_items->missile), 235, ypos) ? 14 : 0;
-    ypos += display_attack(player, &(player_items->hand0), 235, ypos) ? 14 : 0;
-    ypos += display_attack(player, &(player_items->hand1), 235, ypos) ? 14 : 0;
+    if (player_items->missile.ds_id != 0) {
+        ypos += display_attack(player, &(player_items->missile), 235, ypos);
+    }
+    int cypos = ypos;
+
+    ypos += display_attack(player, &(player_items->hand0), 235, ypos);
+    ypos += display_attack(player, &(player_items->hand1), 235, ypos);
+
+    if (ypos == cypos) { // no attack items
+        ypos += display_attack(player, NULL, 235, ypos);
+    }
 }
 
 //static void render_backpack_slot(const int slot, const int frame, const int x, const int y, uint16_t *inv_sprs_list) {
@@ -271,7 +287,8 @@ static void render_backpack_slot(const int slot, const int frame, const int x, c
 
 void inventory_screen_render(void *data, SDL_Renderer *renderer) {
     description[0] = '\0';
-    item_t *items = player_get_entity(char_selected)->inv;
+    entity_t *player = player_get_entity(char_selected);
+    item_t *items = player->inv;
     animate_sprite_t *as = NULL;
 
     sprite_render(renderer, panel);
@@ -295,15 +312,15 @@ void inventory_screen_render(void *data, SDL_Renderer *renderer) {
         sprite_render(renderer, ai[i]);
         sprite_render(renderer, leader[i]);
         //sprite_render(renderer, port_background[i]);
-        sprite_set_frame(ports[i], ds_player_exists(i) ? 1 : 2);
+        sprite_set_frame(ports[i], player_exists(i) ? 1 : 2);
         sprite_render(renderer, ports[i]);
         if (sprite_in_rect(ports[i], mousex, mousey)) {
             sprite_set_frame(ports[i], 1);
             sprite_render(renderer, ports[i]);
-            if (ds_player_get_combat(i)->name[0]) {
+            if (player_exists(i)) {
                 snprintf(description, 128, "%s%s",
                         i == char_selected ? "" : "SELECT ",
-                        ds_player_get_combat(i)->name);
+                        player->name);
             } else {
                 strcpy(description, "PRESS RIGHT MOUSE BUTTON");
             }
@@ -361,7 +378,7 @@ void inventory_screen_render(void *data, SDL_Renderer *renderer) {
         player_render(rend, i);
     }
 
-    if (ds_player_exists(char_selected)) {
+    if (player_exists(char_selected)) {
         player_center_portrait(char_selected, (75) * zoom, (36) * zoom, 90 * zoom, 125 * zoom);
         player_render_portrait(rend, char_selected);
     }
@@ -526,7 +543,6 @@ void inventory_screen_return_control () {
     } else if (last_selection == SELECT_ALS) {
         if (add_load_save_get_action() == ACTION_ADD) {
             uint32_t sel = add_load_save_get_selection();
-            //if (!ds_player_load_character_charsave(slot_clicked, sel)) {
             if (!ds_load_character_charsave(slot_clicked, sel)) {
                 printf("Char loading failed.\n");
             } else {

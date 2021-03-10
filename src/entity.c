@@ -61,6 +61,12 @@ static void apply_character(dude_t *dude, ds_character_t *ch) {
     dude->stats.saves.petrify = ch->saving_throw.petr;
     dude->stats.saves.breath = ch->saving_throw.breath;
     dude->stats.saves.spell = ch->saving_throw.spell;
+    for (int i = 0; i < 3; i++) {
+        dude->stats.attacks[i].number = ch->num_attacks[i];
+        dude->stats.attacks[i].num_dice = ch->num_dice[i];
+        dude->stats.attacks[i].sides = ch->num_sides[i];
+        dude->stats.attacks[i].bonus = ch->num_bonuses[i];
+    }
     dude->allegiance = ch->allegiance;
     dude->size = ch->size;
     dude->sound_fx = ch->sound_fx;
