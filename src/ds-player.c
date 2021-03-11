@@ -31,6 +31,11 @@ void player_cleanup() {
     }
 }
 
+extern void player_free(const int slot) {
+    entity_free(players[slot]);
+    players[slot] = NULL;
+}
+
 void ds_player_init() {
     memset(pc, 0x0, MAX_PCS * sizeof(player_t));
 
@@ -105,19 +110,6 @@ entity_t* player_get_entity(const int slot) {
     return players[slot];
 }
 
-ds1_item_t* ds_player_remove_item(const int slot, const int pos) {
-    if (slot < 0 || slot >= MAX_PCS) { return NULL; }
-    if (pos < 0 || pos >= 26) { return NULL; }
-    ds1_item_t *ret = malloc(sizeof(ds1_item_t));
-
-    ds1_item_t *item = ((ds1_item_t*)&(pc[slot].inv)) + pos;
-    memcpy(ret, item, sizeof(ds1_item_t));
-    item->id = 0;
-    //((ds1_item_t*)&(pc[slot].inv))[pos].id = 0;
-
-    return ret;;
-}
-
 void ds_player_set_item(const int slot, ds1_item_t *item, const int item_slot) {
     if (slot < 0 || slot >= MAX_PCS) { return; }
     if (item_slot < 0 || item_slot >= 26) { return; }
@@ -133,34 +125,9 @@ int player_exists(const int slot) {
     return (player_get_entity(slot)->name != NULL);
 }
 
-int ds_player_exists(const int slot) {
-    if (slot < 0 || slot >= MAX_PCS) { return 0; }
-    return (player_get_entity(slot)->name != NULL);
-}
-
-ds1_combat_t* ds_player_get_combat(const int slot) {
-    if (slot < 0 || slot >= MAX_PCS) { return NULL; }
-    return &(pc[slot].combat);
-}
-
-ds_character_t* ds_player_get_char(const int slot) {
-    if (slot < 0 || slot >= MAX_PCS) { return NULL; }
-    return &(pc[slot].ch);
-}
-
-psin_t* ds_player_get_psi(const int slot) {
-    if (slot < 0 || slot >= MAX_PCS) { return NULL; }
-    return &(pc[slot].psi);
-}
-
 ssi_spell_list_t* ds_player_get_spells(const int slot) {
     if (slot < 0 || slot >= MAX_PCS) { return NULL; }
     return &(pc[slot].spells);
-}
-
-psionic_list_t* ds_player_get_psionics(const int slot) {
-    if (slot < 0 || slot >= MAX_PCS) { return NULL; }
-    return &(pc[slot].psionics);
 }
 
 player_pos_t* ds_player_get_pos(const int slot) {
@@ -173,26 +140,19 @@ ds_inventory_t* ds_player_get_inv(const int slot) {
     return &(pc[slot].inv);
 }
 
-int ds_player_get_active() {
-    return active;
+extern entity_t* player_get_active() {
+    return player_get_entity(active);
+}
+
+extern int player_get_slot(entity_t *entity) {
+    for (int i = 0; i < MAX_PCS; i++) {
+        if (entity == players[i]) { return i; }
+    }
+
+    return -1;
 }
 
 void ds_player_set_active(const int slot) {
     if (slot < 0 || slot >= MAX_PCS) { return; }
     active = slot;
-}
-
-int ds_player_is_ai(const int slot) {
-    if (slot < 0 || slot >= MAX_PCS) { return 0; }
-    return pc[slot].pos.ai;
-}
-
-void ds_player_set_ai(const int slot, int on) {
-    if (slot < 0 || slot >= MAX_PCS) { return; }
-    pc[slot].pos.ai = on;
-}
-
-int ds_player_get_ac(const int slot) {
-    if (slot < 0 || slot >= MAX_PCS) { return 10; }
-    return dnd2e_get_ac_pc(players[slot]);
 }

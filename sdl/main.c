@@ -190,7 +190,7 @@ void main_center_on_player() {
     int w, h;
 
     SDL_GetRendererOutputSize(renderer, &w, &h);
-    dude_t *dude = player_get_entity(ds_player_get_active());
+    dude_t *dude = player_get_active();
 
     xmappos = dude->mapx * 16 * main_get_zoom() - w / 2;
     ymappos = dude->mapy * 16 * main_get_zoom() - h / 2;

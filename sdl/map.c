@@ -224,10 +224,10 @@ void port_enter_combat() {
     // Need to disperse players (and setup combat items.)
     // bring up combat status.
     screen_push_screen(main_get_rend(), &combat_status_screen, 295, 5);
-    dude_t *main_player = player_get_entity(ds_player_get_active());
+    dude_t *main_player = player_get_active();
     for (int i = 0; i < 4; i++) {
         dude_t *next_player = player_get_entity(i);
-        if (i != ds_player_get_active() && next_player->name) { // next_player exists.
+        if (next_player != player_get_active() && next_player->name) { // next_player exists.
             player_add_to_animation_list(i);
             next_player->mapx = main_player->mapx;
             next_player->mapy = main_player->mapy;

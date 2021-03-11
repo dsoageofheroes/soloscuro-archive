@@ -126,6 +126,7 @@ typedef struct inventory_s {
 extern int item_allowed_in_slot(item_t *item, const int slot);
 extern void item_free(item_t *item);
 extern item_t* item_dup(item_t *item);
+extern void item_load_from(item_t *item, const char *data);
 
 // DS1 specific functions
 void item_convert_from_ds1(item_t *item, const ds1_item_t *ds1_item);

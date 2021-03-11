@@ -89,13 +89,14 @@ enum {
 };
 
 enum {
-    ITEM_OBJECT   = 1,
-    COMBAT_OBJECT = 2,
-    CHAR_OBJECT   = 4,
-    ITEM1R_OBJECT = 3,
-    MINI_OBJECT   = 5,
-    PLAYER_OBJECT = 6,
-    ENTITY_NAME   = 7,
+    ITEM_OBJECT      = 1,
+    COMBAT_OBJECT    = 2,
+    CHAR_OBJECT      = 4,
+    ITEM1R_OBJECT    = 3,
+    MINI_OBJECT      = 5,
+    PLAYER_OBJECT    = 6,
+    ENTITY_NAME      = 7,
+    FULL_ITEM_OBJECT = 8,
 };
 
 // Types of Sol Oscuro objects

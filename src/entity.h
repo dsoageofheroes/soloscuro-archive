@@ -99,6 +99,7 @@ extern void entity_free(entity_t *entity);
 extern void entity_load_from_gff(entity_t *entity, const int gff_idx, const int player, const int res_id);
 extern void entity_copy_item(entity_t *entity, item_t *item, const size_t slot);
 extern void entity_clear_item(entity_t *entity, const size_t slot);
+extern void entity_load_from_object(entity_t *entity, const char *data);
 extern uint32_t entity_get_total_exp(entity_t *entity);
 
 #endif

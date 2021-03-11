@@ -134,18 +134,17 @@ void view_character_render(void *data, SDL_Renderer *renderer) {
     print_line_len(renderer, FONT_GREY, message, message_loc.x, message_loc.y, sizeof(message));
 
     for (int i = 0; i < 4; i++) {
-        if (ds_player_exists(i)) {
-            ds1_combat_t* combat = ds_player_get_combat(i);
-            ds_character_t* ch = ds_player_get_char(i);
+        if (player_exists(i)) {
+            entity_t *player = player_get_entity(i);
             int x = 56, y = 74;
             if (i == 1 || i == 3) { y += 60; }
             if (i == 2 || i == 3) { x += 50; }
-            snprintf(buf, BUF_MAX, "%d/%d", combat->hp, ch->base_hp);
+            snprintf(buf, BUF_MAX, "%d/%d", player->stats.hp, player->stats.high_hp);
             print_line_len(renderer, FONT_YELLOW, buf, x * zoom, (y + 0) * zoom, BUF_MAX);
-            snprintf(buf, BUF_MAX, "%d/%d", combat->psp, ch->base_psp);
+            snprintf(buf, BUF_MAX, "%d/%d", player->stats.psp, player->stats.high_psp);
             print_line_len(renderer, FONT_BLUE, buf, x * zoom, (y + 8) * zoom, BUF_MAX);
-            if (combat->status) {
-                snprintf(buf, BUF_MAX, "%d", combat->status);
+            if (player->combat_status) {
+                snprintf(buf, BUF_MAX, "%d", player->combat_status);
             } else {
                 snprintf(buf, BUF_MAX, "Okay");
             }

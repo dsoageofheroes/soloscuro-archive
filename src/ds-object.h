@@ -217,7 +217,4 @@ enum {
 void dsl_object_init();
 void dsl_object_cleanup();
 
-ds_character_t* dsl_get_character(const int id);
-int dsl_valid_character_id(const int id);
-
 #endif

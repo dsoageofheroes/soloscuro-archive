@@ -28,7 +28,7 @@ static animate_sprite_t anims[MAX_PCS];
 #define sprite_t uint16_t
 
 void player_init() {
-    dude_t *dude = player_get_entity(ds_player_get_active());
+    dude_t *dude = player_get_active();
     player_zpos = 0;
     memset(players, 0x00, sizeof(player_sprites_t) * MAX_PCS);
     memset(anims, 0x00, sizeof(animate_sprite_t) * MAX_PCS);
@@ -54,8 +54,8 @@ static int count = 0;
 static int direction = 0x0;
 
 void player_update() {
-    int slot = ds_player_get_active();
-    entity_t *dude = player_get_entity(slot);
+    entity_t *dude = player_get_active();
+    int slot = player_get_slot(dude);
     animate_shift_node(player_node[slot], player_zpos);
     const enum combat_turn_t combat_turn = combat_player_turn();
     if (--count > 0) { return; }
@@ -149,8 +149,6 @@ static void load_character_sprite(SDL_Renderer *renderer, const int slot, const 
     if (slot < 0 || slot >= MAX_PCS) { return; }
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     dude_t *dude = player_get_entity(slot);
-    ds1_item_t *inv = (ds1_item_t*)ds_player_get_inv(slot);
-    sprite_t *inv_sprs = (sprite_t*)&(players[slot].inv);
 
     free_sprites(slot);
 
@@ -221,17 +219,12 @@ static void load_character_sprite(SDL_Renderer *renderer, const int slot, const 
             break;
     }
 
-    for (int i = 0; i < sizeof(inventory_sprites_t) / sizeof(sprite_t) && inv; i++) {
-        if (inv[i].id != 0) {
-            inv_sprs[i] = sprite_new(renderer, pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP,
-                    ds_item_get_bmp_id(inv + i));
-        }
-    }
 }
 
 extern void player_condense() {
     for (int i = 0; i < MAX_PCS; i++) {
-        if (i != ds_player_get_active() && player_get_entity(i)->name) {
+        entity_t *player = player_get_entity(i);
+        if (player != player_get_active() && player->name) {
             //animate_list_remove(player_node[i]);
             animate_list_remove(player_node[i], player_zpos);
             player_node[i] = NULL;
@@ -257,7 +250,7 @@ void player_load(const int slot, const float zoom) {
     load_character_sprite(main_get_rend(), slot, zoom);
     anims[slot].spr = players[slot].main;
     animate_set_animation(anims + slot, combat_get_scmd(COMBAT_SCMD_STAND_DOWN), ticks_per_move);
-    if (slot == ds_player_get_active()) {
+    if (player_get_entity(slot) == player_get_active()) {
         player_add_to_animation_list(slot);
     }
 }

@@ -72,7 +72,7 @@ static int calc_distance_to_player(entity_t *entity) {
 
     //for (int i = 0; i < MAX_PCS; i++) {
         //if (player_exists(i)) {
-            entity_t *dude = player_get_entity(ds_player_get_active());
+            entity_t *dude = player_get_active();
             int xdiff = (entity->mapx - dude->mapx);
             int ydiff = (entity->mapy - dude->mapy);
             if (xdiff < 0) { xdiff *= -1;}
@@ -147,7 +147,7 @@ static void enter_combat_mode(region_t *reg) {
 
     // Right now players are not part of combat, so add them!
     for (int i = 0; i < MAX_PCS; i++) {
-        if (ds_player_exists(i)) {
+        if (player_exists(i)) {
             combat_add(&(reg->cr), player_get_entity(i));
         }
     }
@@ -216,7 +216,7 @@ static void queue_add(action_node_t **head, action_node_t **tail, action_node_t 
 
 static entity_t* player_exists_in_pos(region_t *reg, const uint16_t x, const uint16_t y) {
     for (int i = 0; i < MAX_PCS; i++) {
-        if (!ds_player_exists(i)) { continue; }
+        if (!player_exists(i)) { continue; }
         entity_t *player = player_get_entity(i);
         //printf("(%d, %d) -> player(%d, %d)\n", x, y, player->mapx, player->mapy);
         if (player->mapx == x && player->mapy == y) { return player; }
@@ -633,8 +633,8 @@ void combat_update(region_t *reg) {
     dude_t *bad_dude = NULL;
     entity_list_for_each(reg->cr.combatants, bad_dude) {
         if (bad_dude->abilities.hunt) {
-            xdiff = player_get_entity(ds_player_get_active())->mapx - bad_dude->mapx;
-            ydiff = player_get_entity(ds_player_get_active())->mapy - bad_dude->mapy;
+            xdiff = player_get_active()->mapx - bad_dude->mapx;
+            ydiff = player_get_active()->mapy - bad_dude->mapy;
             xdiff = (xdiff < 0) ? -1 : (xdiff > 0) ? 1 : 0;
             ydiff = (ydiff < 0) ? -1 : (ydiff > 0) ? 1 : 0;
             posx = bad_dude->mapx;

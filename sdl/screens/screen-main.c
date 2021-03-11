@@ -42,7 +42,7 @@ static void click_action() {
     if (count_down_spr == exit_dos) { main_exit_system(); }
     if (count_down_spr == create_characters) { screen_push_screen(renderer, &view_character_screen, 0, 10); }
     if (count_down_spr == start) {
-        if(ds_player_exists(ds_player_get_active())) {
+        if(player_get_active()->name) {
             screen_pop();
             screen_load_region(renderer, 42);
         } else {

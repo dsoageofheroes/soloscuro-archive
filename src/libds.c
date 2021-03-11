@@ -635,92 +635,6 @@ static int lua_dsl_change_region(lua_State *L) {
     return 0;
 }
 
-static int lua_valid_character_id(lua_State *L) {
-    lua_Integer id = luaL_checkinteger (L, 1);
-    if (dsl_valid_character_id(id)) {
-        lua_pushinteger(L, 1);
-    } else {
-        lua_pushinteger(L, -1);
-    }
-    return 1;
-}
-
-#define LUA_GET_CHARACTER_COMMAND(LUANAME, CHARACTER_FIELD) static int lua_get_ ## LUANAME (lua_State *L) { \
-    lua_Integer id = luaL_checkinteger(L, 1); \
-    if (!dsl_valid_character_id(id)) { \
-        lua_pushinteger(L, -1); \
-    } else { \
-        lua_pushinteger(L, CHARACTER_FIELD); \
-    } \
-    return 1; \
-}
-
-#define LUA_SET_CHARACTER_COMMAND(LUANAME, CHARACTER_FIELD) static int lua_set_ ## LUANAME (lua_State *L) { \
-    lua_Integer id = luaL_checkinteger(L, 1); \
-    lua_Integer val = luaL_checkinteger(L, 2); \
-    if (dsl_valid_character_id(id)) { \
-        CHARACTER_FIELD = val; \
-    } \
-    return 0; \
-}
-
-#define CREATE_SET_GET_CHARACTERS_COMMAND(LUANAME, CHARACTER_FIELD) \
-    LUA_SET_CHARACTER_COMMAND(LUANAME, CHARACTER_FIELD) \
-    LUA_GET_CHARACTER_COMMAND(LUANAME, CHARACTER_FIELD)
-
-CREATE_SET_GET_CHARACTERS_COMMAND(current_xp, dsl_get_character(id)->current_xp)
-CREATE_SET_GET_CHARACTERS_COMMAND(high_xp, dsl_get_character(id)->high_xp)
-CREATE_SET_GET_CHARACTERS_COMMAND(base_hp, dsl_get_character(id)->base_hp)
-CREATE_SET_GET_CHARACTERS_COMMAND(high_hp, dsl_get_character(id)->high_hp)
-CREATE_SET_GET_CHARACTERS_COMMAND(base_psp, dsl_get_character(id)->base_psp)
-CREATE_SET_GET_CHARACTERS_COMMAND(legal_class, dsl_get_character(id)->legal_class)
-CREATE_SET_GET_CHARACTERS_COMMAND(race, dsl_get_character(id)->race)
-CREATE_SET_GET_CHARACTERS_COMMAND(gender, dsl_get_character(id)->gender)
-CREATE_SET_GET_CHARACTERS_COMMAND(alignment, dsl_get_character(id)->alignment)
-CREATE_SET_GET_CHARACTERS_COMMAND(str, dsl_get_character(id)->stats.str)
-CREATE_SET_GET_CHARACTERS_COMMAND(dex, dsl_get_character(id)->stats.dex)
-CREATE_SET_GET_CHARACTERS_COMMAND(con, dsl_get_character(id)->stats.con)
-CREATE_SET_GET_CHARACTERS_COMMAND(int, dsl_get_character(id)->stats.intel)
-CREATE_SET_GET_CHARACTERS_COMMAND(wis, dsl_get_character(id)->stats.wis)
-CREATE_SET_GET_CHARACTERS_COMMAND(cha, dsl_get_character(id)->stats.cha)
-CREATE_SET_GET_CHARACTERS_COMMAND(class0, dsl_get_character(id)->real_class[0])
-CREATE_SET_GET_CHARACTERS_COMMAND(class1, dsl_get_character(id)->real_class[1])
-CREATE_SET_GET_CHARACTERS_COMMAND(class2, dsl_get_character(id)->real_class[2])
-CREATE_SET_GET_CHARACTERS_COMMAND(level0, dsl_get_character(id)->level[0])
-CREATE_SET_GET_CHARACTERS_COMMAND(level1, dsl_get_character(id)->level[1])
-CREATE_SET_GET_CHARACTERS_COMMAND(level2, dsl_get_character(id)->level[2])
-CREATE_SET_GET_CHARACTERS_COMMAND(base_ac, dsl_get_character(id)->base_ac)
-CREATE_SET_GET_CHARACTERS_COMMAND(base_move, dsl_get_character(id)->base_move)
-CREATE_SET_GET_CHARACTERS_COMMAND(magic_resistance, dsl_get_character(id)->magic_resistance)
-CREATE_SET_GET_CHARACTERS_COMMAND(num_blows, dsl_get_character(id)->num_blows)
-CREATE_SET_GET_CHARACTERS_COMMAND(num_attacks0, dsl_get_character(id)->num_attacks[0])
-CREATE_SET_GET_CHARACTERS_COMMAND(num_attacks1, dsl_get_character(id)->num_attacks[1])
-CREATE_SET_GET_CHARACTERS_COMMAND(num_attacks2, dsl_get_character(id)->num_attacks[2])
-CREATE_SET_GET_CHARACTERS_COMMAND(num_dice0, dsl_get_character(id)->num_dice[0])
-CREATE_SET_GET_CHARACTERS_COMMAND(num_dice1, dsl_get_character(id)->num_dice[1])
-CREATE_SET_GET_CHARACTERS_COMMAND(num_dice2, dsl_get_character(id)->num_dice[2])
-CREATE_SET_GET_CHARACTERS_COMMAND(num_sides0, dsl_get_character(id)->num_sides[0])
-CREATE_SET_GET_CHARACTERS_COMMAND(num_sides1, dsl_get_character(id)->num_sides[1])
-CREATE_SET_GET_CHARACTERS_COMMAND(num_sides2, dsl_get_character(id)->num_sides[2])
-CREATE_SET_GET_CHARACTERS_COMMAND(num_bonuses0, dsl_get_character(id)->num_bonuses[0])
-CREATE_SET_GET_CHARACTERS_COMMAND(num_bonuses1, dsl_get_character(id)->num_bonuses[1])
-CREATE_SET_GET_CHARACTERS_COMMAND(num_bonuses2, dsl_get_character(id)->num_bonuses[2])
-CREATE_SET_GET_CHARACTERS_COMMAND(paral, dsl_get_character(id)->saving_throw.paral)
-CREATE_SET_GET_CHARACTERS_COMMAND(wand, dsl_get_character(id)->saving_throw.wand)
-CREATE_SET_GET_CHARACTERS_COMMAND(petr, dsl_get_character(id)->saving_throw.petr)
-CREATE_SET_GET_CHARACTERS_COMMAND(breath, dsl_get_character(id)->saving_throw.breath)
-CREATE_SET_GET_CHARACTERS_COMMAND(spell, dsl_get_character(id)->saving_throw.spell)
-CREATE_SET_GET_CHARACTERS_COMMAND(allegiance, dsl_get_character(id)->allegiance)
-CREATE_SET_GET_CHARACTERS_COMMAND(size, dsl_get_character(id)->size)
-CREATE_SET_GET_CHARACTERS_COMMAND(spell_group, dsl_get_character(id)->spell_group)
-CREATE_SET_GET_CHARACTERS_COMMAND(high_level0, dsl_get_character(id)->high_level[0])
-CREATE_SET_GET_CHARACTERS_COMMAND(high_level1, dsl_get_character(id)->high_level[1])
-CREATE_SET_GET_CHARACTERS_COMMAND(high_level2, dsl_get_character(id)->high_level[2])
-CREATE_SET_GET_CHARACTERS_COMMAND(sound_fx, dsl_get_character(id)->sound_fx)
-CREATE_SET_GET_CHARACTERS_COMMAND(attack_sound, dsl_get_character(id)->attack_sound)
-CREATE_SET_GET_CHARACTERS_COMMAND(psi_group, dsl_get_character(id)->psi_group)
-CREATE_SET_GET_CHARACTERS_COMMAND(palette, dsl_get_character(id)->palette)
-
 #define CREATE_SET_GET_CHARACTER_LUA_ENTRIES(NAME) \
     { "get_char_"#NAME, lua_get_ ## NAME }, \
     { "set_char_"#NAME, lua_set_ ## NAME }
@@ -799,61 +713,6 @@ static const struct luaL_Reg lslib [] = {
       // MAS functions
       {"dsl_change_region", lua_dsl_change_region},
 
-      //Object functions
-      {"valid_character_id", lua_valid_character_id},
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(current_xp),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(high_xp),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(base_hp),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(high_hp),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(base_psp),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(legal_class),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(race),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(gender),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(alignment),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(str),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(dex),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(con),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(int),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(wis),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(cha),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(class0),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(class1),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(class2),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(level0),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(level1),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(level2),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(base_ac),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(base_move),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(magic_resistance),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(num_blows),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(num_attacks0),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(num_attacks1),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(num_attacks2),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(num_dice0),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(num_dice1),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(num_dice2),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(num_sides0),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(num_sides1),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(num_sides2),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(num_bonuses0),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(num_bonuses1),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(num_bonuses2),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(paral),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(wand),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(petr),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(breath),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(spell),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(allegiance),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(size),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(spell_group),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(high_level0),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(high_level1),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(high_level2),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(sound_fx),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(attack_sound),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(psi_group),
-      CREATE_SET_GET_CHARACTER_LUA_ENTRIES(palette),
-
       // The End
       {NULL, NULL}  /* sentinel */
     };
@@ -879,13 +738,6 @@ static void push_scmd(lua_State *L, scmd_t *script) {
     void *lscmd = lua_newuserdata(L, sizeof(scmd_t) * len);
     memcpy(lscmd, script, sizeof(scmd_t) * len);
 }
-
-/*
-static void push_ds1_monster(lua_State *L, gff_monster_entry_t *me) {
-    create_table_entry_si(L, "id", me->id);
-    create_table_entry_si(L, "level", me->level);
-}
-*/
 
 static void push_ds1_combat(lua_State *L, ds1_combat_t *dc) {
     create_table_entry_si(L, "type", SO_DS1_COMBAT);

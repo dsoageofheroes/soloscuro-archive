@@ -65,7 +65,7 @@ void ds_region_load_region_from_save(const int id, const int region_id) {
     if (gff_index < 0 ) { return; }
 
     //dsl_region_t *reg = NULL;
-    //player_pos_t *player = ds_player_get_pos(ds_player_get_active());
+    //entity_t *player = player_get_active();
 
     gff_chunk_header_t chunk = gff_find_chunk_header(id, GFF_ROBJ, region_id);
     //reg = dsl_load_region(gff_index);

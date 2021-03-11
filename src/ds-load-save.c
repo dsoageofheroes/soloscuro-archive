@@ -3,6 +3,7 @@
 #include "region.h"
 #include "region-manager.h"
 #include "ds-state.h"
+#include "dsl.h"
 #include "gff.h"
 #include "gfftypes.h"
 #include "gff-map.h"
@@ -49,10 +50,10 @@ static void add_player_to_save(const int id, const int player) {
     rdff_header_t rdff;
     int num_items = 0;
     dude_t *dude = player_get_entity(player);
+    item_t *item = dude->inv;
 
-    ds1_item_t *item = (ds1_item_t*) ds_player_get_inv(player);
     for (int i = 0; i < 26; i++) {
-        if (item[i].id) {
+        if (item && item[i].ds_id) {
             num_items++;
         }
     }
@@ -79,15 +80,16 @@ static void add_player_to_save(const int id, const int player) {
 
     // Next would be the items: TBD
     for (int i = 0; i < 26; i++) {
-        if (item[i].id) {
+        if (item && item[i].ds_id) {
             rdff.load_action = RDFF_OBJECT;
             rdff.blocknum = 0; // no sub objects, TBD: containers?
-            rdff.type = ITEM_OBJECT;
-            rdff.index = item[i].id;
-            rdff.from = item[i].id;
-            rdff.len = sizeof(ds1_item_t);
+            rdff.type = FULL_ITEM_OBJECT;
+            rdff.index = i;
+            rdff.from = item[i].ds_id;
+            rdff.len = sizeof(item_t);
+            //TODO: Add effects!
             buf = append(buf, &offset, &buf_len, &rdff, sizeof(rdff_header_t));
-            buf = append(buf, &offset, &buf_len, item + i, sizeof(ds1_item_t));
+            buf = append(buf, &offset, &buf_len, item + i, sizeof(item_t));
         }
     }
 
@@ -105,7 +107,7 @@ static void add_player_to_save(const int id, const int player) {
 
 static void save_regions(const int id) {
     region_t *reg = region_manager_get_current();
-    dude_t *dude = player_get_entity(ds_player_get_active());
+    dude_t *dude = player_get_active();
     dude_t *entity = NULL;
     size_t buf_len = 128, offset = 0;
     uint32_t len;
@@ -142,7 +144,7 @@ static void save_regions(const int id) {
 
 //TODO: Will need to save off ALL regions when we get to multiple regions
 static void load_regions(const int id) {
-    dude_t *dude = player_get_entity(ds_player_get_active());
+    dude_t *dude = player_get_active();
 
     port_change_region(region_manager_get_region(dude->region));
 }
@@ -161,13 +163,11 @@ void ls_save_to_file(const char *path) {
     gff_add_type(id, GFF_GDAT); // GPL data Objects
 
     for (int i = 0; i < 4; i++) {
-        gff_add_chunk(id, GFF_PSIN, i, (char*)ds_player_get_psi(i), sizeof(psin_t));
-        gff_add_chunk(id, GFF_PSST, i, (char*)ds_player_get_psionics(i), sizeof(psionic_list_t));
-        gff_add_chunk(id, GFF_SPST, i, (char*)ds_player_get_spells(i), sizeof(ssi_spell_list_t));
+        //gff_add_chunk(id, GFF_PSIN, i, (char*)ds_player_get_psi(i), sizeof(psin_t));
+        //gff_add_chunk(id, GFF_PSST, i, (char*)ds_player_get_psionics(i), sizeof(psionic_list_t));
+        //gff_add_chunk(id, GFF_SPST, i, (char*)ds_player_get_spells(i), sizeof(ssi_spell_list_t));
         add_player_to_save(id, i);
     }
-
-    gff_add_chunk(id, GFF_POS, 0, (char*)ds_player_get_pos(ds_player_get_active()), sizeof(player_pos_t));
 
     save_regions(id);
 
@@ -193,7 +193,8 @@ static int load_player(const int id, const int player, const int res_id) {
     size_t offset = 0;
     int num_items;
     dude_t *dude = NULL;
-    ds1_item_t *pc_items = (ds1_item_t*)ds_player_get_inv(player);
+    dude = player_get_entity(player);
+    //ds1_item_t *pc_items = (ds1_item_t*)ds_player_get_inv(player);
     gff_chunk_header_t chunk = gff_find_chunk_header(id, GFF_CHAR, res_id);
     if (gff_read_chunk(id, &chunk, &buf, sizeof(buf)) < 34) { return 0; }
 
@@ -203,26 +204,17 @@ static int load_player(const int id, const int player, const int res_id) {
     num_items = rdff->blocknum - 2;
     offset += sizeof(rdff_disk_object_t);
     if (rdff->type == COMBAT_OBJECT) {
-        memcpy(ds_player_get_combat(player), buf + offset, sizeof(ds1_combat_t));
+        warn("Combat object encountered in save. Ignoring.\n");
         offset += rdff->len;
 
         rdff = (rdff_disk_object_t*) (buf + offset);
         offset += sizeof(rdff_disk_object_t);
-        memcpy(ds_player_get_char(player), buf + offset, sizeof(ds_character_t));
         offset += rdff->len;
     } else if (rdff->type == PLAYER_OBJECT) {
+        player_free(player);
         dude = player_get_entity(player);
-        if (dude->name) { free(dude->name); }
-        if (dude->effects) { free(dude->effects); }
-        if (dude->inventory) { free(dude->inventory); }
-        //if (dude->spells) { free(dude->spells); }
-        //if (dude->psionics) { free(dude->psionics); }
-        memcpy(dude, buf + offset, sizeof(entity_t));
-        dude->name = NULL;
-        dude->effects = NULL; // anything currently affecting the entity.
-        dude->inventory = NULL;
-        //dude->spells = NULL;
-        //dude->psionics = NULL;
+        //memcpy(dude, buf + offset, sizeof(entity_t));
+        entity_load_from_object(dude, buf + offset);
         dude->sprite.scmd = combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
         offset += rdff->len;
     }
@@ -238,19 +230,25 @@ static int load_player(const int id, const int player, const int res_id) {
     for (int i = 0; i < num_items; i++) {
         rdff = (rdff_disk_object_t*) (buf + offset);
         offset += sizeof(rdff_disk_object_t);
-        int slot = ((ds1_item_t*)(buf + offset))->slot;
-        memcpy(pc_items + slot, buf + offset, sizeof(ds1_item_t));
+        if (rdff->type == ITEM_OBJECT ) {
+            int slot = ((ds1_item_t*)(buf + offset))->slot;
+            item_convert_from_ds1(dude->inv + slot, (ds1_item_t*)(buf + offset));
+        }else if (rdff->type == FULL_ITEM_OBJECT) {
+            int slot = rdff->index;
+            item_load_from(dude->inv + slot, buf + offset);
+        }
+        //memcpy(pc_items + slot, buf + offset, sizeof(ds1_item_t));
         offset += rdff->len;
     }
 
     chunk = gff_find_chunk_header(id, GFF_PSIN, res_id);
-    if (!gff_read_chunk(id, &chunk, ds_player_get_psi(player), sizeof(psin_t))) { return 0; }
+    //if (!gff_read_chunk(id, &chunk, ds_player_get_psi(player), sizeof(psin_t))) { return 0; }
 
     chunk = gff_find_chunk_header(id, GFF_SPST, res_id);
-    if (!gff_read_chunk(id, &chunk, ds_player_get_spells(player), sizeof(ssi_spell_list_t))) { return 0;}
+    //if (!gff_read_chunk(id, &chunk, ds_player_get_spells(player), sizeof(ssi_spell_list_t))) { return 0;}
 
     chunk = gff_find_chunk_header(id, GFF_PSST, res_id);
-    if (!gff_read_chunk(id, &chunk, ds_player_get_psionics(player), sizeof(psionic_list_t))) { return 0;}
+    //if (!gff_read_chunk(id, &chunk, ds_player_get_psionics(player), sizeof(psionic_list_t))) { return 0;}
 
     return 1;
 }
@@ -267,6 +265,8 @@ int ls_load_save_file(const char *path) {
 
     if (id < 0) { return 0; }
 
+    region_manager_cleanup();
+
     for (int i = 0; i < 4; i++) {
         if (!load_player(id, i, i)) { return 0; }
     }
@@ -282,7 +282,7 @@ int ls_load_save_file(const char *path) {
     dsl_deserialize_globals(buf);
     free(buf);
 
-    chunk = gff_find_chunk_header(id, GFF_GDAT, player_get_entity(ds_player_get_active())->region);
+    chunk = gff_find_chunk_header(id, GFF_GDAT, player_get_active()->region);
     buf = malloc(chunk.length);
     if (!gff_read_chunk(id, &chunk, buf, chunk.length)) {
         printf("Error loading file.\n");

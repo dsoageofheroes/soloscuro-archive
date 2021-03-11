@@ -150,6 +150,20 @@ error:
     return NULL;
 }
 
+//TODO: Flesh this out. It is currently used for player, but will be use for future entitys;
+extern void entity_load_from_object(entity_t *entity, const char *data) {
+    item_t *inv = entity->inv;
+    effect_node_t *effects = entity->effects;
+    memcpy(entity, data, sizeof(entity_t));
+    entity->inv = inv;
+    entity->effects = effects;
+
+    if (!entity->inv) {
+        entity->inv = calloc(1, sizeof(inventory_t));
+    }
+    entity->sprite.data = NULL;
+}
+
 #define BUF_MAX (1<<14)
 void entity_load_from_gff(entity_t *entity, const int gff_idx, const int player, const int res_id) {
     char buf[BUF_MAX];

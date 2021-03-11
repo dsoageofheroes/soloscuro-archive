@@ -30,7 +30,6 @@ void item_convert_from_ds1(item_t *item, const ds1_item_t *ds1_item) {
     item->ds_id = ds1_item->id;
     strncpy(item->name, ds_item_name(ds1_item->name_idx), ITEM_NAME_MAX - 1);
 
-    //printf("%s-------------->%d, %d\n", item->name, ds1_item1r->weapon_type, ds1_item1r->flags);
     if (ds1_item1r->flags & DS1_ARMOR_FLAG) {
         item->type = ITEM_ARMOR;
     } else if (ds1_item1r->weapon_type & DS1_WEAPON_MELEE) {
@@ -97,6 +96,12 @@ int item_allowed_in_slot(item_t *item, const int slot) {
     }
 
     return 0;
+}
+
+extern void item_load_from(item_t *item, const char *data) {
+    memcpy(item, data, sizeof(item_t));
+    item->sprite.data = NULL;
+    port_load_item(item);
 }
 
 extern item_t* item_dup(item_t *item) {

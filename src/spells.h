@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "psionic.h"
+#include "entity.h"
 
 #define MAX_SPELLS (8*138)
 #define MAX_PSIONICS (34)
@@ -11,7 +12,10 @@ typedef struct spell_s {
     char *name;
     uint32_t icon;
     uint32_t spell_text_id;
-    // More to come.
+    uint16_t range;
+    uint16_t aoe;
+    //void (*affect) (region_t *reg, int mapx, int mapy, entity_t *entity);
+    // Add animation sequence info here.
 } spell_t;
 
 enum {

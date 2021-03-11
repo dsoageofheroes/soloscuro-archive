@@ -52,15 +52,6 @@ void dsl_object_init() {
     printf("DSL_OBJECT LIST INIT\n");
 }
 
-ds_character_t* dsl_get_character(const int id) {
-    if (!dsl_valid_character_id(id)) { return NULL; }
-    return ds_characters + id;
-}
-
-int dsl_valid_character_id(const int id) {
-    return (id >=0 && id < MAX_CHARACTERS);
-}
-
 void dsl_object_cleanup() {
     free(ds1_combats);
     free(ds1_items);
