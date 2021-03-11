@@ -53,19 +53,19 @@ enum {
     NOT_CHAOTIC_EVIL     = 1 << 29,
 };
 
-int dnd2e_is_class_allowed(const uint8_t race, const int8_t classes[3]);
+int dnd2e_is_class_allowed(const uint8_t race, const class_t classes[3]);
 int dnd2e_is_alignment_allowed(const uint8_t alignment, const int8_t classes[3], int target_is_pc);
-void dnd2e_randomize_stats_pc(ds_character_t *pc);
-void dnd2e_fix_stats_pc(ds_character_t *pc);
-void dnd2e_set_exp(ds_character_t *pc, const uint32_t amt);
-void dnd2e_award_exp(ds_character_t *pc, const uint32_t amt);
-int dnd2e_character_is_valid(ds_character_t *pc);
+void dnd2e_randomize_stats_pc(entity_t *pc);
+void dnd2e_fix_stats_pc(entity_t *pc);
+void dnd2e_set_exp(entity_t *pc, const uint32_t amt);
+void dnd2e_award_exp(entity_t *pc, const uint32_t amt);
+int dnd2e_character_is_valid(entity_t *pc);
 int dnd2e_psin_is_valid(ds_character_t *pc, psin_t *psi);
 int16_t dnd2e_calc_ac(entity_t *entity);
-int32_t dnd2e_exp_to_next_level_up(ds_character_t *pc);
-int16_t dnd2e_get_ac_pc(ds_character_t *pc, ds_inventory_t *inv);
-int16_t dnd2e_get_move_pc(ds_character_t *pc);
-int16_t dnd2e_get_thac0_pc(ds_character_t *pc);
+int32_t dnd2e_exp_to_next_level_up(entity_t *pc);
+int16_t dnd2e_get_ac_pc(entity_t *pc);
+int16_t dnd2e_get_move_pc(entity_t *pc);
+int16_t dnd2e_get_thac0_pc(entity_t *pc);
 int16_t dnd2e_get_damage_pc(ds_character_t *pc);
 int16_t dnd2e_get_attack_num_pc(const entity_t *pc, const item_t *item);
 int16_t dnd2e_get_attack_die_pc(const entity_t *pc, const item_t *item);

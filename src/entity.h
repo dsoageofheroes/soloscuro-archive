@@ -58,7 +58,7 @@ typedef struct class_s {
     uint32_t current_xp;
     uint32_t high_xp;    // for level drain.
     int8_t class;
-    uint8_t level;
+    int8_t level;
     uint8_t high_level; // for level drain.
     psi_abilities_t psi;
 } class_t;
@@ -99,5 +99,6 @@ extern void entity_free(entity_t *entity);
 extern void entity_load_from_gff(entity_t *entity, const int gff_idx, const int player, const int res_id);
 extern void entity_copy_item(entity_t *entity, item_t *item, const size_t slot);
 extern void entity_clear_item(entity_t *entity, const size_t slot);
+extern uint32_t entity_get_total_exp(entity_t *entity);
 
 #endif

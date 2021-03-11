@@ -226,6 +226,18 @@ extern void entity_clear_item(entity_t *entity, const size_t slot) {
     memset(entity->inv + slot, 0x0, sizeof(item_t));
 }
 
+extern uint32_t entity_get_total_exp(entity_t *entity) {
+    uint32_t total_exp = 0;
+
+    for (int i = 0; i < 3; i++) {
+        if (entity->class[i].level > -1) {
+            total_exp += entity->class[i].current_xp;
+        }
+    }
+
+    return total_exp;
+}
+
 void entity_free(entity_t *dude) {
     if (!dude) { return; }
     if (dude->name) {

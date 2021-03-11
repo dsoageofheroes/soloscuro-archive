@@ -46,11 +46,11 @@ void ds_player_init() {
     }
 }
 
-static void create_combat(ds_character_t *pc, char *name, ds1_combat_t *combat) {
-    combat->hp = pc->high_hp;
-    combat->psp = pc->base_psp;
+static void create_combat(entity_t *pc, char *name, ds1_combat_t *combat) {
+    combat->hp = pc->stats.hp;
+    combat->psp = pc->stats.psp;
     combat->char_index = 0; // TODO: do we need an index?
-    combat->id = pc->id;
+    combat->id = pc->ds_id;
     combat->ready_item_index = 0; // TODO: do we need this?
     combat->weapon_index = 0; // TODO: do we need this?
     combat->pack_index = 0;  // TODO: do we need this?
@@ -58,7 +58,7 @@ static void create_combat(ds_character_t *pc, char *name, ds1_combat_t *combat) 
     combat->special_attack = 0;
     combat->special_defense = 0;
     combat->icon = 0; // TODO: need to fix this eventually...
-    combat->ac = dnd2e_get_ac_pc(pc, NULL);
+    combat->ac = dnd2e_get_ac_pc(pc);
     combat->move = dnd2e_get_move_pc(pc);
     combat->status = 0; // clear
     combat->allegiance = pc->allegiance;
@@ -66,12 +66,17 @@ static void create_combat(ds_character_t *pc, char *name, ds1_combat_t *combat) 
     combat->thac0 = dnd2e_get_thac0_pc(pc);
     combat->priority = 0; // clear
     combat->flags = 0; // clear
-    combat->stats = pc->stats;
+    combat->stats.str = pc->stats.str;
+    combat->stats.dex = pc->stats.dex;
+    combat->stats.con = pc->stats.con;
+    combat->stats.intel = pc->stats.intel;
+    combat->stats.wis = pc->stats.wis;
+    combat->stats.cha = pc->stats.cha;
     strncpy(combat->name, name, 16);
     combat->name[15] = '\0';
 }
 
-int ds_player_replace(const int slot, ds_character_t *ch, psin_t *psi, ssi_spell_list_t *spells,
+int ds_player_replace(const int slot, entity_t *ch, psin_t *psi, ssi_spell_list_t *spells,
         psionic_list_t *psionics, ds_inventory_t *inv, char *name) {
     ds1_combat_t combat;
     if (slot < 0 || slot >= MAX_PCS) { return 0; }
@@ -91,6 +96,10 @@ entity_t* player_get_entity(const int slot) {
     if (slot < 0 || slot >= MAX_PCS) { return NULL; }
     if (!players[slot]) {
         players[slot] = calloc(1, sizeof(entity_t));
+        for (int i = 0; i < 3; i++) {
+            players[slot]->class[i].class = -1;
+            players[slot]->class[i].level = -1;
+        }
         players[slot]->inventory = calloc(1, sizeof(ds_inventory_t));
     }
     return players[slot];
@@ -185,5 +194,5 @@ void ds_player_set_ai(const int slot, int on) {
 
 int ds_player_get_ac(const int slot) {
     if (slot < 0 || slot >= MAX_PCS) { return 10; }
-    return dnd2e_get_ac_pc(&(pc[slot].ch), &(pc[slot].inv));
+    return dnd2e_get_ac_pc(players[slot]);
 }

@@ -55,9 +55,10 @@ static int race_sprite_ids[]         = { 2095, 2099, 2055, 2053, 2061, 2059, 209
 
 static int offsetx, offsety;
 static float zoom;
-static entity_t *player = NULL;;
+static entity_t *player = NULL;
 static SDL_Renderer *renderer;
-static ds_character_t pc; // the character we are creating.
+//static ds_character_t pc; // the character we are creating.
+static entity_t pc;
 static ds_inventory_t inv; // the inventory
 static psin_t psi; // psi group
 static ssi_spell_list_t spells;
@@ -81,7 +82,7 @@ static const char* get_alignment_as_string();
 static const char* get_gender_as_string();
 static const char* get_race_as_string();
 
-ds_character_t* new_character_get_pc() {
+entity_t* new_character_get_pc() {
     if (!is_valid) { return NULL; }
     return &pc;
 }
@@ -197,7 +198,7 @@ static int convert_to_actual_class(const uint8_t class) {
 
 static int has_class(const uint16_t class) {
     for (int i = 0; i < 3; i++) {
-        if (pc.real_class[i] == class) { return 1; }
+        if (pc.class[i].class == class) { return 1; }
     }
     return 0;
 }
@@ -219,20 +220,21 @@ static int is_divine_spell_user() {
 
 static void set_class_frames() {
     int next_class =
-        (pc.real_class[0] == -1) ? 0 :
-        (pc.real_class[1] == -1) ? 1 :
-        (pc.real_class[2] == -1) ? 2 :
+        (pc.class[0].class == -1) ? 0 :
+        (pc.class[1].class == -1) ? 1 :
+        (pc.class[2].class == -1) ? 2 :
         3;
 
     for (int i = 0; i < 8; i++) {
-        pc.real_class[next_class] = convert_to_actual_class(i);
+        pc.class[next_class].class = convert_to_actual_class(i);
         if (sprite_get_frame(class_sel[i]) != 1) {
             sprite_set_frame(classes[i], 
-                (next_class < 3 && dnd2e_is_class_allowed(pc.race, pc.real_class))
+                (next_class < 3 && dnd2e_is_class_allowed(pc.race, pc.class
+                ))
                 ? 0 : 2);
         }
     }
-    pc.real_class[next_class] = -1;
+    pc.class[next_class].class = -1;
     update_ui();
 }
 
@@ -266,7 +268,7 @@ static void init_pc() {
     pc.race = RACE_HUMAN;
     pc.gender = GENDER_MALE;
     pc.alignment = TRUE_NEUTRAL;
-    pc.real_class[0] = pc.real_class[1] = pc.real_class[2] = -1;
+    pc.class[0].class = pc.class[1].class = pc.class[2].class = -1;
     memset(&psi, 0x0, sizeof(psi));
     memset(&spells, 0x0, sizeof(spells));
     memset(&psionics, 0x0, sizeof(psionics));
@@ -349,7 +351,7 @@ static void new_character_init(SDL_Renderer* _renderer, const uint32_t x, const 
     strcpy(sphere_text, "PSI DISCIPLINES");
 
     srand(time(NULL));
-    load_character_sprite(renderer);
+    load_character_sprite();
     dnd2e_randomize_stats_pc(&pc);
     set_class_frames(); // go ahead and setup the new class frames
     select_class(2); // Fighter is the default class
@@ -440,7 +442,7 @@ static void new_character_init(SDL_Renderer* _renderer, const uint32_t x, const 
                                                        buf, FONT_GREYLIGHT,
                                                        oX + 70, oY);
 
-    snprintf(buf, BUF_MAX, "AC: %d", dnd2e_get_ac_pc(&pc, &inv));
+    snprintf(buf, BUF_MAX, "AC: %d", dnd2e_get_ac_pc(&pc));
     labels[LABEL_AC]             = create_label_at_pos(SCREEN_NEW_CHARACTER, LABEL_AC,
                                                        buf, FONT_GREYLIGHT,
                                                        oX, oY += 15);
@@ -450,12 +452,12 @@ static void new_character_init(SDL_Renderer* _renderer, const uint32_t x, const 
                                                        buf, FONT_GREYLIGHT,
                                                        oX + 70, oY);
 
-    snprintf(buf, BUF_MAX, "%d/%d", pc.base_hp, pc.high_hp);
+    snprintf(buf, BUF_MAX, "%d/%d", pc.stats.hp, pc.stats.high_hp);
     labels[LABEL_HP]             = create_label_at_pos(SCREEN_NEW_CHARACTER, LABEL_HP,
                                                        buf, FONT_GREYLIGHT,
                                                        oX += 20, oY += 15);
 
-    snprintf(buf, BUF_MAX, "%d/%d", pc.base_psp, pc.base_psp);
+    snprintf(buf, BUF_MAX, "%d/%d", pc.stats.psp, pc.stats.high_psp);
     labels[LABEL_PSP]            = create_label_at_pos(SCREEN_NEW_CHARACTER, LABEL_PSP,
                                                        buf, FONT_GREYLIGHT,
                                                        oX, oY += 15);
@@ -565,8 +567,8 @@ static const char* get_class_name(const uint8_t class) {
 static void copy_classes_string(char* storage) {
     int pos = 0;
     for (int i = 0; i < 3; i++) {
-        if (pc.real_class[i] >= 0) {
-            pos += snprintf(storage + pos, BUF_MAX - pos, "%s%s", i > 0 ? "/" : "", get_class_name(pc.real_class[i]));
+        if (pc.class[i].class >= 0) {
+            pos += snprintf(storage + pos, BUF_MAX - pos, "%s%s", i > 0 ? "/" : "", get_class_name(pc.class[i].class));
         }
     }
     storage[pos] = '\0';
@@ -576,16 +578,16 @@ static void copy_levels_string(char* storage) {
     int pos = 0;
 
     for (int i = 0; i < 3; i++) {
-        if (pc.real_class[i] >= 0) {
-            pos += snprintf(storage + pos, BUF_MAX - pos, "%s%d", i > 0 ? "/" : "", pc.level[i]);
+        if (pc.class[i].class >= 0) {
+            pos += snprintf(storage + pos, BUF_MAX - pos, "%s%d", i > 0 ? "/" : "", pc.class[i].level);
         }
     }
     storage[pos] = '\0';
 }
 
 static void copy_exp_tnl_string(char* storage) {
-    if (pc.real_class[0] > -1) {
-        snprintf(storage, BUF_MAX, "EXP: %d (%d)", pc.current_xp, dnd2e_exp_to_next_level_up(&pc));
+    if (pc.class[0].class > -1) {
+        snprintf(storage, BUF_MAX, "EXP: %d (%d)", entity_get_total_exp(&pc), dnd2e_exp_to_next_level_up(&pc));
     }
     else {
         storage[0] = '\0';
@@ -713,7 +715,7 @@ void new_character_render(void* data, SDL_Renderer* renderer) {
     label->set_text(label, buf);
 
     label = &labels[LABEL_AC];
-    snprintf(buf, BUF_MAX, "AC: %d", dnd2e_get_ac_pc(&pc, &inv));
+    snprintf(buf, BUF_MAX, "AC: %d", dnd2e_get_ac_pc(&pc));
     label->set_text(label, buf);
 
     label = &labels[LABEL_DAM];
@@ -721,11 +723,11 @@ void new_character_render(void* data, SDL_Renderer* renderer) {
     label->set_text(label, buf);
 
     label = &labels[LABEL_HP];
-    snprintf(buf, BUF_MAX, "%d/%d", pc.base_hp, pc.high_hp);
+    snprintf(buf, BUF_MAX, "%d/%d", pc.stats.hp, pc.stats.high_hp);
     label->set_text(label, buf);
 
     label = &labels[LABEL_PSP];
-    snprintf(buf, BUF_MAX, "%d/%d", pc.base_psp, pc.base_psp);
+    snprintf(buf, BUF_MAX, "%d/%d", pc.stats.psp, pc.stats.high_psp);
     label->set_text(label, buf);
 
     for (int i = 0; i < LABEL_END; i++) {
@@ -762,8 +764,8 @@ void update_stats_alignment_hp(int i, uint32_t button)
                     fix_alignment(1); // 1 = next alignment
                     break;
                 case 7:
-                    pc.base_hp++;
-                    pc.high_hp++;
+                    pc.stats.hp++;
+                    pc.stats.high_hp++;
                     break;
                 default:
                     break;
@@ -794,8 +796,8 @@ void update_stats_alignment_hp(int i, uint32_t button)
                     fix_alignment(-1); // -1 = previous alignment
                     break;
                 case 7:
-                    pc.base_hp--;
-                    pc.high_hp--;
+                    pc.stats.hp--;
+                    pc.stats.high_hp--;
                     break;
                 default:
                     break;
@@ -808,7 +810,7 @@ void update_stats_alignment_hp(int i, uint32_t button)
 
 static int find_class_selection(const uint8_t real_class) {
     for (int i = 0; i < 3; i++) {
-        if (pc.real_class[i] == real_class) { return i; }
+        if (pc.class[i].class == real_class) { return i; }
     }
     return -1;
 }
@@ -911,7 +913,7 @@ static void toggle_sphere(const uint16_t i) {
 static void deselect_class(uint8_t class_selection) {
     int class_pos = find_class_selection_position(class_selection);
     for (int i = class_pos; i < 2; i++) {
-        pc.real_class[i] = pc.real_class[i + 1];
+        pc.class[i] = pc.class[i + 1];
     }
 
     if (convert_to_actual_class(class_selection) == REAL_CLASS_PSIONICIST) {
@@ -924,7 +926,8 @@ static void deselect_class(uint8_t class_selection) {
     if (!is_divine_spell_user())
         sphere_selection = -1;
 
-    pc.real_class[2] = -1;
+    memset(pc.class + 2, 0x0, sizeof(class_t));
+    pc.class[2].level = pc.class[2].class = -1;
     sprite_set_frame(class_sel[class_selection], 0);
     show_psionic_label = 1;
 
@@ -933,22 +936,23 @@ static void deselect_class(uint8_t class_selection) {
 
     dnd2e_set_exp(&pc, 4000);
     
-    if (pc.real_class[0] == -1) {
+    if (pc.class[0].class == -1) {
         pc.alignment = TRUE_NEUTRAL;
     }
 }
 
 static void select_class(uint8_t class) {
     int pos = 0;
-    if (pc.real_class[pos] != -1) { pos++; }
-    if (pc.real_class[pos] != -1) { pos++; }
+    if (pc.class[pos].class != -1) { pos++; }
+    if (pc.class[pos].class != -1) { pos++; }
     sprite_set_frame(class_sel[class], 1);
 
-    pc.alignment = pc.real_class[0] == -1 ? TRUE_NEUTRAL : pc.alignment;
-    pc.real_class[pos] = convert_to_actual_class(class);
+    pc.alignment = pc.class[0].class == -1 ? TRUE_NEUTRAL : pc.alignment;
+    pc.class[pos].class = convert_to_actual_class(class);
+    pc.class[pos].level = 0;
     set_class_frames();
 
-    if (pc.real_class[pos] == REAL_CLASS_PSIONICIST) {
+    if (pc.class[pos].class == REAL_CLASS_PSIONICIST) {
         spell_set_psin(&psi, PSIONIC_PSYCHOKINETIC, 1);
         spell_set_psin(&psi, PSIONIC_PSYCHOMETABOLISM, 1);
         spell_set_psin(&psi, PSIONIC_TELEPATH, 1);
@@ -990,7 +994,8 @@ static void fix_race_gender() { // move the race/gender to the appropiate spot
         pc.race = RACE_MUL;
     }
 
-    pc.real_class[0] = pc.real_class[1] = pc.real_class[2] = -1;
+    pc.class[0].class = pc.class[1].class = pc.class[2].class = -1;
+    pc.class[0].level = pc.class[1].level = pc.class[2].level = -1;
     for (int i = 0; i < 8; i++)
         sprite_set_frame(class_sel[i], 0);
 
@@ -1012,6 +1017,7 @@ static void fix_alignment(int direction) { // direction: -1 = previous alignment
         pc.alignment = LAWFUL_GOOD;
     }
 
+    /* TODO: FIX ALIGNMENT!!!
     if (!dnd2e_is_alignment_allowed(pc.alignment, pc.real_class, 1))
     {
         for (int i = pc.alignment + direction; i != pc.alignment; i += direction) {
@@ -1030,6 +1036,7 @@ static void fix_alignment(int direction) { // direction: -1 = previous alignment
             }
         }
     }
+    */
 }
 
 label_t *mouse_in_label(const uint32_t x, const uint32_t y) {

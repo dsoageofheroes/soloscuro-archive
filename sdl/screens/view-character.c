@@ -9,6 +9,7 @@
 #include "inventory.h"
 #include "new-character.h"
 #include "popup.h"
+#include "dsl.h"
 #include "add-load-save.h"
 #include "../../src/ds-player.h"
 #include "../../src/ds-load-save.h"
@@ -246,14 +247,15 @@ void view_character_return_control () {
             return;
         }
     } else if (last_selection == SELECT_NEW) {
-        ds_character_t *pc = new_character_get_pc();
+        entity_t *pc = new_character_get_pc();
         psin_t* psi = new_character_get_psin();
         ssi_spell_list_t* spells = new_character_get_spell_list();
         psionic_list_t* psionics = new_character_get_psionic_list();
-        char *name = new_character_get_name();
+        //char *name = new_character_get_name();
         if (pc && psi && spells && psionics) {
-            if (dnd2e_character_is_valid(pc) && dnd2e_psin_is_valid(pc, psi)) {
-                gff_char_add_character(pc, psi, spells, psionics, name);
+            if (dnd2e_character_is_valid(pc)) {// && dnd2e_psin_is_valid(pc, psi)) {
+                warn ("TODO: Add back character creation!\n");
+                //gff_char_add_character(pc, psi, spells, psionics, name);
             } else {
                 screen_push_screen(rend, &popup_screen, 100, 75);
                 popup_set_message("Character was invalid.");

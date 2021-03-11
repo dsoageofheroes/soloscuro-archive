@@ -5,6 +5,7 @@
 #include "../../src/spells.h"
 #include "../screen-manager.h"
 #include "../../src/ds-object.h"
+#include "../../src/entity.h"
 #include "../font.h"
 
 enum {
@@ -70,7 +71,7 @@ typedef struct label_s {
 } label_t;
 
 
-ds_character_t *new_character_get_pc();
+entity_t *new_character_get_pc();
 psin_t* new_character_get_psin();
 ssi_spell_list_t* new_character_get_spell_list();
 psionic_list_t* new_character_get_psionic_list();

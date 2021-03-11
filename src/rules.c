@@ -220,7 +220,7 @@ const static uint8_t race_mods[][6] = {
     {  0,  2,  0, -1,  1, -2  }, // THRI-KREEN
 };
 
-static void dnd2e_apply_race_mods(ds_character_t *pc) {
+static void dnd2e_apply_race_mods(entity_t *pc) {
     if (pc->race < RACE_HUMAN || pc->race > RACE_THRIKREEN) { return; }
     pc->stats.str += race_mods[pc->race][0];
     pc->stats.dex += race_mods[pc->race][1];
@@ -609,10 +609,10 @@ static const uint32_t alignment_flags[] = {
     NOT_LAWFUL_EVIL      | NOT_NEUTRAL_EVIL        | ONLY_CHAOTIC_EVIL,
 };
 
-static int has_class(ds_character_t *pc, const int16_t class){
-    return pc->real_class[0] == class
-        || pc->real_class[1] == class
-        || pc->real_class[2] == class;
+static int has_class(entity_t *pc, const int16_t class){
+    return pc->class[0].class == class
+        || pc->class[1].class == class
+        || pc->class[2].class == class;
 }
 
 
@@ -666,19 +666,19 @@ static int get_total_hit_die(const uint8_t class, const uint8_t level) {
     return xp_table[3 * (level + 1)];
 }
 
-int dnd2e_is_class_allowed(const uint8_t race, const int8_t classes[3]) {
-    uint16_t class = convert_to_class_sel(classes[0]);
+int dnd2e_is_class_allowed(const uint8_t race, const class_t classes[3]) {
+    uint16_t class = convert_to_class_sel(classes[0].class);
     const uint16_t *allowed = NULL;
-    if (classes[0] == -1) { return 0; }
+    if (classes[0].class == -1) { return 0; }
 
     //printf("race = %d (%d, %d, %d)\n", race, classes[0], classes[1], classes[2]);
-    if (classes[1] != -1) {
+    if (classes[1].class != -1) {
         // NO DUPS.
-        if (classes[0] == classes[1] || classes[1] == classes[2]
-            || classes[0] == classes[2]) { return 0; }
-        class |= convert_to_class_sel(classes[1]);
-        if (classes[2] != -1) {
-            class |= convert_to_class_sel(classes[2]);
+        if (classes[0].class == classes[1].class || classes[1].class == classes[2].class
+            || classes[0].class == classes[2].class) { return 0; }
+        class |= convert_to_class_sel(classes[1].class);
+        if (classes[2].class != -1) {
+            class |= convert_to_class_sel(classes[2].class);
         }
     }
 
@@ -724,34 +724,34 @@ int dnd2e_is_alignment_allowed(const uint8_t alignment, const int8_t classes[3],
     return 1;
 }
 
-static void set_psp(ds_character_t *pc) {
-    pc->base_psp = 0;
+static void set_psp(entity_t *pc) {
+    pc->stats.high_psp = 0;
     if (pc->stats.con > 15) {
-        pc->base_psp += pc->stats.con - 15;
+        pc->stats.high_psp += pc->stats.con - 15;
     }
     if (pc->stats.intel > 15) {
-        pc->base_psp += pc->stats.intel - 15;
+        pc->stats.high_psp += pc->stats.intel - 15;
     }
     if (pc->stats.wis > 15) {
-        pc->base_psp += 20 + 2 * (pc->stats.intel - 15);
+        pc->stats.high_psp += 20 + 2 * (pc->stats.intel - 15);
     }
     if (has_class(pc, REAL_CLASS_PSIONICIST)) {
         int psi_level = 0;
-        if (pc->real_class[0] == REAL_CLASS_PSIONICIST) { psi_level = pc->level[0]; }
-        if (pc->real_class[1] == REAL_CLASS_PSIONICIST) { psi_level = pc->level[1]; }
-        if (pc->real_class[2] == REAL_CLASS_PSIONICIST) { psi_level = pc->level[2]; }
-        pc->base_psp += 10 * (psi_level);
+        if (pc->class[0].class == REAL_CLASS_PSIONICIST) { psi_level = pc->class[0].level; }
+        if (pc->class[1].class == REAL_CLASS_PSIONICIST) { psi_level = pc->class[1].level; }
+        if (pc->class[2].class == REAL_CLASS_PSIONICIST) { psi_level = pc->class[2].level; }
+        pc->stats.high_psp += 10 * (psi_level);
         if (pc->stats.wis > 15) {
-            pc->base_psp += (20 + 2 * (pc->stats.intel - 15)) * (psi_level - 1);
+            pc->stats.high_psp += (20 + 2 * (pc->stats.intel - 15)) * (psi_level - 1);
         }
     }
 }
 
-static void do_level_up(ds_character_t *pc, const uint32_t class_idx, const uint32_t class) {
-    int clevel = pc->level[class];
+static void do_level_up(entity_t *pc, const uint32_t class_idx, const uint32_t class) {
+    int clevel = pc->class[class_idx].level;
     int num_classes = 0;
 
-    for (int i = 0; i < 3 && pc->real_class[i] > -1; i++) {
+    for (int i = 0; i < 3 && pc->class[i].class > -1; i++) {
         num_classes++;
     }
 
@@ -770,46 +770,52 @@ static void do_level_up(ds_character_t *pc, const uint32_t class_idx, const uint
         hp = 2;
     }
     //printf("Increasing HP by %d\n", hp);
-    pc->base_hp += hp;
-    pc->high_hp += hp;
-    pc->level[class_idx]++;
+    pc->stats.hp += hp;
+    pc->stats.high_hp += hp;
+    pc->class[class_idx].level++;
     set_psp(pc);
 }
 
-void dnd2e_set_exp(ds_character_t *pc, const uint32_t amt) {
-    pc->base_hp = pc->high_hp = 0;
+void dnd2e_set_exp(entity_t *pc, const uint32_t amt) {
+    pc->stats.hp = pc->stats.high_hp = 0;
     for (int i = 0; i < 3; i++) {
-        if (pc->real_class[i] > -1) {
-            pc->level[i] = 0;
-            do_level_up(pc, i, pc->real_class[i]);
+        if (pc->class[i].class > -1) {
+            pc->class[i].level = 0;
+            do_level_up(pc, i, pc->class[i].class);
         }
     }
-    pc->current_xp = 0;
+    pc->class[0].current_xp = 0;
+    pc->class[1].current_xp = 0;
+    pc->class[2].current_xp = 0;
     dnd2e_award_exp(pc, amt);
 }
 
-void dnd2e_award_exp(ds_character_t *pc, const uint32_t amt) {
-    int num_classes = 0;
-    pc->current_xp += amt;
-    for (int i = 0; i < 3 && pc->level[i]; i++) {
-        //printf("pc->leve[%d] = %d\n",i, pc->level[i]);
-        num_classes++;
-    }
-    for (int i = 0; i < 3 && pc->level[i]; i++) {
-        int next_level = get_class_level(pc->real_class[i], pc->current_xp / num_classes);
-        while (next_level > pc->level[i]) {
-            do_level_up(pc, i, pc->real_class[i]);
-        }
+void dnd2e_award_exp_to_class(entity_t *pc, const int index, const uint32_t amt) {
+    pc->class[index].current_xp += amt;
+    int next_level = get_class_level(pc->class[index].level, pc->class[index].current_xp);
+    while (next_level > pc->class[index].level) {
+        do_level_up(pc, index, pc->class[index].level);
     }
 }
 
-int32_t dnd2e_exp_to_next_level_up(ds_character_t *pc) {
+void dnd2e_award_exp(entity_t *pc, const uint32_t amt) {
+    int num_classes = 0;
+    for (int i = 0; i < 3 && pc->class[i].level > -1; i++) {
+        //printf("pc->leve[%d] = %d\n",i, pc->level[i]);
+        num_classes++;
+    }
+    for (int i = 0; i < num_classes; i++) {
+        dnd2e_award_exp_to_class(pc, i, amt / num_classes);
+    }
+}
+
+int32_t dnd2e_exp_to_next_level_up(entity_t *pc) {
     int next_exp = 999999999;
     for (int i = 0; i < 3; i++) {
-        if (pc->real_class[i] > -1) {
-            const uint32_t *xp_table = get_xp_table(pc->real_class[i]);
+        if (pc->class[i].level > -1) {
+            const uint32_t *xp_table = get_xp_table(pc->class[i].class);
             if (!xp_table) { return next_exp; }
-            int next = xp_table[3 * (pc->level[i] + 1)];
+            int next = xp_table[3 * (pc->class[i].level + 1)];
             if (next < next_exp) {
                 next_exp = next;
             }
@@ -818,18 +824,18 @@ int32_t dnd2e_exp_to_next_level_up(ds_character_t *pc) {
     return next_exp;
 }
 
-int16_t dnd2e_get_ac_pc(ds_character_t *pc, ds_inventory_t *inv) {
+int16_t dnd2e_get_ac_pc(entity_t *pc) {
     int ac_bonus = 0;
-    if (inv) {
-        ds1_item_t *item = (ds1_item_t*)(inv);
+    if (pc->inv) {
+        item_t *item = pc->inv;
         for (int i = 0; i <= SLOT_FOOT; i++) {
-            if (item[i].id) {
-                ac_bonus += -ds_get_item1r(item[i].item_index)->base_AC;
+            if (item[i].ds_id) {
+                ac_bonus += -item[i].ac;
                 //printf("slot: %d, id: %d it1r: %d, ac: %d\n", i, item[i].id, item[i].item_index, ds_get_item1r(item[i].item_index)->base_AC);
             }
         }
     }
-    return pc->base_ac + dex_mods[pc->stats.dex][2] + ac_bonus;
+    return pc->stats.base_ac + dex_mods[pc->stats.dex][2] + ac_bonus;
 }
 
 // return in half attacks.
@@ -911,21 +917,22 @@ int16_t dnd2e_get_attack_mod_pc(const entity_t *pc, const item_t *item) {
             str_mods[pc->stats.str][STR_DAM];
 }
 
-void dnd2e_randomize_stats_pc(ds_character_t *pc) {
+void dnd2e_randomize_stats_pc(entity_t *pc) {
     pc->stats.str = 10 + (rand() % 11);
     pc->stats.dex = 10 + (rand() % 11);
     pc->stats.con = 10 + (rand() % 11);
     pc->stats.intel = 10 + (rand() % 11);
     pc->stats.wis = 10 + (rand() % 11);
     pc->stats.cha = 10 + (rand() % 11);
-    pc->base_ac = 10;
+    pc->stats.base_ac = 10;
     dnd2e_apply_race_mods(pc);
     dnd2e_fix_stats_pc(pc); // Get our base stats correct first.
 
-    dnd2e_set_exp(pc, pc->current_xp); // Also sets HP & PSP
+    //TODO Fix exp giving out.
+    dnd2e_set_exp(pc, 3000); // Also sets HP & PSP
 }
 
-void dnd2e_fix_stats_pc(ds_character_t *pc) {
+void dnd2e_fix_stats_pc(entity_t *pc) {
     if (pc->stats.str < 5) { pc->stats.str = 9; }
     if (pc->stats.dex < 5) { pc->stats.dex = 9; }
     if (pc->stats.con < 5) { pc->stats.con = 9; }
@@ -934,24 +941,24 @@ void dnd2e_fix_stats_pc(ds_character_t *pc) {
     if (pc->stats.cha < 5) { pc->stats.cha = 9; }
 }
 
-int dnd2e_character_is_valid(ds_character_t *pc) {
+int dnd2e_character_is_valid(entity_t *pc) {
     if (pc->stats.str < 0 || pc->stats.str > 25) { return 0; }
     if (pc->stats.dex < 0 || pc->stats.dex > 25) { return 0; }
     if (pc->stats.con < 0 || pc->stats.con > 25) { return 0; }
     if (pc->stats.intel < 0 || pc->stats.intel > 25) { return 0; }
     if (pc->stats.wis < 0 || pc->stats.wis > 25) { return 0; }
     if (pc->stats.cha < 0 || pc->stats.cha > 25) { return 0; }
-    if (pc->base_hp < 1) { return 0; }
-    if (pc->high_hp < 1) { return 0; }
-    if (pc->current_xp < 1) { return 0; }
-    if (pc->base_psp < 0) { return 0; }
-    if (!dnd2e_is_class_allowed(pc->race, pc->real_class)) { return 0; }
+    if (pc->stats.hp < 1) { return 0; }
+    if (pc->stats.high_hp < 1) { return 0; }
+    //if (pc->current_xp < 1) { return 0; }
+    if (pc->stats.high_psp < 0) { return 0; }
+    if (!dnd2e_is_class_allowed(pc->race, pc->class)) { return 0; }
     if (pc->gender != GENDER_MALE && pc->gender != GENDER_FEMALE) { return 0; }
     if (pc->alignment < LAWFUL_GOOD || pc->alignment > CHAOTIC_EVIL) { return 0; }
-    if (pc->level[0] < 1) { return 0; }
-    if (pc->real_class[1] > -1 && pc->level[1] < 1) { return 0; }
-    if (pc->real_class[2] > -1 &&pc->level[2] < 1) { return 0; }
-    if (pc->magic_resistance < 0 || pc->magic_resistance > 100) { return 0; }
+    if (pc->class[0].level < 1) { return 0; }
+    if (pc->class[1].class > -1 && pc->class[1].level < 1) { return 0; }
+    if (pc->class[2].class > -1 && pc->class[2].level < 1) { return 0; }
+    if (pc->stats.magic_resistance < 0 || pc->stats.magic_resistance > 100) { return 0; }
     if (pc->allegiance != 1) { return 0; }
     if (pc->size < 0) { return 0; }
     // Not checked:
@@ -991,11 +998,11 @@ int dnd2e_psin_is_valid(ds_character_t *pc, psin_t *psi) {
     return num_psionics == 1;
 }
 
-int16_t dnd2e_get_move_pc(ds_character_t *pc) {
+int16_t dnd2e_get_move_pc(entity_t *pc) {
     return 12;
 }
 
-int16_t dnd2e_get_thac0_pc(ds_character_t *pc) {
+int16_t dnd2e_get_thac0_pc(entity_t *pc) {
     return 20; //TODO: update
 }
 

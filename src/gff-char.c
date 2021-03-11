@@ -21,11 +21,11 @@ int gff_char_delete(const int id) {
     return 0; // FAILED
 }
 
-static void create_combat(ds_character_t *pc, char *name, ds1_combat_t *combat) {
-    combat->hp = pc->high_hp;
-    combat->psp = pc->base_psp;
+static void create_combat(entity_t *pc, char *name, ds1_combat_t *combat) {
+    combat->hp = pc->stats.high_hp;
+    combat->psp = pc->stats.psp;
     combat->char_index = 0; // TODO: do we need an index?
-    combat->id = pc->id;
+    combat->id = pc->ds_id;
     combat->ready_item_index = 0; // TODO: do we need this?
     combat->weapon_index = 0; // TODO: do we need this?
     combat->pack_index = 0;  // TODO: do we need this?
@@ -33,7 +33,7 @@ static void create_combat(ds_character_t *pc, char *name, ds1_combat_t *combat) 
     combat->special_attack = 0;
     combat->special_defense = 0;
     combat->icon = 0; // TODO: need to fix this eventually...
-    combat->ac = dnd2e_get_ac_pc(pc, NULL);
+    combat->ac = dnd2e_get_ac_pc(pc);
     combat->move = dnd2e_get_move_pc(pc);
     combat->status = 0; // clear
     combat->allegiance = pc->allegiance;
@@ -41,12 +41,17 @@ static void create_combat(ds_character_t *pc, char *name, ds1_combat_t *combat) 
     combat->thac0 = dnd2e_get_thac0_pc(pc);
     combat->priority = 0; // clear
     combat->flags = 0; // clear
-    combat->stats = pc->stats;
+    combat->stats.str = pc->stats.str;
+    combat->stats.dex = pc->stats.dex;
+    combat->stats.con = pc->stats.con;
+    combat->stats.intel = pc->stats.intel;
+    combat->stats.wis = pc->stats.wis;
+    combat->stats.cha = pc->stats.cha;
     strncpy(combat->name, name, 16);
     combat->name[15] = '\0';
 }
 
-static void write_CHAR_entry(gff_chunk_header_t chunk, ds_character_t *pc, ds1_combat_t *combat) {
+static void write_CHAR_entry(gff_chunk_header_t chunk, entity_t *pc, ds1_combat_t *combat) {
     char *buf = malloc(chunk.length);
     rdff_header_t rdff;
     size_t offset = 0;
@@ -78,6 +83,7 @@ static void write_CHAR_entry(gff_chunk_header_t chunk, ds_character_t *pc, ds1_c
 
     memcpy(buf + offset, &rdff, sizeof(rdff_header_t));
     offset += sizeof(rdff_header_t);
+    //TODO: FIX THIS IT IS WRONG!!!!!!!
     memcpy(buf + offset, pc, sizeof(ds_character_t));
     offset += sizeof(ds_character_t);
 
@@ -86,7 +92,7 @@ static void write_CHAR_entry(gff_chunk_header_t chunk, ds_character_t *pc, ds1_c
     free(buf);
 }
 
-int gff_char_add_character(ds_character_t *pc, psin_t *psi, ssi_spell_list_t *spells, psionic_list_t *psionics, char *name) {
+int gff_char_add_character(entity_t *pc, psin_t *psi, ssi_spell_list_t *spells, psionic_list_t *psionics, char *name) {
     ds1_combat_t combat;
     uint32_t res_ids[1<<10];
     int16_t max_id = 1;
