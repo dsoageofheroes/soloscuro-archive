@@ -3,7 +3,13 @@
 #include "gff.h"
 #include "gfftypes.h"
 
-static spell_t wizard_spells[] = {
+typedef struct spell_builder_s {
+    const char *name;
+    const uint16_t icon;
+    const int spell_text_id;
+} spell_builder_t;
+
+static spell_builder_t wizard_spells[] = {
     { .name = "Armor",                           .icon = 21000, .spell_text_id =  1},
     { .name = "Burning Hands",                   .icon = 21001, .spell_text_id =  2},
     { .name = "Charm",                           .icon = 21002, .spell_text_id =  3},
@@ -77,7 +83,8 @@ static spell_t wizard_spells[] = {
 
 extern spell_t* spell_get_spell(const uint16_t id) {
     if (id < 0 || id > sizeof(wizard_spells) / sizeof(spell_t)) { return NULL; }
-    return wizard_spells + id;
+    //return wizard_spells + id;
+    return NULL;
 }
 
 static void load_name_from_gff(const uint8_t id, const uint16_t offset, const uint8_t max, char name[32]) {

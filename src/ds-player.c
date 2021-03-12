@@ -8,21 +8,10 @@
 #include "spells.h"
 #include "rules.h"
 
-typedef struct player_s {
-    ds_character_t ch;
-    ds1_combat_t combat;
-    psin_t psi;
-    ssi_spell_list_t spells;
-    psionic_list_t psionics;
-    player_pos_t pos;
-    ds_inventory_t inv;
-} player_t;
-
 static entity_t *players[MAX_PCS] = {NULL, NULL, NULL, NULL};
 
 #define BUF_MAX (1<<12)
 
-static player_t pc[MAX_PCS];
 static int active = 0;
 
 void player_cleanup() {
@@ -37,20 +26,15 @@ extern void player_free(const int slot) {
 }
 
 void ds_player_init() {
-    memset(pc, 0x0, MAX_PCS * sizeof(player_t));
-
     // Setup the slots for reading/writing
     for (int i = 0; i < MAX_PCS; i++) {
         if (!players[i]) {
             players[i] = player_get_entity(i);
         }
-        ds1_item_t *item = (ds1_item_t*)&(pc[i].inv);
-        for (int j = 0; j < 26; j++) {
-            item[j].slot = j;
-        }
     }
 }
 
+/* Can we delete this?
 static void create_combat(entity_t *pc, char *name, ds1_combat_t *combat) {
     combat->hp = pc->stats.hp;
     combat->psp = pc->stats.psp;
@@ -80,22 +64,7 @@ static void create_combat(entity_t *pc, char *name, ds1_combat_t *combat) {
     strncpy(combat->name, name, 16);
     combat->name[15] = '\0';
 }
-
-int ds_player_replace(const int slot, entity_t *ch, psin_t *psi, ssi_spell_list_t *spells,
-        psionic_list_t *psionics, ds_inventory_t *inv, char *name) {
-    ds1_combat_t combat;
-    if (slot < 0 || slot >= MAX_PCS) { return 0; }
-
-    memcpy(&(pc[slot].ch), ch, sizeof(ds_character_t));
-    create_combat(ch, name, &combat);
-    memcpy(&(pc[slot].combat), &combat, sizeof(ds1_combat_t));
-    memcpy(&(pc[slot].psi), psi, sizeof(psin_t));
-    memcpy(&(pc[slot].spells), spells, sizeof(ssi_spell_list_t));
-    memcpy(&(pc[slot].psionics), psionics, sizeof(psionic_list_t));
-    memcpy(&(pc[slot].inv), inv, sizeof(ds_inventory_t));
-
-    return 1;
-}
+*/
 
 entity_t* player_get_entity(const int slot) {
     if (slot < 0 || slot >= MAX_PCS) { return NULL; }
@@ -110,34 +79,9 @@ entity_t* player_get_entity(const int slot) {
     return players[slot];
 }
 
-void ds_player_set_item(const int slot, ds1_item_t *item, const int item_slot) {
-    if (slot < 0 || slot >= MAX_PCS) { return; }
-    if (item_slot < 0 || item_slot >= 26) { return; }
-
-    // TODO: check we can place there;
-
-    ds1_item_t *player_item = ((ds1_item_t*)&(pc[slot].inv)) + item_slot;
-    memcpy(player_item, item, sizeof(ds1_item_t));
-}
-
-int player_exists(const int slot) {
+extern int player_exists(const int slot) {
     if (slot < 0 || slot >= MAX_PCS) { return 0; }
     return (player_get_entity(slot)->name != NULL);
-}
-
-ssi_spell_list_t* ds_player_get_spells(const int slot) {
-    if (slot < 0 || slot >= MAX_PCS) { return NULL; }
-    return &(pc[slot].spells);
-}
-
-player_pos_t* ds_player_get_pos(const int slot) {
-    if (slot < 0 || slot >= MAX_PCS) { return NULL; }
-    return &(pc[slot].pos);
-}
-
-ds_inventory_t* ds_player_get_inv(const int slot) {
-    if (slot < 0 || slot >= MAX_PCS) { return NULL; }
-    return &(pc[slot].inv);
 }
 
 extern entity_t* player_get_active() {
@@ -150,9 +94,4 @@ extern int player_get_slot(entity_t *entity) {
     }
 
     return -1;
-}
-
-void ds_player_set_active(const int slot) {
-    if (slot < 0 || slot >= MAX_PCS) { return; }
-    active = slot;
 }

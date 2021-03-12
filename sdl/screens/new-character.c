@@ -4,6 +4,7 @@
 #include "../../src/gfftypes.h"
 #include "narrate.h"
 #include "popup.h"
+#include "../textbox.h"
 #include "../sprite.h"
 #include "../../src/spells.h"
 #include "../../src/ds-player.h"
@@ -31,6 +32,7 @@ static uint16_t psionic_label; // 2047
 static uint16_t sphere_label; // 2046
 static uint16_t done_button;
 static uint16_t exit_button;
+static textbox_t* name_tb;
 
 // Store this so we don't trigger mouseup events in sprites/labels we didn't mousedown in
 static uint16_t last_sprite_mousedowned;
@@ -176,6 +178,7 @@ static void get_random_name() {
     gff_get_resource_ids(RESOURCE_GFF_INDEX, GFF_TEXT, res_ids);
     gff_chunk_header_t chunk = gff_find_chunk_header(RESOURCE_GFF_INDEX, GFF_TEXT, res_ids[chosen_name]);
     gff_read_chunk(RESOURCE_GFF_INDEX, &chunk, name_text, 32);
+    textbox_set_text(name_tb, name_text);
 }
 
 static int convert_to_actual_class(const uint8_t class) {
@@ -298,6 +301,7 @@ static void new_character_init(SDL_Renderer* _renderer, const uint32_t x, const 
     done_button = new_sprite_create(renderer, pal, 240 + x, 174 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2000);
     exit_button = new_sprite_create(renderer, pal, 255 + x, 156 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2058);
 
+    name_tb = textbox_create(32, 170, 150);
     text_cursor = new_sprite_create(renderer, pal, 170 + x, 150 + y, // Blinking text cursor (for the player's name)
         zoom, RESOURCE_GFF_INDEX, GFF_ICON, 100);
     sprite_set_frame(text_cursor, 1);
@@ -313,6 +317,7 @@ static void new_character_init(SDL_Renderer* _renderer, const uint32_t x, const 
     stats_align_hp_buttons[7] = new_sprite_create(renderer, pal, 564 + x, 1251 + y, // HP BUTTON
         zoom * .14, RESOURCE_GFF_INDEX, GFF_BMP, 5013);
     sprite_set_frame(stats_align_hp_buttons[7], 1);
+
 
     for (int i = 0; i < 8; i++) {
         classes[i] = new_sprite_create(renderer, pal, 220 + x, 10 + y + (i * 8),
@@ -1013,8 +1018,7 @@ static void fix_alignment(int direction) { // direction: -1 = previous alignment
         pc.alignment = LAWFUL_GOOD;
     }
 
-    /* TODO: FIX ALIGNMENT!!!
-    if (!dnd2e_is_alignment_allowed(pc.alignment, pc.real_class, 1))
+    if (!dnd2e_is_alignment_allowed(pc.alignment, pc.class, 1))
     {
         for (int i = pc.alignment + direction; i != pc.alignment; i += direction) {
             if (i < LAWFUL_GOOD) {
@@ -1025,14 +1029,13 @@ static void fix_alignment(int direction) { // direction: -1 = previous alignment
                 direction = 1;
             }
 
-            if (dnd2e_is_alignment_allowed(i, pc.real_class, 1))
+            if (dnd2e_is_alignment_allowed(i, pc.class, 1))
             {
                 pc.alignment = i;
                 break;
             }
         }
     }
-    */
 }
 
 label_t *mouse_in_label(const uint32_t x, const uint32_t y) {

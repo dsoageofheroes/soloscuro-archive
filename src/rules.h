@@ -54,7 +54,7 @@ enum {
 };
 
 int dnd2e_is_class_allowed(const uint8_t race, const class_t classes[3]);
-int dnd2e_is_alignment_allowed(const uint8_t alignment, const int8_t classes[3], int target_is_pc);
+int dnd2e_is_alignment_allowed(const uint8_t alignment, const class_t classes[3], int target_is_pc);
 void dnd2e_randomize_stats_pc(entity_t *pc);
 void dnd2e_fix_stats_pc(entity_t *pc);
 void dnd2e_set_exp(entity_t *pc, const uint32_t amt);

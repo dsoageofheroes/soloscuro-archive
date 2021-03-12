@@ -1,3 +1,4 @@
+#include "combat.h"
 #include "dsl.h"
 #include "ds-player.h"
 #include "region.h"

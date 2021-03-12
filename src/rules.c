@@ -700,20 +700,21 @@ int dnd2e_is_class_allowed(const uint8_t race, const class_t classes[3]) {
     return 0;
 }
 
-int dnd2e_is_alignment_allowed(const uint8_t alignment, const int8_t classes[3], int target_is_pc) {
+//int dnd2e_is_alignment_allowed(const uint8_t alignment, const int8_t classes[3], int target_is_pc) {
+int dnd2e_is_alignment_allowed(const uint8_t alignment, const class_t classes[3], int target_is_pc) {
     int allowed = 1;
     int game_type = gff_get_game_type();
 
     for (int i = 0; i < 3; i++)
     {
-        if (classes[i] == -1) {
+        if (classes[i].class == -1) {
             break;
         }
 
         // Alignment has to match alignment flags for the class
         // NPCs can be any alignment - PCs can only be non-evil UNLESS the game is DSO
-        allowed = (  class_alignments[classes[i]] == ANY_ALIGNMENT ||
-                     class_alignments[classes[i]] & alignment_flags[alignment] ) &&
+        allowed = (  class_alignments[classes[i].class] == ANY_ALIGNMENT ||
+                     class_alignments[classes[i].class] & alignment_flags[alignment] ) &&
                    ( !target_is_pc || ( game_type != DARKSUN_ONLINE && alignment_flags[alignment] & NOT_EVIL_MORALS ) );
 
         if (!allowed) {

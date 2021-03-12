@@ -4,19 +4,26 @@
 #include <stdint.h>
 #include "psionic.h"
 #include "entity.h"
+#include "item.h"
 
 #define MAX_SPELLS (8*138)
 #define MAX_PSIONICS (34)
 
 typedef struct spell_s {
     char *name;
-    uint32_t icon;
-    uint32_t spell_text_id;
+    char *spell_text;
     uint16_t range;
     uint16_t aoe;
-    //void (*affect) (region_t *reg, int mapx, int mapy, entity_t *entity);
+    uint16_t shape;
+    //void (*apply) (entity_list_t *entities);
+    sprite_info_t icon;
     // Add animation sequence info here.
 } spell_t;
+
+// Okay before I forget.
+// Spells create a spell entity on point of impact.
+// If AOE, then many children entities are created that point to the parent/master spell entity.
+// This allows each tile/square its own trigger and the parent/master can clean up the children when the duration is over.
 
 enum {
     PSIONIC_PSYCHOKINETIC,
