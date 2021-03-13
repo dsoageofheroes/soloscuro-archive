@@ -23,7 +23,6 @@ enum {
 enum {
     LABEL_NONE = -1,
     LABEL_NAME,
-    LABEL_NAME_TEXT,
     LABEL_STR,
     LABEL_STR_VAL,
     LABEL_DEX,

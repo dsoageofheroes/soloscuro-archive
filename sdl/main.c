@@ -4,6 +4,7 @@
 #include "player.h"
 #include "lua.h"
 #include "mouse.h"
+#include "textbox.h"
 #include "screen-manager.h"
 #include "gameloop.h"
 #include "screens/narrate.h"
@@ -35,6 +36,12 @@ static uint32_t xmappos, ymappos;
 static int32_t xmapdiff, ymapdiff;
 
 static uint8_t player_directions[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+static textbox_t *textbox = NULL;
+
+void main_set_textbox(textbox_t *tb) {
+    textbox = tb;
+}
 
 SDL_Renderer *main_get_rend() { return renderer; }
 SDL_Surface *main_get_screen() { return screen; }
@@ -106,6 +113,7 @@ void handle_input() {
                 break;
             case SDL_KEYUP:
                 if (ignore_repeat && event.key.repeat != 0) { break; }
+                if (textbox_handle_keyup(textbox, event.key.keysym)) { return; }
                 if (ui_lua_keyup(event.key.keysym.sym)) { break; }
                 if (event.key.keysym.sym == SDLK_s) { player_unmove(PLAYER_LEFT); }
                 if (event.key.keysym.sym == SDLK_e) { player_unmove(PLAYER_UP); }
@@ -135,6 +143,7 @@ void handle_input() {
                 break;
             case SDL_KEYDOWN:
                 if (ignore_repeat && event.key.repeat != 0) { break; }
+                if (textbox_handle_keydown(textbox, event.key.keysym)) { return; }
                 if (ui_lua_keydown(event.key.keysym.sym)) { break; }
                 if (event.key.keysym.sym == SDLK_ESCAPE) {
                     game_loop_signal(WAIT_FINAL, 0);
@@ -178,8 +187,10 @@ void handle_input() {
     xmappos += xmapdiff;
     ymappos += ymapdiff;
     handle_mouse_motion();
-    player_update();
-    main_combat_update();
+    if (region_manager_get_current()) {
+        player_update();
+        main_combat_update();
+    }
 }
 
 void main_set_xscroll(int amt) { xmapdiff = amt; }

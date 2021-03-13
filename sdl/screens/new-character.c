@@ -17,7 +17,7 @@
 static uint16_t background;
 static uint16_t parchment[5];
 static uint16_t done;
-static uint16_t name_textbox;
+//static uint16_t name_textbox;
 static uint16_t text_cursor;
 static uint16_t classes[8];
 static uint16_t class_sel[8];
@@ -44,8 +44,6 @@ static int8_t sphere_selection = -1;
 static int die_pos = 0;
 static int die_countdown = 0;
 
-static int cursor_countdown = 0;
-
 // FIXME - Change these to ds1_race_[...] and then add ones for DS2 and DSO
 // H = Human - D = Dwarf - E = Elf - HE = Half-Elf - HG = Half-Giant - HL = Halfling - M = Mul - T = Thri-Kreen
 // genderRace                              mH    fH    mD    fD    mE    fE   mHE   fHE   mHG   fHG   mHL   fHL    mM    fM    mT    fT
@@ -64,7 +62,7 @@ static ssi_spell_list_t spells;
 static psionic_list_t psionics;
 static uint8_t is_valid;
 static char sphere_text[32];
-static char name_text[32];
+//static char name_text[32];
 static int current_textbox;
 static int changed_name;
 static label_t label_tables[SCREEN_END][LABEL_END]; // This will go in its own file, TODO: manually populate array sizes per screen
@@ -102,7 +100,7 @@ psionic_list_t* new_character_get_psionic_list() {
 }
 
 char* new_character_get_name() {
-    return name_text;
+    return textbox_get_text(name_tb);
 }
 
 void label_render(struct label_s* label, SDL_Renderer* renderer) {
@@ -169,6 +167,7 @@ static void get_random_name() {
     int name_list_start  = pc.race == RACE_THRIKREEN ? 52 : pc.gender == GENDER_FEMALE ? 33 : 0;
     int name_list_length = pc.race == RACE_THRIKREEN ? 7  : pc.gender == GENDER_FEMALE ? 17 : 32;
     int chosen_name = (rand() % (name_list_length + 1)) + name_list_start;
+    char name_text[32];
 
     memset(&name_text[0], 0, sizeof(name_text));
 
@@ -285,7 +284,6 @@ static void new_character_init(SDL_Renderer* _renderer, const uint32_t x, const 
     current_textbox = TEXTBOX_NONE;
     labels = label_tables[SCREEN_NEW_CHARACTER];
 
-    init_pc();
     is_valid = 0;
     spr = SPRITE_ERROR;
     background = new_sprite_create(renderer, pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 13001);
@@ -295,13 +293,15 @@ static void new_character_init(SDL_Renderer* _renderer, const uint32_t x, const 
     parchment[3] = new_sprite_create(renderer, pal, 210 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20086);
     parchment[4] = new_sprite_create(renderer, pal, 210 + x, 90 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20087);
     done = new_sprite_create(renderer, pal, 250 + x, 160 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2000);
-    name_textbox = new_sprite_create(renderer, pal, 37 + x, 124 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 4003);
+    //name_textbox = new_sprite_create(renderer, pal, 37 + x, 124 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 4003);
     sphere_label = new_sprite_create(renderer, pal, 217 + x, 140 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2046);
     psionic_label = new_sprite_create(renderer, pal, 217 + x, 140 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2047);
     done_button = new_sprite_create(renderer, pal, 240 + x, 174 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2000);
     exit_button = new_sprite_create(renderer, pal, 255 + x, 156 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2058);
+    name_tb = textbox_create(32, 34, 124);
+    main_set_textbox(name_tb);
 
-    name_tb = textbox_create(32, 170, 150);
+    init_pc();
     text_cursor = new_sprite_create(renderer, pal, 170 + x, 150 + y, // Blinking text cursor (for the player's name)
         zoom, RESOURCE_GFF_INDEX, GFF_ICON, 100);
     sprite_set_frame(text_cursor, 1);
@@ -361,9 +361,9 @@ static void new_character_init(SDL_Renderer* _renderer, const uint32_t x, const 
     labels[LABEL_NAME]           = create_label_at_pos(SCREEN_NEW_CHARACTER, LABEL_NAME,
                                                        "NAME:", FONT_GREYLIGHT,
                                                        oX, oY);
-    labels[LABEL_NAME_TEXT]      = create_label_at_pos(SCREEN_NEW_CHARACTER, LABEL_NAME_TEXT,
-                                                       name_text, FONT_GREYLIGHT,
-                                                       oX + 76, oY);
+    //labels[LABEL_NAME_TEXT]      = create_label_at_pos(SCREEN_NEW_CHARACTER, LABEL_NAME_TEXT,
+                                                       //name_text, FONT_GREYLIGHT,
+                                                       //oX + 76, oY);
 
     labels[LABEL_STR]            = create_label_at_pos(SCREEN_NEW_CHARACTER, LABEL_STR,
                                                        "STR:", FONT_GREYLIGHT,
@@ -484,14 +484,6 @@ static void update_die_countdown() {
         }
         last_die_pos = die_pos;
     }
-}
-
-static void update_cursor_blink() {
-    if (cursor_countdown >= 30) {
-        sprite_render(renderer, text_cursor);
-    }
-
-    cursor_countdown--;
 }
 
 static int get_race_id() { // for the large portrait
@@ -639,8 +631,9 @@ void new_character_render(void* data, SDL_Renderer* renderer) {
         sprite_render(renderer, ps_sel[i]);
     }
 
-    sprite_render(renderer, name_textbox);
+    //sprite_render(renderer, name_textbox);
 
+/*
     if (current_textbox == TEXTBOX_NAME) {
         sprite_set_location(text_cursor,
             85 + font_pixel_width(FONT_GREYLIGHT, name_text, strlen(name_text)),
@@ -652,17 +645,19 @@ void new_character_render(void* data, SDL_Renderer* renderer) {
 
         update_cursor_blink();
     }
+
     else {
         cursor_countdown = 0;
     }
+    */
 
     sprite_render(renderer, show_psionic_label ? sphere_label : psionic_label);
     sprite_render(renderer, done_button);
     sprite_render(renderer, exit_button);
 
-    label = &labels[LABEL_NAME_TEXT];
-    snprintf(buf, BUF_MAX, "%s", name_text);
-    label->set_text(label, buf);
+    //label = &labels[LABEL_NAME_TEXT];
+    //snprintf(buf, BUF_MAX, "%s", name_text);
+    //label->set_text(label, buf);
 
     label = &labels[LABEL_STR_VAL];
     snprintf(buf, BUF_MAX, "%d", pc.stats.str);
@@ -734,6 +729,8 @@ void new_character_render(void* data, SDL_Renderer* renderer) {
     for (int i = 0; i < LABEL_END; i++) {
         labels[i].render(&labels[i], renderer);
     }
+
+    textbox_render(name_tb);
 }
 
 void update_stats_alignment_hp(int i, uint32_t button)
@@ -1135,9 +1132,9 @@ int new_character_handle_mouse_down(const uint32_t button, const uint32_t x, con
         sprite_set_frame(exit_button, 2);
     }
 
-    if (sprite_in_rect(name_textbox, x, y)) {
-        last_sprite_mousedowned = name_textbox;
-    }
+    //if (sprite_in_rect(name_textbox, x, y)) {
+        //last_sprite_mousedowned = name_textbox;
+    //}
 
     for (int i = 0; i < 8; i++) {
         if (sprite_in_rect(stats_align_hp_buttons[i], x, y)) {
@@ -1182,6 +1179,8 @@ int new_character_handle_mouse_down(const uint32_t button, const uint32_t x, con
     } else if (!show_psionic_label && sprite_get_frame(sphere_label) < 2 && sprite_in_rect(sphere_label, x, y)) {
         last_sprite_mousedowned = sphere_label;
     }
+    
+    textbox_set_focus(name_tb, (textbox_is_in(name_tb, x, y)));
 
     return 1; // handle
 }
@@ -1238,11 +1237,11 @@ int new_character_handle_mouse_up(const uint32_t button, const uint32_t x, const
         }
     }
 
-    if (sprite_in_rect(name_textbox, x, y)) {
-        current_textbox = TEXTBOX_NAME;
-    } else {
-        current_textbox = TEXTBOX_NONE;
-    }
+    //if (sprite_in_rect(name_textbox, x, y)) {
+        //current_textbox = TEXTBOX_NAME;
+    //} else {
+        //current_textbox = TEXTBOX_NONE;
+    //}
 
     if (last_sprite_mousedowned == parchment[2] && sprite_in_rect(parchment[2], x, y)) {
         die_countdown = 40;
@@ -1355,6 +1354,7 @@ void new_character_free() {
     sprite_free(done_button);
     sprite_free(exit_button);
     sprite_free(spr);
+    main_set_textbox(NULL);
 }
 
 sops_t new_character_screen = {

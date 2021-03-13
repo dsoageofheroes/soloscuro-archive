@@ -61,13 +61,17 @@ uint32_t font_pixel_width(font_t font, const char *text, const uint32_t len) {
 
     if (text == NULL) { return sum; }
 
-    for (int i = 0; text[i] && i < len; i++) {
+    for (size_t i = 0; text[i] && i < len; i++) {
         c = text[i];
         sum += font_loc[font][c].w;
         //debug("Need to print '%c'\n", i);
     }
 
     return sum;
+}
+
+uint16_t font_char_width(font_t font, const int c) {
+    return font_loc[font][c].w;
 }
 
 uint32_t font_pixel_height(font_t font) {

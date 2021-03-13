@@ -11,7 +11,7 @@
 #define MAX_REGIONS (100)
 
 static region_t *regions[MAX_REGIONS];
-static int current_region = 0; // will need to eliminate for server code.
+static int current_region = -1; // will need to eliminate for server code.
 
 void region_manager_init() {
     memset(regions, 0x0, sizeof(regions));
@@ -50,6 +50,7 @@ region_t* region_manager_get_region(const int region_id) {
 }
 
 region_t* region_manager_get_current() {
+    if (current_region < 0) { return NULL; }
     return regions[current_region];
 }
 
