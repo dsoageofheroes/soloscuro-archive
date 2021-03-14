@@ -91,8 +91,8 @@ void combat_status_render(void *data, SDL_Renderer *renderer) {
 
 void port_combat_action(combat_action_t *ca) {
     if (ca->action == CA_RED_DAMAGE) {
-        animate_sprite_t *anim = ca->target->sprite.data;
-        sprite_center_spr(combat_attacks, anim->spr);
+        animate_sprite_node_t *asn = ca->target->sprite.data;
+        sprite_center_spr(combat_attacks, asn->anim->spr);
         show_attack = 1;
         damage_amount = ca->amt;
         return;

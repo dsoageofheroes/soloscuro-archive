@@ -72,7 +72,6 @@ void player_update() {
     //debug ("tile @ (%d, %d) = %d\n", pc->xpos, pc->ypos, cmap_is_block(pc->xpos, pc->ypos));
 
     if (!narrate_is_open()) {
-        //trigger_noorders(pc->xpos, pc->ypos);
         trigger_noorders(dude->mapx, dude->mapy);
     }
     trigger_box_check(dude->mapx, dude->mapy);
@@ -241,9 +240,8 @@ void player_add_to_animation_list(const int slot) {
     anims[slot].desty -= sprite_geth(anims[slot].spr) - (16 * main_get_zoom());
     anims[slot].x = anims[slot].destx;
     anims[slot].y = anims[slot].desty;
-    printf("%d, %d\n", anims[slot].x, anims[slot].y);
     anims[slot].entity = player_get_entity(slot);
-    anims[slot].entity->sprite.data = anims + slot;
+    anims[slot].entity->sprite.data = player_node[slot];//anims + slot;
 }
 
 void player_load(const int slot, const float zoom) {

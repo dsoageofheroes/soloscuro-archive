@@ -81,36 +81,21 @@ void animate_list_render(SDL_Renderer *renderer) {
 
 // The assembly makes even less sense...
 static int is_less(animate_sprite_t *a0, animate_sprite_t *a1) {
-    const int map0y = a0->entity
-        ? (a0->entity->mapy * 16 - a0->entity->sprite.yoffset)
-        //: (a0->obj)
-        //? ((a0->obj->mapy + 1) * 16 + a0->obj->yoffset)
-        : 9999;
+    int map0y = a0->entity
+        ? (a0->entity->mapy)// * 16 + a0->entity->sprite.yoffset)
+        : 0;
 
-    const int map1y = a1->entity
-        ? (a1->entity->mapy * 16 - a1->entity->sprite.yoffset)
-        //: (a1->obj)
-        //? ((a1->obj->mapy + 1) * 16 + a1->obj->yoffset)
-        : 9999;
+    int map1y = a1->entity
+        ? (a1->entity->mapy)// * 16 + a1->entity->sprite.yoffset)
+        : 0;
 
 
-    /*
-    const int map0y = a0->entity
-        //? ((a0->obj->mapy * zoom) - sprite_geth(a0->spr) )
-        //? ((a0->obj->mapy) * zoom) - ((sprite_geth(a0->spr) - 16*zoom) / 2)
-        ? ((sprite_geth(a0->spr)))
-        //? ((a0->obj->mapy) * zoom)
-        : -9999;
-    const int map1y = a1->entity
-        //? ((a1->obj->mapy * zoom) - sprite_geth(a0->spr) )
-        //? ((a1->obj->mapy) * zoom) - ((sprite_geth(a1->spr) - 16*zoom) / 2)
-        ? ((sprite_geth(a1->spr)))
-        //? ((a1->obj->mapy) * zoom)
-        : -9999;
-        */
-    //printf("%p, %p\n", a0->obj, a1->obj);
-    //printf("%d, %d\n", map0y, map1y);
-    //printf("%p, %p\n", a0->entity, a1->entity);
+    if (map0y == map1y && a0->entity) {
+        //map0y = -a0->entity->sprite.yoffset;
+        //map1y = -a1->entity->sprite.yoffset;
+        map0y = sprite_geth(a0->spr);
+        map1y = sprite_geth(a1->spr);
+    }
     return map0y < map1y;
 }
 
@@ -207,7 +192,8 @@ void animate_close() {
 }
 
 void port_animate_entity(entity_t *dude) {
-    animate_sprite_t *anim = dude->sprite.data;
+    animate_sprite_node_t *asn = dude->sprite.data;
+    animate_sprite_t *anim = asn->anim;
 
     // In case we are in the middle of an animation, skip past it.
     while (! (anim->scmd[anim->pos].flags & SCMD_LAST) && anim->pos < SCMD_MAX_SIZE) {

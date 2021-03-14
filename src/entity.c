@@ -156,6 +156,7 @@ extern entity_t* entity_create_clone(entity_t *clone) {
     ret->abilities = clone->abilities;
     ret->mapx = clone->mapx;
     ret->mapy = clone->mapy;
+    ret->mapz = clone->mapz;
 
     return ret;
 }

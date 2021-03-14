@@ -175,11 +175,11 @@ void port_add_entity(entity_t *entity, gff_palette_t *pal) {
     anims[anim_pos].move = anims[anim_pos].left_over = 0.0;
     anims[anim_pos].entity = entity;
     anim_nodes[anim_pos] = animate_list_add(anims + anim_pos, entity->mapz);
-    entity->sprite.data = anims + anim_pos;
+    entity->sprite.data = anim_nodes[anim_pos];
     anim_nodes[anim_pos]->anim->entity = entity;
-    //entity->data = anims + anim_pos;
     //printf("%d: %d %d %d (%d, %d)\n", obj->combat_id, obj->mapx, obj->mapy, obj->mapz, anims[anim_pos].x, anims[anim_pos].y);
     //printf("             (%d, %d)\n", anims[anim_pos].destx, anims[anim_pos].desty);
+    //printf("%s: @ %p\n", entity->name, entity->sprite.data);
     anim_pos++;
 }
 
@@ -196,13 +196,14 @@ void port_remove_entity(entity_t *entity) {
 }
 
 static void entity_instant_move(entity_t *entity) {
-    animate_sprite_t *as = (animate_sprite_t*) entity->sprite.data;
-    as->x = as->destx;
-    as->y = as->desty;
+    animate_sprite_node_t *asn = (animate_sprite_node_t*) entity->sprite.data;
+    asn->anim->x = asn->anim->destx;
+    asn->anim->y = asn->anim->desty;
 }
 
 void port_update_entity(entity_t *entity, const uint16_t xdiff, const uint16_t ydiff) {
-    animate_sprite_t *as = (animate_sprite_t*) entity->sprite.data;
+    animate_sprite_node_t *asn = (animate_sprite_node_t*) entity->sprite.data;
+    animate_sprite_t *as = asn->anim;
     //printf("cur:%d %d\n", as->x, as->y);
     //printf("dest: %d, %d\n", as->destx, as->desty);
     as->x = as->destx;
@@ -215,6 +216,10 @@ void port_update_entity(entity_t *entity, const uint16_t xdiff, const uint16_t y
     as->destx -= (8 * main_get_zoom());
     as->desty -= sprite_geth(as->spr) - (8 * main_get_zoom());
     animate_set_animation(as, entity->sprite.scmd, 20);
+
+    //const size_t offset = (as - anims) / sizeof(animate_sprite_node_t*);
+    //printf("%ld\n", offset);
+    animate_shift_node(asn, entity->mapz);
 }
 
 void port_enter_combat() {
@@ -247,13 +252,13 @@ void port_exit_combat() {
 }
 
 void port_swap_enitity(int obj_id, entity_t *dude) {
-    animate_sprite_t *as = (animate_sprite_t*) dude->sprite.data;
+    animate_sprite_node_t *asn = (animate_sprite_node_t*) dude->sprite.data;
     gff_palette_t *pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + cmap->region->map_id - 1;
     const int zoom = 2.0;
 
-    if (as) {
-        sprite_free(as->spr);
-        as->spr = sprite_new(cren, pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP, dude->sprite.bmp_id);
+    if (asn) {
+        sprite_free(asn->anim->spr);
+        asn->anim->spr = sprite_new(cren, pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP, dude->sprite.bmp_id);
     } else {
         error("Unable to find animation for obj_id!\n");
     }
@@ -265,10 +270,10 @@ entity_t* get_entity_at_location(const uint32_t x, const uint32_t y) {
     if (!cmap) { return 0; }
 
     entity_list_for_each(cmap->region->entities, dude) {
-        animate_sprite_t *as = dude->sprite.data;
+        animate_sprite_node_t *asn = dude->sprite.data;
         //printf("%d: %d, %d (%d, %d)\n", dude->ds_id, dude->mapx * 16, dude->mapy * 16, x, y);
-        if (as && dude->object_flags & CLICKABLE) {
-            if (sprite_in_rect(as->spr, x, y)) {
+        if (asn && dude->object_flags & CLICKABLE) {
+            if (sprite_in_rect(asn->anim->spr, x, y)) {
                 return dude;
             }
         }
