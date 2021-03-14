@@ -491,7 +491,7 @@ static int dsl_clone(lua_State *l) {
         if (dude) {
             if (dude->sprite.scmd == NULL) { dude->sprite.scmd = ds_scmd_empty(); }
             region_move_to_nearest(region_manager_get_current(), dude);
-            entity_list_add(region_manager_get_current()->entities, dude);
+            region_add_entity(region_manager_get_current(), dude);
             port_add_entity(dude, pal);
         }
     }

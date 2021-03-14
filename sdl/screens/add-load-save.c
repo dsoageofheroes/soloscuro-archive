@@ -1,20 +1,25 @@
 #include "add-load-save.h"
 #include "screen-main.h"
 #include "popup.h"
+#include "../textbox.h"
 #include "../main.h"
 #include "../font.h"
 #include "../sprite.h"
 #include "../map.h"
+#include "../player.h"
 #include "../../src/ds-load-save.h"
 #include "../../src/gff.h"
 #include "../../src/gff-char.h"
 #include "../../src/gfftypes.h"
+
+#define SAVE_FORMAT "save%02d.sav"
 
 static uint16_t background;
 static uint16_t up_arrow, down_arrow;
 static uint16_t action_btn, exit_btn, delete_btn;
 static uint16_t title;
 static uint16_t bar;
+static textbox_t *name_tb = NULL;
 
 extern char *strdup(const char *s);
 
@@ -29,7 +34,7 @@ static uint16_t new_sprite_create(SDL_Renderer *renderer, gff_palette_t *pal,
 
 static float zoom;
 static uint16_t mousex, mousey;
-static uint16_t selection;
+static int16_t selection;
 static uint16_t char_selected;
 static char **entries = NULL;
 static uint16_t *valids = NULL;
@@ -45,7 +50,7 @@ void add_load_save_set_mode(int _mode) { mode = _mode; }
 
 static void free_entries() {
     if (entries) {
-        for (int i = 0; i < num_entries; i++) {
+        for (uint32_t i = 0; i < num_entries; i++) {
             free(entries[i]);
         }
         free(entries);
@@ -74,7 +79,7 @@ static void setup_character_selection() {
     if (!entries || !valids) { return; }
     num_valid_entries = 0;
     gff_get_resource_ids(CHARSAVE_GFF_INDEX, GFF_CHAR, res_ids);
-    for (int i = 0; i < num_entries; i++) {
+    for (uint32_t i = 0; i < num_entries; i++) {
         gff_chunk_header_t chunk = gff_find_chunk_header(CHARSAVE_GFF_INDEX, GFF_CHAR, res_ids[i]);
         gff_read_chunk(CHARSAVE_GFF_INDEX, &chunk, &buf, sizeof(buf));
         ds1_combat_t *combat = (ds1_combat_t*)(buf + 10);
@@ -88,6 +93,21 @@ static void setup_character_selection() {
     }
 }
 
+static char* read_save_name(const char *path) {
+    int gff_id = gff_open(path);
+    char buf[32];
+
+    if (gff_id < 0) { return "<error>"; }
+
+    gff_chunk_header_t chunk = gff_find_chunk_header(gff_id, GFF_STXT, 0);
+    gff_read_chunk(gff_id, &chunk, buf, 32);
+    buf[chunk.length > 31 ? 31 : chunk.length] = '\0'; // guard.
+
+    gff_close(gff_id);
+
+    return strdup(buf);
+}
+
 static void setup_save_load_selection() {
     char buf[BUF_MAX];
     int16_t id = 0;
@@ -95,12 +115,12 @@ static void setup_save_load_selection() {
 
     free_entries();
 
-    snprintf(buf, BUF_MAX, "save%02d.sav", id);
+    snprintf(buf, BUF_MAX, SAVE_FORMAT, id);
     file = fopen(buf, "rb");
     while (file) {
         fclose(file);
         id++;
-        snprintf(buf, BUF_MAX, "save%02d.sav", id);
+        snprintf(buf, BUF_MAX, SAVE_FORMAT, id);
         file = fopen(buf, "rb");
     }
 
@@ -110,8 +130,9 @@ static void setup_save_load_selection() {
     num_valid_entries = 0;
     for (int i = 0; i < id; i++) {
         //TODO: Store the name and get it back.
-        snprintf(buf, BUF_MAX, "save%02d.sav", i);
-        entries[i] = strdup(buf);
+        snprintf(buf, BUF_MAX, SAVE_FORMAT, i);
+        //entries[i] = strdup(buf);
+        entries[i] = read_save_name(buf);
         valids[i] = i;
         num_entries++;
         num_valid_entries++;
@@ -121,7 +142,7 @@ static void setup_save_load_selection() {
 void add_load_save_init(SDL_Renderer *_renderer, const uint32_t x, const uint32_t y, const float _zoom) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     zoom = _zoom;
-    selection = 0xFFFF;
+    selection = -1;
     renderer = _renderer;
     num_valid_entries = 0;
 
@@ -131,6 +152,8 @@ void add_load_save_init(SDL_Renderer *_renderer, const uint32_t x, const uint32_
     exit_btn = new_sprite_create(renderer, pal, 230 + x, 50 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2058);
     delete_btn = new_sprite_create(renderer, pal, 215 + x, 150 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2097);
     bar = new_sprite_create(renderer, pal, 45 + x, 31 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 18100);
+    name_tb = textbox_create(32, 50, 148);
+    main_set_textbox(name_tb);
 
     switch(mode) {
         case ACTION_ADD:
@@ -163,7 +186,7 @@ void add_load_save_render(void *data, SDL_Renderer *renderer) {
     sprite_render(renderer, delete_btn);
     sprite_render(renderer, title);
     sprite_render(renderer, action_btn);
-    for (int i = 0; i < 10; i++) {
+    for (unsigned int i = 0; i < 10; i++) {
         sprite_set_frame(bar, 0);
         sprite_set_location(bar, zoom * 45, zoom * (31 + i * 11));
         if (sprite_in_rect(bar, mousex, mousey)) {
@@ -175,11 +198,13 @@ void add_load_save_render(void *data, SDL_Renderer *renderer) {
         sprite_render(renderer, bar);
     }
 
-    for (int i = top_entry; i < top_entry + 10 && i < num_valid_entries; i++) {
+    for (uint16_t i = top_entry; i < top_entry + 10 && i < num_valid_entries; i++) {
         print_line_len(renderer, (selection != i) ? FONT_GREY : FONT_REDDARK,
                 entries[valids[i]],
                 zoom * 47, zoom * (31 + (i - top_entry) * 11), 1<<10);
     }
+
+    textbox_render(name_tb);
 }
 
 int add_load_save_handle_mouse_movement(const uint32_t x, const uint32_t y) {
@@ -244,21 +269,42 @@ int add_load_save_handle_mouse_down(const uint32_t button, const uint32_t x, con
             selection = top_entry + i;
             if (selection < num_valid_entries) {
                 char_selected = res_ids[valids[selection]];
+                textbox_set_text(name_tb, entries[valids[selection]]);
             }
         }
     }
+
+    textbox_set_focus(name_tb, (textbox_is_in(name_tb, x, y)));
+
     return 1; // means I captured the mouse click
 }
 
 static void load_game() {
     char buf[128];
-    strncpy(buf, entries[selection], 127);
+    snprintf(buf, 128, SAVE_FORMAT, selection);
     screen_clear();
+    player_close();
+    player_init();
     ls_load_save_file(buf);
     main_center_on_player();
 }
 
+int16_t find_next_save_file() {
+    char buf[32];
+
+    for (int i = 0; i < 100; i++) {
+        snprintf(buf, 31, SAVE_FORMAT, i);
+        FILE *file = fopen(buf, "rb");
+        if (!file) { return i; }
+        fclose (file);
+    }
+
+    return -1;
+}
+
 int add_load_save_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
+    char filename[32];
+
     if (sprite_in_rect(action_btn, x, y)) {
         if (mode == ACTION_LOAD) {
             load_game();
@@ -266,10 +312,15 @@ int add_load_save_handle_mouse_up(const uint32_t button, const uint32_t x, const
         }
         if (mode == ACTION_SAVE) {
             //TODO: Fix for naming
-            ls_save_to_file(entries[selection]);
+            if (selection < 0) {
+                selection = find_next_save_file();
+            }
+            if (selection < 0) { return 0; }
+            snprintf(filename, 31, SAVE_FORMAT, selection);
+            ls_save_to_file(filename, textbox_get_text(name_tb));
         }
         sprite_set_frame(action_btn, 0);
-        if (selection != 0xFFFF) {
+        if (selection != -1) {
             last_action = mode;
             screen_pop();
         }
@@ -280,7 +331,7 @@ int add_load_save_handle_mouse_up(const uint32_t button, const uint32_t x, const
     }
     if (sprite_in_rect(delete_btn, x, y)) {
         sprite_set_frame(delete_btn, 0);
-        if (selection != 0xFFFF) {
+        if (selection != -1) {
             sprite_set_frame(delete_btn, 3);
             screen_push_screen(renderer, &popup_screen, 90, 62);
             popup_set_message("DELETE THIS PERSON?");
@@ -320,6 +371,8 @@ void add_load_save_free() {
     sprite_free(title);
     sprite_free(bar);
     free_entries();
+    textbox_free(name_tb);
+    main_set_textbox(NULL);
 }
 
 int add_load_save_get_action() { return last_action; }

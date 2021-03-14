@@ -208,6 +208,7 @@ void main_center_on_player() {
 }
 
 void render() {
+    region_tick(region_manager_get_current());
     combat_update(region_manager_get_current());
     screen_render(renderer, xmappos, ymappos);
 }

@@ -95,6 +95,7 @@ typedef entity_t dude_t;
 
 extern entity_t* entity_create_from_objex(const int id);
 extern entity_t* entity_create_from_etab(gff_map_object_t *entry_table, uint32_t id);
+extern entity_t* entity_create_clone(entity_t *clone);
 extern void entity_free(entity_t *entity);
 extern void entity_load_from_gff(entity_t *entity, const int gff_idx, const int player, const int res_id);
 extern void entity_copy_item(entity_t *entity, item_t *item, const size_t slot);

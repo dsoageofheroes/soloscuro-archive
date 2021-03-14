@@ -654,7 +654,8 @@ int req_set_allegiance(int16_t object, long allegiance, long notused2) {
     entity_list_for_each(region_manager_get_current()->entities, dude) {
         if (dude->ds_id == object) {
             dude->allegiance = allegiance;
-            combat_add(&(region_manager_get_current()->cr), dude);
+            //combat_add(&(region_manager_get_current()->cr), dude);
+            //region_add_entity(region_manager_get_current(), dude);
         }
     }
 

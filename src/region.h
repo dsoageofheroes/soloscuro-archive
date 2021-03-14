@@ -38,6 +38,8 @@ extern entity_t* region_find_entity_by_id(region_t *reg, const int id);
 extern void region_move_to_nearest(const region_t *reg, entity_t *entity);
 extern int region_location_blocked(const region_t *reg, const int32_t x, const int32_t y);
 extern void region_remove_entity(region_t *reg, entity_t *entity);
+extern void region_add_entity(region_t *reg, entity_t *entity);
+extern void region_tick(region_t *reg);
 extern int region_is_block(region_t *region, int row, int column);
 extern void region_set_block(region_t *region, int row, int column, int val);
 extern void region_clear_block(region_t *region, int row, int column, int val);

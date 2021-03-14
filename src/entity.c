@@ -150,6 +150,16 @@ error:
     return NULL;
 }
 
+extern entity_t* entity_create_clone(entity_t *clone) {
+    entity_t *ret = entity_create_from_objex(-1 * abs(clone->ds_id));
+
+    ret->abilities = clone->abilities;
+    ret->mapx = clone->mapx;
+    ret->mapy = clone->mapy;
+
+    return ret;
+}
+
 //TODO: Flesh this out. It is currently used for player, but will be use for future entitys;
 extern void entity_load_from_object(entity_t *entity, const char *data) {
     item_t *inv = entity->inv;

@@ -87,7 +87,7 @@ typedef struct combat_action_list_s {
 void combat_init(combat_region_t *cr);
 void combat_free(combat_region_t *rc);
 const enum combat_turn_t combat_player_turn();
-uint32_t combat_add(combat_region_t *rc, entity_t *entity);
+extern int combat_initiate(region_t *reg, const uint16_t x, const uint16_t y);
 scmd_t* combat_get_scmd(const enum combat_scmd_t type);
 entity_t* combat_get_current(combat_region_t *cr);
 extern void combat_set_hunt(combat_region_t *cr, const uint32_t combat_id);

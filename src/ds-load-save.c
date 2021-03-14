@@ -116,19 +116,21 @@ static void save_regions(const int id) {
 
     if (reg) {
         entity_list_for_each(reg->entities, entity) {
-            rdff.load_action = RDFF_OBJECT;
-            rdff.blocknum = 0;
-            rdff.type = PLAYER_OBJECT;
-            rdff.index = rdff.from = 0;
-            rdff.len = sizeof(entity_t);
-            buf = append(buf, &offset, &buf_len, &rdff, sizeof(rdff_header_t));
-            buf = append(buf, &offset, &buf_len, entity, sizeof(entity_t));
-            // Any of his items will need to go here.
+            if (entity->name) {
+                rdff.load_action = RDFF_OBJECT;
+                rdff.blocknum = 0;
+                rdff.type = PLAYER_OBJECT;
+                rdff.index = rdff.from = 0;
+                rdff.len = sizeof(entity_t);
+                buf = append(buf, &offset, &buf_len, &rdff, sizeof(rdff_header_t));
+                buf = append(buf, &offset, &buf_len, entity, sizeof(entity_t));
+                // Any of his items will need to go here.
+            }
         }
-        gff_add_chunk(id, GFF_ROBJ, dude->region, buf, offset);
+        gff_add_chunk(id, GFF_RENT, dude->region, buf, offset);
         offset = 0;
         buf = append(buf, &offset, &buf_len, reg->flags, sizeof(reg->flags));
-        buf = append(buf, &offset, &buf_len, &(reg->cr), sizeof(reg->cr));
+        //buf = append(buf, &offset, &buf_len, &(reg->cr), sizeof(reg->cr));
         gff_add_chunk(id, GFF_RDAT, dude->region, buf, offset);
     }
     free(buf);
@@ -144,12 +146,45 @@ static void save_regions(const int id) {
 
 //TODO: Will need to save off ALL regions when we get to multiple regions
 static void load_regions(const int id) {
+    //entity_t *entity = NULL;
+    //gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes;
     dude_t *dude = player_get_active();
+    region_t *reg = region_manager_get_region(dude->region);
+    char *buf = NULL;
+    rdff_header_t *rdff = NULL;
+    size_t offset = 0;
 
-    port_change_region(region_manager_get_region(dude->region));
+    if (reg) {
+        gff_chunk_header_t chunk = gff_find_chunk_header(id, GFF_RDAT, dude->region);
+        buf = malloc(chunk.length);
+        if (!buf || (gff_read_chunk(id, &chunk, buf, chunk.length) < chunk.length)) { return; }
+        memcpy(&(reg->flags), buf, sizeof(reg->flags));
+
+        chunk = gff_find_chunk_header(id, GFF_RENT, dude->region);
+        buf = realloc(buf, chunk.length);
+        if (!buf || (gff_read_chunk(id, &chunk, buf, chunk.length) < chunk.length)) { return; }
+
+        offset = 0;
+        rdff = (rdff_header_t*)(buf + offset);
+        while(rdff->type == PLAYER_OBJECT) {
+            offset += sizeof(rdff_header_t);
+            entity_t* dude = entity_create_clone((entity_t*)(buf + offset));
+            //printf("dude->name = %s, hunt = %d, (%d, %d)\n", dude->name, dude->abilities.hunt,
+                //dude->mapx, dude->mapy);
+
+            entity_list_add(reg->entities, dude);
+            //port_add_entity(dude, pal);
+
+            offset += sizeof(entity_t);
+            rdff = (rdff_header_t*)(buf + offset);
+        }
+        free(buf);
+    }
+
+    port_change_region(reg);
 }
 
-void ls_save_to_file(const char *path) {
+void ls_save_to_file(const char *path, char *save_name) {
     int id = gff_create(path);
 
     gff_add_type(id, GFF_PSIN);
@@ -157,7 +192,8 @@ void ls_save_to_file(const char *path) {
     gff_add_type(id, GFF_SPST);
     gff_add_type(id, GFF_CHAR);
     gff_add_type(id, GFF_POS);
-    gff_add_type(id, GFF_ROBJ); // Region objects
+    gff_add_type(id, GFF_STXT);
+    gff_add_type(id, GFF_RENT); // Region Entities
     gff_add_type(id, GFF_RDAT); // Region data, not compatible with DS1.
     gff_add_type(id, GFF_TRIG); // Trigger Objects
     gff_add_type(id, GFF_GDAT); // GPL data Objects
@@ -175,13 +211,15 @@ void ls_save_to_file(const char *path) {
     char* triggers = trigger_serialize(&trigger_len);
     gff_add_chunk(id, GFF_TRIG, 0, triggers, trigger_len);
 
+    gff_add_chunk(id, GFF_STXT, 0, save_name, strlen(save_name) + 1);
+
     free(triggers);
     gff_close(id);
 }
 
-char* ls_create_save_file() {
+char* ls_create_save_file(char *name) {
     char *path = get_next_save_file();
-    ls_save_to_file(path);
+    ls_save_to_file(path, name);
     return path;
 }
 
@@ -262,6 +300,7 @@ int ls_load_save_file(const char *path) {
     int id = gff_open(path);
     char *triggers = NULL;
     char *buf = NULL;
+
 
     if (id < 0) { return 0; }
 

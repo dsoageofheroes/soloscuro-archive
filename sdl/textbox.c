@@ -89,7 +89,7 @@ int textbox_handle_keydown(textbox_t *tb, SDL_Keysym ks) {
     if (ks.sym == SDLK_LEFT && tb->text_pos > 0) {
         tb->text_pos--;
     }
-    if (ks.sym == SDLK_RIGHT && tb->text_pos < strlen(tb->text) - 1) {
+    if (ks.sym == SDLK_RIGHT && tb->text_pos < strlen(tb->text)) {
         tb->text_pos++;
     }
     return 1;

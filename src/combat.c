@@ -65,36 +65,6 @@ void combat_free(combat_region_t *cr) {
 
 static int32_t ticks_per_game_round = 20;// For outside combat.
 
-//TODO: Ignores walls, but that might be okay right now.
-static int calc_distance_to_player(entity_t *entity) {
-    int min = 9999999;
-    int max;
-
-    //for (int i = 0; i < MAX_PCS; i++) {
-        //if (player_exists(i)) {
-            entity_t *dude = player_get_active();
-            int xdiff = (entity->mapx - dude->mapx);
-            int ydiff = (entity->mapy - dude->mapy);
-            if (xdiff < 0) { xdiff *= -1;}
-            if (ydiff < 0) { ydiff *= -1;}
-            max = (xdiff > ydiff) ? xdiff : ydiff;
-            min = (min < max) ? min : max;
-        //}
-    //}
-
-    return min;
-}
-
-static int enemies_alive(combat_region_t *cr) {
-    dude_t *enemy = NULL;
-    entity_list_for_each(cr->combatants, enemy) {
-        if (enemy->allegiance > 1) { // looks like > 1 is hostile.
-            return 1; // need to check status as well.
-        }
-    }
-    return 0;
-}
-
 static int initiative_is_less(combat_entry_t *n0, combat_entry_t *n1) {
     if (n0->initiative != n1->initiative) { return n0->initiative < n1->initiative; }
     return n0->sub_roll < n1->sub_roll;
@@ -127,37 +97,43 @@ static void add_to_combat(entity_t *entity) {
     }
 }
 
-static void enter_combat_mode(region_t *reg) {
-    debug("Enter combat mode.\n");
-    entity_t *combatant = NULL;
+static int get_dist(entity_t *entity, const uint16_t x, const uint16_t y) {
+    int xdiff = abs(entity->mapx - x);
+    int ydiff = abs(entity->mapy - y);
 
-    combat_region_t *cr = &(reg->cr);
-    if (!enemies_alive(cr)) {
-        error("Called to enter combat, but no enemies? ignoring...\n");
-        return;
+    return (xdiff > ydiff) ? xdiff : ydiff;
+}
+
+extern int combat_initiate(region_t *reg, const uint16_t x, const uint16_t y) {
+    const int dist = 10; // distance of the sphere;
+    dude_t *enemy = NULL;
+
+    entity_list_for_each(reg->entities, enemy) {
+        if (enemy->name && get_dist(enemy, x, y) <= dist) {
+            entity_list_add(reg->cr.combatants, enemy);
+        }
+    }
+
+    // Freeze all combats.
+    entity_list_for_each(reg->cr.combatants, enemy) {
+        enemy->sprite.scmd = combat_animation_get_scmd(enemy->sprite.scmd, 0, 0, CA_NONE);
+        port_update_entity(enemy, 0, 0);
+    }
+
+    for (int i = 0; i < MAX_PCS; i++) {
+        if (player_exists(i)) {
+            entity_list_add(reg->cr.combatants, player_get_entity(i));
+        }
     }
 
     in_combat = 1;
 
-    // Freeze all combats.
-    entity_list_for_each(cr->combatants, combatant) {
-        combatant->sprite.scmd = combat_animation_get_scmd(combatant->sprite.scmd, 0, 0, CA_NONE);
-        port_update_entity(combatant, 0, 0);
+    entity_list_for_each(reg->cr.combatants, enemy) {
+        add_to_combat(enemy);
     }
 
-    // Right now players are not part of combat, so add them!
-    for (int i = 0; i < MAX_PCS; i++) {
-        if (player_exists(i)) {
-            combat_add(&(reg->cr), player_get_entity(i));
-        }
-    }
+    port_enter_combat();
 
-    // Now lets make an initiative list
-    entity_list_for_each(cr->combatants, combatant) {
-        add_to_combat(combatant);
-    }
-
-    // print to debug:
     /*
     combat_entry_t *rover = combat_order;
     while(rover) {
@@ -166,7 +142,7 @@ static void enter_combat_mode(region_t *reg) {
     }
     */
 
-    port_enter_combat();
+    return in_combat;
 }
 
 static int which_player(combat_entry_t *node) {
@@ -594,8 +570,6 @@ void combat_update(region_t *reg) {
     if (reg == NULL) { return; }
     combat_region_t *cr = &(reg->cr);
     if (cr == NULL) { return; }
-    int xdiff, ydiff;
-    int posx, posy;
 
     if (wait_on_player) {
         do_player_turn(reg);
@@ -612,6 +586,7 @@ void combat_update(region_t *reg) {
             return;
         }
         port_combat_action(&clear);
+
         in_combat = !is_combat_over(reg); // Just to check
         entity_t *combatant = NULL;
         if (in_combat) {
@@ -629,39 +604,6 @@ void combat_update(region_t *reg) {
         return;
         // We were in combat but now it is over. Need to clean up.
     }
-
-    dude_t *bad_dude = NULL;
-    entity_list_for_each(reg->cr.combatants, bad_dude) {
-        if (bad_dude->abilities.hunt) {
-            xdiff = player_get_active()->mapx - bad_dude->mapx;
-            ydiff = player_get_active()->mapy - bad_dude->mapy;
-            xdiff = (xdiff < 0) ? -1 : (xdiff > 0) ? 1 : 0;
-            ydiff = (ydiff < 0) ? -1 : (ydiff > 0) ? 1 : 0;
-            posx = bad_dude->mapx;
-            posy = bad_dude->mapy;
-
-            if (region_location_blocked(reg, posx + xdiff, posy + ydiff)
-                    ){
-                if (!region_location_blocked(reg, posx, posy + ydiff)) {
-                    xdiff = 0;
-                } else if (!region_location_blocked(reg, posx + xdiff, posy)) {
-                    ydiff = 0;
-                } else {
-                    xdiff = ydiff = 0;
-                }
-            }
-            bad_dude->sprite.scmd = combat_animation_get_scmd(bad_dude->sprite.scmd, xdiff, ydiff, CA_NONE);
-            if (calc_distance_to_player(bad_dude) < 5) {
-                enter_combat_mode(reg);
-                return;
-            }
-            port_update_entity(bad_dude, xdiff, ydiff);
-        } else {
-            if (bad_dude) {
-                port_update_entity(bad_dude, 0, 0);
-            }
-        }
-    }
 }
 
 void combat_set_hunt(combat_region_t *cr, const uint32_t combat_id) {
@@ -670,7 +612,7 @@ void combat_set_hunt(combat_region_t *cr, const uint32_t combat_id) {
 }
 
 // This does not force into combat mode, simply add a combat to the current region.
-uint32_t combat_add(combat_region_t *rc, entity_t *entity) {
+extern uint32_t combat_add(combat_region_t *rc, entity_t *entity) {
     if (!rc || !entity) { return 0; }
 
     entity_list_add(rc->combatants, entity);

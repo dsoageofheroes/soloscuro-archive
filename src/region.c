@@ -1,10 +1,12 @@
 #include "combat.h"
+#include "combat-animation.h"
 #include "dsl.h"
 #include "ds-player.h"
 #include "region.h"
 #include "gff-map.h"
 #include "gff.h"
 #include "gfftypes.h"
+#include "port.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -217,6 +219,85 @@ extern int region_location_blocked(const region_t *reg, const int32_t x, const i
     }
 
     return 0;
+}
+
+extern void region_add_entity(region_t *reg, entity_t *entity) {
+    if (!reg || !entity) { return; }
+    //entity_t * dude = NULL;
+
+    entity_list_add(reg->entities, entity);
+
+    //printf("---------------\n");
+    //entity_list_for_each(reg->entities, dude) {
+        //printf("Entity's name: %s\n", dude->name);
+    //}
+}
+
+//TODO: Ignores walls, but that might be okay right now.
+static int calc_distance_to_player(entity_t *entity) {
+    int min = 9999999;
+    int max;
+
+    //for (int i = 0; i < MAX_PCS; i++) {
+        //if (player_exists(i)) {
+            entity_t *dude = player_get_active();
+            int xdiff = (entity->mapx - dude->mapx);
+            int ydiff = (entity->mapy - dude->mapy);
+            if (xdiff < 0) { xdiff *= -1;}
+            if (ydiff < 0) { ydiff *= -1;}
+            max = (xdiff > ydiff) ? xdiff : ydiff;
+            min = (min < max) ? min : max;
+        //}
+    //}
+
+    return min;
+}
+
+
+extern void region_tick(region_t *reg) {
+    dude_t *bad_dude = NULL;
+    int xdiff, ydiff;
+    int posx, posy;
+    static int ticks_per_game_round = 30;
+
+    if (combat_player_turn() != NO_COMBAT) { return; }
+
+    ticks_per_game_round--;
+    if (ticks_per_game_round > 0) { return; }
+    ticks_per_game_round = 30;
+
+    entity_list_for_each(reg->entities, bad_dude) {
+        if (bad_dude->abilities.hunt) {
+            xdiff = player_get_active()->mapx - bad_dude->mapx;
+            ydiff = player_get_active()->mapy - bad_dude->mapy;
+            xdiff = (xdiff < 0) ? -1 : (xdiff > 0) ? 1 : 0;
+            ydiff = (ydiff < 0) ? -1 : (ydiff > 0) ? 1 : 0;
+            posx = bad_dude->mapx;
+            posy = bad_dude->mapy;
+
+            if (region_location_blocked(reg, posx + xdiff, posy + ydiff)
+                    ){
+                if (!region_location_blocked(reg, posx, posy + ydiff)) {
+                    xdiff = 0;
+                } else if (!region_location_blocked(reg, posx + xdiff, posy)) {
+                    ydiff = 0;
+                } else {
+                    xdiff = ydiff = 0;
+                }
+            }
+            bad_dude->sprite.scmd = combat_animation_get_scmd(bad_dude->sprite.scmd, xdiff, ydiff, CA_NONE);
+            if (calc_distance_to_player(bad_dude) < 5) {
+                //enter_combat_mode(reg);
+                combat_initiate(reg, bad_dude->mapx, bad_dude->mapy);
+                return;
+            }
+            port_update_entity(bad_dude, xdiff, ydiff);
+        } else {
+            if (bad_dude->name) {
+                port_update_entity(bad_dude, 0, 0);
+            }
+        }
+    }
 }
 
 extern void region_move_to_nearest(const region_t *reg, entity_t *entity) {
