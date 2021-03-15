@@ -147,6 +147,8 @@ void inventory_screen_init(SDL_Renderer *renderer, const uint32_t _xoffset, cons
 
     strcpy(name, "NAME");
     strcpy(description, "message");
+
+    map_apply_alpha(127);
 }
 
 static const char *slot_names[] = {
@@ -515,6 +517,8 @@ void inventory_screen_free() {
     sprite_free(magic);
     sprite_free(status);
     sprite_free(slots);
+
+    map_apply_alpha(255);
 }
 
 void inventory_screen_return_control () {
