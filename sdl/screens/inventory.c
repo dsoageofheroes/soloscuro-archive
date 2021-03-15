@@ -383,7 +383,14 @@ void inventory_screen_render(void *data, SDL_Renderer *renderer) {
 
     for (int i = 0; i < 4; i++) {
         player_center(i, xoffset + 12 * zoom, yoffset + (4 + 48 * i) * zoom, 34 * zoom, 34 * zoom);
-        player_render(rend, i);
+        uint16_t spr = player_get_sprite(i);
+        if (sprite_geth(spr) > 30 * zoom) {
+            sprite_set_frame(spr, 0);
+            sprite_render_box(rend, spr, xoffset + 15 * zoom, yoffset + 11 + (48 * i) * zoom,
+                30 * zoom, 30 * zoom);
+        } else {
+            player_render(rend, i);
+        }
     }
 
     if (player_exists(char_selected)) {

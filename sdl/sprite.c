@@ -1,4 +1,5 @@
 #include "sprite.h"
+#include "main.h"
 
 #define MAX_SPRITES (1<<10)
 
@@ -154,6 +155,25 @@ void sprite_set_alpha(const uint16_t id, const uint8_t alpha) {
     for (uint32_t i = 0; i < sprites[id].len; i++) {
         SDL_SetTextureAlphaMod(sprites[id].tex[i], alpha);
     }
+}
+
+void sprite_render_box(SDL_Renderer *renderer, const uint16_t sprite_id,
+        const uint16_t x, const uint16_t y, const uint16_t w, const uint16_t h) {
+    if (sprite_id == (uint16_t)SPRITE_ERROR) { return; }
+    sprite_t *sprite = sprites + sprite_id;
+    SDL_Rect dest = *(sprites[sprite_id].loc);
+    dest.x = x;
+    dest.y = y;
+    dest.w = w;
+    dest.h = h;
+
+    SDL_Rect src = *(sprites[sprite_id].loc);
+    src.x = src.y = 0;
+    src.w = w;
+    src.h = w / main_get_zoom();
+    src.h = h / main_get_zoom();
+
+    SDL_RenderCopy(renderer, sprite->tex[sprite->pos], &src, &dest); //(sprite->loc + sprite->pos));
 }
 
 void sprite_render(SDL_Renderer *renderer, const uint16_t sprite_id) {
