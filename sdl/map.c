@@ -126,6 +126,19 @@ static void clear_animations() {
     anim_pos = 0;
 }
 
+void map_apply_alpha(const uint8_t alpha) {
+    entity_t *entity = NULL;
+
+    for (uint32_t i = 0; i < cmap->region->num_tiles; i++) {
+        SDL_SetTextureAlphaMod(cmap->tiles[i + 1], alpha);
+    }
+
+    entity_list_for_each(cmap->region->entities, entity) {
+        if (entity->sprite.data) {
+        }
+    }
+}
+
 void map_render(void *data, SDL_Renderer *renderer) {
     const int stretch = 2;
     const uint32_t xoffset = getCameraX();
