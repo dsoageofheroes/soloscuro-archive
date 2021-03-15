@@ -238,5 +238,6 @@ sops_t narrate_screen = {
     .mouse_movement = narrate_handle_mouse_movement,
     .mouse_down = narrate_handle_mouse_down,
     .mouse_up = NULL,
+    .grey_out_map = 0,
     .data = NULL
 };

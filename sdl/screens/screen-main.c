@@ -16,6 +16,7 @@ static int mousex = 0, mousey = 0;
 static int mouse_down = 0;
 static int count_down = 0;
 static uint16_t count_down_spr = SPRITE_ERROR;
+static uint32_t xoffset, yoffset;
 
 SDL_Renderer *renderer = NULL;
 
@@ -30,13 +31,15 @@ void main_init(SDL_Renderer *_renderer, const uint32_t x, const uint32_t y) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     renderer = _renderer;
     const float zoom = main_get_zoom();
+    xoffset = x;
+    yoffset = y;
 
-    background = main_sprite_create(renderer, pal, x, 20 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20029);
-    sun = main_sprite_create(renderer, pal, 45 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20028);
-    start = main_sprite_create(renderer, pal, 90 + x, 45 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2048);
-    create_characters = main_sprite_create(renderer, pal, 45 + x, 62 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2049);
-    load_save = main_sprite_create(renderer, pal, 60 + x, 80 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2050);
-    exit_dos = main_sprite_create(renderer, pal, 90 + x, 100 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2051);
+    background = main_sprite_create(renderer, pal, x / zoom, 20 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20029);
+    sun = main_sprite_create(renderer, pal, 45 + x / zoom, 0 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20028);
+    start = main_sprite_create(renderer, pal, 90 + x / zoom, 45 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2048);
+    create_characters = main_sprite_create(renderer, pal, 45 + x / zoom, 62 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2049);
+    load_save = main_sprite_create(renderer, pal, 60 + x / zoom, 80 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2050);
+    exit_dos = main_sprite_create(renderer, pal, 90 + x / zoom, 100 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2051);
 }
 
 static void click_action() {
@@ -138,5 +141,6 @@ sops_t main_screen = {
     .mouse_movement = main_handle_mouse_movement,
     .mouse_down = main_handle_mouse_down,
     .mouse_up = main_handle_mouse_up,
+    .grey_out_map = 0,
     .data = NULL
 };

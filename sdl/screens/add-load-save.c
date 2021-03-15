@@ -19,6 +19,7 @@ static uint16_t up_arrow, down_arrow;
 static uint16_t action_btn, exit_btn, delete_btn;
 static uint16_t title;
 static uint16_t bar;
+static uint32_t xoffset, yoffset;
 static textbox_t *name_tb = NULL;
 
 extern char *strdup(const char *s);
@@ -144,35 +145,37 @@ void add_load_save_init(SDL_Renderer *_renderer, const uint32_t x, const uint32_
     selection = -1;
     renderer = _renderer;
     num_valid_entries = 0;
+    xoffset = x;
+    yoffset = y;
 
-    background = new_sprite_create(renderer, pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 3009);
-    up_arrow = new_sprite_create(renderer, pal, 215 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2093);
-    down_arrow = new_sprite_create(renderer, pal, 215 + x, 130 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2094);
-    exit_btn = new_sprite_create(renderer, pal, 230 + x, 50 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2058);
-    delete_btn = new_sprite_create(renderer, pal, 215 + x, 150 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2097);
-    bar = new_sprite_create(renderer, pal, 45 + x, 31 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 18100);
-    name_tb = textbox_create(32, 50, 148);
+    background = new_sprite_create(renderer, pal, 0 + x / zoom, 0 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 3009);
+    up_arrow = new_sprite_create(renderer, pal, 215 + x / zoom, 30 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2093);
+    down_arrow = new_sprite_create(renderer, pal, 215 + x / zoom, 130 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2094);
+    exit_btn = new_sprite_create(renderer, pal, 230 + x / zoom, 50 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2058);
+    delete_btn = new_sprite_create(renderer, pal, 215 + x / zoom, 150 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2097);
+    bar = new_sprite_create(renderer, pal, 45 + x / zoom, 31 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 18100);
+    name_tb = textbox_create(32, 50 + x / zoom, 148 + y / zoom);
     main_set_textbox(name_tb);
 
     switch(mode) {
         case ACTION_ADD:
-            title = new_sprite_create(renderer, pal, 115 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6036); // Add
-            action_btn = new_sprite_create(renderer, pal, 230 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6037); // add
+            title = new_sprite_create(renderer, pal, 115 + x / zoom, 0 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6036); // Add
+            action_btn = new_sprite_create(renderer, pal, 230 + x / zoom, 30 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6037); // add
             setup_character_selection();
             break;
         case ACTION_SAVE:
-            title = new_sprite_create(renderer, pal, 115 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2056); // SAVE
-            action_btn = new_sprite_create(renderer, pal, 230 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2057); // save
+            title = new_sprite_create(renderer, pal, 115 + x / zoom, 0 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2056); // SAVE
+            action_btn = new_sprite_create(renderer, pal, 230 + x / zoom, 30 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2057); // save
             setup_save_load_selection();
             break;
         case ACTION_LOAD:
-            title = new_sprite_create(renderer, pal, 115 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6030); // Load
-            action_btn = new_sprite_create(renderer, pal, 230 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6031); // load
+            title = new_sprite_create(renderer, pal, 115 + x / zoom, 0 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6030); // Load
+            action_btn = new_sprite_create(renderer, pal, 230 + x / zoom, 30 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6031); // load
             setup_save_load_selection();
             break;
         case ACTION_DROP:
-            title = new_sprite_create(renderer, pal, 115 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6038); // Drop
-            action_btn = new_sprite_create(renderer, pal, 230 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6039); // drop
+            title = new_sprite_create(renderer, pal, 115 + x / zoom, 0 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6038); // Drop
+            action_btn = new_sprite_create(renderer, pal, 230 + x / zoom, 30 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6039); // drop
             break;
     }
 }
@@ -188,7 +191,7 @@ void add_load_save_render(void *data, SDL_Renderer *renderer) {
     sprite_render(renderer, action_btn);
     for (unsigned int i = 0; i < 10; i++) {
         sprite_set_frame(bar, 0);
-        sprite_set_location(bar, zoom * 45, zoom * (31 + i * 11));
+        sprite_set_location(bar, zoom * 45 + xoffset, zoom * (31 + i * 11) + yoffset);
         if (sprite_in_rect(bar, mousex, mousey)) {
             sprite_set_frame(bar, 1);
         }
@@ -201,7 +204,7 @@ void add_load_save_render(void *data, SDL_Renderer *renderer) {
     for (uint16_t i = top_entry; i < top_entry + 10 && i < num_valid_entries; i++) {
         print_line_len(renderer, (selection != i) ? FONT_GREY : FONT_REDDARK,
                 entries[valids[i]],
-                zoom * 47, zoom * (31 + (i - top_entry) * 11), 1<<10);
+                zoom * 47 + xoffset, zoom * (31 + (i - top_entry) * 11) + yoffset, 1<<10);
     }
 
     textbox_render(name_tb);
@@ -387,5 +390,6 @@ sops_t als_screen = {
     .mouse_down = add_load_save_handle_mouse_down,
     .mouse_up = add_load_save_handle_mouse_up,
     .return_control = add_load_save_return_control,
+    .grey_out_map = 1,
     .data = NULL
 };

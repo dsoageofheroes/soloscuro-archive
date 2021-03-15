@@ -1323,5 +1323,6 @@ sops_t new_character_screen = {
     .mouse_down = new_character_handle_mouse_down,
     .mouse_up = new_character_handle_mouse_up,
     .return_control = NULL,
+    .grey_out_map = 1,
     .data = NULL
 };

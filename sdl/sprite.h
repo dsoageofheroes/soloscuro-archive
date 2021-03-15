@@ -33,6 +33,7 @@ void sprite_render(SDL_Renderer *renderer, const uint16_t sprite_id);
 void sprite_render_flip(SDL_Renderer *renderer, const uint16_t sprite_id, SDL_RendererFlip flip);
 uint16_t sprite_get_frame(const uint16_t id);
 void sprite_set_frame(const uint16_t id, const uint16_t frame);
+void sprite_set_alpha(const uint16_t id, const uint8_t alpha);
 int sprite_in_rect(const uint16_t id, const uint32_t x, const uint32_t y);
 void sprite_set_location(const uint16_t, const uint32_t, const uint32_t y);
 void sprite_center(const int id, const int x, const int y, const int w, const int h);

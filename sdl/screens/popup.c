@@ -157,5 +157,6 @@ sops_t popup_screen = {
     .mouse_movement = popup_handle_mouse_movement,
     .mouse_down = popup_handle_mouse_down,
     .mouse_up = popup_handle_mouse_up,
+    .grey_out_map = 1,
     .data = NULL
 };

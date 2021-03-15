@@ -129,12 +129,18 @@ static void clear_animations() {
 void map_apply_alpha(const uint8_t alpha) {
     entity_t *entity = NULL;
 
+    if (!cmap || !cmap->region || !cmap->tiles) { return; }
+
     for (uint32_t i = 0; i < cmap->region->num_tiles; i++) {
         SDL_SetTextureAlphaMod(cmap->tiles[i + 1], alpha);
     }
 
     entity_list_for_each(cmap->region->entities, entity) {
         if (entity->sprite.data) {
+            animate_sprite_node_t *asn = (animate_sprite_node_t*) entity->sprite.data;
+            if (asn) {
+                sprite_set_alpha(asn->anim->spr, alpha);
+            }
         }
     }
 }

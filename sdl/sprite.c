@@ -148,6 +148,14 @@ void sprite_set_frame(const uint16_t id, const uint16_t frame) {
     sprites[id].pos = frame;
 }
 
+void sprite_set_alpha(const uint16_t id, const uint8_t alpha) {
+    if (!valid_id(id)) { return; }
+
+    for (uint32_t i = 0; i < sprites[id].len; i++) {
+        SDL_SetTextureAlphaMod(sprites[id].tex[i], alpha);
+    }
+}
+
 void sprite_render(SDL_Renderer *renderer, const uint16_t sprite_id) {
     if (sprite_id == (uint16_t)SPRITE_ERROR) { return; }
     sprite_t *sprite = sprites + sprite_id;

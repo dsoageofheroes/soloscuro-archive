@@ -14,6 +14,7 @@ typedef struct sops_s{
     void (*return_control) ();
     uint32_t (*get_width) ();
     uint32_t (*get_height) ();
+    uint8_t grey_out_map;
     void *data;
 } sops_t;
 

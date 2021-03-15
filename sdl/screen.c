@@ -23,13 +23,13 @@ void load_screen(const char *arg) {
     }
     if (!strcmp(arg, "view")) {
         screen_push_screen(renderer, &view_character_screen, 0, 10);
-        narrate_init(renderer, 0, 0, 2.0); // to setup print_line
+        narrate_init(renderer, 0, 0); // to setup print_line
     }
     if (!strcmp(arg, "new")) {
         screen_push_screen(renderer, &new_character_screen, 0, 0);
     }
     if (!strcmp(arg, "popup")) {
-        narrate_init(renderer, 0, 0, 2.0); // to setup print_line
+        narrate_init(renderer, 0, 0); // to setup print_line
         screen_push_screen(renderer, &popup_screen, 10, 10);
         popup_set_message("Exit game?");
         popup_set_option(0, "Save");

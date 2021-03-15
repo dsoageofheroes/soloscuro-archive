@@ -26,6 +26,7 @@ static uint16_t game_menu, game_return;
 enum {SELECT_NONE, SELECT_POPUP, SELECT_NEW, SELECT_ALS};
 static int8_t last_selection = SELECT_NONE;
 static uint8_t slot_clicked;
+static uint32_t xoffset, yoffset;
 
 static SDL_Rect initial_locs[] = {{ 155, 28, 0, 0 }, // description
                                   { 75, 175, 0, 0 }, // message
@@ -56,10 +57,13 @@ static uint16_t view_sprite_create(SDL_Renderer *renderer, gff_palette_t *pal,
     return sprite_create(renderer, &tmp, pal, 0, 0, main_get_zoom(), gff_idx, type_id, res_id);
 }
 
-void view_character_init(SDL_Renderer *renderer, const uint32_t x, const uint32_t y) {
+void view_character_init(SDL_Renderer *renderer, const uint32_t _x, const uint32_t _y) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     rend = renderer;
     const float zoom = main_get_zoom();
+    uint32_t x = _x / main_get_zoom(), y = _y / main_get_zoom();
+    xoffset = _x;
+    yoffset = _y;
 
     memset(description, 0x0, sizeof(description));
     memset(message, 0x0, sizeof(message));
@@ -136,19 +140,19 @@ void view_character_render(void *data, SDL_Renderer *renderer) {
     for (int i = 0; i < 4; i++) {
         if (player_exists(i)) {
             entity_t *player = player_get_entity(i);
-            int x = 56, y = 74;
+            int x = 56, y = 64;
             if (i == 1 || i == 3) { y += 60; }
             if (i == 2 || i == 3) { x += 50; }
             snprintf(buf, BUF_MAX, "%d/%d", player->stats.hp, player->stats.high_hp);
-            print_line_len(renderer, FONT_YELLOW, buf, x * zoom, (y + 0) * zoom, BUF_MAX);
+            print_line_len(renderer, FONT_YELLOW, buf, xoffset + x * zoom, yoffset + (y + 0) * zoom, BUF_MAX);
             snprintf(buf, BUF_MAX, "%d/%d", player->stats.psp, player->stats.high_psp);
-            print_line_len(renderer, FONT_BLUE, buf, x * zoom, (y + 8) * zoom, BUF_MAX);
+            print_line_len(renderer, FONT_BLUE, buf, xoffset + x * zoom, yoffset + (y + 8) * zoom, BUF_MAX);
             if (player->combat_status) {
                 snprintf(buf, BUF_MAX, "%d", player->combat_status);
             } else {
                 snprintf(buf, BUF_MAX, "Okay");
             }
-            print_line_len(renderer, FONT_YELLOW, buf, x * zoom, (y + 16) * zoom, BUF_MAX);
+            print_line_len(renderer, FONT_YELLOW, buf, xoffset + x * zoom, yoffset + (y + 16) * zoom, BUF_MAX);
         }
     }
 }
@@ -287,5 +291,6 @@ sops_t view_character_screen = {
     .mouse_down = view_character_handle_mouse_down,
     .mouse_up = view_character_handle_mouse_up,
     .return_control = view_character_return_control,
+    .grey_out_map = 1,
     .data = NULL
 };

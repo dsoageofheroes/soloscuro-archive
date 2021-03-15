@@ -35,11 +35,11 @@ const static char *statuses[] = {
 void combat_status_init(SDL_Renderer *renderer, const uint32_t x, const uint32_t y) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     const float zoom = main_get_zoom();
-    xoffset = x * zoom;
-    yoffset = y * zoom;
+    xoffset = main_get_width() - 100 * main_get_zoom();
+    yoffset = 5 * main_get_zoom();
 
-    background = sprite_new(renderer, pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 5016);
-    combat_attacks = sprite_new(renderer, pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 5014);
+    background = sprite_new(renderer, pal, 0 + xoffset / main_get_zoom(), 0 + yoffset / main_get_zoom(), zoom, RESOURCE_GFF_INDEX, GFF_BMP, 5016);
+    combat_attacks = sprite_new(renderer, pal, 0, 0, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 5014);
 }
 
 static void get_status() {
@@ -127,5 +127,6 @@ sops_t combat_status_screen = {
     .mouse_movement = combat_status_handle_mouse_movement,
     .mouse_down = combat_status_handle_mouse_down,
     .mouse_up = combat_status_handle_mouse_up,
+    .grey_out_map = 0,
     .data = NULL
 };

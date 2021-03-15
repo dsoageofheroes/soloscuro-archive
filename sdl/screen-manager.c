@@ -29,6 +29,8 @@ static uint32_t default_get_width() { return 320 * main_get_zoom(); }
 static uint32_t default_get_height() { return 200 * main_get_zoom(); }
 
 void screen_load_screen(SDL_Renderer *renderer, int layer, sops_t *screen, const uint32_t x, const uint32_t y) {
+    int grey_out_map = 0;
+
     if (layer < 0 || layer > MAX_SCREENS) { return; }
 
     if (screens[layer].render) {
@@ -44,6 +46,14 @@ void screen_load_screen(SDL_Renderer *renderer, int layer, sops_t *screen, const
         screens[layer].init(renderer,
             ((main_get_width() - screens[layer].get_width()) / 2),
             ((main_get_height() - screens[layer].get_height()) / 2));
+    }
+
+    for (uint32_t i = 0; i < screen_pos && !grey_out_map; i++) {
+        grey_out_map = screens[i].grey_out_map;
+    }
+
+    if (grey_out_map) {
+        map_apply_alpha(127);
     }
 }
 
@@ -161,10 +171,20 @@ void screen_clear() {
 }
 
 void screen_pop() {
+    int grey_out_map = 0;
+
     destroy_screen(--screen_pos);
 
     if (screen_pos > 0 && screens[screen_pos - 1].return_control) {
         screens[screen_pos - 1].return_control();
+    }
+
+    for (uint32_t i = 0; i < screen_pos && !grey_out_map; i++) {
+        grey_out_map = screens[i].grey_out_map;
+    }
+
+    if (!grey_out_map) {
+        map_apply_alpha(255);
     }
 }
 
