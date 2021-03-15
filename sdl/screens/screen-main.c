@@ -26,9 +26,10 @@ uint16_t main_sprite_create(SDL_Renderer *renderer, gff_palette_t *pal,
     return sprite_create(renderer, &tmp, pal, 0, 0, zoom, gff_idx, type_id, res_id);
 }
 
-void main_init(SDL_Renderer *_renderer, const uint32_t x, const uint32_t y, const float zoom) {
+void main_init(SDL_Renderer *_renderer, const uint32_t x, const uint32_t y) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     renderer = _renderer;
+    const float zoom = main_get_zoom();
 
     background = main_sprite_create(renderer, pal, x, 20 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20029);
     sun = main_sprite_create(renderer, pal, 45 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20028);

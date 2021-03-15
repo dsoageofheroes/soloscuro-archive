@@ -32,7 +32,6 @@ static uint16_t new_sprite_create(SDL_Renderer *renderer, gff_palette_t *pal,
 
 #define RES_MAX (1<<10)
 
-static float zoom;
 static uint16_t mousex, mousey;
 static int16_t selection;
 static uint16_t char_selected;
@@ -139,9 +138,9 @@ static void setup_save_load_selection() {
     }
 }
 
-void add_load_save_init(SDL_Renderer *_renderer, const uint32_t x, const uint32_t y, const float _zoom) {
+void add_load_save_init(SDL_Renderer *_renderer, const uint32_t x, const uint32_t y) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
-    zoom = _zoom;
+    const float zoom = main_get_zoom();
     selection = -1;
     renderer = _renderer;
     num_valid_entries = 0;
@@ -179,6 +178,7 @@ void add_load_save_init(SDL_Renderer *_renderer, const uint32_t x, const uint32_
 }
 
 void add_load_save_render(void *data, SDL_Renderer *renderer) {
+    const float zoom = main_get_zoom();
     sprite_render(renderer, background);
     sprite_render(renderer, up_arrow);
     sprite_render(renderer, down_arrow);
@@ -248,6 +248,7 @@ int add_load_save_handle_mouse_movement(const uint32_t x, const uint32_t y) {
 }
 
 int add_load_save_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
+    const float zoom = main_get_zoom();
     if (sprite_in_rect(action_btn, x, y)) {
         sprite_set_frame(action_btn, 2);
     }

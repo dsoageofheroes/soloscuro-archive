@@ -53,7 +53,6 @@ static int race_sprite_offsets_y[]   = {   27,   28,   33,   33,   28,   26,   2
 static int race_sprite_ids[]         = { 2095, 2099, 2055, 2053, 2061, 2059, 2095, 2099, 2072, 2074, 2068, 2070, 2093, 2093, 2097, 2097 };
 
 static int offsetx, offsety;
-static float zoom;
 static SDL_Renderer *renderer;
 static entity_t pc;
 static psin_t psi; // psi group
@@ -253,7 +252,7 @@ static void load_character_sprite() {
     spr = new_sprite_create(renderer, pal,
                             race_sprite_offsets_x[race + gender],
                             race_sprite_offsets_y[race + gender],
-                            zoom, OBJEX_GFF_INDEX, GFF_BMP,
+                            main_get_zoom(), OBJEX_GFF_INDEX, GFF_BMP,
                             race_sprite_ids[race + gender]);
 }
 
@@ -271,14 +270,14 @@ static void init_pc() {
     get_random_name();
 }
 
-static void new_character_init(SDL_Renderer* _renderer, const uint32_t x, const uint32_t y, const float _zoom) {
+static void new_character_init(SDL_Renderer* _renderer, const uint32_t x, const uint32_t y) {
     gff_palette_t* pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     char buf[BUF_MAX];
     offsetx = x; offsety = y;
-    zoom = _zoom;
     renderer = _renderer;
     current_textbox = TEXTBOX_NONE;
     labels = label_tables[SCREEN_NEW_CHARACTER];
+    const float zoom = main_get_zoom();
 
     is_valid = 0;
     spr = SPRITE_ERROR;

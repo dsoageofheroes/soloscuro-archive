@@ -1,6 +1,7 @@
 #include "popup.h"
 #include "narrate.h"
 #include "../sprite.h"
+#include "../main.h"
 #include "../font.h"
 #include "../../src/gff.h"
 #include "../../src/gfftypes.h"
@@ -46,8 +47,9 @@ static SDL_Rect setup_loc(const SDL_Rect rect, const uint32_t x, const uint32_t 
     return ret;
 }
 
-void popup_init(SDL_Renderer *renderer, const uint32_t x, const uint32_t y, const float zoom) {
+void popup_init(SDL_Renderer *renderer, const uint32_t x, const uint32_t y) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
+    const float zoom = main_get_zoom();
 
     background = popup_sprite_create(renderer, pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 14000);
     popup_return = popup_sprite_create(renderer, pal, 103 + x, 36 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 5012);

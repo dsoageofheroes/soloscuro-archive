@@ -4,7 +4,6 @@
 #include <SDL2/SDL.h>
 #include "../screen-manager.h"
 
-void main_init(SDL_Renderer *renderer, const uint32_t x, const uint32_t y, const float zoom);
 void main_render(void *data, SDL_Renderer *renderer);
 int main_handle_mouse_movement(const uint32_t x, const uint32_t y);
 int main_handle_mouse_click(const uint32_t button, const uint32_t x, const uint32_t y);

@@ -8,7 +8,7 @@
 #include "../player.h"
 #include "new-character.h"
 #include "popup.h"
-#include "dsl.h"
+#include "../../src/dsl.h"
 #include "add-load-save.h"
 #include "../../src/ds-player.h"
 #include "../../src/ds-load-save.h"
@@ -25,10 +25,10 @@ static uint16_t character, inv, magic, status;
 static uint16_t game_menu, game_return;
 enum {SELECT_NONE, SELECT_POPUP, SELECT_NEW, SELECT_ALS};
 static int8_t last_selection = SELECT_NONE;
-static float zoom = 1.0;
 static uint8_t slot_clicked;
 static uint32_t mousex, mousey;
 static int char_selected;
+static uint32_t xoffset, yoffset;
 
 static SDL_Rect initial_locs[] = {{ 59, 5, 0, 0 }, // name
                                   { 52, 165, 174, 0 }, // description
@@ -84,12 +84,16 @@ static uint16_t view_sprite_create(SDL_Renderer *renderer, gff_palette_t *pal,
     return sprite_create(renderer, &tmp, pal, 0, 0, zoom, gff_idx, type_id, res_id);
 }
 
-void inventory_screen_init(SDL_Renderer *renderer, const uint32_t x, const uint32_t y, const float _zoom) {
+void inventory_screen_init(SDL_Renderer *renderer, const uint32_t _xoffset, const uint32_t _yoffset) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     rend = renderer;
-    zoom = _zoom;
+    const float zoom = main_get_zoom();
     mousex = mousey = 0;
     char_selected = 0;
+    xoffset = _xoffset;
+    yoffset = _yoffset;
+    uint32_t x = xoffset / zoom;
+    uint32_t y = yoffset / zoom;
 
     memset(name, 0x0, sizeof(name));
     memset(description, 0x0, sizeof(description));
@@ -105,7 +109,7 @@ void inventory_screen_init(SDL_Renderer *renderer, const uint32_t x, const uint3
     slots = view_sprite_create(renderer, pal, 53 + x, 3 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 13007);
     for (int i = 0; i < 23; i++) {
         sprite_set_frame(slots, i);
-        sprite_set_location(slots, slot_locs[i].x * zoom, slot_locs[i].y * zoom);
+        sprite_set_location(slots, (x + slot_locs[i].x) * zoom, (y + slot_locs[i].y) * zoom);
     }
 
     character = view_sprite_create(renderer, pal, 160 + x, 181 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 10100);
@@ -186,6 +190,7 @@ static int display_attack(entity_t *entity, item_t *item, const int xpos, const 
     char buf[BUF_MAX];
     int pos = 0;
     int offset = 0;
+    const float zoom = main_get_zoom();
 
     if (item && item->type != ITEM_MELEE && item->type != ITEM_MISSILE_THROWN
             && item->type != ITEM_MISSILE_USE_AMMO) { return 0;}
@@ -193,7 +198,7 @@ static int display_attack(entity_t *entity, item_t *item, const int xpos, const 
     if (item == NULL) {
         pos += snprintf(buf, BUF_MAX, "<");
     } else {
-        print_line_len(rend, FONT_YELLOW, item->name, 235 * zoom, ypos * zoom, BUF_MAX);
+        print_line_len(rend, FONT_YELLOW, item->name, xoffset + 235 * zoom, yoffset + ypos * zoom, BUF_MAX);
         offset += 7;
     }
 
@@ -211,7 +216,7 @@ static int display_attack(entity_t *entity, item_t *item, const int xpos, const 
         pos += snprintf(buf + pos, BUF_MAX - pos, ">");
     }
 
-    print_line_len(rend, FONT_YELLOW, buf, 235 * zoom, (ypos + offset) * zoom, BUF_MAX);
+    print_line_len(rend, FONT_YELLOW, buf, xoffset + 235 * zoom, yoffset + (ypos + offset) * zoom, BUF_MAX);
     return offset + 7;
 }
 
@@ -219,34 +224,35 @@ static void render_character() {
     char buf[BUF_MAX];
     entity_t *player = player_get_entity(char_selected);
     inventory_t *player_items = (inventory_t*)player->inv;
+    const float zoom = main_get_zoom();
 
     if (player->name == NULL) { return; } // no character.
     strcpy(name, player->name);
 
-    print_line_len(rend, FONT_YELLOW, "STR:", 235 * zoom, 53 * zoom, BUF_MAX);
-    print_line_len(rend, FONT_YELLOW, "DEX:", 235 * zoom, 60 * zoom, BUF_MAX);
-    print_line_len(rend, FONT_YELLOW, "CON:", 235 * zoom, 67 * zoom, BUF_MAX);
-    print_line_len(rend, FONT_YELLOW, "INT:", 235 * zoom, 74 * zoom, BUF_MAX);
-    print_line_len(rend, FONT_YELLOW, "WIS:", 235 * zoom, 81 * zoom, BUF_MAX);
-    print_line_len(rend, FONT_YELLOW, "CHA:", 235 * zoom, 88 * zoom, BUF_MAX);
+    print_line_len(rend, FONT_YELLOW, "STR:", xoffset + 235 * zoom, yoffset + 53 * zoom, BUF_MAX);
+    print_line_len(rend, FONT_YELLOW, "DEX:", xoffset + 235 * zoom, yoffset + 60 * zoom, BUF_MAX);
+    print_line_len(rend, FONT_YELLOW, "CON:", xoffset + 235 * zoom, yoffset + 67 * zoom, BUF_MAX);
+    print_line_len(rend, FONT_YELLOW, "INT:", xoffset + 235 * zoom, yoffset + 74 * zoom, BUF_MAX);
+    print_line_len(rend, FONT_YELLOW, "WIS:", xoffset + 235 * zoom, yoffset + 81 * zoom, BUF_MAX);
+    print_line_len(rend, FONT_YELLOW, "CHA:", xoffset + 235 * zoom, yoffset + 88 * zoom, BUF_MAX);
     snprintf(buf, BUF_MAX, "%d\n", player->stats.str);
-    print_line_len(rend, FONT_YELLOW, buf, 260 * zoom, 53 * zoom, BUF_MAX);
+    print_line_len(rend, FONT_YELLOW, buf, xoffset + 260 * zoom, yoffset + 53 * zoom, BUF_MAX);
     snprintf(buf, BUF_MAX, "%d\n", player->stats.dex);
-    print_line_len(rend, FONT_YELLOW, buf, 260 * zoom, 60 * zoom, BUF_MAX);
+    print_line_len(rend, FONT_YELLOW, buf, xoffset + 260 * zoom, yoffset + 60 * zoom, BUF_MAX);
     snprintf(buf, BUF_MAX, "%d\n", player->stats.con);
-    print_line_len(rend, FONT_YELLOW, buf, 260 * zoom, 67 * zoom, BUF_MAX);
+    print_line_len(rend, FONT_YELLOW, buf, xoffset + 260 * zoom, yoffset + 67 * zoom, BUF_MAX);
     snprintf(buf, BUF_MAX, "%d\n", player->stats.intel);
-    print_line_len(rend, FONT_YELLOW, buf, 260 * zoom, 74 * zoom, BUF_MAX);
+    print_line_len(rend, FONT_YELLOW, buf, xoffset + 260 * zoom, yoffset + 74 * zoom, BUF_MAX);
     snprintf(buf, BUF_MAX, "%d\n", player->stats.wis);
-    print_line_len(rend, FONT_YELLOW, buf, 260 * zoom, 81 * zoom, BUF_MAX);
+    print_line_len(rend, FONT_YELLOW, buf, xoffset + 260 * zoom, yoffset + 81 * zoom, BUF_MAX);
     snprintf(buf, BUF_MAX, "%d\n", player->stats.cha);
-    print_line_len(rend, FONT_YELLOW, buf, 260 * zoom, 88 * zoom, BUF_MAX);
+    print_line_len(rend, FONT_YELLOW, buf, xoffset + 260 * zoom, yoffset + 88 * zoom, BUF_MAX);
 
     snprintf(buf, BUF_MAX, "PSI:  %d/%d\n", player->stats.psp, player->stats.high_psp);
-    print_line_len(rend, FONT_YELLOW, buf, 235 * zoom, 100 * zoom, BUF_MAX);
+    print_line_len(rend, FONT_YELLOW, buf, xoffset + 235 * zoom, yoffset + 100 * zoom, BUF_MAX);
 
     snprintf(buf, BUF_MAX, "AC: %d\n", dnd2e_calc_ac(player));
-    print_line_len(rend, FONT_YELLOW, buf, 235 * zoom, 115 * zoom, BUF_MAX);
+    print_line_len(rend, FONT_YELLOW, buf, xoffset + 235 * zoom, yoffset + 115 * zoom, BUF_MAX);
 
     int ypos = 125;
     if (player_items->missile.ds_id != 0) {
@@ -262,7 +268,6 @@ static void render_character() {
     }
 }
 
-//static void render_backpack_slot(const int slot, const int frame, const int x, const int y, uint16_t *inv_sprs_list) {
 static void render_backpack_slot(const int slot, const int frame, const int x, const int y, item_t *items) {
     sprite_set_frame(slots, 5);
     sprite_set_location(slots, x, y);
@@ -270,8 +275,7 @@ static void render_backpack_slot(const int slot, const int frame, const int x, c
     sprite_set_frame(slots, frame);
     sprite_set_location(slots, x, y);
     sprite_render(rend, slots);
-    animate_sprite_node_t *asn = items[slot].sprite.data;
-    animate_sprite_t *as = asn->anim;
+    animate_sprite_t *as = items[slot].sprite.data;
 
     if (as) {
         sprite_center_spr(as->spr, slots);
@@ -288,10 +292,11 @@ static void render_backpack_slot(const int slot, const int frame, const int x, c
 }
 
 void inventory_screen_render(void *data, SDL_Renderer *renderer) {
+    const float zoom = main_get_zoom();
+
     description[0] = '\0';
     entity_t *player = player_get_entity(char_selected);
     item_t *items = player->inv;
-    animate_sprite_node_t *asn = NULL;
     animate_sprite_t *as = NULL;
 
     sprite_render(renderer, panel);
@@ -338,8 +343,7 @@ void inventory_screen_render(void *data, SDL_Renderer *renderer) {
     }
 
     for (int i = 9; i < 23; i++) {
-        asn = items[i - 9].sprite.data;
-        as = asn->anim;
+        as = items[i - 9].sprite.data;
         sprite_set_frame(slots, i);
         int32_t x = sprite_getx(slots);
         int32_t y = sprite_gety(slots);
@@ -362,8 +366,8 @@ void inventory_screen_render(void *data, SDL_Renderer *renderer) {
 
     sprite_set_frame(slots, 0);
     for (int i = 0; i < 6; i++) {
-        render_backpack_slot(14 + 2 * i, 0, 186 * zoom, (18 + 18 * i) * zoom, items);
-        render_backpack_slot(15 + 2 * i, 0, 204 * zoom, (18 + 18 * i) * zoom, items);
+        render_backpack_slot(14 + 2 * i, 0, xoffset + 186 * zoom, yoffset + (18 + 18 * i) * zoom, items);
+        render_backpack_slot(15 + 2 * i, 0, xoffset + 204 * zoom, yoffset + (18 + 18 * i) * zoom, items);
     }
 
     if (sprite_in_rect(character, mousex, mousey)) { strcpy(description, "VIEW CHARACTER"); }
@@ -378,12 +382,12 @@ void inventory_screen_render(void *data, SDL_Renderer *renderer) {
     render_character();
 
     for (int i = 0; i < 4; i++) {
-        player_center(i, 12 * zoom, (4 + 48 * i) * zoom, 34 * zoom, 34 * zoom);
+        player_center(i, xoffset + 12 * zoom, yoffset + (4 + 48 * i) * zoom, 34 * zoom, 34 * zoom);
         player_render(rend, i);
     }
 
     if (player_exists(char_selected)) {
-        player_center_portrait(char_selected, (75) * zoom, (36) * zoom, 90 * zoom, 125 * zoom);
+        player_center_portrait(char_selected, xoffset + (75) * zoom, yoffset + (36) * zoom, 90 * zoom, 125 * zoom);
         player_render_portrait(rend, char_selected);
     }
 }
@@ -430,6 +434,8 @@ static void clicked_slot(const int slot) {
     entity_t *player = player_get_entity(char_selected);
     item_t *player_item = player->inv + slot;
 
+    printf("clicked_slot: %d\n", slot);
+
     if (mouse_item) { // mouse has an item
         if (!item_allowed_in_slot(mouse_get_item(), slot)) { return; }
         if (player_item->ds_id) { // If we are doing a swap
@@ -449,6 +455,8 @@ static void clicked_slot(const int slot) {
 }
 
 int inventory_screen_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
+    const float zoom = main_get_zoom();
+
     for (int i = 0; i < 4; i++) {
         if (sprite_in_rect(ports[i], x, y)) {
             if (button == SDL_BUTTON_RIGHT) {
@@ -475,13 +483,12 @@ int inventory_screen_handle_mouse_up(const uint32_t button, const uint32_t x, co
     }
 
     sprite_set_frame(slots, 5);
-
     for (int i = 0; i < 6; i++) {
-        sprite_set_location(slots, (186 * zoom), (18 + 17 * i) * zoom);
+        sprite_set_location(slots, xoffset + 186 * zoom, yoffset + (18 + 18 * i) * zoom);
         if (sprite_in_rect(slots, x, y)) {
             clicked_slot(14 + 2 * i);
         }
-        sprite_set_location(slots, (204 * zoom), (18 + 17 * i) * zoom);
+        sprite_set_location(slots, xoffset + 204 * zoom, yoffset + (18 + 18 * i) * zoom);
         if (sprite_in_rect(slots, x, y)) {
             clicked_slot(15 + 2 * i);
         }
@@ -534,7 +541,7 @@ void inventory_screen_return_control () {
             if (dnd2e_character_is_valid(pc)) {// && dnd2e_psin_is_valid(pc, psi)) {
                 warn ("TODO: PUT BACK IN CHARACTER ADDING!\n");
                 //gff_char_add_character(pc, psi, spells, psionics, name);
-                player_load(slot_clicked, zoom);
+                player_load(slot_clicked, main_get_zoom());
             } else {
                 screen_push_screen(rend, &popup_screen, 100, 75);
                 popup_set_message("Character was invalid.");
@@ -551,7 +558,7 @@ void inventory_screen_return_control () {
             if (!ds_load_character_charsave(slot_clicked, sel)) {
                 printf("Char loading failed.\n");
             } else {
-                player_load(slot_clicked, zoom);
+                player_load(slot_clicked, main_get_zoom());
                 char_selected = slot_clicked;
             }
         }

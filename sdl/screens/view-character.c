@@ -25,7 +25,6 @@ static uint16_t character, inv, magic, status;
 static uint16_t game_menu, game_return;
 enum {SELECT_NONE, SELECT_POPUP, SELECT_NEW, SELECT_ALS};
 static int8_t last_selection = SELECT_NONE;
-static float zoom = 1.0;
 static uint8_t slot_clicked;
 
 static SDL_Rect initial_locs[] = {{ 155, 28, 0, 0 }, // description
@@ -54,13 +53,13 @@ static uint16_t view_sprite_create(SDL_Renderer *renderer, gff_palette_t *pal,
         const int offsetx, const int offsety, const float zoom,
         const int gff_idx, const int type_id, const int res_id) {
     SDL_Rect tmp = {offsetx, offsety, 0, 0};
-    return sprite_create(renderer, &tmp, pal, 0, 0, zoom, gff_idx, type_id, res_id);
+    return sprite_create(renderer, &tmp, pal, 0, 0, main_get_zoom(), gff_idx, type_id, res_id);
 }
 
-void view_character_init(SDL_Renderer *renderer, const uint32_t x, const uint32_t y, const float _zoom) {
+void view_character_init(SDL_Renderer *renderer, const uint32_t x, const uint32_t y) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     rend = renderer;
-    zoom = _zoom;
+    const float zoom = main_get_zoom();
 
     memset(description, 0x0, sizeof(description));
     memset(message, 0x0, sizeof(message));
@@ -113,6 +112,7 @@ void view_character_init(SDL_Renderer *renderer, const uint32_t x, const uint32_
 
 void view_character_render(void *data, SDL_Renderer *renderer) {
     char buf[BUF_MAX];
+    const float zoom = main_get_zoom();
     sprite_render(renderer, panel);
     sprite_render(renderer, view_char);
 
@@ -272,7 +272,7 @@ void view_character_return_control () {
             if (!ds_load_character_charsave(slot_clicked, sel)) {
                 printf("Char loading failed.\n");
             } else {
-                player_load(slot_clicked, zoom);
+                player_load(slot_clicked, main_get_zoom());
             }
         }
     }

@@ -25,6 +25,9 @@ void screen_init(SDL_Renderer *renderer) {
     animate_init();
 }
 
+static uint32_t default_get_width() { return 320 * main_get_zoom(); }
+static uint32_t default_get_height() { return 200 * main_get_zoom(); }
+
 void screen_load_screen(SDL_Renderer *renderer, int layer, sops_t *screen, const uint32_t x, const uint32_t y) {
     if (layer < 0 || layer > MAX_SCREENS) { return; }
 
@@ -34,13 +37,18 @@ void screen_load_screen(SDL_Renderer *renderer, int layer, sops_t *screen, const
 
     screens[layer] = *screen;
 
+    if (!screens[layer].get_width) { screens[layer].get_width = default_get_width; }
+    if (!screens[layer].get_height) { screens[layer].get_height = default_get_height; }
+
     if (screens[layer].init) {
-        screens[layer].init(renderer, x, y, 2.0);
+        screens[layer].init(renderer,
+            ((main_get_width() - screens[layer].get_width()) / 2),
+            ((main_get_height() - screens[layer].get_height()) / 2));
     }
 }
 
 void screen_toggle_screen(SDL_Renderer *renderer, sops_t *the_screen, const uint32_t x, const uint32_t y) {
-    int pos;
+    uint32_t pos;
     sops_t tmp;
     for (pos = 0; pos < screen_pos; pos++) {
         if (screens[pos].render == the_screen->render) { break; }
@@ -64,7 +72,7 @@ void screen_toggle_screen(SDL_Renderer *renderer, sops_t *the_screen, const uint
 }
 
 void screen_push_screen(SDL_Renderer *renderer, sops_t *screen, const uint32_t x, const uint32_t y) {
-    for (int i = 0; i < screen_pos; i++) {
+    for (uint32_t i = 0; i < screen_pos; i++) {
         if (screens[i].render == screen->render) { return; }
     }
     screen_load_screen(renderer, screen_pos++, screen, x, y);

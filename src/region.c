@@ -260,7 +260,7 @@ extern void region_tick(region_t *reg) {
     int posx, posy;
     static int ticks_per_game_round = 30;
 
-    if (combat_player_turn() != NO_COMBAT) { return; }
+    if (!reg || combat_player_turn() != NO_COMBAT) { return; }
 
     ticks_per_game_round--;
     if (ticks_per_game_round > 0) { return; }

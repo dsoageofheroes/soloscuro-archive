@@ -32,10 +32,11 @@ const static char *statuses[] = {
     "Gone"
 };
 
-void combat_status_init(SDL_Renderer *renderer, const uint32_t x, const uint32_t y, const float zoom) {
+void combat_status_init(SDL_Renderer *renderer, const uint32_t x, const uint32_t y) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
-    xoffset = x * main_get_zoom();
-    yoffset = y * main_get_zoom();
+    const float zoom = main_get_zoom();
+    xoffset = x * zoom;
+    yoffset = y * zoom;
 
     background = sprite_new(renderer, pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 5016);
     combat_attacks = sprite_new(renderer, pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 5014);
@@ -55,7 +56,7 @@ static void get_status() {
 
 void combat_status_render(void *data, SDL_Renderer *renderer) {
     sprite_render(renderer, background);
-    float zoom = main_get_zoom();
+    const float zoom = main_get_zoom();
     SDL_Rect loc;
     char buf[128];
 

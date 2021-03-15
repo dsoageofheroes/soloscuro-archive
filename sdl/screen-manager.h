@@ -5,13 +5,15 @@
 
 // sops = Screen OPerationS
 typedef struct sops_s{
-    void (*init) (SDL_Renderer*, const uint32_t x, const uint32_t y, const float zoom);
+    void (*init) (SDL_Renderer*, const uint32_t x, const uint32_t y);
     void (*cleanup) ();
     void (*render) (void*, SDL_Renderer*);
     int (*mouse_movement) (const uint32_t x, const uint32_t y);
     int (*mouse_up) (const uint32_t button, const uint32_t x, const uint32_t y);
     int (*mouse_down) (const uint32_t button, const uint32_t x, const uint32_t y);
     void (*return_control) ();
+    uint32_t (*get_width) ();
+    uint32_t (*get_height) ();
     void *data;
 } sops_t;
 

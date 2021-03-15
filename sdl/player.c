@@ -136,7 +136,7 @@ static void free_sprites(const int slot) {
         sprite_free(players[slot].port);
         players[slot].port = SPRITE_ERROR;
     }
-    for (int i = 0; i < sizeof(inventory_sprites_t) / sizeof(sprite_t); i++) {
+    for (size_t i = 0; i < sizeof(inventory_sprites_t) / sizeof(sprite_t); i++) {
         if (inv_sprs[i] != SPRITE_ERROR) {
             sprite_free(inv_sprs[i]);
             inv_sprs[i] = SPRITE_ERROR;

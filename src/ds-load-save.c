@@ -166,7 +166,7 @@ static void load_regions(const int id) {
 
         offset = 0;
         rdff = (rdff_header_t*)(buf + offset);
-        while(rdff->type == PLAYER_OBJECT) {
+        while(offset < chunk.length && rdff->type == PLAYER_OBJECT) {
             offset += sizeof(rdff_header_t);
             entity_t* dude = entity_create_clone((entity_t*)(buf + offset));
             //printf("dude->name = %s, hunt = %d, (%d, %d)\n", dude->name, dude->abilities.hunt,

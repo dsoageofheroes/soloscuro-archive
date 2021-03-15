@@ -11,6 +11,7 @@
 #include "screens/screen-main.h"
 #include "screens/inventory.h"
 #include "screens/add-load-save.h"
+#include "screens/view-character.h"
 #include "../src/combat.h"
 #include "../src/dsl.h"
 #include "../src/dsl-manager.h"
@@ -49,6 +50,14 @@ const float main_get_zoom() { return zoom; }
 
 const uint32_t getCameraX() { return xmappos; }
 const uint32_t getCameraY() { return ymappos; }
+
+uint32_t main_get_width() {
+    return 800;
+}
+
+uint32_t main_get_height() {
+    return 600;
+}
 
 void main_set_browser_mode() {
     browser_mode = 1;
@@ -151,6 +160,9 @@ void handle_input() {
                 if (event.key.keysym.sym == SDLK_i) {
                     screen_toggle_screen(renderer, &inventory_screen, 0, 0);
                 }
+                if (event.key.keysym.sym == SDLK_c) {
+                    screen_toggle_screen(renderer, &view_character_screen, 0, 0);
+                }
                 if (event.key.keysym.sym == SDLK_s) { player_move(PLAYER_LEFT); }
                 if (event.key.keysym.sym == SDLK_e) { player_move(PLAYER_UP); }
                 if (event.key.keysym.sym == SDLK_f) { player_move(PLAYER_RIGHT); }
@@ -249,8 +261,7 @@ static void init(int args, char *argv[]) {
         exit(1);
     }
     win = SDL_CreateWindow( "Dark Sun: Shattered Lands", SDL_WINDOWPOS_UNDEFINED,
-        //SDL_WINDOWPOS_UNDEFINED, 2*320, 2*200, SDL_WINDOW_SHOWN );
-        SDL_WINDOWPOS_UNDEFINED, 800, 600, SDL_WINDOW_SHOWN );
+        SDL_WINDOWPOS_UNDEFINED, main_get_width(), main_get_height(), SDL_WINDOW_SHOWN );
     if( win == NULL ) {
         error( "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
         exit(1);
@@ -417,7 +428,7 @@ void game_loop_signal(int signal, int _accum) {
         done = 1;
     } else {
         warn("signal %d received, but not waiting on it...\n", signal);
-        exit(1);
+        done = 1;
     }
 }
 

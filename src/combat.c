@@ -56,11 +56,10 @@ void combat_init(combat_region_t *cr) {
 }
 
 void combat_free(combat_region_t *cr) {
-    //if (cr->combatants) {
-        //entity_list_free(cr->combatants);
-        //free(cr->combatants);
-        //cr->combatants = NULL;
-    //}
+    if (cr->combatants) {
+        entity_list_free(cr->combatants);
+        cr->combatants = NULL;
+    }
 }
 
 static int32_t ticks_per_game_round = 20;// For outside combat.
