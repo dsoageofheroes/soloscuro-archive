@@ -1,10 +1,13 @@
 #include "font.h"
+#include "main.h"
 #include "../src/dsl.h"
+#include <SDL2/SDL_ttf.h>
 
 #define MAX_CHARS (128)
 
 static SDL_Texture *font_table[NUM_FONTS][MAX_CHARS];
 static SDL_Rect     font_loc[NUM_FONTS][MAX_CHARS];
+static TTF_Font    *font = NULL;
 
 static void create_font(SDL_Renderer *renderer, const uint32_t idx, const uint32_t fg_color, const uint32_t bg_color) {
     char *data = NULL;
@@ -78,6 +81,30 @@ uint32_t font_pixel_height(font_t font) {
     return font_loc[font]['T'].h; // font height is the same for all characters
 }
 
+void font_render_ttf(const char *msg, uint16_t x, uint16_t y, uint32_t color) {
+    SDL_Color text_color = {
+        (color >> 24) & 0xFF,
+        (color >> 16) & 0xFF,
+        (color >> 8) & 0xFF,
+        (color >> 0) & 0xFF
+    };
+    SDL_Rect offset;
+    offset.x = x;
+    offset.y = y;
+
+    // TODO: Consider creating font maps, instead of create/destory textures each time.
+    // Fast, probably okay for create/destroy
+    SDL_Surface *textSurface = TTF_RenderUTF8_Solid( font, msg, text_color );
+    // Slow, for labels and such, blending has alpha.
+    //SDL_Surface *textSurface = TTF_RenderUTF8_Blended( font, msg, text_color );
+    offset.w = textSurface->w;
+    offset.h = textSurface->h;
+    SDL_Texture *tex = SDL_CreateTextureFromSurface( main_get_rend(), textSurface );
+    SDL_RenderCopy(main_get_rend(), tex, NULL, &offset); //(sprite->loc + sprite->pos));
+    SDL_FreeSurface( textSurface );
+    SDL_DestroyTexture( tex );
+}
+
 void print_line_len(SDL_Renderer *renderer, font_t font, const char *text, size_t x, size_t y, const uint32_t len) {
     size_t c;
     if (text == NULL) { return; }
@@ -102,6 +129,8 @@ void font_init(SDL_Renderer *renderer) {
     create_font(renderer, FONT_RED, 0xD72128FF, 0xA6A6BEFF);
     create_font(renderer, FONT_REDDARK, 0xD72128FF, 0x000000FF);
     create_font(renderer, FONT_BLUE, 0x287DC7FF, 0x101038FF);
+    TTF_Init();
+    font = TTF_OpenFont( "DarkSun.ttf", 8 * main_get_zoom() );
 }
 
 void font_render_center(SDL_Renderer *rend, font_t font, const char *str, const SDL_Rect loc) {
@@ -115,4 +144,9 @@ void font_free(SDL_Renderer *renderer) {
     for (int i = 0; i < MAX_CHARS; i++) {
         SDL_DestroyTexture(font_table[0][i]);
     }
+
+    //Free global font
+    TTF_CloseFont(font);
+    TTF_Quit();
+    font = NULL;
 }

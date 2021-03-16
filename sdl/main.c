@@ -1,6 +1,7 @@
 #include <SDL2/SDL.h>
 #include <stdio.h>
 #include "map.h"
+#include "font.h"
 #include "player.h"
 #include "lua.h"
 #include "mouse.h"

@@ -111,6 +111,7 @@ void screen_render(SDL_Renderer *renderer, const uint32_t xmappos, const uint32_
             screens[i].render(screens[i].data, renderer);
         }
     }
+    //font_render_ttf("TEST!!!!!!!!!!!", 100, 100, 0xFFFF00FF);
     //player_render(renderer);
     SDL_RenderPresent(renderer);
 }
