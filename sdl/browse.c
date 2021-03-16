@@ -9,6 +9,7 @@
 #include "../src/gff.h"
 #include "../src/gff-map.h"
 #include "../src/gff-image.h"
+#include "../src/gff-xmi.h"
 #include "../src/spells.h"
 #include "../src/region-manager.h"
 
@@ -273,10 +274,15 @@ static void print_menu() {
 #define BLOB_MAX (1<<16)
 static void write_blob() {
     char buf[BLOB_MAX];
+    unsigned int midi_len;
     gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, gff_get_type_id(gff_idx, entry_idx), res_ids[res_idx]);
     gff_read_chunk(gff_idx, &chunk, buf, BLOB_MAX);
     FILE *file = fopen("out.dat", "wb");
     fwrite(buf, 1, chunk.length, file);
+    fclose(file);
+    unsigned char *midi = xmi_to_midi((unsigned char*)buf, chunk.length, &midi_len);
+    file = fopen("out.midi", "wb");
+    fwrite(midi, 1, midi_len, file);
     fclose(file);
 }
 

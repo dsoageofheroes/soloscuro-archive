@@ -8,7 +8,13 @@ unsigned char* xmi_to_midi(const unsigned char *xmi_data, const unsigned int xmi
     unsigned char *buf = malloc(1<<20);
     unsigned char *midi_data = NULL;
 
-    _WM_xmi2midi(xmi_data, xmi_len, (unsigned char**)&(buf), midi_len,  XMIDI_CONVERT_MT32_TO_GS);
+    // I think MT32 to GS is the best, followed by MT32 to GM.
+    // No conversion and GS127 to GS are not authentic.
+
+    //_WM_xmi2midi(xmi_data, xmi_len, (unsigned char**)&(buf), midi_len, XMIDI_CONVERT_NOCONVERSION);
+    //_WM_xmi2midi(xmi_data, xmi_len, (unsigned char**)&(buf), midi_len, XMIDI_CONVERT_MT32_TO_GM );
+    _WM_xmi2midi(xmi_data, xmi_len, (unsigned char**)&(buf), midi_len, XMIDI_CONVERT_MT32_TO_GS );
+    //_WM_xmi2midi(xmi_data, xmi_len, (unsigned char**)&(buf), midi_len, XMIDI_CONVERT_GS127_TO_GS );
 
     midi_data = malloc(*midi_len);
     if (!midi_data) { return NULL; }
