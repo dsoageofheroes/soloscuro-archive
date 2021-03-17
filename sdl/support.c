@@ -4,8 +4,16 @@
 #include "../src/region.h"
 #include "../src/gff.h"
 #include "../src/gff-map.h"
+#include "../src/gff-xmi.h"
 #include "../src/gff-image.h"
 #include "../src/spells.h"
+
+#define XMIDI_CONVERT_NOCONVERSION      0x00
+#define XMIDI_CONVERT_MT32_TO_GM        0x01
+#define XMIDI_CONVERT_MT32_TO_GS        0x02
+#define XMIDI_CONVERT_MT32_TO_GS127     0x03 /* This one is broken, don't use */
+#define XMIDI_CONVERT_MT32_TO_GS127DRUM 0x04 /* This one is broken, don't use */
+#define XMIDI_CONVERT_GS127_TO_GS       0x05
 
 #define RES_MAX (1<<12)
 
@@ -204,6 +212,92 @@ void export_all_items(const char *base_path) {
             //if (open_files[i].pals->len) {
                 //pal = open_files[i].pals->palettes;
             //}
+        }
+    }
+}
+
+static void write_xmis(const char *base_path, const int gff_idx, const int type_id, const int res_id) {
+    char filename[1<<10];
+    //char type[5];
+    char *data = NULL;
+    unsigned int midi_len;
+
+    gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, type_id, res_id);
+    data = malloc(chunk.length);
+    gff_read_chunk(gff_idx, &chunk, data, chunk.length);
+
+    snprintf(filename, 1<<10, "%s%03d.xmi", base_path, res_id);
+    FILE *file = fopen(filename, "wb+");
+    fwrite(data, 1, chunk.length, file);
+    fclose(file);
+
+    unsigned char *midi = xmi_to_midi_type((unsigned char*)data, chunk.length, &midi_len, XMIDI_CONVERT_NOCONVERSION);
+    snprintf(filename, 1<<10, "%s%03d-no-conversion.midi", base_path, res_id);
+    file = fopen(filename, "wb+");
+    fwrite(midi, 1, midi_len, file);
+    fclose(file);
+    free(midi);
+
+    midi = xmi_to_midi_type((unsigned char*)data, chunk.length, &midi_len, XMIDI_CONVERT_MT32_TO_GM);
+    snprintf(filename, 1<<10, "%s%03d-mt32-to-gm.midi", base_path, res_id);
+    file = fopen(filename, "wb+");
+    fwrite(midi, 1, midi_len, file);
+    fclose(file);
+    free(midi);
+
+    midi = xmi_to_midi_type((unsigned char*)data, chunk.length, &midi_len, XMIDI_CONVERT_MT32_TO_GS);
+    snprintf(filename, 1<<10, "%s%03d-mt32-to-gs.midi", base_path, res_id);
+    file = fopen(filename, "wb+");
+    fwrite(midi, 1, midi_len, file);
+    fclose(file);
+    free(midi);
+
+    midi = xmi_to_midi_type((unsigned char*)data, chunk.length, &midi_len, XMIDI_CONVERT_GS127_TO_GS);
+    snprintf(filename, 1<<10, "%s%03d-gs127-to-gs.midi", base_path, res_id);
+    file = fopen(filename, "wb+");
+    fwrite(midi, 1, midi_len, file);
+    fclose(file);
+    free(midi);
+
+    free(data);
+}
+
+void export_all_xmis(const char *base_path) {
+    char pseq[128];
+    char cseq[128];
+    char gseq[128];
+    char lseq[128];
+    uint32_t res_ids[RES_MAX];
+
+    snprintf(pseq, 127, "%s/pseq", base_path);
+    snprintf(cseq, 127, "%s/cseq", base_path);
+    snprintf(gseq, 127, "%s/gseq", base_path);
+    snprintf(lseq, 127, "%s/lseq", base_path);
+    for (int i = 0; i < NUM_FILES; i++) {
+        if (open_files[i].file) {
+            for (int j = 0; j < gff_get_number_of_types(i); j++) {
+                int type = gff_get_type_id(i, j);
+                int res_max = gff_get_resource_length(i, type = gff_get_type_id(i, j));
+                //printf("SIZE %s:[%d:%d] has %d\n", open_files[i].filename, i, type, res_max);
+                gff_get_resource_ids(i, type, res_ids);
+                //printf("SIZE %s:[%d] has %d\n", open_files[i].filename, j, res_max);
+                for (int k = 0; k < res_max; k++) {
+                    switch(type) {
+                        case GFF_PSEQ:
+                            write_xmis(pseq, i, type, res_ids[k]);
+                            break;
+                        case GFF_CSEQ:
+                            write_xmis(cseq, i, type, res_ids[k]);
+                            break;
+                        case GFF_LSEQ:
+                            write_xmis(lseq, i, type, res_ids[k]);
+                            break;
+                        case GFF_GSEQ:
+                            write_xmis(gseq, i, type, res_ids[k]);
+                            break;
+                    }
+                }
+            }
         }
     }
 }

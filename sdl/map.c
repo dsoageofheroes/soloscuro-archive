@@ -4,6 +4,7 @@
 #include "sprite.h"
 #include "main.h"
 #include "player.h"
+#include "audio.h"
 #include "screens/narrate.h"
 #include "screens/combat-status.h"
 #include "../src/dsl.h"
@@ -80,6 +81,9 @@ static void map_load_current_region() {
     }
 
     cmap = map;
+
+    //TODO: Find out what maps to which areas.
+    audio_load_xmi(RESOURCE_GFF_INDEX, GFF_GSEQ, 2);
 }
 
 static map_t *create_map() {

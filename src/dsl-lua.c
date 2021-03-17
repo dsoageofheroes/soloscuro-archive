@@ -83,6 +83,7 @@ void dsl_lua_string_compare(void);
 void dsl_lua_match_string(void);
 void dsl_lua_take(void);
 void dsl_lua_sound(void);
+void dsl_lua_music(void);
 void dsl_lua_tport(void);
 void dsl_lua_bitsnoop(void);
 void dsl_lua_award(void);
@@ -362,7 +363,7 @@ dsl_lua_operation_t dsl_lua_operations[] = {
     { dsl_lua_take, "dsl take" }, // 0x5C
     { dsl_lua_sound, "dsl sound" }, // 0x5D
     { dsl_lua_tport, "dsl tport" }, // 0x5E
-    { NULL, "dsl music" }, // 0x5F
+    { dsl_lua_music, "dsl music" }, // 0x5F
     { NULL, "dsl default" }, // 0x60
     { dsl_lua_cmpend, "dsl cmpend" }, // 0x61
     { dsl_lua_wait, "dsl wait" }, // 0x62
@@ -1143,6 +1144,12 @@ void dsl_lua_sound(void) {
     lprintf("dsl.play_sound(%s) -- parameter is bvoc index\n", buf);
 }
 
+void dsl_lua_music(void) {
+    char buf[BUF_SIZE];
+    dsl_lua_read_number(buf, BUF_SIZE);
+    lprintf("dsl.play_music(%s) -- parameter is xmi index\n", buf);
+}
+
 #define CHOSEN (0x7FFD)
 #define PARTY  (0x7FFE)
 #define ALL    (0x7FFF)
@@ -1387,41 +1394,48 @@ void dsl_lua_pdamage(void) {
 void dsl_lua_word_plus_equal(void) {
     dsl_lua_get_parameters(2);
     lprintf("--*((uint16_t *)lparams.params[0]) += lparam.params[1];\n");
+    lprintf("dsl.error()");
     //*((uint16_t *)param.ptr[0]) += param.val[1];
 }
 
 void dsl_lua_word_minus_equal(void) {
     dsl_lua_get_parameters(2);
     lprintf("--*((uint16_t *)lparams.params[0]) -= lparam.params[1];\n");
+    lprintf("dsl.error()");
     //*((uint16_t *)param.ptr[0]) -= param.val[1];
 }
 
 void dsl_lua_word_times_equal(void) {
     dsl_lua_get_parameters(2);
     lprintf("--*((uint16_t *)lparams.params[0]) *= lparam.params[1];\n");
+    lprintf("dsl.error()");
     //*((uint16_t *)param.ptr[0]) *= param.val[1];
 }
 
 void dsl_lua_word_divide_equal(void) {
     dsl_lua_get_parameters(2);
     lprintf("--*((uint16_t *)lparams.params[0]) /= lparam.params[1];\n");
+    lprintf("dsl.error()");
     //*((uint16_t *)param.ptr[0]) /= param.val[1];
 }
 
 void dsl_lua_long_plus_equal(void) {
     dsl_lua_get_parameters(2);
     lprintf("--*((uint32_t *)lparams.params[0]) += lparam.params[1];\n");
+    lprintf("dsl.error()");
     //*((uint32_t *)param.ptr[0]) += param.val[1];
 }
 
 void dsl_lua_long_minus_equal(void) {
     dsl_lua_get_parameters(2);
     lprintf("--*((uint32_t *)lparams.params[0]) -= lparam.params[1];\n");
+    lprintf("dsl.error()");
     //*((uint32_t *)param.ptr[0]) -= param.val[1];
 }
 
 uint16_t dsl_range(int16_t obj0, int16_t obj1) {
     lprintf("--Must compute range from %d to %d\n", obj0, obj1);
+    lprintf("dsl.error()");
     return 10;//Totally bogus
 }
 

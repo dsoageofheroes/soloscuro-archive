@@ -4,6 +4,7 @@
 #include "font.h"
 #include "screens/narrate.h"
 #include "gameloop.h"
+#include "audio.h"
 #include "../src/dsl.h"
 #include "../src/region.h"
 #include "../src/gff.h"
@@ -40,6 +41,7 @@ static void move_entry_cursor(int amt);
 static void write_blob();
 static void move_res_cursor(int amt);
 static void move_frame_cursor(int amt);
+static void play_xmi();
 
 typedef struct ds1_it1r_s {
     uint8_t weapon_type;
@@ -147,6 +149,7 @@ static void browse_handle_input() {
                     case SDLK_d: mapx += 1; break;
                     case SDLK_s: mapy -= 1; cobj--; break;
                     case SDLK_e: mapx -= 1; break;
+                    case SDLK_p: play_xmi(); break;
                     case SDLK_KP_MINUS: if (zoom > 1.0) {zoom -= 0.25;} break;
                     case SDLK_KP_PLUS: zoom += 0.25; break;
                 }
@@ -402,6 +405,9 @@ static void render_entry_psin();
 static void render_entry_it1r();
 static void render_entry_cact();
 static void render_entry_scmd();
+static void render_entry_gseq();
+static void render_entry_lseq();
+static void render_entry_pseq();
 
 static void render_entry() {
     switch(gff_get_type_id(gff_idx, entry_idx)) {
@@ -430,6 +436,9 @@ static void render_entry() {
         case GFF_IT1R: render_entry_it1r(); break;
         case GFF_CACT: render_entry_cact(); break;
         case GFF_SCMD: render_entry_scmd(); break;
+        case GFF_GSEQ: render_entry_gseq(); break;
+        case GFF_LSEQ: render_entry_lseq(); break;
+        case GFF_PSEQ: render_entry_pseq(); break;
         default:
             render_entry_header();
             print_line_len(renderer, 0, "Need to implement", 320, 40, 128);
@@ -1503,7 +1512,7 @@ static void render_entry_scmd() {
     const int max_entries = 36;
     int ypos = 40;
     scmd_t* scmd = dsl_scmd_get(gff_idx, res_ids[res_idx], 0);
-    while (num_entries < max_entries && scmd->flags != SCMD_JUMP) {// && scmd->delay != 0) {
+    while (num_entries < max_entries && scmd->flags != SCMD_JUMP) {
         snprintf(buf, BUF_MAX, "%c%c: bmp: %d, delay: %d, offset: (%d, %d), hot: (%d, %d)", 
             scmd->flags & SCMD_LAST ? 'L' : ' ',
             scmd->flags & SCMD_JUMP ? 'J' : ' ',
@@ -1525,4 +1534,28 @@ static void render_entry_scmd() {
         scmd->xoffsethot, scmd->yoffsethot);
     print_line_len(renderer, 0, buf, 320, ypos, BUF_MAX);
     //printf("num_entries = %d\n", num_entries);
+}
+
+static uint32_t music_type = 0;
+
+static void play_xmi() {
+    audio_load_xmi(gff_idx, music_type, res_ids[res_idx]);
+}
+
+void render_entry_gseq() {
+    render_entry_header();
+    music_type = GFF_GSEQ;
+    print_line_len(renderer, 0, "Press p to play.", 320, 60, 128);
+}
+
+void render_entry_lseq() {
+    render_entry_header();
+    music_type = GFF_LSEQ;
+    print_line_len(renderer, 0, "Press p to play.", 320, 60, 128);
+}
+
+void render_entry_pseq() {
+    render_entry_header();
+    music_type = GFF_PSEQ;
+    print_line_len(renderer, 0, "Press p to play.", 320, 60, 128);
 }

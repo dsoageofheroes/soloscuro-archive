@@ -1,6 +1,7 @@
 #include <SDL2/SDL.h>
 #include <stdio.h>
 #include "map.h"
+#include "audio.h"
 #include "font.h"
 #include "player.h"
 #include "lua.h"
@@ -25,6 +26,7 @@ void browse_loop(SDL_Surface*, SDL_Renderer *rend);
 void screen_debug_init(SDL_Surface *sur, SDL_Renderer *rend, const char *arg);
 void export_all_images(const char *filename);
 void export_all_items(const char *base_path);
+void export_all_xmis(const char *base_path);
 
 static uint32_t last_tick = 0;
 static const uint32_t TICK_AMT = 1000 / TICKS_PER_SEC;// Not fully correct...
@@ -281,6 +283,7 @@ static void init(int args, char *argv[]) {
 
     player_init();
     mouse_init(renderer);
+    audio_init();
 
     if (browser_mode) {
         browse_loop(screen, renderer);
@@ -300,6 +303,10 @@ static void init(int args, char *argv[]) {
         }
         if (!strcmp(argv[i], "--extract-images") && i < (args - 1)) {
             export_all_images(argv[i + 1]);
+            exit(0);
+        }
+        if (!strcmp(argv[i], "--extract-xmis") && i < (args - 1)) {
+            export_all_xmis(argv[i + 1]);
             exit(0);
         }
         if (!strcmp(argv[i], "--extract-items") && i < (args - 1)) {
@@ -329,6 +336,7 @@ static void init(int args, char *argv[]) {
 static void cleanup() {
     ui_lua_close();
     // Order matters.
+    audio_cleanup();
     player_close();
     screen_free();
 
