@@ -32,7 +32,7 @@ Now for the .dlls you may either copy them over to system, or create a lib direc
 
 In repos/soloscuro:
 $ mkdir libs/
-$ cp <path-to-sdl2>/x86_64-w64-mingw32/lib/SDL2.dll libs/
+$ cp <path-to-sdl2>/x86_64-w64-mingw32/bin/SDL2.dll libs/
 $ cp <path-to-sdl2>/x86_64-w64-mingw32/lib/libSDL2main.a libs/
 $ cp <path-to-sdl2_ttf>x86_64-w64-mingw32/bin/SDL2_ttf.dll libs/
 $ cp <path-to-lua5.3>/lua53.dll libs/
