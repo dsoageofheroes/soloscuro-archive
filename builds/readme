@@ -1,0 +1,44 @@
+This directory contains build scripts for doing a full build on various machine.
+
+Linux:
+
+Native, trying:
+$ make -f makefile.sdl mdark
+in the root of the repository and fix any missing libraries.
+
+Compiling for Windows on Linux:
+
+Install mingw:
+sudo apt-get install gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 wine64
+
+Now get the development libraries (you need the headers).
+Unzip and copy include over:
+# mkdir /usr/lib/gcc/x86_64-w64-mingw32/8.3-win32/include/SDL2
+# cp -r include/* /usr/lib/gcc/x86_64-w64-mingw32/8.3-win32/include/SDL2
+
+Now do the same for lua5.3:
+
+Download the lua binaries for window, as of writing it was: lua-5.3.6_Win64_dllw6_lib.zip
+# mkdir /usr/lib/gcc/x86_64-w64-mingw32/8.3-win32/include/lua5.3/
+# cp -r include/* /usr/lib/gcc/x86_64-w64-mingw32/8.3-win32/include/lua5.3/
+
+Now download libsndfile and copy over header:
+# cp libsndfile-1.0.31-win64/include/sndfile.h /usr/lib/gcc/x86_64-w64-mingw32/8.3-win32/include/
+
+Now copy over the SDL_ttf header as well
+# cp SDL2_ttf-2.0.15/x86_64-w64-mingw32/include/SDL2/SDL_ttf.h /usr/lib/gcc/x86_64-w64-mingw32/8.3-win32/include/SDL2
+
+Now for the .dlls you may either copy them over to system, or create a lib directory. I prefer the lib directory as that allows me to switch them out if I need to play with different versions.
+
+In repos/soloscuro:
+$ mkdir libs/
+$ cp <path-to-sdl2>/x86_64-w64-mingw32/lib/SDL2.dll libs/
+$ cp <path-to-sdl2>/x86_64-w64-mingw32/lib/libSDL2main.a libs/
+$ cp <path-to-sdl2_ttf>x86_64-w64-mingw32/bin/SDL2_ttf.dll libs/
+$ cp <path-to-lua5.3>/lua53.dll libs/
+$ cp <path-to-sndfile>libsndfile-1.0.31-win64/bin/sndfile.dll libs/
+$ cp <path-to-ADLMIDI>/ADLMIDI.dll libs/
+
+Note: You either copy ADLMIDI.dll from the soloscuro dev pack to libs, or build it yourself.
+
+Windows:

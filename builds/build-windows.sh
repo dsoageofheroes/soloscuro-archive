@@ -13,8 +13,9 @@ mkdir -p staging/lua
 cp ../mdark.exe staging/
 cp ../lua/*.lua staging/lua/
 cp ../*dll staging/
-locate SDL2.dll | xargs -I {} cp {} staging/
-locate lua5.3.dll | xargs -I {} cp {} staging/lua53.dll
+cp ../libs/* staging/
+#locate SDL2.dll | xargs -I {} cp {} staging/
+#locate lua5.3.dll | xargs -I {} cp {} staging/lua53.dll
 cp windows/* staging/
 cd staging
 zip -r ${FILE_NAME} *
