@@ -277,15 +277,10 @@ static void print_menu() {
 #define BLOB_MAX (1<<16)
 static void write_blob() {
     char buf[BLOB_MAX];
-    unsigned int midi_len;
     gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, gff_get_type_id(gff_idx, entry_idx), res_ids[res_idx]);
     gff_read_chunk(gff_idx, &chunk, buf, BLOB_MAX);
     FILE *file = fopen("out.dat", "wb");
     fwrite(buf, 1, chunk.length, file);
-    fclose(file);
-    unsigned char *midi = xmi_to_midi((unsigned char*)buf, chunk.length, &midi_len);
-    file = fopen("out.midi", "wb");
-    fwrite(midi, 1, midi_len, file);
     fclose(file);
 }
 
@@ -408,6 +403,7 @@ static void render_entry_scmd();
 static void render_entry_gseq();
 static void render_entry_lseq();
 static void render_entry_pseq();
+static void render_entry_bvoc();
 
 static void render_entry() {
     switch(gff_get_type_id(gff_idx, entry_idx)) {
@@ -439,6 +435,7 @@ static void render_entry() {
         case GFF_GSEQ: render_entry_gseq(); break;
         case GFF_LSEQ: render_entry_lseq(); break;
         case GFF_PSEQ: render_entry_pseq(); break;
+        case GFF_BVOC: render_entry_bvoc(); break;
         default:
             render_entry_header();
             print_line_len(renderer, 0, "Need to implement", 320, 40, 128);
@@ -1539,7 +1536,16 @@ static void render_entry_scmd() {
 static uint32_t music_type = 0;
 
 static void play_xmi() {
-    audio_load_xmi(gff_idx, music_type, res_ids[res_idx]);
+    switch(music_type) {
+        case GFF_GSEQ:
+        case GFF_LSEQ:
+        case GFF_PSEQ:
+            audio_play_xmi(gff_idx, music_type, res_ids[res_idx]);
+            break;
+        case GFF_BVOC:
+            audio_play_voc(gff_idx, music_type, res_ids[res_idx]);
+            break;
+    }
 }
 
 void render_entry_gseq() {
@@ -1557,5 +1563,11 @@ void render_entry_lseq() {
 void render_entry_pseq() {
     render_entry_header();
     music_type = GFF_PSEQ;
+    print_line_len(renderer, 0, "Press p to play.", 320, 60, 128);
+}
+
+void render_entry_bvoc() {
+    render_entry_header();
+    music_type = GFF_BVOC;
     print_line_len(renderer, 0, "Press p to play.", 320, 60, 128);
 }

@@ -83,7 +83,7 @@ static void map_load_current_region() {
     cmap = map;
 
     //TODO: Find out what maps to which areas.
-    audio_load_xmi(RESOURCE_GFF_INDEX, GFF_GSEQ, 2);
+    audio_play_xmi(RESOURCE_GFF_INDEX, GFF_GSEQ, 2);
 }
 
 static map_t *create_map() {
