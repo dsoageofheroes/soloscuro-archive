@@ -35,9 +35,11 @@ $ mkdir libs/
 $ cp <path-to-sdl2>/x86_64-w64-mingw32/bin/SDL2.dll libs/
 $ cp <path-to-sdl2>/x86_64-w64-mingw32/lib/libSDL2main.a libs/
 $ cp <path-to-sdl2_ttf>x86_64-w64-mingw32/bin/SDL2_ttf.dll libs/
+$ cp <path-to-sdl2_ttf>x86_64-w64-mingw32/bin/libfreetype-6.dll libs/
 $ cp <path-to-lua5.3>/lua53.dll libs/
 $ cp <path-to-sndfile>libsndfile-1.0.31-win64/bin/sndfile.dll libs/
 $ cp <path-to-ADLMIDI>/ADLMIDI.dll libs/
+$ cp <path-to-dev-pack>/libgcc_s_seh-1.dll libs/
 
 Note: You either copy ADLMIDI.dll from the soloscuro dev pack to libs, or build it yourself.
 
