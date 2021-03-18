@@ -214,14 +214,23 @@ int combat_animation_has_more() {
     return next_animation_head != NULL;
 }
 
+static void play_death_sound(entity_t *target) {
+    if (!target) { return; }
+
+    if (target->attack_sound) {
+        port_play_sound_effect(target->attack_sound + 2);
+        return;
+    }
+}
+
 static void apply_last(region_t *reg) {
     // This comes from last.
     switch(last->ca.action) {
         case CA_RED_DAMAGE:
             last->ca.target->stats.hp -= last->ca.amt;
             if (last->ca.target->stats.hp <= 0) {
-                //printf("DYING\n");
                 last->ca.target->combat_status = COMBAT_STATUS_DYING;
+                play_death_sound(last->ca.target);
                 combat_is_defeated(reg, last->ca.target);
             }
             break;
@@ -229,6 +238,35 @@ static void apply_last(region_t *reg) {
             break;
     }
 }
+
+static void play_melee_sound(entity_t *source) {
+    if (source->attack_sound) {
+        port_play_sound_effect(source->attack_sound);
+        return;
+    }
+
+    // sound 69: is Thri-keen melee sound
+    if (source->race  == RACE_THRIKREEN) {
+        port_play_sound_effect(69);
+        return;
+    }
+
+    // sound 7: general melee sound.
+    port_play_sound_effect(7);
+}
+
+static void play_damage_sound(entity_t *target) {
+    if (!target) { return; }
+
+    if (target->attack_sound) {
+        port_play_sound_effect(target->attack_sound + 1);
+    }
+
+    // sound 67: is PC taking damage
+    port_play_sound_effect(67);
+}
+
+// sound 63: is PC doing range attack
 
 int combat_animation_execute(region_t *reg) {
     if (!next_animation_head) {
@@ -240,15 +278,16 @@ int combat_animation_execute(region_t *reg) {
         return 0;
     }
     entity_t *source = next_animation_head->ca.source;
+    entity_t *target = next_animation_head->ca.target;
 
     switch(next_animation_head->ca.action) {
         case CA_MELEE:
-            //port_play_sound_effect(const uint16_t id);
-            port_play_sound_effect(source->attack_sound);
+            play_melee_sound(source);
             source->sprite.scmd = get_combat_scmd(source->sprite.scmd, next_animation_head->ca.action);
             port_update_entity(source, 0, 0);
             break;
         case CA_RED_DAMAGE:
+            play_damage_sound(target);
             source->sprite.scmd = get_scmd(source->sprite.scmd, 0, 0);
             port_update_entity(source, 0, 0);
             port_combat_action(&(next_animation_head->ca));

@@ -404,15 +404,6 @@ static void check_and_perform_attack(region_t *reg) {
             // Monster data should be in the entity.
             // For Now, 1d6, always hits. Need to add thac0 calculation.
             amt = 1 + (rand() % 6);
-            action->target->stats.hp -= amt;
-            //printf("hp after: %d\n", action->target->stats.hp);
-            /*
-            if (action->target->stats.hp <= 0) {
-                //printf("DYING\n");
-                action->target->combat_status = COMBAT_STATUS_DYING;
-                combat_is_defeated(reg, action->target);
-            }
-            */
             combat_animation_add(CA_MELEE, current_turn->entity, NULL, 0);
             combat_animation_add(CA_RED_DAMAGE, current_turn->entity, action->target, amt);
             break;

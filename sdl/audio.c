@@ -185,6 +185,7 @@ static int get_audio_id() {
 
 extern void port_play_sound_effect(const uint16_t id) {
     //TODO: Have the volume be a setting.
+    //printf("Playing %d.\n", id);
     audio_play_voc(RESOURCE_GFF_INDEX, GFF_BVOC, id, 0.1);
 }
 
