@@ -558,6 +558,7 @@ static int lua_narrate_show(lua_State *l) {
 static int lua_play_sound(lua_State *l) {
     lua_Integer bvoc_index = luaL_checkinteger(l, 1);
     debug("I need to play bvoc: " PRI_LI "\n", bvoc_index);
+    port_play_sound_effect(bvoc_index);
     return 0;
 }
 

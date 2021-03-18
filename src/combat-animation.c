@@ -243,6 +243,8 @@ int combat_animation_execute(region_t *reg) {
 
     switch(next_animation_head->ca.action) {
         case CA_MELEE:
+            //port_play_sound_effect(const uint16_t id);
+            port_play_sound_effect(source->attack_sound);
             source->sprite.scmd = get_combat_scmd(source->sprite.scmd, next_animation_head->ca.action);
             port_update_entity(source, 0, 0);
             break;

@@ -183,7 +183,12 @@ static int get_audio_id() {
     return min_id;
 }
 
-extern void audio_play_voc(const int gff_idx, uint32_t type, uint32_t res_id) {
+extern void port_play_sound_effect(const uint16_t id) {
+    //TODO: Have the volume be a setting.
+    audio_play_voc(RESOURCE_GFF_INDEX, GFF_BVOC, id, 0.1);
+}
+
+extern void audio_play_voc(const int gff_idx, uint32_t type, uint32_t res_id, const float volume) {
     static float buffer [VOC_BUFFER_LEN];
     int readcount;
     SF_VIRTUAL_IO vout;
@@ -253,6 +258,12 @@ extern void audio_play_voc(const int gff_idx, uint32_t type, uint32_t res_id) {
     if (!audio_opened[audio_id]) {
         audio_device[audio_id] = SDL_OpenAudioDevice(NULL, 0, &spec, NULL, 0);
         audio_opened[audio_id] = 1;
+    }
+
+    if (volume >= 0 && volume <= 1.0) {
+        for (sf_count_t i = 0; i < audio_data.offset / 2; i++) {
+            ((int16_t*)audio_data.buffer)[i] *= volume;
+        }
     }
 
     int failure = SDL_QueueAudio(audio_device[audio_id], audio_data.buffer, audio_data.offset);

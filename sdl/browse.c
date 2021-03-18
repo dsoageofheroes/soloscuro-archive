@@ -1543,7 +1543,7 @@ static void play_xmi() {
             audio_play_xmi(gff_idx, music_type, res_ids[res_idx]);
             break;
         case GFF_BVOC:
-            audio_play_voc(gff_idx, music_type, res_ids[res_idx]);
+            audio_play_voc(gff_idx, music_type, res_ids[res_idx], 0.5);
             break;
     }
 }

@@ -44,6 +44,8 @@ extern void port_animate_entity(entity_t *obj);
 extern void port_swap_enitity(int obj_id, entity_t *dude);
 extern void port_update_entity(entity_t *entity, const uint16_t xdiff, const uint16_t ydiff);
 
+extern void port_play_sound_effect(const uint16_t id);
+
 extern void port_change_region(region_t *reg);
 extern void port_combat_action(combat_action_t *ca);
 extern void port_load_item(item_t *item);
