@@ -4,6 +4,7 @@
 #include "gameloop.h"
 #include "screen-manager.h"
 #include "screens/add-load-save.h"
+#include "screens/game-menu.h"
 #include "screens/inventory.h"
 #include "screens/narrate.h"
 #include "screens/screen-main.h"
@@ -41,6 +42,9 @@ void load_screen(const char *arg) {
     }
     if (!strcmp(arg, "inv")) {
         screen_push_screen(renderer, &inventory_screen, 0, 0);
+    }
+    if (!strcmp(arg, "menu")) {
+        screen_push_screen(renderer, &game_menu_screen, 0, 0);
     }
     if (!strcmp(arg, "combat")) {
         combat_status_t* cs = combat_status_get();
