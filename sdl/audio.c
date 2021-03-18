@@ -11,6 +11,9 @@ static SDL_AudioSpec            spec, obtained;
 static struct ADL_MIDIPlayer    *midi_player = NULL;
 static struct ADLMIDI_AudioFormat audio_format;
 
+static float midi_volume = 4.0;
+static float voc_volume = 0.1;
+
 #define VOC_BUFFER_LEN (1<<16)
 
 typedef struct audio_buffer_s {
@@ -77,6 +80,9 @@ extern void audio_init() {
             audio_format.sampleOffset = sizeof(float) * 2;
             break;
     }
+
+    adl_setVolumeRangeModel(midi_player, ADLMIDI_VolumeModel_AIL);
+    adl_setScaleModulators(midi_player, 1);
 }
 
 extern void audio_play_xmi(const int gff_idx, uint32_t type, uint32_t res_id) {
@@ -184,9 +190,8 @@ static int get_audio_id() {
 }
 
 extern void port_play_sound_effect(const uint16_t id) {
-    //TODO: Have the volume be a setting.
     //printf("Playing %d.\n", id);
-    audio_play_voc(RESOURCE_GFF_INDEX, GFF_BVOC, id, 0.1);
+    audio_play_voc(RESOURCE_GFF_INDEX, GFF_BVOC, id, voc_volume);
 }
 
 extern void audio_play_voc(const int gff_idx, uint32_t type, uint32_t res_id, const float volume) {
@@ -263,7 +268,9 @@ extern void audio_play_voc(const int gff_idx, uint32_t type, uint32_t res_id, co
 
     if (volume >= 0 && volume <= 1.0) {
         for (sf_count_t i = 0; i < audio_data.offset / 2; i++) {
-            ((int16_t*)audio_data.buffer)[i] *= volume;
+            ((int16_t*)audio_data.buffer)[i] = ((int16_t*)audio_data.buffer)[i] * voc_volume > 32767.0
+                ? 32767
+                : ((int16_t*)audio_data.buffer)[i] * volume;
         }
     }
 
@@ -295,6 +302,13 @@ static void soloscuro_audio_callback(void *midi_player, uint8_t *stream, int len
         xmi_playing = 0;
         SDL_memset(stream, 0, len);
         return;
+    }
+
+    // Assuming ADLMIDI_SampleType_S16
+    for (int i = 0; i < samples_count; i++) {
+        ((int16_t*)xmi_buf)[i] = ((int16_t*)xmi_buf)[i] * midi_volume > 32767.0
+            ? 32767
+            : ((int16_t*)xmi_buf)[i] * midi_volume;
     }
 
     /* Send buffer to the audio device */
