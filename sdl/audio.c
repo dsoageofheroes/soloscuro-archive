@@ -11,8 +11,14 @@ static SDL_AudioSpec            spec, obtained;
 static struct ADL_MIDIPlayer    *midi_player = NULL;
 static struct ADLMIDI_AudioFormat audio_format;
 
-static float midi_volume = 4.0;
-static float voc_volume = 0.1;
+// The MIDI and VOC subsystems generate sounds at different volumes.
+// Namely voc is super loud and midi is quiet. These factor are applied to the volumes.
+#define MIDI_FACTOR (6.0)
+#define VOC_FACTOR (0.2)
+
+// The volumes (0.0 - 1.0)
+static float midi_volume = 0.8;
+static float voc_volume = 0.6;
 
 #define VOC_BUFFER_LEN (1<<16)
 
@@ -26,6 +32,25 @@ typedef struct audio_buffer_s {
 static SDL_AudioDeviceID audio_device[AUDIO_DEVICE_NUM];
 static int audio_opened[AUDIO_DEVICE_NUM] = {0, 0, 0, 0};
 
+extern float audio_get_xmi_volume() {
+    return midi_volume;
+}
+
+extern void audio_set_xmi_volume(const float vol) {
+    if (vol < 0) { midi_volume = 0.0; return; }
+    if (vol > 1.0) { midi_volume = 1.0; return; }
+    midi_volume = vol;
+}
+
+extern float audio_get_voc_volume() {
+    return voc_volume;
+}
+
+extern void audio_set_voc_volume(const float vol) {
+    if (vol < 0) { voc_volume = 0.0; return; }
+    if (vol > 1.0) { voc_volume = 1.0;return;  }
+    voc_volume = vol;
+}
 
 extern void audio_init() {
     SDL_Init(SDL_INIT_AUDIO);
@@ -266,11 +291,12 @@ extern void audio_play_voc(const int gff_idx, uint32_t type, uint32_t res_id, co
         audio_opened[audio_id] = 1;
     }
 
+    const float total_factor = volume * VOC_FACTOR;
     if (volume >= 0 && volume <= 1.0) {
         for (sf_count_t i = 0; i < audio_data.offset / 2; i++) {
-            ((int16_t*)audio_data.buffer)[i] = ((int16_t*)audio_data.buffer)[i] * voc_volume > 32767.0
+            ((int16_t*)audio_data.buffer)[i] = ((int16_t*)audio_data.buffer)[i] * total_factor > 32767.0
                 ? 32767
-                : ((int16_t*)audio_data.buffer)[i] * volume;
+                : ((int16_t*)audio_data.buffer)[i] * total_factor;
         }
     }
 
@@ -305,10 +331,11 @@ static void soloscuro_audio_callback(void *midi_player, uint8_t *stream, int len
     }
 
     // Assuming ADLMIDI_SampleType_S16
+    const float total_factor = midi_volume * MIDI_FACTOR;
     for (int i = 0; i < samples_count; i++) {
-        ((int16_t*)xmi_buf)[i] = ((int16_t*)xmi_buf)[i] * midi_volume > 32767.0
+        ((int16_t*)xmi_buf)[i] = ((int16_t*)xmi_buf)[i] * total_factor > 32767.0
             ? 32767
-            : ((int16_t*)xmi_buf)[i] * midi_volume;
+            : ((int16_t*)xmi_buf)[i] * total_factor;
     }
 
     /* Send buffer to the audio device */

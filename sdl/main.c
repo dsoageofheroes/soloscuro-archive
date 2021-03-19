@@ -14,6 +14,7 @@
 #include "screens/inventory.h"
 #include "screens/add-load-save.h"
 #include "screens/view-character.h"
+#include "screens/game-menu.h"
 #include "../src/combat.h"
 #include "../src/dsl.h"
 #include "../src/dsl-manager.h"
@@ -159,6 +160,9 @@ void handle_input() {
                 if (ui_lua_keydown(event.key.keysym.sym)) { break; }
                 if (event.key.keysym.sym == SDLK_ESCAPE) {
                     game_loop_signal(WAIT_FINAL, 0);
+                }
+                if (event.key.keysym.sym == SDLK_TAB) {
+                    screen_toggle_screen(renderer, &game_menu_screen, 0, 0);
                 }
                 if (event.key.keysym.sym == SDLK_i) {
                     screen_toggle_screen(renderer, &inventory_screen, 0, 0);
