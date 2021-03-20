@@ -567,11 +567,11 @@ static int melee_count(entity_t *entity) {
 // decide if the current turn is over and ready next.
 static void check_current_turn() {
     if (!combat_animation_has_more()) {
-        printf("%d %d\n", melee_count(current_turn->entity), current_turn->melee_actions);
         if (melee_count(current_turn->entity) <= current_turn->melee_actions) {
-            //return;
-        }
             end_turn();
+            return;
+        }
+        monster_step = -1;
     }
 }
 
