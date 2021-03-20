@@ -18,6 +18,7 @@ static enum combat_action_e player_action;
 typedef struct combat_entry_s {
     int initiative;
     int sub_roll; // used to break ties.
+    int melee_actions, range_actions, spell_actions, psionic_actions;
     combat_action_t current_action;
     entity_t *entity;
     struct combat_entry_s *next;
@@ -71,7 +72,7 @@ static int initiative_is_less(combat_entry_t *n0, combat_entry_t *n1) {
 
 // Add to the actual combat list.
 static void add_to_combat(entity_t *entity) {
-    combat_entry_t *node = malloc(sizeof(combat_entry_t));
+    combat_entry_t *node = calloc(1, sizeof(combat_entry_t));
     node->entity = entity;
     node->next = combat_order; // start up front.
     node->initiative = dnd2e_roll_initiative(entity);
@@ -341,7 +342,12 @@ static void apply_action_animation(const enum combat_action_e action) {
 }
 
 static void end_turn() {
+    entity_t *entity = (current_turn) ? current_turn->entity : NULL;
     monster_step = -1;
+
+    if (entity) {
+        entity->sprite.scmd = combat_animation_get_scmd(entity->sprite.scmd, 0, 0, CA_NONE);
+    }
     current_turn = current_turn->next;
     /*
     combat_entry_t *rover = current_turn;
@@ -389,23 +395,33 @@ extern void combat_is_defeated(region_t *reg, entity_t *dude) {
 
 }
 
+// DS Engine: Attacks usually based on weapons. If none, then bare hand.
+//            Monster's base weapon are considered plus for
+//            level 0-4: regular
+//            level 5-6: +1
+//            level 6-7: +2
+//            level 8-9: +3
+//            level 10+: +4
+// Monster data should be in the entity.
+// For Now, 1d6, always hits. Need to add thac0 calculation.
+static void perform_enemy_melee_attack() {
+    entity_t *source = current_turn->entity;
+    entity_t *target = monster_actions[monster_step].target;
+
+    int16_t amt = dnd2e_melee_attack(source, target, current_turn->melee_actions++);
+    combat_animation_add(CA_MELEE, source, NULL, 0);
+    //printf("amt = %d!\n", amt);
+    if (amt > 0) {
+        combat_animation_add(CA_RED_DAMAGE, source, target, amt);
+    }
+}
+
 static void check_and_perform_attack(region_t *reg) {
-    int amt = 0;
     combat_action_t *action = monster_actions + monster_step;
+
     switch (action->action) {
         case CA_MELEE:
-            // DS Engine: Attacks usually based on weapons. If none, then bare hand.
-            //            Monster's base weapon are considered plus for
-            //            level 0-4: regular
-            //            level 5-6: +1
-            //            level 6-7: +2
-            //            level 8-9: +3
-            //            level 10+: +4
-            // Monster data should be in the entity.
-            // For Now, 1d6, always hits. Need to add thac0 calculation.
-            amt = 1 + (rand() % 6);
-            combat_animation_add(CA_MELEE, current_turn->entity, NULL, 0);
-            combat_animation_add(CA_RED_DAMAGE, current_turn->entity, action->target, amt);
+            perform_enemy_melee_attack();
             break;
         default:
             break;
@@ -479,6 +495,7 @@ static void next_round() {
 
     while (rover) {
         rover->entity->stats.move = rover->entity->stats.base_move;
+        rover->melee_actions = rover->range_actions = rover->spell_actions = rover->psionic_actions = 0;
         rover = rover->next;
     }
 
@@ -536,10 +553,25 @@ static int is_combat_over(region_t *reg) {
     return num_types < 2;
 }
 
+static int melee_count(entity_t *entity) {
+    if (!entity->inv) {
+        int amt = entity->stats.attacks[0].number;
+        amt += entity->stats.attacks[1].number;
+        amt += entity->stats.attacks[2].number;
+        return amt;
+    }
+    warn("NOT TAKING INTO ACCOUNT INVENTORY FOR CREATURES!!! FIX THIS !!!");
+    return 0;
+}
+
 // decide if the current turn is over and ready next.
 static void check_current_turn() {
     if (!combat_animation_has_more()) {
-        end_turn();
+        printf("%d %d\n", melee_count(current_turn->entity), current_turn->melee_actions);
+        if (melee_count(current_turn->entity) <= current_turn->melee_actions) {
+            //return;
+        }
+            end_turn();
     }
 }
 

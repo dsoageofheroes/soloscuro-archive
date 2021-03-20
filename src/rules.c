@@ -1,5 +1,6 @@
 #include "gff.h"
 #include "rules.h"
+#include "dsl.h"
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -1028,4 +1029,35 @@ int16_t dnd2e_calc_ac(entity_t *entity) {
         }
     }
     return entity->stats.base_ac + dex_mods[entity->stats.dex][2] - ac_bonus;
+}
+
+// Combat
+static int droll(const int max) {
+    return 1 + (rand() % max);
+}
+// returns the amt of damage done. 0 means miss/absorbed, negative means the attack is not legit
+int16_t dnd2e_melee_attack(entity_t *source, entity_t *target, int attack_num) {
+    if (!source || !target || attack_num < 0) { return -1; }
+    int16_t amt = 0;
+
+    if (source->inv) {
+        printf("NEED TO CALC BASED ON INV.\n");
+        return amt;
+    }
+
+    // No inventory, do natural
+    if (attack_num == 0) {
+        printf("%d %d\n", source->stats.base_thac0,  dnd2e_calc_ac(target));
+        if (droll(20) >= (source->stats.base_thac0 - dnd2e_calc_ac(target))) { // hit
+            for (int i = 0; i < source->stats.attacks[0].num_dice; i++) {
+                amt += droll(source->stats.attacks[0].sides);
+            }
+            // TODO: SPECIALS?
+            return amt;
+        }
+    }
+
+    warn("melee attack is not complete.\n");
+
+    return -1;
 }

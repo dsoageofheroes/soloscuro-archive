@@ -9,14 +9,22 @@
 #define MAX_SPELLS (8*138)
 #define MAX_PSIONICS (34)
 
+enum spell_shape {
+    SPELL_SINGLE, // a point, aoe is ignore
+    SPELL_CIRCLE, // EX: Fireball
+    SPELL_CONE,   // EX: Cone of Cold
+    SPELL_RECTANGLE, // aoe is two 8-bit ints, width times height
+    SPELL_MULTI,  // aoe is number of charges.
+};
+
 typedef struct spell_s {
     char *name;
     char *spell_text;
     uint16_t range;
     uint16_t aoe;
-    uint16_t shape;
-    //void (*apply) (entity_list_t *entities);
+    enum spell_shape shape;
     sprite_info_t icon;
+    effect_node_t *effects;
     // Add animation sequence info here.
 } spell_t;
 

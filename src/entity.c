@@ -17,6 +17,8 @@ static void apply_combat(dude_t *dude, ds1_combat_t *combat) {
     dude->stats.psp = combat->psp;
     dude->stats.special_defense = combat->special_defense;
     dude->stats.attacks[0].special = combat->special_attack;
+    dude->stats.base_thac0 = combat->thac0;
+    dude->stats.base_ac = combat->ac;
     dude->allegiance = combat->allegiance;
     dude->stats.str = combat->stats.str;
     dude->stats.dex = combat->stats.dex;
