@@ -1035,10 +1035,26 @@ int16_t dnd2e_calc_ac(entity_t *entity) {
 static int droll(const int max) {
     return 1 + (rand() % max);
 }
+
+static int16_t roll_damage_innate(innate_attack_t *attack) {
+    int16_t amt = 0;
+
+    for (int i = 0; i < attack->num_dice; i++) {
+        amt += droll(attack->sides);
+    }
+
+    // TODO: SPECIALS?
+    if (attack->special) {
+        warn("melee special not implemented.\n");
+    }
+
+    return amt;
+}
 // returns the amt of damage done. 0 means miss/absorbed, negative means the attack is not legit
 int16_t dnd2e_melee_attack(entity_t *source, entity_t *target, int attack_num) {
     if (!source || !target || attack_num < 0) { return -1; }
     int16_t amt = 0;
+    int16_t attack_amt = 0;
 
     if (source->inv) {
         printf("NEED TO CALC BASED ON INV.\n");
@@ -1046,18 +1062,28 @@ int16_t dnd2e_melee_attack(entity_t *source, entity_t *target, int attack_num) {
     }
 
     // No inventory, do natural
-    if (attack_num == 0) {
-        printf("%d %d\n", source->stats.base_thac0,  dnd2e_calc_ac(target));
+    if (attack_num >= 0 && attack_num < source->stats.attacks[0].number) {
+        //printf("%d %d\n", source->stats.base_thac0,  dnd2e_calc_ac(target));
         if (droll(20) >= (source->stats.base_thac0 - dnd2e_calc_ac(target))) { // hit
-            for (int i = 0; i < source->stats.attacks[0].num_dice; i++) {
-                amt += droll(source->stats.attacks[0].sides);
-            }
-            // TODO: SPECIALS?
-            return amt;
+            return roll_damage_innate(source->stats.attacks + 0);
         }
     }
+    attack_amt += source->stats.attacks[0].number;
 
-    warn("melee attack is not complete.\n");
+    if (attack_num >= attack_amt && attack_num < source->stats.attacks[1].number) {
+        //printf("%d %d\n", source->stats.base_thac0,  dnd2e_calc_ac(target));
+        if (droll(20) >= (source->stats.base_thac0 - dnd2e_calc_ac(target))) { // hit
+            return roll_damage_innate(source->stats.attacks + 1);
+        }
+    }
+    attack_amt += source->stats.attacks[1].number;
+
+    if (attack_num >= attack_amt && attack_num < source->stats.attacks[2].number) {
+        //printf("%d %d\n", source->stats.base_thac0,  dnd2e_calc_ac(target));
+        if (droll(20) >= (source->stats.base_thac0 - dnd2e_calc_ac(target))) { // hit
+            return roll_damage_innate(source->stats.attacks + 2);
+        }
+    }
 
     return -1;
 }

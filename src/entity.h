@@ -6,7 +6,6 @@
 #include "ds-scmd.h"
 #include "ds-item.h"
 #include "gff-map.h"
-#include "spells.h"
 #include "psionic.h"
 #include "item.h"
 

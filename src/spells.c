@@ -81,10 +81,11 @@ static spell_builder_t wizard_spells[] = {
     { .name = "Wall of Stone",                   .icon = 21068, .spell_text_id = 69},
 };
 
-extern spell_t* spell_get_spell(const uint16_t id) {
-    if (id < 0 || id > sizeof(wizard_spells) / sizeof(spell_t)) { return NULL; }
-    //return wizard_spells + id;
-    return NULL;
+extern void* spell_get_spell(const uint16_t id) {
+    //if (id < 0 || id > sizeof(wizard_spells) / sizeof(spell_t)) { return NULL; }
+    if (id < 0) { return NULL; }
+    ////return wizard_spells + id;
+    return wizard_spells + id;
 }
 
 static void load_name_from_gff(const uint8_t id, const uint16_t offset, const uint8_t max, char name[32]) {

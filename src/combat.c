@@ -18,6 +18,7 @@ static enum combat_action_e player_action;
 typedef struct combat_entry_s {
     int initiative;
     int sub_roll; // used to break ties.
+    int round; // which round we are in.
     int melee_actions, range_actions, spell_actions, psionic_actions;
     combat_action_t current_action;
     entity_t *entity;
@@ -560,7 +561,7 @@ static int melee_count(entity_t *entity) {
         amt += entity->stats.attacks[2].number;
         return amt;
     }
-    warn("NOT TAKING INTO ACCOUNT INVENTORY FOR CREATURES!!! FIX THIS !!!");
+    warn("NOT TAKING INTO ACCOUNT INVENTORY FOR CREATURES!!! FIX THIS !!! (%s)\n", entity->name);
     return 0;
 }
 
