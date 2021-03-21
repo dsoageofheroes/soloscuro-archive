@@ -497,6 +497,7 @@ static void next_round() {
     while (rover) {
         rover->entity->stats.move = rover->entity->stats.base_move;
         rover->melee_actions = rover->range_actions = rover->spell_actions = rover->psionic_actions = 0;
+        rover->round++;
         rover = rover->next;
     }
 
@@ -559,7 +560,11 @@ static int melee_count(entity_t *entity) {
         int amt = entity->stats.attacks[0].number;
         amt += entity->stats.attacks[1].number;
         amt += entity->stats.attacks[2].number;
-        return amt;
+        // For even rounds allow the extra half attack.
+        if ((current_turn->round % 2) == 0) {
+            amt++;
+        }
+        return amt / 2;
     }
     warn("NOT TAKING INTO ACCOUNT INVENTORY FOR CREATURES!!! FIX THIS !!! (%s)\n", entity->name);
     return 0;
