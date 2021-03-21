@@ -38,7 +38,7 @@ static void create_combat(entity_t *pc, char *name, ds1_combat_t *combat) {
     combat->status = 0; // clear
     combat->allegiance = pc->allegiance;
     combat->data = 0; // whatever
-    combat->thac0 = dnd2e_get_thac0_pc(pc);
+    combat->thac0 = 20;//dnd2e_get_thac0_pc(pc);
     combat->priority = 0; // clear
     combat->flags = 0; // clear
     combat->stats.str = pc->stats.str;

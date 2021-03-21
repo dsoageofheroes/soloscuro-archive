@@ -202,7 +202,7 @@ static int display_attack(entity_t *entity, item_t *item, const int xpos, const 
         offset += 7;
     }
 
-    uint16_t num_attacks = dnd2e_get_attack_num_pc(entity, item);
+    uint16_t num_attacks = dnd2e_get_attack_num(entity, item);
     pos += snprintf(buf + pos, BUF_MAX - pos, "%d%sx",
         num_attacks >> 1, // num_attacks is half-attacks.
         (num_attacks & 0x01) ? ".5" : "");

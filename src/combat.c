@@ -409,7 +409,7 @@ static void perform_enemy_melee_attack() {
     entity_t *source = current_turn->entity;
     entity_t *target = monster_actions[monster_step].target;
 
-    int16_t amt = dnd2e_melee_attack(source, target, current_turn->melee_actions++);
+    int16_t amt = dnd2e_melee_attack(source, target, current_turn->melee_actions++, current_turn->round);
     combat_animation_add(CA_MELEE, source, NULL, 0);
     //printf("amt = %d!\n", amt);
     if (amt > 0) {
@@ -450,10 +450,18 @@ static entity_t* entity_in_way(region_t *reg, entity_t *entity, const enum comba
 
 static void player_melee(region_t *reg, entity_t* entity, entity_t *enemy) {
     //int amt = 1 + (rand() % 6);
-    int amt = 100; // FTW!
-    combat_animation_add(CA_MELEE, current_turn->entity, NULL, 0);
-    combat_animation_add(CA_RED_DAMAGE, current_turn->entity, enemy, amt);
-    wait_on_player = 0;
+    //int amt = 100; // FTW!
+    //combat_animation_add(CA_MELEE, current_turn->entity, NULL, 0);
+    //combat_animation_add(CA_RED_DAMAGE, current_turn->entity, enemy, amt);
+    int16_t amt = dnd2e_melee_attack(entity, enemy, current_turn->melee_actions++, current_turn->round);
+    combat_animation_add(CA_MELEE, entity, NULL, 0);
+    //printf("amt = %d!\n", amt);
+    if (amt > 0) {
+        combat_animation_add(CA_RED_DAMAGE, entity, enemy, amt);
+    }
+    wait_on_player = dnd2e_can_melee_again(entity, current_turn->melee_actions, current_turn->round);
+    player_action = CA_NONE;
+    //wait_on_player = 0;
 }
 
 static void move_entity(region_t *reg, entity_t *entity, const enum combat_action_e action) {
@@ -555,25 +563,10 @@ static int is_combat_over(region_t *reg) {
     return num_types < 2;
 }
 
-static int melee_count(entity_t *entity) {
-    if (!entity->inv) {
-        int amt = entity->stats.attacks[0].number;
-        amt += entity->stats.attacks[1].number;
-        amt += entity->stats.attacks[2].number;
-        // For even rounds allow the extra half attack.
-        if ((current_turn->round % 2) == 0) {
-            amt++;
-        }
-        return amt / 2;
-    }
-    warn("NOT TAKING INTO ACCOUNT INVENTORY FOR CREATURES!!! FIX THIS !!! (%s)\n", entity->name);
-    return 0;
-}
-
 // decide if the current turn is over and ready next.
 static void check_current_turn() {
     if (!combat_animation_has_more()) {
-        if (melee_count(current_turn->entity) <= current_turn->melee_actions) {
+        if (!dnd2e_can_melee_again(current_turn->entity, current_turn->melee_actions, current_turn->round)) {
             end_turn();
             return;
         }

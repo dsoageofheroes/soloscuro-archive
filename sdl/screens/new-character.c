@@ -586,8 +586,8 @@ static void copy_exp_tnl_string(char* storage) {
 static void copy_dam_string(char* storage) {
     int pos = 0;
 
-    pos = snprintf(storage, BUF_MAX, "DAM: %d%s", dnd2e_get_attack_num_pc(&pc, 0) >> 1,
-                   (dnd2e_get_attack_num_pc(&pc, 0) & 0x01) ? ".5" : "");
+    pos = snprintf(storage, BUF_MAX, "DAM: %d%s", dnd2e_get_attack_num(&pc, 0) >> 1,
+                   (dnd2e_get_attack_num(&pc, 0) & 0x01) ? ".5" : "");
     pos += snprintf(storage + pos, BUF_MAX - pos, "x1D%d", dnd2e_get_attack_die_pc(&pc, 0));
     pos += snprintf(storage + pos, BUF_MAX - pos, "+%d", dnd2e_get_attack_mod_pc(&pc, 0));
 }

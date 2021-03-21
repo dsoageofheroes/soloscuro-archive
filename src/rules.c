@@ -610,6 +610,22 @@ static const uint32_t alignment_flags[] = {
     NOT_LAWFUL_EVIL      | NOT_NEUTRAL_EVIL        | ONLY_CHAOTIC_EVIL,
 };
 
+static int8_t warrior_thac0[] = {
+    20, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1
+};
+
+static int8_t rogue_thac0[] = {
+    20, 20, 20, 19, 19, 18, 18, 17, 17, 16, 16, 15, 15, 14, 14, 13, 13, 12, 12, 11, 11
+};
+
+static int8_t priest_thac0[] = {
+    20, 20, 20, 20, 18, 18, 18, 16, 16, 16, 14, 14, 14, 12, 12, 12, 10, 10, 10, 8, 8
+};
+
+static int8_t wizard_thac0[] = {
+    20, 20, 20, 20, 19, 19, 19, 18, 18, 18, 17, 17, 17, 16, 16, 16, 15, 15, 15, 14, 14
+};
+
 static int has_class(entity_t *pc, const int16_t class){
     return pc->class[0].class == class
         || pc->class[1].class == class
@@ -874,7 +890,7 @@ static int16_t class_attack_num(const entity_t *pc, const item_t *item) {
     return 0;
 }
 
-int16_t dnd2e_get_attack_num_pc(const entity_t *pc, const item_t *item) {
+int16_t dnd2e_get_attack_num(const entity_t *pc, const item_t *item) {
     if (item == NULL || !item->ds_id) { return pc->stats.attacks[0].number; }
     // For some reason double attacks are stored for missiles...
     return item->attack.number + class_attack_num(pc, item);
@@ -1004,9 +1020,90 @@ int16_t dnd2e_get_move_pc(entity_t *pc) {
     return 12;
 }
 
-int16_t dnd2e_get_thac0_pc(entity_t *pc) {
-    return 20; //TODO: update
+// THAC0
+static int get_class_thac0(entity_t *pc) {
+    int thac0 = 9999;
+    for (int i = 0; i < 3; i++) {
+        switch(pc->class[i].class) {
+            case REAL_CLASS_FIGHTER:
+            case REAL_CLASS_GLADIATOR:
+            case REAL_CLASS_AIR_RANGER:
+            case REAL_CLASS_EARTH_RANGER:
+            case REAL_CLASS_FIRE_RANGER:
+            case REAL_CLASS_WATER_RANGER:
+                thac0 = thac0 > warrior_thac0[pc->class[i].level]
+                    ? warrior_thac0[pc->class[i].level]
+                    : thac0;
+                break;
+            case REAL_CLASS_AIR_CLERIC:
+            case REAL_CLASS_EARTH_CLERIC:
+            case REAL_CLASS_FIRE_CLERIC:
+            case REAL_CLASS_WATER_CLERIC:
+            case REAL_CLASS_AIR_DRUID:
+            case REAL_CLASS_EARTH_DRUID:
+            case REAL_CLASS_FIRE_DRUID:
+            case REAL_CLASS_WATER_DRUID:
+            case REAL_CLASS_TEMPLAR:
+                thac0 = thac0 > priest_thac0[pc->class[i].level]
+                    ? priest_thac0[pc->class[i].level]
+                    : thac0;
+                break;
+            case REAL_CLASS_PSIONICIST:
+            case REAL_CLASS_THIEF:
+                thac0 = thac0 > rogue_thac0[pc->class[i].level]
+                    ? rogue_thac0[pc->class[i].level]
+                    : thac0;
+                break;
+            case REAL_CLASS_DEFILER:
+            case REAL_CLASS_PRESERVER:
+                thac0 = thac0 > wizard_thac0[pc->class[i].level]
+                    ? wizard_thac0[pc->class[i].level]
+                    : thac0;
+                break;
+            default: break;
+        }
+    }
+
+    if (thac0 > 1000) { thac0 = pc->stats.base_thac0; } // not a pc.
+
+    return thac0;
 }
+
+static int item_thac0_mod(item_t *item) {
+    int thac0_mod = 0;
+
+    switch(item->material) {
+        case MATERIAL_WOOD: thac0_mod = 3; break;
+        case MATERIAL_STONE:
+        case MATERIAL_BONE:
+            thac0_mod = 2; break;
+        case MATERIAL_OBSIDIAN:
+            thac0_mod = 1; break;
+    }
+
+    if (item->effect) {
+        warn("need to added any effects on thac0 for %d (%s)\n", item->ds_id, item->name);
+    }
+
+    return thac0_mod;
+}
+
+int16_t dnd2e_get_thac0(entity_t *pc, int slot) {
+    int class_thac0 = get_class_thac0(pc);
+    int weapon_mod = (pc->inv && pc->inv[slot].ds_id)
+        ? item_thac0_mod(pc->inv + slot)
+        : 0; // bare handed.
+    int stat_mod = 0;
+
+    if (slot != SLOT_MISSILE && slot != SLOT_AMMO) {
+        stat_mod = str_mods[pc->stats.str][STR_HIT];
+    } else { // ASSUME missile/ammo
+        stat_mod = dex_mods[pc->stats.dex][DEX_MISSILE];
+    }
+
+    return class_thac0 + weapon_mod - stat_mod;
+}
+// END THAC0
 
 // Missle modification is in original DS engine, so is d10. Although DS was highest goes first, we are lowest.
 // TODO: Add mods for race, spell efects, etc...
@@ -1050,40 +1147,82 @@ static int16_t roll_damage_innate(innate_attack_t *attack) {
 
     return amt;
 }
-// returns the amt of damage done. 0 means miss/absorbed, negative means the attack is not legit
-int16_t dnd2e_melee_attack(entity_t *source, entity_t *target, int attack_num) {
-    if (!source || !target || attack_num < 0) { return -1; }
+
+static int16_t roll_damage_weapon(item_t *item) {
     int16_t amt = 0;
-    int16_t attack_amt = 0;
 
-    if (source->inv) {
-        printf("NEED TO CALC BASED ON INV.\n");
-        return amt;
+    for (int i = 0; i < item->attack.num_dice; i++) {
+        amt += droll(item->attack.sides);
     }
 
-    // No inventory, do natural
-    if (attack_num >= 0 && attack_num < source->stats.attacks[0].number) {
-        //printf("%d %d\n", source->stats.base_thac0,  dnd2e_calc_ac(target));
-        if (droll(20) >= (source->stats.base_thac0 - dnd2e_calc_ac(target))) { // hit
-            return roll_damage_innate(source->stats.attacks + 0);
-        }
+    // TODO: SPECIALS?
+    if (item->effect) {
+        warn("weapon special not implemented.\n");
     }
-    attack_amt += source->stats.attacks[0].number;
 
-    if (attack_num >= attack_amt && attack_num < source->stats.attacks[1].number) {
-        //printf("%d %d\n", source->stats.base_thac0,  dnd2e_calc_ac(target));
-        if (droll(20) >= (source->stats.base_thac0 - dnd2e_calc_ac(target))) { // hit
-            return roll_damage_innate(source->stats.attacks + 1);
-        }
+    return amt;
+}
+
+static int get_next_melee_attack(entity_t *source, const int attack_num, const int round) {
+    int current_count = 0;
+    int next_max = 0;
+    int to_add = 0;
+
+    next_max += (source->inv && source->inv[SLOT_HAND0].ds_id)
+        ? dnd2e_get_attack_num(source, source->inv + SLOT_HAND0)
+        : source->stats.attacks[0].number;
+    if ((round % 2) == 0) { next_max += 1; }
+    next_max /= 2;
+    if (attack_num >= current_count && attack_num < next_max) {
+        return 0;
     }
-    attack_amt += source->stats.attacks[1].number;
 
-    if (attack_num >= attack_amt && attack_num < source->stats.attacks[2].number) {
-        //printf("%d %d\n", source->stats.base_thac0,  dnd2e_calc_ac(target));
-        if (droll(20) >= (source->stats.base_thac0 - dnd2e_calc_ac(target))) { // hit
-            return roll_damage_innate(source->stats.attacks + 2);
-        }
+    current_count = next_max;
+    to_add += (source->inv && source->inv[SLOT_HAND1].ds_id)
+        ? dnd2e_get_attack_num(source, source->inv + SLOT_HAND1)
+        : source->stats.attacks[1].number;
+    if ((round % 2) == 0) { to_add += 1; }
+    next_max += to_add / 2;
+    if (attack_num >= current_count && attack_num < next_max) {
+        return 1;
+    }
+
+    current_count = next_max;
+    to_add += source->stats.attacks[2].number;
+    if ((round % 2) == 0) { to_add += 1; }
+    next_max += to_add / 2;
+    if (attack_num >= current_count && attack_num < next_max) {
+        return 2;
     }
 
     return -1;
+}
+
+extern int16_t dnd2e_can_melee_again(entity_t *source, const int attack_num, const int round) {
+    return get_next_melee_attack(source, attack_num, round) != -1;
+}
+
+// returns the amt of damage done. 0 means miss/absorbed, negative means attack is not legit, or out of round.
+extern int16_t dnd2e_melee_attack(entity_t *source, entity_t *target, const int attack_num, const int round) {
+    if (!source || !target || attack_num < 0) { return -1; }
+    int16_t thac0 = 20;
+
+    int attack_slot = get_next_melee_attack(source, attack_num, round);
+
+    if (attack_slot < 0) { return -1; }
+
+    if (source->inv && attack_slot < 2) {
+        int slot = attack_slot == 0 ? SLOT_HAND0 : SLOT_HAND1;
+        thac0 = dnd2e_get_thac0(source, slot);
+        if (droll(20) >= (thac0 - dnd2e_calc_ac(target))) {
+            return roll_damage_weapon(source->inv + slot) + str_mods[source->stats.str][STR_DAM];
+        }
+        return 0;
+    }
+
+    if (droll(20) >= (source->stats.base_thac0 - dnd2e_calc_ac(target))) { // hit
+        return roll_damage_innate(source->stats.attacks + attack_slot);
+    }
+
+    return 0;
 }
