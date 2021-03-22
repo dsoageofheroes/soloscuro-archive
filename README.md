@@ -4,7 +4,7 @@ A Dark Sun Engine
 Goals: To create an engine for Dark Sun 1, 2, and Crimson Sands.
 
 ### Latest Downloads:
-<http://dso.paulofthewest.com/downloads.php>
+<http://dso.paulofthewest.com/downloads.html>
 
 ### Linux dev setup
 1) run make
