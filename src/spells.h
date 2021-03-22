@@ -219,6 +219,9 @@ typedef struct ssi_spell_list_s {
     uint8_t spells[MAX_SPELLS/8];
 } ssi_spell_list_t;
 
+void spell_init();
+void spell_cleanup();
+
 void spell_get_psionic_name(uint8_t psi, char name[32]);
 void spell_get_wizard_name(uint8_t spell, char name[32]);
 void spell_get_cleric_name(uint8_t spell, char name[32]);

@@ -20,10 +20,10 @@ static int armor_affect_power (struct power_instance_s *target) {
     return 0;
 }
 
-power_t spell_armor = {
-    .actions.can_activate = armor_can_activate,
-    .actions.pay          = armor_pay,
-    .actions.apply        = armor_apply,
-    .actions.still_active = armor_still_active,
-    .actions.affect_power = armor_affect_power,
-};
+extern void spell_armor_attach (power_t *spell) {
+    spell->actions.can_activate = armor_can_activate;
+    spell->actions.pay          = armor_pay;
+    spell->actions.apply        = armor_apply;
+    spell->actions.still_active = armor_still_active;
+    spell->actions.affect_power = armor_affect_power;
+}

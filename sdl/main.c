@@ -1,10 +1,11 @@
 #include <SDL2/SDL.h>
 #include <stdio.h>
 #include "map.h"
+#include "uil.h"
 #include "audio.h"
 #include "font.h"
 #include "player.h"
-#include "lua-inc.h"
+#include "../src/lua-inc.h"
 #include "mouse.h"
 #include "textbox.h"
 #include "screen-manager.h"

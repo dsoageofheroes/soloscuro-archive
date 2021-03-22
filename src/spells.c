@@ -10,19 +10,17 @@ typedef struct spell_builder_s {
     int              spell_text_id;
     uint16_t         range, aoe;
     enum power_shape shape;
-    uint16_t         icon_num;
-    int              (*can_activate) (struct power_instance_s *source);
-    int              (*pay)          (struct power_instance_s *source);
-    int              (*apply)        (struct power_instance_s *source, entity_t *target);
-    int              (*still_active) (struct power_instance_s *source, const int rounds_past);
-    int              (*affect_power) (struct power_instance_s *target);
-    uint16_t         thrown_bmp_id;
-    uint16_t         hit_bmp_id;
-    uint16_t         sound_id;
+    uint16_t         thrown_bmp;
+    uint16_t         hit_bmp;
+    uint16_t         sound;
+    void             (*attach)       (power_t *spell);
 } spell_builder_t;
 
+extern void spell_armor_attach (power_t *spell);
+
 static spell_builder_t wizard_spells[] = {
-    { .name = "Armor",                           .icon = 21000, .spell_text_id =  1, .range = 0, .aoe = 0},
+    { .name = "Armor",                           .icon = 21000, .spell_text_id =  1, .range = 0, .aoe = 0,
+        .shape = POWER_SINGLE, .thrown_bmp = 0, .hit_bmp = 0, .sound = 0, .attach = spell_armor_attach},
     { .name = "Burning Hands",                   .icon = 21001, .spell_text_id =  2},
     { .name = "Charm",                           .icon = 21002, .spell_text_id =  3},
     { .name = "Chill",                           .icon = 21003, .spell_text_id =  4},
@@ -92,6 +90,12 @@ static spell_builder_t wizard_spells[] = {
     { .name = "Wall of Force",                   .icon = 21067, .spell_text_id = 68},
     { .name = "Wall of Stone",                   .icon = 21068, .spell_text_id = 69},
 };
+
+void spell_init() {
+}
+
+void spell_cleanup() {
+}
 
 extern void* spell_get_spell(const uint16_t id) {
     //if (id < 0 || id > sizeof(wizard_spells) / sizeof(spell_t)) { return NULL; }

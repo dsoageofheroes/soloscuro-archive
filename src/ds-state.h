@@ -1,7 +1,7 @@
 #ifndef DS_STATE_H
 #define DS_STATE_H
 
-#include "lua.h"
+#include "lua-inc.h"
 
 enum {
     GNAME_UNKNOWN0,

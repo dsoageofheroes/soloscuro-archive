@@ -2,23 +2,15 @@
 #include "screen-manager.h"
 #include "../src/dsl.h"
 #include "main.h"
+#include "uil.h"
 #include "player.h"
 #include "../src/ds-load-save.h"
 #include "screens/inventory.h"
-
-
-#ifdef _WIN32
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-#else
-#include <lua5.3/lua.h>
-#include <lua5.3/lualib.h>
-#include <lua5.3/lauxlib.h>
-#endif
+#include "../src/lua-inc.h"
 
 static lua_State *ui_lua = NULL;
 static void ui_lua_state_register(lua_State *l);
+extern void uil_set_globals(lua_State *l);
 
 static int ui_lua_error(const char *msg) {
     error("%s: %s\n", msg, lua_tostring(ui_lua, -1));
@@ -100,7 +92,7 @@ static void load_game() {
     ui_lua_close();
 }
 
-int ui_lua_load_preload(const char *filename) {
+extern int ui_lua_load_preload(const char *filename) {
     ui_lua = luaL_newstate();
     luaL_openlibs(ui_lua);
 
@@ -120,12 +112,12 @@ int ui_lua_load_preload(const char *filename) {
     return 0;
 }
 
-int ui_lua_load(const char *filename) {
+extern int ui_lua_load(const char *filename) {
     ui_lua_run(filename, "init");
     return lua_toboolean(ui_lua, -1);
 }
 
-int ui_lua_keydown(const int key_code) {
+extern int ui_lua_keydown(const int key_code) {
     if (!ui_lua) { return 0; }
 
     lua_getglobal(ui_lua, "keydown");
@@ -135,7 +127,7 @@ int ui_lua_keydown(const int key_code) {
     return lua_toboolean(ui_lua, -1);
 }
 
-int ui_lua_keyup(const int key_code) {
+extern int ui_lua_keyup(const int key_code) {
     if (!ui_lua) { return 0; }
 
     lua_getglobal(ui_lua, "keyup");
@@ -145,7 +137,7 @@ int ui_lua_keyup(const int key_code) {
     return lua_toboolean(ui_lua, -1);
 }
 
-void ui_lua_close() {
+extern void ui_lua_close() {
     if (ui_lua) {
         lua_close(ui_lua);
         ui_lua = NULL;
