@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "lua.h"
+#include "lua-inc.h"
 #include "dsl.h"
 #include "ds-object.h"
 #include "dsl-var.h"

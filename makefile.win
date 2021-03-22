@@ -9,8 +9,8 @@ LIB_EXT   = dll
 #WERROR    = -Werror
 #CFLAGS    = -g -I src/ -I ext/ -L./ $(WERROR) -Wall -llua53 -lxmimidi -DDEBUG=1 -fPIC
 CFLAGS    = -O2 -I src/ -I ext/ -L./ -Llibs/ -L/mingw64/bin $(WERROR) -Wall -DDEBUG=1 -fPIC
-SDL_FLAGS = -O2 -I src/ -I sdl/ -I ext/ -L./ -Llibs/ -L/mingw64/bin $(WERROR) -Wall -llua53 -lxmimidi -O2 -DDEBUG=1 -lSDL2_ttf -lsndfile -lADLMIDI
-LUA_LIB   = -llua
+LUA_LIB   = -llua53
+SDL_FLAGS = -O2 -I src/ -I sdl/ -I ext/ -L./ -Llibs/ -L/mingw64/bin $(WERROR) -Wall $(LUA_LIB) -lxmimidi -O2 -DDEBUG=1 -lSDL2_ttf -lsndfile -lADLMIDI -lsndfile
 
 .PHONY: clean test all
 
@@ -20,7 +20,9 @@ obj/%.o : sdl/%.c $(DEPS) $(SDL_DEPS)
 	$(CC) -c $(SDL_FLAGS) $< -o $@
 
 mdark : obj/screens $(SDL_OBJS) $(OBJS) libxmimidi.so
-	$(CC) $(SDL_FLAGS) $(SDL_OBJS) $(OBJS) -o $@ -lmingw32 -lSDL2main -lSDL2
+	$(CC) $(SDL_FLAGS) $(SDL_OBJS) $(OBJS) -o $@ -lmingw32 -lSDL2main -lSDL2 -lsndfile
+	mkdir -p run
+	cp mdark.exe run
 
 obj/screens: obj
 	mkdir -p obj/screens

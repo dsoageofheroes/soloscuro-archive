@@ -4,7 +4,7 @@
 #include "audio.h"
 #include "font.h"
 #include "player.h"
-#include "lua.h"
+#include "lua-inc.h"
 #include "mouse.h"
 #include "textbox.h"
 #include "screen-manager.h"

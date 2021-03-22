@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <unistd.h>
-#include "lua.h"
+#include "lua-inc.h"
 #include "ds-narrate.h"
 #include "replay.h"
 #include "../sdl/gameloop.h"

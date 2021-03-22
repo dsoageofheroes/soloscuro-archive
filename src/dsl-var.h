@@ -2,7 +2,7 @@
 #define DSL_VAR_H
 #include <stdint.h>
 #include "dsl.h"
-#include "lua.h"
+#include "lua-inc.h"
 
 #define OPERATOR_OFFSET (0xD0)
 #define DSL_OP_ADD      (0xD1)

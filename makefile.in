@@ -12,7 +12,7 @@ libds.so: obj obj/spells $(OBJS) libxmimidi.so
 libxmimidi.so:
 	$(CC) ext/xmi2mid.c -shared -o libxmimidi.$(LIB_EXT)
 
-obj/spells/%.o: src/spells/%.c $(DEPS)
+obj/spells/%.o: src/spells/%.c $(DEPS) obj/spells
 	$(CC) -c $(CFLAGS) $< -o $@
 
 obj/%.o : src/%.c $(DEPS)

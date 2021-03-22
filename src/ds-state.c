@@ -1,4 +1,5 @@
 #include "dsl.h"
+#include "lua-inc.h"
 #include "dsl-manager.h"
 #include "ds-narrate.h"
 #include "region.h"

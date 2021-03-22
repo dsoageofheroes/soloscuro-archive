@@ -1,11 +1,21 @@
 #include <SDL2/SDL.h>
-#include "lua.h"
 #include "screen-manager.h"
 #include "../src/dsl.h"
 #include "main.h"
 #include "player.h"
 #include "../src/ds-load-save.h"
 #include "screens/inventory.h"
+
+
+#ifdef _WIN32
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
+#else
+#include <lua5.3/lua.h>
+#include <lua5.3/lualib.h>
+#include <lua5.3/lauxlib.h>
+#endif
 
 static lua_State *ui_lua = NULL;
 static void ui_lua_state_register(lua_State *l);
