@@ -1,8 +1,6 @@
-#include <lua5.3/lua.h>
-#include <lua5.3/lualib.h>
-#include <lua5.3/lauxlib.h>
 #include <string.h>
 #include <stdlib.h>
+#include "lua.h"
 #include "dsl.h"
 #include "port.h"
 #include "dsl-manager.h"

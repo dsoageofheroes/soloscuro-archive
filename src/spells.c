@@ -1,16 +1,28 @@
 #include <string.h>
 #include "spells.h"
+#include "powers.h"
 #include "gff.h"
 #include "gfftypes.h"
 
 typedef struct spell_builder_s {
-    const char *name;
-    const uint16_t icon;
-    const int spell_text_id;
+    char             *name;
+    uint16_t         icon;
+    int              spell_text_id;
+    uint16_t         range, aoe;
+    enum power_shape shape;
+    uint16_t         icon_num;
+    int              (*can_activate) (struct power_instance_s *source);
+    int              (*pay)          (struct power_instance_s *source);
+    int              (*apply)        (struct power_instance_s *source, entity_t *target);
+    int              (*still_active) (struct power_instance_s *source, const int rounds_past);
+    int              (*affect_power) (struct power_instance_s *target);
+    uint16_t         thrown_bmp_id;
+    uint16_t         hit_bmp_id;
+    uint16_t         sound_id;
 } spell_builder_t;
 
 static spell_builder_t wizard_spells[] = {
-    { .name = "Armor",                           .icon = 21000, .spell_text_id =  1},
+    { .name = "Armor",                           .icon = 21000, .spell_text_id =  1, .range = 0, .aoe = 0},
     { .name = "Burning Hands",                   .icon = 21001, .spell_text_id =  2},
     { .name = "Charm",                           .icon = 21002, .spell_text_id =  3},
     { .name = "Chill",                           .icon = 21003, .spell_text_id =  4},

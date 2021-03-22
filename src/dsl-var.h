@@ -1,8 +1,8 @@
 #ifndef DSL_VAR_H
 #define DSL_VAR_H
 #include <stdint.h>
-#include <lua5.3/lua.h>
 #include "dsl.h"
+#include "lua.h"
 
 #define OPERATOR_OFFSET (0xD0)
 #define DSL_OP_ADD      (0xD1)

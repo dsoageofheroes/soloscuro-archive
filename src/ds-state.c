@@ -9,8 +9,6 @@
 #include "replay.h"
 #include "region-manager.h"
 #include "trigger.h"
-#include <lua5.3/lualib.h>
-#include <lua5.3/lauxlib.h>
 #include <string.h>
 #include <stdlib.h>
 

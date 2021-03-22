@@ -1,11 +1,9 @@
-#include <lua5.3/lua.h>
-#include <lua5.3/lualib.h>
-#include <lua5.3/lauxlib.h>
 #include <math.h>
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
 
+#include "lua.h"
 #include "dsl.h"
 #include "ds-object.h"
 #include "dsl-var.h"

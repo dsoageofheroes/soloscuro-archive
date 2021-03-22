@@ -12,20 +12,28 @@ enum power_shape {
 };
 
 struct power_instance_s;
+
+typedef struct power_actions_s {
+    int (*can_activate) (struct power_instance_s *source);
+    int (*pay)          (struct power_instance_s *source);
+    int (*apply)        (struct power_instance_s *source, entity_t *target);
+    int (*still_active) (struct power_instance_s *source, const int rounds_past);
+    int (*affect_power) (struct power_instance_s *target);
+} power_actions_t;
+
 // A power is a spell, psionic, innate special ability, or charge on an item.
 // This should be stored in a general list/array/hashtable for access at any time.
 typedef struct power_s {
-    char          *name;
-    char          *description;
-    uint16_t      range;
-    uint16_t      aoe;
-    enum          power_shape shape;
-    sprite_info_t icon;
-    int           (*can_activate) (struct power_instance_s *source);
-    int           (*pay)          (struct power_instance_s *source);
-    int           (*apply)        (struct power_instance_s *source, entity_t *target);
-    int           (*still_active) (struct power_instance_s *source, const int rounds_past);
-    int           (*affect_power) (struct power_instance_s *target);
+    char            *name;
+    char            *description;
+    uint16_t        range;
+    uint16_t        aoe;
+    enum            power_shape shape;
+    sprite_info_t   icon;
+    sprite_info_t   thrown;
+    sprite_info_t   hit;
+    uint16_t        sound_id;
+    power_actions_t actions;
     // Add animation sequence info here.
 } power_t;
 
@@ -51,6 +59,5 @@ typedef struct power_overlay_s {
 // Spells create a spell entity on point of impact.
 // If AOE, then many children entities are created that point to the parent/master spell entity.
 // This allows each tile/square its own trigger and the parent/master can clean up the children when the duration is over.
-
 
 #endif
