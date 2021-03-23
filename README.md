@@ -12,7 +12,7 @@ Goals: To create an engine for Dark Sun 1, 2, and Crimson Sands.
 
 ### Windows dev setup with msys2:
 
-1. Install msys2 (http://msys.org) download the installer and run (must be 64-bit.)
+1. Install msys2 (http://msys2.org) download the installer and run (must be 64-bit.)
   * default C:\msys64 is fine and assumed for these instructions.
   * update pacman:
 
