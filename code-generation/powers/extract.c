@@ -1,10 +1,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
+
+/* DS1 Notes:
+ * It appears Monster Summoning I and Evard's Black Tentacles are unique to DS1.
+ * There is acollision between Hold person and hold person/mammal, both should map to the same spell.
+ * Same with Dispel Magic
+ */
 
 static FILE *ds1_file = NULL;
 static FILE *ds2_file = NULL;
 static FILE *dso_file = NULL;
+static const char *ds1_power_names[];
+static size_t ds1_pos = 0;
+
+static int ds1_has_power(const char *name);
 
 typedef struct damage_info_s {
     uint8_t plus      : 5;
@@ -48,6 +59,8 @@ typedef struct power_entry_s {
     char name[32];
     char name2[9];
 } __attribute__ ((__packed__)) power_entry_t;
+
+static power_info_t *ds1powers;
 
 static power_info_t ds1pw;
 static power_entry_t ds2pw;
@@ -304,7 +317,8 @@ static char* get_hit() {
                 dsopw.info.hit_sound
                );
     }
-    if (feof(ds1_file)) {
+    //if (feof(ds1_file)) {
+    if (!ds1_pos) {
         snprintf(hit_buf, 255, "%d, --- , %d",
             dsopw.info.hit, dsopw.info.hit_sound
             );
@@ -393,7 +407,8 @@ static char* get_thrown() {
                 dsopw.info.thrown_sound
                );
     }
-    if (feof(ds1_file)) {
+    //if (feof(ds1_file)) {
+    if (!ds1_pos) {
         snprintf(thrown_buf, 255, "%d, --- , %d",
             dsopw.info.thrown, dsopw.info.thrown_sound
             );
@@ -424,7 +439,8 @@ static char* get_cast(power_entry_t pw) {
                 dsopw.info.cast_sound
                );
     }
-    if (feof(ds1_file)) {
+    //if (feof(ds1_file)) {
+    if (!ds1_pos) {
         snprintf(cast_buf, 255, "%d, --- , %d",
             pw.info.cast, pw.info.cast_sound
             );
@@ -536,6 +552,7 @@ int main(int argc, char *argv[]) {
     ds1_file = fopen("dsun1.dat", "rb");
     ds2_file = fopen("dsun2.dat", "rb");
     dso_file = fopen("dso.dat", "rb");
+    size_t ds1_file_size = 0;
 
     if (!ds1_file) {
         fprintf(stderr, "Unable to open dsun2.dat, please provide.\n");
@@ -552,6 +569,14 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
+    //power_info_t *ds1powers;
+    fseek(ds1_file, 0L, SEEK_END);
+    ds1_file_size = ftell(ds1_file);
+    ds1powers = malloc(ds1_file_size);
+    fseek(ds1_file, 0L, SEEK_SET);
+
+    fread(ds1powers, 1, ds1_file_size, ds1_file);
+
     //while (!feof(dso_file)) {
     printf("Name, Subname, range, duration, area, target, cast (?), ds1 cast sound, ds2/dso cast sound,"
             " special, thrown (?), ds1 thrown sound, ds2/dso thrown sound, hit (?),"
@@ -563,11 +588,20 @@ int main(int argc, char *argv[]) {
     //for (int i = 0; i < 60; i++) {
         fread(&ds2pw, 1, sizeof(power_entry_t), ds2_file);
         fread(&dsopw, 1, sizeof(power_entry_t), dso_file);
-        if (!feof(ds1_file)) {
-            fread(&ds1pw, 1, sizeof(power_info_t), ds1_file);
+        ds1_pos = ds1_has_power(dsopw.name);
+        if (ds1_pos) {
+            ds1pw = ds1powers[ds1_pos + 1];
         } else {
-            ds1pw = ds2pw.info;
+            ds1pw = dsopw.info;
         }
+        //if (!feof(ds1_file)) {
+            //fread(&ds1pw, 1, sizeof(power_info_t), ds1_file);
+        //} else {
+            //ds1pw = ds2pw.info;
+        //}
+        //printf("(%s) = %d\n", dsopw.name, ds1_has_power(dsopw.name));
+        //printf("%03d %s\n", ds1_has_power(ds2pw.name), ds2pw.name);
+        //printf("%03d %s\n", ds1_has_power(dsopw.name), dsopw.name);
         printf("%s, %s", dsopw.name, dsopw.name2);
 
         printf(", %s", get_range(dsopw));
@@ -584,7 +618,8 @@ int main(int argc, char *argv[]) {
         printf(", %s", get_aoe_id());
         printf(", %s", get_effect());
         printf(", %s", get_effect_type());
-        if (feof(ds1_file)) {
+        //if (feof(ds1_file)) {
+        if (!ds1_pos) {
             printf(", ---");
         } else {
             printf(", %s", get_damage(ds1pw.damage));
@@ -593,15 +628,22 @@ int main(int argc, char *argv[]) {
         printf(", %s", get_damage(dsopw.info.damage));
         printf(", %s", get_save());
 
-        printf(", %s %d times, %s %d, %s %d times",
+        if (!ds1_pos) {
+            printf(", ---");
+        } else {
+            printf(", %s %d times",
                 ai[ds1pw.data0 & 0x03],
-                ds1pw.data0 >> 2,
+                ds1pw.data0 >> 2);
+        }
+        printf(", %s %d, %s %d times",
                 ai[ds2pw.info.data0 & 0x03],
                 ds2pw.info.data0 >> 2,
                 ai[dsopw.info.data0 & 0x03],
                 dsopw.info.data0 >> 2
               );
         printf("\n");
+        /*
+        */
         //fflush(stdout);
     }
     //fread(&power, 1, sizeof(power_entry_t), file);
@@ -612,3 +654,18 @@ int main(int argc, char *argv[]) {
     fclose(dso_file);
     return 0;
 }
+
+static int ds1_has_power(const char *name) {
+    int name_len = strlen(name);
+    int test_len = 0;
+
+    for (int i = 0; i < 900; i++) {
+        int ds1_len = strlen(ds1_power_names[i]);
+        if (ds1_len != name_len) { continue; }
+        if (!strncmp(ds1_power_names[i], name, ds1_len)) { return i; }
+    }
+
+    return 0;
+}
+
+static const char *ds1_power_names[] = {"DNE", "ARMOR", "BURNING HANDS", "CHARM PERSON", "CHILL TOUCH", "COLOR SPRAY", "ENLARGE", "GAZE REFLECTION", "GREASE", "MAGIC MISSILE", "SHIELD", "SHOCKING GRASP", "WALL OF FOG", "BLUR", "DETECT INVISIBLE", "FLAMING SPHERE", "FOG CLOUD", "GLITTER DUST", "INVISIBILITY", "ACID ARROW", "MIRROR IMAGE", "PROTECTION FROM PARALYSIS", "SCARE", "STINKING CLOUD", "STRENGTH", "WEB", "BLINK", "DISPEL MAGIC", "FIREBALL", "FLAMING ARROW", "HASTE", "HOLD PERSON", "HOLD UNDEAD", "LIGHTNING BOLT", "MINUTE METEORS", "MINOR MALISON", "MONSTER SUMMONING I", "PROTECTION FROM MISSILES", "SLOW", "SPIRIT ARMOR", "VAMPIRIC TOUCH", "CHARM MONSTER", "CONFUSION", "EVARD'S BLACK TENTACLES", "FEAR", "FIRE SHIELD", "ICE STORM", "IMPROVED INVISIBILITY", "M GLOBE OF INVULNERABILITY", "MINOR SPELL TURNING", "MONSTER SUMMONING II", "RAINBOW PATTERN", "SOLID FOG", "STONE SKIN", "PEBBLE TO BOULDER", "WALL OF FIRE", "WALL OF ICE", "CHAOS", "CLOUD KILL", "CONE OF COLD", "CONJURE ELEMENTAL", "DISMISSAL", "DOMINATE", "FEEBLE MIND", "HOLD MONSTER", "LOWER RESISTANCE", "MONSTER SUMMONING III", "SUMMON SHADOW", "WALL OF FORCE", "WALL OF STONE", "BLESS", "CURSE", "CURE LIGHT WOUNDS", "CAUSE LIGHT WOUNDS", "ENTANGLE", "INVISIBLE TO UNDEAD", "MAGIC STONE", "PROTECTION FROM EVIL", "REMOVE FEAR", "CAUSE FEAR", "SHILLELAGH", "AID", "BARKSKIN", "CHARM MAMMAL", "DUSTDEVIL", "FIND TRAPS", "FLAME BLADE", "HOLD PERSON", "RESIST FIRE", "RESIST COLD", "SPIRITUAL HAMMER", "CONJURE AIR ELEMENTAL", "CONJURE FIRE ELEMENTAL", "CONJURE EARTH ELEMENTAL", "CONJURE WATER ELEMENTAL", "CURE BLINDNESS", "CAUSE BLINDNESS", "CURE DISEASE", "CAUSE DISEASE", "DISPEL MAGIC", "MAGIC VESTMENT", "NEGATIVE PLANE PROTECTION", "PRAYER", "PROTECTION FROM FIRE", "REMOVE CURSE", "BESTOW CURSE", "REMOVE PARALYSIS", "SUMMON INSECTS", "ABJURE", "BLOOD FLOW", "CLOAK OF BRAVERY", "CLOAK OF FEAR", "CONDENSE", "CURE SERIOUS WOUNDS", "CAUSE SERIOUS WOUNDS", "DEHYDRATE", "DUST CLOUD", "FOCUS HEAT", "FREE ACTION", "NEUTRALIZE POISON", "POISON", "PRODUCE FIRE", "PROTECTION FROM EVIL 10", "PROTECTION FROM LIGHTNING", "CONJURE GREATER AIR ELEMENTAL", "CONJURE GREATER FIRE ELEMENTAL", "CONJURE GREATER EARTH ELEMENTAL", "CONJURE GREATER WATER ELEMENTAL", "CURE CRITICAL WOUNDS", "CAUSE CRITICAL WOUNDS", "DEFLECTION", "DISPEL EVIL", "FLAME STRIKE", "INSECT PLAGUE", "IRON SKIN", "QUICKSAND", "RAISE DEAD", "SLAY LIVING", "WALL OF FIRE", "DETONATE", "DISINTEGRATE", "PROJECT FORCE", "BALLISTIC ATTACK", "CONTROL BODY", "INERTIAL BARRIER", "ANIMAL AFFINITY", "ENERGY CONTROL", "LIFE DRAIN", "ABSORB DISEASE", "ADRENALIN CONTROL", "BIOFEEDBACK", "BODY WEAPONRY", "CELLULAR ADJUSTMENT", "DISPLACEMENT", "ENHANCED STRENGTH", "FLESH ARMOR", "GRAFT WEAPON", "LEND HEALTH", "SHARE STRENGTH", "DOMINATION", "MASS DOMINATION", "PSYCHIC CRUSH", "SUPERIOR INVISIBILITY", "TOWER OF IRON WILL", "EGO WHIP", "ID INSINUATION", "INTELLECT FORTRESS", "MENTAL BARRIER", "PSIONIC MIND BAR", "MIND BLANK", "PSIONIC BLAST", "SYNAPTIC STATIC", "THOUGHT SHIELD", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "TURN UNDEAD", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "TURN UNDEAD" };
