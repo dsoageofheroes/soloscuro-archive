@@ -9,7 +9,7 @@ typedef struct spell_builder_s {
     uint16_t         icon;
     int              spell_text_id;
     uint16_t         range, aoe;
-    enum power_shape shape;
+    enum target_shape shape;
     uint16_t         thrown_bmp;
     uint16_t         hit_bmp;
     uint16_t         sound;
@@ -20,7 +20,7 @@ extern void spell_armor_attach (power_t *spell);
 
 static spell_builder_t wizard_spells[] = {
     { .name = "Armor",                           .icon = 21000, .spell_text_id =  1, .range = 0, .aoe = 0,
-        .shape = POWER_SINGLE, .thrown_bmp = 0, .hit_bmp = 0, .sound = 0, .attach = spell_armor_attach},
+        .shape = TARGET_SINGLE, .thrown_bmp = 0, .hit_bmp = 0, .sound = 0, .attach = spell_armor_attach},
     { .name = "Burning Hands",                   .icon = 21001, .spell_text_id =  2},
     { .name = "Charm",                           .icon = 21002, .spell_text_id =  3},
     { .name = "Chill",                           .icon = 21003, .spell_text_id =  4},

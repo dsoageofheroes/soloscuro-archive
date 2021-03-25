@@ -3,12 +3,16 @@
 
 #include "entity.h"
 
-enum power_shape {
-    POWER_SINGLE, // a point, aoe is ignore
-    POWER_CIRCLE, // EX: Fireball
-    POWER_CONE,   // EX: Cone of Cold
-    POWER_RECTANGLE, // aoe is two 8-bit ints, width times height
-    POWER_MULTI,  // aoe is number of charges.
+enum target_shape {
+    TARGET_NONE,
+    TARGET_ALLY,
+    TARGET_SELF,
+    TARGET_ENEMY,
+    TARGET_SINGLE, // check AOE for circle (IE: Fireball)
+    TARGET_CONE,   // EX: Cone of Cold
+    TARGET_RECTANGLE, // aoe is two 8-bit ints, width times height
+    TARGET_ANY,
+    TARGET_MULTI,  // aoe is number of charges.
 };
 
 struct power_instance_s;
@@ -28,11 +32,11 @@ typedef struct power_s {
     char            *description;
     uint16_t        range;
     uint16_t        aoe;
-    enum            power_shape shape;
+    enum            target_shape shape;
     sprite_info_t   icon;
     sprite_info_t   thrown;
     sprite_info_t   hit;
-    uint16_t        sound_id;
+    uint16_t        cast_sound, thrown_sound, hit_sound;
     power_actions_t actions;
     // Add animation sequence info here.
 } power_t;

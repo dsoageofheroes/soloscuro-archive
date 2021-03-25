@@ -13,6 +13,7 @@
 static FILE *ds1_file = NULL;
 static FILE *ds2_file = NULL;
 static FILE *dso_file = NULL;
+static FILE *dso_extra_file = NULL;
 static const char *ds1_power_names[];
 static size_t ds1_pos = 0;
 
@@ -310,7 +311,6 @@ static char* get_hit() {
                 dsopw.info.hit_sound
                );
     }
-    //if (feof(ds1_file)) {
     if (!ds1_pos) {
         snprintf(hit_buf, 255, "%d, --- , %d",
             dsopw.info.hit, dsopw.info.hit_sound
@@ -400,7 +400,6 @@ static char* get_thrown() {
                 dsopw.info.thrown_sound
                );
     }
-    //if (feof(ds1_file)) {
     if (!ds1_pos) {
         snprintf(thrown_buf, 255, "%d, --- , %d",
             dsopw.info.thrown, dsopw.info.thrown_sound
@@ -432,7 +431,6 @@ static char* get_cast(power_entry_t pw) {
                 dsopw.info.cast_sound
                );
     }
-    //if (feof(ds1_file)) {
     if (!ds1_pos) {
         snprintf(cast_buf, 255, "%d, --- , %d",
             pw.info.cast, pw.info.cast_sound
@@ -545,6 +543,7 @@ int main() {
     ds1_file = fopen("dsun1.dat", "rb");
     ds2_file = fopen("dsun2.dat", "rb");
     dso_file = fopen("dso.dat", "rb");
+    dso_extra_file = fopen("dso-extra.dat", "rb");
     size_t ds1_file_size = 0;
 
     if (!ds1_file) {
@@ -558,7 +557,12 @@ int main() {
     }
 
     if (!dso_file) {
-        fprintf(stderr, "You need to provide the chunk containing the powers as chunk.dat\n");
+        fprintf(stderr, "You need to provide the chunk containing the powers as dso.dat\n");
+        return 0;
+    }
+
+    if (!dso_file) {
+        fprintf(stderr, "You need to provide the dso-extra.dat\n");
         return 0;
     }
 
@@ -570,20 +574,30 @@ int main() {
 
     fread(ds1powers, 1, ds1_file_size, ds1_file);
 
-    //while (!feof(dso_file)) {
     printf("Name, Subname, range, duration, area, target, cast (?), ds1 cast sound, ds2/dso cast sound,"
             " special, thrown (?), ds1 thrown sound, ds2/dso thrown sound, hit (?),"
             " ds1 hit sound, ds2/dso hit sound, aoe id, effect id,"
             " effect type, ds1 damage, ds2 damage, dso damage, save,"
             " ds1 ai, ds2 ai, dso ai \n");
-    while (!feof(dso_file)) {
-        fread(&ds2pw, 1, sizeof(power_entry_t), ds2_file);
-        fread(&dsopw, 1, sizeof(power_entry_t), dso_file);
-        ds1_pos = ds1_has_power(dsopw.name);
-        if (ds1_pos) {
-            ds1pw = ds1powers[ds1_pos - 1];
+    while (!feof(dso_file) || !feof(dso_extra_file)) {
+        if (!feof(dso_file)) {
+            if (fread(&dsopw, 1, sizeof(power_entry_t), dso_file) < sizeof(power_entry_t)) {
+                continue;
+            }
+            fread(&ds2pw, 1, sizeof(power_entry_t), ds2_file);
+            ds1_pos = ds1_has_power(dsopw.name);
+            if (ds1_pos) {
+                ds1pw = ds1powers[ds1_pos - 1];
+            } else {
+                ds1pw = dsopw.info;
+            }
         } else {
+            if (fread(&dsopw, 1, sizeof(power_entry_t), dso_extra_file) < sizeof(power_entry_t)) {
+                continue;
+            }
+            ds2pw = dsopw;
             ds1pw = dsopw.info;
+            ds1_pos = 9999;
         }
         printf("%s, %s", dsopw.name, dsopw.name2);
         printf(", %s", get_range(dsopw));
@@ -643,7 +657,22 @@ static int ds1_has_power(const char *name) {
     return 0;
 }
 
-static const char *wizard_spells[] = { "ARMOR", "BURNINGH", "CHARMPER", "CHILL", "COLORSPR", "ENLARGE", "GAZEREFL", "GREASE", "MAGICMIS", "SHIELD", "SHOKGRSP", "WALLOFOG", "BLUR", "DETINVIS", "FLMSPHER", "FOGCLOUD", "GLITTERD", "INVISBEL", "ACIDAROW", "MIRRORIM", "PROPARAL", "SCARE", "STINKCLD", "STRENGTH", "WEB", "BLINK", "DISWIZRD", "FIREBALL", "FLMARROW", "HASTE", "HOLDWIZ", "HLDUNDED", "LITNBOLT", "MINMETOR", "MINMALIS", "PRONMMIS", "SLOW", "SPIRARMR", "VAMTOUCH", "CHARMMON", "CNFUSWIZ", "FEAR", "FIRESHLD", "ICESTORM", "IMPVISIB", "MGBINVUL", "MINSPTUR", "ORSPHERE", "PSIDAMPR", "RAINBOWP", "SOLIDFOG", "SSTRAND", "STONSKIN", "PEBTOBOD", "WALLFIRW", "WALLOICE", "CHAOS", "CLODKILL", "CNOFCOLD", "CONELEMN", "DISMISAL", "DOMINATE", "FEEBLEMD", "HLDMONST", "LOWRESMG", "SUMSHADW", "WALLFORC", "WALLSTON", "ANTIMAGS", "CHAINLIT", "DEATHFOG", "DEATHSPL", "DISNTWIZ", "GLOBEINV", "IMPHASTE", "IMPSLOW", "MONSUMM4", "REINCARN", "STNTFLSH", "FLSHTSTN", "TNSRTRAN", "CGELMENT", "CNUNDEAD", "DELAYFBA", "FINGEROD", "FORCAGE", "MASINVSB", "MONSUMM5", "MORDSWRD", "POWSTUN", "PRISPRAY", "SPELTURN", "BIGBYFST", "INCNDCLD", "MASCHARM", "MINDBLKW", "MONSUMM6", "OTSPHERE", "OTTODANC", "POWBLIND", "PRISWALL", "SSPELLIM", "BIGBYHND", "CRYSBRTL", "LVLDRAIN", "METEORSW", "MONSUMM7", "MORDDISJ", "POWKILL", "PRISPHER", "TIMESTOP", "DOMEINVL", "MAGPLAGU", "RIFT", "WALLASH"};
+static const char *priest_spells[] = { "BLESS", "CURSE", "CURLTWND", "CASLTWND", "ENTANGLE", "INVISUND", "MAGSTONE", "PROTEVIL", "REMFEAR", "CAUSFEAR", "SANCTURY", "SHILELAG", "AID", "ALTRUISM", "BARKSKIN", "CHNSTNCH", "CHRMPRML", "DUSTDEVL", "FNDTRAPS", "FLMBLADE", "HESITATN", "HLDPERSP", "MUSICSPH", "RESTFIRE", "RESTCOLD", "SILENC15", "SPRHAMER", "STELBRTH", "AIR_LENS", "BRMBSTAF", "CRTSMOKE", "CURBLIDF", "CASBLIDF", "CURDISES", "CASDISES", "DISMAGCP", "HEATXHST", "MAGCVEST", "NGPLNPRO", "PLNTGROW", "PRAYER", "PROTFIRE", "REMCURSE", "BSTCURSE", "REMPARAL", "SANDSPRA", "SPIKEGRO", "STONESHA", "STRNGTHO", "SUMINSCT", "ABJURE", "BLOODFLW", "CLKBRAVY", "CLKOFEAR", "CONDENSE", "CURSRWND", "CASSRWND", "DEHYDRAT", "DUSTCLOD", "FOCSHEAT", "FREEACT", "LUNGWATR", "MAGMABLD", "NEUTPOIS", "POISON", "PRODFIRE", "QUCHFIRE", "PROEVL10", "PROLIGHT", "PROWEATH", "INTENSFW", "RETEARTH", "SOOTHE", "THRNBIND", "CONAIRE", "CONFIREE", "CONEARHE", "CONWATRE", "CRUMBLE", "CURECRIT", "CAUSCRIT", "DEFLECTN", "DISPEVIL", "FLMSTRIK", "INSPLAGE", "IRONSKIN", "RAINBOW", "QUIKSAND", "RASEDEAD", "SLAYLIVG", "SANDSTOR", "SPIKSTON", "WALLFIRE", "BLADEBAR", "FIRESEED", "HEAL", "HARM", "HEARTSEE", "SUNSTROK", "WALTHORN", "WATOLIFE", "CONFUSIN", "CONGEL_A", "CONGEL_F", "CONGEL_E", "CONGEL_W", "CREEPING", "FIRESTOR", "GLASSTOR", "RESTORE", "ENERGYDR", "SCIROCCO", "SUNRAY", "SYM_HOPL", "SYM_PAIN", "SYM_PERS", "REV_WIND", "DISRUPTN", "INSCHOST", "RIFTPR", NULL };
+
+static int priest_index(power_entry_t pw) {
+    const char **ptr = priest_spells;
+    int pos = 0;
+
+    while (*ptr) {
+        if (!strcmp(pw.name2, *ptr)) { return pos; }
+        ptr++;
+        pos++;
+    }
+
+    return -1;
+}
+
+static const char *wizard_spells[] = { "ARMOR", "BURNINGH", "CHARMPER", "CHILL", "COLORSPR", "ENLARGE", "GAZEREFL", "GREASE", "MAGICMIS", "SHIELD", "SHOKGRSP", "WALLOFOG", "BLUR", "DETINVIS", "FLMSPHER", "FOGCLOUD", "GLITTERD", "INVISBEL", "ACIDAROW", "MIRRORIM", "PROPARAL", "SCARE", "STINKCLD", "STRENGTH", "WEB", "BLINK", "DISWIZRD", "FIREBALL", "FLMARROW", "HASTE", "HOLDWIZ", "HLDUNDED", "LITNBOLT", "MINMETOR", "MINMALIS", "PRONMMIS", "SLOW", "SPIRARMR", "VAMTOUCH", "CHARMMON", "CNFUSWIZ", "FEAR", "FIRESHLD", "ICESTORM", "IMPVISIB", "MGBINVUL", "MINSPTUR", "ORSPHERE", "PSIDAMPR", "RAINBOWP", "SOLIDFOG", "SSTRAND", "STONSKIN", "PEBTOBOD", "WALLFIRW", "WALLOICE", "CHAOS", "CLODKILL", "CNOFCOLD", "CONELEMN", "DISMISAL", "DOMINATE", "FEEBLEMD", "HLDMONST", "LOWRESMG", "SUMSHADW", "WALLFORC", "WALLSTON", "ANTIMAGS", "CHAINLIT", "DEATHFOG", "DEATHSPL", "DISNTWIZ", "GLOBEINV", "IMPHASTE", "IMPSLOW", "MONSUMM4", "REINCARN", "STNTFLSH", "FLSHTSTN", "TNSRTRAN", "CGELMENT", "CNUNDEAD", "DELAYFBA", "FINGEROD", "FORCAGE", "MASINVSB", "MONSUMM5", "MORDSWRD", "POWSTUN", "PRISPRAY", "SPELTURN", "BIGBYFST", "INCNDCLD", "MASCHARM", "MINDBLKW", "MONSUMM6", "OTSPHERE", "OTTODANC", "POWBLIND", "PRISWALL", "SSPELLIM", "BIGBYHND", "CRYSBRTL", "LVLDRAIN", "METEORSW", "MONSUMM7", "MORDDISJ", "POWKILL", "PRISPHER", "TIMESTOP", "DOMEINVL", "MAGPLAGU", "RIFT", "WALLASH", NULL };
 
 static int wizard_index(power_entry_t pw) {
     const char **ptr = wizard_spells;
@@ -658,8 +687,7 @@ static int wizard_index(power_entry_t pw) {
     return -1;
 }
 
-static const char *psionics[] = { "DETONATE", "DISNTGRT", "PRJTFRCE", "BLSTCATK", "CNTLBODY", "INERTBAR", "ANMAFFIN", "ENRGECON", "LIFDRAIN", "ABSRBDIS", "ADRENCNT", "BIOFEDBK", "BODYWEAP", "CELLADG", "DISPLACE", "ENSTRENG", "FLESHARM", "GRAFWEAP", "LNDHEALH", "SHARESTR", "PSIDOMNT", "MASSDOM", "PSICRUSH", "SUPINVIS", "TWRIRONW", "EGO_WHIP", "IDINSINT", "INTELFOR", "MENTLBAR", "MIND_BAR", "MNDBLANK", "PSIBLAST", "SYNPSTAT", "THOTSHLD", NULL
-};
+static const char *psionics[] = { "DETONATE", "DISNTGRT", "PRJTFRCE", "BLSTCATK", "CNTLBODY", "INERTBAR", "ANMAFFIN", "ENRGECON", "LIFDRAIN", "ABSRBDIS", "ADRENCNT", "BIOFEDBK", "BODYWEAP", "CELLADG", "DISPLACE", "ENSTRENG", "FLESHARM", "GRAFWEAP", "LNDHEALH", "SHARESTR", "PSIDOMNT", "MASSDOM", "PSICRUSH", "SUPINVIS", "TWRIRONW", "EGO_WHIP", "IDINSINT", "INTELFOR", "MENTLBAR", "MIND_BAR", "MNDBLANK", "PSIBLAST", "SYNPSTAT", "THOTSHLD", NULL };
 
 static int psionic_index(power_entry_t pw) {
     const char **ptr = psionics;
@@ -674,6 +702,29 @@ static int psionic_index(power_entry_t pw) {
     return -1;
 }
 
+static const char *innate_power_full[] = { "COLD TOUCH", "PARALYSIS TOUCH", "ACID TOUCH", "WEB", "POISON 10", "POISON 30", "CORROSIVE POISON", "PARALYSIS GAZE", "LAUNCH DARTS", "FIRE BERATH", "STUN SCREAM", "ENFEEBLEMENT GAZE", "ROTTING DISEASE", "FIRE BREATH", "CORRODE ARMOR", "CORRODE WEAPON", "CONE OF SKULLS", "STUN", "CLAMP AND SHAKE", "SWALLOW", "GATE_AIR", "GATE_EARTH", "GATE_FIRE", "GATE_WATER", "EARTHQUAKE", "FEYR_FEAR", "SMASH_FISTS", "RADIATE_HEAT", "BURNING TOUCH", "CRUSH", "AURA_OF_FEAR", "MIND_BLAST", "EAT_BRAIN", "TERRASQUE_TRAMPLE", "CONSTRICT", "PARALYSE_SPIT", "THRIKREEN POISON", "TURN UNDEAD", "TWINKLE", "GENERIC ZAP", "BURNING_WEB", "ETC_POISON_PARALYZING   ", "ETC_SCHRAPNEL_D10     ", "ROD_OF_TEETH", "NINE_LIFE_STEALER", "RAINBOW BOW", "HEART_SEEKER ", "SWORD_OF_MAGMA", "SWORD_OF_WOUNDING", "LOCK_JAWS", "UMBERHULK", "POISON", "SCREECH", "DETONATE", "SLIME", "POISON", "BANSHEE GAZE", "FIRE EEL", "GHOST FEAR", "MASTRYIAL", "BLACK MASTRYIAL", "DISEASE", "RAMPAGER_FEAR", "DISEASE", "HOWL", "PSIONIC BLAST", "GREATER SHADOW", "SLAAD DISEASE", "RED SLAAD STUN", "POISON", "SPINE LAUNCH", "STYR BREATH", "TANARRI SCREECH", "TYRIAN SLIME", "XORN CORROSION", "ZOMBIE", NULL };
+
+static const char *innate_power_short[] = { " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", "RODOFTTH", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", "PSIBLAST", " ", " ", " ", "POISON", "SPINES", " ", " ", " ", " ", " ", " ", NULL};
+
+static int innate_index(power_entry_t pw) {
+    const char **fptr = innate_power_full;
+    const char **sptr = innate_power_short;
+    int pos = 0;
+
+    while (*fptr) {
+        if ((*sptr)[0] == ' ' && (*sptr)[1] == '\0') {
+            if (!strcmp(pw.name, *fptr)) { return pos; }
+        } else {
+            if (!strcmp(pw.name2, *sptr)) { return pos; }
+        }
+
+        fptr++;
+        sptr++;
+        pos++;
+    }
+
+    return -1;
+}
 static const char *ds1_power_names[] = {"DNE", "ARMOR", "BURNING HANDS", "CHARM PERSON", "CHILL TOUCH", "COLOR SPRAY", "ENLARGE", "GAZE REFLECTION", "GREASE", "MAGIC MISSILE", "SHIELD", "SHOCKING GRASP", "WALL OF FOG", "BLUR", "DETECT INVISIBLE", "FLAMING SPHERE", "FOG CLOUD", "GLITTER DUST", "INVISIBILITY", "ACID ARROW", "MIRROR IMAGE", "PROTECTION FROM PARALYSIS", "SCARE", "STINKING CLOUD", "STRENGTH", "WEB", "BLINK", "DISPEL MAGIC", "FIREBALL", "FLAMING ARROW", "HASTE", "HOLD PERSON", "HOLD UNDEAD", "LIGHTNING BOLT", "MINUTE METEORS", "MINOR MALISON", "MONSTER SUMMONING I", "PROTECTION FROM MISSILES", "SLOW", "SPIRIT ARMOR", "VAMPIRIC TOUCH", "CHARM MONSTER", "CONFUSION", "EVARD'S BLACK TENTACLES", "FEAR", "FIRE SHIELD", "ICE STORM", "IMPROVED INVISIBILITY", "M GLOBE OF INVULNERABILITY", "MINOR SPELL TURNING", "MONSTER SUMMONING II", "RAINBOW PATTERN", "SOLID FOG", "STONE SKIN", "PEBBLE TO BOULDER", "WALL OF FIRE", "WALL OF ICE", "CHAOS", "CLOUD KILL", "CONE OF COLD", "CONJURE ELEMENTAL", "DISMISSAL", "DOMINATE", "FEEBLE MIND", "HOLD MONSTER", "LOWER RESISTANCE", "MONSTER SUMMONING III", "SUMMON SHADOW", "WALL OF FORCE", "WALL OF STONE", "BLESS", "CURSE", "CURE LIGHT WOUNDS", "CAUSE LIGHT WOUNDS", "ENTANGLE", "INVISIBLE TO UNDEAD", "MAGIC STONE", "PROTECTION FROM EVIL", "REMOVE FEAR", "CAUSE FEAR", "SHILLELAGH", "AID", "BARKSKIN", "CHARM MAMMAL", "DUSTDEVIL", "FIND TRAPS", "FLAME BLADE", "HOLD PERSON", "RESIST FIRE", "RESIST COLD", "SPIRITUAL HAMMER", "CONJURE AIR ELEMENTAL", "CONJURE FIRE ELEMENTAL", "CONJURE EARTH ELEMENTAL", "CONJURE WATER ELEMENTAL", "CURE BLINDNESS", "CAUSE BLINDNESS", "CURE DISEASE", "CAUSE DISEASE", "DISPEL MAGIC", "MAGIC VESTMENT", "NEGATIVE PLANE PROTECTION", "PRAYER", "PROTECTION FROM FIRE", "REMOVE CURSE", "BESTOW CURSE", "REMOVE PARALYSIS", "SUMMON INSECTS", "ABJURE", "BLOOD FLOW", "CLOAK OF BRAVERY", "CLOAK OF FEAR", "CONDENSE", "CURE SERIOUS WOUNDS", "CAUSE SERIOUS WOUNDS", "DEHYDRATE", "DUST CLOUD", "FOCUS HEAT", "FREE ACTION", "NEUTRALIZE POISON", "POISON", "PRODUCE FIRE", "PROTECTION FROM EVIL 10", "PROTECTION FROM LIGHTNING", "CONJURE GREATER AIR ELEMENTAL", "CONJURE GREATER FIRE ELEMENTAL", "CONJURE GREATER EARTH ELEMENTAL", "CONJURE GREATER WATER ELEMENTAL", "CURE CRITICAL WOUNDS", "CAUSE CRITICAL WOUNDS", "DEFLECTION", "DISPEL EVIL", "FLAME STRIKE", "INSECT PLAGUE", "IRON SKIN", "QUICKSAND", "RAISE DEAD", "SLAY LIVING", "WALL OF FIRE", "DETONATE", "DISINTEGRATE", "PROJECT FORCE", "BALLISTIC ATTACK", "CONTROL BODY", "INERTIAL BARRIER", "ANIMAL AFFINITY", "ENERGY CONTROL", "LIFE DRAIN", "ABSORB DISEASE", "ADRENALIN CONTROL", "BIOFEEDBACK", "BODY WEAPONRY", "CELLULAR ADJUSTMENT", "DISPLACEMENT", "ENHANCED STRENGTH", "FLESH ARMOR", "GRAFT WEAPON", "LEND HEALTH", "SHARE STRENGTH", "DOMINATION", "MASS DOMINATION", "PSYCHIC CRUSH", "SUPERIOR INVISIBILITY", "TOWER OF IRON WILL", "EGO WHIP", "ID INSINUATION", "INTELLECT FORTRESS", "MENTAL BARRIER", "PSIONIC MIND BAR", "MIND BLANK", "PSIONIC BLAST", "SYNAPTIC STATIC", "THOUGHT SHIELD", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "TURN UNDEAD", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "TURN UNDEAD" };
 
 /*
@@ -720,49 +771,56 @@ typedef struct power_entry_s {
     char name2[9];
 } __attribute__ ((__packed__)) power_entry_t;
 */
-static void generate_activate(power_entry_t pw, char *name, FILE *file) {
-    int pi = psionic_index(pw);
-    int wi = wizard_index(pw);
 
-    fprintf(file, "\nstatic int %s_can_activate (power_instance_t *source, const int16_t power_level) {\n", name);
+static int psi, wiz, pri, innate;
+static char type[64];
+static void generate_activate(power_entry_t pw, char *name, FILE *file) {
+    fprintf(file, "\nstatic int %s_%s_can_activate (power_instance_t *source, const int16_t power_level) {\n", type, name);
     fprintf(file, "    if (!source || !source->entity) { return 0;}\n");
     
-    if (pi >= 0) {
-    } else if (wi >= 0){
+    if (psi >= 0) {
+    } else if (wiz >= 0) {
         fprintf(file, "    return entity_has_wizard_slot(power_level);\n");
-    } else {
+    } else if (pri >= 0) {
         fprintf(file, "    return entity_has_priest_slot(power_level);\n");
+    } else if (psi >= 0) {
+        fprintf(file, "    NEED TO DO PSI CALC!\n");
+    } else if (innate >= 0) {
+        fprintf(file, "    return 1;// innates can always activate\n");
+    } else {
+        fprintf(file, "    return ???;\n");
     }
 
     fprintf(file, "}\n");
 }
 
 static void generate_pay(power_entry_t pw, char *name, FILE *file) {
-    int pi = psionic_index(pw);
-    int wi = wizard_index(pw);
-
-    fprintf(file, "\nstatic int %s_pay          (power_instance_t *source, const int16_t power_level) {\n", name);
+    fprintf(file, "\nstatic int %s_%s_pay          (power_instance_t *source, const int16_t power_level) {\n", type, name);
     fprintf(file, "    if (!source || !source->entity) { return 0;}\n");
     
-    if (pi >= 0) {
-    } else if (wi >= 0){
+    if (psi >= 0) {
+    } else if (wiz >= 0) {
         fprintf(file, "    return entity_take_wizard_slot(power_level);\n");
-    } else {
+    } else if (pri >= 0) {
         fprintf(file, "    return entity_take_priest_slot(power_level);\n");
+    } else if (psi >= 0) {
+        fprintf(file, "    NEED TO DO PSI CALC!\n");
+    } else if (innate >= 0) {
+        fprintf(file, "    return 1;// innates can always pay\n");
+    } else {
+        fprintf(file, "    return ???;\n");
     }
 
     fprintf(file, "}\n");
 }
 
 static void generate_apply(power_entry_t pw, char *name, FILE *file) {
-    int pi = psionic_index(pw);
-    int wi = wizard_index(pw);
-
-    fprintf(file, "\nstatic int %s_apply        (power_instance_t *source, entity_t *entity) {\n", name);
+    fprintf(file, "\nstatic int %s_%s_apply        (power_instance_t *source, entity_t *entity) {\n", type, name);
     fprintf(file, "    if (!source || !source->entity) { return 0;}\n");
     
-    if (pi >= 0) {
-    } else if (wi >= 0){
+    if (psi >= 0) {
+    } else if (wiz >= 0) {
+    } else if (pri >= 0) {
     } else {
     }
 
@@ -770,51 +828,57 @@ static void generate_apply(power_entry_t pw, char *name, FILE *file) {
 }
 
 static void generate_affect(power_entry_t pw, char *name, FILE *file) {
-    int pi = psionic_index(pw);
-    int wi = wizard_index(pw);
-
-    fprintf(file, "\nstatic int %s_affect_power (power_instance_t *target) {\n", name);
+    fprintf(file, "\nstatic int %s_%s_affect_power (power_instance_t *target) {\n", type, name);
     fprintf(file, "    if (!target) { return 0;}\n");
     
-    if (pi >= 0) {
-    } else if (wi >= 0){
+    if (psi >= 0) {
+    } else if (wiz >= 0) {
+    } else if (pri >= 0) {
     } else {
     }
 
     fprintf(file, "}\n");
 }
 
-static void generate_struct(power_entry_t pw, char *name, FILE *file) {
-    int pi = psionic_index(pw);
-    int wi = wizard_index(pw);
+static char* get_target_shape(power_entry_t pw) {
+    switch (pw.info.target) {
+        case 0: return "TARGET_NONE";
+        case 1: return "TARGET_SINGLE";
+        case 2: return "TARGET_RECTANGLE";
+        case 3: return "TARGET_ALLY";
+        case 4: return "TARGET_ENEMY";
+        case 5: return "TARGET_ANY";
+        case 6: return "TARGET_CONE";
+        //case 7: return "Self";
+        //case 8: return "Two?";
+        default:break;
+    }
+    return "ERROR";
+}
 
-    const char *type = (pi >= 0)
-        ? "psionic"
-        : (wi >= 0)
-        ? "wizard"
-        : "priest";
-    int index = (pi >= 0)
-        ? pi
-        : (wi >= 0)
-        ? wi
-        : -1
-        ;
-
-    fprintf(file, "\nextern void %s_armor_attach (power_t *spell) {\n", type);
+static void generate_setup(power_entry_t pw, char *name, FILE *file) {
+    fprintf(file, "\nextern void %s_%s_setup  (power_t *spell) {\n", type, name);
     fprintf(file, "    spell->name                 = \"%s\";\n", pw.name);
     fprintf(file, "    spell->description          = %s_read_description(%d);\n", type, index);
-    fprintf(file, "    spell->range                = 0;\n");
-    fprintf(file, "    spell->aoe                  = 0;\n");
-    fprintf(file, "    spell->shape                = POWER_SINGLE;\n");
-    fprintf(file, "    spell->sound_id             = 79;\n");
-    fprintf(file, "    spell->actions.can_activate = wizard_armor_can_activate;\n");
-    fprintf(file, "    spell->actions.pay          = wizard_armor_pay;\n");
-    fprintf(file, "    spell->actions.apply        = wizard_armor_apply;\n");
-    fprintf(file, "    spell->actions.still_active = wizard_armor_still_active;\n");
-    fprintf(file, "    spell->actions.affect_power = wizard_armor_affect_power;\n");
+    fprintf(file, "    spell->range                = -99999;\n");
+    fprintf(file, "    spell->aoe                  = -99999;\n");
+    fprintf(file, "    spell->shape                = %s;\n", get_target_shape(pw));
+    fprintf(file, "    spell->cast_sound           = select_by_game(%d, %d, %d);\n",
+            ds1pw.cast_sound, ds2pw.info.cast_sound, dsopw.info.cast_sound);
+    fprintf(file, "    spell->thrown_sound         = select_by_game(%d, %d, %d);\n",
+            ds1pw.thrown_sound, ds2pw.info.thrown_sound, dsopw.info.thrown_sound);
+    fprintf(file, "    spell->hit_sound            = select_by_game(%d, %d, %d);\n",
+            ds1pw.hit_sound, ds2pw.info.hit_sound, dsopw.info.hit_sound);
+    fprintf(file, "    spell->actions.can_activate = %s_%s_can_activate;\n", type, name);
+    fprintf(file, "    spell->actions.pay          = %s_%s_pay;\n", type, name);
+    fprintf(file, "    spell->actions.apply        = %s_%s_apply;\n", type, name);
+    fprintf(file, "    spell->actions.still_active = %s_%s_still_active;\n", type, name);
+    fprintf(file, "    spell->actions.affect_power = %s_%s_affect_power;\n", type, name);
     fprintf(file, "    spells_set_icon(spell, 21000);\n");
     fprintf(file, "    spells_set_thrown(spell, 2315);\n");
-    fprintf(file, "    spells_set_hit(spell, 2314);\n");
+    //fprintf(file, "    spells_set_hit(spell, 2314);\n");
+    fprintf(file, "    spells_set_hit(spell, select_by_game(%d, %d, %d));\n",
+            ds1pw.hit, ds2pw.info.hit, dsopw.info.hit);
     fprintf(file, "}\n");
 }
 
@@ -824,6 +888,22 @@ static void generate_power(power_entry_t pw) {
     char name[64];
     FILE *file = NULL;
     int pos = 0;
+
+    psi = psionic_index(pw);
+    wiz = wizard_index(pw);
+    pri = priest_index(pw);
+    innate = innate_index(pw);
+
+    (psi >= 0)
+        ? strcpy(type, "psionic")
+        : (wiz >= 0)
+        ? strcpy(type, "wizard")
+        : (pri >= 0)
+        ? strcpy(type, "priest")
+        : (innate >= 0)
+        ? strcpy(type, "innate")
+        : strcpy(type, "unknown")
+        ;
 
     for (int i = 0; i < 64 && pw.name[i]; i++) {
         if (pw.name[i] == '\'') { continue; }
@@ -836,27 +916,34 @@ static void generate_power(power_entry_t pw) {
     filename[pos] = '\0';
     name[pos] = '\0';
 
-    snprintf(path, 127, "powers/%s.c", filename);
+    snprintf(path, 127, "powers/%s-%s.c", type, filename);
     file = fopen(path, "wb+");
 
     if (!file) {
         fprintf(stderr, "Unable to overwrite '%s'\n", path);
     }
 
+    for (int i = 0; i < 64 && type[i]; i++) {
+        type[i] = toupper(type[i]);
+    }
+
     fprintf(file, "/* This file is auto-generated. */\n");
-    fprintf(file, "#ifndef %s_POWER_H\n", name);
-    fprintf(file, "#define %s_POWER_H\n", name);
+    fprintf(file, "#ifndef %s_%s_POWER_H\n", type, name);
+    fprintf(file, "#define %s_%s_POWER_H\n", type, name);
     fprintf(file, "\n#include \"../spells.h\"\n");
 
     for (int i = 0; i < 64 && name[i]; i++) {
         name[i] = tolower(name[i]);
+    }
+    for (int i = 0; i < 64 && type[i]; i++) {
+        type[i] = tolower(type[i]);
     }
 
     generate_activate(pw, name, file);
     generate_pay(pw, name, file);
     generate_apply(pw, name, file);
     generate_affect(pw, name, file);
-    generate_struct(pw, name, file);
+    generate_setup(pw, name, file);
 
     fprintf(file, "#endif\n");
     fclose(file);
