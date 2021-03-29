@@ -3,12 +3,25 @@ A Dark Sun Engine
 
 Goals: To create an engine for Dark Sun 1, 2, and Crimson Sands.
 
+### Discord
+
+<https://discord.gg/W942xHN72S>
+
 ### Latest Downloads:
 <http://dso.paulofthewest.com/downloads.html>
 
 ### Linux dev setup
-1) run make
-   fix any lib issues that come up (keep in mind we use Lua 5.3!)
+1) run
+ 
+   ```$ make -f makefile.sdl mdark```
+   
+2)   fix any lib issues that come up (keep in mind we use Lua 5.3!)
+3)   put your darksun1 gffs into a directory ds1/ inside your repo.
+4)   to run:
+
+   ```$ LD_LIBRARY_PATH=./ ./mdark```
+   
+5) There are other options (that I need to get to documenting), please message us on discord.
 
 ### Windows dev setup with msys2:
 
