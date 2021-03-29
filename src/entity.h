@@ -83,7 +83,6 @@ typedef struct entity_s {
     sprite_info_t sprite;
     ability_set_t abilities;
     effect_node_t *effects; // anything currently affecting the entity.
-    ds_inventory_t *inventory;
     item_t *inv; // NULL means that there is no inventory on this entity (IE: some monsters.)
     //spell_list_t *spells;
     //psionic_list_t *psionics;

@@ -50,7 +50,7 @@ enum combat_turn_t {
     PLAYER4_TURN,
 };
 
-enum combat_action_e {
+enum entity_action_e {
     CA_NONE,
     CA_WALK_LEFT,
     CA_WALK_RIGHT,
@@ -71,18 +71,18 @@ enum combat_action_e {
     CA_END,
 };
 
-typedef struct combat_action_s {
-    enum combat_action_e action;
+typedef struct entity_action_s {
+    enum entity_action_e action;
     entity_t *source;
     entity_t *target;
     int32_t amt;
-} combat_action_t;
+} entity_action_t;
 
 #define MAX_COMBAT_ACTIONS (100)
-typedef struct combat_action_list_s {
+typedef struct entity_action_list_s {
     ds1_combat_t *combat;
-    combat_action_t actions[MAX_COMBAT_ACTIONS];
-} combat_action_list_t;
+    entity_action_t actions[MAX_COMBAT_ACTIONS];
+} entity_action_list_t;
 
 void combat_init(combat_region_t *cr);
 void combat_free(combat_region_t *rc);
@@ -91,7 +91,7 @@ extern int combat_initiate(region_t *reg, const uint16_t x, const uint16_t y);
 scmd_t* combat_get_scmd(const enum combat_scmd_t type);
 entity_t* combat_get_current(combat_region_t *cr);
 extern void combat_set_hunt(combat_region_t *cr, const uint32_t combat_id);
-extern void combat_player_action(const combat_action_t action);
+extern void combat_player_action(const entity_action_t action);
 
 // pre-processor ordering.
 extern void combat_is_defeated(region_t *reg, entity_t *dude);

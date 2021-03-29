@@ -1,4 +1,5 @@
 #include "audio.h"
+#include "main.h"
 #include "../src/dsl.h"
 #include "../ext/libadlmidi/adlmidi.h"
 #include <SDL2/SDL.h>
@@ -31,6 +32,7 @@ typedef struct audio_buffer_s {
 #define AUDIO_DEVICE_NUM (4)
 
 static SDL_AudioDeviceID audio_device[AUDIO_DEVICE_NUM];
+static SDL_AudioDeviceID music_device;
 static int audio_opened[AUDIO_DEVICE_NUM] = {0, 0, 0, 0};
 
 extern float audio_get_xmi_volume() {
@@ -54,7 +56,6 @@ extern void audio_set_voc_volume(const float vol) {
 }
 
 extern void audio_init() {
-    SDL_Init(SDL_INIT_AUDIO);
     spec.freq = 44100;
     spec.format = AUDIO_S16SYS;
     spec.channels = 2;
@@ -70,7 +71,7 @@ extern void audio_init() {
     spec.callback = soloscuro_audio_callback;
     spec.userdata = midi_player;
 
-    if (SDL_OpenAudio(&spec, &obtained) < 0) {
+    if ((music_device = SDL_OpenAudio(&spec, &obtained)) < 0) {
         error("Couldn't open audio: %s\n", SDL_GetError());                                                                
     }
 
@@ -324,6 +325,8 @@ extern void audio_play_voc(const int gff_idx, uint32_t type, uint32_t res_id, co
 }
 
 static void soloscuro_audio_callback(void *midi_player, uint8_t *stream, int len) {
+    if (!main_still_running()) { return; }
+    return;
     struct ADL_MIDIPlayer* p = (struct ADL_MIDIPlayer*)midi_player;
 
     /* Convert bytes length into total count of samples in all channels */
@@ -364,6 +367,11 @@ extern void audio_cleanup() {
             SDL_CloseAudioDevice(audio_device[i]);
             audio_opened[i] = 0;
         }
+    }
+
+    if (music_device >= 0) {
+        SDL_CloseAudioDevice(music_device);
+        music_device = 0;
     }
 
     adl_close(midi_player);

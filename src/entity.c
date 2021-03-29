@@ -3,6 +3,7 @@
 #include "dsl.h"
 #include "entity.h"
 #include "gff.h"
+#include "port.h"
 #include "gfftypes.h"
 #include "gff-map.h"
 #include "region-manager.h"
@@ -183,7 +184,7 @@ void entity_load_from_gff(entity_t *entity, const int gff_idx, const int player,
     rdff_header_t *rdff;
     size_t offset = 0;
     int num_items;
-    ds1_item_t *pc_items = (ds1_item_t*)(entity->inventory);
+    //ds1_item_t *pc_items = (ds1_item_t*)(entity->inventory);
     gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_CHAR, res_id);
     if (gff_read_chunk(gff_idx, &chunk, &buf, sizeof(buf)) < 34) { return; }
 
@@ -207,7 +208,7 @@ void entity_load_from_gff(entity_t *entity, const int gff_idx, const int player,
         offset += sizeof(rdff_disk_object_t);
         int slot = ((ds1_item_t*)(buf + offset))->slot;
         item_convert_from_ds1(entity->inv + slot, (ds1_item_t*)(buf + offset));
-        memcpy(pc_items + slot, buf + offset, sizeof(ds1_item_t));
+        //memcpy(pc_items + slot, buf + offset, sizeof(ds1_item_t));
         offset += rdff->len;
     }
 
@@ -267,9 +268,16 @@ extern uint32_t entity_get_total_exp(entity_t *entity) {
 
 void entity_free(entity_t *dude) {
     if (!dude) { return; }
+
+    item_free_inventory(dude->inv);
+    port_remove_entity(dude);
     if (dude->name) {
         free(dude->name);
         dude->name = NULL;
+    }
+    if (dude->inv) {
+        // TODO: Once effects are added free the effects as well!
+        free(dude->inv);
     }
 
     free(dude); // Dude has got to be free!

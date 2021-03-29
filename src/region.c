@@ -1,5 +1,5 @@
 #include "combat.h"
-#include "combat-animation.h"
+#include "entity-animation.h"
 #include "dsl.h"
 #include "ds-player.h"
 #include "region.h"
@@ -70,6 +70,7 @@ region_t* region_create(const int gff_file) {
 }
 
 extern void region_remove_entity(region_t *reg, entity_t *entity) {
+    if (!reg || !entity) { return; }
     entity_list_remove(reg->entities, entity_list_find(reg->entities, entity));
 }
 
@@ -285,7 +286,7 @@ extern void region_tick(region_t *reg) {
                     xdiff = ydiff = 0;
                 }
             }
-            bad_dude->sprite.scmd = combat_animation_get_scmd(bad_dude->sprite.scmd, xdiff, ydiff, CA_NONE);
+            bad_dude->sprite.scmd = entity_animation_get_scmd(bad_dude->sprite.scmd, xdiff, ydiff, CA_NONE);
             if (calc_distance_to_player(bad_dude) < 5) {
                 //enter_combat_mode(reg);
                 combat_initiate(reg, bad_dude->mapx, bad_dude->mapy);

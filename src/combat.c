@@ -1,5 +1,5 @@
 #include "combat.h"
-#include "combat-animation.h"
+#include "entity-animation.h"
 #include "ds-player.h"
 #include "region.h"
 #include "dsl.h"
@@ -11,16 +11,16 @@
 
 static int current_player = 0;
 static int wait_on_player = 0;
-static combat_action_t monster_actions[MAX_COMBAT_ACTIONS]; // list of actions for a monster's turn.
+static entity_action_t monster_actions[MAX_COMBAT_ACTIONS]; // list of actions for a monster's turn.
 static int monster_step = -1; // keep track of what step of the action the monster is on.
-static enum combat_action_e player_action;
+static enum entity_action_e player_action;
 
 typedef struct combat_entry_s {
     int initiative;
     int sub_roll; // used to break ties.
     int round; // which round we are in.
     int melee_actions, range_actions, spell_actions, psionic_actions;
-    combat_action_t current_action;
+    entity_action_t current_action;
     entity_t *entity;
     struct combat_entry_s *next;
 } combat_entry_t;
@@ -29,7 +29,7 @@ typedef struct combat_entry_s {
 typedef struct action_node_s {
     int num_moves;
     uint16_t x, y;
-    combat_action_t actions[MAX_COMBAT_ACTIONS];
+    entity_action_t actions[MAX_COMBAT_ACTIONS];
     struct action_node_s *next;
 } action_node_t;
 
@@ -117,7 +117,7 @@ extern int combat_initiate(region_t *reg, const uint16_t x, const uint16_t y) {
 
     // Freeze all combats.
     entity_list_for_each(reg->cr.combatants, enemy) {
-        enemy->sprite.scmd = combat_animation_get_scmd(enemy->sprite.scmd, 0, 0, CA_NONE);
+        enemy->sprite.scmd = entity_animation_get_scmd(enemy->sprite.scmd, 0, 0, CA_NONE);
         port_update_entity(enemy, 0, 0);
     }
 
@@ -157,13 +157,13 @@ static int which_player(combat_entry_t *node) {
     return -1;
 }
 
-void combat_player_action(const combat_action_t action) {
+void combat_player_action(const entity_action_t action) {
     if (!wait_on_player || !current_turn) { return; }
 
     player_action = action.action;
 }
 
-static void queue_add(action_node_t **head, action_node_t **tail, action_node_t *current, const enum combat_action_e action) {
+static void queue_add(action_node_t **head, action_node_t **tail, action_node_t *current, const enum entity_action_e action) {
     action_node_t *new = malloc(sizeof(action_node_t));
     memcpy(new, current, sizeof(action_node_t));
     new->actions[new->num_moves].action = action;
@@ -266,7 +266,7 @@ static void generate_monster_actions(region_t *reg) {
     // Start of AI, lets just go to the closest PC and attack.
     static uint8_t visit_flags[MAP_ROWS][MAP_COLUMNS];
     entity_t *player;
-    memset(monster_actions, 0x0, sizeof(combat_action_t) * MAX_COMBAT_ACTIONS);
+    memset(monster_actions, 0x0, sizeof(entity_action_t) * MAX_COMBAT_ACTIONS);
     memset(visit_flags, 0x0, sizeof(uint8_t) * MAP_ROWS * MAP_COLUMNS);
     action_node_t *rover = malloc(sizeof(action_node_t));
     memset(rover, 0x0, sizeof(action_node_t));
@@ -321,7 +321,7 @@ static void generate_monster_actions(region_t *reg) {
     printf("NEED TO move and guard!\n");
 }
 
-static void apply_action_animation(const enum combat_action_e action) {
+static void apply_action_animation(const enum entity_action_e action) {
     int16_t xdiff = 0, ydiff = 0;
 
     switch (action) {
@@ -337,7 +337,7 @@ static void apply_action_animation(const enum combat_action_e action) {
     }
 
     //printf("(%d, %d) applying xdiff = %d, ydiff = %d\n", current_turn->entity->mapx, current_turn->entity->mapy, xdiff, ydiff);
-    current_turn->entity->sprite.scmd = combat_animation_get_scmd(current_turn->entity->sprite.scmd,
+    current_turn->entity->sprite.scmd = entity_animation_get_scmd(current_turn->entity->sprite.scmd,
             xdiff, ydiff, CA_NONE);
     port_update_entity(current_turn->entity, xdiff, ydiff);
 }
@@ -347,7 +347,7 @@ static void end_turn() {
     monster_step = -1;
 
     if (entity) {
-        entity->sprite.scmd = combat_animation_get_scmd(entity->sprite.scmd, 0, 0, CA_NONE);
+        entity->sprite.scmd = entity_animation_get_scmd(entity->sprite.scmd, 0, 0, CA_NONE);
     }
     current_turn = current_turn->next;
     /*
@@ -410,15 +410,15 @@ static void perform_enemy_melee_attack() {
     entity_t *target = monster_actions[monster_step].target;
 
     int16_t amt = dnd2e_melee_attack(source, target, current_turn->melee_actions++, current_turn->round);
-    combat_animation_add(CA_MELEE, source, NULL, 0);
+    entity_animation_add(CA_MELEE, source, NULL, 0);
     //printf("amt = %d!\n", amt);
     if (amt > 0) {
-        combat_animation_add(CA_RED_DAMAGE, source, target, amt);
+        entity_animation_add(CA_RED_DAMAGE, source, target, amt);
     }
 }
 
 static void check_and_perform_attack(region_t *reg) {
-    combat_action_t *action = monster_actions + monster_step;
+    entity_action_t *action = monster_actions + monster_step;
 
     switch (action->action) {
         case CA_MELEE:
@@ -429,7 +429,7 @@ static void check_and_perform_attack(region_t *reg) {
     }
 }
 
-static entity_t* entity_in_way(region_t *reg, entity_t *entity, const enum combat_action_e action) {
+static entity_t* entity_in_way(region_t *reg, entity_t *entity, const enum entity_action_e action) {
     int xdiff = 0, ydiff = 0;
 
     switch(action) {
@@ -454,22 +454,22 @@ static void player_melee(region_t *reg, entity_t* entity, entity_t *enemy) {
     //combat_animation_add(CA_MELEE, current_turn->entity, NULL, 0);
     //combat_animation_add(CA_RED_DAMAGE, current_turn->entity, enemy, amt);
     int16_t amt = dnd2e_melee_attack(entity, enemy, current_turn->melee_actions++, current_turn->round);
-    combat_animation_add(CA_MELEE, entity, NULL, 0);
+    entity_animation_add(CA_MELEE, entity, NULL, 0);
     //printf("amt = %d!\n", amt);
     if (amt > 0) {
-        combat_animation_add(CA_RED_DAMAGE, entity, enemy, amt);
+        entity_animation_add(CA_RED_DAMAGE, entity, enemy, amt);
     }
     wait_on_player = dnd2e_can_melee_again(entity, current_turn->melee_actions, current_turn->round);
     player_action = CA_NONE;
     //wait_on_player = 0;
 }
 
-static void move_entity(region_t *reg, entity_t *entity, const enum combat_action_e action) {
+static void move_entity(region_t *reg, entity_t *entity, const enum entity_action_e action) {
     entity_t *enemy;
 
     switch(action) {
         case CA_NONE:
-            entity->sprite.scmd = combat_animation_get_scmd(entity->sprite.scmd, 0, 0, CA_NONE);
+            entity->sprite.scmd = entity_animation_get_scmd(entity->sprite.scmd, 0, 0, CA_NONE);
             port_update_entity(entity, 0, 0);
             ticks_per_game_round = 0;
             break;
@@ -483,7 +483,7 @@ static void move_entity(region_t *reg, entity_t *entity, const enum combat_actio
         case CA_WALK_RIGHT:
             enemy = entity_in_way(reg, entity, action);
             if (enemy && enemy->allegiance != entity->allegiance) {
-                entity->sprite.scmd = combat_animation_face_direction(entity->sprite.scmd, action);
+                entity->sprite.scmd = entity_animation_face_direction(entity->sprite.scmd, action);
                 player_melee(reg, entity, enemy);
                 return;
             }
@@ -565,7 +565,7 @@ static int is_combat_over(region_t *reg) {
 
 // decide if the current turn is over and ready next.
 static void check_current_turn() {
-    if (!combat_animation_has_more()) {
+    if (!entity_animation_has_more()) {
         if (!dnd2e_can_melee_again(current_turn->entity, current_turn->melee_actions, current_turn->round)) {
             end_turn();
             return;
@@ -585,7 +585,7 @@ static void do_player_turn(region_t *reg) {
     if (ticks_per_game_round > 0) { ticks_per_game_round = 20; }
 }
 
-static combat_action_t clear = { CA_NONE, NULL, NULL, 0 };
+static entity_action_t clear = { CA_NONE, NULL, NULL, 0 };
 
 void combat_update(region_t *reg) {
     if (reg == NULL) { return; }
@@ -602,7 +602,7 @@ void combat_update(region_t *reg) {
     ticks_per_game_round = 30;
 
     if (in_combat) {
-        if (combat_animation_execute(reg)) {
+        if (entity_animation_execute(reg)) {
             check_current_turn();
             return;
         }

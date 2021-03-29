@@ -110,11 +110,23 @@ extern item_t* item_dup(item_t *item) {
     return ret;
 }
 
-
 void item_free(item_t *item) {
     if (item) {
         free(item);
     }
+}
+
+extern void item_free_inventory(item_t *inv) {
+    if (!inv) { return; }
+    item_t *items = (item_t*)inv;
+
+    for (int i = 0; i < 26; i++) {
+        if (items[i].ds_id) {
+            port_free_item(items + i);
+        }
+    }
+
+    //TODO: Free up the effects!
 }
 
 // TODO: Implement!

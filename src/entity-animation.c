@@ -1,11 +1,11 @@
-#include "combat-animation.h"
+#include "entity-animation.h"
 #include "combat.h"
 #include "dsl.h"
 #include "port.h"
 #include <stdlib.h>
 
-static combat_animation_node_t *last;
-static combat_animation_node_t *next_animation_head = NULL, *next_animation_tail = NULL;
+static entity_animation_node_t *last;
+static entity_animation_node_t *next_animation_head = NULL, *next_animation_tail = NULL;
 
 static scmd_t combat_move_down[] = {
     {.bmp_idx = 3, .delay = 7, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
@@ -150,8 +150,7 @@ static scmd_t* get_scmd(scmd_t *current_scmd, const int xdiff, const int ydiff) 
     return current_scmd;
 }
 
-
-static scmd_t* get_combat_scmd(scmd_t *current_scmd, enum combat_action_e action) {
+static scmd_t* get_entity_scmd(scmd_t *current_scmd, enum entity_action_e action) {
     current_scmd = get_scmd(current_scmd, 0, 0);
 
     if (action == CA_MELEE) {
@@ -169,7 +168,7 @@ static scmd_t* get_combat_scmd(scmd_t *current_scmd, enum combat_action_e action
     return current_scmd;
 }
 
-scmd_t* combat_animation_face_direction(scmd_t *current_scmd, const enum combat_action_e action) {
+extern scmd_t* entity_animation_face_direction(scmd_t *current_scmd, const enum entity_action_e action) {
     switch (action) {
         case CA_WALK_DOWNLEFT:
         case CA_WALK_UPLEFT:
@@ -188,16 +187,16 @@ scmd_t* combat_animation_face_direction(scmd_t *current_scmd, const enum combat_
     }
 }
 
-scmd_t* combat_animation_get_scmd(scmd_t *current_scmd, const int xdiff, const int ydiff,
-        const enum combat_action_e action) {
+extern scmd_t* entity_animation_get_scmd(scmd_t *current_scmd, const int xdiff, const int ydiff,
+        const enum entity_action_e action) {
     current_scmd = get_scmd(current_scmd, xdiff, ydiff);
-    if (action != CA_NONE) { current_scmd = get_combat_scmd(current_scmd, action); }
+    if (action != CA_NONE) { current_scmd = get_entity_scmd(current_scmd, action); }
 
     return current_scmd;
 }
 
-void combat_animation_add(enum combat_action_e action, entity_t *source, entity_t *target, const int32_t amt) {
-    combat_animation_node_t *toadd = malloc(sizeof(combat_animation_node_t));
+void entity_animation_add(enum entity_action_e action, entity_t *source, entity_t *target, const int32_t amt) {
+    entity_animation_node_t *toadd = malloc(sizeof(entity_animation_node_t));
     toadd->ca.action = action;
     toadd->ca.source = source;
     toadd->ca.target = target;
@@ -210,7 +209,7 @@ void combat_animation_add(enum combat_action_e action, entity_t *source, entity_
     }
 }
 
-int combat_animation_has_more() {
+extern int entity_animation_has_more() {
     return next_animation_head != NULL;
 }
 
@@ -267,8 +266,7 @@ static void play_damage_sound(entity_t *target) {
 }
 
 // sound 63: is PC doing range attack
-
-int combat_animation_execute(region_t *reg) {
+extern int entity_animation_execute(region_t *reg) {
     if (!next_animation_head) {
         if (last) { // we just finished.
             apply_last(reg);
@@ -283,7 +281,7 @@ int combat_animation_execute(region_t *reg) {
     switch(next_animation_head->ca.action) {
         case CA_MELEE:
             play_melee_sound(source);
-            source->sprite.scmd = get_combat_scmd(source->sprite.scmd, next_animation_head->ca.action);
+            source->sprite.scmd = get_entity_scmd(source->sprite.scmd, next_animation_head->ca.action);
             port_update_entity(source, 0, 0);
             break;
         case CA_RED_DAMAGE:

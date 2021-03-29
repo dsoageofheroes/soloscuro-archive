@@ -196,4 +196,5 @@ void screen_free() {
         }
     }
     animate_close();
+    font_free(main_get_rend());
 }

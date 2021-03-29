@@ -11,6 +11,7 @@ const float main_get_zoom();
 uint32_t main_get_width();
 uint32_t main_get_height();
 void main_center_on_player();
+extern int main_still_running();
 void main_set_browser_mode();
 void main_set_ignore_repeat(int repeat);
 void main_set_xscroll(int amt);

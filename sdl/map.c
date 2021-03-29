@@ -207,6 +207,7 @@ void port_add_entity(entity_t *entity, gff_palette_t *pal) {
 }
 
 void port_remove_entity(entity_t *entity) {
+    if (!entity || entity->sprite.data == NULL) { return; }
     region_remove_entity(region_manager_get_current(), entity);
     for (int i = 0; i < MAX_ANIMS; i++) {
         if (anim_nodes[i] && anim_nodes[i]->anim && anim_nodes[i]->anim->entity == entity) {
@@ -333,7 +334,18 @@ extern void port_load_item(item_t *item) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     as->spr = sprite_new(main_get_rend(), pal, 0, 0, main_get_zoom(),
             OBJEX_GFF_INDEX, GFF_BMP, item->sprite.bmp_id);
+    printf("ITEM---------->spr = %d\n", as->spr);
     as->entity = NULL;
+}
+
+extern void port_free_item(item_t *item) {
+    if (!item || item->sprite.data == NULL) { return; }
+    animate_sprite_t *as = (animate_sprite_t*)item->sprite.data;
+    printf("ITEM---FREE------->spr = %d\n", as->spr);
+    sprite_free(as->spr);
+    as->spr = SPRITE_ERROR;
+    free(as);
+    item->sprite.data = NULL;
 }
 
 sops_t map_screen = {

@@ -16,7 +16,7 @@ static int active = 0;
 
 void player_cleanup() {
     for (int i = 0; i < MAX_PCS; i++) {
-        entity_free(players[i]);
+        player_free(i);
     }
 }
 
@@ -74,7 +74,6 @@ entity_t* player_get_entity(const int slot) {
             players[slot]->class[i].class = -1;
             players[slot]->class[i].level = -1;
         }
-        players[slot]->inventory = calloc(1, sizeof(ds_inventory_t));
     }
     return players[slot];
 }

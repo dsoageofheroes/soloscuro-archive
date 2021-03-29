@@ -264,3 +264,12 @@
    obj:/usr/lib/x86_64-linux-gnu/libSDL2*
    ...
 }
+
+{
+    sdl2_pulse
+    Memcheck:Leak
+    ...
+    obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-12.2.so
+    ...
+}
+

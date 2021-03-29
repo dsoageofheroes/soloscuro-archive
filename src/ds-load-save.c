@@ -231,12 +231,12 @@ static int load_player(const int id, const int player, const int res_id) {
     size_t offset = 0;
     int num_items;
     dude_t *dude = NULL;
-    dude = player_get_entity(player);
-    //ds1_item_t *pc_items = (ds1_item_t*)ds_player_get_inv(player);
     gff_chunk_header_t chunk = gff_find_chunk_header(id, GFF_CHAR, res_id);
     if (gff_read_chunk(id, &chunk, &buf, sizeof(buf)) < 34) { return 0; }
 
-    entity_load_from_gff(player_get_entity(player), id, player, res_id);
+    player_free(player);
+    dude = player_get_entity(player);
+    entity_load_from_gff(dude, id, player, res_id);
 
     rdff = (rdff_disk_object_t*) (buf);
     num_items = rdff->blocknum - 2;
@@ -251,7 +251,6 @@ static int load_player(const int id, const int player, const int res_id) {
     } else if (rdff->type == PLAYER_OBJECT) {
         player_free(player);
         dude = player_get_entity(player);
-        //memcpy(dude, buf + offset, sizeof(entity_t));
         entity_load_from_object(dude, buf + offset);
         dude->sprite.scmd = combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
         offset += rdff->len;
@@ -275,7 +274,6 @@ static int load_player(const int id, const int player, const int res_id) {
             int slot = rdff->index;
             item_load_from(dude->inv + slot, buf + offset);
         }
-        //memcpy(pc_items + slot, buf + offset, sizeof(ds1_item_t));
         offset += rdff->len;
     }
 

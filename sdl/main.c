@@ -97,7 +97,7 @@ void main_exit_game() {
 }
 
 static void main_combat_update() {
-    combat_action_t player_action;
+    entity_action_t player_action;
     player_action.action = CA_NONE;
     switch(combat_player_turn()) {
         case PLAYER1_TURN:
@@ -405,6 +405,8 @@ int main(int argc, char *argv[]) {
 static int done = 0;
 static int accum = 0;
 static uint8_t wait_flags[WAIT_MAX_SIGNALS];
+
+extern int main_still_running() { return !done; }
 
 typedef struct animation_s {
     struct animation_s *next;
