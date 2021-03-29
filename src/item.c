@@ -116,3 +116,14 @@ void item_free(item_t *item) {
         free(item);
     }
 }
+
+// TODO: Implement!
+extern int item_get_wizard_level(item_t *item) {
+    if (!item) { return 0; }
+    return 0;
+}
+
+extern int item_get_priest_level(item_t *item) {
+    if (!item) { return 0; }
+    return 0;
+}

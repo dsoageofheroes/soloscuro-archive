@@ -2,7 +2,7 @@
 #define NEW_CHARACTER_H
 
 #include <SDL2/SDL.h>
-#include "../../src/spells.h"
+#include "../../src/wizard.h"
 #include "../screen-manager.h"
 #include "../../src/ds-object.h"
 #include "../../src/entity.h"

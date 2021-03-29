@@ -2,6 +2,7 @@ SDL_SRCS  = $(wildcard sdl/*.c)
 SDL_SRCS  += $(wildcard sdl/screens/*.c)
 SDL_DEPS  = $(wildcard sdl/*.h)
 SDL_OBJS  = $(SDL_SRCS:sdl/%.c=obj/%.o)
+POWER_LIB = src/powers/obj/*
 LIB_EXT   = so
 CFLAGS    = -g -O2 -I src/ -I ext/ -L./ -Werror -Wall -llua5.3 -lxmimidi -lm -O2 -DDEBUG=1 -fPIC
 SDL_FLAGS = -g -O2 -I src/ -I sdl/ -I ext/ -L./ -Llibs/linux/ -Werror -Wall -llua5.3 -lxmimidi -lm -O2 -DDEBUG=1  -lSDL2_ttf -lADLMIDI -lsndfile
@@ -15,7 +16,7 @@ obj/%.o : sdl/%.c $(DEPS) $(SDL_DEPS)
 	$(CC) -c $(SDL_FLAGS) $< -o $@
 
 mdark : obj/screens $(SDL_OBJS) libds.so libxmimidi.so
-	$(CC) $(SDL_FLAGS) $(SDL_OBJS) -o $@ -lds -lSDL2
+	$(CC) $(SDL_FLAGS) $(SDL_OBJS) $(POWER_LIB) -o $@ -lds -lSDL2
 
 obj/screens: obj
 	mkdir -p obj/screens

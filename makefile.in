@@ -1,19 +1,19 @@
-SPELL_SRCS = $(wildcard src/spells/*.c)
-SPELL_OBJS = $(SPELL_SRCS:src/spells/%.c=obj/spells/%.o)
 SRCS       = $(wildcard src/*.c)
 OBJS       = $(SRCS:src/%.c=obj/%.o)
 OBJS      += $(SPELL_OBJS)
 DEPS       = $(wildcard src/*.h)
 all: obj $(EXEC) libds.so
 
-libds.so: obj obj/spells $(OBJS) libxmimidi.so
+.PHONY: POWERS
+
+libds.so: obj obj/spells $(OBJS) libxmimidi.so POWERS
 	$(CC) -L./ $(OBJS) -shared -o libds.$(LIB_EXT) -llua5.3 -lxmimidi
+
+POWERS:
+	cd src/powers ; CC="$(CC)" CFLAGS="-O2" make
 
 libxmimidi.so:
 	$(CC) ext/xmi2mid.c -shared -o libxmimidi.$(LIB_EXT)
-
-obj/spells/%.o: src/spells/%.c $(DEPS) obj/spells
-	$(CC) -c $(CFLAGS) $< -o $@
 
 obj/%.o : src/%.c $(DEPS)
 	$(CC) -c $(CFLAGS) $< -o $@
@@ -43,6 +43,7 @@ lua-test: libds.so bin
 	LD_LIBRARY_PATH=./ lua5.3 test/$@.lua -v
 
 clean:
+	cd src/powers ; make clean
 	rm -rf $(EXEC) obj gff-inspector libds.$(LIB_EXT) libxmimidi.$(LIB_EXT) bin/ mdark mdark.exe *dll
 
 flip:

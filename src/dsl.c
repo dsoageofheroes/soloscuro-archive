@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "dsl.h"
+#include "wizard.h"
 #include "dsl-manager.h"
 #include "ds-item.h"
 #include "region-manager.h"
@@ -42,6 +43,7 @@ static void initialize_dsl_stack() {
 void dsl_init() {
     info("Initalizing DSL.\n");
     initialize_dsl_stack();
+    spells_init();
     dsl_init_vars();
     ds_player_init();
     ds_item_init();
@@ -67,6 +69,7 @@ void dsl_debug(const char *file, const int line_num, const char *pretty, const c
 }
 
 void dsl_cleanup() {
+    spells_cleanup();
     free(gTextstring);
     free(dsl_local_strings);
     free(dsl_global_strings);

@@ -6,7 +6,7 @@
 #include "popup.h"
 #include "../textbox.h"
 #include "../sprite.h"
-#include "../../src/spells.h"
+#include "../../src/wizard.h"
 #include "../../src/ds-player.h"
 #include "../../src/rules.h"
 #include <string.h>

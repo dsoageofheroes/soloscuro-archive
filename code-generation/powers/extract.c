@@ -9,6 +9,26 @@
  * There is acollision between Hold person and hold person/mammal, both should map to the same spell.
  * Same with Dispel Magic
  */
+enum effect_type {
+    EFFECT_POISON     = 0x0001,
+    EFFECT_FIRE       = 0x0002,
+    EFFECT_COLD       = 0x0004,
+    EFFECT_BLUNT      = 0x0008,
+    EFFECT_CUTTING    = 0x0010,
+    EFFECT_POINTED    = 0x0020,
+    EFFECT_ACID       = 0x0040,
+    EFFECT_ELECTRIC   = 0x0080,
+    EFFECT_DRAINING   = 0x0100,
+    EFFECT_MAGIC      = 0x0200,
+    EFFECT_MENTAL     = 0x0400,
+    EFFECT_DEATH      = 0x0800,
+    EFFECT_PLUS1      = 0x1000,
+    EFFECT_PLUS2      = 0x2000,
+    EFFECT_METAL      = 0x4000,
+    EFFECT_OVER2      = 0x8000, // More than a +2
+    EFFECT_MELEE      = 0x10000,
+    EFFECT_MISSILE    = 0x20000,
+};
 
 static FILE *ds1_file = NULL;
 static FILE *ds2_file = NULL;
@@ -16,6 +36,7 @@ static FILE *dso_file = NULL;
 static FILE *dso_extra_file = NULL;
 static const char *ds1_power_names[];
 static size_t ds1_pos = 0;
+static size_t dso_pos = 0;
 
 static int ds1_has_power(const char *name);
 
@@ -64,6 +85,8 @@ typedef struct power_entry_s {
 
 static power_info_t *ds1powers;
 
+#include "tables.c"
+
 static power_info_t ds1pw;
 static power_entry_t ds2pw;
 static power_entry_t dsopw;
@@ -77,9 +100,6 @@ const char *saves[] = {
 
 static char save_buf[256];
 static char* get_save() {
-    //uint8_t savable   : 1;
-    //uint8_t save_mod  : 4;
-    //uint8_t save_type : 3;
     if (ds1pw.damage.savable != ds2pw.info.damage.savable || ds2pw.info.damage.savable != dsopw.info.damage.savable
         || ds1pw.damage.save_mod != ds2pw.info.damage.save_mod || ds2pw.info.damage.save_mod != dsopw.info.damage.save_mod
         || ds1pw.damage.save_type != ds2pw.info.damage.save_type || ds2pw.info.damage.save_type != dsopw.info.damage.save_type) {
@@ -109,17 +129,7 @@ static char* get_save() {
 static char damage[256];
 static char* get_damage(damage_info_t d) {
     int pos = 0;
-//typedef struct damage_info_s {
-    //uint8_t plus      : 5;
-    //uint8_t dice_plus : 3;
-    //uint8_t div       : 3;
-    //uint8_t dice      : 5;
-    //uint8_t sides     : 4;
-    //uint8_t level     : 4;
-    //uint8_t savable   : 1;
-    //uint8_t save_mod  : 4;
-    //uint8_t save_type : 3;
-//} __attribute__ ((__packed__)) damage_info_t;
+
     if (d.div > 1) {
         pos += snprintf(damage + pos, 255 - pos, "(%d * ((%d + caster level) / %d) + %d)d",
                 d.level, d.dice_plus, d.div, d.dice);
@@ -180,12 +190,11 @@ static char* get_effect_type() {
                 dsopw.info.effect_type
                );
     }
-
     if (dsopw.info.effect_type & 0x0001) {
         pos += snprintf(effect_type + pos, 255 - pos, "Poison ");
     }
     if (dsopw.info.effect_type & 0x0002) {
-        pos += snprintf(effect_type + pos, 255 - pos, "Magic-fire ");
+        pos += snprintf(effect_type + pos, 255 - pos, "Fire ");
     }
     if (dsopw.info.effect_type & 0x0004) {
         pos += snprintf(effect_type + pos, 255 - pos, "Cold ");
@@ -235,16 +244,6 @@ static char* get_effect_type() {
 
 char effect_id[256];
 static char* get_effect() {
-    /*
-    if (ds1pw.effect != ds2pw.info.effect || ds2pw.info.effect != dsopw.info.effect) {
-        fprintf(stderr, "%s has different effect (%d, %d, %d).\n",
-                dsopw.name,
-                ds1pw.effect,
-                ds2pw.info.effect,
-                dsopw.info.effect
-               );
-    }
-    */
     snprintf(effect_id, 255, "%d", dsopw.info.effect);
 
     return effect_id;
@@ -637,6 +636,7 @@ int main() {
         printf("\n");
 
         generate_power(dsopw);
+        dso_pos++;
     }
 
     fclose(ds1_file);
@@ -657,8 +657,6 @@ static int ds1_has_power(const char *name) {
     return 0;
 }
 
-static const char *priest_spells[] = { "BLESS", "CURSE", "CURLTWND", "CASLTWND", "ENTANGLE", "INVISUND", "MAGSTONE", "PROTEVIL", "REMFEAR", "CAUSFEAR", "SANCTURY", "SHILELAG", "AID", "ALTRUISM", "BARKSKIN", "CHNSTNCH", "CHRMPRML", "DUSTDEVL", "FNDTRAPS", "FLMBLADE", "HESITATN", "HLDPERSP", "MUSICSPH", "RESTFIRE", "RESTCOLD", "SILENC15", "SPRHAMER", "STELBRTH", "AIR_LENS", "BRMBSTAF", "CRTSMOKE", "CURBLIDF", "CASBLIDF", "CURDISES", "CASDISES", "DISMAGCP", "HEATXHST", "MAGCVEST", "NGPLNPRO", "PLNTGROW", "PRAYER", "PROTFIRE", "REMCURSE", "BSTCURSE", "REMPARAL", "SANDSPRA", "SPIKEGRO", "STONESHA", "STRNGTHO", "SUMINSCT", "ABJURE", "BLOODFLW", "CLKBRAVY", "CLKOFEAR", "CONDENSE", "CURSRWND", "CASSRWND", "DEHYDRAT", "DUSTCLOD", "FOCSHEAT", "FREEACT", "LUNGWATR", "MAGMABLD", "NEUTPOIS", "POISON", "PRODFIRE", "QUCHFIRE", "PROEVL10", "PROLIGHT", "PROWEATH", "INTENSFW", "RETEARTH", "SOOTHE", "THRNBIND", "CONAIRE", "CONFIREE", "CONEARHE", "CONWATRE", "CRUMBLE", "CURECRIT", "CAUSCRIT", "DEFLECTN", "DISPEVIL", "FLMSTRIK", "INSPLAGE", "IRONSKIN", "RAINBOW", "QUIKSAND", "RASEDEAD", "SLAYLIVG", "SANDSTOR", "SPIKSTON", "WALLFIRE", "BLADEBAR", "FIRESEED", "HEAL", "HARM", "HEARTSEE", "SUNSTROK", "WALTHORN", "WATOLIFE", "CONFUSIN", "CONGEL_A", "CONGEL_F", "CONGEL_E", "CONGEL_W", "CREEPING", "FIRESTOR", "GLASSTOR", "RESTORE", "ENERGYDR", "SCIROCCO", "SUNRAY", "SYM_HOPL", "SYM_PAIN", "SYM_PERS", "REV_WIND", "DISRUPTN", "INSCHOST", "RIFTPR", NULL };
-
 static int priest_index(power_entry_t pw) {
     const char **ptr = priest_spells;
     int pos = 0;
@@ -671,8 +669,6 @@ static int priest_index(power_entry_t pw) {
 
     return -1;
 }
-
-static const char *wizard_spells[] = { "ARMOR", "BURNINGH", "CHARMPER", "CHILL", "COLORSPR", "ENLARGE", "GAZEREFL", "GREASE", "MAGICMIS", "SHIELD", "SHOKGRSP", "WALLOFOG", "BLUR", "DETINVIS", "FLMSPHER", "FOGCLOUD", "GLITTERD", "INVISBEL", "ACIDAROW", "MIRRORIM", "PROPARAL", "SCARE", "STINKCLD", "STRENGTH", "WEB", "BLINK", "DISWIZRD", "FIREBALL", "FLMARROW", "HASTE", "HOLDWIZ", "HLDUNDED", "LITNBOLT", "MINMETOR", "MINMALIS", "PRONMMIS", "SLOW", "SPIRARMR", "VAMTOUCH", "CHARMMON", "CNFUSWIZ", "FEAR", "FIRESHLD", "ICESTORM", "IMPVISIB", "MGBINVUL", "MINSPTUR", "ORSPHERE", "PSIDAMPR", "RAINBOWP", "SOLIDFOG", "SSTRAND", "STONSKIN", "PEBTOBOD", "WALLFIRW", "WALLOICE", "CHAOS", "CLODKILL", "CNOFCOLD", "CONELEMN", "DISMISAL", "DOMINATE", "FEEBLEMD", "HLDMONST", "LOWRESMG", "SUMSHADW", "WALLFORC", "WALLSTON", "ANTIMAGS", "CHAINLIT", "DEATHFOG", "DEATHSPL", "DISNTWIZ", "GLOBEINV", "IMPHASTE", "IMPSLOW", "MONSUMM4", "REINCARN", "STNTFLSH", "FLSHTSTN", "TNSRTRAN", "CGELMENT", "CNUNDEAD", "DELAYFBA", "FINGEROD", "FORCAGE", "MASINVSB", "MONSUMM5", "MORDSWRD", "POWSTUN", "PRISPRAY", "SPELTURN", "BIGBYFST", "INCNDCLD", "MASCHARM", "MINDBLKW", "MONSUMM6", "OTSPHERE", "OTTODANC", "POWBLIND", "PRISWALL", "SSPELLIM", "BIGBYHND", "CRYSBRTL", "LVLDRAIN", "METEORSW", "MONSUMM7", "MORDDISJ", "POWKILL", "PRISPHER", "TIMESTOP", "DOMEINVL", "MAGPLAGU", "RIFT", "WALLASH", NULL };
 
 static int wizard_index(power_entry_t pw) {
     const char **ptr = wizard_spells;
@@ -687,8 +683,6 @@ static int wizard_index(power_entry_t pw) {
     return -1;
 }
 
-static const char *psionics[] = { "DETONATE", "DISNTGRT", "PRJTFRCE", "BLSTCATK", "CNTLBODY", "INERTBAR", "ANMAFFIN", "ENRGECON", "LIFDRAIN", "ABSRBDIS", "ADRENCNT", "BIOFEDBK", "BODYWEAP", "CELLADG", "DISPLACE", "ENSTRENG", "FLESHARM", "GRAFWEAP", "LNDHEALH", "SHARESTR", "PSIDOMNT", "MASSDOM", "PSICRUSH", "SUPINVIS", "TWRIRONW", "EGO_WHIP", "IDINSINT", "INTELFOR", "MENTLBAR", "MIND_BAR", "MNDBLANK", "PSIBLAST", "SYNPSTAT", "THOTSHLD", NULL };
-
 static int psionic_index(power_entry_t pw) {
     const char **ptr = psionics;
     int pos = 0;
@@ -701,10 +695,6 @@ static int psionic_index(power_entry_t pw) {
 
     return -1;
 }
-
-static const char *innate_power_full[] = { "COLD TOUCH", "PARALYSIS TOUCH", "ACID TOUCH", "WEB", "POISON 10", "POISON 30", "CORROSIVE POISON", "PARALYSIS GAZE", "LAUNCH DARTS", "FIRE BERATH", "STUN SCREAM", "ENFEEBLEMENT GAZE", "ROTTING DISEASE", "FIRE BREATH", "CORRODE ARMOR", "CORRODE WEAPON", "CONE OF SKULLS", "STUN", "CLAMP AND SHAKE", "SWALLOW", "GATE_AIR", "GATE_EARTH", "GATE_FIRE", "GATE_WATER", "EARTHQUAKE", "FEYR_FEAR", "SMASH_FISTS", "RADIATE_HEAT", "BURNING TOUCH", "CRUSH", "AURA_OF_FEAR", "MIND_BLAST", "EAT_BRAIN", "TERRASQUE_TRAMPLE", "CONSTRICT", "PARALYSE_SPIT", "THRIKREEN POISON", "TURN UNDEAD", "TWINKLE", "GENERIC ZAP", "BURNING_WEB", "ETC_POISON_PARALYZING   ", "ETC_SCHRAPNEL_D10     ", "ROD_OF_TEETH", "NINE_LIFE_STEALER", "RAINBOW BOW", "HEART_SEEKER ", "SWORD_OF_MAGMA", "SWORD_OF_WOUNDING", "LOCK_JAWS", "UMBERHULK", "POISON", "SCREECH", "DETONATE", "SLIME", "POISON", "BANSHEE GAZE", "FIRE EEL", "GHOST FEAR", "MASTRYIAL", "BLACK MASTRYIAL", "DISEASE", "RAMPAGER_FEAR", "DISEASE", "HOWL", "PSIONIC BLAST", "GREATER SHADOW", "SLAAD DISEASE", "RED SLAAD STUN", "POISON", "SPINE LAUNCH", "STYR BREATH", "TANARRI SCREECH", "TYRIAN SLIME", "XORN CORROSION", "ZOMBIE", NULL };
-
-static const char *innate_power_short[] = { " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", "RODOFTTH", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", "PSIBLAST", " ", " ", " ", "POISON", "SPINES", " ", " ", " ", " ", " ", " ", NULL};
 
 static int innate_index(power_entry_t pw) {
     const char **fptr = innate_power_full;
@@ -725,52 +715,6 @@ static int innate_index(power_entry_t pw) {
 
     return -1;
 }
-static const char *ds1_power_names[] = {"DNE", "ARMOR", "BURNING HANDS", "CHARM PERSON", "CHILL TOUCH", "COLOR SPRAY", "ENLARGE", "GAZE REFLECTION", "GREASE", "MAGIC MISSILE", "SHIELD", "SHOCKING GRASP", "WALL OF FOG", "BLUR", "DETECT INVISIBLE", "FLAMING SPHERE", "FOG CLOUD", "GLITTER DUST", "INVISIBILITY", "ACID ARROW", "MIRROR IMAGE", "PROTECTION FROM PARALYSIS", "SCARE", "STINKING CLOUD", "STRENGTH", "WEB", "BLINK", "DISPEL MAGIC", "FIREBALL", "FLAMING ARROW", "HASTE", "HOLD PERSON", "HOLD UNDEAD", "LIGHTNING BOLT", "MINUTE METEORS", "MINOR MALISON", "MONSTER SUMMONING I", "PROTECTION FROM MISSILES", "SLOW", "SPIRIT ARMOR", "VAMPIRIC TOUCH", "CHARM MONSTER", "CONFUSION", "EVARD'S BLACK TENTACLES", "FEAR", "FIRE SHIELD", "ICE STORM", "IMPROVED INVISIBILITY", "M GLOBE OF INVULNERABILITY", "MINOR SPELL TURNING", "MONSTER SUMMONING II", "RAINBOW PATTERN", "SOLID FOG", "STONE SKIN", "PEBBLE TO BOULDER", "WALL OF FIRE", "WALL OF ICE", "CHAOS", "CLOUD KILL", "CONE OF COLD", "CONJURE ELEMENTAL", "DISMISSAL", "DOMINATE", "FEEBLE MIND", "HOLD MONSTER", "LOWER RESISTANCE", "MONSTER SUMMONING III", "SUMMON SHADOW", "WALL OF FORCE", "WALL OF STONE", "BLESS", "CURSE", "CURE LIGHT WOUNDS", "CAUSE LIGHT WOUNDS", "ENTANGLE", "INVISIBLE TO UNDEAD", "MAGIC STONE", "PROTECTION FROM EVIL", "REMOVE FEAR", "CAUSE FEAR", "SHILLELAGH", "AID", "BARKSKIN", "CHARM MAMMAL", "DUSTDEVIL", "FIND TRAPS", "FLAME BLADE", "HOLD PERSON", "RESIST FIRE", "RESIST COLD", "SPIRITUAL HAMMER", "CONJURE AIR ELEMENTAL", "CONJURE FIRE ELEMENTAL", "CONJURE EARTH ELEMENTAL", "CONJURE WATER ELEMENTAL", "CURE BLINDNESS", "CAUSE BLINDNESS", "CURE DISEASE", "CAUSE DISEASE", "DISPEL MAGIC", "MAGIC VESTMENT", "NEGATIVE PLANE PROTECTION", "PRAYER", "PROTECTION FROM FIRE", "REMOVE CURSE", "BESTOW CURSE", "REMOVE PARALYSIS", "SUMMON INSECTS", "ABJURE", "BLOOD FLOW", "CLOAK OF BRAVERY", "CLOAK OF FEAR", "CONDENSE", "CURE SERIOUS WOUNDS", "CAUSE SERIOUS WOUNDS", "DEHYDRATE", "DUST CLOUD", "FOCUS HEAT", "FREE ACTION", "NEUTRALIZE POISON", "POISON", "PRODUCE FIRE", "PROTECTION FROM EVIL 10", "PROTECTION FROM LIGHTNING", "CONJURE GREATER AIR ELEMENTAL", "CONJURE GREATER FIRE ELEMENTAL", "CONJURE GREATER EARTH ELEMENTAL", "CONJURE GREATER WATER ELEMENTAL", "CURE CRITICAL WOUNDS", "CAUSE CRITICAL WOUNDS", "DEFLECTION", "DISPEL EVIL", "FLAME STRIKE", "INSECT PLAGUE", "IRON SKIN", "QUICKSAND", "RAISE DEAD", "SLAY LIVING", "WALL OF FIRE", "DETONATE", "DISINTEGRATE", "PROJECT FORCE", "BALLISTIC ATTACK", "CONTROL BODY", "INERTIAL BARRIER", "ANIMAL AFFINITY", "ENERGY CONTROL", "LIFE DRAIN", "ABSORB DISEASE", "ADRENALIN CONTROL", "BIOFEEDBACK", "BODY WEAPONRY", "CELLULAR ADJUSTMENT", "DISPLACEMENT", "ENHANCED STRENGTH", "FLESH ARMOR", "GRAFT WEAPON", "LEND HEALTH", "SHARE STRENGTH", "DOMINATION", "MASS DOMINATION", "PSYCHIC CRUSH", "SUPERIOR INVISIBILITY", "TOWER OF IRON WILL", "EGO WHIP", "ID INSINUATION", "INTELLECT FORTRESS", "MENTAL BARRIER", "PSIONIC MIND BAR", "MIND BLANK", "PSIONIC BLAST", "SYNAPTIC STATIC", "THOUGHT SHIELD", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "TURN UNDEAD", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "DNE", "TURN UNDEAD" };
-
-/*
-typedef struct damage_info_s {
-    uint8_t plus      : 5;
-    uint8_t dice_plus : 3;
-    uint8_t div       : 3;
-    uint8_t dice      : 5;
-    uint8_t sides     : 4;
-    uint8_t level     : 4;
-    uint8_t savable   : 1;
-    int8_t save_mod   : 4;
-    uint8_t save_type : 3;
-} __attribute__ ((__packed__)) damage_info_t;
-
-typedef struct power_info_s {
-    uint8_t data0;
-    int16_t range;
-    uint8_t range_per_level;
-    uint8_t dur;
-    uint16_t dur_per_level;
-    int16_t dur_multiplier;
-    uint16_t area;
-    uint8_t area_per_level;
-    uint8_t target;
-    int16_t cast;
-    uint8_t cast_sound;
-    int8_t thrown;
-    uint16_t special;
-    uint8_t thrown_sound;
-    int16_t hit;
-    uint8_t hit_sound;
-    int8_t aoe_id;
-    uint8_t data1;
-    int8_t effect;
-    uint16_t effect_type;
-    damage_info_t damage;
-
-} __attribute__ ((__packed__)) power_info_t;
-
-typedef struct power_entry_s {
-    power_info_t info;
-    char name[32];
-    char name2[9];
-} __attribute__ ((__packed__)) power_entry_t;
-*/
 
 static int psi, wiz, pri, innate;
 static char type[64];
@@ -780,9 +724,9 @@ static void generate_activate(power_entry_t pw, char *name, FILE *file) {
     
     if (psi >= 0) {
     } else if (wiz >= 0) {
-        fprintf(file, "    return entity_has_wizard_slot(power_level);\n");
+        fprintf(file, "    return entity_has_wizard_slot(source->entity, power_level);\n");
     } else if (pri >= 0) {
-        fprintf(file, "    return entity_has_priest_slot(power_level);\n");
+        fprintf(file, "    return entity_has_priest_slot(source->entity, power_level);\n");
     } else if (psi >= 0) {
         fprintf(file, "    NEED TO DO PSI CALC!\n");
     } else if (innate >= 0) {
@@ -800,9 +744,9 @@ static void generate_pay(power_entry_t pw, char *name, FILE *file) {
     
     if (psi >= 0) {
     } else if (wiz >= 0) {
-        fprintf(file, "    return entity_take_wizard_slot(power_level);\n");
+        fprintf(file, "    return entity_take_wizard_slot(source->entity, power_level);\n");
     } else if (pri >= 0) {
-        fprintf(file, "    return entity_take_priest_slot(power_level);\n");
+        fprintf(file, "    return entity_take_priest_slot(source->entity, power_level);\n");
     } else if (psi >= 0) {
         fprintf(file, "    NEED TO DO PSI CALC!\n");
     } else if (innate >= 0) {
@@ -814,14 +758,94 @@ static void generate_pay(power_entry_t pw, char *name, FILE *file) {
     fprintf(file, "}\n");
 }
 
+const char *effect_names[] = {
+    "EFFECT_POISON",
+    "EFFECT_FIRE",
+    "EFFECT_COLD",
+    "EFFECT_BLUNT",
+    "EFFECT_CUTTING",
+    "EFFECT_POINTED",
+    "EFFECT_ACID",
+    "EFFECT_ELECTRIC",
+    "EFFECT_DRAINING",
+    "EFFECT_MAGIC",
+    "EFFECT_MENTAL",
+    "EFFECT_DEATH",
+    "EFFECT_PLUS1",
+    "EFFECT_PLUS2",
+    "EFFECT_METAL",
+    "EFFECT_OVER2",
+};
+
 static void generate_apply(power_entry_t pw, char *name, FILE *file) {
-    fprintf(file, "\nstatic int %s_%s_apply        (power_instance_t *source, entity_t *entity) {\n", type, name);
-    fprintf(file, "    if (!source || !source->entity) { return 0;}\n");
+    fprintf(file, "\nstatic void %s_%s_apply        (power_instance_t *source, entity_t *entity) {\n", type, name);
+    fprintf(file, "    if (!source || !entity) { return; }\n");
+    fprintf(file, "    size_t num_dice = 0, mod = 0, damage = 0;\n");
+    fprintf(file, "    uint64_t effect_type = 0;\n");
+    fprintf(file, "    int caster_level = (source->entity) ? entity_get_%s_level(source->entity)\n", type);
+    fprintf(file, "            : item_get_%s_level(source->item);\n\n", type);
     
-    if (psi >= 0) {
-    } else if (wiz >= 0) {
-    } else if (pri >= 0) {
+    fprintf(file, "    num_dice = ");
+    if (pw.info.damage.div > 1) {
+        fprintf(file, "(%d * ((%d + caster_level) / %d) + %d)",
+                pw.info.damage.level, pw.info.damage.dice_plus, pw.info.damage.div, pw.info.damage.dice);
     } else {
+        if (pw.info.damage.dice_plus) {
+            if (pw.info.damage.div == 1) {
+                fprintf(file, "(%d * caster_level + %d)",
+                        pw.info.damage.dice_plus, pw.info.damage.dice);
+            } else {
+                fprintf(file, "%d", pw.info.damage.dice);
+            }
+        } else {
+            if (pw.info.damage.dice > 0) {
+                fprintf(file, "%d", pw.info.damage.dice);
+            } else {
+                fprintf(file, "0");
+            }
+        }
+    }
+    fprintf(file, ";\n");
+
+    fprintf(file, "    mod = ");
+    if (pw.info.damage.plus) {
+        if (pw.info.damage.div > 1) {
+            fprintf(file, " %d * ((%d + caster_level) / %d)",
+                    pw.info.damage.level, pw.info.damage.plus, pw.info.damage.div);
+        } else {
+            if (pw.info.damage.div == 1) {
+                fprintf(file , "(%d + %d) * caster_level",
+                        pw.info.damage.level, pw.info.damage.plus);
+            } else {
+                fprintf(file, "%d", pw.info.damage.plus);
+            }
+        }
+    } else if (pw.info.damage.div == 1) {
+        if (pw.info.damage.level) {
+            fprintf(file, "(%d + %d) * caster_level",
+                pw.info.damage.level, pw.info.damage.div);
+        } else {
+            fprintf(file, "%d * caster_level", pw.info.damage.div);
+        }
+    } else {
+        fprintf(file, "0");
+    }
+    fprintf(file, ";\n");
+
+    fprintf(file, "    damage = dnd2e_dice_roll(num_dice, %d) + mod;\n", pw.info.damage.sides);
+    fprintf(file, "    effect_type = 0");
+
+    int is_first = 1;
+    for (int i = 0; i < 16; i++) {
+        if (pw.info.effect_type & (1<<i)) {
+            fprintf(file, " | %s", effect_names[i]);
+            is_first = 0;
+        }
+    }
+    fprintf(file, ";\n");
+
+    if (pw.info.damage.sides > 0) {
+        fprintf(file, "    effect_apply_damage(entity, damage, effect_type);\n");
     }
 
     fprintf(file, "}\n");
@@ -837,6 +861,50 @@ static void generate_affect(power_entry_t pw, char *name, FILE *file) {
     } else {
     }
 
+    fprintf(file, "    return 0; // Doesn't affect powers.\n");
+
+    fprintf(file, "}\n");
+}
+
+
+static void generate_update(power_entry_t pw, char *name, FILE *file) {
+    fprintf(file, "\nstatic int %s_%s_update       (power_t *power, power_instance_t *source) {\n", type, name);
+    fprintf(file, "    if (!power || ! source) { return 0;}\n");
+    fprintf(file, "    entity_t *entity = source->entity;\n");
+    //fprintf(file, "    int made_save = 0;\n");
+    //fprintf(file, "    item_t *item = source->item;\n\n");
+    fprintf(file, "\n");
+
+    fprintf(file, "    if (entity) {\n");
+    fprintf(file, "        power->range = %d",
+        (dsopw.info.range) < 0
+        ? 0
+        : dsopw.info.range
+        );
+    if (pw.info.range_per_level > 0) {
+        fprintf(file, " + (%d * entity_get_%s_level(entity))",
+            dsopw.info.range_per_level, type);
+    }
+        //snprintf(range_buf, 255, "%d feet + %d per level", pw.info.range, pw.info.range_per_level);
+    fprintf(file, ";\n");
+    fprintf(file, "        power->aoe = %d",
+        (dsopw.info.area) < 0
+        ? 0
+        : dsopw.info.area
+        );
+    if (pw.info.area_per_level > 0) {
+        fprintf(file, " + (%d * entity_get_%s_level(entity))",
+            dsopw.info.area_per_level, type);
+    }
+        //snprintf(range_buf, 255, "%d feet + %d per level", pw.info.range, pw.info.range_per_level);
+    fprintf(file, ";\n");
+    fprintf(file, "    }\n\n");
+
+    if (pw.info.damage.savable) {
+        //pw.info.damage.save_type
+    }
+
+    fprintf(file, "    return 1;\n");
     fprintf(file, "}\n");
 }
 
@@ -849,35 +917,55 @@ static char* get_target_shape(power_entry_t pw) {
         case 4: return "TARGET_ENEMY";
         case 5: return "TARGET_ANY";
         case 6: return "TARGET_CONE";
-        //case 7: return "Self";
-        //case 8: return "Two?";
+        case 7: return "TARGET_SELF";
+        case 8: return "TARGET_MULTI";
         default:break;
     }
     return "ERROR";
 }
 
 static void generate_setup(power_entry_t pw, char *name, FILE *file) {
-    fprintf(file, "\nextern void %s_%s_setup  (power_t *spell) {\n", type, name);
-    fprintf(file, "    spell->name                 = \"%s\";\n", pw.name);
-    fprintf(file, "    spell->description          = %s_read_description(%d);\n", type, index);
-    fprintf(file, "    spell->range                = -99999;\n");
-    fprintf(file, "    spell->aoe                  = -99999;\n");
-    fprintf(file, "    spell->shape                = %s;\n", get_target_shape(pw));
-    fprintf(file, "    spell->cast_sound           = select_by_game(%d, %d, %d);\n",
+    fprintf(file, "\nextern void %s_%s_setup  (power_t *power) {\n", type, name);
+    fprintf(file, "    power->name                 = \"%s\";\n", pw.name);
+    fprintf(file, "    power->description          = spin_read_description(select_by_game(%d, %d, %d));\n",
+            (int)ds1_pos,
+            (dso_pos < MAX_DSO_ICONS)
+            ? dso_icons[dso_pos].spin
+            : -1,
+            (dso_pos < MAX_DSO_ICONS)
+            ? dso_icons[dso_pos].spin
+            : -1);
+    fprintf(file, "    power->range                = -99999;\n");
+    fprintf(file, "    power->aoe                  = -99999;\n");
+    fprintf(file, "    power->shape                = %s;\n", get_target_shape(pw));
+    fprintf(file, "    power->cast_sound           = select_by_game(%d, %d, %d);\n",
             ds1pw.cast_sound, ds2pw.info.cast_sound, dsopw.info.cast_sound);
-    fprintf(file, "    spell->thrown_sound         = select_by_game(%d, %d, %d);\n",
+    fprintf(file, "    power->thrown_sound         = select_by_game(%d, %d, %d);\n",
             ds1pw.thrown_sound, ds2pw.info.thrown_sound, dsopw.info.thrown_sound);
-    fprintf(file, "    spell->hit_sound            = select_by_game(%d, %d, %d);\n",
+    fprintf(file, "    power->hit_sound            = select_by_game(%d, %d, %d);\n",
             ds1pw.hit_sound, ds2pw.info.hit_sound, dsopw.info.hit_sound);
-    fprintf(file, "    spell->actions.can_activate = %s_%s_can_activate;\n", type, name);
-    fprintf(file, "    spell->actions.pay          = %s_%s_pay;\n", type, name);
-    fprintf(file, "    spell->actions.apply        = %s_%s_apply;\n", type, name);
-    fprintf(file, "    spell->actions.still_active = %s_%s_still_active;\n", type, name);
-    fprintf(file, "    spell->actions.affect_power = %s_%s_affect_power;\n", type, name);
-    fprintf(file, "    spells_set_icon(spell, 21000);\n");
-    fprintf(file, "    spells_set_thrown(spell, 2315);\n");
-    //fprintf(file, "    spells_set_hit(spell, 2314);\n");
-    fprintf(file, "    spells_set_hit(spell, select_by_game(%d, %d, %d));\n",
+    fprintf(file, "    power->actions.can_activate = %s_%s_can_activate;\n", type, name);
+    fprintf(file, "    power->actions.pay          = %s_%s_pay;\n", type, name);
+    fprintf(file, "    power->actions.apply        = %s_%s_apply;\n", type, name);
+    fprintf(file, "    power->actions.affect_power = %s_%s_affect_power;\n", type, name);
+    fprintf(file, "    powers_set_icon(power, select_by_game(%d, %d, %d));\n",
+            (dso_pos < MAX_DSO_ICONS) 
+            ? ds1_icons[dso_pos].icon
+            : -1,
+            (dso_pos < MAX_DSO_ICONS)
+            ? dso_icons[dso_pos].icon
+            : -1,
+            (dso_pos < MAX_DSO_ICONS)
+            ? dso_icons[dso_pos].icon
+            : -1);
+    fprintf(file, "    powers_set_cast(power, select_by_game(%d, %d, %d)); // OJFF\n",
+            ds1pw.cast, ds2pw.info.cast, dsopw.info.cast);
+    fprintf(file, "    powers_set_thrown(power, select_by_game(%d, %d, %d)); // OJFF.\n",
+            8100 + ds1pw.thrown,
+            8100 + ds2pw.info.thrown,
+            8100 + dsopw.info.thrown
+            );
+    fprintf(file, "    powers_set_hit(power, select_by_game(%d, %d, %d)); // OJFF\n",
             ds1pw.hit, ds2pw.info.hit, dsopw.info.hit);
     fprintf(file, "}\n");
 }
@@ -929,8 +1017,12 @@ static void generate_power(power_entry_t pw) {
 
     fprintf(file, "/* This file is auto-generated. */\n");
     fprintf(file, "#ifndef %s_%s_POWER_H\n", type, name);
-    fprintf(file, "#define %s_%s_POWER_H\n", type, name);
-    fprintf(file, "\n#include \"../spells.h\"\n");
+    fprintf(file, "#define %s_%s_POWER_H\n\n", type, name);
+    fprintf(file, "#include <stdlib.h>\n");
+    fprintf(file, "#include \"../effect.h\"\n");
+    fprintf(file, "#include \"../entity.h\"\n");
+    fprintf(file, "#include \"../rules.h\"\n");
+    fprintf(file, "#include \"../wizard.h\"\n");
 
     for (int i = 0; i < 64 && name[i]; i++) {
         name[i] = tolower(name[i]);
@@ -943,8 +1035,9 @@ static void generate_power(power_entry_t pw) {
     generate_pay(pw, name, file);
     generate_apply(pw, name, file);
     generate_affect(pw, name, file);
+    generate_update(pw, name, file);
     generate_setup(pw, name, file);
 
-    fprintf(file, "#endif\n");
+    fprintf(file, "\n#endif\n");
     fclose(file);
 };

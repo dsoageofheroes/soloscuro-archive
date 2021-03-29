@@ -1,5 +1,5 @@
-#ifndef SPELL_H
-#define SPELL_H
+#ifndef WIZARD_H
+#define WIZARD_H
 
 #include <stdint.h>
 #include "powers.h"
@@ -219,9 +219,6 @@ typedef struct ssi_spell_list_s {
     uint8_t spells[MAX_SPELLS/8];
 } ssi_spell_list_t;
 
-void spell_init();
-void spell_cleanup();
-
 void spell_get_psionic_name(uint8_t psi, char name[32]);
 void spell_get_wizard_name(uint8_t spell, char name[32]);
 void spell_get_cleric_name(uint8_t spell, char name[32]);
@@ -235,5 +232,8 @@ int spell_has_spell(ssi_spell_list_t *psi, uint16_t spell);
 
 // NEW INTERFACE
 //extern spell_t* spell_get_spell(const uint16_t id);
+extern void spells_init();
+extern void spells_cleanup();
+extern char* spells_read_description(const uint16_t id);
 
 #endif

@@ -2,7 +2,7 @@
 #define DS_COMBAT_H
 
 #include "ds-object.h"
-#include "spells.h"
+#include "wizard.h"
 #include "entity.h"
 #include "region.h"
 #include "entity-list.h"

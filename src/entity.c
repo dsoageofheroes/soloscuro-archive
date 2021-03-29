@@ -274,3 +274,34 @@ void entity_free(entity_t *dude) {
 
     free(dude); // Dude has got to be free!
 }
+
+// TODO: IMPELMENT!!!!
+extern int entity_has_wizard_slot(entity_t *entity, const int slot) {
+    if (!entity) { return 0; }
+    return 0;
+}
+
+extern int entity_has_priest_slot(entity_t *entity, const int slot) {
+    if (!entity) { return 0; }
+    return 0;
+}
+
+extern int entity_take_wizard_slot(entity_t *entity, const int slot) {
+    if (!entity) { return 0; }
+    return 0;
+}
+
+extern int entity_take_priest_slot(entity_t *entity, const int slot) {
+    if (!entity) { return 0; }
+    return 0;
+}
+
+extern int entity_get_wizard_level(entity_t *entity) {
+    if (!entity) { return 0; }
+    return 0;
+}
+
+extern int entity_get_priest_level(entity_t *entity) {
+    if (!entity) { return 0; }
+    return 0;
+}

@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "spells.h"
+#include "wizard.h"
 #include "entity.h"
 #include "ds-object.h"
 

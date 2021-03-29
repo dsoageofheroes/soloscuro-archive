@@ -128,7 +128,10 @@ extern void item_free(item_t *item);
 extern item_t* item_dup(item_t *item);
 extern void item_load_from(item_t *item, const char *data);
 
+extern int item_get_wizard_level(item_t *item);
+extern int item_get_priest_level(item_t *item);
+
 // DS1 specific functions
-void item_convert_from_ds1(item_t *item, const ds1_item_t *ds1_item);
+extern void item_convert_from_ds1(item_t *item, const ds1_item_t *ds1_item);
 
 #endif

@@ -16,13 +16,14 @@ enum target_shape {
 };
 
 struct power_instance_s;
+struct power_s;
 
 typedef struct power_actions_s {
-    int (*can_activate) (struct power_instance_s *source);
-    int (*pay)          (struct power_instance_s *source);
-    int (*apply)        (struct power_instance_s *source, entity_t *target);
-    int (*still_active) (struct power_instance_s *source, const int rounds_past);
-    int (*affect_power) (struct power_instance_s *target);
+    int  (*can_activate) (struct power_instance_s *source, const int16_t power_level);
+    int  (*pay)          (struct power_instance_s *source, const int16_t power_level);
+    void (*apply)        (struct power_instance_s *source, entity_t *target);
+    int  (*affect_power) (struct power_instance_s *target);
+    int  (*update)       (struct power_instance_s *source, struct power_s *power);
 } power_actions_t;
 
 // A power is a spell, psionic, innate special ability, or charge on an item.
@@ -30,8 +31,8 @@ typedef struct power_actions_s {
 typedef struct power_s {
     char            *name;
     char            *description;
-    uint16_t        range;
-    uint16_t        aoe;
+    int32_t         range;
+    int32_t         aoe;
     enum            target_shape shape;
     sprite_info_t   icon;
     sprite_info_t   thrown;
@@ -63,5 +64,12 @@ typedef struct power_overlay_s {
 // Spells create a spell entity on point of impact.
 // If AOE, then many children entities are created that point to the parent/master spell entity.
 // This allows each tile/square its own trigger and the parent/master can clean up the children when the duration is over.
+
+extern void powers_set_cast(power_t *powers, const uint16_t id);
+extern void powers_set_icon(power_t *powers, const uint16_t id);
+extern void powers_set_thrown(power_t *powers, const uint16_t id);
+extern void powers_set_hit(power_t *powers, const uint16_t id);
+extern size_t select_by_game(const size_t ds1, const size_t ds2, const size_t dso);
+extern char* spin_read_description(const uint16_t id);
 
 #endif

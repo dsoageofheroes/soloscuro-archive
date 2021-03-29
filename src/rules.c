@@ -1105,6 +1105,16 @@ int16_t dnd2e_get_thac0(entity_t *pc, int slot) {
 }
 // END THAC0
 
+extern int16_t dnd2e_dice_roll(const uint16_t num, const uint16_t sides) {
+    int16_t sum = 0;
+
+    for (uint16_t i = 0; i < num; i++) {
+        sum += 1 + (rand() % sides);
+    }
+
+    return sum;
+}
+
 // Missle modification is in original DS engine, so is d10. Although DS was highest goes first, we are lowest.
 // TODO: Add mods for race, spell efects, etc...
 int dnd2e_roll_initiative(entity_t *entity) {

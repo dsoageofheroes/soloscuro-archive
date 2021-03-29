@@ -6,7 +6,7 @@
 #include "../src/gff-map.h"
 #include "../src/gff-xmi.h"
 #include "../src/gff-image.h"
-#include "../src/spells.h"
+#include "../src/wizard.h"
 
 #define XMIDI_CONVERT_NOCONVERSION      0x00
 #define XMIDI_CONVERT_MT32_TO_GM        0x01

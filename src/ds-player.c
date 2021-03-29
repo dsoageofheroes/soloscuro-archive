@@ -5,7 +5,7 @@
 #include "gff.h"
 #include "ds-player.h"
 #include "ds-item.h"
-#include "spells.h"
+#include "wizard.h"
 #include "rules.h"
 
 static entity_t *players[MAX_PCS] = {NULL, NULL, NULL, NULL};
