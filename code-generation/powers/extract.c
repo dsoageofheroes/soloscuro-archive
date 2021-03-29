@@ -538,6 +538,45 @@ const char *ai[]  = {
         "effect all"
 };
 
+static void generate_power_csv() {
+        printf("%s, %s", dsopw.name, dsopw.name2);
+        printf(", %s", get_range(dsopw));
+        printf(", %s", get_duration(dsopw));
+        printf(", %s", get_area(dsopw));
+        printf(", %s", get_target());
+        printf(", %s", get_cast(dsopw));
+        printf(", %s", get_special());
+        printf(", %s", get_thrown());
+        printf(", %s", get_hit());
+        printf(", %s", get_aoe_id());
+        printf(", %s", get_effect());
+        printf(", %s", get_effect_type());
+
+        if (!ds1_pos) {
+            printf(", ---");
+        } else {
+            printf(", %s", get_damage(ds1pw.damage));
+        }
+        printf(", %s", get_damage(ds2pw.info.damage));
+        printf(", %s", get_damage(dsopw.info.damage));
+        printf(", %s", get_save());
+
+        if (!ds1_pos) {
+            printf(", ---");
+        } else {
+            printf(", %s %d times",
+                ai[ds1pw.data0 & 0x03],
+                ds1pw.data0 >> 2);
+        }
+        printf(", %s %d, %s %d times",
+                ai[ds2pw.info.data0 & 0x03],
+                ds2pw.info.data0 >> 2,
+                ai[dsopw.info.data0 & 0x03],
+                dsopw.info.data0 >> 2
+              );
+        printf("\n");
+}
+
 int main() {
     ds1_file = fopen("dsun1.dat", "rb");
     ds2_file = fopen("dsun2.dat", "rb");
@@ -598,46 +637,47 @@ int main() {
             ds1pw = dsopw.info;
             ds1_pos = 9999;
         }
-        printf("%s, %s", dsopw.name, dsopw.name2);
-        printf(", %s", get_range(dsopw));
-        printf(", %s", get_duration(dsopw));
-        printf(", %s", get_area(dsopw));
-        printf(", %s", get_target());
-        printf(", %s", get_cast(dsopw));
-        printf(", %s", get_special());
-        printf(", %s", get_thrown());
-        printf(", %s", get_hit());
-        printf(", %s", get_aoe_id());
-        printf(", %s", get_effect());
-        printf(", %s", get_effect_type());
-
-        if (!ds1_pos) {
-            printf(", ---");
-        } else {
-            printf(", %s", get_damage(ds1pw.damage));
-        }
-        printf(", %s", get_damage(ds2pw.info.damage));
-        printf(", %s", get_damage(dsopw.info.damage));
-        printf(", %s", get_save());
-
-        if (!ds1_pos) {
-            printf(", ---");
-        } else {
-            printf(", %s %d times",
-                ai[ds1pw.data0 & 0x03],
-                ds1pw.data0 >> 2);
-        }
-        printf(", %s %d, %s %d times",
-                ai[ds2pw.info.data0 & 0x03],
-                ds2pw.info.data0 >> 2,
-                ai[dsopw.info.data0 & 0x03],
-                dsopw.info.data0 >> 2
-              );
-        printf("\n");
-
+        generate_power_csv();
         generate_power(dsopw);
         dso_pos++;
     }
+
+    // Manually generate the 4 powers left over from DS1:
+    ds1pw = ds1powers[35];
+    dso_pos = 345;
+    dsopw.info = ds1pw;
+    strcpy(dsopw.name, "MONSTER SUMMONING I");
+    strcpy(dsopw.name2, "MONSUMM1");
+    ds2pw = dsopw;
+    generate_power_csv();
+    generate_power(dsopw);
+
+    ds1pw = ds1powers[49];
+    dso_pos = 346;
+    dsopw.info = ds1pw;
+    strcpy(dsopw.name, "MONSTER SUMMONING II");
+    strcpy(dsopw.name2, "MONSUMM2");
+    ds2pw = dsopw;
+    generate_power_csv();
+    generate_power(dsopw);
+
+    ds1pw = ds1powers[65];
+    dso_pos = 347;
+    dsopw.info = ds1pw;
+    strcpy(dsopw.name, "MONSTER SUMMONING III");
+    strcpy(dsopw.name2, "MONSUMM2");
+    ds2pw = dsopw;
+    generate_power_csv();
+    generate_power(dsopw);
+
+    ds1pw = ds1powers[65];
+    dso_pos = 348;
+    dsopw.info = ds1pw;
+    strcpy(dsopw.name, "EVARD'S BLACK TENTACLES");
+    strcpy(dsopw.name2, "EVARDSBT");
+    ds2pw = dsopw;
+    generate_power_csv();
+    generate_power(dsopw);
 
     fclose(ds1_file);
     fclose(ds2_file);
@@ -928,7 +968,9 @@ static void generate_setup(power_entry_t pw, char *name, FILE *file) {
     fprintf(file, "\nextern void %s_%s_setup  (power_t *power) {\n", type, name);
     fprintf(file, "    power->name                 = \"%s\";\n", pw.name);
     fprintf(file, "    power->description          = spin_read_description(select_by_game(%d, %d, %d));\n",
-            (int)ds1_pos,
+            (dso_pos < MAX_DSO_ICONS)
+            ? ds1_icons[dso_pos].spin
+            : -1,
             (dso_pos < MAX_DSO_ICONS)
             ? dso_icons[dso_pos].spin
             : -1,

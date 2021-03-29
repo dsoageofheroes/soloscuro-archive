@@ -5,7 +5,7 @@ struct icon_spin_s {
     int spin;
 };
 
-#define MAX_DSO_ICONS (269)
+#define MAX_DSO_ICONS (350)
 const struct icon_spin_s dso_icons[] = {
     { 21000, 1 }, 
     { 21001, 2 }, 
@@ -276,6 +276,87 @@ const struct icon_spin_s dso_icons[] = {
     { 21266, 267 }, 
     { 21267, 268 }, 
     { 21268, 269 }, 
+    { -1, -1 }, // 270
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 }, // 280
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 }, // 290
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 }, // 300
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 }, // 310
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 }, // 320
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 }, // 330
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 }, // 340
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },  // index 345: DS1 start
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 }, // 350
 };
 
 const struct icon_spin_s ds1_icons[] = {
@@ -548,11 +629,92 @@ const struct icon_spin_s ds1_icons[] = {
     { 3031, 267 }, 
     { 3032, 268 }, 
     { 3033, 269 }, 
+    { -1, -1 }, // 270
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 }, // 280
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 }, // 290
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 }, // 300
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 }, // 310
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 }, // 320
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 }, // 330
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 }, // 340
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { 4000, 36 }, // index 345: DS1 start Monster Summoning I
+    { 4001, 50 }, // Monster Summoning II
+    { 4002, 66 }, // Monster Summoning III
+    { 4003, 43 }, // Evard's Black Tentacles
+    { 4004, -1 }, // 350
 };
 
 static const char *priest_spells[] = { "BLESS", "CURSE", "CURLTWND", "CASLTWND", "ENTANGLE", "INVISUND", "MAGSTONE", "PROTEVIL", "REMFEAR", "CAUSFEAR", "SANCTURY", "SHILELAG", "AID", "ALTRUISM", "BARKSKIN", "CHNSTNCH", "CHRMPRML", "DUSTDEVL", "FNDTRAPS", "FLMBLADE", "HESITATN", "HLDPERSP", "MUSICSPH", "RESTFIRE", "RESTCOLD", "SILENC15", "SPRHAMER", "STELBRTH", "AIR_LENS", "BRMBSTAF", "CRTSMOKE", "CURBLIDF", "CASBLIDF", "CURDISES", "CASDISES", "DISMAGCP", "HEATXHST", "MAGCVEST", "NGPLNPRO", "PLNTGROW", "PRAYER", "PROTFIRE", "REMCURSE", "BSTCURSE", "REMPARAL", "SANDSPRA", "SPIKEGRO", "STONESHA", "STRNGTHO", "SUMINSCT", "ABJURE", "BLOODFLW", "CLKBRAVY", "CLKOFEAR", "CONDENSE", "CURSRWND", "CASSRWND", "DEHYDRAT", "DUSTCLOD", "FOCSHEAT", "FREEACT", "LUNGWATR", "MAGMABLD", "NEUTPOIS", "POISON", "PRODFIRE", "QUCHFIRE", "PROEVL10", "PROLIGHT", "PROWEATH", "INTENSFW", "RETEARTH", "SOOTHE", "THRNBIND", "CONAIRE", "CONFIREE", "CONEARHE", "CONWATRE", "CRUMBLE", "CURECRIT", "CAUSCRIT", "DEFLECTN", "DISPEVIL", "FLMSTRIK", "INSPLAGE", "IRONSKIN", "RAINBOW", "QUIKSAND", "RASEDEAD", "SLAYLIVG", "SANDSTOR", "SPIKSTON", "WALLFIRE", "BLADEBAR", "FIRESEED", "HEAL", "HARM", "HEARTSEE", "SUNSTROK", "WALTHORN", "WATOLIFE", "CONFUSIN", "CONGEL_A", "CONGEL_F", "CONGEL_E", "CONGEL_W", "CREEPING", "FIRESTOR", "GLASSTOR", "RESTORE", "ENERGYDR", "SCIROCCO", "SUNRAY", "SYM_HOPL", "SYM_PAIN", "SYM_PERS", "REV_WIND", "DISRUPTN", "INSCHOST", "RIFTPR", NULL };
 
-static const char *wizard_spells[] = { "ARMOR", "BURNINGH", "CHARMPER", "CHILL", "COLORSPR", "ENLARGE", "GAZEREFL", "GREASE", "MAGICMIS", "SHIELD", "SHOKGRSP", "WALLOFOG", "BLUR", "DETINVIS", "FLMSPHER", "FOGCLOUD", "GLITTERD", "INVISBEL", "ACIDAROW", "MIRRORIM", "PROPARAL", "SCARE", "STINKCLD", "STRENGTH", "WEB", "BLINK", "DISWIZRD", "FIREBALL", "FLMARROW", "HASTE", "HOLDWIZ", "HLDUNDED", "LITNBOLT", "MINMETOR", "MINMALIS", "PRONMMIS", "SLOW", "SPIRARMR", "VAMTOUCH", "CHARMMON", "CNFUSWIZ", "FEAR", "FIRESHLD", "ICESTORM", "IMPVISIB", "MGBINVUL", "MINSPTUR", "ORSPHERE", "PSIDAMPR", "RAINBOWP", "SOLIDFOG", "SSTRAND", "STONSKIN", "PEBTOBOD", "WALLFIRW", "WALLOICE", "CHAOS", "CLODKILL", "CNOFCOLD", "CONELEMN", "DISMISAL", "DOMINATE", "FEEBLEMD", "HLDMONST", "LOWRESMG", "SUMSHADW", "WALLFORC", "WALLSTON", "ANTIMAGS", "CHAINLIT", "DEATHFOG", "DEATHSPL", "DISNTWIZ", "GLOBEINV", "IMPHASTE", "IMPSLOW", "MONSUMM4", "REINCARN", "STNTFLSH", "FLSHTSTN", "TNSRTRAN", "CGELMENT", "CNUNDEAD", "DELAYFBA", "FINGEROD", "FORCAGE", "MASINVSB", "MONSUMM5", "MORDSWRD", "POWSTUN", "PRISPRAY", "SPELTURN", "BIGBYFST", "INCNDCLD", "MASCHARM", "MINDBLKW", "MONSUMM6", "OTSPHERE", "OTTODANC", "POWBLIND", "PRISWALL", "SSPELLIM", "BIGBYHND", "CRYSBRTL", "LVLDRAIN", "METEORSW", "MONSUMM7", "MORDDISJ", "POWKILL", "PRISPHER", "TIMESTOP", "DOMEINVL", "MAGPLAGU", "RIFT", "WALLASH", NULL };
+static const char *wizard_spells[] = { "ARMOR", "BURNINGH", "CHARMPER", "CHILL", "COLORSPR", "ENLARGE", "GAZEREFL", "GREASE", "MAGICMIS", "SHIELD", "SHOKGRSP", "WALLOFOG", "BLUR", "DETINVIS", "FLMSPHER", "FOGCLOUD", "GLITTERD", "INVISBEL", "ACIDAROW", "MIRRORIM", "PROPARAL", "SCARE", "STINKCLD", "STRENGTH", "WEB", "BLINK", "DISWIZRD", "FIREBALL", "FLMARROW", "HASTE", "HOLDWIZ", "HLDUNDED", "LITNBOLT", "MINMETOR", "MINMALIS", "PRONMMIS", "SLOW", "SPIRARMR", "VAMTOUCH", "CHARMMON", "CNFUSWIZ", "FEAR", "FIRESHLD", "ICESTORM", "IMPVISIB", "MGBINVUL", "MINSPTUR", "ORSPHERE", "PSIDAMPR", "RAINBOWP", "SOLIDFOG", "SSTRAND", "STONSKIN", "PEBTOBOD", "WALLFIRW", "WALLOICE", "CHAOS", "CLODKILL", "CNOFCOLD", "CONELEMN", "DISMISAL", "DOMINATE", "FEEBLEMD", "HLDMONST", "LOWRESMG", "SUMSHADW", "WALLFORC", "WALLSTON", "ANTIMAGS", "CHAINLIT", "DEATHFOG", "DEATHSPL", "DISNTWIZ", "GLOBEINV", "IMPHASTE", "IMPSLOW", "MONSUMM4", "REINCARN", "STNTFLSH", "FLSHTSTN", "TNSRTRAN", "CGELMENT", "CNUNDEAD", "DELAYFBA", "FINGEROD", "FORCAGE", "MASINVSB", "MONSUMM5", "MORDSWRD", "POWSTUN", "PRISPRAY", "SPELTURN", "BIGBYFST", "INCNDCLD", "MASCHARM", "MINDBLKW", "MONSUMM6", "OTSPHERE", "OTTODANC", "POWBLIND", "PRISWALL", "SSPELLIM", "BIGBYHND", "CRYSBRTL", "LVLDRAIN", "METEORSW", "MONSUMM7", "MORDDISJ", "POWKILL", "PRISPHER", "TIMESTOP", "DOMEINVL", "MAGPLAGU", "RIFT", "WALLASH", "MONSUMM1", "MONSUMM2", "MONSUMM3", "EVARDSBT", NULL };
 
 static const char *psionics[] = { "DETONATE", "DISNTGRT", "PRJTFRCE", "BLSTCATK", "CNTLBODY", "INERTBAR", "ANMAFFIN", "ENRGECON", "LIFDRAIN", "ABSRBDIS", "ADRENCNT", "BIOFEDBK", "BODYWEAP", "CELLADG", "DISPLACE", "ENSTRENG", "FLESHARM", "GRAFWEAP", "LNDHEALH", "SHARESTR", "PSIDOMNT", "MASSDOM", "PSICRUSH", "SUPINVIS", "TWRIRONW", "EGO_WHIP", "IDINSINT", "INTELFOR", "MENTLBAR", "MIND_BAR", "MNDBLANK", "PSIBLAST", "SYNPSTAT", "THOTSHLD", NULL };
 
