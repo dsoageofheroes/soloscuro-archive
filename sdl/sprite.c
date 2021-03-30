@@ -180,11 +180,11 @@ void sprite_render(SDL_Renderer *renderer, const uint16_t sprite_id) {
     if (sprite_id == (uint16_t)SPRITE_ERROR) { return; }
     sprite_t *sprite = sprites + sprite_id;
     /*
-    printf("->%p {%d, %d, %d, %d}\n", sprite->tex[sprite->pos],
-            sprite->loc.x,
-            sprite->loc.y,
-            sprite->loc.w,
-            sprite->loc.h);
+    printf("->%p [%d] {%d, %d, %d, %d}\n", sprite->tex[sprite->pos], sprite->pos,
+            sprite->loc[sprite->pos].x,
+            sprite->loc[sprite->pos].y,
+            sprite->loc[sprite->pos].w,
+            sprite->loc[sprite->pos].h);
             */
     SDL_RenderCopy(renderer, sprite->tex[sprite->pos], NULL, (sprite->loc + sprite->pos));
 }

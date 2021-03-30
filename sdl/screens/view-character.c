@@ -131,7 +131,6 @@ void view_character_render(void *data, SDL_Renderer *renderer) {
         sprite_render(renderer, ai[i]);
         sprite_render(renderer, leader[i]);
         //sprite_render(renderer, port_background[i]);
-        sprite_render(renderer, ports[i]);
     }
 
     print_line_len(renderer, FONT_YELLOW, description, description_loc.x, description_loc.y, sizeof(description));
@@ -153,6 +152,20 @@ void view_character_render(void *data, SDL_Renderer *renderer) {
                 snprintf(buf, BUF_MAX, "Okay");
             }
             print_line_len(renderer, FONT_YELLOW, buf, xoffset + x * zoom, yoffset + (y + 16) * zoom, BUF_MAX);
+            sprite_set_frame(ports[i], 0);
+            sprite_render(renderer, ports[i]);
+            player_center(i, xoffset + x * zoom, yoffset + (y - 34) * zoom, 34 * zoom, 34 * zoom);
+            uint16_t spr = player_get_sprite(i);
+            if (sprite_geth(spr) > 30 * zoom) {
+                sprite_set_frame(spr, 0);
+                sprite_render_box(rend, spr, xoffset + (x - 34) * zoom, yoffset + (y - 34) * zoom,
+                    34 * zoom, 34 * zoom);
+            } else {
+                player_render(rend, i);
+            }
+        } else {
+            sprite_set_frame(ports[i], 2);
+            sprite_render(renderer, ports[i]);
         }
     }
 }

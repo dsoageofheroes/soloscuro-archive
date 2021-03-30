@@ -142,7 +142,7 @@ static scmd_t* get_scmd(scmd_t *current_scmd, const int xdiff, const int ydiff) 
     } else if (current_scmd == combat_get_scmd(COMBAT_SCMD_MOVE_UP)
         || current_scmd == combat_get_scmd(COMBAT_SCMD_MELEE_UP)) {
         return combat_get_scmd(COMBAT_SCMD_STAND_UP);
-    } else if (current_scmd == combat_get_scmd(COMBAT_SCMD_MOVE_UP)
+    } else if (current_scmd == combat_get_scmd(COMBAT_SCMD_MOVE_DOWN)
         || current_scmd == combat_get_scmd(COMBAT_SCMD_MELEE_DOWN)) {
         return combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
     }

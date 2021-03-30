@@ -257,7 +257,6 @@ void port_enter_combat() {
     for (int i = 0; i < 4; i++) {
         dude_t *next_player = player_get_entity(i);
         if (next_player != player_get_active() && next_player->name) { // next_player exists.
-            player_add_to_animation_list(i);
             next_player->mapx = main_player->mapx;
             next_player->mapy = main_player->mapy;
             region_move_to_nearest(region_manager_get_current(), next_player);

@@ -34,38 +34,6 @@ void ds_player_init() {
     }
 }
 
-/* Can we delete this?
-static void create_combat(entity_t *pc, char *name, ds1_combat_t *combat) {
-    combat->hp = pc->stats.hp;
-    combat->psp = pc->stats.psp;
-    combat->char_index = 0; // TODO: do we need an index?
-    combat->id = pc->ds_id;
-    combat->ready_item_index = 0; // TODO: do we need this?
-    combat->weapon_index = 0; // TODO: do we need this?
-    combat->pack_index = 0;  // TODO: do we need this?
-    memset(combat->data_block, 0x0, 8);
-    combat->special_attack = 0;
-    combat->special_defense = 0;
-    combat->icon = 0; // TODO: need to fix this eventually...
-    combat->ac = dnd2e_get_ac_pc(pc);
-    combat->move = dnd2e_get_move_pc(pc);
-    combat->status = 0; // clear
-    combat->allegiance = pc->allegiance;
-    combat->data = 0; // whatever
-    combat->thac0 = dnd2e_get_thac0_pc(pc);
-    combat->priority = 0; // clear
-    combat->flags = 0; // clear
-    combat->stats.str = pc->stats.str;
-    combat->stats.dex = pc->stats.dex;
-    combat->stats.con = pc->stats.con;
-    combat->stats.intel = pc->stats.intel;
-    combat->stats.wis = pc->stats.wis;
-    combat->stats.cha = pc->stats.cha;
-    strncpy(combat->name, name, 16);
-    combat->name[15] = '\0';
-}
-*/
-
 entity_t* player_get_entity(const int slot) {
     if (slot < 0 || slot >= MAX_PCS) { return NULL; }
     if (!players[slot]) {
