@@ -21,12 +21,13 @@ static uint16_t ai[4];
 static uint16_t leader[4];
 static uint16_t ports[4];
 static uint16_t effects, view_char, use, panel;
-static uint16_t character, inv, magic, status;
+static uint16_t character, inv, magic, powers;
 static uint16_t game_menu, game_return;
 enum {SELECT_NONE, SELECT_POPUP, SELECT_NEW, SELECT_ALS};
 static int8_t last_selection = SELECT_NONE;
 static uint8_t slot_clicked;
 static uint32_t xoffset, yoffset;
+static int mode = 0; // 0 = char, 2 = magic, 3 = status
 
 static SDL_Rect initial_locs[] = {{ 155, 28, 0, 0 }, // description
                                   { 75, 175, 0, 0 }, // message
@@ -76,7 +77,7 @@ void view_character_init(SDL_Renderer *renderer, const uint32_t _x, const uint32
     character = view_sprite_create(renderer, pal, 45 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 10100);
     inv = view_sprite_create(renderer, pal, 70 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11102);
     magic = view_sprite_create(renderer, pal, 95 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11103);
-    status = view_sprite_create(renderer, pal, 120 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11104);
+    powers = view_sprite_create(renderer, pal, 120 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11104);
     game_return = view_sprite_create(renderer, pal, 252 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 10108);
     game_menu = view_sprite_create(renderer, pal, 222 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11101);
 
@@ -120,17 +121,20 @@ void view_character_render(void *data, SDL_Renderer *renderer) {
     sprite_render(renderer, panel);
     sprite_render(renderer, view_char);
 
+    sprite_set_frame((mode == 0) ? character
+            : (mode == 2) ? magic
+            : powers, 3);
+
     sprite_render(renderer, character);
     sprite_render(renderer, inv);
     sprite_render(renderer, magic);
-    sprite_render(renderer, status);
+    sprite_render(renderer, powers);
     sprite_render(renderer, game_menu);
     sprite_render(renderer, game_return);
 
     for (int i = 0; i < 4; i++) {
         sprite_render(renderer, ai[i]);
         sprite_render(renderer, leader[i]);
-        //sprite_render(renderer, port_background[i]);
     }
 
     print_line_len(renderer, FONT_YELLOW, description, description_loc.x, description_loc.y, sizeof(description));
@@ -174,7 +178,7 @@ static int get_sprite_mouse_is_on(const uint32_t x, const uint32_t y) {
     if (sprite_in_rect(character, x, y)) { return character; }
     if (sprite_in_rect(inv, x, y)) { return inv; }
     if (sprite_in_rect(magic, x, y)) { return magic; }
-    if (sprite_in_rect(status, x, y)) { return status; }
+    if (sprite_in_rect(powers, x, y)) { return powers; }
     if (sprite_in_rect(game_menu, x, y)) { return game_menu; }
     if (sprite_in_rect(game_return, x, y)) { return game_return; }
     //if (sprite_in_rect(effects, x, y)) { return effects; }
@@ -244,7 +248,7 @@ void view_character_free() {
     sprite_free(character);
     sprite_free(inv);
     sprite_free(magic);
-    sprite_free(status);
+    sprite_free(powers);
 }
 
 void view_character_return_control () {
