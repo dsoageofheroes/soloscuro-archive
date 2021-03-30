@@ -6,6 +6,9 @@
 #include "sprite.h"
 #include "screens/narrate.h"
 #include "../src/trigger.h"
+#include "../src/entity-animation.h"
+#include "../src/port.h"
+#include "../src/region-manager.h"
 #include "../src/ds-player.h"
 #include "../src/dsl-var.h"
 #include "../src/gff-map.h"
@@ -90,6 +93,8 @@ void player_update() {
             animate_set_animation(anims + 0, combat_get_scmd(COMBAT_SCMD_STAND_UP), ticks_per_move);
         } else if (anims[0].scmd == combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_DOWN)) {
             animate_set_animation(anims + 0, combat_get_scmd(COMBAT_SCMD_STAND_DOWN), ticks_per_move);
+        } else {
+            animate_set_animation(anims + 0, combat_get_scmd(COMBAT_SCMD_STAND_DOWN), ticks_per_move);
         }
         return;
     }
@@ -106,14 +111,21 @@ void player_update() {
     //printf("Going to: (%d, %d) -> %d, %d\n", anims[0].x, anims[0].y, anims[0].destx, anims[0].desty);
 
     if (direction & PLAYER_LEFT) { 
+        //anims[0].scmd = combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_LEFT);
         animate_set_animation(anims + 0, combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_LEFT), ticks_per_move);
+        //sprite_set_frame(anims[0].spr, anims[0].scmd->bmp_idx);
     } else if (direction & PLAYER_RIGHT) {
+        //anims[0].scmd = combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_RIGHT);
         animate_set_animation(anims + 0, combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_RIGHT), ticks_per_move);
     } else if (direction & PLAYER_DOWN) {
-        animate_set_animation(anims + 0, combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_DOWN), ticks_per_move);
+        anims[0].scmd = combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_DOWN);
+        //animate_set_animation(anims + 0, combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_DOWN), ticks_per_move);
     } else if (direction & PLAYER_UP) {
+        //anims[0].scmd = combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_UP);
         animate_set_animation(anims + 0, combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_UP), ticks_per_move);
     }
+/*
+    */
 
     count = ticks_per_move;
 }
@@ -234,6 +246,7 @@ extern void player_condense() {
 void player_add_to_animation_list(const int slot) {
     entity_t *dude = player_get_entity(slot);
     if (!dude->name) { return; } // !player_exists
+    /*
     player_node[slot] = animate_list_add(anims + slot, player_zpos);
     anims[slot].destx = dude->mapx * 16 * main_get_zoom();
     anims[slot].desty = dude->mapy * 16 * main_get_zoom();
@@ -242,14 +255,34 @@ void player_add_to_animation_list(const int slot) {
     anims[slot].y = anims[slot].desty;
     anims[slot].entity = player_get_entity(slot);
     anims[slot].entity->sprite.data = player_node[slot];//anims + slot;
+    */
 }
 
 void player_load(const int slot, const float zoom) {
+    //gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes;
+    entity_t *dude = player_get_entity(slot);
     load_character_sprite(main_get_rend(), slot, zoom);
+    anims[slot].scmd = entity_animation_get_scmd(NULL, 0, 1, CA_NONE);
     anims[slot].spr = players[slot].main;
-    animate_set_animation(anims + slot, combat_get_scmd(COMBAT_SCMD_STAND_DOWN), ticks_per_move);
+    anims[slot].delay = 0;
+    anims[slot].pos = 0;
+    anims[slot].x = (dude->mapx * 16 + dude->sprite.xoffset) * zoom;
+    anims[slot].y = (dude->mapy * 16 + dude->sprite.yoffset + dude->mapz) * zoom;
+    anims[slot].destx = anims[slot].x;
+    anims[slot].destx -= sprite_getw(anims[slot].spr) / 2 - (8 * main_get_zoom());
+    anims[slot].move = anims[slot].left_over = 0.0;
+    anims[slot].entity = dude;
+    //anim_nodes[slot] = animate_list_add(anims + anim_pos, entity->mapz);
+    player_node[slot] = animate_list_add(anims + slot, dude->mapz);
+    //dude->sprite.data = anim_nodes[slot];
+    dude->sprite.data = player_node[slot];
+    //anim_nodes[slot]->anim->entity = dude;
+    player_node[slot]->anim->entity = dude;
+    //animate_set_animation(anims + slot, combat_get_scmd(COMBAT_SCMD_STAND_DOWN), ticks_per_move);
     if (player_get_entity(slot) == player_get_active()) {
-        player_add_to_animation_list(slot);
+        //player_add_to_animation_list(slot);
+        region_add_entity(region_manager_get_current(), player_get_entity(slot));
+        //port_add_entity(player_get_entity(slot), pal);
     }
 }
 

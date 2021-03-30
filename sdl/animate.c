@@ -59,7 +59,9 @@ out:
     if (anim->x > anim->destx) { anim->x -= move_amt; }
     if (anim->y > anim->desty) { anim->y -= move_amt; }
 
-    //printf("%d: anim->x = %d (move_amt = %f)\n", anim->obj->combat_id, anim->x, move_amt);
+    //if (anim->entity && anim->entity->name) {
+        //printf("%s: (%d, %d) (move_amt = %f)\n", anim->entity->name, anim->x, anim->y, move_amt);
+    //}
     sprite_set_location(anim->spr,
         anim->x - xoffset, // + scmd_xoffset,
         anim->y - yoffset); // + anim->scmd->yoffset);

@@ -21,7 +21,7 @@ void player_cleanup() {
 }
 
 extern void player_free(const int slot) {
-    entity_free(players[slot]);
+    //entity_free(players[slot]);
     players[slot] = NULL;
 }
 

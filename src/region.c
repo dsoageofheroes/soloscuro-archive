@@ -223,6 +223,7 @@ extern int region_location_blocked(const region_t *reg, const int32_t x, const i
 }
 
 extern void region_add_entity(region_t *reg, entity_t *entity) {
+    printf("Adding: %s %p %p\n", entity->name, reg, entity);
     if (!reg || !entity) { return; }
     //entity_t * dude = NULL;
 
@@ -268,6 +269,9 @@ extern void region_tick(region_t *reg) {
     ticks_per_game_round = 30;
 
     entity_list_for_each(reg->entities, bad_dude) {
+        //if (bad_dude->name) {
+            //printf("bad_dude->name = %s\n", bad_dude->name);
+        //}
         if (bad_dude->abilities.hunt) {
             xdiff = player_get_active()->mapx - bad_dude->mapx;
             ydiff = player_get_active()->mapy - bad_dude->mapy;
@@ -294,9 +298,9 @@ extern void region_tick(region_t *reg) {
             }
             port_update_entity(bad_dude, xdiff, ydiff);
         } else {
-            if (bad_dude->name) {
-                port_update_entity(bad_dude, 0, 0);
-            }
+            //if (bad_dude->name) {
+                //port_update_entity(bad_dude, 0, 0);
+            //}
         }
     }
 }

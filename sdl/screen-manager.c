@@ -89,10 +89,11 @@ void screen_push_screen(SDL_Renderer *renderer, sops_t *screen, const uint32_t x
 }
 
 void port_change_region(region_t *reg) {
+    map_load_region(reg, main_get_rend());
+
     for (int i = 0; i < MAX_PCS; i++) {
         player_load(i, main_get_zoom());
     }
-    map_load_region(reg, main_get_rend());
 }
 
 int screen_load_region(SDL_Renderer *renderer, const int region) {
