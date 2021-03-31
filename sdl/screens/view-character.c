@@ -26,6 +26,7 @@ static uint16_t game_menu, game_return;
 enum {SELECT_NONE, SELECT_POPUP, SELECT_NEW, SELECT_ALS};
 static int8_t last_selection = SELECT_NONE;
 static uint8_t slot_clicked;
+static int32_t player_selected = 0;
 static uint32_t xoffset, yoffset;
 static int mode = 0; // 0 = char, 2 = magic, 3 = status
 
@@ -65,6 +66,7 @@ void view_character_init(SDL_Renderer *renderer, const uint32_t _x, const uint32
     uint32_t x = _x / main_get_zoom(), y = _y / main_get_zoom();
     xoffset = _x;
     yoffset = _y;
+    player_selected = player_get_slot(player_get_active());
 
     memset(description, 0x0, sizeof(description));
     memset(message, 0x0, sizeof(message));
@@ -110,6 +112,9 @@ void view_character_init(SDL_Renderer *renderer, const uint32_t _x, const uint32
     set_zoom(&message_loc, zoom);
 
     strcpy(description, "description");
+    if (player_get_active()->name) {
+        strcpy(description, player_get_active()->name);
+    }
     strcpy(message, "message");
 }
 
@@ -156,13 +161,13 @@ void view_character_render(void *data, SDL_Renderer *renderer) {
                 snprintf(buf, BUF_MAX, "Okay");
             }
             print_line_len(renderer, FONT_YELLOW, buf, xoffset + x * zoom, yoffset + (y + 16) * zoom, BUF_MAX);
-            sprite_set_frame(ports[i], 0);
+            sprite_set_frame(ports[i], (i == player_selected) ? 3 : 0);
             sprite_render(renderer, ports[i]);
             player_center(i, xoffset + x * zoom, yoffset + (y - 34) * zoom, 34 * zoom, 34 * zoom);
             uint16_t spr = player_get_sprite(i);
             if (sprite_geth(spr) > 30 * zoom) {
                 sprite_set_frame(spr, 0);
-                sprite_render_box(rend, spr, xoffset + (x - 34) * zoom, yoffset + (y - 34) * zoom,
+                sprite_render_box(rend, spr, xoffset + x * zoom, yoffset + (y - 34) * zoom,
                     34 * zoom, 34 * zoom);
             } else {
                 player_render(rend, i);
