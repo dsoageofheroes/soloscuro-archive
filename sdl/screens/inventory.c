@@ -136,7 +136,6 @@ void inventory_screen_init(SDL_Renderer *renderer, const uint32_t _xoffset, cons
 
     for (int i = 0; i < 4; i++) {
         sprite_set_frame(ports[i], 2);
-        //sprite_set_frame(port_background[i], 3);
     }
 
     name_loc = apply_params(initial_locs[0], x, y);

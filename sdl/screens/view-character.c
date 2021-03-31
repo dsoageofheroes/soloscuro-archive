@@ -20,9 +20,10 @@
 static uint16_t ai[4];
 static uint16_t leader[4];
 static uint16_t ports[4];
-static uint16_t effects, view_char, use, panel;
+static uint16_t effects, view_char, use, panel, sun;
 static uint16_t character, inv, magic, powers;
 static uint16_t game_menu, game_return;
+static uint16_t slots;
 enum {SELECT_NONE, SELECT_POPUP, SELECT_NEW, SELECT_ALS};
 static int8_t last_selection = SELECT_NONE;
 static uint8_t slot_clicked;
@@ -75,6 +76,7 @@ void view_character_init(SDL_Renderer *renderer, const uint32_t _x, const uint32
     effects = view_sprite_create(renderer, pal, 80 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20075);
     view_char = view_sprite_create(renderer, pal, 60 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20079);
     use = view_sprite_create(renderer, pal, 115 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20080);
+    sun = sprite_new(renderer, pal, 50 + x, 0 + y - 11, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20028);
 
     character = view_sprite_create(renderer, pal, 45 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 10100);
     inv = view_sprite_create(renderer, pal, 70 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11102);
@@ -82,6 +84,7 @@ void view_character_init(SDL_Renderer *renderer, const uint32_t _x, const uint32
     powers = view_sprite_create(renderer, pal, 120 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11104);
     game_return = view_sprite_create(renderer, pal, 252 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 10108);
     game_menu = view_sprite_create(renderer, pal, 222 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11101);
+    slots = view_sprite_create(renderer, pal, 53 + x, 3 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 13007);
 
     ai[0] = view_sprite_create(renderer, pal, 45 + x, 40 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111);
     ai[1] = view_sprite_create(renderer, pal, 45 + x, 100 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111);
@@ -118,7 +121,7 @@ void view_character_init(SDL_Renderer *renderer, const uint32_t _x, const uint32
     strcpy(message, "message");
     label_create_group();
     label_group_set_font(FONT_YELLOW);
-    label_set_positions(143 * zoom, 30 * zoom);
+    label_set_positions(143 * zoom, 30 * zoom, SCREEN_VIEW_CHARACTER);
 }
 
 #define BUF_MAX (1<<12)
@@ -126,6 +129,8 @@ void view_character_init(SDL_Renderer *renderer, const uint32_t _x, const uint32
 void view_character_render(void *data, SDL_Renderer *renderer) {
     char buf[BUF_MAX];
     const float zoom = main_get_zoom();
+
+    sprite_render(renderer, sun);
     sprite_render(renderer, panel);
     sprite_render(renderer, view_char);
 
@@ -180,8 +185,44 @@ void view_character_render(void *data, SDL_Renderer *renderer) {
             sprite_render(renderer, ports[i]);
         }
     }
-    label_set_group(player_get_entity(player_selected));
+    label_set_group(player_get_entity(player_selected), SCREEN_VIEW_CHARACTER);
+    label_set_positions(143 * zoom, 30 * zoom, SCREEN_VIEW_CHARACTER);
     label_render_stats(xoffset, yoffset);
+    label_render_gra(xoffset + (64 * zoom), yoffset - (49 * zoom));
+    label_render_class_and_combat(xoffset + (64 * zoom), yoffset - (42 * zoom));
+
+    sprite_set_frame(slots, 0);
+    item_t *items = player_get_entity(player_selected)->inv;
+    animate_sprite_t *as = NULL;
+    sprite_set_location(slots, xoffset + (205 * zoom), yoffset + (41 * zoom));
+    sprite_render(main_get_rend(), slots);
+    if (items) {
+        as = items[2].sprite.data;
+        if (as) {
+            sprite_center_spr(as->spr, slots);
+            sprite_render(renderer, as->spr);
+        }
+    }
+
+    sprite_set_location(slots, xoffset + (223 * zoom), yoffset + (41 * zoom));
+    sprite_render(main_get_rend(), slots);
+    if (items) {
+        as = items[3].sprite.data;
+        if (as) {
+            sprite_center_spr(as->spr, slots);
+            sprite_render(renderer, as->spr);
+        }
+    }
+
+    sprite_set_location(slots, xoffset + (241 * zoom), yoffset + (41 * zoom));
+    sprite_render(main_get_rend(), slots);
+    if (items) {
+        as = items[10].sprite.data;
+        if (as) {
+            sprite_center_spr(as->spr, slots);
+            sprite_render(renderer, as->spr);
+        }
+    }
 }
 
 static int get_sprite_mouse_is_on(const uint32_t x, const uint32_t y) {
@@ -220,6 +261,15 @@ int view_character_handle_mouse_movement(const uint32_t x, const uint32_t y) {
 }
 
 int view_character_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
+    //static int32_t player_selected = 0;
+    for (int i = 0; i < 4; i++) {
+        if (sprite_in_rect(ports[i], x, y)
+                && player_exists(i)
+                ) {
+            player_selected = i;
+            strcpy(description, player_get_entity(player_selected)->name);
+        }
+    }
     return 1; // means I captured the mouse click
 }
 
@@ -243,6 +293,7 @@ int view_character_handle_mouse_up(const uint32_t button, const uint32_t x, cons
 }
 
 void view_character_free() {
+    sprite_free(sun);
     sprite_free(panel);
     sprite_free(use);
     sprite_free(view_char);
@@ -262,6 +313,7 @@ void view_character_free() {
 }
 
 void view_character_return_control () {
+    label_group_set_font(FONT_YELLOW);
     if (last_selection == SELECT_POPUP) {
         if (popup_get_selection() == POPUP_0) { // new
             popup_clear_selection();

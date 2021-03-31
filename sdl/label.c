@@ -4,6 +4,7 @@
 
 static label_t labels[LABEL_END];
 static int labels_created = 0;
+static enum screen_type screen_type;
 
 #define BUF_MAX (1<<10)
 
@@ -264,7 +265,7 @@ static void copy_classes_string(entity_t *pc, char* storage) {
     int pos = 0;
 
     for (int i = 0; i < 3; i++) {
-        if (pc->class[i].class >= 0) {
+        if (pc->class[i].class > 0) {
             pos += snprintf(storage + pos, BUF_MAX - pos, "%s%s", i > 0 ? "/" : "", get_class_name(pc->class[i].class));
         }
     }
@@ -276,7 +277,7 @@ static void copy_levels_string(entity_t *pc, char* storage) {
     int pos = 0;
 
     for (int i = 0; i < 3; i++) {
-        if (pc->class[i].class >= 0) {
+        if (pc->class[i].class > 0) {
             pos += snprintf(storage + pos, BUF_MAX - pos, "%s%d", i > 0 ? "/" : "", pc->class[i].level);
         }
     }
@@ -295,16 +296,22 @@ static void copy_exp_tnl_string(entity_t *pc, char* storage) {
 
 static void copy_dam_string(entity_t *pc, char* storage) {
     int pos = 0;
+    item_t *items = pc ? pc->inv : NULL;
+    int attack_num = dnd2e_get_attack_num(pc, items ? items + 3 : NULL);
+    int sides = dnd2e_get_attack_sides_pc(pc, items ? items + 3 : NULL);
+    int mod = dnd2e_get_attack_mod_pc(pc, items ? items + 3 : NULL);
 
-    pos = snprintf(storage, BUF_MAX, "DAM: %d%s", dnd2e_get_attack_num(pc, 0) >> 1,
-                   (dnd2e_get_attack_num(pc, 0) & 0x01) ? ".5" : "");
-    pos += snprintf(storage + pos, BUF_MAX - pos, "x1D%d", dnd2e_get_attack_die_pc(pc, 0));
-    pos += snprintf(storage + pos, BUF_MAX - pos, "+%d", dnd2e_get_attack_mod_pc(pc, 0));
+    pos = snprintf(storage, BUF_MAX, "DAM: %d%s",
+            attack_num >> 1, attack_num & 0x01 ? ".5" : "");
+    pos += snprintf(storage + pos, BUF_MAX - pos, "x1D%d", sides);
+    pos += snprintf(storage + pos, BUF_MAX - pos, "+%d", mod);
 }
 
 
-extern void label_set_group(entity_t *dude) {
+extern void label_set_group(entity_t *dude, enum screen_type _screen_type) {
+    screen_type = _screen_type;
     char buf[BUF_MAX];
+    int show_hp_psp = (screen_type == SCREEN_VIEW_CHARACTER);
 
     snprintf(buf, 127, "%d", dude->stats.str);
     label_set_text(labels + LABEL_STR_VAL, buf);
@@ -346,44 +353,53 @@ extern void label_set_group(entity_t *dude) {
     copy_dam_string(dude, buf);
     label_set_text(labels + LABEL_DAM, buf);
 
-    snprintf(buf, BUF_MAX, "%d/%d", dude->stats.hp, dude->stats.high_hp);
+    snprintf(buf, BUF_MAX, "%s%d/%d",
+            (show_hp_psp) ? "HP: " : "",
+            dude->stats.hp, dude->stats.high_hp);
     label_set_text(labels + LABEL_HP, buf);
 
-    snprintf(buf, BUF_MAX, "%d/%d", dude->stats.psp, dude->stats.high_psp);
+    snprintf(buf, BUF_MAX, "%s%d/%d",
+            (show_hp_psp) ? "PSP: " : "",
+            dude->stats.psp, dude->stats.high_psp);
     label_set_text(labels + LABEL_PSP, buf);
 }
 
-extern void label_set_positions(int32_t oX, int32_t oY) {
+extern void label_set_positions(int32_t oX, int32_t oY, const enum screen_type _screen_type) {
+    screen_type = _screen_type;
+    int tab_hp_psp = (screen_type != SCREEN_VIEW_CHARACTER);
+    int exp_new_line = (screen_type == SCREEN_VIEW_CHARACTER);
+    int yadj = (screen_type == SCREEN_VIEW_CHARACTER) ? 13 : 15;
+
     labels[LABEL_NAME].x = oX;
     labels[LABEL_NAME].y = oY;
 
     labels[LABEL_STR].x = (oX += 12);
-    labels[LABEL_STR].y = (oY += 20);
+    labels[LABEL_STR].y = (oY += yadj + 5);
     labels[LABEL_STR_VAL].x = oX + (strlen(labels[LABEL_STR_VAL].text) > 1 ? 52 : 60);
     labels[LABEL_STR_VAL].y = oY;
 
     labels[LABEL_DEX].x = oX;
-    labels[LABEL_DEX].y = (oY += 15);
+    labels[LABEL_DEX].y = (oY += yadj);
     labels[LABEL_DEX_VAL].x = oX + (strlen(labels[LABEL_DEX_VAL].text) > 1 ? 52 : 60);
     labels[LABEL_DEX_VAL].y = oY;
 
     labels[LABEL_CON].x = oX;
-    labels[LABEL_CON].y = (oY += 15);
+    labels[LABEL_CON].y = (oY += yadj);
     labels[LABEL_CON_VAL].x = oX + (strlen(labels[LABEL_CON_VAL].text) > 1 ? 52 : 60);
     labels[LABEL_CON_VAL].y = oY;
     
     labels[LABEL_INT].x = oX;
-    labels[LABEL_INT].y = (oY += 15);
+    labels[LABEL_INT].y = (oY += yadj);
     labels[LABEL_INT_VAL].x = oX + (strlen(labels[LABEL_INT_VAL].text) > 1 ? 52 : 60);
     labels[LABEL_INT_VAL].y = oY;
 
     labels[LABEL_WIS].x = oX;
-    labels[LABEL_WIS].y = (oY += 15);
+    labels[LABEL_WIS].y = (oY += yadj);
     labels[LABEL_WIS_VAL].x = oX + (strlen(labels[LABEL_WIS_VAL].text) > 1 ? 52 : 60);
     labels[LABEL_WIS_VAL].y = oY;
 
     labels[LABEL_CHA].x = oX;
-    labels[LABEL_CHA].y = (oY += 15);
+    labels[LABEL_CHA].y = (oY += yadj);
     labels[LABEL_CHA_VAL].x = oX + (strlen(labels[LABEL_CHA_VAL].text) > 1 ? 52 : 60);
     labels[LABEL_CHA_VAL].y = oY;
 
@@ -394,40 +410,46 @@ extern void label_set_positions(int32_t oX, int32_t oY) {
     labels[LABEL_RACE].y = (oY = 270);
 
     labels[LABEL_ALIGNMENT].x = oX;
-    labels[LABEL_ALIGNMENT].y = (oY += 15);
+    labels[LABEL_ALIGNMENT].y = (oY += yadj);
 
     labels[LABEL_CLASSES].x = oX;
-    labels[LABEL_CLASSES].y = (oY += 15);
+    labels[LABEL_CLASSES].y = (oY += yadj);
 
     labels[LABEL_LEVELS].x = oX;
-    labels[LABEL_LEVELS].y = (oY += 15);
+    labels[LABEL_LEVELS].y = (oY += yadj);
 
-    labels[LABEL_EXP_TNL].x = oX + 70;
-    labels[LABEL_EXP_TNL].y = oY;
+    labels[LABEL_EXP_TNL].x = oX + (exp_new_line ? 0 : 70);
+    labels[LABEL_EXP_TNL].y = (oY += (exp_new_line ? yadj : 0));
 
     labels[LABEL_AC].x = oX;
-    labels[LABEL_AC].y = (oY += 15);
-
     labels[LABEL_DAM].x = oX + 70;
-    labels[LABEL_DAM].y = oY;
-
-    labels[LABEL_HP].x = (oX += 20);
-    labels[LABEL_HP].y = (oY += 15);
-
+    labels[LABEL_HP].x = (oX += (tab_hp_psp) ? 20 : 0);
     labels[LABEL_PSP].x = oX;
-    labels[LABEL_PSP].y = (oY += 15);
+
+    if (screen_type == SCREEN_VIEW_CHARACTER) {
+        labels[LABEL_HP].y = (oY += yadj);
+        labels[LABEL_PSP].y = (oY += yadj);
+        labels[LABEL_AC].y = (oY += yadj);
+        labels[LABEL_DAM].y = oY;
+    } else {
+        labels[LABEL_AC].y = (oY += yadj);
+        labels[LABEL_DAM].y = oY;
+        labels[LABEL_HP].y = (oY += yadj);
+        labels[LABEL_PSP].y = (oY += yadj);
+    }
 }
 
 extern void label_render_offset(label_t *label, const int16_t offsetx, const int16_t offsety) {
     print_line_len(main_get_rend(), label->font, label->text, offsetx + label->x, offsety + label->y, strlen(label->text));
 }
 
-extern void label_render_full(const int16_t offsetx, const int16_t offsety) {
-    label_render_stats(offsetx, offsety);
-    label_render_offset(labels + LABEL_NAME, offsetx, offsety);
+extern void label_render_gra(const int16_t offsetx, const int16_t offsety) {
     label_render_offset(labels + LABEL_GENDER, offsetx, offsety);
     label_render_offset(labels + LABEL_RACE, offsetx, offsety);
     label_render_offset(labels + LABEL_ALIGNMENT, offsetx, offsety);
+}
+
+extern void label_render_class_and_combat(const int16_t offsetx, const int16_t offsety) {
     label_render_offset(labels + LABEL_CLASSES, offsetx, offsety);
     label_render_offset(labels + LABEL_LEVELS, offsetx, offsety);
     label_render_offset(labels + LABEL_EXP_TNL, offsetx, offsety);
@@ -435,6 +457,13 @@ extern void label_render_full(const int16_t offsetx, const int16_t offsety) {
     label_render_offset(labels + LABEL_DAM, offsetx, offsety);
     label_render_offset(labels + LABEL_HP, offsetx, offsety);
     label_render_offset(labels + LABEL_PSP, offsetx, offsety);
+}
+
+extern void label_render_full(const int16_t offsetx, const int16_t offsety) {
+    label_render_stats(offsetx, offsety);
+    label_render_offset(labels + LABEL_NAME, offsetx, offsety);
+    label_render_gra(offsetx, offsety);
+    label_render_class_and_combat(offsetx, offsety);
 }
 
 extern void label_render_stats(const int16_t offsetx, const int16_t offsety) {

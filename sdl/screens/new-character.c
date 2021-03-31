@@ -355,8 +355,9 @@ void new_character_render(void* data, SDL_Renderer* renderer) {
     sprite_render(renderer, done_button);
     sprite_render(renderer, exit_button);
 
-    label_set_group(&pc);
-    label_set_positions(9, 249);
+    label_group_set_font(FONT_GREYLIGHT);
+    label_set_group(&pc, SCREEN_NEW_CHARACTER);
+    label_set_positions(9, 249, SCREEN_NEW_CHARACTER);
     label_render_full(offsetx, offsety);
 
     textbox_render(name_tb);

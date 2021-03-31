@@ -870,6 +870,8 @@ static int16_t class_attack_num(const entity_t *pc, const item_t *item) {
                     if (pc->class[i].level < 7) { return 1; }
                     if (pc->class[i].level < 13) { return 2; }
                     return 3;
+                default:
+                    return 1;
             }
         }
     } else if (item->type == ITEM_MISSILE_THROWN || item->type == ITEM_MISSILE_USE_AMMO) { // MISSILE
@@ -884,6 +886,8 @@ static int16_t class_attack_num(const entity_t *pc, const item_t *item) {
                     if (pc->class[i].level < 7) { return 2; }
                     if (pc->class[i].level < 13) { return 4; }
                     return 6;
+                default:
+                    return 1;
             }
         }
     }

@@ -10,18 +10,6 @@
 #include "../label.h"
 
 enum {
-    SCREEN_NONE = -1,
-    SCREEN_ADD_LOAD_SAVE,
-    SCREEN_INVENTORY,
-    SCREEN_NARRATE,
-    SCREEN_NEW_CHARACTER,
-    SCREEN_POPUP,
-    SCREEN_MAIN,
-    SCREEN_VIEW_CHARACTER,
-    SCREEN_END
-};
-
-enum {
 	TEXTBOX_NONE = -1,
 	TEXTBOX_NAME
 };
