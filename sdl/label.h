@@ -56,8 +56,9 @@ extern uint32_t label_pixel_width(struct label_s* label);
 extern label_t* label_point_in(label_t *label, const int32_t x, const int32_t y);
 
 extern void label_create_group();
+extern void label_group_set_font(font_t font);
 extern void label_set_group(entity_t *dude);
-extern void label_set_positions();
+extern void label_set_positions(int32_t oX, int32_t oY);
 extern void label_render_stats(const int16_t offsetx, const int16_t offsety);
 extern void label_render_full(const int16_t offsetx, const int16_t offsety);
 extern label_t* label_group_point_in(const int32_t x, const int32_t y);

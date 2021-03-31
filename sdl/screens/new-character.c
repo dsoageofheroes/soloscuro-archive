@@ -356,11 +356,7 @@ void new_character_render(void* data, SDL_Renderer* renderer) {
     sprite_render(renderer, exit_button);
 
     label_set_group(&pc);
-    label_set_positions();
-    //for (int i = 0; i < LABEL_END; i++) {
-        //label_render(&labels[i], renderer);
-    //}
-    //label_render_stats(offsetx, offsety);
+    label_set_positions(9, 249);
     label_render_full(offsetx, offsety);
 
     textbox_render(name_tb);

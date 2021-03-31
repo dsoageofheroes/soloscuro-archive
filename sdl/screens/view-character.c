@@ -116,6 +116,9 @@ void view_character_init(SDL_Renderer *renderer, const uint32_t _x, const uint32
         strcpy(description, player_get_active()->name);
     }
     strcpy(message, "message");
+    label_create_group();
+    label_group_set_font(FONT_YELLOW);
+    label_set_positions(143 * zoom, 30 * zoom);
 }
 
 #define BUF_MAX (1<<12)
@@ -177,6 +180,8 @@ void view_character_render(void *data, SDL_Renderer *renderer) {
             sprite_render(renderer, ports[i]);
         }
     }
+    label_set_group(player_get_entity(player_selected));
+    label_render_stats(xoffset, yoffset);
 }
 
 static int get_sprite_mouse_is_on(const uint32_t x, const uint32_t y) {

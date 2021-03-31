@@ -86,6 +86,12 @@ extern label_t* label_group_point_in(const int32_t x, const int32_t y) {
     return NULL;
 }
 
+extern void label_group_set_font(font_t font) {
+    for (int i = 0; i < LABEL_END; i++) {
+        labels[i].font = font;
+    }
+}
+
 extern void label_create_group() {
     int oX = 8, oY = 249;
     char buf[64];
@@ -347,9 +353,7 @@ extern void label_set_group(entity_t *dude) {
     label_set_text(labels + LABEL_PSP, buf);
 }
 
-extern void label_set_positions() {
-    int oX = 8, oY = 249;
-
+extern void label_set_positions(int32_t oX, int32_t oY) {
     labels[LABEL_NAME].x = oX;
     labels[LABEL_NAME].y = oY;
 
