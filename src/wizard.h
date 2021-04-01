@@ -232,8 +232,9 @@ int spell_has_spell(ssi_spell_list_t *psi, uint16_t spell);
 
 // NEW INTERFACE
 //extern spell_t* spell_get_spell(const uint16_t id);
-extern void spells_init();
-extern void spells_cleanup();
 extern char* spells_read_description(const uint16_t id);
 
+extern void wizard_add_power(const int spell_level, power_t *pw);
+extern void wizard_setup_powers();
+extern void wizard_cleanup();
 #endif

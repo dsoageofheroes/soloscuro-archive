@@ -43,7 +43,7 @@ static void initialize_dsl_stack() {
 void dsl_init() {
     info("Initalizing DSL.\n");
     initialize_dsl_stack();
-    spells_init();
+    powers_init();
     dsl_init_vars();
     ds_player_init();
     ds_item_init();
@@ -69,7 +69,7 @@ void dsl_debug(const char *file, const int line_num, const char *pretty, const c
 }
 
 void dsl_cleanup() {
-    spells_cleanup();
+    powers_cleanup();
     free(gTextstring);
     free(dsl_local_strings);
     free(dsl_global_strings);

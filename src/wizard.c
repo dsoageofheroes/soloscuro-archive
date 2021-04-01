@@ -1,13 +1,27 @@
 #include <string.h>
 #include "wizard.h"
 #include "powers.h"
+#include "dsl.h"
 #include "gff.h"
 #include "gfftypes.h"
 
-extern void spells_init() {
+power_list_t* wizard_spells[10] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+
+extern void wizard_add_power(const int spell_level, power_t *pw) {
+    int index = spell_level - 1;
+    if (index < 0 || index > 9) { return; }
+    if (!wizard_spells[index]) { wizard_spells[index] = power_list_create(); }
+    power_list_add(wizard_spells[index], pw);
+    debug("Added %s to wizard level %d\n", pw->name, spell_level);
 }
 
-extern void spells_cleanup() {
+extern void wizard_cleanup() {
+    for (int i = 0; i < 10; i++) {
+        if (wizard_spells[i]) {
+             power_list_free(wizard_spells[i]);
+             wizard_spells[i] = NULL;
+        }
+    }
 }
 
 static void load_name_from_gff(const uint8_t id, const uint16_t offset, const uint8_t max, char name[32]) {
@@ -157,3 +171,4 @@ extern char* spells_read_description(const uint16_t id) {
 
     return description;
 }
+

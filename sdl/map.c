@@ -227,6 +227,7 @@ static void entity_instant_move(entity_t *entity) {
 
 void port_update_entity(entity_t *entity, const uint16_t xdiff, const uint16_t ydiff) {
     animate_sprite_node_t *asn = (animate_sprite_node_t*) entity->sprite.data;
+    if (!asn) { return; }
     animate_sprite_t *as = asn->anim;
     //printf("cur:%d %d\n", as->x, as->y);
     //printf("dest: %d, %d\n", as->destx, as->desty);

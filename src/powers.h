@@ -51,13 +51,17 @@ typedef struct power_instance_s {
     struct power_instance_s *next, *prev;
 } power_instance_t;
 
-typedef struct power_instance_list_s {
+typedef struct power_list_s {
     power_instance_t *head;
-} power_instance_list_t;
+} power_list_t;
+
+extern power_list_t* power_list_create();
+extern void power_list_free(power_list_t *pl);
+extern void power_list_add(power_list_t *pl, power_t *pw);
 
 // List of all the spell nodes on a region.
 typedef struct power_overlay_s {
-    power_instance_list_t *power_list[MAP_ROWS][MAP_COLUMNS];
+    power_list_t *power_list[MAP_ROWS][MAP_COLUMNS];
 } power_overlay_t;
 
 // Okay before I forget.
@@ -65,6 +69,8 @@ typedef struct power_overlay_s {
 // If AOE, then many children entities are created that point to the parent/master spell entity.
 // This allows each tile/square its own trigger and the parent/master can clean up the children when the duration is over.
 
+extern void powers_init();
+extern void powers_cleanup();
 extern void powers_set_cast(power_t *powers, const uint16_t id);
 extern void powers_set_icon(power_t *powers, const uint16_t id);
 extern void powers_set_thrown(power_t *powers, const uint16_t id);

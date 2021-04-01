@@ -4,9 +4,18 @@
 #include <string.h>
 #include <ctype.h>
 
+#define MAX_LEVELS (10)
+#define MAX_POWERS (100)
+int32_t wizard_powers[MAX_LEVELS][MAX_POWERS];
+int32_t priest_powers[MAX_LEVELS][MAX_POWERS];
+int32_t psionic_powers[MAX_LEVELS][MAX_POWERS];
+int32_t innate_powers[MAX_POWERS];
+
+char power_names[1024][64];
+
 /* DS1 Notes:
- * It appears Monster Summoning I and Evard's Black Tentacles are unique to DS1.
- * There is acollision between Hold person and hold person/mammal, both should map to the same spell.
+ * It appears Monster Summoning I, II, III, and Evard's Black Tentacles are unique to DS1.
+ * There is a collision between Hold person and hold person/mammal, both should map to the same spell.
  * Same with Dispel Magic
  */
 enum effect_type {
@@ -93,6 +102,7 @@ static power_entry_t dsopw;
 
 static char test_buf[256];
 static void generate_power(power_entry_t pw);
+static void generate_tables();
 
 const char *saves[] = {
     "NONE", "Poison", "Wands", "Petrification", "Breath", "Spells", "Paralyze", "Death", "Magic"
@@ -577,12 +587,60 @@ static void generate_power_csv() {
         printf("\n");
 }
 
+static void add_to_power(int32_t powers[MAX_POWERS], int32_t power) {
+    size_t pos = 0;
+    while(powers[pos] >= 0) { pos++; }
+    powers[pos] = power;
+}
+
+void add_power() {
+    if (dso_pos < 12) { add_to_power(wizard_powers[0], dso_pos);
+    } else if (dso_pos < 25) { add_to_power(wizard_powers[1], dso_pos);
+    } else if (dso_pos < 39) { add_to_power(wizard_powers[2], dso_pos);
+    } else if (dso_pos < 56) { add_to_power(wizard_powers[3], dso_pos);
+    } else if (dso_pos < 68) { add_to_power(wizard_powers[4], dso_pos);
+    } else if (dso_pos < 81) { add_to_power(wizard_powers[5], dso_pos);
+    } else if (dso_pos < 92) { add_to_power(wizard_powers[6], dso_pos);
+    } else if (dso_pos < 102) { add_to_power(wizard_powers[7], dso_pos);
+    } else if (dso_pos < 111) { add_to_power(wizard_powers[8], dso_pos);
+    } else if (dso_pos < 115) { add_to_power(wizard_powers[9], dso_pos);
+    } else if (dso_pos < 127) { add_to_power(priest_powers[0], dso_pos);
+    } else if (dso_pos < 143) { add_to_power(priest_powers[1], dso_pos);
+    } else if (dso_pos < 165) { add_to_power(priest_powers[2], dso_pos);
+    } else if (dso_pos < 189) { add_to_power(priest_powers[3], dso_pos);
+    } else if (dso_pos < 208) { add_to_power(priest_powers[4], dso_pos);
+    } else if (dso_pos < 216) { add_to_power(priest_powers[5], dso_pos);
+    } else if (dso_pos < 231) { add_to_power(priest_powers[6], dso_pos);
+    } else if (dso_pos < 232) { add_to_power(priest_powers[7], dso_pos);
+    } else if (dso_pos < 233) { add_to_power(priest_powers[8], dso_pos);
+    } else if (dso_pos < 234) { add_to_power(priest_powers[9], dso_pos);
+    } else if (dso_pos < 238) { add_to_power(psionic_powers[0], dso_pos); // Kinetic Sciences
+    } else if (dso_pos < 241) { add_to_power(psionic_powers[1], dso_pos); // Kinetic Devotions
+    } else if (dso_pos < 244) { add_to_power(psionic_powers[2], dso_pos); // Metabolism Sciences
+    } else if (dso_pos < 255) { add_to_power(psionic_powers[3], dso_pos); // Metabolism Devotions
+    } else if (dso_pos < 260) { add_to_power(psionic_powers[4], dso_pos); // Telepathic Sciences
+    } else if (dso_pos < 269) { add_to_power(psionic_powers[5], dso_pos); // Telepathic Devotions
+    } else if (dso_pos < 345) { add_to_power(innate_powers, dso_pos); // Monster/innate powers
+    } else if (dso_pos == 345) { add_to_power(wizard_powers[2], dso_pos); // Monster Summoning I
+    } else if (dso_pos == 346) { add_to_power(wizard_powers[3], dso_pos); // Monster Summoning II
+    } else if (dso_pos == 347) { add_to_power(wizard_powers[4], dso_pos); // Monster Summoning III
+    } else if (dso_pos == 348) { add_to_power(wizard_powers[5], dso_pos); // Evard's Black Tentacles
+    } else {
+        fprintf(stderr, "ERRRRRRRRRRRRRR: unknown power: %ld\n", dso_pos);
+    }
+}
+
 int main() {
     ds1_file = fopen("dsun1.dat", "rb");
     ds2_file = fopen("dsun2.dat", "rb");
     dso_file = fopen("dso.dat", "rb");
     dso_extra_file = fopen("dso-extra.dat", "rb");
     size_t ds1_file_size = 0;
+
+    memset(wizard_powers, -1, sizeof(int32_t) * MAX_LEVELS * MAX_POWERS);
+    memset(priest_powers, -1, sizeof(int32_t) * MAX_LEVELS * MAX_POWERS);
+    memset(psionic_powers, -1, sizeof(int32_t) * MAX_LEVELS * MAX_POWERS);
+    memset(innate_powers, -1, sizeof(int32_t) * MAX_POWERS);
 
     if (!ds1_file) {
         fprintf(stderr, "Unable to open dsun2.dat, please provide.\n");
@@ -639,6 +697,7 @@ int main() {
         }
         generate_power_csv();
         generate_power(dsopw);
+        add_power();
         dso_pos++;
     }
 
@@ -678,6 +737,8 @@ int main() {
     ds2pw = dsopw;
     generate_power_csv();
     generate_power(dsopw);
+
+    generate_tables();
 
     fclose(ds1_file);
     fclose(ds2_file);
@@ -1012,6 +1073,41 @@ static void generate_setup(power_entry_t pw, char *name, FILE *file) {
     fprintf(file, "}\n");
 }
 
+static void generate_tables() {
+    FILE *file = fopen ("powers-generator.c", "wb");
+    if (!file) { return; }
+
+    fprintf(file, "// This file is generated.\n");
+    fprintf(file, "#include <stdlib.h>\n");
+    fprintf(file, "#include \"powers.h\"\n");
+    fprintf(file, "#include \"wizard.h\"\n");
+    fprintf(file, "\n");
+    for (int i = 0; i < MAX_LEVELS; i++) {
+        for (int j = 0; j < MAX_POWERS; j++) {
+            if (wizard_powers[i][j] >= 0) {
+                fprintf(file, "extern void wizard_%s_setup(power_t *p);\n", power_names[wizard_powers[i][j]]);
+            }
+        }
+        fprintf(file, "\n");
+    }
+
+    fprintf(file, "\nvoid wizard_setup_powers() {\n");
+    fprintf(file, "    power_t *p;\n");
+    for (int i = 0; i < MAX_LEVELS; i++) {
+        for (int j = 0; j < MAX_POWERS; j++) {
+            if (wizard_powers[i][j] >= 0) {
+                fprintf(file, "    p = calloc(1, sizeof(power_t));\n");
+                fprintf(file, "    wizard_%s_setup(p);\n", power_names[wizard_powers[i][j]]);
+                fprintf(file, "    wizard_add_power(%d, p);\n", i + 1);
+            }
+        }
+        fprintf(file, "\n");
+    }
+    fprintf(file, "}\n");
+
+    fclose(file);
+}
+
 static void generate_power(power_entry_t pw) {
     char path[128];
     char filename[64];
@@ -1073,6 +1169,7 @@ static void generate_power(power_entry_t pw) {
         type[i] = tolower(type[i]);
     }
 
+    strcpy(power_names[dso_pos], name);
     generate_activate(pw, name, file);
     generate_pay(pw, name, file);
     generate_apply(pw, name, file);
