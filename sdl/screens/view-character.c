@@ -20,8 +20,10 @@
 static uint16_t ai[4];
 static uint16_t leader[4];
 static uint16_t ports[4];
+static uint16_t buttons[3];
+static label_t power_name, power_level;
 static uint16_t effects, view_char, use, panel, sun;
-static uint16_t character, inv, magic, powers;
+static uint16_t character, inv, powers, status;
 static uint16_t game_menu, game_return;
 static uint16_t slots;
 enum {SELECT_NONE, SELECT_POPUP, SELECT_NEW, SELECT_ALS};
@@ -29,7 +31,7 @@ static int8_t last_selection = SELECT_NONE;
 static uint8_t slot_clicked;
 static int32_t player_selected = 0;
 static uint32_t xoffset, yoffset;
-static int mode = 0; // 0 = char, 2 = magic, 3 = status
+static int mode = 2; // 0 = char, 2 = powers, 3 = status
 
 static SDL_Rect initial_locs[] = {{ 155, 28, 0, 0 }, // description
                                   { 75, 175, 0, 0 }, // message
@@ -53,13 +55,6 @@ static SDL_Rect apply_params(const SDL_Rect rect, const uint32_t x, const uint32
     return ret;
 }
 
-static uint16_t view_sprite_create(SDL_Renderer *renderer, gff_palette_t *pal,
-        const int offsetx, const int offsety, const float zoom,
-        const int gff_idx, const int type_id, const int res_id) {
-    SDL_Rect tmp = {offsetx, offsety, 0, 0};
-    return sprite_create(renderer, &tmp, pal, 0, 0, main_get_zoom(), gff_idx, type_id, res_id);
-}
-
 void view_character_init(SDL_Renderer *renderer, const uint32_t _x, const uint32_t _y) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     rend = renderer;
@@ -72,40 +67,40 @@ void view_character_init(SDL_Renderer *renderer, const uint32_t _x, const uint32
     memset(description, 0x0, sizeof(description));
     memset(message, 0x0, sizeof(message));
 
-    panel = view_sprite_create(renderer, pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 11000);
-    effects = view_sprite_create(renderer, pal, 80 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20075);
-    view_char = view_sprite_create(renderer, pal, 60 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20079);
-    use = view_sprite_create(renderer, pal, 115 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20080);
+    panel = sprite_new(renderer, pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 11000);
+    effects = sprite_new(renderer, pal, 80 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20075);
+    view_char = sprite_new(renderer, pal, 60 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20079);
+    use = sprite_new(renderer, pal, 115 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20080);
     sun = sprite_new(renderer, pal, 50 + x, 0 + y - 11, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20028);
 
-    character = view_sprite_create(renderer, pal, 45 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 10100);
-    inv = view_sprite_create(renderer, pal, 70 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11102);
-    magic = view_sprite_create(renderer, pal, 95 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11103);
-    powers = view_sprite_create(renderer, pal, 120 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11104);
-    game_return = view_sprite_create(renderer, pal, 252 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 10108);
-    game_menu = view_sprite_create(renderer, pal, 222 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11101);
-    slots = view_sprite_create(renderer, pal, 53 + x, 3 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 13007);
+    character = sprite_new(renderer, pal, 45 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 10100);
+    inv = sprite_new(renderer, pal, 68 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11102);
+    powers = sprite_new(renderer, pal, 91 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11103);
+    status = sprite_new(renderer, pal, 112 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11104);
+    game_return = sprite_new(renderer, pal, 252 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 10108);
+    game_menu = sprite_new(renderer, pal, 222 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11101);
+    slots = sprite_new(renderer, pal, 53 + x, 3 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 13007);
 
-    ai[0] = view_sprite_create(renderer, pal, 45 + x, 40 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111);
-    ai[1] = view_sprite_create(renderer, pal, 45 + x, 100 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111);
-    ai[2] = view_sprite_create(renderer, pal, 95 + x, 40 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111);
-    ai[3] = view_sprite_create(renderer, pal, 95 + x, 100 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111);
-    leader[0] = view_sprite_create(renderer, pal, 45 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11106);
-    leader[1] = view_sprite_create(renderer, pal, 45 + x, 90 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11106);
-    leader[2] = view_sprite_create(renderer, pal, 95 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11106);
-    leader[3] = view_sprite_create(renderer, pal, 95 + x, 90 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11106);
-    ports[0] = view_sprite_create(renderer, pal, 55 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11100);
-    ports[1] = view_sprite_create(renderer, pal, 55 + x, 90 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11100);
-    ports[2] = view_sprite_create(renderer, pal, 105 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11100);
-    ports[3] = view_sprite_create(renderer, pal, 105 + x, 90 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11100);
-    //port_background[0] = view_sprite_create(renderer, pal, 55 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6041);
-    //port_background[1] = view_sprite_create(renderer, pal, 55 + x, 90 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6041);
-    //port_background[2] = view_sprite_create(renderer, pal, 105 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6041);
-    //port_background[3] = view_sprite_create(renderer, pal, 105 + x, 90 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6041);
+    ai[0] = sprite_new(renderer, pal, 45 + x, 40 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111);
+    ai[1] = sprite_new(renderer, pal, 45 + x, 100 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111);
+    ai[2] = sprite_new(renderer, pal, 95 + x, 40 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111);
+    ai[3] = sprite_new(renderer, pal, 95 + x, 100 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111);
+    leader[0] = sprite_new(renderer, pal, 45 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11106);
+    leader[1] = sprite_new(renderer, pal, 45 + x, 90 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11106);
+    leader[2] = sprite_new(renderer, pal, 95 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11106);
+    leader[3] = sprite_new(renderer, pal, 95 + x, 90 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11106);
+    ports[0] = sprite_new(renderer, pal, 55 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11100);
+    ports[1] = sprite_new(renderer, pal, 55 + x, 90 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11100);
+    ports[2] = sprite_new(renderer, pal, 105 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11100);
+    ports[3] = sprite_new(renderer, pal, 105 + x, 90 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11100);
+    buttons[0] = sprite_new(renderer, pal, 131 + x, 157 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11109);
+    buttons[1] = sprite_new(renderer, pal, 172 + x, 157 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11110);
+    buttons[2] = sprite_new(renderer, pal, 172 + x, 157 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 13006);
+    power_name = create_label_at_pos(0, -1, "MAGE", FONT_GREY, (135 + x) * zoom, (158 + y) * zoom);
+    power_level = create_label_at_pos(0, -1, "LEVEL 1", FONT_GREY, (175 + x) * zoom, (158 + y) * zoom);
 
     for (int i = 0; i < 4; i++) {
         sprite_set_frame(ports[i], 2);
-        //sprite_set_frame(port_background[i], 3);
     }
 
     description_loc = apply_params(initial_locs[0], x, y);
@@ -124,6 +119,57 @@ void view_character_init(SDL_Renderer *renderer, const uint32_t _x, const uint32
     label_set_positions(143 * zoom, 30 * zoom, SCREEN_VIEW_CHARACTER);
 }
 
+static void render_character(SDL_Renderer *renderer) {
+    const float zoom = main_get_zoom();
+
+    label_set_group(player_get_entity(player_selected), SCREEN_VIEW_CHARACTER);
+    label_set_positions(143 * zoom, 30 * zoom, SCREEN_VIEW_CHARACTER);
+    label_render_stats(xoffset, yoffset);
+    label_render_gra(xoffset + (64 * zoom), yoffset - (49 * zoom));
+    label_render_class_and_combat(xoffset + (64 * zoom), yoffset - (42 * zoom));
+
+    sprite_set_frame(slots, 0);
+    item_t *items = player_get_entity(player_selected)->inv;
+    animate_sprite_t *as = NULL;
+    sprite_set_location(slots, xoffset + (205 * zoom), yoffset + (41 * zoom));
+    sprite_render(main_get_rend(), slots);
+    if (items) {
+        as = items[2].sprite.data;
+        if (as) {
+            sprite_center_spr(as->spr, slots);
+            sprite_render(renderer, as->spr);
+        }
+    }
+
+    sprite_set_location(slots, xoffset + (223 * zoom), yoffset + (41 * zoom));
+    sprite_render(main_get_rend(), slots);
+    if (items) {
+        as = items[3].sprite.data;
+        if (as) {
+            sprite_center_spr(as->spr, slots);
+            sprite_render(renderer, as->spr);
+        }
+    }
+
+    sprite_set_location(slots, xoffset + (241 * zoom), yoffset + (41 * zoom));
+    sprite_render(main_get_rend(), slots);
+    if (items) {
+        as = items[10].sprite.data;
+        if (as) {
+            sprite_center_spr(as->spr, slots);
+            sprite_render(renderer, as->spr);
+        }
+    }
+}
+
+static void render_powers(SDL_Renderer *renderer) {
+    sprite_render(renderer, buttons[0]);
+    sprite_render(renderer, buttons[1]);
+
+    label_render(&power_name, renderer);
+    label_render(&power_level, renderer);
+}
+
 #define BUF_MAX (1<<12)
 
 void view_character_render(void *data, SDL_Renderer *renderer) {
@@ -135,13 +181,13 @@ void view_character_render(void *data, SDL_Renderer *renderer) {
     sprite_render(renderer, view_char);
 
     sprite_set_frame((mode == 0) ? character
-            : (mode == 2) ? magic
-            : powers, 3);
+            : (mode == 2) ? powers
+            : status, 3);
 
     sprite_render(renderer, character);
     sprite_render(renderer, inv);
-    sprite_render(renderer, magic);
     sprite_render(renderer, powers);
+    sprite_render(renderer, status);
     sprite_render(renderer, game_menu);
     sprite_render(renderer, game_return);
 
@@ -185,51 +231,19 @@ void view_character_render(void *data, SDL_Renderer *renderer) {
             sprite_render(renderer, ports[i]);
         }
     }
-    label_set_group(player_get_entity(player_selected), SCREEN_VIEW_CHARACTER);
-    label_set_positions(143 * zoom, 30 * zoom, SCREEN_VIEW_CHARACTER);
-    label_render_stats(xoffset, yoffset);
-    label_render_gra(xoffset + (64 * zoom), yoffset - (49 * zoom));
-    label_render_class_and_combat(xoffset + (64 * zoom), yoffset - (42 * zoom));
 
-    sprite_set_frame(slots, 0);
-    item_t *items = player_get_entity(player_selected)->inv;
-    animate_sprite_t *as = NULL;
-    sprite_set_location(slots, xoffset + (205 * zoom), yoffset + (41 * zoom));
-    sprite_render(main_get_rend(), slots);
-    if (items) {
-        as = items[2].sprite.data;
-        if (as) {
-            sprite_center_spr(as->spr, slots);
-            sprite_render(renderer, as->spr);
-        }
-    }
-
-    sprite_set_location(slots, xoffset + (223 * zoom), yoffset + (41 * zoom));
-    sprite_render(main_get_rend(), slots);
-    if (items) {
-        as = items[3].sprite.data;
-        if (as) {
-            sprite_center_spr(as->spr, slots);
-            sprite_render(renderer, as->spr);
-        }
-    }
-
-    sprite_set_location(slots, xoffset + (241 * zoom), yoffset + (41 * zoom));
-    sprite_render(main_get_rend(), slots);
-    if (items) {
-        as = items[10].sprite.data;
-        if (as) {
-            sprite_center_spr(as->spr, slots);
-            sprite_render(renderer, as->spr);
-        }
+    switch(mode) {
+        case 0: render_character(renderer); break;
+        case 2: render_powers(renderer); break;
+        default: break;
     }
 }
 
 static int get_sprite_mouse_is_on(const uint32_t x, const uint32_t y) {
     if (sprite_in_rect(character, x, y)) { return character; }
     if (sprite_in_rect(inv, x, y)) { return inv; }
-    if (sprite_in_rect(magic, x, y)) { return magic; }
     if (sprite_in_rect(powers, x, y)) { return powers; }
+    if (sprite_in_rect(status, x, y)) { return status; }
     if (sprite_in_rect(game_menu, x, y)) { return game_menu; }
     if (sprite_in_rect(game_return, x, y)) { return game_return; }
     //if (sprite_in_rect(effects, x, y)) { return effects; }
@@ -287,8 +301,16 @@ int view_character_handle_mouse_up(const uint32_t button, const uint32_t x, cons
             }
         }
     }
+
+    sprite_set_frame(character, 0);
+    sprite_set_frame(powers, 0);
+    sprite_set_frame(status, 0);
+
     if (sprite_in_rect(game_return, x, y)) { screen_pop(); } 
+    if (sprite_in_rect(character, x, y)) { mode = 0; }
     if (sprite_in_rect(inv, x, y)) { screen_push_screen(rend, &inventory_screen, 0, 0); }
+    if (sprite_in_rect(powers, x, y)) { mode = 2; }
+    if (sprite_in_rect(status, x, y)) { mode = 3; }
     return 1; // means I captured the mouse click
 }
 
@@ -304,12 +326,15 @@ void view_character_free() {
         sprite_free(leader[i]);
         sprite_free(ports[i]);
     }
+    for (int i = 0; i < 3; i++) {
+        sprite_free(buttons[i]);
+    }
     sprite_free(game_return);
     sprite_free(game_menu);
     sprite_free(character);
     sprite_free(inv);
-    sprite_free(magic);
     sprite_free(powers);
+    sprite_free(status);
 }
 
 void view_character_return_control () {
