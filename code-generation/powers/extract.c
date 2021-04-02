@@ -593,6 +593,32 @@ static void add_to_power(int32_t powers[MAX_POWERS], int32_t power) {
     powers[pos] = power;
 }
 
+int get_level() {
+    if (dso_pos < 12) { return 1;
+    } else if (dso_pos < 25) { return 2;
+    } else if (dso_pos < 39) { return 3;
+    } else if (dso_pos < 56) { return 4;
+    } else if (dso_pos < 68) { return 5;
+    } else if (dso_pos < 81) { return 6;
+    } else if (dso_pos < 92) { return 7;
+    } else if (dso_pos < 102) { return 8;
+    } else if (dso_pos < 111) { return 9;
+    } else if (dso_pos < 115) { return 10;
+    } else if (dso_pos < 127) { return 0;
+    } else if (dso_pos < 143) { return 2;
+    } else if (dso_pos < 165) { return 3;
+    } else if (dso_pos < 189) { return 4;
+    } else if (dso_pos < 208) { return 5;
+    } else if (dso_pos < 216) { return 6;
+    } else if (dso_pos < 231) { return 7;
+    } else if (dso_pos < 232) { return 8;
+    } else if (dso_pos < 233) { return 9;
+    } else if (dso_pos < 234) { return 10;
+    }
+
+    return 0;
+}
+
 void add_power() {
     if (dso_pos < 12) { add_to_power(wizard_powers[0], dso_pos);
     } else if (dso_pos < 25) { add_to_power(wizard_powers[1], dso_pos);
@@ -1040,6 +1066,7 @@ static void generate_setup(power_entry_t pw, char *name, FILE *file) {
             : -1);
     fprintf(file, "    power->range                = -99999;\n");
     fprintf(file, "    power->aoe                  = -99999;\n");
+    fprintf(file, "    power->level                = %d;\n", get_level());
     fprintf(file, "    power->shape                = %s;\n", get_target_shape(pw));
     fprintf(file, "    power->cast_sound           = select_by_game(%d, %d, %d);\n",
             ds1pw.cast_sound, ds2pw.info.cast_sound, dsopw.info.cast_sound);

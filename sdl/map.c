@@ -247,6 +247,29 @@ void port_update_entity(entity_t *entity, const uint16_t xdiff, const uint16_t y
     animate_shift_node(asn, entity->mapz);
 }
 
+extern void port_load_sprite(sprite_info_t *spr, gff_palette_t *pal, const int gff_index, const int type, const uint32_t id) {
+    animate_sprite_node_t *asn = NULL;
+    if (!spr) { return; }
+
+    if (spr->scmd) {
+        error("port_load_sprite not implemented for sprites with a scmd!\n");
+        exit(1);
+    }
+
+    asn = animate_sprite_node_create();
+    spr->data = asn;
+    asn->anim->spr = sprite_new(main_get_rend(), pal, 0, 0, main_get_zoom(), gff_index, type, id);
+}
+
+extern void port_free_sprite(sprite_info_t *spr) {
+    if (!spr) { return; }
+
+    if (spr->data) {
+        animate_sprite_node_free(spr->data);
+        spr->data = NULL;
+    }
+}
+
 void port_enter_combat() {
     //gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     // Right now we need to migrate player to combat, we will see if that is better.

@@ -7,6 +7,11 @@
 
 power_list_t* wizard_spells[10] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 
+extern power_list_t* wizard_get_spells(const int level) {
+    if (level < 1 || level > 10) { return NULL; }
+    return wizard_spells[level - 1];
+}
+
 extern void wizard_add_power(const int spell_level, power_t *pw) {
     int index = spell_level - 1;
     if (index < 0 || index > 9) { return; }

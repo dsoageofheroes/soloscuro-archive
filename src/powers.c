@@ -3,6 +3,7 @@
 #include "wizard.h"
 #include "gff.h"
 #include "gfftypes.h"
+#include "port.h"
 
 extern power_list_t* power_list_create() {
     return calloc(1, sizeof(power_list_t*));
@@ -25,6 +26,9 @@ extern void power_list_free_instance(power_list_t *pl, power_instance_t *pi) {
     if (pl->head == pi) {
         pl->head = pi->next;
     }
+    if (pi->stats->icon.data) {
+        port_free_sprite(pi->stats->icon.data);
+    }
     if (pi->stats->description) {
         free(pi->stats->description);
     }
@@ -42,16 +46,20 @@ extern void power_list_free(power_list_t *pl) {
     free(pl);
 }
 
-extern void powers_set_cast(power_t *powers, const uint16_t id) {
+extern void powers_set_cast(power_t *powers, const uint32_t id) {
 }
 
-extern void powers_set_icon(power_t *powers, const uint16_t id) {
+extern void powers_set_icon(power_t *power, const uint32_t id) {
+    gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
+    if (!power) { return; }
+    power->icon.bmp_id = 0;
+    port_load_sprite(&(power->icon), pal, RESOURCE_GFF_INDEX, GFF_ICON, id);
 }
 
-extern void powers_set_thrown(power_t *powers, const uint16_t id) {
+extern void powers_set_thrown(power_t *powers, const uint32_t id) {
 }
 
-extern void powers_set_hit(power_t *powers, const uint16_t id) {
+extern void powers_set_hit(power_t *powers, const uint32_t id) {
 }
 
 extern void powers_init() {

@@ -237,4 +237,5 @@ extern char* spells_read_description(const uint16_t id);
 extern void wizard_add_power(const int spell_level, power_t *pw);
 extern void wizard_setup_powers();
 extern void wizard_cleanup();
+extern power_list_t* wizard_get_spells(const int level);
 #endif

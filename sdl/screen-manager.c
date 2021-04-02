@@ -16,8 +16,6 @@ static sops_t screens[MAX_SCREENS];
 static uint32_t screen_pos = 0;
 
 void screen_init(SDL_Renderer *renderer) {
-    font_init(renderer);
-
     sprite_init();
 
     memset(screens, 0x0, sizeof(sops_t) * MAX_SCREENS);

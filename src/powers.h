@@ -38,6 +38,7 @@ typedef struct power_s {
     sprite_info_t   thrown;
     sprite_info_t   hit;
     uint16_t        cast_sound, thrown_sound, hit_sound;
+    int8_t          level;
     power_actions_t actions;
     // Add animation sequence info here.
 } power_t;
@@ -71,10 +72,10 @@ typedef struct power_overlay_s {
 
 extern void powers_init();
 extern void powers_cleanup();
-extern void powers_set_cast(power_t *powers, const uint16_t id);
-extern void powers_set_icon(power_t *powers, const uint16_t id);
-extern void powers_set_thrown(power_t *powers, const uint16_t id);
-extern void powers_set_hit(power_t *powers, const uint16_t id);
+extern void powers_set_cast(power_t *powers, const uint32_t id);
+extern void powers_set_icon(power_t *powers, const uint32_t id);
+extern void powers_set_thrown(power_t *powers, const uint32_t id);
+extern void powers_set_hit(power_t *powers, const uint32_t id);
 extern size_t select_by_game(const size_t ds1, const size_t ds2, const size_t dso);
 extern char* spin_read_description(const uint16_t id);
 

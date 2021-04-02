@@ -53,6 +53,7 @@ extern void wizard_monster_summoning_ii_setup  (power_t *power) {
     power->description          = spin_read_description(select_by_game(50, -1, -1));
     power->range                = -99999;
     power->aoe                  = -99999;
+    power->level                = 0;
     power->shape                = TARGET_SINGLE;
     power->cast_sound           = select_by_game(82, 82, 82);
     power->thrown_sound         = select_by_game(75, 75, 75);

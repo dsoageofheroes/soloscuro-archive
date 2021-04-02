@@ -32,6 +32,9 @@ static uint8_t slot_clicked;
 static int32_t player_selected = 0;
 static uint32_t xoffset, yoffset;
 static int mode = 2; // 0 = char, 2 = powers, 3 = status
+#define MAX_POWERS (50)
+static power_t *power_list[MAX_POWERS];
+static int level = 1;
 
 static SDL_Rect initial_locs[] = {{ 155, 28, 0, 0 }, // description
                                   { 75, 175, 0, 0 }, // message
@@ -55,6 +58,20 @@ static SDL_Rect apply_params(const SDL_Rect rect, const uint32_t x, const uint32
     return ret;
 }
 
+static void set_power(const int type, const int level) {
+    char buf[64];
+    power_list_t *powers = wizard_get_spells(level);
+    power_instance_t *rover = powers->head;
+    size_t power_pos = 0;
+    while (rover) {
+        power_list[power_pos++] = rover->stats;
+        rover = rover->next;
+    }
+    power_list[power_pos] = NULL;
+    snprintf(buf, 63, "LEVEL %d", level);
+    label_set_text(&power_level, buf);
+}
+
 void view_character_init(SDL_Renderer *renderer, const uint32_t _x, const uint32_t _y) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     rend = renderer;
@@ -66,6 +83,7 @@ void view_character_init(SDL_Renderer *renderer, const uint32_t _x, const uint32
 
     memset(description, 0x0, sizeof(description));
     memset(message, 0x0, sizeof(message));
+    memset(power_list, 0x0, sizeof(power_t*) * MAX_POWERS);
 
     panel = sprite_new(renderer, pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 11000);
     effects = sprite_new(renderer, pal, 80 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20075);
@@ -117,6 +135,8 @@ void view_character_init(SDL_Renderer *renderer, const uint32_t _x, const uint32
     label_create_group();
     label_group_set_font(FONT_YELLOW);
     label_set_positions(143 * zoom, 30 * zoom, SCREEN_VIEW_CHARACTER);
+
+    set_power(0, level);
 }
 
 static void render_character(SDL_Renderer *renderer) {
@@ -163,11 +183,20 @@ static void render_character(SDL_Renderer *renderer) {
 }
 
 static void render_powers(SDL_Renderer *renderer) {
+    const float zoom = main_get_zoom();
     sprite_render(renderer, buttons[0]);
     sprite_render(renderer, buttons[1]);
 
     label_render(&power_name, renderer);
     label_render(&power_level, renderer);
+
+    for (int i = 0; i < MAX_POWERS && power_list[i]; i++) {
+        animate_sprite_node_t *asn = (animate_sprite_node_t*) power_list[i]->icon.data;
+        sprite_set_location(asn->anim->spr, xoffset + (170 + (i % 5) * 20) * zoom,
+            yoffset + (42 + (i / 5) * 20) * zoom);
+        sprite_render(renderer, asn->anim->spr);
+    }
+    //power_list_t* wizard_get_spells(const int level);
 }
 
 #define BUF_MAX (1<<12)
@@ -255,6 +284,11 @@ static int get_sprite_mouse_is_on(const uint32_t x, const uint32_t y) {
         if (sprite_in_rect(ports[i], x, y)) { return ports[i]; }
     }
 
+    if (mode == 2) {
+        if (sprite_in_rect(buttons[0], x, y)) { return buttons[0]; }
+        if (sprite_in_rect(buttons[1], x, y)) { return buttons[1]; }
+    }
+
     return SPRITE_ERROR;
 }
 
@@ -311,6 +345,16 @@ int view_character_handle_mouse_up(const uint32_t button, const uint32_t x, cons
     if (sprite_in_rect(inv, x, y)) { screen_push_screen(rend, &inventory_screen, 0, 0); }
     if (sprite_in_rect(powers, x, y)) { mode = 2; }
     if (sprite_in_rect(status, x, y)) { mode = 3; }
+
+    if (mode == 2) {
+        if (sprite_in_rect(buttons[0], x, y)) { return buttons[0]; }
+        if (sprite_in_rect(buttons[1], x, y)) {
+            level = (level + 1) % 6;
+            if (level < 1) { level = 1; }
+            set_power(0, level);
+        }
+    }
+
     return 1; // means I captured the mouse click
 }
 

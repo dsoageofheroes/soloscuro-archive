@@ -258,8 +258,7 @@ static int sdl_init(const int what) {
     return SDL_Init(what);
 }
 
-static void init(int args, char *argv[]) {
-    int run_lua = 1;
+static void gui_init() {
     xmappos = 560;
     ymappos = 50;
     xmapdiff = ymapdiff = 0;
@@ -282,9 +281,15 @@ static void init(int args, char *argv[]) {
 
     last_tick = SDL_GetTicks();
 
-    gameloop_init();
-
     screen_init(renderer);
+}
+
+static void init(int args, char *argv[]) {
+    int run_lua = 1;
+
+    font_init(renderer);
+
+    gameloop_init();
 
     player_init();
     mouse_init(renderer);
@@ -377,6 +382,7 @@ int main(int argc, char *argv[]) {
     parse_args(argc, argv);
 
     // Order matters.
+    gui_init();
     gff_init();
     ui_lua_load_preload("lua/settings.lua");
     if (gff_get_game_type() == DARKSUN_UNKNOWN) {

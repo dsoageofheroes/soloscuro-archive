@@ -8,17 +8,17 @@
 #include "../rules.h"
 #include "../wizard.h"
 
-extern int wizard_psionic_dampener_can_activate (power_instance_t *source, const int16_t power_level) {
+static int wizard_psionic_dampener_can_activate (power_instance_t *source, const int16_t power_level) {
     if (!source || !source->entity) { return 0;}
     return entity_has_wizard_slot(source->entity, power_level);
 }
 
-extern int wizard_psionic_dampener_pay          (power_instance_t *source, const int16_t power_level) {
+static int wizard_psionic_dampener_pay          (power_instance_t *source, const int16_t power_level) {
     if (!source || !source->entity) { return 0;}
     return entity_take_wizard_slot(source->entity, power_level);
 }
 
-extern void wizard_psionic_dampener_apply        (power_instance_t *source, entity_t *entity) {
+static void wizard_psionic_dampener_apply        (power_instance_t *source, entity_t *entity) {
     if (!source || !entity) { return; }
     size_t num_dice = 0, mod = 0, damage = 0;
     uint64_t effect_type = 0;
@@ -31,12 +31,12 @@ extern void wizard_psionic_dampener_apply        (power_instance_t *source, enti
     effect_type = 0 | EFFECT_MAGIC;
 }
 
-extern int wizard_psionic_dampener_affect_power (power_instance_t *target) {
+static int wizard_psionic_dampener_affect_power (power_instance_t *target) {
     if (!target) { return 0;}
     return 0; // Doesn't affect powers.
 }
 
-extern int wizard_psionic_dampener_update       (power_t *power, power_instance_t *source) {
+static int wizard_psionic_dampener_update       (power_t *power, power_instance_t *source) {
     if (!power || ! source) { return 0;}
     entity_t *entity = source->entity;
 
@@ -50,9 +50,10 @@ extern int wizard_psionic_dampener_update       (power_t *power, power_instance_
 
 extern void wizard_psionic_dampener_setup  (power_t *power) {
     power->name                 = "PSIONIC DAMPENER";
-    power->description          = spin_read_description(select_by_game(0, 49, 49));
+    power->description          = spin_read_description(select_by_game(49, 49, 49));
     power->range                = -99999;
     power->aoe                  = -99999;
+    power->level                = 4;
     power->shape                = TARGET_ENEMY;
     power->cast_sound           = select_by_game(10, 10, 10);
     power->thrown_sound         = select_by_game(255, 255, 255);

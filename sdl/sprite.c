@@ -4,7 +4,7 @@
 #define MAX_SPRITES (1<<10)
 
 static sprite_t sprites[MAX_SPRITES];
-static uint16_t sprite_pos;
+static uint16_t sprite_pos = 0;
 
 static uint16_t sprite_append_full(uint16_t sprite_id, SDL_Renderer *renderer, SDL_Rect *initial,
         gff_palette_t *pal,
