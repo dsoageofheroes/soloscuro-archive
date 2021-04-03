@@ -50,7 +50,7 @@ static int wizard_summon_shadow_update       (power_t *power, power_instance_t *
 
 extern void wizard_summon_shadow_setup  (power_t *power) {
     power->name                 = "SUMMON SHADOW";
-    power->description          = spin_read_description(select_by_game(66, 66, 66));
+    power->description          = spin_read_description(select_by_game(67, 66, 66));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 5;
@@ -62,7 +62,7 @@ extern void wizard_summon_shadow_setup  (power_t *power) {
     power->actions.pay          = wizard_summon_shadow_pay;
     power->actions.apply        = wizard_summon_shadow_apply;
     power->actions.affect_power = wizard_summon_shadow_affect_power;
-    powers_set_icon(power, select_by_game(21065, 21065, 21065));
+    powers_set_icon(power, select_by_game(21066, 21065, 21065));
     powers_set_cast(power, select_by_game(8309, 8309, 8309)); // OJFF
     powers_set_thrown(power, select_by_game(8099, 8099, 8099)); // OJFF.
     powers_set_hit(power, select_by_game(8300, 8300, 8300)); // OJFF

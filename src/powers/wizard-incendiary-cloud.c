@@ -51,7 +51,7 @@ static int wizard_incendiary_cloud_update       (power_t *power, power_instance_
 
 extern void wizard_incendiary_cloud_setup  (power_t *power) {
     power->name                 = "INCENDIARY CLOUD";
-    power->description          = spin_read_description(select_by_game(94, 94, 94));
+    power->description          = spin_read_description(select_by_game(-1, 94, 94));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 8;

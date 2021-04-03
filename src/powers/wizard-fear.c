@@ -50,7 +50,7 @@ static int wizard_fear_update       (power_t *power, power_instance_t *source) {
 
 extern void wizard_fear_setup  (power_t *power) {
     power->name                 = "FEAR";
-    power->description          = spin_read_description(select_by_game(42, 42, 42));
+    power->description          = spin_read_description(select_by_game(44, 42, 42));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 4;
@@ -62,7 +62,7 @@ extern void wizard_fear_setup  (power_t *power) {
     power->actions.pay          = wizard_fear_pay;
     power->actions.apply        = wizard_fear_apply;
     power->actions.affect_power = wizard_fear_affect_power;
-    powers_set_icon(power, select_by_game(21041, 21041, 21041));
+    powers_set_icon(power, select_by_game(21043, 21041, 21041));
     powers_set_cast(power, select_by_game(8201, 8201, 8201)); // OJFF
     powers_set_thrown(power, select_by_game(8099, 8099, 8099)); // OJFF.
     powers_set_hit(power, select_by_game(8217, 8217, 8217)); // OJFF

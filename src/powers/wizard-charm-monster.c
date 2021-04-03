@@ -50,7 +50,7 @@ static int wizard_charm_monster_update       (power_t *power, power_instance_t *
 
 extern void wizard_charm_monster_setup  (power_t *power) {
     power->name                 = "CHARM MONSTER";
-    power->description          = spin_read_description(select_by_game(40, 40, 40));
+    power->description          = spin_read_description(select_by_game(41, 40, 40));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 4;
@@ -62,7 +62,7 @@ extern void wizard_charm_monster_setup  (power_t *power) {
     power->actions.pay          = wizard_charm_monster_pay;
     power->actions.apply        = wizard_charm_monster_apply;
     power->actions.affect_power = wizard_charm_monster_affect_power;
-    powers_set_icon(power, select_by_game(21039, 21039, 21039));
+    powers_set_icon(power, select_by_game(21040, 21039, 21039));
     powers_set_cast(power, select_by_game(8304, 8304, 8304)); // OJFF
     powers_set_thrown(power, select_by_game(8099, 8099, 8099)); // OJFF.
     powers_set_hit(power, select_by_game(8302, 8302, 8302)); // OJFF

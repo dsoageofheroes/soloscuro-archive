@@ -50,7 +50,7 @@ static int wizard_prismatic_sphere_update       (power_t *power, power_instance_
 
 extern void wizard_prismatic_sphere_setup  (power_t *power) {
     power->name                 = "PRISMATIC SPHERE";
-    power->description          = spin_read_description(select_by_game(110, 110, 110));
+    power->description          = spin_read_description(select_by_game(-1, 110, 110));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 9;

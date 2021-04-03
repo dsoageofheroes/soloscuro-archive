@@ -50,7 +50,7 @@ static int wizard_mordenkainens_sword_update       (power_t *power, power_instan
 
 extern void wizard_mordenkainens_sword_setup  (power_t *power) {
     power->name                 = "MORDENKAINEN'S SWORD";
-    power->description          = spin_read_description(select_by_game(89, 89, 89));
+    power->description          = spin_read_description(select_by_game(-1, 89, 89));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 7;

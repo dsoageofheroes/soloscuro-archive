@@ -50,7 +50,7 @@ static int wizard_solid_fog_update       (power_t *power, power_instance_t *sour
 
 extern void wizard_solid_fog_setup  (power_t *power) {
     power->name                 = "SOLID FOG";
-    power->description          = spin_read_description(select_by_game(51, 51, 51));
+    power->description          = spin_read_description(select_by_game(52, 51, 51));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 4;
@@ -62,7 +62,7 @@ extern void wizard_solid_fog_setup  (power_t *power) {
     power->actions.pay          = wizard_solid_fog_pay;
     power->actions.apply        = wizard_solid_fog_apply;
     power->actions.affect_power = wizard_solid_fog_affect_power;
-    powers_set_icon(power, select_by_game(21050, 21050, 21050));
+    powers_set_icon(power, select_by_game(21051, 21050, 21050));
     powers_set_cast(power, select_by_game(8300, 8300, 8300)); // OJFF
     powers_set_thrown(power, select_by_game(8099, 8099, 8099)); // OJFF.
     powers_set_hit(power, select_by_game(-1, -1, -1)); // OJFF

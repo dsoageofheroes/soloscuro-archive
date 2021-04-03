@@ -50,7 +50,7 @@ static int wizard_reincarnation_update       (power_t *power, power_instance_t *
 
 extern void wizard_reincarnation_setup  (power_t *power) {
     power->name                 = "REINCARNATION";
-    power->description          = spin_read_description(select_by_game(78, 78, 78));
+    power->description          = spin_read_description(select_by_game(-1, 78, 78));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 6;

@@ -51,7 +51,7 @@ static int wizard_bigbys_crushing_hand_update       (power_t *power, power_insta
 
 extern void wizard_bigbys_crushing_hand_setup  (power_t *power) {
     power->name                 = "BIGBY'S CRUSHING HAND";
-    power->description          = spin_read_description(select_by_game(103, 103, 103));
+    power->description          = spin_read_description(select_by_game(-1, 103, 103));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 9;

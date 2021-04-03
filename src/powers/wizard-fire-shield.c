@@ -50,7 +50,7 @@ static int wizard_fire_shield_update       (power_t *power, power_instance_t *so
 
 extern void wizard_fire_shield_setup  (power_t *power) {
     power->name                 = "FIRE SHIELD";
-    power->description          = spin_read_description(select_by_game(43, 43, 43));
+    power->description          = spin_read_description(select_by_game(45, 43, 43));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 4;
@@ -62,7 +62,7 @@ extern void wizard_fire_shield_setup  (power_t *power) {
     power->actions.pay          = wizard_fire_shield_pay;
     power->actions.apply        = wizard_fire_shield_apply;
     power->actions.affect_power = wizard_fire_shield_affect_power;
-    powers_set_icon(power, select_by_game(21042, 21042, 21042));
+    powers_set_icon(power, select_by_game(21044, 21042, 21042));
     powers_set_cast(power, select_by_game(8209, 8209, 8209)); // OJFF
     powers_set_thrown(power, select_by_game(8099, 8099, 8099)); // OJFF.
     powers_set_hit(power, select_by_game(-1, -1, -1)); // OJFF

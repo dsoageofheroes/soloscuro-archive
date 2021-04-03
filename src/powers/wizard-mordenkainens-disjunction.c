@@ -51,7 +51,7 @@ static int wizard_mordenkainens_disjunction_update       (power_t *power, power_
 
 extern void wizard_mordenkainens_disjunction_setup  (power_t *power) {
     power->name                 = "MORDENKAINEN'S DISJUNCTION";
-    power->description          = spin_read_description(select_by_game(108, 108, 108));
+    power->description          = spin_read_description(select_by_game(-1, 108, 108));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 9;

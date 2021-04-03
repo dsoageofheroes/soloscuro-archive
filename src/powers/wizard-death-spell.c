@@ -50,7 +50,7 @@ static int wizard_death_spell_update       (power_t *power, power_instance_t *so
 
 extern void wizard_death_spell_setup  (power_t *power) {
     power->name                 = "DEATH SPELL";
-    power->description          = spin_read_description(select_by_game(72, 72, 72));
+    power->description          = spin_read_description(select_by_game(-1, 72, 72));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 6;

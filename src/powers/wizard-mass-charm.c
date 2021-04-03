@@ -51,7 +51,7 @@ static int wizard_mass_charm_update       (power_t *power, power_instance_t *sou
 
 extern void wizard_mass_charm_setup  (power_t *power) {
     power->name                 = "MASS CHARM";
-    power->description          = spin_read_description(select_by_game(95, 95, 95));
+    power->description          = spin_read_description(select_by_game(-1, 95, 95));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 8;

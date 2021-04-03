@@ -50,7 +50,7 @@ static int wizard_spirit_armor_update       (power_t *power, power_instance_t *s
 
 extern void wizard_spirit_armor_setup  (power_t *power) {
     power->name                 = "SPIRIT ARMOR";
-    power->description          = spin_read_description(select_by_game(38, 38, 38));
+    power->description          = spin_read_description(select_by_game(39, 38, 38));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 3;
@@ -62,7 +62,7 @@ extern void wizard_spirit_armor_setup  (power_t *power) {
     power->actions.pay          = wizard_spirit_armor_pay;
     power->actions.apply        = wizard_spirit_armor_apply;
     power->actions.affect_power = wizard_spirit_armor_affect_power;
-    powers_set_icon(power, select_by_game(21037, 21037, 21037));
+    powers_set_icon(power, select_by_game(21038, 21037, 21037));
     powers_set_cast(power, select_by_game(8301, 8301, 8301)); // OJFF
     powers_set_thrown(power, select_by_game(8099, 8099, 8099)); // OJFF.
     powers_set_hit(power, select_by_game(-1, -1, -1)); // OJFF

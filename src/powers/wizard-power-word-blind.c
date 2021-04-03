@@ -50,7 +50,7 @@ static int wizard_power_word_blind_update       (power_t *power, power_instance_
 
 extern void wizard_power_word_blind_setup  (power_t *power) {
     power->name                 = "POWER WORD BLIND";
-    power->description          = spin_read_description(select_by_game(100, 100, 100));
+    power->description          = spin_read_description(select_by_game(-1, 100, 100));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 8;

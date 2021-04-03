@@ -50,7 +50,7 @@ static int wizard_monster_summoning_vii_update       (power_t *power, power_inst
 
 extern void wizard_monster_summoning_vii_setup  (power_t *power) {
     power->name                 = "MONSTER SUMMONING VII";
-    power->description          = spin_read_description(select_by_game(107, 107, 107));
+    power->description          = spin_read_description(select_by_game(-1, 107, 107));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 9;

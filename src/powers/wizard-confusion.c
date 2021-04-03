@@ -50,7 +50,7 @@ static int wizard_confusion_update       (power_t *power, power_instance_t *sour
 
 extern void wizard_confusion_setup  (power_t *power) {
     power->name                 = "CONFUSION";
-    power->description          = spin_read_description(select_by_game(41, 41, 41));
+    power->description          = spin_read_description(select_by_game(42, 41, 41));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 4;
@@ -62,7 +62,7 @@ extern void wizard_confusion_setup  (power_t *power) {
     power->actions.pay          = wizard_confusion_pay;
     power->actions.apply        = wizard_confusion_apply;
     power->actions.affect_power = wizard_confusion_affect_power;
-    powers_set_icon(power, select_by_game(21040, 21040, 21040));
+    powers_set_icon(power, select_by_game(21041, 21040, 21040));
     powers_set_cast(power, select_by_game(8306, 8306, 8306)); // OJFF
     powers_set_thrown(power, select_by_game(8099, 8099, 8099)); // OJFF.
     powers_set_hit(power, select_by_game(8302, 8302, 8302)); // OJFF

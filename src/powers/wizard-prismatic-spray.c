@@ -51,7 +51,7 @@ static int wizard_prismatic_spray_update       (power_t *power, power_instance_t
 
 extern void wizard_prismatic_spray_setup  (power_t *power) {
     power->name                 = "PRISMATIC SPRAY";
-    power->description          = spin_read_description(select_by_game(91, 91, 91));
+    power->description          = spin_read_description(select_by_game(-1, 91, 91));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 7;

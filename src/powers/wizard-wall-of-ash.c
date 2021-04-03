@@ -51,7 +51,7 @@ static int wizard_wall_of_ash_update       (power_t *power, power_instance_t *so
 
 extern void wizard_wall_of_ash_setup  (power_t *power) {
     power->name                 = "WALL OF ASH";
-    power->description          = spin_read_description(select_by_game(115, 115, 115));
+    power->description          = spin_read_description(select_by_game(-1, 115, 115));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 10;

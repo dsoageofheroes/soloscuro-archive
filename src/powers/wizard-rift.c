@@ -50,7 +50,7 @@ static int wizard_rift_update       (power_t *power, power_instance_t *source) {
 
 extern void wizard_rift_setup  (power_t *power) {
     power->name                 = "RIFT";
-    power->description          = spin_read_description(select_by_game(114, 114, 114));
+    power->description          = spin_read_description(select_by_game(-1, 114, 114));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 10;

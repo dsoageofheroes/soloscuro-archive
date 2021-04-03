@@ -50,7 +50,7 @@ static int wizard_spell_immunity_update       (power_t *power, power_instance_t 
 
 extern void wizard_spell_immunity_setup  (power_t *power) {
     power->name                 = "SPELL IMMUNITY";
-    power->description          = spin_read_description(select_by_game(102, 102, 102));
+    power->description          = spin_read_description(select_by_game(-1, 102, 102));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 8;

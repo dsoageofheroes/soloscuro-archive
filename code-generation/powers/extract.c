@@ -93,6 +93,7 @@ typedef struct power_entry_s {
 } __attribute__ ((__packed__)) power_entry_t;
 
 static power_info_t *ds1powers;
+static int ds1_has_powerp(const power_entry_t *pw);
 
 #include "tables.c"
 
@@ -614,6 +615,10 @@ int get_level() {
     } else if (dso_pos < 232) { return 8;
     } else if (dso_pos < 233) { return 9;
     } else if (dso_pos < 234) { return 10;
+    } else if (dso_pos == 345) { return 3;
+    } else if (dso_pos == 346) { return 4;
+    } else if (dso_pos == 347) { return 5;
+    } else if (dso_pos == 348) { return 4;
     }
 
     return 0;
@@ -650,7 +655,7 @@ void add_power() {
     } else if (dso_pos == 345) { add_to_power(wizard_powers[2], dso_pos); // Monster Summoning I
     } else if (dso_pos == 346) { add_to_power(wizard_powers[3], dso_pos); // Monster Summoning II
     } else if (dso_pos == 347) { add_to_power(wizard_powers[4], dso_pos); // Monster Summoning III
-    } else if (dso_pos == 348) { add_to_power(wizard_powers[5], dso_pos); // Evard's Black Tentacles
+    } else if (dso_pos == 348) { add_to_power(wizard_powers[3], dso_pos); // Evard's Black Tentacles
     } else {
         fprintf(stderr, "ERRRRRRRRRRRRRR: unknown power: %ld\n", dso_pos);
     }
@@ -736,6 +741,7 @@ int main() {
     ds2pw = dsopw;
     generate_power_csv();
     generate_power(dsopw);
+    add_power();
 
     ds1pw = ds1powers[49];
     dso_pos = 346;
@@ -745,6 +751,7 @@ int main() {
     ds2pw = dsopw;
     generate_power_csv();
     generate_power(dsopw);
+    add_power();
 
     ds1pw = ds1powers[65];
     dso_pos = 347;
@@ -754,6 +761,7 @@ int main() {
     ds2pw = dsopw;
     generate_power_csv();
     generate_power(dsopw);
+    add_power();
 
     ds1pw = ds1powers[65];
     dso_pos = 348;
@@ -763,12 +771,24 @@ int main() {
     ds2pw = dsopw;
     generate_power_csv();
     generate_power(dsopw);
+    add_power();
 
     generate_tables();
 
     fclose(ds1_file);
     fclose(ds2_file);
     fclose(dso_file);
+    return 0;
+}
+
+static int ds1_has_powerp(const power_entry_t *pw) {
+    for (int i = 0; i < 900; i++) {
+        int ds1_len = strlen(ds1_power_names[i]);
+        //printf("POW: '%s' ?= '%s'\n", ds1_power_names[i], pw->name);
+        if (!strncmp(ds1_power_names[i], pw->name, ds1_len)) { return i; }
+        if (!strncmp(ds1_power_names[i], pw->name2, ds1_len)) { return i; }
+    }
+
     return 0;
 }
 
@@ -1055,7 +1075,9 @@ static void generate_setup(power_entry_t pw, char *name, FILE *file) {
     fprintf(file, "\nextern void %s_%s_setup  (power_t *power) {\n", type, name);
     fprintf(file, "    power->name                 = \"%s\";\n", pw.name);
     fprintf(file, "    power->description          = spin_read_description(select_by_game(%d, %d, %d));\n",
-            (dso_pos < MAX_DSO_ICONS)
+            (!ds1_has_powerp(&pw))
+            ? -1
+            : (dso_pos < MAX_DSO_ICONS)
             ? ds1_icons[dso_pos].spin
             : -1,
             (dso_pos < MAX_DSO_ICONS)
@@ -1125,7 +1147,10 @@ static void generate_tables() {
             if (wizard_powers[i][j] >= 0) {
                 fprintf(file, "    p = calloc(1, sizeof(power_t));\n");
                 fprintf(file, "    wizard_%s_setup(p);\n", power_names[wizard_powers[i][j]]);
-                fprintf(file, "    wizard_add_power(%d, p);\n", i + 1);
+                fprintf(file, "    if (p->description) {\n");
+                fprintf(file, "        wizard_add_power(%d, p);\n", i + 1);
+                fprintf(file, "    } else {\n");
+                fprintf(file, "    }\n");
             }
         }
         fprintf(file, "\n");

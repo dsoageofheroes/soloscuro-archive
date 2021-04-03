@@ -50,7 +50,7 @@ static int wizard_ottos_irresistible_dance_update       (power_t *power, power_i
 
 extern void wizard_ottos_irresistible_dance_setup  (power_t *power) {
     power->name                 = "OTTO'S IRRESISTIBLE DANCE";
-    power->description          = spin_read_description(select_by_game(99, 99, 99));
+    power->description          = spin_read_description(select_by_game(-1, 99, 99));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 8;

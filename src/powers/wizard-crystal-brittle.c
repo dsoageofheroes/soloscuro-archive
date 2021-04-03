@@ -51,7 +51,7 @@ static int wizard_crystal_brittle_update       (power_t *power, power_instance_t
 
 extern void wizard_crystal_brittle_setup  (power_t *power) {
     power->name                 = "CRYSTAL BRITTLE";
-    power->description          = spin_read_description(select_by_game(104, 104, 104));
+    power->description          = spin_read_description(select_by_game(-1, 104, 104));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 9;

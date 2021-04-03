@@ -50,7 +50,7 @@ static int wizard_slow_update       (power_t *power, power_instance_t *source) {
 
 extern void wizard_slow_setup  (power_t *power) {
     power->name                 = "SLOW";
-    power->description          = spin_read_description(select_by_game(37, 37, 37));
+    power->description          = spin_read_description(select_by_game(38, 37, 37));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 3;
@@ -62,7 +62,7 @@ extern void wizard_slow_setup  (power_t *power) {
     power->actions.pay          = wizard_slow_pay;
     power->actions.apply        = wizard_slow_apply;
     power->actions.affect_power = wizard_slow_affect_power;
-    powers_set_icon(power, select_by_game(21036, 21036, 21036));
+    powers_set_icon(power, select_by_game(21037, 21036, 21036));
     powers_set_cast(power, select_by_game(8304, 8304, 8304)); // OJFF
     powers_set_thrown(power, select_by_game(8099, 8099, 8099)); // OJFF.
     powers_set_hit(power, select_by_game(8308, 8308, 8308)); // OJFF

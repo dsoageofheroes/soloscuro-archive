@@ -50,7 +50,7 @@ static int wizard_improved_invisibility_update       (power_t *power, power_inst
 
 extern void wizard_improved_invisibility_setup  (power_t *power) {
     power->name                 = "IMPROVED INVISIBILITY";
-    power->description          = spin_read_description(select_by_game(45, 45, 45));
+    power->description          = spin_read_description(select_by_game(47, 45, 45));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 4;
@@ -62,7 +62,7 @@ extern void wizard_improved_invisibility_setup  (power_t *power) {
     power->actions.pay          = wizard_improved_invisibility_pay;
     power->actions.apply        = wizard_improved_invisibility_apply;
     power->actions.affect_power = wizard_improved_invisibility_affect_power;
-    powers_set_icon(power, select_by_game(21044, 21044, 21044));
+    powers_set_icon(power, select_by_game(21046, 21044, 21044));
     powers_set_cast(power, select_by_game(-1, -1, -1)); // OJFF
     powers_set_thrown(power, select_by_game(8099, 8099, 8099)); // OJFF.
     powers_set_hit(power, select_by_game(8305, 8305, 8305)); // OJFF

@@ -26,18 +26,21 @@ static uint16_t effects, view_char, use, panel, sun;
 static uint16_t character, inv, powers, status;
 static uint16_t game_menu, game_return;
 static uint16_t slots;
+static uint16_t power_highlight, power_background;
 enum {SELECT_NONE, SELECT_POPUP, SELECT_NEW, SELECT_ALS};
 static int8_t last_selection = SELECT_NONE;
 static uint8_t slot_clicked;
 static int32_t player_selected = 0;
 static uint32_t xoffset, yoffset;
+static uint32_t mousex = 0, mousey = 0;
 static int mode = 2; // 0 = char, 2 = powers, 3 = status
 #define MAX_POWERS (50)
 static power_t *power_list[MAX_POWERS];
+static power_t *power_to_display = NULL;
 static int level = 1;
 
 static SDL_Rect initial_locs[] = {{ 155, 28, 0, 0 }, // description
-                                  { 75, 175, 0, 0 }, // message
+                                  { 60, 155, 0, 0 }, // message
 };
 
 static SDL_Rect description_loc, message_loc;
@@ -61,13 +64,16 @@ static SDL_Rect apply_params(const SDL_Rect rect, const uint32_t x, const uint32
 static void set_power(const int type, const int level) {
     char buf[64];
     power_list_t *powers = wizard_get_spells(level);
-    power_instance_t *rover = powers->head;
+    power_instance_t *rover = powers ? powers->head : NULL;
     size_t power_pos = 0;
+    if (!rover) { return; }
     while (rover) {
         power_list[power_pos++] = rover->stats;
         rover = rover->next;
     }
-    power_list[power_pos] = NULL;
+    while (power_pos < MAX_POWERS) {
+        power_list[power_pos++] = NULL;
+    }
     snprintf(buf, 63, "LEVEL %d", level);
     label_set_text(&power_level, buf);
 }
@@ -98,6 +104,8 @@ void view_character_init(SDL_Renderer *renderer, const uint32_t _x, const uint32
     game_return = sprite_new(renderer, pal, 252 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 10108);
     game_menu = sprite_new(renderer, pal, 222 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11101);
     slots = sprite_new(renderer, pal, 53 + x, 3 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 13007);
+    power_highlight = sprite_new(renderer, pal, 53 + x, 3 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20088);
+    power_background = sprite_new(renderer, pal, 53 + x, 3 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 15002);
 
     ai[0] = sprite_new(renderer, pal, 45 + x, 40 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111);
     ai[1] = sprite_new(renderer, pal, 45 + x, 100 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111);
@@ -122,10 +130,12 @@ void view_character_init(SDL_Renderer *renderer, const uint32_t _x, const uint32
     }
 
     description_loc = apply_params(initial_locs[0], x, y);
-    message_loc = apply_params(initial_locs[1], x, y);
+    message_loc.x = (75 + x) * zoom;
+    message_loc.y = (175 + y) * zoom;
+    message_loc.h = 8 * zoom;
+    message_loc.w = 180 * zoom;
 
     set_zoom(&description_loc, zoom);
-    set_zoom(&message_loc, zoom);
 
     strcpy(description, "description");
     if (player_get_active()->name) {
@@ -182,6 +192,32 @@ static void render_character(SDL_Renderer *renderer) {
     }
 }
 
+static power_t* find_power(const uint32_t x, const uint32_t y) {
+    size_t power_pos = 0;
+    while (power_list[power_pos]) {
+        animate_sprite_node_t *asn = (animate_sprite_node_t*) power_list[power_pos]->icon.data;
+        if (sprite_in_rect(asn->anim->spr, x, y)) {
+            return power_list[power_pos];
+        }
+        power_pos++;
+    }
+
+    return NULL;
+}
+
+static void sprite_highlight(const uint32_t x, const uint32_t y) {
+    const float zoom = main_get_zoom();
+    power_t *pw = find_power(x, y);
+
+    if (!pw) { return; }
+
+    animate_sprite_node_t *asn = (animate_sprite_node_t*) pw->icon.data;
+    sprite_set_frame(power_highlight, 4);
+    sprite_set_location(power_highlight, sprite_getx(asn->anim->spr) - 1 * zoom,
+            sprite_gety(asn->anim->spr) - 1 * zoom);
+    sprite_render(main_get_rend(), power_highlight);
+}
+
 static void render_powers(SDL_Renderer *renderer) {
     const float zoom = main_get_zoom();
     sprite_render(renderer, buttons[0]);
@@ -196,7 +232,42 @@ static void render_powers(SDL_Renderer *renderer) {
             yoffset + (42 + (i / 5) * 20) * zoom);
         sprite_render(renderer, asn->anim->spr);
     }
+
+    sprite_highlight(mousex, mousey);
     //power_list_t* wizard_get_spells(const int level);
+}
+
+static int get_next_len(const char *str, const int max) {
+    int ret = 0;
+    for (int i = 0; i < max; i++) {
+        if (str[i] == ' ') { ret = i + 1; }
+        if (str[i] == '\0') {
+            return i;
+        }
+    }
+    return ret;
+}
+
+static void render_power_to_display(SDL_Renderer *renderer) {
+    const float zoom = main_get_zoom();
+    char *msg = power_to_display->description;
+    int next_index = 0, pos = 0, amt = 20;
+    int lines = 0;
+
+    sprite_set_location(power_background, xoffset + (90 * zoom) , yoffset + (48 * zoom));
+    sprite_render(main_get_rend(), power_background);
+    animate_sprite_node_t *asn = (animate_sprite_node_t*) power_to_display->icon.data;
+    sprite_set_location(asn->anim->spr, xoffset + (100) * zoom, yoffset + (58 * zoom));
+    sprite_render(renderer, asn->anim->spr);
+
+    while ((next_index = get_next_len(msg + pos, amt))) {
+        print_line_len(renderer, FONT_BLACK, msg + pos, 
+                (lines == 0) ? xoffset + (120 * zoom) : xoffset + (100 * zoom),
+                yoffset + ((64 + 10 * lines) * zoom), next_index);
+        pos += next_index;
+        lines++;
+        amt = 26;
+    }
 }
 
 #define BUF_MAX (1<<12)
@@ -226,7 +297,8 @@ void view_character_render(void *data, SDL_Renderer *renderer) {
     }
 
     print_line_len(renderer, FONT_YELLOW, description, description_loc.x, description_loc.y, sizeof(description));
-    print_line_len(renderer, FONT_GREY, message, message_loc.x, message_loc.y, sizeof(message));
+    //print_line_len(renderer, FONT_GREY, message, message_loc.x, message_loc.y, sizeof(message));
+    font_render_center(renderer, FONT_GREY, message, message_loc);
 
     for (int i = 0; i < 4; i++) {
         if (player_exists(i)) {
@@ -266,6 +338,10 @@ void view_character_render(void *data, SDL_Renderer *renderer) {
         case 2: render_powers(renderer); break;
         default: break;
     }
+
+    if (power_to_display) {
+        render_power_to_display(renderer);
+    }
 }
 
 static int get_sprite_mouse_is_on(const uint32_t x, const uint32_t y) {
@@ -296,6 +372,7 @@ int view_character_handle_mouse_movement(const uint32_t x, const uint32_t y) {
     static uint16_t last_sprite = SPRITE_ERROR;
 
     uint16_t cur_sprite = get_sprite_mouse_is_on(x, y);
+    mousex = x; mousey = y;
 
     if (last_sprite != cur_sprite) {
         sprite_set_frame(cur_sprite, sprite_get_frame(cur_sprite) + 1);
@@ -322,6 +399,11 @@ int view_character_handle_mouse_down(const uint32_t button, const uint32_t x, co
 }
 
 int view_character_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
+    if (power_to_display && sprite_in_rect(power_background, x, y)) {
+        power_to_display = NULL;
+        return 1;
+    }
+
     if (button == SDL_BUTTON_RIGHT) {
         for (int i = 0; i < 4; i++) {
             if (sprite_in_rect(ports[i], x, y)) {
@@ -333,6 +415,10 @@ int view_character_handle_mouse_up(const uint32_t button, const uint32_t x, cons
                 popup_set_option(2, "CANCEL");
                 last_selection = SELECT_POPUP;
             }
+        }
+        if (mode == 2) {
+            power_to_display = find_power(x, y);
+            strcpy(message, power_to_display->name);
         }
     }
 
@@ -379,6 +465,8 @@ void view_character_free() {
     sprite_free(inv);
     sprite_free(powers);
     sprite_free(status);
+    sprite_free(power_highlight);
+    sprite_free(power_background);
 }
 
 void view_character_return_control () {

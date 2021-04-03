@@ -53,7 +53,7 @@ extern void wizard_monster_summoning_i_setup  (power_t *power) {
     power->description          = spin_read_description(select_by_game(36, -1, -1));
     power->range                = -99999;
     power->aoe                  = -99999;
-    power->level                = 0;
+    power->level                = 3;
     power->shape                = TARGET_SINGLE;
     power->cast_sound           = select_by_game(81, 81, 81);
     power->thrown_sound         = select_by_game(74, 74, 74);
@@ -62,7 +62,7 @@ extern void wizard_monster_summoning_i_setup  (power_t *power) {
     power->actions.pay          = wizard_monster_summoning_i_pay;
     power->actions.apply        = wizard_monster_summoning_i_apply;
     power->actions.affect_power = wizard_monster_summoning_i_affect_power;
-    powers_set_icon(power, select_by_game(4000, -1, -1));
+    powers_set_icon(power, select_by_game(21035, -1, -1));
     powers_set_cast(power, select_by_game(8303, 8303, 8303)); // OJFF
     powers_set_thrown(power, select_by_game(8099, 8099, 8099)); // OJFF.
     powers_set_hit(power, select_by_game(152, 152, 152)); // OJFF

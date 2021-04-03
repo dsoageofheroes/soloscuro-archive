@@ -50,7 +50,7 @@ static int wizard_level_drain_update       (power_t *power, power_instance_t *so
 
 extern void wizard_level_drain_setup  (power_t *power) {
     power->name                 = "LEVEL DRAIN";
-    power->description          = spin_read_description(select_by_game(105, 105, 105));
+    power->description          = spin_read_description(select_by_game(-1, 105, 105));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 9;

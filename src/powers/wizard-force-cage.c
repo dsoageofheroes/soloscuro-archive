@@ -50,7 +50,7 @@ static int wizard_force_cage_update       (power_t *power, power_instance_t *sou
 
 extern void wizard_force_cage_setup  (power_t *power) {
     power->name                 = "FORCE CAGE";
-    power->description          = spin_read_description(select_by_game(86, 86, 86));
+    power->description          = spin_read_description(select_by_game(-1, 86, 86));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 7;

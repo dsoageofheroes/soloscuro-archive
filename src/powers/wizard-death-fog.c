@@ -51,7 +51,7 @@ static int wizard_death_fog_update       (power_t *power, power_instance_t *sour
 
 extern void wizard_death_fog_setup  (power_t *power) {
     power->name                 = "DEATH FOG";
-    power->description          = spin_read_description(select_by_game(71, 71, 71));
+    power->description          = spin_read_description(select_by_game(-1, 71, 71));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 6;

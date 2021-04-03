@@ -51,7 +51,7 @@ static int wizard_delayed_blast_fireball_update       (power_t *power, power_ins
 
 extern void wizard_delayed_blast_fireball_setup  (power_t *power) {
     power->name                 = "DELAYED BLAST FIREBALL";
-    power->description          = spin_read_description(select_by_game(84, 84, 84));
+    power->description          = spin_read_description(select_by_game(-1, 84, 84));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 7;

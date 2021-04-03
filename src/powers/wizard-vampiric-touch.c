@@ -50,7 +50,7 @@ static int wizard_vampiric_touch_update       (power_t *power, power_instance_t 
 
 extern void wizard_vampiric_touch_setup  (power_t *power) {
     power->name                 = "VAMPIRIC TOUCH";
-    power->description          = spin_read_description(select_by_game(39, 39, 39));
+    power->description          = spin_read_description(select_by_game(40, 39, 39));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 3;
@@ -62,7 +62,7 @@ extern void wizard_vampiric_touch_setup  (power_t *power) {
     power->actions.pay          = wizard_vampiric_touch_pay;
     power->actions.apply        = wizard_vampiric_touch_apply;
     power->actions.affect_power = wizard_vampiric_touch_affect_power;
-    powers_set_icon(power, select_by_game(21038, 21038, 21038));
+    powers_set_icon(power, select_by_game(21039, 21038, 21038));
     powers_set_cast(power, select_by_game(-1, -1, -1)); // OJFF
     powers_set_thrown(power, select_by_game(8099, 8099, 8099)); // OJFF.
     powers_set_hit(power, select_by_game(8221, 8221, 8221)); // OJFF

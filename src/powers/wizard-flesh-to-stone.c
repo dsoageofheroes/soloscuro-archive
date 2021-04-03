@@ -50,7 +50,7 @@ static int wizard_flesh_to_stone_update       (power_t *power, power_instance_t 
 
 extern void wizard_flesh_to_stone_setup  (power_t *power) {
     power->name                 = "FLESH TO STONE";
-    power->description          = spin_read_description(select_by_game(80, 80, 80));
+    power->description          = spin_read_description(select_by_game(-1, 80, 80));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 6;

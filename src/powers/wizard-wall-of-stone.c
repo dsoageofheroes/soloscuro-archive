@@ -50,7 +50,7 @@ static int wizard_wall_of_stone_update       (power_t *power, power_instance_t *
 
 extern void wizard_wall_of_stone_setup  (power_t *power) {
     power->name                 = "WALL OF STONE";
-    power->description          = spin_read_description(select_by_game(68, 68, 68));
+    power->description          = spin_read_description(select_by_game(69, 68, 68));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 5;
@@ -62,7 +62,7 @@ extern void wizard_wall_of_stone_setup  (power_t *power) {
     power->actions.pay          = wizard_wall_of_stone_pay;
     power->actions.apply        = wizard_wall_of_stone_apply;
     power->actions.affect_power = wizard_wall_of_stone_affect_power;
-    powers_set_icon(power, select_by_game(21067, 21067, 21067));
+    powers_set_icon(power, select_by_game(21068, 21067, 21067));
     powers_set_cast(power, select_by_game(8303, 8303, 8303)); // OJFF
     powers_set_thrown(power, select_by_game(8099, 8099, 8099)); // OJFF.
     powers_set_hit(power, select_by_game(-1, -1, -1)); // OJFF

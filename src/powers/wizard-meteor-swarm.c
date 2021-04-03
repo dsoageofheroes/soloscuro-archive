@@ -51,7 +51,7 @@ static int wizard_meteor_swarm_update       (power_t *power, power_instance_t *s
 
 extern void wizard_meteor_swarm_setup  (power_t *power) {
     power->name                 = "METEOR SWARM";
-    power->description          = spin_read_description(select_by_game(106, 106, 106));
+    power->description          = spin_read_description(select_by_game(-1, 106, 106));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 9;

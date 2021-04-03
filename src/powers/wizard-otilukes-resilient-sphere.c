@@ -50,7 +50,7 @@ static int wizard_otilukes_resilient_sphere_update       (power_t *power, power_
 
 extern void wizard_otilukes_resilient_sphere_setup  (power_t *power) {
     power->name                 = "OTILUKE'S RESILIENT SPHERE";
-    power->description          = spin_read_description(select_by_game(48, 48, 48));
+    power->description          = spin_read_description(select_by_game(-1, 48, 48));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 4;
@@ -62,7 +62,7 @@ extern void wizard_otilukes_resilient_sphere_setup  (power_t *power) {
     power->actions.pay          = wizard_otilukes_resilient_sphere_pay;
     power->actions.apply        = wizard_otilukes_resilient_sphere_apply;
     power->actions.affect_power = wizard_otilukes_resilient_sphere_affect_power;
-    powers_set_icon(power, select_by_game(21047, 21047, 21047));
+    powers_set_icon(power, select_by_game(21035, 21047, 21047));
     powers_set_cast(power, select_by_game(8307, 8307, 8307)); // OJFF
     powers_set_thrown(power, select_by_game(8099, 8099, 8099)); // OJFF.
     powers_set_hit(power, select_by_game(8410, 8410, 8410)); // OJFF

@@ -50,7 +50,7 @@ static int wizard_time_stop_update       (power_t *power, power_instance_t *sour
 
 extern void wizard_time_stop_setup  (power_t *power) {
     power->name                 = "TIME STOP";
-    power->description          = spin_read_description(select_by_game(111, 111, 111));
+    power->description          = spin_read_description(select_by_game(-1, 111, 111));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 9;

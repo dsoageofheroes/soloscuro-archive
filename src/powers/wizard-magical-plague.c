@@ -50,7 +50,7 @@ static int wizard_magical_plague_update       (power_t *power, power_instance_t 
 
 extern void wizard_magical_plague_setup  (power_t *power) {
     power->name                 = "MAGICAL PLAGUE";
-    power->description          = spin_read_description(select_by_game(113, 113, 113));
+    power->description          = spin_read_description(select_by_game(-1, 113, 113));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 10;

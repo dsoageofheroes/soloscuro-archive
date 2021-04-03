@@ -50,7 +50,7 @@ static int wizard_spider_strand_update       (power_t *power, power_instance_t *
 
 extern void wizard_spider_strand_setup  (power_t *power) {
     power->name                 = "SPIDER STRAND";
-    power->description          = spin_read_description(select_by_game(52, 52, 52));
+    power->description          = spin_read_description(select_by_game(-1, 52, 52));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 4;
@@ -62,7 +62,7 @@ extern void wizard_spider_strand_setup  (power_t *power) {
     power->actions.pay          = wizard_spider_strand_pay;
     power->actions.apply        = wizard_spider_strand_apply;
     power->actions.affect_power = wizard_spider_strand_affect_power;
-    powers_set_icon(power, select_by_game(21051, 21051, 21051));
+    powers_set_icon(power, select_by_game(21049, 21051, 21051));
     powers_set_cast(power, select_by_game(8304, 8304, 8304)); // OJFF
     powers_set_thrown(power, select_by_game(8099, 8099, 8099)); // OJFF.
     powers_set_hit(power, select_by_game(-1, -1, -1)); // OJFF

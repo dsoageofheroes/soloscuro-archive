@@ -53,7 +53,7 @@ extern void wizard_evards_black_tentacles_setup  (power_t *power) {
     power->description          = spin_read_description(select_by_game(43, -1, -1));
     power->range                = -99999;
     power->aoe                  = -99999;
-    power->level                = 0;
+    power->level                = 4;
     power->shape                = TARGET_SINGLE;
     power->cast_sound           = select_by_game(82, 82, 82);
     power->thrown_sound         = select_by_game(73, 73, 73);
@@ -62,7 +62,7 @@ extern void wizard_evards_black_tentacles_setup  (power_t *power) {
     power->actions.pay          = wizard_evards_black_tentacles_pay;
     power->actions.apply        = wizard_evards_black_tentacles_apply;
     power->actions.affect_power = wizard_evards_black_tentacles_affect_power;
-    powers_set_icon(power, select_by_game(4003, -1, -1));
+    powers_set_icon(power, select_by_game(21042, -1, -1));
     powers_set_cast(power, select_by_game(8309, 8309, 8309)); // OJFF
     powers_set_thrown(power, select_by_game(8099, 8099, 8099)); // OJFF.
     powers_set_hit(power, select_by_game(8300, 8300, 8300)); // OJFF

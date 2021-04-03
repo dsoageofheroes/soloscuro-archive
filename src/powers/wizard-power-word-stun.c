@@ -50,7 +50,7 @@ static int wizard_power_word_stun_update       (power_t *power, power_instance_t
 
 extern void wizard_power_word_stun_setup  (power_t *power) {
     power->name                 = "POWER WORD STUN";
-    power->description          = spin_read_description(select_by_game(90, 90, 90));
+    power->description          = spin_read_description(select_by_game(-1, 90, 90));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 7;

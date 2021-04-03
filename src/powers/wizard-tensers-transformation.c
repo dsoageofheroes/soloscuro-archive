@@ -50,7 +50,7 @@ static int wizard_tensers_transformation_update       (power_t *power, power_ins
 
 extern void wizard_tensers_transformation_setup  (power_t *power) {
     power->name                 = "TENSER'S TRANSFORMATION";
-    power->description          = spin_read_description(select_by_game(81, 81, 81));
+    power->description          = spin_read_description(select_by_game(-1, 81, 81));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 6;

@@ -50,7 +50,7 @@ static int wizard_finger_of_death_update       (power_t *power, power_instance_t
 
 extern void wizard_finger_of_death_setup  (power_t *power) {
     power->name                 = "FINGER OF DEATH";
-    power->description          = spin_read_description(select_by_game(85, 85, 85));
+    power->description          = spin_read_description(select_by_game(-1, 85, 85));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 7;

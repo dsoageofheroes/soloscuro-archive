@@ -50,7 +50,7 @@ static int wizard_protection_from_missiles_update       (power_t *power, power_i
 
 extern void wizard_protection_from_missiles_setup  (power_t *power) {
     power->name                 = "PROTECTION FROM MISSILES";
-    power->description          = spin_read_description(select_by_game(36, 36, 36));
+    power->description          = spin_read_description(select_by_game(37, 36, 36));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 3;
@@ -62,7 +62,7 @@ extern void wizard_protection_from_missiles_setup  (power_t *power) {
     power->actions.pay          = wizard_protection_from_missiles_pay;
     power->actions.apply        = wizard_protection_from_missiles_apply;
     power->actions.affect_power = wizard_protection_from_missiles_affect_power;
-    powers_set_icon(power, select_by_game(21035, 21035, 21035));
+    powers_set_icon(power, select_by_game(21036, 21035, 21035));
     powers_set_cast(power, select_by_game(8309, 8309, 8309)); // OJFF
     powers_set_thrown(power, select_by_game(8099, 8099, 8099)); // OJFF.
     powers_set_hit(power, select_by_game(8301, 8301, 8301)); // OJFF

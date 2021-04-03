@@ -50,7 +50,7 @@ static int wizard_otilukes_telekinetic_sphere_update       (power_t *power, powe
 
 extern void wizard_otilukes_telekinetic_sphere_setup  (power_t *power) {
     power->name                 = "OTILUKE'S TELEKINETIC SPHERE";
-    power->description          = spin_read_description(select_by_game(98, 98, 98));
+    power->description          = spin_read_description(select_by_game(-1, 98, 98));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 8;

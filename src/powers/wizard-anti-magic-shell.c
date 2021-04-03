@@ -50,7 +50,7 @@ static int wizard_anti_magic_shell_update       (power_t *power, power_instance_
 
 extern void wizard_anti_magic_shell_setup  (power_t *power) {
     power->name                 = "ANTI MAGIC SHELL";
-    power->description          = spin_read_description(select_by_game(69, 69, 69));
+    power->description          = spin_read_description(select_by_game(-1, 69, 69));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 6;
@@ -62,7 +62,7 @@ extern void wizard_anti_magic_shell_setup  (power_t *power) {
     power->actions.pay          = wizard_anti_magic_shell_pay;
     power->actions.apply        = wizard_anti_magic_shell_apply;
     power->actions.affect_power = wizard_anti_magic_shell_affect_power;
-    powers_set_icon(power, select_by_game(21068, 21068, 21068));
+    powers_set_icon(power, select_by_game(21065, 21068, 21068));
     powers_set_cast(power, select_by_game(8410, 8410, 8410)); // OJFF
     powers_set_thrown(power, select_by_game(8099, 8099, 8099)); // OJFF.
     powers_set_hit(power, select_by_game(-1, -1, -1)); // OJFF

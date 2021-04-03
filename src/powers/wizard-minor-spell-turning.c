@@ -50,7 +50,7 @@ static int wizard_minor_spell_turning_update       (power_t *power, power_instan
 
 extern void wizard_minor_spell_turning_setup  (power_t *power) {
     power->name                 = "MINOR SPELL TURNING";
-    power->description          = spin_read_description(select_by_game(47, 47, 47));
+    power->description          = spin_read_description(select_by_game(49, 47, 47));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 4;
@@ -62,7 +62,7 @@ extern void wizard_minor_spell_turning_setup  (power_t *power) {
     power->actions.pay          = wizard_minor_spell_turning_pay;
     power->actions.apply        = wizard_minor_spell_turning_apply;
     power->actions.affect_power = wizard_minor_spell_turning_affect_power;
-    powers_set_icon(power, select_by_game(21046, 21046, 21046));
+    powers_set_icon(power, select_by_game(21048, 21046, 21046));
     powers_set_cast(power, select_by_game(8301, 8301, 8301)); // OJFF
     powers_set_thrown(power, select_by_game(8099, 8099, 8099)); // OJFF.
     powers_set_hit(power, select_by_game(-1, -1, -1)); // OJFF

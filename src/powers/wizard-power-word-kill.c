@@ -50,7 +50,7 @@ static int wizard_power_word_kill_update       (power_t *power, power_instance_t
 
 extern void wizard_power_word_kill_setup  (power_t *power) {
     power->name                 = "POWER WORD KILL";
-    power->description          = spin_read_description(select_by_game(109, 109, 109));
+    power->description          = spin_read_description(select_by_game(-1, 109, 109));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 9;

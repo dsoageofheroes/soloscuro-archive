@@ -50,7 +50,7 @@ static int wizard_mass_invisibility_update       (power_t *power, power_instance
 
 extern void wizard_mass_invisibility_setup  (power_t *power) {
     power->name                 = "MASS INVISIBILITY";
-    power->description          = spin_read_description(select_by_game(87, 87, 87));
+    power->description          = spin_read_description(select_by_game(-1, 87, 87));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 7;

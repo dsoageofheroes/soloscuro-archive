@@ -50,7 +50,7 @@ static int wizard_control_undead_update       (power_t *power, power_instance_t 
 
 extern void wizard_control_undead_setup  (power_t *power) {
     power->name                 = "CONTROL UNDEAD";
-    power->description          = spin_read_description(select_by_game(83, 83, 83));
+    power->description          = spin_read_description(select_by_game(-1, 83, 83));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 7;

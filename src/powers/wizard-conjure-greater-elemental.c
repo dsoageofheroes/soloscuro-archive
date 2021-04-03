@@ -50,7 +50,7 @@ static int wizard_conjure_greater_elemental_update       (power_t *power, power_
 
 extern void wizard_conjure_greater_elemental_setup  (power_t *power) {
     power->name                 = "CONJURE GREATER ELEMENTAL";
-    power->description          = spin_read_description(select_by_game(82, 82, 82));
+    power->description          = spin_read_description(select_by_game(-1, 82, 82));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 7;

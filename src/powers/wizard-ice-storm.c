@@ -51,7 +51,7 @@ static int wizard_ice_storm_update       (power_t *power, power_instance_t *sour
 
 extern void wizard_ice_storm_setup  (power_t *power) {
     power->name                 = "ICE STORM";
-    power->description          = spin_read_description(select_by_game(44, 44, 44));
+    power->description          = spin_read_description(select_by_game(46, 44, 44));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 4;
@@ -63,7 +63,7 @@ extern void wizard_ice_storm_setup  (power_t *power) {
     power->actions.pay          = wizard_ice_storm_pay;
     power->actions.apply        = wizard_ice_storm_apply;
     power->actions.affect_power = wizard_ice_storm_affect_power;
-    powers_set_icon(power, select_by_game(21043, 21043, 21043));
+    powers_set_icon(power, select_by_game(21045, 21043, 21043));
     powers_set_cast(power, select_by_game(8304, 8304, 8304)); // OJFF
     powers_set_thrown(power, select_by_game(8099, 8099, 8099)); // OJFF.
     powers_set_hit(power, select_by_game(-1, -1, -1)); // OJFF

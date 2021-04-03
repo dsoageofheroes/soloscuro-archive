@@ -50,7 +50,7 @@ static int wizard_psionic_dampener_update       (power_t *power, power_instance_
 
 extern void wizard_psionic_dampener_setup  (power_t *power) {
     power->name                 = "PSIONIC DAMPENER";
-    power->description          = spin_read_description(select_by_game(49, 49, 49));
+    power->description          = spin_read_description(select_by_game(-1, 49, 49));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 4;
@@ -62,7 +62,7 @@ extern void wizard_psionic_dampener_setup  (power_t *power) {
     power->actions.pay          = wizard_psionic_dampener_pay;
     power->actions.apply        = wizard_psionic_dampener_apply;
     power->actions.affect_power = wizard_psionic_dampener_affect_power;
-    powers_set_icon(power, select_by_game(21048, 21048, 21048));
+    powers_set_icon(power, select_by_game(21042, 21048, 21048));
     powers_set_cast(power, select_by_game(8307, 8307, 8307)); // OJFF
     powers_set_thrown(power, select_by_game(8215, 8215, 8215)); // OJFF.
     powers_set_hit(power, select_by_game(-1, -1, -1)); // OJFF

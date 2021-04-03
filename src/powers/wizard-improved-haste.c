@@ -50,7 +50,7 @@ static int wizard_improved_haste_update       (power_t *power, power_instance_t 
 
 extern void wizard_improved_haste_setup  (power_t *power) {
     power->name                 = "IMPROVED HASTE";
-    power->description          = spin_read_description(select_by_game(75, 75, 75));
+    power->description          = spin_read_description(select_by_game(-1, 75, 75));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 6;

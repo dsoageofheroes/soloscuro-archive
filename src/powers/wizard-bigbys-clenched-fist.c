@@ -50,7 +50,7 @@ static int wizard_bigbys_clenched_fist_update       (power_t *power, power_insta
 
 extern void wizard_bigbys_clenched_fist_setup  (power_t *power) {
     power->name                 = "BIGBY'S CLENCHED FIST";
-    power->description          = spin_read_description(select_by_game(93, 93, 93));
+    power->description          = spin_read_description(select_by_game(-1, 93, 93));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 8;

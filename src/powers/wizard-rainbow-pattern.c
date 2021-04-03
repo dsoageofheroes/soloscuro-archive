@@ -50,7 +50,7 @@ static int wizard_rainbow_pattern_update       (power_t *power, power_instance_t
 
 extern void wizard_rainbow_pattern_setup  (power_t *power) {
     power->name                 = "RAINBOW PATTERN";
-    power->description          = spin_read_description(select_by_game(50, 50, 50));
+    power->description          = spin_read_description(select_by_game(51, 50, 50));
     power->range                = -99999;
     power->aoe                  = -99999;
     power->level                = 4;
@@ -62,7 +62,7 @@ extern void wizard_rainbow_pattern_setup  (power_t *power) {
     power->actions.pay          = wizard_rainbow_pattern_pay;
     power->actions.apply        = wizard_rainbow_pattern_apply;
     power->actions.affect_power = wizard_rainbow_pattern_affect_power;
-    powers_set_icon(power, select_by_game(21049, 21049, 21049));
+    powers_set_icon(power, select_by_game(21050, 21049, 21049));
     powers_set_cast(power, select_by_game(8304, 8304, 8304)); // OJFF
     powers_set_thrown(power, select_by_game(8099, 8099, 8099)); // OJFF.
     powers_set_hit(power, select_by_game(8300, 8300, 8300)); // OJFF
