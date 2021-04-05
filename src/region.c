@@ -290,9 +290,8 @@ extern void region_tick(region_t *reg) {
                     xdiff = ydiff = 0;
                 }
             }
-            bad_dude->sprite.scmd = entity_animation_get_scmd(bad_dude->sprite.scmd, xdiff, ydiff, CA_NONE);
+            bad_dude->sprite.scmd = entity_animation_get_scmd(bad_dude->sprite.scmd, xdiff, ydiff, EA_NONE);
             if (calc_distance_to_player(bad_dude) < 5) {
-                //enter_combat_mode(reg);
                 combat_initiate(reg, bad_dude->mapx, bad_dude->mapy);
                 return;
             }

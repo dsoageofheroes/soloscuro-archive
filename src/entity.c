@@ -269,6 +269,7 @@ extern uint32_t entity_get_total_exp(entity_t *entity) {
 void entity_free(entity_t *dude) {
     if (!dude) { return; }
 
+    entity_animation_list_free(&(dude->actions));
     item_free_inventory(dude->inv);
     port_remove_entity(dude);
     if (dude->name) {

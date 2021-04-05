@@ -35,6 +35,7 @@ typedef struct power_s {
     int32_t         aoe;
     enum            target_shape shape;
     sprite_info_t   icon;
+    sprite_info_t   cast;
     sprite_info_t   thrown;
     sprite_info_t   hit;
     uint16_t        cast_sound, thrown_sound, hit_sound;

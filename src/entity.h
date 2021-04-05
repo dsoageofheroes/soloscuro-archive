@@ -62,6 +62,8 @@ typedef struct class_s {
     psi_abilities_t psi;
 } class_t;
 
+#include "entity-animation.h"
+
 typedef struct entity_s {
     char *name;
     int16_t ds_id;     // This is the darksun/GPL id
@@ -82,6 +84,7 @@ typedef struct entity_s {
     class_t class[3];
     sprite_info_t sprite;
     ability_set_t abilities;
+    struct entity_animation_list_s actions;
     effect_node_t *effects; // anything currently affecting the entity.
     item_t *inv; // NULL means that there is no inventory on this entity (IE: some monsters.)
     //spell_list_t *spells;

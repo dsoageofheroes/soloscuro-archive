@@ -6,6 +6,7 @@
 #include "entity.h"
 #include "region.h"
 #include "entity-list.h"
+#include "entity-animation.h"
 #include "ds-combat.h"
 
 #define COMBAT_ERROR    (9999)
@@ -50,34 +51,6 @@ enum combat_turn_t {
     PLAYER4_TURN,
 };
 
-enum entity_action_e {
-    CA_NONE,
-    CA_WALK_LEFT,
-    CA_WALK_RIGHT,
-    CA_WALK_UP,
-    CA_WALK_DOWN,
-    CA_WALK_UPLEFT,
-    CA_WALK_UPRIGHT,
-    CA_WALK_DOWNLEFT,
-    CA_WALK_DOWNRIGHT,
-    CA_MELEE,
-    CA_MISSILE,
-    CA_PSIONIC,
-    CA_SPELL,
-    CA_WAIT,
-    CA_GUARD,
-    CA_RED_DAMAGE,
-    CA_GREEN_DAMAGE,
-    CA_END,
-};
-
-typedef struct entity_action_s {
-    enum entity_action_e action;
-    entity_t *source;
-    entity_t *target;
-    int32_t amt;
-} entity_action_t;
-
 #define MAX_COMBAT_ACTIONS (100)
 typedef struct entity_action_list_s {
     ds1_combat_t *combat;
@@ -92,6 +65,7 @@ scmd_t* combat_get_scmd(const enum combat_scmd_t type);
 entity_t* combat_get_current(combat_region_t *cr);
 extern void combat_set_hunt(combat_region_t *cr, const uint32_t combat_id);
 extern void combat_player_action(const entity_action_t action);
+extern int combat_activate_power(power_t *pw, region_t *reg, entity_t *source, const int32_t x, const int32_t y);
 
 // pre-processor ordering.
 extern void combat_is_defeated(region_t *reg, entity_t *dude);

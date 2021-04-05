@@ -74,6 +74,11 @@ void player_update() {
 
     if (--count > 0) { return; }
 
+    if (entity_animation_list_execute(&(dude->actions), region_manager_get_current())) {
+        count = ticks_per_move;
+        return;
+    }
+
     // update when we can have the player take a turn.
     if (combat_turn != NO_COMBAT) { return; }
 
@@ -95,7 +100,7 @@ void player_update() {
     trigger_tile_check(dude->mapx, dude->mapy);
 
     dude->sprite.scmd = entity_animation_get_scmd(dude->sprite.scmd,
-            xdiff, ydiff, CA_NONE);
+            xdiff, ydiff, EA_NONE);
     port_update_entity(dude, xdiff, ydiff);
 
     // We aren't moving...

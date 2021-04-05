@@ -78,7 +78,7 @@ static void add_to_combat(entity_t *entity) {
     node->next = combat_order; // start up front.
     node->initiative = dnd2e_roll_initiative(entity);
     node->sub_roll = dnd2e_roll_sub_roll();
-    node->current_action.action = CA_NONE;// Means they need to take their turn.
+    node->current_action.action = EA_NONE;// Means they need to take their turn.
 
     // if the node is first.
     if (combat_order == NULL || initiative_is_less(node, combat_order)) {
@@ -117,7 +117,7 @@ extern int combat_initiate(region_t *reg, const uint16_t x, const uint16_t y) {
 
     // Freeze all combats.
     entity_list_for_each(reg->cr.combatants, enemy) {
-        enemy->sprite.scmd = entity_animation_get_scmd(enemy->sprite.scmd, 0, 0, CA_NONE);
+        enemy->sprite.scmd = entity_animation_get_scmd(enemy->sprite.scmd, 0, 0, EA_NONE);
         port_update_entity(enemy, 0, 0);
     }
 
@@ -171,14 +171,14 @@ static void queue_add(action_node_t **head, action_node_t **tail, action_node_t 
     new->num_moves++;
 
     switch (action) {
-        case CA_WALK_LEFT: new->x -= 1; break;
-        case CA_WALK_RIGHT: new->x += 1; break;
-        case CA_WALK_UP: new->y -= 1; break;
-        case CA_WALK_DOWN: new->y += 1; break;
-        case CA_WALK_UPLEFT: new->x -= 1; new->y -= 1; break;
-        case CA_WALK_UPRIGHT: new->x += 1; new->y -= 1; break;
-        case CA_WALK_DOWNLEFT: new->x -= 1; new->y += 1; break;
-        case CA_WALK_DOWNRIGHT: new->x += 1; new->y += 1; break;
+        case EA_WALK_LEFT: new->x -= 1; break;
+        case EA_WALK_RIGHT: new->x += 1; break;
+        case EA_WALK_UP: new->y -= 1; break;
+        case EA_WALK_DOWN: new->y += 1; break;
+        case EA_WALK_UPLEFT: new->x -= 1; new->y -= 1; break;
+        case EA_WALK_UPRIGHT: new->x += 1; new->y -= 1; break;
+        case EA_WALK_DOWNLEFT: new->x -= 1; new->y += 1; break;
+        case EA_WALK_DOWNRIGHT: new->x += 1; new->y += 1; break;
         default: 
             break; // Do nothing right now...
     }
@@ -291,11 +291,11 @@ static void generate_monster_actions(region_t *reg) {
                 monster_actions[i] = rover->actions[i];
                 //printf("move %d: %d\n", i, rover->actions[i].action);
             }
-            monster_actions[rover->num_moves].action = CA_MELEE;
+            monster_actions[rover->num_moves].action = EA_MELEE;
             monster_actions[rover->num_moves].target = player;
             rover->num_moves++;
             monster_actions[rover->num_moves].target = NULL;
-            monster_actions[rover->num_moves].action = CA_END;
+            monster_actions[rover->num_moves].action = EA_END;
             //Free up the queue.
             free(rover);
             while(queue_head) {
@@ -307,14 +307,14 @@ static void generate_monster_actions(region_t *reg) {
             return;
         }
 
-        queue_add(&queue_head, &queue_tail, rover, CA_WALK_LEFT);
-        queue_add(&queue_head, &queue_tail, rover, CA_WALK_RIGHT);
-        queue_add(&queue_head, &queue_tail, rover, CA_WALK_UP);
-        queue_add(&queue_head, &queue_tail, rover, CA_WALK_DOWN);
-        queue_add(&queue_head, &queue_tail, rover, CA_WALK_UPLEFT);
-        queue_add(&queue_head, &queue_tail, rover, CA_WALK_UPRIGHT);
-        queue_add(&queue_head, &queue_tail, rover, CA_WALK_DOWNLEFT);
-        queue_add(&queue_head, &queue_tail, rover, CA_WALK_DOWNRIGHT);
+        queue_add(&queue_head, &queue_tail, rover, EA_WALK_LEFT);
+        queue_add(&queue_head, &queue_tail, rover, EA_WALK_RIGHT);
+        queue_add(&queue_head, &queue_tail, rover, EA_WALK_UP);
+        queue_add(&queue_head, &queue_tail, rover, EA_WALK_DOWN);
+        queue_add(&queue_head, &queue_tail, rover, EA_WALK_UPLEFT);
+        queue_add(&queue_head, &queue_tail, rover, EA_WALK_UPRIGHT);
+        queue_add(&queue_head, &queue_tail, rover, EA_WALK_DOWNLEFT);
+        queue_add(&queue_head, &queue_tail, rover, EA_WALK_DOWNRIGHT);
         free(rover);
     }
 
@@ -325,20 +325,20 @@ static void apply_action_animation(const enum entity_action_e action) {
     int16_t xdiff = 0, ydiff = 0;
 
     switch (action) {
-        case CA_WALK_LEFT: xdiff = -1; ydiff = 0; break;
-        case CA_WALK_RIGHT: xdiff = 1; ydiff = 0; break;
-        case CA_WALK_UP: xdiff = 0; ydiff = -1; break;
-        case CA_WALK_DOWN: xdiff = 0; ydiff = 1; break;
-        case CA_WALK_UPLEFT: xdiff = -1; ydiff = -1; break;
-        case CA_WALK_UPRIGHT: xdiff = 1; ydiff = -1; break;
-        case CA_WALK_DOWNLEFT: xdiff = -1; ydiff = 1; break;
-        case CA_WALK_DOWNRIGHT: xdiff = 1; ydiff = 1; break;
+        case EA_WALK_LEFT: xdiff = -1; ydiff = 0; break;
+        case EA_WALK_RIGHT: xdiff = 1; ydiff = 0; break;
+        case EA_WALK_UP: xdiff = 0; ydiff = -1; break;
+        case EA_WALK_DOWN: xdiff = 0; ydiff = 1; break;
+        case EA_WALK_UPLEFT: xdiff = -1; ydiff = -1; break;
+        case EA_WALK_UPRIGHT: xdiff = 1; ydiff = -1; break;
+        case EA_WALK_DOWNLEFT: xdiff = -1; ydiff = 1; break;
+        case EA_WALK_DOWNRIGHT: xdiff = 1; ydiff = 1; break;
         default: break;
     }
 
     //printf("(%d, %d) applying xdiff = %d, ydiff = %d\n", current_turn->entity->mapx, current_turn->entity->mapy, xdiff, ydiff);
     current_turn->entity->sprite.scmd = entity_animation_get_scmd(current_turn->entity->sprite.scmd,
-            xdiff, ydiff, CA_NONE);
+            xdiff, ydiff, EA_NONE);
     port_update_entity(current_turn->entity, xdiff, ydiff);
 }
 
@@ -347,7 +347,7 @@ static void end_turn() {
     monster_step = -1;
 
     if (entity) {
-        entity->sprite.scmd = entity_animation_get_scmd(entity->sprite.scmd, 0, 0, CA_NONE);
+        entity->sprite.scmd = entity_animation_get_scmd(entity->sprite.scmd, 0, 0, EA_NONE);
     }
     current_turn = current_turn->next;
     /*
@@ -358,7 +358,7 @@ static void end_turn() {
         rover = rover->next;
     }
     */
-    player_action = CA_NONE;
+    player_action = EA_NONE;
 }
 
 extern void combat_is_defeated(region_t *reg, entity_t *dude) {
@@ -410,10 +410,11 @@ static void perform_enemy_melee_attack() {
     entity_t *target = monster_actions[monster_step].target;
 
     int16_t amt = dnd2e_melee_attack(source, target, current_turn->melee_actions++, current_turn->round);
-    entity_animation_add(CA_MELEE, source, NULL, 0);
+    entity_animation_add(EA_MELEE, source, NULL, NULL, 0);
     //printf("amt = %d!\n", amt);
     if (amt > 0) {
-        entity_animation_add(CA_RED_DAMAGE, source, target, amt);
+        entity_animation_add(EA_RED_DAMAGE, source, target, NULL, amt);
+        entity_animation_add(EA_DAMAGE_APPLY, source, target, NULL, amt);
     }
 }
 
@@ -421,7 +422,7 @@ static void check_and_perform_attack(region_t *reg) {
     entity_action_t *action = monster_actions + monster_step;
 
     switch (action->action) {
-        case CA_MELEE:
+        case EA_MELEE:
             perform_enemy_melee_attack();
             break;
         default:
@@ -433,14 +434,14 @@ static entity_t* entity_in_way(region_t *reg, entity_t *entity, const enum entit
     int xdiff = 0, ydiff = 0;
 
     switch(action) {
-        case CA_WALK_DOWNLEFT:  xdiff = -1; ydiff = 1; break;
-        case CA_WALK_DOWN:      xdiff = 0; ydiff = 1; break;
-        case CA_WALK_DOWNRIGHT: xdiff = 1; ydiff = 1; break;
-        case CA_WALK_UPLEFT:    xdiff = -1; ydiff = -1; break;
-        case CA_WALK_UP:        xdiff = 0; ydiff = -1; break;
-        case CA_WALK_UPRIGHT:   xdiff = 1; ydiff = -1; break;
-        case CA_WALK_LEFT:      xdiff = -1; ydiff = 0; break;
-        case CA_WALK_RIGHT:     xdiff = 1; ydiff = 0; break;
+        case EA_WALK_DOWNLEFT:  xdiff = -1; ydiff = 1; break;
+        case EA_WALK_DOWN:      xdiff = 0; ydiff = 1; break;
+        case EA_WALK_DOWNRIGHT: xdiff = 1; ydiff = 1; break;
+        case EA_WALK_UPLEFT:    xdiff = -1; ydiff = -1; break;
+        case EA_WALK_UP:        xdiff = 0; ydiff = -1; break;
+        case EA_WALK_UPRIGHT:   xdiff = 1; ydiff = -1; break;
+        case EA_WALK_LEFT:      xdiff = -1; ydiff = 0; break;
+        case EA_WALK_RIGHT:     xdiff = 1; ydiff = 0; break;
         default:
             return NULL;
     }
@@ -451,16 +452,16 @@ static entity_t* entity_in_way(region_t *reg, entity_t *entity, const enum entit
 static void player_melee(region_t *reg, entity_t* entity, entity_t *enemy) {
     //int amt = 1 + (rand() % 6);
     //int amt = 100; // FTW!
-    //combat_animation_add(CA_MELEE, current_turn->entity, NULL, 0);
-    //combat_animation_add(CA_RED_DAMAGE, current_turn->entity, enemy, amt);
+    //combat_animation_add(EA_MELEE, current_turn->entity, NULL, 0);
+    //combat_animation_add(EA_RED_DAMAGE, current_turn->entity, enemy, amt);
     int16_t amt = dnd2e_melee_attack(entity, enemy, current_turn->melee_actions++, current_turn->round);
-    entity_animation_add(CA_MELEE, entity, NULL, 0);
+    entity_animation_add(EA_MELEE, entity, NULL, NULL, 0);
     //printf("amt = %d!\n", amt);
     if (amt > 0) {
-        entity_animation_add(CA_RED_DAMAGE, entity, enemy, amt);
+        entity_animation_add(EA_RED_DAMAGE, entity, enemy, NULL, amt);
     }
     wait_on_player = dnd2e_can_melee_again(entity, current_turn->melee_actions, current_turn->round);
-    player_action = CA_NONE;
+    player_action = EA_NONE;
     //wait_on_player = 0;
 }
 
@@ -468,19 +469,19 @@ static void move_entity(region_t *reg, entity_t *entity, const enum entity_actio
     entity_t *enemy;
 
     switch(action) {
-        case CA_NONE:
-            entity->sprite.scmd = entity_animation_get_scmd(entity->sprite.scmd, 0, 0, CA_NONE);
+        case EA_NONE:
+            entity->sprite.scmd = entity_animation_get_scmd(entity->sprite.scmd, 0, 0, EA_NONE);
             port_update_entity(entity, 0, 0);
             ticks_per_game_round = 0;
             break;
-        case CA_WALK_DOWNLEFT:
-        case CA_WALK_DOWN:
-        case CA_WALK_DOWNRIGHT:
-        case CA_WALK_UPLEFT:
-        case CA_WALK_UP:
-        case CA_WALK_UPRIGHT:
-        case CA_WALK_LEFT:
-        case CA_WALK_RIGHT:
+        case EA_WALK_DOWNLEFT:
+        case EA_WALK_DOWN:
+        case EA_WALK_DOWNRIGHT:
+        case EA_WALK_UPLEFT:
+        case EA_WALK_UP:
+        case EA_WALK_UPRIGHT:
+        case EA_WALK_LEFT:
+        case EA_WALK_RIGHT:
             enemy = entity_in_way(reg, entity, action);
             if (enemy && enemy->allegiance != entity->allegiance) {
                 entity->sprite.scmd = entity_animation_face_direction(entity->sprite.scmd, action);
@@ -585,7 +586,7 @@ static void do_player_turn(region_t *reg) {
     if (ticks_per_game_round > 0) { ticks_per_game_round = 20; }
 }
 
-static entity_action_t clear = { CA_NONE, NULL, NULL, 0 };
+static entity_action_t clear = { EA_NONE, NULL, NULL, 0 };
 
 void combat_update(region_t *reg) {
     if (reg == NULL) { return; }
@@ -637,5 +638,16 @@ extern uint32_t combat_add(combat_region_t *rc, entity_t *entity) {
     if (!rc || !entity) { return 0; }
 
     entity_list_add(rc->combatants, entity);
+    return 1;
+}
+
+extern int combat_activate_power(power_t *pw, region_t *reg, entity_t *source, const int32_t x, const int32_t y) {
+    //printf("COMBAT ACTIVATE: %p, %p, %p (%d, %d)\n", pw, reg, source, x, y);
+    if (!pw || !source) { return 0; }
+
+    //entity_animation_list_t* list = entity_animation_list_create();
+    entity_animation_list_add(&(source->actions), EA_CAST, source, NULL, pw, 0);
+    printf("ADDED!\n");
+
     return 1;
 }

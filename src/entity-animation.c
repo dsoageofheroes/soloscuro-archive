@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 static entity_animation_node_t *last;
-static entity_animation_node_t *next_animation_head = NULL, *next_animation_tail = NULL;
+static entity_animation_node_t *next_animation_head = NULL;
 
 static scmd_t combat_move_down[] = {
     {.bmp_idx = 3, .delay = 7, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
@@ -153,7 +153,7 @@ static scmd_t* get_scmd(scmd_t *current_scmd, const int xdiff, const int ydiff) 
 static scmd_t* get_entity_scmd(scmd_t *current_scmd, enum entity_action_e action) {
     current_scmd = get_scmd(current_scmd, 0, 0);
 
-    if (action == CA_MELEE) {
+    if (action == EA_MELEE) {
         if (current_scmd == combat_get_scmd(COMBAT_SCMD_STAND_LEFT)) {
             return combat_get_scmd(COMBAT_SCMD_MELEE_LEFT);
         } else if (current_scmd == combat_get_scmd(COMBAT_SCMD_STAND_RIGHT)) {
@@ -170,17 +170,17 @@ static scmd_t* get_entity_scmd(scmd_t *current_scmd, enum entity_action_e action
 
 extern scmd_t* entity_animation_face_direction(scmd_t *current_scmd, const enum entity_action_e action) {
     switch (action) {
-        case CA_WALK_DOWNLEFT:
-        case CA_WALK_UPLEFT:
-        case CA_WALK_LEFT:
+        case EA_WALK_DOWNLEFT:
+        case EA_WALK_UPLEFT:
+        case EA_WALK_LEFT:
             return combat_get_scmd(COMBAT_SCMD_STAND_LEFT);
-        case CA_WALK_DOWNRIGHT:
-        case CA_WALK_UPRIGHT:
-        case CA_WALK_RIGHT:
+        case EA_WALK_DOWNRIGHT:
+        case EA_WALK_UPRIGHT:
+        case EA_WALK_RIGHT:
             return combat_get_scmd(COMBAT_SCMD_STAND_RIGHT);
-        case CA_WALK_UP:
+        case EA_WALK_UP:
             return combat_get_scmd(COMBAT_SCMD_STAND_UP);
-        case CA_WALK_DOWN:
+        case EA_WALK_DOWN:
             return combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
         default:
             return current_scmd;
@@ -190,23 +190,17 @@ extern scmd_t* entity_animation_face_direction(scmd_t *current_scmd, const enum 
 extern scmd_t* entity_animation_get_scmd(scmd_t *current_scmd, const int xdiff, const int ydiff,
         const enum entity_action_e action) {
     current_scmd = get_scmd(current_scmd, xdiff, ydiff);
-    if (action != CA_NONE) { current_scmd = get_entity_scmd(current_scmd, action); }
+    if (action != EA_NONE) { current_scmd = get_entity_scmd(current_scmd, action); }
 
     return current_scmd;
 }
 
-void entity_animation_add(enum entity_action_e action, entity_t *source, entity_t *target, const int32_t amt) {
-    entity_animation_node_t *toadd = malloc(sizeof(entity_animation_node_t));
-    toadd->ca.action = action;
-    toadd->ca.source = source;
-    toadd->ca.target = target;
-    toadd->ca.amt = amt;
-    toadd->next = NULL;
-    if (!next_animation_head) {
-        next_animation_head = next_animation_tail = toadd;
-    } else {
-        next_animation_tail->next = toadd;
-    }
+extern void entity_animation_add(enum entity_action_e action, entity_t *source, entity_t *target,
+        power_t *power, const int32_t amt) {
+    entity_animation_list_t list;
+    list.head = next_animation_head;
+    entity_animation_list_add(&list, action, source, target, power, amt);
+    next_animation_head = list.head;
 }
 
 extern int entity_animation_has_more() {
@@ -219,22 +213,6 @@ static void play_death_sound(entity_t *target) {
     if (target->attack_sound) {
         port_play_sound_effect(target->attack_sound + 2);
         return;
-    }
-}
-
-static void apply_last(region_t *reg) {
-    // This comes from last.
-    switch(last->ca.action) {
-        case CA_RED_DAMAGE:
-            last->ca.target->stats.hp -= last->ca.amt;
-            if (last->ca.target->stats.hp <= 0) {
-                last->ca.target->combat_status = COMBAT_STATUS_DYING;
-                play_death_sound(last->ca.target);
-                combat_is_defeated(reg, last->ca.target);
-            }
-            break;
-        default:
-            break;
     }
 }
 
@@ -267,39 +245,85 @@ static void play_damage_sound(entity_t *target) {
 
 // sound 63: is PC doing range attack
 extern int entity_animation_execute(region_t *reg) {
-    if (!next_animation_head) {
-        if (last) { // we just finished.
-            apply_last(reg);
-            free(last);
-            last = NULL;
-        }
-        return 0;
-    }
-    entity_t *source = next_animation_head->ca.source;
-    entity_t *target = next_animation_head->ca.target;
+    entity_animation_list_t list;
+    list.head = next_animation_head;
+    int ret = entity_animation_list_execute(&list, reg);
+    next_animation_head = list.head;
 
-    switch(next_animation_head->ca.action) {
-        case CA_MELEE:
+    return ret;
+}
+
+entity_animation_list_t* entity_animation_list_create() {
+    return calloc(1, sizeof(entity_animation_list_t));
+}
+
+void entity_animation_list_free(entity_animation_list_t *list) {
+    if (!list) { return; }
+
+    //TODO:
+    if (list->head) {
+        printf("NEED TO FREE!!!!!\n");
+    }
+}
+
+void entity_animation_list_add(entity_animation_list_t *list, enum entity_action_e action,
+        entity_t *source, entity_t *target, power_t *power, const int32_t amt) {
+    if (!list) { return; }
+    entity_animation_node_t *toadd = malloc(sizeof(entity_animation_node_t));
+
+    toadd->ca.action = action;
+    toadd->ca.source = source;
+    toadd->ca.target = target;
+    toadd->ca.power  = power;
+    toadd->ca.amt = amt;
+    toadd->next = NULL;
+
+    if (!list->head) {
+        list->head = toadd;
+    } else {
+        list->head->next = toadd;
+    }
+}
+
+extern int entity_animation_list_execute(entity_animation_list_t *list, region_t *reg) {
+    if (!list || !list->head) { return 0; }
+
+    entity_t *source = list->head->ca.source;
+    entity_t *target = list->head->ca.target;
+
+    switch(list->head->ca.action) {
+        case EA_MELEE:
             play_melee_sound(source);
-            source->sprite.scmd = get_entity_scmd(source->sprite.scmd, next_animation_head->ca.action);
+            source->sprite.scmd = get_entity_scmd(source->sprite.scmd, list->head->ca.action);
             port_update_entity(source, 0, 0);
             break;
-        case CA_RED_DAMAGE:
+        case EA_RED_DAMAGE:
             play_damage_sound(target);
             source->sprite.scmd = get_scmd(source->sprite.scmd, 0, 0);
             port_update_entity(source, 0, 0);
-            port_combat_action(&(next_animation_head->ca));
+            port_combat_action(&(list->head->ca));
+            break;
+        case EA_DAMAGE_APPLY:
+            target->stats.hp -= list->head->ca.amt;
+            if (target->stats.hp <= 0) {
+                target->combat_status = COMBAT_STATUS_DYING;
+                play_death_sound(target);
+                combat_is_defeated(reg, target);
+            }
+            break;
+        case EA_CAST:
+            printf("CAST!\n");
+            source->sprite.scmd = get_entity_scmd(source->sprite.scmd, list->head->ca.action);
+            port_update_entity(source, 0, 0);
             break;
         default:
-            error("unknown action %d!\n", next_animation_head->ca.action);
+            error("unknown action %d!\n", list->head->ca.action);
             break;
     }
 
-    if (last) { free(last); }
-    last = next_animation_head;
-    next_animation_head = next_animation_head->next;
-    if (!next_animation_head) { next_animation_tail = NULL; }
+    last = list->head;
+    list->head = list->head->next;
+    if (last) { free(last); last = NULL; }
 
     return 1;
 }
-

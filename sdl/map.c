@@ -452,11 +452,26 @@ static void mouse_cycle() {
 
 int map_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
     dude_t *dude = NULL;
+    enum mouse_state ms = mouse_get_state();
+    const uint32_t xoffset = getCameraX();
+    const uint32_t yoffset = getCameraY();
+    const float zoom = main_get_zoom();
+    int tilex = (xoffset + mousex) / (16 * zoom);
+    int tiley = (yoffset + mousey) / (16 * zoom);
 
     if (!cmap) { return 0; }
 
-    if ((dude = get_entity_at_location(x, y))) {
+    if (ms == MOUSE_TALK && (dude = get_entity_at_location(x, y))) {
+        mouse_set_state(MOUSE_POINTER);
         talk_click(dude->ds_id);
+        return 1;
+    }
+
+    if (ms == MOUSE_POWER) {
+        combat_activate_power(mouse_get_power(), region_manager_get_current(),
+                player_get_active(), tilex, tiley);
+        mouse_set_state(MOUSE_POINTER);
+        return 1;
     }
 
     if (button == SDL_BUTTON_RIGHT) {

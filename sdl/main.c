@@ -102,20 +102,20 @@ void main_exit_game() {
 
 static void main_combat_update() {
     entity_action_t player_action;
-    player_action.action = CA_NONE;
+    player_action.action = EA_NONE;
     switch(combat_player_turn()) {
         case PLAYER1_TURN:
         case PLAYER2_TURN:
         case PLAYER3_TURN:
         case PLAYER4_TURN:
-            if (player_directions[1]) { player_action.action = CA_WALK_DOWNLEFT; }
-            if (player_directions[2]) { player_action.action = CA_WALK_DOWN; }
-            if (player_directions[3]) { player_action.action = CA_WALK_DOWNRIGHT; }
-            if (player_directions[4]) { player_action.action = CA_WALK_LEFT; }
-            if (player_directions[6]) { player_action.action = CA_WALK_RIGHT; }
-            if (player_directions[7]) { player_action.action = CA_WALK_UPLEFT; }
-            if (player_directions[8]) { player_action.action = CA_WALK_UP; }
-            if (player_directions[9]) { player_action.action = CA_WALK_UPRIGHT; }
+            if (player_directions[1]) { player_action.action = EA_WALK_DOWNLEFT; }
+            if (player_directions[2]) { player_action.action = EA_WALK_DOWN; }
+            if (player_directions[3]) { player_action.action = EA_WALK_DOWNRIGHT; }
+            if (player_directions[4]) { player_action.action = EA_WALK_LEFT; }
+            if (player_directions[6]) { player_action.action = EA_WALK_RIGHT; }
+            if (player_directions[7]) { player_action.action = EA_WALK_UPLEFT; }
+            if (player_directions[8]) { player_action.action = EA_WALK_UP; }
+            if (player_directions[9]) { player_action.action = EA_WALK_UPRIGHT; }
             combat_player_action(player_action);
             break;
         default: break;
