@@ -52,7 +52,7 @@ extern void powers_set_cast(power_t *powers, const uint32_t id) {
 extern void powers_set_icon(power_t *power, const uint32_t id) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     if (!power) { return; }
-    power->icon.bmp_id = 0;
+    power->icon.bmp_id = id;
     port_load_sprite(&(power->icon), pal, RESOURCE_GFF_INDEX, GFF_ICON, id);
 }
 
@@ -89,4 +89,9 @@ extern char* spin_read_description(const uint16_t id) {
     gff_read_chunk(RESOURCE_GFF_INDEX, &chunk, description, chunk.length);
 
     return description;
+}
+
+extern enum target_shape power_get_target_type(power_t *power) {
+    if (!power) { return TARGET_NONE; }
+    return power->shape;
 }

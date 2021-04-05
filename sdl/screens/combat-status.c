@@ -103,7 +103,7 @@ void port_combat_action(entity_action_t *ca) {
 }
 
 int combat_status_handle_mouse_movement(const uint32_t x, const uint32_t y) {
-    return 1;// did not handle
+    return 0;// did not handle, we need to let the map handle movement
 }
 
 int combat_status_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {

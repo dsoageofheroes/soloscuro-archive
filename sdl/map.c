@@ -5,6 +5,7 @@
 #include "main.h"
 #include "player.h"
 #include "audio.h"
+#include "mouse.h"
 #include "screens/narrate.h"
 #include "screens/combat-status.h"
 #include "../src/dsl.h"
@@ -24,6 +25,8 @@ static SDL_Renderer *cren = NULL;
 static animate_sprite_t anims[MAX_ANIMS];
 static animate_sprite_node_t *anim_nodes[MAX_ANIMS];
 static int anim_pos = 0;
+static int mousex = 0, mousey = 0;
+static uint16_t tile_highlight = SPRITE_ERROR;
 
 static void clear_animations();
 void map_free(map_t *map);
@@ -35,6 +38,10 @@ void map_init(map_t *map) {
 void map_cleanup() {
     clear_animations();
     map_free(cmap);
+    if (tile_highlight != SPRITE_ERROR) {
+        sprite_free(tile_highlight);
+        tile_highlight = SPRITE_ERROR;
+    }
     cmap = NULL;
 }
 
@@ -149,8 +156,43 @@ void map_apply_alpha(const uint8_t alpha) {
     }
 }
 
+extern void map_highlight_tile(const int tilex, const int tiley, const int frame) {
+    const uint32_t xoffset = getCameraX();
+    const uint32_t yoffset = getCameraY();
+    const float zoom = main_get_zoom();
+    const int x = tilex * (16 * zoom) - xoffset;
+    const int y = tiley * (16 * zoom) - yoffset;
+
+    sprite_set_frame(tile_highlight, frame);
+    sprite_set_location(tile_highlight, x - zoom, y - zoom);
+    sprite_render(main_get_rend(), tile_highlight);
+}
+
+static void show_debug_info() {
+    const uint32_t xoffset = getCameraX();
+    const uint32_t yoffset = getCameraY();
+    const float zoom = main_get_zoom();
+    int x = (xoffset + mousex) / (16 * zoom);
+    int y = (yoffset + mousey) / (16 * zoom);
+
+    if (tile_highlight == SPRITE_ERROR) {
+        const float zoom = main_get_zoom();
+        gff_palette_t* pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
+        tile_highlight = sprite_new(main_get_rend(), pal, 0, 0, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20088);
+    }
+
+    map_highlight_tile(x, y, 4);
+    for (int x = 0; x < 98; x++) {
+        for (int y = 0; y < 128; y++) {
+            if (region_is_block(region_manager_get_current(), x, y)) {
+                map_highlight_tile(y, x, 6);
+            }
+        }
+    }
+}
+
 void map_render(void *data, SDL_Renderer *renderer) {
-    const int stretch = 2;
+    const int stretch = main_get_zoom();
     const uint32_t xoffset = getCameraX();
     const uint32_t yoffset = getCameraY();
     SDL_Rect tile_loc = { -xoffset, -yoffset, stretch * 16, stretch * 16 };
@@ -172,6 +214,8 @@ void map_render(void *data, SDL_Renderer *renderer) {
         tile_loc.y += stretch * 16;
     }
     animate_list_render(renderer);
+
+    if (main_get_debug()) { show_debug_info(); }
 }
 
 void port_add_entity(entity_t *entity, gff_palette_t *pal) {
@@ -186,6 +230,8 @@ void port_add_entity(entity_t *entity, gff_palette_t *pal) {
     }
     anims[anim_pos].delay = 0;
     anims[anim_pos].pos = 0;
+    anims[anim_pos].w = sprite_getw(anims[anim_pos].spr);
+    anims[anim_pos].h = sprite_geth(anims[anim_pos].spr);
     anims[anim_pos].x = (entity->mapx * 16 + entity->sprite.xoffset) * zoom;
     anims[anim_pos].y = (entity->mapy * 16 + entity->sprite.yoffset + entity->mapz) * zoom;
     anims[anim_pos].destx = anims[anim_pos].x;
@@ -229,6 +275,7 @@ void port_update_entity(entity_t *entity, const uint16_t xdiff, const uint16_t y
     animate_sprite_node_t *asn = (animate_sprite_node_t*) entity->sprite.data;
     if (!asn) { return; }
     animate_sprite_t *as = asn->anim;
+    const float zoom = main_get_zoom();
     //printf("cur:%d %d\n", as->x, as->y);
     //printf("dest: %d, %d\n", as->destx, as->desty);
     as->x = as->destx;
@@ -237,13 +284,13 @@ void port_update_entity(entity_t *entity, const uint16_t xdiff, const uint16_t y
     entity->mapy += ydiff;
     as->destx = entity->mapx * 16 * main_get_zoom();
     as->desty = entity->mapy * 16 * main_get_zoom();
-    //as->destx -= sprite_getw(as->spr) / 2;
-    as->destx -= (8 * main_get_zoom());
-    as->desty -= sprite_geth(as->spr) - (8 * main_get_zoom());
+    if (as->w > 16 * zoom) {
+        //printf("width = %d\n", as->w);
+        as->destx -= (as->w - 16 * zoom) / 2;
+    }
+    as->desty -= as->h - (16 * zoom);
     animate_set_animation(as, entity->sprite.scmd, 20);
 
-    //const size_t offset = (as - anims) / sizeof(animate_sprite_node_t*);
-    //printf("%ld\n", offset);
     animate_shift_node(asn, entity->mapz);
 }
 
@@ -329,12 +376,78 @@ entity_t* get_entity_at_location(const uint32_t x, const uint32_t y) {
     return NULL;
 }
 
+static void update_mouse_icon() {
+    enum mouse_state ms = mouse_get_state();
+    entity_t *dude = get_entity_at_location(mousex, mousey);
+    const float zoom = main_get_zoom();
+
+    if (ms == MOUSE_MELEE || ms == MOUSE_NO_MELEE) {
+        int x = (getCameraX() + mousex) / (16 * zoom);
+        int y = (getCameraY() + mousey) / (16 * zoom);
+        if (abs(player_get_active()->mapx - x) > 1 || abs(player_get_active()->mapy - y) > 1) {
+            mouse_set_state(MOUSE_RANGE);
+            ms = mouse_get_state();
+        }
+    } else if (ms == MOUSE_RANGE || ms == MOUSE_NO_RANGE) {
+        int x = (getCameraX() + mousex) / (16 * zoom);
+        int y = (getCameraY() + mousey) / (16 * zoom);
+        if (abs(player_get_active()->mapx - x) <= 1 && abs(player_get_active()->mapy - y) <= 1) {
+            mouse_set_state(MOUSE_MELEE);
+            ms = mouse_get_state();
+        }
+    }
+
+    if (!dude) {
+        if (ms == MOUSE_MELEE) { mouse_set_state(MOUSE_NO_MELEE);
+        } else if (ms == MOUSE_RANGE) { mouse_set_state(MOUSE_NO_RANGE);
+        } else if (ms == MOUSE_TALK) { mouse_set_state(MOUSE_NO_TALK);
+        } else if (ms == MOUSE_POWER) {
+            switch(power_get_target_type(mouse_get_power())) {
+                case TARGET_ALLY:
+                case TARGET_ENEMY:
+                case TARGET_MULTI:
+                    mouse_set_state(MOUSE_NO_POWER);
+                    break;
+                default: break;
+            }
+        }
+    } else {
+        if (ms == MOUSE_NO_MELEE) { mouse_set_state(MOUSE_MELEE);
+        } else if (ms == MOUSE_NO_RANGE) { mouse_set_state(MOUSE_RANGE);
+        } else if (ms == MOUSE_NO_TALK) { mouse_set_state(MOUSE_TALK);
+        } else if (ms == MOUSE_NO_POWER) { mouse_set_state(MOUSE_POWER);
+        }
+    }
+}
+
 int map_handle_mouse(const uint32_t x, const uint32_t y) {
     if (!cmap) { return 0; }
 
-    // Need to get entity and highlight?
+    mousex = x;
+    mousey = y;
+
+    update_mouse_icon();
 
     return 1; // map always intercepts the mouse...
+}
+
+// User right clicks for the next mouse pointer type;
+static void mouse_cycle() {
+    enum mouse_state ms = mouse_get_state();
+
+    if (ms == MOUSE_POINTER || ms == MOUSE_NO_POINTER) {
+        mouse_set_state(MOUSE_MELEE);
+    } else if (ms == MOUSE_MELEE || ms == MOUSE_NO_MELEE || ms == MOUSE_RANGE || ms == MOUSE_NO_RANGE) {
+        mouse_set_state(MOUSE_TALK);
+    } else if (ms == MOUSE_NO_TALK || ms == MOUSE_TALK) {
+        mouse_set_state((mouse_get_item()) ? MOUSE_ITEM : MOUSE_POINTER);
+    } else if (ms == MOUSE_ITEM || ms == MOUSE_POWER || ms == MOUSE_NO_POWER) {
+        mouse_set_state(MOUSE_POINTER);
+    } else {
+        error ("unable to cycle from mouse state: %d\n", ms);
+    }
+
+    update_mouse_icon();
 }
 
 int map_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
@@ -344,6 +457,10 @@ int map_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_
 
     if ((dude = get_entity_at_location(x, y))) {
         talk_click(dude->ds_id);
+    }
+
+    if (button == SDL_BUTTON_RIGHT) {
+        mouse_cycle();
     }
     //printf("No dude there bruh.\n");
 

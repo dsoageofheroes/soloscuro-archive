@@ -4,21 +4,22 @@
 #include <SDL2/SDL.h>
 #include "textbox.h"
 
-void main_exit_system();
-SDL_Renderer *main_get_rend();
-SDL_Surface *main_get_screen();
-const float main_get_zoom();
-uint32_t main_get_width();
-uint32_t main_get_height();
-void main_center_on_player();
+extern void main_exit_system();
+extern SDL_Renderer *main_get_rend();
+extern SDL_Surface *main_get_screen();
+extern float main_get_zoom();
+extern uint32_t main_get_width();
+extern uint32_t main_get_height();
+extern void main_center_on_player();
 extern int main_still_running();
-void main_set_browser_mode();
-void main_set_ignore_repeat(int repeat);
-void main_set_xscroll(int amt);
-void main_set_yscroll(int amt);
-void main_exit_game();
-void main_set_textbox(textbox_t *tb);
-int main_player_freeze();
+extern int main_get_debug();
+extern void main_set_browser_mode();
+extern void main_set_ignore_repeat(int repeat);
+extern void main_set_xscroll(int amt);
+extern void main_set_yscroll(int amt);
+extern void main_exit_game();
+extern void main_set_textbox(textbox_t *tb);
+extern int main_player_freeze();
 
 
 #endif

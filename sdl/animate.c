@@ -4,6 +4,7 @@
 #include "animate.h"
 #include "gameloop.h"
 #include "sprite.h"
+#include "main.h"
 #include "../src/dsl.h"
 #include "../src/ds-scmd.h"
 
@@ -65,6 +66,10 @@ out:
     sprite_set_location(anim->spr,
         anim->x - xoffset, // + scmd_xoffset,
         anim->y - yoffset); // + anim->scmd->yoffset);
+
+    if (main_get_debug() && anim->entity) {
+        map_highlight_tile(anim->entity->mapx, anim->entity->mapy, 4);
+    }
 
     return flip;
 }

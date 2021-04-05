@@ -13,7 +13,7 @@ typedef struct animate_sprite_s {
     uint16_t spr;
     uint16_t delay;
     uint16_t pos;
-    uint16_t x, y;
+    uint16_t x, y, w, h;
     uint16_t destx, desty;
     entity_t *entity;
     float move, left_over; // see animate_tick for left_over

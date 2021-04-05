@@ -9,6 +9,7 @@
 #include "inventory.h"
 #include "new-character.h"
 #include "popup.h"
+#include "mouse.h"
 #include "dsl.h"
 #include "add-load-save.h"
 #include "../../src/ds-player.h"
@@ -419,6 +420,17 @@ int view_character_handle_mouse_up(const uint32_t button, const uint32_t x, cons
         if (mode == 2) {
             power_to_display = find_power(x, y);
             strcpy(message, power_to_display->name);
+        }
+    }
+    if (button == SDL_BUTTON_LEFT) {
+        if (mode == 2) {
+            power_to_display = find_power(x, y);
+            if (power_to_display) {
+                mouse_set_as_power(power_to_display);
+            }
+            power_to_display = NULL;
+            screen_pop();
+            return 1;
         }
     }
 

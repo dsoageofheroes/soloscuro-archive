@@ -19,8 +19,48 @@ const static size_t ds1_icon_res[] = {
 
 static SDL_Cursor **cursors;
 static int num_cursors;
-static item_t *item_data;
+static item_t *item_data = NULL;
+static power_t *power = NULL;
 static SDL_Cursor *item_cursor;
+static SDL_Cursor *power_cursor;
+static enum mouse_state state = MOUSE_POINTER;
+
+extern enum mouse_state mouse_get_state() {
+    return state;
+}
+
+extern void mouse_set_state(const enum mouse_state _state) {
+    switch(_state) {
+        case MOUSE_POINTER:    SDL_SetCursor(cursors[0]); break;
+        case MOUSE_NO_POINTER: SDL_SetCursor(cursors[1]); break;
+        case MOUSE_MELEE:      SDL_SetCursor(cursors[2]); break;
+        case MOUSE_NO_MELEE:   SDL_SetCursor(cursors[3]); break;
+        case MOUSE_RANGE:      SDL_SetCursor(cursors[4]); break;
+        case MOUSE_NO_RANGE:   SDL_SetCursor(cursors[5]); break;
+        case MOUSE_TALK:       SDL_SetCursor(cursors[6]); break;
+        case MOUSE_NO_TALK:    SDL_SetCursor(cursors[7]); break;
+        case MOUSE_NO_POWER:   SDL_SetCursor(cursors[8]); break;
+        case MOUSE_WAIT:       SDL_SetCursor(cursors[9]); break;
+        case MOUSE_ITEM:
+            if (!item_cursor) {
+                error ("Trying to set item cursor, but no item selected!\n");
+                return;
+            }
+            SDL_SetCursor(item_cursor);
+            break;
+        case MOUSE_POWER:
+            if (!power_cursor) {
+                error ("Trying to set power cursor, but no power selected!\n");
+                return;
+            }
+            SDL_SetCursor(power_cursor);
+            break;
+        default:
+            error ("Unknown mouse state requested: %d\n", _state);
+            return;
+    }
+    state = _state;
+}
 
 static SDL_Cursor* create_cursor(const int gff_idx, const int type_idx, const size_t res_id) {
     SDL_Surface *surface = NULL;
@@ -52,7 +92,7 @@ static SDL_Cursor* create_cursor(const int gff_idx, const int type_idx, const si
     return c;
 }
 
-void mouse_init(SDL_Renderer *rend) {
+extern void mouse_init(SDL_Renderer *rend) {
     if (gff_get_game_type() != DARKSUN_1) {
         warn("Mouse cursor implemented in DS1 only right now. Not loading mouse cursor.");
         return;
@@ -68,9 +108,10 @@ void mouse_init(SDL_Renderer *rend) {
 
     item_data = NULL;
     item_cursor = NULL;
+    power_cursor = NULL;
 }
 
-void mouse_free() {
+extern void mouse_free() {
     for (int i = 0; i < num_cursors; i++) {
         SDL_FreeCursor(cursors[i]);
     }
@@ -85,9 +126,13 @@ void mouse_free() {
         free(item_data);
         item_data = NULL;
     }
+    if (power_cursor) {
+        SDL_FreeCursor(power_cursor);
+        power_cursor = NULL;
+    }
 }
 
-void mouse_set_as_item(item_t *item) {
+extern void mouse_set_as_item(item_t *item) {
     if (item_data) { 
         item_free(item_data);
         item_data = NULL;
@@ -95,19 +140,32 @@ void mouse_set_as_item(item_t *item) {
 
     item_data = item_dup(item);
 
-    // Unforutnately, in SDL you are suppose to use a surface for the cursor.
+    // Unfortunately, in SDL you are suppose to use a surface for the cursor.
     // So, we will store the texture for later and load the mouse as a surface.
     if (item_cursor) { SDL_FreeCursor(item_cursor); }
     item_cursor = create_cursor(OBJEX_GFF_INDEX, GFF_BMP, item->sprite.bmp_id);
-    SDL_SetCursor(item_cursor);
+    mouse_set_state(MOUSE_ITEM);
 }
 
-item_t* mouse_get_item() {
+extern item_t* mouse_get_item() {
     return item_data;
 }
 
-void mouse_free_item() {
+extern void mouse_free_item() {
     item_data = NULL;
     if (item_cursor) { SDL_FreeCursor(item_cursor); }
     SDL_SetCursor(cursors[0]);
+}
+
+extern power_t* mouse_get_power() {
+    return power;
+}
+
+extern void mouse_set_as_power(power_t *pw) {
+    if (!pw) { return; }
+    if (power_cursor) { SDL_FreeCursor(power_cursor); }
+
+    power = pw;
+    power_cursor = create_cursor(RESOURCE_GFF_INDEX, GFF_ICON, pw->icon.bmp_id);
+    mouse_set_state(MOUSE_POWER);
 }

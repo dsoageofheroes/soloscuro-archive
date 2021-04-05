@@ -37,6 +37,7 @@ static SDL_Surface *screen = NULL;
 static SDL_Renderer *renderer = NULL;
 static float zoom = 2.0;
 static uint8_t ignore_repeat = 1, browser_mode = 0;
+static int show_debug = 0;
 
 static uint32_t xmappos, ymappos;
 static int32_t xmapdiff, ymapdiff;
@@ -51,10 +52,13 @@ void main_set_textbox(textbox_t *tb) {
 
 SDL_Renderer *main_get_rend() { return renderer; }
 SDL_Surface *main_get_screen() { return screen; }
-const float main_get_zoom() { return zoom; }
+float main_get_zoom() { return zoom; }
 
-const uint32_t getCameraX() { return xmappos; }
-const uint32_t getCameraY() { return ymappos; }
+extern uint32_t getCameraX() { return xmappos; }
+extern uint32_t getCameraY() { return ymappos; }
+extern int main_get_debug() { return show_debug; }
+
+static void main_toggle_debug() { show_debug = !show_debug; }
 
 uint32_t main_get_width() {
     return 800;
@@ -187,6 +191,7 @@ void handle_input() {
                 if (event.key.keysym.sym == SDLK_KP_7) { player_directions[7] = 1; }
                 if (event.key.keysym.sym == SDLK_KP_8) { player_directions[8] = 1; }
                 if (event.key.keysym.sym == SDLK_KP_9) { player_directions[9] = 1; }
+                if (event.key.keysym.sym == SDLK_SPACE) { main_toggle_debug(); }
                 break;
             case SDL_MOUSEMOTION:
                 handle_mouse_motion();
