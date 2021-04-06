@@ -28,6 +28,8 @@ enum combat_scmd_t {
     COMBAT_SCMD_MELEE_UP,
     COMBAT_SCMD_MELEE_RIGHT,
     COMBAT_SCMD_MELEE_LEFT,
+    COMBAT_POWER_CAST,
+    COMBAT_POWER_THROW_STATIC,
 };
 
 enum {
@@ -65,7 +67,7 @@ scmd_t* combat_get_scmd(const enum combat_scmd_t type);
 entity_t* combat_get_current(combat_region_t *cr);
 extern void combat_set_hunt(combat_region_t *cr, const uint32_t combat_id);
 extern void combat_player_action(const entity_action_t action);
-extern int combat_activate_power(power_t *pw, region_t *reg, entity_t *source, const int32_t x, const int32_t y);
+extern int combat_activate_power(power_t *pw, entity_t *source, entity_t *target, const int32_t x, const int32_t y);
 
 // pre-processor ordering.
 extern void combat_is_defeated(region_t *reg, entity_t *dude);

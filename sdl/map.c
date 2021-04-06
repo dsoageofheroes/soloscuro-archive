@@ -111,6 +111,7 @@ void map_load_region(region_t *reg, SDL_Renderer *renderer) {
     // TODO: NEED TO CLEAR ALL SCREENS
     screen_push_screen(renderer, &map_screen, 0, 0);
     screen_push_screen(renderer, &narrate_screen, 0, 0);
+    screen_push_screen(renderer, &combat_status_screen, 295, 5);
 }
 
 void map_load_map(SDL_Renderer *renderer, int id) {
@@ -300,7 +301,7 @@ extern void port_load_sprite(sprite_info_t *spr, gff_palette_t *pal, const int g
 
     if (spr->scmd) {
         error("port_load_sprite not implemented for sprites with a scmd!\n");
-        exit(1);
+        //exit(1);
     }
 
     asn = animate_sprite_node_create();
@@ -323,7 +324,7 @@ void port_enter_combat() {
     //player_remove_animation();
     // Need to disperse players (and setup combat items.)
     // bring up combat status.
-    screen_push_screen(main_get_rend(), &combat_status_screen, 295, 5);
+    //screen_push_screen(main_get_rend(), &combat_status_screen, 295, 5);
     dude_t *main_player = player_get_active();
     for (int i = 0; i < 4; i++) {
         dude_t *next_player = player_get_entity(i);
@@ -341,7 +342,7 @@ void port_exit_combat() {
     // condense players.
     player_condense();
     // remove combat status.
-    screen_pop();
+    //screen_pop();
     // assign experience.
 }
 
@@ -468,8 +469,8 @@ int map_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_
     }
 
     if (ms == MOUSE_POWER) {
-        combat_activate_power(mouse_get_power(), region_manager_get_current(),
-                player_get_active(), tilex, tiley);
+        combat_activate_power(mouse_get_power(), player_get_active(),
+            get_entity_at_location(x, y), tilex, tiley);
         mouse_set_state(MOUSE_POINTER);
         return 1;
     }

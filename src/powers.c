@@ -117,3 +117,21 @@ extern enum target_shape power_get_target_type(power_t *power) {
     if (!power) { return TARGET_NONE; }
     return power->shape;
 }
+
+static void load_power_sprite(sprite_info_t *spr) {
+    gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
+    port_load_sprite(spr, pal, OBJEX_GFF_INDEX, GFF_BMP, spr->bmp_id);
+}
+
+extern void power_load(power_t *power) {
+    if (!power) { return; }
+    if (!power->cast.data) {
+        load_power_sprite(&(power->cast));
+    }
+    if (!power->thrown.data) {
+        load_power_sprite(&(power->thrown));
+    }
+    if (!power->hit.data) {
+        load_power_sprite(&(power->hit));
+    }
+}

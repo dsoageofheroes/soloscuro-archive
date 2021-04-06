@@ -6,6 +6,7 @@
 #include "sprite.h"
 #include "main.h"
 #include "../src/dsl.h"
+#include "../src/combat.h"
 #include "../src/ds-scmd.h"
 
 #define MAX_ZPOS (128)
@@ -146,6 +147,22 @@ void animate_list_remove(animate_sprite_node_t *an, const int zpos) {
     free(an);
 }
 
+extern animate_sprite_node_t* animate_list_node_add(animate_sprite_node_t *node, const int zpos) {
+    for (animate_sprite_node_t *rover = animate_list[zpos]; rover; rover = rover->next) {
+        if (rover == node) { return node; }
+    }
+
+    if (animate_list[zpos]) {
+        animate_list[zpos]->prev = node;
+    }
+    node->prev = NULL;
+    sprite_set_frame(node->anim->spr, node->anim->scmd->bmp_idx);
+    animate_list[zpos] = node;
+    animate_shift_node(animate_list[zpos], zpos);
+
+    return node;
+}
+
 animate_sprite_node_t *animate_list_add(animate_sprite_t *anim, const int zpos) {
     if (zpos < 0 || zpos >= MAX_ZPOS) {
         error("zpos is beyond range!");
@@ -154,15 +171,8 @@ animate_sprite_node_t *animate_list_add(animate_sprite_t *anim, const int zpos) 
     animate_sprite_node_t *node = malloc(sizeof(animate_sprite_node_t));
     node->anim = anim;
     node->next = animate_list[zpos];
-    if (animate_list[zpos]) {
-        animate_list[zpos]->prev = node;
-    }
-    node->prev = NULL;;
-    sprite_set_frame(anim->spr, anim->scmd->bmp_idx);
-    animate_list[zpos] = node;
-    animate_shift_node(animate_list[zpos], zpos);
 
-    return node;
+    return animate_list_node_add(node, zpos);
 }
 
 void animate_set_animation(animate_sprite_t *as, scmd_t *scmd, const uint32_t ticks_per_move) {

@@ -24,6 +24,7 @@ enum entity_action_e {
     EA_GREEN_DAMAGE,
     EA_DAMAGE_APPLY,
     EA_CAST,
+    EA_THROW,
     EA_END,
 };
 

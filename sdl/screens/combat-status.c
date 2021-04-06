@@ -11,6 +11,7 @@
 #include <string.h>
 
 static uint16_t background;
+static animate_sprite_node_t *power_animation;
 static combat_status_t combat_status;
 static uint32_t xoffset, yoffset;
 static uint16_t combat_attacks;
@@ -54,12 +55,25 @@ static void get_status() {
     }
 }
 
+static int count = 30;
+
 void combat_status_render(void *data, SDL_Renderer *renderer) {
-    sprite_render(renderer, background);
     const float zoom = main_get_zoom();
     SDL_Rect loc;
     char buf[128];
 
+    if (power_animation) {
+        count--;
+        if (count == 0) {
+            animate_list_remove(power_animation, 100);
+            power_animation = NULL;
+            count = 30;
+        }
+    }
+
+    if (combat_player_turn() == NO_COMBAT) { return; }
+
+    sprite_render(renderer, background);
     get_status();
 
     loc.x = xoffset;
@@ -90,6 +104,46 @@ void combat_status_render(void *data, SDL_Renderer *renderer) {
     }
 }
 
+enum {
+    DIRECTION_U, // up
+    DIRECTION_UUR, // up up right
+    DIRECTION_UR, // up right
+    DIRECTION_URR, // up right up
+    DIRECTION_R, // right
+    DIRECTION_RRD, // right right down
+    DIRECTION_RD, // right down
+    DIRECTION_RDD, // right down down
+    DIRECTION_D, // down
+    DIRECTION_DDL, // down down left
+    DIRECTION_DL, // down left
+    DIRECTION_DLL, // down left left
+    DIRECTION_L, // left
+    DIRECTION_LLU, // left left up
+    DIRECTION_LU, // left up
+    DIRECTION_LUU, // left up up
+};
+
+int get_direction(entity_t *source, entity_t *target) {
+    int diffx = source->mapx - target->mapx;
+    int diffy = source->mapy - target->mapy;
+
+    if (diffx == 0) {
+        if (diffy < 0) { return DIRECTION_D; }
+        return DIRECTION_U;
+    } else if(diffy == 0) {
+        if (diffx < 0) { return DIRECTION_R; }
+        return DIRECTION_L;
+    } else if (diffx < 0) {
+        if (diffy < 0) { return DIRECTION_RD; }
+        return DIRECTION_UR;
+    } else if (diffx > 0) {
+        if (diffy < 0) { return DIRECTION_DL; }
+        return DIRECTION_LU;
+    }
+
+    return DIRECTION_RDD;
+}
+
 void port_combat_action(entity_action_t *ca) {
     if (ca->action == EA_RED_DAMAGE) {
         animate_sprite_node_t *asn = ca->target->sprite.data;
@@ -97,6 +151,34 @@ void port_combat_action(entity_action_t *ca) {
         show_attack = 1;
         damage_amount = ca->amt;
         return;
+    } else if (ca->action == EA_CAST) {
+        animate_sprite_node_t *source = ca->source->sprite.data;
+        animate_sprite_node_t *cast = ca->power->cast.data;
+        power_animation = cast;
+        sprite_center_spr(power_animation->anim->spr, source->anim->spr);
+        power_animation->anim->x = sprite_getx(power_animation->anim->spr) + getCameraX();
+        power_animation->anim->y = sprite_gety(power_animation->anim->spr) + getCameraY();
+        power_animation->anim->destx = power_animation->anim->x;
+        power_animation->anim->desty = power_animation->anim->y;
+        cast->anim->scmd = combat_get_scmd(COMBAT_POWER_CAST);
+        animate_list_node_add(cast, 100);
+    } else if (ca->action == EA_THROW) {
+        int dir = get_direction(ca->source, ca->target);
+        animate_sprite_node_t *throw = ca->power->thrown.data;
+        animate_sprite_node_t *source = ca->source->sprite.data;
+        animate_sprite_node_t *dest = ca->target->sprite.data;
+        printf("dir = %d\n", dir);
+        if (dir > 8) { dir -= 8; }
+        throw->anim->scmd = combat_get_scmd(COMBAT_POWER_THROW_STATIC);
+        throw->anim->x = sprite_getx(source->anim->spr) + getCameraX();
+        throw->anim->y = sprite_gety(source->anim->spr) + getCameraY();
+        throw->anim->destx = sprite_getx(dest->anim->spr) + getCameraX();
+        throw->anim->desty = sprite_gety(dest->anim->spr) + getCameraY();
+        printf("(%d, %d) -> (%d, %d)\n", throw->anim->x, throw->anim->y,
+            throw->anim->destx, throw->anim->desty);
+        animate_list_node_add(throw, 100);
+        //animate_sprite_node_t *source = ca->source->sprite.data;
+        //animate_sprite_node_t *throw = ca->power->thrown.data;
     }
 
     show_attack = 0;

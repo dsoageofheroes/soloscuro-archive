@@ -103,6 +103,17 @@ static scmd_t combat_stand_left[] = {
     {.bmp_idx = 2, .delay = 0, .flags = SCMD_XMIRROR | SCMD_LAST, .xoffset = 0, .yoffset = 0, 0, 0, 0},
 };
 
+static scmd_t cast_scmd[] = {
+    {.bmp_idx = 0, .delay = 7, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 1, .delay = 8, .flags = 0x0, .xoffset = -1, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 2, .delay = 8, .flags = 0x0, .xoffset = -10, .yoffset = -10, 0, 0, 0},
+    {.bmp_idx = 3, .delay = 7, .flags = SCMD_JUMP, .xoffset = -9, .yoffset = -10, 0, 0, 0},
+};
+
+static scmd_t throw_scmd[] = {
+    {.bmp_idx = 0, .delay = 0, .flags = SCMD_LAST, .xoffset = 0, .yoffset = 0, 0, 0, 0},
+};
+
 static scmd_t *combat_types[] = {
     combat_stand_down,
     combat_stand_up,
@@ -120,6 +131,8 @@ static scmd_t *combat_types[] = {
     combat_melee_up,
     combat_melee_right,
     combat_melee_left,
+    cast_scmd,
+    throw_scmd,
 };
 
 scmd_t* combat_get_scmd(const enum combat_scmd_t type) {
@@ -313,8 +326,14 @@ extern int entity_animation_list_execute(entity_animation_list_t *list, region_t
             break;
         case EA_CAST:
             printf("CAST!\n");
-            source->sprite.scmd = get_entity_scmd(source->sprite.scmd, list->head->ca.action);
-            port_update_entity(source, 0, 0);
+            //printf("->%s\n", list->head->ca.source->name);
+            //source->sprite.scmd = get_entity_scmd(source->sprite.scmd, list->head->ca.action);
+            //port_update_entity(source, 0, 0);
+            port_combat_action(&(list->head->ca));
+            break;
+        case EA_THROW:
+            printf("throw!\n");
+            port_combat_action(&(list->head->ca));
             break;
         default:
             error("unknown action %d!\n", list->head->ca.action);

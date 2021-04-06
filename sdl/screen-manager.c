@@ -4,6 +4,7 @@
 #include "animate.h"
 #include "player.h"
 #include "screens/narrate.h"
+#include "screens/combat-status.h"
 #include "sprite.h"
 #include "font.h"
 #include "../src/dsl.h"
@@ -99,6 +100,7 @@ int screen_load_region(SDL_Renderer *renderer, const int region) {
 
     screen_push_screen(renderer, &map_screen, 0, 0);
     screen_push_screen(renderer, &narrate_screen, 0, 0);
+    screen_push_screen(renderer, &combat_status_screen, 295, 5);
 
     return 1;
 }

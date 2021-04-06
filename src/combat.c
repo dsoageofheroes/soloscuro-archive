@@ -641,13 +641,24 @@ extern uint32_t combat_add(combat_region_t *rc, entity_t *entity) {
     return 1;
 }
 
-extern int combat_activate_power(power_t *pw, region_t *reg, entity_t *source, const int32_t x, const int32_t y) {
+extern int combat_activate_power(power_t *pw, entity_t *source, entity_t *target, const int32_t x, const int32_t y) {
     //printf("COMBAT ACTIVATE: %p, %p, %p (%d, %d)\n", pw, reg, source, x, y);
     if (!pw || !source) { return 0; }
 
     //entity_animation_list_t* list = entity_animation_list_create();
-    entity_animation_list_add(&(source->actions), EA_CAST, source, NULL, pw, 0);
-    printf("ADDED!\n");
+    power_load(pw);
+        printf("->%d\n", pw->thrown.bmp_id);
+    pw->cast.bmp_id = 0;
+    pw->hit.bmp_id = 0;
+    pw->thrown.bmp_id = 0;
+
+    if (pw->cast.scmd) {
+        entity_animation_list_add(&(source->actions), EA_CAST, source, target, pw, 0);
+    }
+
+    if (pw->thrown.scmd) {
+        entity_animation_list_add(&(source->actions), EA_THROW, source, target, pw, 0);
+    }
 
     return 1;
 }
