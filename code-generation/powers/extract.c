@@ -1147,10 +1147,11 @@ static void generate_tables() {
             if (wizard_powers[i][j] >= 0) {
                 fprintf(file, "    p = calloc(1, sizeof(power_t));\n");
                 fprintf(file, "    wizard_%s_setup(p);\n", power_names[wizard_powers[i][j]]);
-                fprintf(file, "    if (p->description) {\n");
-                fprintf(file, "        wizard_add_power(%d, p);\n", i + 1);
-                fprintf(file, "    } else {\n");
-                fprintf(file, "    }\n");
+                //fprintf(file, "    if (p->description) {\n");
+                fprintf(file, "    wizard_add_power(%d, p);\n", i + 1);
+                //fprintf(file, "    } else {\n");
+                //fprintf(file, "        free(p);\n");
+                //fprintf(file, "    }\n");
             }
         }
         fprintf(file, "\n");
