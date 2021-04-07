@@ -647,17 +647,20 @@ extern int combat_activate_power(power_t *pw, entity_t *source, entity_t *target
 
     //entity_animation_list_t* list = entity_animation_list_create();
     power_load(pw);
-        printf("->%d\n", pw->thrown.bmp_id);
     pw->cast.bmp_id = 0;
     pw->hit.bmp_id = 0;
     pw->thrown.bmp_id = 0;
 
     if (pw->cast.scmd) {
-        entity_animation_list_add(&(source->actions), EA_CAST, source, target, pw, 0);
+        entity_animation_list_add(&(source->actions), EA_POWER_CAST, source, target, pw, 0);
     }
 
     if (pw->thrown.scmd) {
-        entity_animation_list_add(&(source->actions), EA_THROW, source, target, pw, 0);
+        entity_animation_list_add(&(source->actions), EA_POWER_THROW, source, target, pw, 0);
+    }
+
+    if (pw->thrown.scmd) {
+        entity_animation_list_add(&(source->actions), EA_POWER_HIT, source, target, pw, 0);
     }
 
     return 1;

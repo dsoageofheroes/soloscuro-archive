@@ -39,7 +39,6 @@ extern void power_list_free_instance(power_list_t *pl, power_instance_t *pi) {
 static void set_sprite_from_ojff(sprite_info_t *spr, const uint32_t id) {
     disk_object_t dobj;
     gff_chunk_header_t chunk = gff_find_chunk_header(OBJEX_GFF_INDEX, GFF_OJFF, id);
-    //printf("WIZ id = %d, length = %d\n", id, chunk.length);
     if (chunk.length <= 0) { return; }
 
     gff_read_chunk(OBJEX_GFF_INDEX, &chunk, &dobj, sizeof(dobj));
@@ -48,6 +47,7 @@ static void set_sprite_from_ojff(sprite_info_t *spr, const uint32_t id) {
     spr->flags = dobj.flags;
     spr->xoffset = dobj.xoffset;
     spr->yoffset = dobj.yoffset;
+    //printf("id = %d, length = %d, bmp_id = %d", id, chunk.length, spr->bmp_id);
     spr->scmd = dsl_scmd_get(OBJEX_GFF_INDEX, dobj.script_id, 0);
 }
 

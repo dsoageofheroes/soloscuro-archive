@@ -112,6 +112,21 @@ static scmd_t cast_scmd[] = {
 
 static scmd_t throw_scmd[] = {
     {.bmp_idx = 0, .delay = 0, .flags = SCMD_LAST, .xoffset = 0, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 1, .delay = 0, .flags = SCMD_LAST, .xoffset = 0, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 2, .delay = 0, .flags = SCMD_LAST, .xoffset = 0, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 3, .delay = 0, .flags = SCMD_LAST, .xoffset = 0, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 4, .delay = 0, .flags = SCMD_LAST, .xoffset = 0, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 5, .delay = 0, .flags = SCMD_LAST, .xoffset = 0, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 6, .delay = 0, .flags = SCMD_LAST, .xoffset = 0, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 7, .delay = 0, .flags = SCMD_LAST, .xoffset = 0, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 8, .delay = 0, .flags = SCMD_LAST, .xoffset = 0, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 7, .delay = 0, .flags = SCMD_LAST, .xoffset = -1, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 6, .delay = 0, .flags = SCMD_LAST, .xoffset = -1, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 5, .delay = 0, .flags = SCMD_LAST, .xoffset = -1, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 4, .delay = 0, .flags = SCMD_LAST, .xoffset = -1, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 3, .delay = 0, .flags = SCMD_LAST, .xoffset = -1, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 2, .delay = 0, .flags = SCMD_LAST, .xoffset = -1, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 1, .delay = 0, .flags = SCMD_LAST, .xoffset = -1, .yoffset = 0, 0, 0, 0},
 };
 
 static scmd_t *combat_types[] = {
@@ -132,7 +147,22 @@ static scmd_t *combat_types[] = {
     combat_melee_right,
     combat_melee_left,
     cast_scmd,
-    throw_scmd,
+    throw_scmd + 0,
+    throw_scmd + 1,
+    throw_scmd + 2,
+    throw_scmd + 3,
+    throw_scmd + 4,
+    throw_scmd + 5,
+    throw_scmd + 6,
+    throw_scmd + 7,
+    throw_scmd + 8,
+    throw_scmd + 9,
+    throw_scmd + 10,
+    throw_scmd + 11,
+    throw_scmd + 12,
+    throw_scmd + 13,
+    throw_scmd + 14,
+    throw_scmd + 15,
 };
 
 scmd_t* combat_get_scmd(const enum combat_scmd_t type) {
@@ -283,6 +313,7 @@ void entity_animation_list_add(entity_animation_list_t *list, enum entity_action
         entity_t *source, entity_t *target, power_t *power, const int32_t amt) {
     if (!list) { return; }
     entity_animation_node_t *toadd = malloc(sizeof(entity_animation_node_t));
+    entity_animation_node_t *rover = list->head;
 
     toadd->ca.action = action;
     toadd->ca.source = source;
@@ -294,7 +325,8 @@ void entity_animation_list_add(entity_animation_list_t *list, enum entity_action
     if (!list->head) {
         list->head = toadd;
     } else {
-        list->head->next = toadd;
+        while (rover->next) { rover = rover->next; }
+        rover->next = toadd;
     }
 }
 
@@ -324,15 +356,9 @@ extern int entity_animation_list_execute(entity_animation_list_t *list, region_t
                 combat_is_defeated(reg, target);
             }
             break;
-        case EA_CAST:
-            printf("CAST!\n");
-            //printf("->%s\n", list->head->ca.source->name);
-            //source->sprite.scmd = get_entity_scmd(source->sprite.scmd, list->head->ca.action);
-            //port_update_entity(source, 0, 0);
-            port_combat_action(&(list->head->ca));
-            break;
-        case EA_THROW:
-            printf("throw!\n");
+        case EA_POWER_CAST:
+        case EA_POWER_THROW:
+        case EA_POWER_HIT:
             port_combat_action(&(list->head->ca));
             break;
         default:

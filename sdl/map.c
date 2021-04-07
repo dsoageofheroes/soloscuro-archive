@@ -242,7 +242,7 @@ void port_add_entity(entity_t *entity, gff_palette_t *pal) {
     if (entity->name) {
         anims[anim_pos].desty -= sprite_geth(anims[anim_pos].spr) - (8 * main_get_zoom());
     }
-    anims[anim_pos].move = anims[anim_pos].left_over = 0.0;
+    anims[anim_pos].movey = anims[anim_pos].movex = anims[anim_pos].left_over = 0.0;
     anims[anim_pos].entity = entity;
     anim_nodes[anim_pos] = animate_list_add(anims + anim_pos, entity->mapz);
     entity->sprite.data = anim_nodes[anim_pos];

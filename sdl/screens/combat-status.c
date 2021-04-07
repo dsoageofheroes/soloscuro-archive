@@ -151,7 +151,7 @@ void port_combat_action(entity_action_t *ca) {
         show_attack = 1;
         damage_amount = ca->amt;
         return;
-    } else if (ca->action == EA_CAST) {
+    } else if (ca->action == EA_POWER_CAST) {
         animate_sprite_node_t *source = ca->source->sprite.data;
         animate_sprite_node_t *cast = ca->power->cast.data;
         power_animation = cast;
@@ -162,23 +162,39 @@ void port_combat_action(entity_action_t *ca) {
         power_animation->anim->desty = power_animation->anim->y;
         cast->anim->scmd = combat_get_scmd(COMBAT_POWER_CAST);
         animate_list_node_add(cast, 100);
-    } else if (ca->action == EA_THROW) {
+    } else if (ca->action == EA_POWER_THROW) {
         int dir = get_direction(ca->source, ca->target);
         animate_sprite_node_t *throw = ca->power->thrown.data;
         animate_sprite_node_t *source = ca->source->sprite.data;
         animate_sprite_node_t *dest = ca->target->sprite.data;
         printf("dir = %d\n", dir);
-        if (dir > 8) { dir -= 8; }
-        throw->anim->scmd = combat_get_scmd(COMBAT_POWER_THROW_STATIC);
+        throw->anim->scmd = combat_get_scmd(COMBAT_POWER_THROW_STATIC_U + dir);
         throw->anim->x = sprite_getx(source->anim->spr) + getCameraX();
         throw->anim->y = sprite_gety(source->anim->spr) + getCameraY();
-        throw->anim->destx = sprite_getx(dest->anim->spr) + getCameraX();
-        throw->anim->desty = sprite_gety(dest->anim->spr) + getCameraY();
+        throw->anim->destx = sprite_getx(dest->anim->spr) + sprite_getw(dest->anim->spr) / 2 + getCameraX();
+        throw->anim->desty = sprite_gety(dest->anim->spr) + sprite_geth(dest->anim->spr) / 2 + getCameraY();
         printf("(%d, %d) -> (%d, %d)\n", throw->anim->x, throw->anim->y,
             throw->anim->destx, throw->anim->desty);
+        throw->anim->movex = abs(throw->anim->destx - throw->anim->x) / 30;
+        throw->anim->movey = abs(throw->anim->desty - throw->anim->y) / 30;
+        power_animation = throw;
         animate_list_node_add(throw, 100);
         //animate_sprite_node_t *source = ca->source->sprite.data;
         //animate_sprite_node_t *throw = ca->power->thrown.data;
+    } else if (ca->action == EA_POWER_HIT) {
+        printf("HIT %p\n", power_animation); // need change up animations...
+        /*
+        animate_sprite_node_t *dest = ca->target->sprite.data;
+        animate_sprite_node_t *hit = ca->power->hit.data;
+        power_animation = hit;
+        sprite_center_spr(power_animation->anim->spr, dest->anim->spr);
+        power_animation->anim->x = sprite_getx(power_animation->anim->spr) + getCameraX();
+        power_animation->anim->y = sprite_gety(power_animation->anim->spr) + getCameraY();
+        power_animation->anim->destx = power_animation->anim->x;
+        power_animation->anim->desty = power_animation->anim->y;
+        power_animation->anim->scmd = combat_get_scmd(COMBAT_POWER_CAST);
+        animate_list_node_add(power_animation, 100);
+        */
     }
 
     show_attack = 0;

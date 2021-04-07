@@ -52,18 +52,23 @@ out:
         flip |= SDL_FLIP_VERTICAL;
     }
 
-    anim->left_over += fmod(anim->move, 1.0);
-    float move_amt = floor(anim->move + anim->left_over);
+    anim->left_over += fmod(anim->movex, 1.0);
+    float movex_amt = floor(anim->movex + anim->left_over);
+    float movey_amt = floor(anim->movey + anim->left_over);
     anim->left_over = fmod(anim->left_over, 1.0);
 
-    if (anim->x < anim->destx) { anim->x += move_amt; }
-    if (anim->y < anim->desty) { anim->y += move_amt; }
-    if (anim->x > anim->destx) { anim->x -= move_amt; }
-    if (anim->y > anim->desty) { anim->y -= move_amt; }
+    if (anim->x < anim->destx) { anim->x += movex_amt; }
+    if (anim->y < anim->desty) { anim->y += movey_amt; }
+    if (anim->x > anim->destx) { anim->x -= movex_amt; }
+    if (anim->y > anim->desty) { anim->y -= movey_amt; }
 
-    //if (anim->entity && anim->entity->name) {
-        //printf("%s: (%d, %d) (move_amt = %f)\n", anim->entity->name, anim->x, anim->y, move_amt);
-    //}
+    /*
+    if (anim->scmd == combat_get_scmd(COMBAT_POWER_THROW_STATIC_U)) {
+        printf("%s: (%d, %d) -> (%d, %d) (move_amt = (%f, %f))\n",
+            anim->entity ? anim->entity->name : "THROW",
+            anim->x, anim->y, anim->destx, anim->desty, movex_amt, movey_amt);
+    }
+    */
     sprite_set_location(anim->spr,
         anim->x - xoffset, // + scmd_xoffset,
         anim->y - yoffset); // + anim->scmd->yoffset);
@@ -183,7 +188,8 @@ void animate_set_animation(animate_sprite_t *as, scmd_t *scmd, const uint32_t ti
 
     as->scmd = scmd;
     as->pos = 0;
-    as->move = distance == 0 ? 0 : distance / ((float)ticks_per_move * 2);
+    as->movex = distance == 0 ? 0 : distance / ((float)ticks_per_move * 2);
+    as->movey = distance == 0 ? 0 : distance / ((float)ticks_per_move * 2);
 
     sprite_set_frame(as->spr, as->scmd->bmp_idx);
 }
