@@ -5,9 +5,11 @@
 #include <SDL2/SDL.h>
 #include <sndfile.h>
 
+#define XMI_BUF_SIZE (1<<13)
+
 static void soloscuro_audio_callback(void *midi_player, uint8_t *stream, int len);
 static uint8_t xmi_playing = 0;
-static uint8_t xmi_buf[1<<13];
+static uint8_t xmi_buf[XMI_BUF_SIZE];
 static SDL_AudioSpec            spec, obtained;
 static struct ADL_MIDIPlayer    *midi_player = NULL;
 static struct ADLMIDI_AudioFormat audio_format;
@@ -60,6 +62,8 @@ extern void audio_init() {
     spec.format = AUDIO_S16SYS;
     spec.channels = 2;
     spec.samples = 2048;
+
+    memset(xmi_buf, 0x0, XMI_BUF_SIZE);
 
     midi_player = adl_init(spec.freq);
     if (!midi_player) {

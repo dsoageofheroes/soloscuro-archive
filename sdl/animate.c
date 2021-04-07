@@ -148,8 +148,6 @@ void animate_list_remove(animate_sprite_node_t *an, const int zpos) {
     } else {
         animate_list[zpos] = next;
     }
-
-    free(an);
 }
 
 extern animate_sprite_node_t* animate_list_node_add(animate_sprite_node_t *node, const int zpos) {
@@ -247,7 +245,9 @@ void animate_sprite_node_free(animate_sprite_node_t *node) {
         node->anim->spr = SPRITE_ERROR;
     }
 
-    free(node->anim);
+    if (node->anim) {
+        free(node->anim);
+    }
     node->anim = NULL;
     free(node);
 }

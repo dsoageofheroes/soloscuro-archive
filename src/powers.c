@@ -21,18 +21,49 @@ extern void power_list_add(power_list_t *pl, power_t *pw) {
     pl->head = to_add;
 }
 
+extern void power_free(power_t *pw) {
+    if (pw->icon.data) {
+        port_free_sprite(&(pw->icon));
+        pw->icon.data = NULL;
+    }
+    if (pw->thrown.data) {
+        port_free_sprite(&(pw->thrown));
+        pw->thrown.data = NULL;
+    }
+    if (pw->hit.data) {
+        port_free_sprite(&(pw->hit));
+        pw->hit.data = NULL;
+    }
+    if (pw->cast.data) {
+        port_free_sprite(&(pw->cast));
+        pw->cast.data = NULL;
+    }
+    if (pw->description) {
+        free(pw->description);
+        pw->description = NULL;
+    }
+    free(pw);
+}
+
 extern void power_list_free_instance(power_list_t *pl, power_instance_t *pi) {
     if (!pl || !pi) { return; }
+
     if (pl->head == pi) {
         pl->head = pi->next;
+        if (pl->head) {
+            pl->head->prev = NULL;
+        }
+    } else {
+        if (pi->prev) {
+            pi->prev->next = pi->next;
+        }
+        if (pi->next) {
+            pi->next->prev = pi->prev;
+        }
     }
-    if (pi->stats->icon.data) {
-        port_free_sprite(pi->stats->icon.data);
-    }
-    if (pi->stats->description) {
-        free(pi->stats->description);
-    }
-    free(pi->stats);
+
+    power_free(pi->stats);
+
     free(pi);
 }
 

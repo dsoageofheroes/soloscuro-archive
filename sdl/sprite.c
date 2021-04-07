@@ -277,12 +277,16 @@ uint32_t sprite_get_xdiff_from_start(const uint16_t id) {
 // Free a sprite at an ID (do not use it again!)
 void sprite_free(const uint16_t id) {
     if (!valid_id(id)) { return; }
+    //printf("HERE: %d, %d\n", sprites[id].in_use, sprites[id].len);
     if (sprites[id].in_use) {
         for (int i = 0; i < sprites[id].len; i++) {
             SDL_DestroyTexture(sprites[id].tex[i]);
         }
+        sprites[id].len = 0;
         free(sprites[id].loc);
+        sprites[id].loc = NULL;
         free(sprites[id].tex);
+        sprites[id].tex = NULL;
         sprites[id].in_use = 0;
     }
 }

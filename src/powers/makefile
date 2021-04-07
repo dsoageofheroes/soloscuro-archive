@@ -7,7 +7,7 @@ obj:
 	mkdir -p obj
 
 obj/%.o : %.c
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) -c -g -O2 $(CFLAGS) $< -o $@
 
 clean: 
 	rm -rf obj/

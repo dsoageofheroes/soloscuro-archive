@@ -659,7 +659,7 @@ extern int combat_activate_power(power_t *pw, entity_t *source, entity_t *target
         entity_animation_list_add(&(source->actions), EA_POWER_THROW, source, target, pw, 0);
     }
 
-    if (pw->thrown.scmd) {
+    if (pw->hit.scmd) {
         entity_animation_list_add(&(source->actions), EA_POWER_HIT, source, target, pw, 0);
     }
 

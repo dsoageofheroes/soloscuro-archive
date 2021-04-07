@@ -16,6 +16,10 @@ extern void wizard_add_power(const int spell_level, power_t *pw) {
     int index = spell_level - 1;
     if (index < 0 || index > 9) { return; }
     if (!wizard_spells[index]) { wizard_spells[index] = power_list_create(); }
+    if (!pw->description) {
+        power_free(pw);
+        return;
+    }
     power_list_add(wizard_spells[index], pw);
     debug("Added %s to wizard level %d\n", pw->name, spell_level);
 }
@@ -23,8 +27,8 @@ extern void wizard_add_power(const int spell_level, power_t *pw) {
 extern void wizard_cleanup() {
     for (int i = 0; i < 10; i++) {
         if (wizard_spells[i]) {
-             power_list_free(wizard_spells[i]);
-             wizard_spells[i] = NULL;
+            power_list_free(wizard_spells[i]);
+            wizard_spells[i] = NULL;
         }
     }
 }
