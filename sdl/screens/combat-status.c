@@ -3,6 +3,7 @@
 #include "narrate.h"
 #include "../animate.h"
 #include "../main.h"
+#include "../audio.h"
 #include "../sprite.h"
 #include "../font.h"
 #include "../../src/gff.h"
@@ -21,18 +22,26 @@ static int damage_amount = 0;
 typedef struct animate_sprite_node_list_s {
     animate_sprite_node_t *an;
     int cycles;
+    uint16_t sound;
     struct animate_sprite_node_list_s *next;
 } animate_sprite_node_list_t;
 
 animate_sprite_node_list_t *list = NULL;
 
-static void add_node_list(animate_sprite_node_t *an) {
+static void start_node() {
+    if (!list || !list->an) { return; }
+    animate_list_node_add(list->an, 100);
+    audio_play_voc(RESOURCE_GFF_INDEX, GFF_BVOC, list->sound, 1.0);
+}
+
+static void add_node_list(animate_sprite_node_t *an, uint16_t sound) {
     animate_sprite_node_list_t *rover = list;
     animate_sprite_node_list_t *toadd = calloc(1, sizeof(animate_sprite_node_list_t));
     toadd->an = an;
+    toadd->sound = sound;
     if (!list) {
         list = toadd;
-        animate_list_node_add(an, 100);
+        start_node();
         return;
     }
     while(rover->next) { rover = rover->next; }
@@ -45,9 +54,7 @@ static void pop_list() {
     animate_sprite_node_list_t *delme = list;
     list = list->next;
     free(delme);
-    if (list && list->an) {
-        animate_list_node_add(list->an, 100);
-    }
+    start_node();
 }
 
 combat_status_t* combat_status_get() { return &combat_status; }
@@ -200,7 +207,7 @@ void port_combat_action(entity_action_t *ca) {
         cast->anim->destx = cast->anim->x;
         cast->anim->desty = cast->anim->y;
         cast->anim->scmd = combat_get_scmd(COMBAT_POWER_CAST);
-        add_node_list(cast);
+        add_node_list(cast, ca->power->cast_sound);
     } else if (ca->action == EA_POWER_THROW) {
         int dir = get_direction(ca->source, ca->target);
         animate_sprite_node_t *throw = ca->power->thrown.data;
@@ -215,7 +222,7 @@ void port_combat_action(entity_action_t *ca) {
             //throw->anim->destx, throw->anim->desty);
         throw->anim->movex = abs(throw->anim->destx - throw->anim->x) / 30;
         throw->anim->movey = abs(throw->anim->desty - throw->anim->y) / 30;
-        add_node_list(throw);
+        add_node_list(throw, ca->power->thrown_sound);
     } else if (ca->action == EA_POWER_HIT) {
         animate_sprite_node_t *dest = ca->target->sprite.data;
         animate_sprite_node_t *hit = ca->power->hit.data;
@@ -225,7 +232,7 @@ void port_combat_action(entity_action_t *ca) {
         hit->anim->destx = hit->anim->x;
         hit->anim->desty = hit->anim->y;
         hit->anim->scmd = combat_get_scmd(COMBAT_POWER_CAST);
-        add_node_list(hit);
+        add_node_list(hit, ca->power->hit_sound);
     }
 
     show_attack = 0;
