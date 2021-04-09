@@ -21,7 +21,9 @@ static int damage_amount = 0;
 
 typedef struct animate_sprite_node_list_s {
     animate_sprite_node_t *an;
+    entity_t *target;
     int cycles;
+    int is_moving;
     uint16_t sound;
     struct animate_sprite_node_list_s *next;
 } animate_sprite_node_list_t;
@@ -34,11 +36,13 @@ static void start_node() {
     audio_play_voc(RESOURCE_GFF_INDEX, GFF_BVOC, list->sound, 1.0);
 }
 
-static void add_node_list(animate_sprite_node_t *an, uint16_t sound) {
+static void add_node_list(animate_sprite_node_t *an, uint16_t sound, entity_t *target) {
     animate_sprite_node_list_t *rover = list;
     animate_sprite_node_list_t *toadd = calloc(1, sizeof(animate_sprite_node_list_t));
     toadd->an = an;
     toadd->sound = sound;
+    toadd->target = target;
+    toadd->is_moving = (an->anim->x != an->anim->destx) || (an->anim->y != an->anim->desty);
     if (!list) {
         list = toadd;
         start_node();
@@ -53,6 +57,9 @@ static void pop_list() {
     animate_list_remove(list->an, 100);
     animate_sprite_node_list_t *delme = list;
     list = list->next;
+    if (entity_is_fake(delme->target)) {
+        entity_free(delme->target);
+    }
     free(delme);
     start_node();
 }
@@ -98,14 +105,14 @@ static int count = 30;
 
 void combat_status_render(void *data, SDL_Renderer *renderer) {
     const float zoom = main_get_zoom();
-    const int delta = 4 * zoom;
+    const int delta = 5 * zoom;
     SDL_Rect loc;
     char buf[128];
 
     if (list && list->an) {
         count--;
         // Static animation, needs ot move to location
-        if (list->an->anim->scmd->flags & SCMD_LAST) {
+        if (list->is_moving) {
             if (abs(list->an->anim->x - list->an->anim->destx) < delta
                     && abs(list->an->anim->y == list->an->anim->desty) < delta) {
                 pop_list();
@@ -181,10 +188,34 @@ int get_direction(entity_t *source, entity_t *target) {
         if (diffx < 0) { return DIRECTION_R; }
         return DIRECTION_L;
     } else if (diffx < 0) {
-        if (diffy < 0) { return DIRECTION_RD; }
+        if (diffy < 0) { 
+            if (abs(diffx) < abs(diffy)) {
+                return DIRECTION_RDD;
+            } else if (abs(diffx) > abs(diffy)) {
+                return DIRECTION_RRD;
+            }
+            return DIRECTION_RD;
+        }
+        if (abs(diffx) < abs(diffy)) {
+            return DIRECTION_UUR;
+        } else if (abs(diffx) > abs(diffy)) {
+            return DIRECTION_URR;
+        }
         return DIRECTION_UR;
     } else if (diffx > 0) {
-        if (diffy < 0) { return DIRECTION_DL; }
+        if (diffy < 0) {
+            if (abs(diffx) < abs(diffy)) {
+                return DIRECTION_DDL;
+            } else if (abs(diffx) > abs(diffy)) {
+                return DIRECTION_DLL;
+            }
+            return DIRECTION_DL;
+        }
+        if (abs(diffx) < abs(diffy)) {
+            return DIRECTION_LUU;
+        } else if (abs(diffx) > abs(diffy)) {
+            return DIRECTION_LLU;
+        }
         return DIRECTION_LU;
     }
 
@@ -192,6 +223,8 @@ int get_direction(entity_t *source, entity_t *target) {
 }
 
 void port_combat_action(entity_action_t *ca) {
+    float const zoom = main_get_zoom();
+
     if (ca->action == EA_RED_DAMAGE) {
         animate_sprite_node_t *asn = ca->target->sprite.data;
         sprite_center_spr(combat_attacks, asn->anim->spr);
@@ -207,22 +240,30 @@ void port_combat_action(entity_action_t *ca) {
         cast->anim->destx = cast->anim->x;
         cast->anim->desty = cast->anim->y;
         cast->anim->scmd = combat_get_scmd(COMBAT_POWER_CAST);
-        add_node_list(cast, ca->power->cast_sound);
+        add_node_list(cast, ca->power->cast_sound, ca->target);
     } else if (ca->action == EA_POWER_THROW) {
         int dir = get_direction(ca->source, ca->target);
         animate_sprite_node_t *throw = ca->power->thrown.data;
         animate_sprite_node_t *source = ca->source->sprite.data;
         animate_sprite_node_t *dest = ca->target->sprite.data;
-        throw->anim->scmd = combat_get_scmd(COMBAT_POWER_THROW_STATIC_U + dir);
+        if (sprite_num_frames(throw->anim->spr) < 30) {
+            throw->anim->scmd = combat_get_scmd(COMBAT_POWER_THROW_STATIC_U + dir);
+        } else {
+            throw->anim->scmd = combat_get_scmd(COMBAT_POWER_THROW_ANIM_U + dir);
+        }
         throw->anim->x = sprite_getx(source->anim->spr) + getCameraX();
         throw->anim->y = sprite_gety(source->anim->spr) + getCameraY();
-        throw->anim->destx = sprite_getx(dest->anim->spr) + sprite_getw(dest->anim->spr) / 2 + getCameraX();
-        throw->anim->desty = sprite_gety(dest->anim->spr) + sprite_geth(dest->anim->spr) / 2 + getCameraY();
+        throw->anim->destx = dest
+            ? sprite_getx(dest->anim->spr) + sprite_getw(dest->anim->spr) / 2 + getCameraX()
+            : ca->target->mapx * 16 * zoom;
+        throw->anim->desty = dest
+            ? sprite_gety(dest->anim->spr) + sprite_geth(dest->anim->spr) / 2 + getCameraY()
+            : ca->target->mapy * 16 * zoom;
         //printf("(%d, %d) -> (%d, %d)\n", throw->anim->x, throw->anim->y,
             //throw->anim->destx, throw->anim->desty);
         throw->anim->movex = abs(throw->anim->destx - throw->anim->x) / 30;
         throw->anim->movey = abs(throw->anim->desty - throw->anim->y) / 30;
-        add_node_list(throw, ca->power->thrown_sound);
+        add_node_list(throw, ca->power->thrown_sound, ca->target);
     } else if (ca->action == EA_POWER_HIT) {
         animate_sprite_node_t *dest = ca->target->sprite.data;
         animate_sprite_node_t *hit = ca->power->hit.data;
@@ -232,7 +273,7 @@ void port_combat_action(entity_action_t *ca) {
         hit->anim->destx = hit->anim->x;
         hit->anim->desty = hit->anim->y;
         hit->anim->scmd = combat_get_scmd(COMBAT_POWER_CAST);
-        add_node_list(hit, ca->power->hit_sound);
+        add_node_list(hit, ca->power->hit_sound, ca->target);
     }
 
     show_attack = 0;

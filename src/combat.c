@@ -651,6 +651,10 @@ extern int combat_activate_power(power_t *pw, entity_t *source, entity_t *target
     pw->hit.bmp_id = 0;
     pw->thrown.bmp_id = 0;
 
+    if (!target) { // time to make a fake target for the power.
+        target = entity_create_fake(x, y);
+    }
+
     if (pw->cast.scmd) {
         entity_animation_list_add(&(source->actions), EA_POWER_CAST, source, target, pw, 0);
     }

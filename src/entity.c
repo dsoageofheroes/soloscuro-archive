@@ -314,3 +314,14 @@ extern int entity_get_priest_level(entity_t *entity) {
     if (!entity) { return 0; }
     return 0;
 }
+
+extern entity_t* entity_create_fake(const int mapx, const int mapy) {
+    dude_t *dude = calloc(1, sizeof(dude_t));
+    dude->mapx = mapx;
+    dude->mapy = mapy;
+    return dude;
+}
+
+extern int entity_is_fake(entity_t *entity) {
+    return (entity->ds_id == 0);
+}

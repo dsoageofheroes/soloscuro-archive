@@ -427,10 +427,10 @@ int view_character_handle_mouse_up(const uint32_t button, const uint32_t x, cons
             power_to_display = find_power(x, y);
             if (power_to_display) {
                 mouse_set_as_power(power_to_display);
+                power_to_display = NULL;
+                screen_pop();
+                return 1;
             }
-            power_to_display = NULL;
-            screen_pop();
-            return 1;
         }
     }
 
