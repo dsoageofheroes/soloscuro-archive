@@ -594,6 +594,10 @@ void combat_update(region_t *reg) {
     if (cr == NULL) { return; }
 
     if (wait_on_player) {
+        if (entity_animation_execute(reg)) {
+            check_current_turn();
+            return;
+        }
         do_player_turn(reg);
         return;
     }
@@ -666,6 +670,27 @@ extern int combat_activate_power(power_t *pw, entity_t *source, entity_t *target
     if (pw->hit.scmd) {
         entity_animation_list_add(&(source->actions), EA_POWER_HIT, source, target, pw, 0);
     }
+
+    switch (pw->shape) {
+        case TARGET_NONE: break;
+        case TARGET_SINGLE: // check AOE for circle (IE: Fireball)
+            if (pw->aoe > 1) {
+                warn("single target with aoe not implemented.\n");
+                break;
+            }
+        case TARGET_ANY:
+        case TARGET_ALLY:
+        case TARGET_SELF:
+        case TARGET_ENEMY:
+            entity_animation_list_add(&(source->actions), EA_POWER_APPLY, source, target, pw, 0);
+            break;
+        case TARGET_CONE:
+        case TARGET_RECTANGLE:
+        case TARGET_MULTI:
+        default:
+            warn("pw->shape %d not implemented\n", pw->shape);
+    }
+//static void wizard_magic_missile_apply        (power_instance_t *source, entity_t *entity) {
 
     return 1;
 }

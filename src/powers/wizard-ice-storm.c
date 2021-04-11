@@ -29,7 +29,7 @@ static void wizard_ice_storm_apply        (power_instance_t *source, entity_t *e
     mod = 1 * caster_level;
     damage = dnd2e_dice_roll(num_dice, 10) + mod;
     effect_type = 0 | EFFECT_COLD | EFFECT_MAGIC;
-    effect_apply_damage(entity, damage, effect_type);
+    effect_apply_damage(source->entity, entity, damage, effect_type);
 }
 
 static int wizard_ice_storm_affect_power (power_instance_t *target) {

@@ -29,7 +29,7 @@ static void wizard_death_fog_apply        (power_instance_t *source, entity_t *e
     mod = 1 * caster_level;
     damage = dnd2e_dice_roll(num_dice, 2) + mod;
     effect_type = 0 | EFFECT_ACID;
-    effect_apply_damage(entity, damage, effect_type);
+    effect_apply_damage(source->entity, entity, damage, effect_type);
 }
 
 static int wizard_death_fog_affect_power (power_instance_t *target) {

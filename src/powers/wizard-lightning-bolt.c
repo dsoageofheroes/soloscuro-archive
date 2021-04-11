@@ -29,7 +29,7 @@ static void wizard_lightning_bolt_apply        (power_instance_t *source, entity
     mod = 1 * caster_level;
     damage = dnd2e_dice_roll(num_dice, 6) + mod;
     effect_type = 0 | EFFECT_ELECTRIC | EFFECT_MAGIC;
-    effect_apply_damage(entity, damage, effect_type);
+    effect_apply_damage(source->entity, entity, damage, effect_type);
 }
 
 static int wizard_lightning_bolt_affect_power (power_instance_t *target) {

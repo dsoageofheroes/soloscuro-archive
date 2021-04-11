@@ -29,7 +29,7 @@ static void wizard_crystal_brittle_apply        (power_instance_t *source, entit
     mod = 0;
     damage = dnd2e_dice_roll(num_dice, 1) + mod;
     effect_type = 0;
-    effect_apply_damage(entity, damage, effect_type);
+    effect_apply_damage(source->entity, entity, damage, effect_type);
 }
 
 static int wizard_crystal_brittle_affect_power (power_instance_t *target) {

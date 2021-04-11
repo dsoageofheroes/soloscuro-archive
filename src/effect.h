@@ -82,6 +82,6 @@ typedef struct effect_s {
     void    (*end_of_effect_trigger) (entity_t *source);
 } effect_t;
 
-void effect_apply_damage(entity_t *entity, const int32_t damage, enum effect_type type);
+void effect_apply_damage(entity_t *source, entity_t *target, const int32_t damage, enum effect_type type);
 
 #endif

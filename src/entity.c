@@ -307,12 +307,12 @@ extern int entity_take_priest_slot(entity_t *entity, const int slot) {
 
 extern int entity_get_wizard_level(entity_t *entity) {
     if (!entity) { return 0; }
-    return 0;
+    return 1;
 }
 
 extern int entity_get_priest_level(entity_t *entity) {
     if (!entity) { return 0; }
-    return 0;
+    return 1;
 }
 
 extern entity_t* entity_create_fake(const int mapx, const int mapy) {

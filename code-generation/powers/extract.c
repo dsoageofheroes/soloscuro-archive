@@ -992,7 +992,7 @@ static void generate_apply(power_entry_t pw, char *name, FILE *file) {
     fprintf(file, ";\n");
 
     if (pw.info.damage.sides > 0) {
-        fprintf(file, "    effect_apply_damage(entity, damage, effect_type);\n");
+        fprintf(file, "    effect_apply_damage(source->entity, entity, damage, effect_type);\n");
     }
 
     fprintf(file, "}\n");

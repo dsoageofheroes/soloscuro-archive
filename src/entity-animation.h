@@ -21,11 +21,15 @@ enum entity_action_e {
     EA_WAIT,
     EA_GUARD,
     EA_RED_DAMAGE,
+    EA_BIG_RED_DAMAGE,
     EA_GREEN_DAMAGE,
+    EA_MAGIC_DAMAGE,
+    EA_BROWN_DAMAGE,
     EA_DAMAGE_APPLY,
     EA_POWER_CAST,
     EA_POWER_THROW,
     EA_POWER_HIT,
+    EA_POWER_APPLY,
     EA_END,
 };
 

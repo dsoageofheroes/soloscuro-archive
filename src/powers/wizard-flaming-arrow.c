@@ -29,7 +29,7 @@ static void wizard_flaming_arrow_apply        (power_instance_t *source, entity_
     mod = 0;
     damage = dnd2e_dice_roll(num_dice, 6) + mod;
     effect_type = 0 | EFFECT_FIRE | EFFECT_POINTED | EFFECT_MAGIC;
-    effect_apply_damage(entity, damage, effect_type);
+    effect_apply_damage(source->entity, entity, damage, effect_type);
 }
 
 static int wizard_flaming_arrow_affect_power (power_instance_t *target) {

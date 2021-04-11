@@ -29,7 +29,7 @@ static void wizard_delayed_blast_fireball_apply        (power_instance_t *source
     mod = (0 + 1) * caster_level;
     damage = dnd2e_dice_roll(num_dice, 6) + mod;
     effect_type = 0 | EFFECT_FIRE | EFFECT_MAGIC;
-    effect_apply_damage(entity, damage, effect_type);
+    effect_apply_damage(source->entity, entity, damage, effect_type);
 }
 
 static int wizard_delayed_blast_fireball_affect_power (power_instance_t *target) {

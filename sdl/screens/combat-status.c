@@ -21,7 +21,10 @@ static int damage_amount = 0;
 
 typedef struct animate_sprite_node_list_s {
     animate_sprite_node_t *an;
+    power_t *power;
+    entity_t *source;
     entity_t *target;
+    enum entity_action_e action;
     int cycles;
     int is_moving;
     uint16_t sound;
@@ -36,12 +39,16 @@ static void start_node() {
     audio_play_voc(RESOURCE_GFF_INDEX, GFF_BVOC, list->sound, 1.0);
 }
 
-static void add_node_list(animate_sprite_node_t *an, uint16_t sound, entity_t *target) {
+static void add_node_list(animate_sprite_node_t *an, uint16_t sound, entity_action_t *ca) {
+    // DO NOT STORE CA!!!!!!!!!!!!
     animate_sprite_node_list_t *rover = list;
     animate_sprite_node_list_t *toadd = calloc(1, sizeof(animate_sprite_node_list_t));
     toadd->an = an;
     toadd->sound = sound;
-    toadd->target = target;
+    toadd->target = ca->target;
+    toadd->source = ca->source;
+    toadd->power = ca->power;
+    toadd->action = ca->action;
     toadd->is_moving = (an->anim->x != an->anim->destx) || (an->anim->y != an->anim->desty);
     if (!list) {
         list = toadd;
@@ -52,14 +59,29 @@ static void add_node_list(animate_sprite_node_t *an, uint16_t sound, entity_t *t
     rover->next = toadd;
 }
 
+static void clear() {
+    //sprite_set_location(combat_attacks, -1000, -1000);
+    show_attack = 0;
+}
+
 static void pop_list() {
     if (!list) { return; }
     animate_list_remove(list->an, 100);
     animate_sprite_node_list_t *delme = list;
     list = list->next;
+
     if (entity_is_fake(delme->target)) {
         entity_free(delme->target);
     }
+
+    if (delme->action == EA_POWER_HIT) {
+        power_instance_t pi;
+        memset(&pi, 0x0, sizeof(power_instance_t));
+        pi.entity = delme->target;
+        pi.stats = delme->power;
+        delme->power->actions.apply(&pi, delme->target);
+    }
+
     free(delme);
     start_node();
 }
@@ -101,6 +123,29 @@ static void get_status() {
     }
 }
 
+static void draw_cone(SDL_Renderer *renderer, int sx, int sy, int range) {
+    //Lets draw a triangle...
+    SDL_SetRenderDrawColor(renderer, 192, 192, 192, 128);
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    /*
+    for (int i = 0; i < range; i++) {
+        //SDL_RenderDrawPoint(renderer, 100, i + 100);
+        SDL_RenderDrawLine(renderer, 100 + i, 100 - i/2, 100 + i, 100 + i/2);
+    }
+    */
+    for (int w = 0; w < range; w++) {
+        for (int h = 0; h < range; h++) {
+            int dx = range - w;
+            int dy = range - h;
+            // The 1.0 is 1/8th a circle, can be raise to a 2.0 for 1/4th circle or
+            // less than 1.0 for smaller that 1/8.
+            if ((dx*dx + dy*dy) <= (range * range) && dy < 1.0 * dx) {
+                SDL_RenderDrawPoint(renderer, sx + dx, sy + dy);
+            }
+        }
+    }
+}
+
 static int count = 30;
 
 void combat_status_render(void *data, SDL_Renderer *renderer) {
@@ -108,24 +153,47 @@ void combat_status_render(void *data, SDL_Renderer *renderer) {
     const int delta = 5 * zoom;
     SDL_Rect loc;
     char buf[128];
+    static int last_action = 0;
 
-    if (list && list->an) {
+    // Okay this can be confusing.
+    // The if decides when to proceed to the next action on the combat list
+    // list: List of actions
+    // last_action: a flag so we want a full round before clearing the GUI.
+    if ((list && list->an) || last_action) {
         count--;
-        // Static animation, needs ot move to location
-        if (list->is_moving) {
+        // Static animation, needs to move to location
+        if (list && list->an && list->is_moving) {
             if (abs(list->an->anim->x - list->an->anim->destx) < delta
                     && abs(list->an->anim->y == list->an->anim->desty) < delta) {
                 pop_list();
             }
-        } else if (list->an->anim->scmd[list->an->anim->pos].flags & SCMD_JUMP) {
+        // animation, we want until animation complete (after SCMD_JUMP)
+        } else if (list && list->an && list->an->anim->scmd[list->an->anim->pos].flags & SCMD_JUMP) {
             list->cycles++;
-        } else if (list->cycles) {
+        } else if (list && list->cycles) {
             pop_list();
+        }
+
+        if (last_action == 0 && (!list || !list->an)) {
+            last_action = 1;
+            count = 30;
+        };
+
+        if (last_action && count == 0) {
+            clear();
+            last_action = 0;
+        }
+
+        if (count <= 0) {
             count = 30;
         }
     }
 
     if (combat_player_turn() == NO_COMBAT) { return; }
+
+    if (2 == 1) {
+        draw_cone(renderer, 100, 100, 200);
+    }
 
     sprite_render(renderer, background);
     get_status();
@@ -156,6 +224,7 @@ void combat_status_render(void *data, SDL_Renderer *renderer) {
         snprintf(buf, 128, "%d", damage_amount);
         font_render_center(renderer, FONT_GREYLIGHT, buf, loc);
     }
+
 }
 
 enum {
@@ -222,58 +291,80 @@ int get_direction(entity_t *source, entity_t *target) {
     return DIRECTION_RDD;
 }
 
+// DO NOT STORE THE POINTER TO CA!!!!!!!!
 void port_combat_action(entity_action_t *ca) {
+    // DO NOT STORE THE POINTER TO CA!!!!!!!!
     float const zoom = main_get_zoom();
+    animate_sprite_node_t *asn = NULL, *source = NULL, *cast = NULL,
+        *dest = NULL, *hit = NULL, *throw = NULL;
+    int dir = 0;
 
-    if (ca->action == EA_RED_DAMAGE) {
-        animate_sprite_node_t *asn = ca->target->sprite.data;
-        sprite_center_spr(combat_attacks, asn->anim->spr);
-        show_attack = 1;
-        damage_amount = ca->amt;
-        return;
-    } else if (ca->action == EA_POWER_CAST) {
-        animate_sprite_node_t *source = ca->source->sprite.data;
-        animate_sprite_node_t *cast = ca->power->cast.data;
-        sprite_center_spr(cast->anim->spr, source->anim->spr);
-        cast->anim->x = sprite_getx(cast->anim->spr) + getCameraX();
-        cast->anim->y = sprite_gety(cast->anim->spr) + getCameraY();
-        cast->anim->destx = cast->anim->x;
-        cast->anim->desty = cast->anim->y;
-        cast->anim->scmd = combat_get_scmd(COMBAT_POWER_CAST);
-        add_node_list(cast, ca->power->cast_sound, ca->target);
-    } else if (ca->action == EA_POWER_THROW) {
-        int dir = get_direction(ca->source, ca->target);
-        animate_sprite_node_t *throw = ca->power->thrown.data;
-        animate_sprite_node_t *source = ca->source->sprite.data;
-        animate_sprite_node_t *dest = ca->target->sprite.data;
-        if (sprite_num_frames(throw->anim->spr) < 30) {
-            throw->anim->scmd = combat_get_scmd(COMBAT_POWER_THROW_STATIC_U + dir);
-        } else {
-            throw->anim->scmd = combat_get_scmd(COMBAT_POWER_THROW_ANIM_U + dir);
-        }
-        throw->anim->x = sprite_getx(source->anim->spr) + getCameraX();
-        throw->anim->y = sprite_gety(source->anim->spr) + getCameraY();
-        throw->anim->destx = dest
-            ? sprite_getx(dest->anim->spr) + sprite_getw(dest->anim->spr) / 2 + getCameraX()
-            : ca->target->mapx * 16 * zoom;
-        throw->anim->desty = dest
-            ? sprite_gety(dest->anim->spr) + sprite_geth(dest->anim->spr) / 2 + getCameraY()
-            : ca->target->mapy * 16 * zoom;
-        //printf("(%d, %d) -> (%d, %d)\n", throw->anim->x, throw->anim->y,
-            //throw->anim->destx, throw->anim->desty);
-        throw->anim->movex = abs(throw->anim->destx - throw->anim->x) / 30;
-        throw->anim->movey = abs(throw->anim->desty - throw->anim->y) / 30;
-        add_node_list(throw, ca->power->thrown_sound, ca->target);
-    } else if (ca->action == EA_POWER_HIT) {
-        animate_sprite_node_t *dest = ca->target->sprite.data;
-        animate_sprite_node_t *hit = ca->power->hit.data;
-        sprite_center_spr(hit->anim->spr, dest->anim->spr);
-        hit->anim->x = sprite_getx(hit->anim->spr) + getCameraX();
-        hit->anim->y = sprite_gety(hit->anim->spr) + getCameraY();
-        hit->anim->destx = hit->anim->x;
-        hit->anim->desty = hit->anim->y;
-        hit->anim->scmd = combat_get_scmd(COMBAT_POWER_CAST);
-        add_node_list(hit, ca->power->hit_sound, ca->target);
+    switch (ca->action) {
+        case EA_RED_DAMAGE: sprite_set_frame(combat_attacks, 0); break;
+        case EA_BIG_RED_DAMAGE: sprite_set_frame(combat_attacks, 1); break;
+        case EA_GREEN_DAMAGE: sprite_set_frame(combat_attacks, 2); break;
+        case EA_MAGIC_DAMAGE: sprite_set_frame(combat_attacks, 3); break;
+        case EA_BROWN_DAMAGE: sprite_set_frame(combat_attacks, 4); break;
+        default: break;
+    }
+
+    switch (ca->action) {
+        case EA_RED_DAMAGE:
+        case EA_BIG_RED_DAMAGE:
+        case EA_GREEN_DAMAGE:
+        case EA_MAGIC_DAMAGE:
+        case EA_BROWN_DAMAGE:
+            asn = ca->target->sprite.data;
+            sprite_center_spr(combat_attacks, asn->anim->spr);
+            show_attack = 1;
+            damage_amount = ca->amt;
+            return;
+        case EA_POWER_CAST:
+            source = ca->source->sprite.data;
+            cast = ca->power->cast.data;
+            sprite_center_spr(cast->anim->spr, source->anim->spr);
+            cast->anim->x = sprite_getx(cast->anim->spr) + getCameraX();
+            cast->anim->y = sprite_gety(cast->anim->spr) + getCameraY();
+            cast->anim->destx = cast->anim->x;
+            cast->anim->desty = cast->anim->y;
+            cast->anim->scmd = combat_get_scmd(COMBAT_POWER_CAST);
+            add_node_list(cast, ca->power->cast_sound, ca);
+            break;
+        case EA_POWER_THROW:
+            dir = get_direction(ca->source, ca->target);
+            throw = ca->power->thrown.data;
+            source = ca->source->sprite.data;
+            dest = ca->target->sprite.data;
+            if (sprite_num_frames(throw->anim->spr) < 30) {
+                throw->anim->scmd = combat_get_scmd(COMBAT_POWER_THROW_STATIC_U + dir);
+            } else {
+                throw->anim->scmd = combat_get_scmd(COMBAT_POWER_THROW_ANIM_U + dir);
+            }
+            throw->anim->x = sprite_getx(source->anim->spr) + getCameraX();
+            throw->anim->y = sprite_gety(source->anim->spr) + getCameraY();
+            throw->anim->destx = dest
+                ? sprite_getx(dest->anim->spr) + sprite_getw(dest->anim->spr) / 2 + getCameraX()
+                : ca->target->mapx * 16 * zoom;
+            throw->anim->desty = dest
+                ? sprite_gety(dest->anim->spr) + sprite_geth(dest->anim->spr) / 2 + getCameraY()
+                : ca->target->mapy * 16 * zoom;
+            //printf("(%d, %d) -> (%d, %d)\n", throw->anim->x, throw->anim->y,
+                //throw->anim->destx, throw->anim->desty);
+            throw->anim->movex = abs(throw->anim->destx - throw->anim->x) / 30;
+            throw->anim->movey = abs(throw->anim->desty - throw->anim->y) / 30;
+            add_node_list(throw, ca->power->thrown_sound, ca);
+        case EA_POWER_HIT:
+            dest = ca->target->sprite.data;
+            hit = ca->power->hit.data;
+            sprite_center_spr(hit->anim->spr, dest->anim->spr);
+            hit->anim->x = sprite_getx(hit->anim->spr) + getCameraX();
+            hit->anim->y = sprite_gety(hit->anim->spr) + getCameraY();
+            hit->anim->destx = hit->anim->x;
+            hit->anim->desty = hit->anim->y;
+            hit->anim->scmd = combat_get_scmd(COMBAT_POWER_CAST);
+            add_node_list(hit, ca->power->hit_sound, ca);
+        default:
+            break;
     }
 
     show_attack = 0;

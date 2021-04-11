@@ -430,6 +430,10 @@ extern int entity_animation_list_execute(entity_animation_list_t *list, region_t
             port_update_entity(source, 0, 0);
             break;
         case EA_RED_DAMAGE:
+        case EA_BIG_RED_DAMAGE:
+        case EA_GREEN_DAMAGE:
+        case EA_MAGIC_DAMAGE:
+        case EA_BROWN_DAMAGE:
             play_damage_sound(target);
             source->sprite.scmd = get_scmd(source->sprite.scmd, 0, 0);
             port_update_entity(source, 0, 0);
@@ -447,6 +451,8 @@ extern int entity_animation_list_execute(entity_animation_list_t *list, region_t
         case EA_POWER_THROW:
         case EA_POWER_HIT:
             port_combat_action(&(list->head->ca));
+            break;
+        case EA_POWER_APPLY:
             break;
         default:
             error("unknown action %d!\n", list->head->ca.action);

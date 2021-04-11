@@ -29,7 +29,7 @@ static void wizard_wall_of_ash_apply        (power_instance_t *source, entity_t 
     mod = 0;
     damage = dnd2e_dice_roll(num_dice, 10) + mod;
     effect_type = 0 | EFFECT_DEATH;
-    effect_apply_damage(entity, damage, effect_type);
+    effect_apply_damage(source->entity, entity, damage, effect_type);
 }
 
 static int wizard_wall_of_ash_affect_power (power_instance_t *target) {

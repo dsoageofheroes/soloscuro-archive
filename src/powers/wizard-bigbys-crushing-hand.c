@@ -29,7 +29,7 @@ static void wizard_bigbys_crushing_hand_apply        (power_instance_t *source, 
     mod = 1 * caster_level;
     damage = dnd2e_dice_roll(num_dice, 10) + mod;
     effect_type = 0 | EFFECT_BLUNT;
-    effect_apply_damage(entity, damage, effect_type);
+    effect_apply_damage(source->entity, entity, damage, effect_type);
 }
 
 static int wizard_bigbys_crushing_hand_affect_power (power_instance_t *target) {
