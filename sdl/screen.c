@@ -6,6 +6,7 @@
 #include "screens/add-load-save.h"
 #include "screens/game-menu.h"
 #include "screens/inventory.h"
+#include "screens/interact.h"
 #include "screens/narrate.h"
 #include "screens/screen-main.h"
 #include "screens/view-character.h"
@@ -45,6 +46,9 @@ void load_screen(const char *arg) {
     }
     if (!strcmp(arg, "menu")) {
         screen_push_screen(renderer, &game_menu_screen, 0, 0);
+    }
+    if (!strcmp(arg, "interact")) {
+        screen_push_screen(renderer, &interact_screen, 0, 0);
     }
     if (!strcmp(arg, "combat")) {
         combat_status_t* cs = combat_status_get();

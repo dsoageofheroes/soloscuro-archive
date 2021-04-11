@@ -404,6 +404,8 @@ static void render_entry_gseq();
 static void render_entry_lseq();
 static void render_entry_pseq();
 static void render_entry_bvoc();
+static void render_entry_wind();
+static void render_entry_apfm();
 
 static void render_entry() {
     switch(gff_get_type_id(gff_idx, entry_idx)) {
@@ -436,6 +438,8 @@ static void render_entry() {
         case GFF_LSEQ: render_entry_lseq(); break;
         case GFF_PSEQ: render_entry_pseq(); break;
         case GFF_BVOC: render_entry_bvoc(); break;
+        case GFF_WIND: render_entry_wind(); break;
+        case GFF_APFM: render_entry_apfm(); break;
         default:
             render_entry_header();
             print_line_len(renderer, 0, "Need to implement", 320, 40, 128);
@@ -1570,4 +1574,121 @@ void render_entry_bvoc() {
     render_entry_header();
     music_type = GFF_BVOC;
     print_line_len(renderer, 0, "Press p to play.", 320, 60, 128);
+}
+
+typedef struct resource_header_s {
+    uint32_t type;
+    uint32_t len;
+    uint32_t id;
+} resource_header_t;
+
+typedef struct gui_rect_s {
+    int16_t xmin, ymin;
+    int16_t xmax, ymax;
+} gui_rect_t;
+
+typedef struct gui_region_s {
+    uint16_t depth;
+    gui_rect_t bounds;
+    gui_rect_t regions[16];
+} gui_region_t;
+
+typedef struct gui_frame_s {
+    uint16_t flags;
+    uint16_t type;
+    gui_rect_t bounds;
+    gui_rect_t initbounds;
+    gui_rect_t zonebounds;
+    uint16_t width;
+    uint16_t height;
+    uint32_t border_bmp;
+    int8_t data[4];
+    uint32_t background_bmp;
+    int8_t data1[4];
+    char title[24];
+} __attribute__ ((__packed__)) gui_frame_t;
+
+typedef struct gui_window_s {
+    resource_header_t rh;
+    gui_region_t region;
+    int16_t x;
+    int16_t y;
+    int8_t data[4];
+    uint16_t flags;
+    short data1;
+    gui_frame_t  frame;
+    int16_t offsetx;
+    int16_t offsety;
+    int8_t data2[4];
+    uint8_t titleLen;
+    uint16_t itemCount;
+    uint32_t mem; // total mem needed
+} __attribute__ ((__packed__)) gui_window_t;
+
+typedef struct gui_item_s {
+    int8_t data[4];
+    uint32_t type;
+    uint32_t id;
+    gui_rect_t init_bounds;
+    gui_rect_t item_bounds;
+    uint16_t flags;
+} __attribute__ ((__packed__)) gui_item_t;
+
+void render_entry_wind() {
+    render_entry_header();
+    char buf[4096];
+    gui_window_t *wind = NULL;
+
+    gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_WIND, res_ids[res_idx]);
+    if (!gff_read_chunk(gff_idx, &chunk, buf, 4096)) {
+        printf("ERROR.\n");
+        return;
+    }
+
+    wind = (gui_window_t*) buf;
+    printf("->(%d, %d, %d)\n", wind->rh.id, wind->rh.len, wind->rh.type);
+    printf("->(%d, %d)\n", wind->x, wind->y);
+    printf("->%d:%d\n", wind->frame.width, wind->frame.height);
+    printf("-> %d\n", wind->itemCount);
+    printf("-> border: %d, background: %d\n", wind->frame.border_bmp, wind->frame.background_bmp);
+    printf("-> len: %d\n", wind->titleLen);
+    printf("----%ld----\n", sizeof(gui_window_t) + wind->titleLen);
+    for (int i = 0; i < wind->itemCount; i++) {
+        gui_item_t *item = (gui_item_t*) (buf + (sizeof(gui_window_t) + 12) + i * sizeof(gui_item_t));
+        printf("item: %d, %d\n", item->type, item->id);
+    }
+    //printf("num items = %d\n", wind->itemCount);
+}
+
+typedef struct gui_app_frame_s {
+    resource_header_t rh;
+    gui_frame_t frame;
+    uint8_t data[4];
+    int16_t event_filter;
+    uint8_t data1[4];
+    uint8_t data2[4];
+    uint8_t data3[4];
+    int16_t snapMode;
+    int16_t snapOriginX;
+    int16_t snapOriginY;
+    int16_t snapSizeX;
+    int16_t snapSizeY;
+    uint8_t data4[4];
+} __attribute__ ((__packed__)) gui_app_frame_t;
+
+void render_entry_apfm() {
+    render_entry_header();
+    char buf[4096];
+    gui_app_frame_t *frame = NULL;
+
+    gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_APFM, res_ids[res_idx]);
+    if (!gff_read_chunk(gff_idx, &chunk, buf, 4096)) {
+        printf("ERROR.\n");
+        return;
+    }
+    frame = (gui_app_frame_t*) buf;
+
+    printf("-> %d, %d, %d\n", frame->rh.id, frame->rh.len, frame->rh.type);
+    printf("-> %d: %d\n", frame->frame.width, frame->frame.height);
+    printf("background: %d, border: %d\n", frame->frame.background_bmp, frame->frame.border_bmp);
 }
