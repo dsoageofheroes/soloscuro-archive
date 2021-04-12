@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include "region.h"
+#include "gff-image.h"
 
 void game_loop_signal(int signal, int _accum) {
 }
@@ -19,6 +20,9 @@ void port_narrate_close() {
 }
 
 void port_add_entity(entity_t *entity, gff_palette_t *pal) {
+}
+
+extern void port_remove_entity(entity_t *entity) {
 }
 
 void port_animate_entity(entity_t *obj) {
@@ -43,5 +47,23 @@ void port_enter_combat() {
 void port_exit_combat() {
 }
 
-void port_change_region(dsl_region_t *reg) {
+void port_change_region(region_t *reg) {
+}
+
+extern void port_load_item(item_t *item) {
+}
+
+extern void port_free_item(item_t *item) {
+}
+
+extern void port_load_sprite(sprite_info_t *spr, gff_palette_t *pal, const int gff_index, const int type, const uint32_t id) {
+}
+
+extern void port_free_sprite(sprite_info_t *spr) {
+}
+
+extern void port_combat_action(entity_action_t *ca) {
+}
+
+extern void port_play_sound_effect(const uint16_t id) {
 }

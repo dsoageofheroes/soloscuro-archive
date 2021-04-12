@@ -2,12 +2,18 @@ SRCS       = $(wildcard src/*.c)
 OBJS       = $(SRCS:src/%.c=obj/%.o)
 OBJS      += $(SPELL_OBJS)
 DEPS       = $(wildcard src/*.h)
+POWER_LIB  = src/powers/obj/*
+ALL_SOURCES := $(shell find src/ -name '*.c')
+TEST_OBJS  = $(SRCS:src/%.c=obj-test/%.o)
+
+.PRECIOUS: *.o
+
 all: obj $(EXEC) libds.so
 
 .PHONY: POWERS
 
 libds.so: obj obj/spells $(OBJS) libxmimidi.so POWERS
-	$(CC) -L./ $(OBJS) -shared -o libds.$(LIB_EXT) -llua5.3 -lxmimidi
+	$(CC) -L./ $(OBJS) $(POWER_LIB) -shared -o libds.$(LIB_EXT) -llua5.3 -lxmimidi
 
 POWERS:
 	cd src/powers ; CC="$(CC)" CFLAGS="-O2" make
@@ -15,8 +21,14 @@ POWERS:
 libxmimidi.so:
 	$(CC) ext/xmi2mid.c -shared -o libxmimidi.$(LIB_EXT)
 
+obj-test:
+	mkdir -p obj-test
+
 obj/%.o : src/%.c $(DEPS)
 	$(CC) -c $(CFLAGS) $< -o $@
+
+obj-test/%.o: src/%.c $(DEPS)
+	$(CC) -I ext/ -fprofile-arcs -ftest-coverage -c $< -o $@
 
 obj/spells:
 	mkdir -p obj/spells
@@ -35,9 +47,14 @@ bin:
 lua-test: libds.so bin
 	$(CC) $(CFLAGS) test/lua-test.c -o bin/lua-test -lds -llua5.3
 
-%test: bin libds.so libxmimidi.so
-	$(CC) $(CFLAGS) test/$@.c test/unity.c -o bin/$@ -lds -llua5.3
+coverage:
+	mkdir -p coverage
+
+%test: bin libxmimidi.so coverage $(TEST_OBJS) obj-test
+	$(CC) -fprofile-arcs -ftest-coverage -I ext/ -I src/ -g -O2 obj-test/*.o src/powers/obj/*.o test/$@.c test/base.c test/unity.c -o bin/$@ -L ./ -llua5.3 -lxmimidi
 	LD_LIBRARY_PATH=./ bin/$@
+	mv *gcda coverage/
+	mv *gcno coverage/
 
 %test-lua: bin
 	LD_LIBRARY_PATH=./ lua5.3 test/$@.lua -v

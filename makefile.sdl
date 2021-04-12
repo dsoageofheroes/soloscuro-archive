@@ -16,7 +16,7 @@ obj/%.o : sdl/%.c $(DEPS) $(SDL_DEPS)
 	$(CC) -c $(SDL_FLAGS) $< -o $@
 
 mdark : obj/screens $(SDL_OBJS) libds.so libxmimidi.so
-	$(CC) $(SDL_FLAGS) $(SDL_OBJS) $(POWER_LIB) -o $@ -lds -lSDL2
+	$(CC) $(SDL_FLAGS) $(SDL_OBJS) -o $@ -lds -lSDL2
 
 obj/screens: obj
 	mkdir -p obj/screens
