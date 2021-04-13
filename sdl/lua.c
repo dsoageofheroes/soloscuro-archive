@@ -7,6 +7,7 @@
 #include "../src/ds-load-save.h"
 #include "screens/inventory.h"
 #include "../src/lua-inc.h"
+#include "../src/lua-structs.h"
 
 static lua_State *ui_lua = NULL;
 static void ui_lua_state_register(lua_State *l);
@@ -22,6 +23,7 @@ static void ui_lua_run(const char *filename, const char *name) {
     luaL_openlibs(ui_lua);
 
     ui_lua_state_register(ui_lua);
+    lua_struct_register(ui_lua);
 
     if (luaL_loadfile(ui_lua, filename)) {
         error("unable to open '%s'.\n", filename);
@@ -95,6 +97,7 @@ static void load_game() {
 extern int ui_lua_load_preload(const char *filename) {
     ui_lua = luaL_newstate();
     luaL_openlibs(ui_lua);
+    lua_struct_register(ui_lua);
 
     if (luaL_loadfile(ui_lua, "solconfig.lua")) {
         write_generic_settings();

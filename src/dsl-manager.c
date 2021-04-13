@@ -5,6 +5,7 @@
 #include "port.h"
 #include "dsl-manager.h"
 #include "dsl-lua.h"
+#include "lua-structs.h"
 #include "ds-state.h"
 #include "gff.h"
 #include "gfftypes.h"
@@ -114,6 +115,7 @@ uint8_t dsl_lua_execute_script(size_t file, size_t addr, uint8_t is_mas) {
     clua = l = luaL_newstate();
     luaL_openlibs(l);
     dsl_state_register(l);
+    lua_struct_register(l);
     if (luaL_dostring(l, scripts[file])) {
         error("Error: unable to load %s script " PRI_SIZET ":" PRI_SIZET "\n",
             is_mas ? "MAS" : "GPL",

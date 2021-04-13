@@ -292,6 +292,15 @@ static void gui_init() {
 static void init(int args, char *argv[]) {
     int run_lua = 1;
 
+    for (int i = 0; i < args; i++) {
+        if (!strcmp(argv[i], "--lua") && i < (args - 1)) {
+            ui_lua_load(argv[i + 1]);
+            exit(0);
+        }
+    }
+
+    gui_init();
+
     font_init(renderer);
 
     gameloop_init();
@@ -387,7 +396,6 @@ int main(int argc, char *argv[]) {
     parse_args(argc, argv);
 
     // Order matters.
-    gui_init();
     gff_init();
     ui_lua_load_preload("lua/settings.lua");
     if (gff_get_game_type() == DARKSUN_UNKNOWN) {
