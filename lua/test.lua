@@ -19,6 +19,16 @@ function init()
     print (e.mapy)
 
     print (e.stats.dex)
+    print (e.stats.attack1.num_dice)
+    print (e.stats.saves.paralysis)
+    print (e.class1.current_xp)
+    print (e.class2.current_xp)
+    print (e.class3.current_xp)
+
+    reg = soloscuro.create_region()
+    reg.map_id = 1000
+    print (reg.map_id)
+    reg:set_tile(4, 5, 128)
 
     return true -- returning true, means that lua has setup the game, don't do the default
                 -- returning false, would allow the engine to proceed with normal startup
