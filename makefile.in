@@ -1,6 +1,7 @@
 SRCS       = $(wildcard src/*.c)
 OBJS       = $(SRCS:src/%.c=obj/%.o)
 OBJS      += $(SPELL_OBJS)
+OBJS      += obj/spng.o
 DEPS       = $(wildcard src/*.h)
 POWER_LIB  = src/powers/obj/*
 ALL_SOURCES := $(shell find src/ -name '*.c')
@@ -23,6 +24,9 @@ libxmimidi.so:
 
 obj-test:
 	mkdir -p obj-test
+
+obj/spng.o : ext/spng/spng.c ext/spng/spng.h
+	$(CC) -c $(CFLAGS) -I ext/spng/ ext/spng/spng.c -o obj/spng.o
 
 obj/%.o : src/%.c $(DEPS)
 	$(CC) -c $(CFLAGS) $< -o $@
