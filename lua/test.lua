@@ -28,7 +28,19 @@ function init()
     reg = soloscuro.create_region()
     reg.map_id = 1000
     print (reg.map_id)
-    reg:set_tile(4, 5, 128)
+    
+    simple_gff = soloscuro.open_gff("test/data/simple.gff")
+    -- The region has to be attacked to the file with tiles.
+    reg.gff_file = simple_gff
+    print (reg.gff_file)
+
+    for i=1,98 do
+        for j=1,128 do
+            reg:set_tile(i, j, 142)
+        end
+    end 
+
+    soloscuro.start_game()
 
     return true -- returning true, means that lua has setup the game, don't do the default
                 -- returning false, would allow the engine to proceed with normal startup
