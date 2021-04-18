@@ -459,6 +459,12 @@ size_t gff_add_chunk(const int idx, const int type_id, int res_id, char *buf, co
     fseek(gff->file, 0L, SEEK_END);
     size_t size = ftell(gff->file);
     size_t write_pos = (size == (gff->header.toc_length + gff->header.toc_location)) ? gff->header.toc_location : size;
+    for (size_t i = 0; i < entry->chunk_count; i++) {
+        if (entry->chunks[i].id == res_id) {
+            error("id %d for that type already exists!\n", res_id);
+            return 0;
+        }
+    }
     entry->chunk_count++;
     entry = realloc(entry, 8L + entry->chunk_count * sizeof(gff_chunk_header_t));
     entry->chunks[entry->chunk_count - 1].id = res_id;

@@ -54,4 +54,6 @@ extern void port_combat_action(entity_action_t *ca);
 extern void port_load_item(item_t *item);
 extern void port_free_item(item_t *item);
 
+extern void port_start();
+
 #endif

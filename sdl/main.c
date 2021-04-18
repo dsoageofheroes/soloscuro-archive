@@ -289,6 +289,43 @@ static void gui_init() {
     screen_init(renderer);
 }
 
+static void cleanup() {
+    ui_lua_close();
+    // Order matters.
+    audio_cleanup();
+    player_close();
+    screen_free();
+
+    dsl_cleanup();
+    gff_cleanup();
+    mouse_free();
+
+    SDL_DestroyRenderer(renderer);
+    //SDL_DestroySurface(screen);
+    SDL_DestroyWindow( win );
+
+    //Quit SDL subsystems
+    SDL_Quit();
+}
+
+
+extern void port_start() {
+    gui_init();
+
+    font_init(renderer);
+
+    gameloop_init();
+
+    player_init();
+    mouse_init(renderer);
+    audio_init();
+
+    game_loop();
+
+    cleanup();
+    replay_cleanup();
+}
+
 static void init(int args, char *argv[]) {
     int run_lua = 1;
 
@@ -355,25 +392,6 @@ static void init(int args, char *argv[]) {
     main_center_on_player();
     // Start the main game.
     //screen_push_screen(renderer, &main_screen, 0, 0);
-}
-
-static void cleanup() {
-    ui_lua_close();
-    // Order matters.
-    audio_cleanup();
-    player_close();
-    screen_free();
-
-    dsl_cleanup();
-    gff_cleanup();
-    mouse_free();
-
-    SDL_DestroyRenderer(renderer);
-    //SDL_DestroySurface(screen);
-    SDL_DestroyWindow( win );
-
-    //Quit SDL subsystems
-    SDL_Quit();
 }
 
 static char *ds1_gffs = NULL;

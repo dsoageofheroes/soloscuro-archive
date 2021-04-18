@@ -1,6 +1,8 @@
 #include "lua-structs.h"
 #include "ds-player.h"
 #include "region.h"
+#include "gff.h"
+#include "port.h"
 #include <string.h>
 
 extern char *strdup(const char *s); // Not in standard.
@@ -78,6 +80,28 @@ static int create_region (lua_State *l) {
     return 1;
 }
 
+static int open_gff (lua_State *l) {
+    const char *filename = luaL_checkstring(l, 1);
+    int gff_index = gff_open(filename);
+    lua_newtable(l); // entity table
+
+    if (gff_index <= 0) {
+        return 1;
+    }
+
+    lua_pushlightuserdata(l, open_files + gff_index);
+    lua_setfield(l, -2, "ptr__");
+
+    luaL_setmetatable(l, "soloscuro.gff"); // entity meta
+
+    return 1;
+}
+
+static int start_game (lua_State *l) {
+    port_start();
+    return 0;
+}
+
 static void* get_userdata(lua_State *l, const int loc) {
     void *ret = NULL;
     luaL_checktype(l, 1, LUA_TTABLE);
@@ -94,6 +118,8 @@ static const struct luaL_Reg entity_lib [] = {
     //{"new", entity_new},
     {"load_player", load_player},
     {"create_region", create_region},
+    {"open_gff", open_gff},
+    {"start_game", start_game},
     {NULL, NULL}
 };
 
@@ -252,6 +278,44 @@ static const luaL_Reg attack_methods[] = {
     {0,0}
 };
 
+static int gff_get(lua_State *l) {
+    const char *str = luaL_checkstring(l, 2);
+    gff_file_t *file = get_userdata(l, -3);
+
+    printf("indexing '%s' of file %p\n", str, file);
+    //GET_INTEGER_TABLE(file, number);
+    //GET_INTEGER_TABLE(file, num_dice);
+    //GET_INTEGER_TABLE(file, sides);
+    //GET_INTEGER_TABLE(file, bonus);
+    //GET_INTEGER_TABLE(file, special);
+    //if (!strcmp(str, "blah")) { lua_pushcfunction(l, blah); return 1; }
+
+    lua_pushinteger(l, 0);
+    return 1;
+}
+
+static int gff_set(lua_State *l) {
+    const char *str = luaL_checkstring(l, 2);
+    gff_file_t *file = get_userdata(l, -4);
+
+    if (lua_isinteger(l, 3)) {
+        const int num = luaL_checkinteger(l, 3);
+        printf("set %s=%d for %p\n", str, num, file);
+        //SET_INTEGER_TABLE(file, number, num);
+        //SET_INTEGER_TABLE(file, num_dice, num);
+        //SET_INTEGER_TABLE(file, sides, num);
+        //SET_INTEGER_TABLE(file, bonus, num);
+        //SET_INTEGER_TABLE(file, special, num);
+    }
+
+    return 0;
+}
+static const luaL_Reg gff_methods[] = {
+    {"__index",      gff_get},
+    {"__newindex",   gff_set},
+    {0,0}
+};
+
 static int saves_get(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
     saving_throws_t *saves = get_userdata(l, -3);
@@ -331,7 +395,11 @@ static int region_set_tile(lua_State *l) {
     const int x = luaL_checkinteger(l, 2);
     const int y = luaL_checkinteger(l, 3);
     const int tile = luaL_checkinteger(l, 4);
-    printf("%p (%d, %d) to %d!\n", region, x, y, tile);
+
+    if (x > 0 && x < 99 && y > 0 && y < 128) {
+        region->tiles[x-1][y-1] = tile;
+    }
+    //printf("%p (%d, %d) to %d!\n", region, x, y, tile);
     //uint8_t tiles[MAP_ROWS][MAP_COLUMNS];
     return 0;
 }
@@ -343,6 +411,7 @@ static int region_get(lua_State *l) {
     //printf("indexing '%s' of saves %p\n", str, attack);
     GET_INTEGER_TABLE(region, map_id);
     GET_INTEGER_TABLE(region, palette_id);
+    GET_INTEGER_TABLE(region, gff_file);
     if (!strcmp(str, "set_tile")) { lua_pushcfunction(l, region_set_tile); return 1; }
     //if (!strcmp(str, "blah")) { lua_pushcfunction(l, blah); return 1; }
 
@@ -358,6 +427,11 @@ static int region_set(lua_State *l) {
         const int num = luaL_checkinteger(l, 3);
         SET_INTEGER_TABLE(region, map_id, num);
         SET_INTEGER_TABLE(region, palette_id, num);
+    } else if (lua_istable(l, 3)) {
+        gff_file_t *file = get_userdata(l, 3);
+        if (!strcmp("gff_file", str)) {
+            region->gff_file = file - open_files;
+        }
     }
 
     return 0;
@@ -385,4 +459,5 @@ extern void lua_struct_register(lua_State *l) {
     setup_metatable(l, "soloscuro.saves", saves_methods, "saves__");
     setup_metatable(l, "soloscuro.class", class_methods, "class__");
     setup_metatable(l, "soloscuro.region", region_methods, "region__");
+    setup_metatable(l, "soloscuro.gff", gff_methods, "gff__");
 }
