@@ -5,6 +5,7 @@
 #include "gff.h"
 #include "gfftypes.h"
 #include "dsl.h"
+#include "../ext/spng/spng.h"
 
 
 #define NUM_PALETTES (256)
@@ -94,6 +95,44 @@ int get_frame_count(int gff_idx, int type_id, int res_id) {
     gff_read_chunk_piece(gff_idx, &chunk, buf, 16);
     short num_frames = *((unsigned short*)(buf + 4));
     return num_frames;
+}
+
+extern int gff_image_load_png(const int gff_index, int type_id, const uint32_t image_id,
+        const int frame_id, uint32_t *w, uint32_t *h, unsigned char **data) {
+    unsigned char buf[1<<16];
+    size_t out_size;
+    struct spng_ihdr header;
+
+    *data = NULL;
+    gff_chunk_header_t chunk = gff_find_chunk_header(gff_index, type_id, image_id);
+    if (chunk.length < 8) { return 0; }
+    gff_read_chunk(gff_index, &chunk, buf, 1<<16);
+    spng_ctx *ctx = spng_ctx_new(0);
+    if (spng_set_png_buffer(ctx, buf, chunk.length)) { goto error; }
+    if (spng_decoded_image_size(ctx, SPNG_FMT_RGBA8, &out_size)) { goto error; }
+    if (spng_get_ihdr(ctx, &header)) { goto error; }
+    *w = header.width;
+    *h = header.height;
+    *data = malloc(out_size);
+    if (spng_decode_image(ctx, *data, out_size, SPNG_FMT_RGBA8, 0)) { goto error; }
+    spng_ctx_free(ctx);
+
+    return 1;
+error:
+    if (*data) {
+        free(*data);
+        *data = NULL;
+    }
+    return 0;
+}
+
+extern int gff_image_is_png(int gff_idx, int type_id, int res_id, int frame_id) {
+    unsigned char buf[1<<16];
+    gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, type_id, res_id);
+    if (chunk.length < 8) { return 0; }
+    gff_read_chunk(gff_idx, &chunk, buf, 1<<16);
+    return buf[0] == 137 && buf[1] == 80 && buf[2] == 78 && buf[3] == 71
+        && buf[4] == 13 && buf[5] == 10 && buf[6] == 26 && buf[7] == 10;
 }
 
 #define get_distance_to_chunk(a, b) ((unsigned long)a - (unsigned long)b)

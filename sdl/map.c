@@ -61,25 +61,32 @@ static void map_load_current_region() {
     uint32_t width, height;
     size_t max_id = 0;
     unsigned char *data;
-    gff_palette_t *pal;
+    gff_palette_t *pal = NULL;
     map_t *map = cmap;
+    int offset = 0;
 
-    pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + map->region->map_id - 1;
+    if (map->region->map_id < 100 && map->region->map_id > 0) {
+        pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + map->region->map_id - 1;
+        offset = 1;
+    }
     ids = cmap->region->tile_ids;
-    for (uint32_t i = 0; i < map->region->num_tiles; i++) { max_id = max_id > ids[i] ? max_id : ids[i]; }
-    max_id++;
+    max_id = 256;
     map->tiles = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * max_id);
     memset(map->tiles, 0x0, sizeof(SDL_Texture*) * max_id);
 
-    for (uint32_t i = 0; i < map->region->num_tiles; i++) {
-        region_get_tile(map->region, i, &width, &height, &data);
+    for (uint32_t i = 0; i <= map->region->num_tiles; i++) {
+        region_get_tile(map->region, ids[i], &width, &height, &data);
 
-        tile = SDL_CreateRGBSurfaceFrom(data, width, height, 32, 4*width, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
+        if (data && *data) {
+        printf("*data = %p, (%d, %d), ids[%d] = %d\n", data, width, height, i, ids[i]);
+            tile = SDL_CreateRGBSurfaceFrom(data, width, height, 32, 4*width, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
 
-        map->tiles[ids[i]] = SDL_CreateTextureFromSurface(cren, tile);
-        SDL_FreeSurface(tile);
+            map->tiles[i + offset] = SDL_CreateTextureFromSurface(cren, tile);
+            //map->tiles[i] = SDL_CreateTextureFromSurface(cren, tile);
+            SDL_FreeSurface(tile);
 
-        free(data);
+            free(data);
+        }
     }
 
     dude_t *dude;

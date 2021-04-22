@@ -8,37 +8,41 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define MAX_REGIONS (100)
+#define MAX_REGIONS (0xFF)
 
-static region_t *regions[MAX_REGIONS];
+static region_t *ssi_regions[MAX_REGIONS];
+static region_t *sol_regions[MAX_REGIONS];
 static int current_region = -1; // will need to eliminate for server code.
 
 void region_manager_init() {
-    memset(regions, 0x0, sizeof(regions));
+    memset(ssi_regions, 0x0, sizeof(ssi_regions));
+    memset(sol_regions, 0x0, sizeof(sol_regions));
 }
 
 void region_manager_cleanup() {
     for (int i = 0; i < MAX_REGIONS; i++) {
-        if (regions[i]) {
-            region_free(regions[i]);
-            combat_free(&(regions[i]->cr));
-            free(regions[i]);
-            regions[i] = NULL;
+        if (ssi_regions[i]) {
+            region_free(ssi_regions[i]);
+            combat_free(&(ssi_regions[i]->cr));
+            free(ssi_regions[i]);
+            ssi_regions[i] = NULL;
         }
     }
-    memset(regions, 0x0, sizeof(regions));
+    memset(ssi_regions, 0x0, sizeof(ssi_regions));
 }
 
 region_t* region_manager_get_region(const int region_id) {
     char gff_name[32];
 
-    if (!regions[region_id]) {
-        snprintf(gff_name, 32, "rgn%x.gff", region_id);
+    if (region_id >= MAX_REGIONS && region_id < 2 * MAX_REGIONS) { return sol_regions[region_id - MAX_REGIONS]; }
+
+    if (!ssi_regions[region_id]) {
+        snprintf(gff_name, 32, "rgn%02x.gff", region_id);
         int gff_index = gff_find_index(gff_name);
         if (gff_index < 0 ) { return NULL; }
 
-        regions[region_id] = region_create(gff_index);
-        entity_list_load_etab(regions[region_id]->entities, gff_index, region_id);
+        ssi_regions[region_id] = region_create(gff_index);
+        entity_list_load_etab(ssi_regions[region_id]->entities, gff_index, region_id);
     }
 
     current_region = region_id;
@@ -46,12 +50,16 @@ region_t* region_manager_get_region(const int region_id) {
         player_get_entity(i)->region = region_id;
     }
 
-    return regions[region_id];
+    return ssi_regions[region_id];
 }
 
 region_t* region_manager_get_current() {
     if (current_region < 0) { return NULL; }
-    return regions[current_region];
+    if (current_region < MAX_REGIONS) {
+        return ssi_regions[current_region];
+    }
+
+    return sol_regions[current_region - MAX_REGIONS];
 }
 
 // Deprecated API:
@@ -140,4 +148,24 @@ void ds_region_load_region_from_save(const int id, const int region_id) {
     free(buf);
 
     //ds_regions[region_id] = reg;
+}
+
+extern int region_manager_add_region(region_t *region) {
+    int pos = 0;
+    for (pos = 0; pos < MAX_REGIONS && sol_regions[pos]; pos++) { ; }
+
+    if (pos >= MAX_REGIONS) { return -1; }
+
+    sol_regions[pos] = region;
+    if (region) {
+        region->map_id = pos;
+    }
+    return pos;
+}
+
+extern void region_manager_set_current(region_t *region) {
+    for (int i = 0; i < MAX_REGIONS; i++) {
+        if (ssi_regions[i] == region) { current_region = i; }
+        if (sol_regions[i] == region) { current_region = MAX_REGIONS + i; }
+    }
 }

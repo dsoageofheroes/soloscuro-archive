@@ -34,7 +34,6 @@ static void ui_lua_run(const char *filename, const char *name) {
     if (lua_pcall(ui_lua, 0, 0, 0)) { ui_lua_error("Can't prime"); }
     lua_getglobal(ui_lua, name);
     if (lua_pcall(ui_lua, 0, 1, 0)) { ui_lua_error("Can't call"); }
-
 }
 
 static void write_generic_settings() {
@@ -117,7 +116,11 @@ extern int ui_lua_load_preload(const char *filename) {
 
 extern int ui_lua_load(const char *filename) {
     ui_lua_run(filename, "init");
-    return lua_toboolean(ui_lua, -1);
+    if (ui_lua) {
+        return lua_toboolean(ui_lua, -1);
+    }
+
+    return 0;
 }
 
 extern int ui_lua_keydown(const int key_code) {

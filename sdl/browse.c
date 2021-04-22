@@ -916,7 +916,7 @@ static void render_entry_font() {
     }
 }
 
-static region_t *region;
+static region_t *region = NULL;;
 static void render_entry_rmap() {
     render_entry_header();
     static char *cfile = NULL;

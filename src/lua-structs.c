@@ -1,6 +1,7 @@
 #include "lua-structs.h"
 #include "ds-player.h"
 #include "region.h"
+#include "region-manager.h"
 #include "gff.h"
 #include "port.h"
 #include <string.h>
@@ -11,6 +12,18 @@ extern char *strdup(const char *s); // Not in standard.
 #define GET_STRING_TABLE(a, field) if (!strcmp(str, #field)) { lua_pushstring(l, a->field); return 1; }
 #define SET_INTEGER_TABLE(a, field, num) if (!strcmp(str, #field)) { a->field = num; return 0; }
 #define SET_STRING_TABLE(a, field, num) if (!strcmp(str, #field)) { if (a->field) { free(a->field); } a->field = strdup(num); return 0; }
+
+static void* get_userdata(lua_State *l, const int loc) {
+    void *ret = NULL;
+    luaL_checktype(l, 1, LUA_TTABLE);
+
+    lua_pushstring(l, "ptr__");
+    lua_rawget(l, loc);
+    ret = lua_touserdata(l, -1);
+    lua_pop(l, 1);
+
+    return ret;
+}
 
 static void push_table_start(lua_State *l, void *data, const char *name) {
     lua_pushstring(l, name);
@@ -58,7 +71,7 @@ static int load_player (lua_State *l) {
 
 static int create_region (lua_State *l) {
     lua_newtable(l); // entity table
-    lua_pushlightuserdata(l, calloc(1, sizeof(region_t)));
+    lua_pushlightuserdata(l, region_create_empty());
     lua_setfield(l, -2, "ptr__");
 
     /*push_table_start(l, &(player_get_entity(n)->stats), "stats");
@@ -78,6 +91,16 @@ static int create_region (lua_State *l) {
     luaL_setmetatable(l, "soloscuro.region"); // entity meta
 
     return 1;
+}
+
+static int set_region (lua_State *l) {
+    luaL_checktype(l, 1, LUA_TTABLE);
+
+    region_t *region = get_userdata(l, 1);
+    region_manager_add_region(region);
+    region_manager_set_current(region);
+
+    return 0;
 }
 
 static int open_gff (lua_State *l) {
@@ -102,22 +125,11 @@ static int start_game (lua_State *l) {
     return 0;
 }
 
-static void* get_userdata(lua_State *l, const int loc) {
-    void *ret = NULL;
-    luaL_checktype(l, 1, LUA_TTABLE);
-
-    lua_pushstring(l, "ptr__");
-    lua_rawget(l, loc);
-    ret = lua_touserdata(l, -1);
-    lua_pop(l, 1);
-
-    return ret;
-}
-
 static const struct luaL_Reg entity_lib [] = {
     //{"new", entity_new},
     {"load_player", load_player},
     {"create_region", create_region},
+    {"set_region", set_region},
     {"open_gff", open_gff},
     {"start_game", start_game},
     {NULL, NULL}
@@ -404,6 +416,28 @@ static int region_set_tile(lua_State *l) {
     return 0;
 }
 
+static int region_set_tile_id(lua_State *l) {
+    region_t *region = get_userdata(l, 1);
+    const int pos = luaL_checkinteger(l, 2);
+    const int id = luaL_checkinteger(l, 3);
+
+    if (pos < 0 && pos > 255) {
+        return 0;
+    }
+
+    if (!region->tile_ids) {
+        region->num_tiles = 256;
+        region->tile_ids = calloc(1, region->num_tiles * sizeof(uint32_t));
+        //for (int i = 0; i < region->num_tiles; i++) {
+            //region->tile_ids[i] = 0;
+        //}
+    }
+
+    region->tile_ids[pos] = id;
+    //printf("%p (%d, %d) to %d!\n", region, x, y, tile);
+    return 0;
+}
+
 static int region_get(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
     region_t *region = get_userdata(l, -3);
@@ -413,6 +447,7 @@ static int region_get(lua_State *l) {
     GET_INTEGER_TABLE(region, palette_id);
     GET_INTEGER_TABLE(region, gff_file);
     if (!strcmp(str, "set_tile")) { lua_pushcfunction(l, region_set_tile); return 1; }
+    if (!strcmp(str, "set_tile_id")) { lua_pushcfunction(l, region_set_tile_id); return 1; }
     //if (!strcmp(str, "blah")) { lua_pushcfunction(l, blah); return 1; }
 
     lua_pushinteger(l, 0);

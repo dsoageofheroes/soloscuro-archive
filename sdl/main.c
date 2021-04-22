@@ -320,6 +320,8 @@ extern void port_start() {
     mouse_init(renderer);
     audio_init();
 
+    map_load_region(region_manager_get_current(), renderer);
+
     game_loop();
 
     cleanup();

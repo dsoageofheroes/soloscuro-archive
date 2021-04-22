@@ -31,6 +31,7 @@ typedef struct region_s {
 extern void combat_update(region_t *reg);
 
 extern region_t* region_create(const int gff_file);
+extern region_t* region_create_empty();
 extern void region_free(region_t *region);
 extern int region_get_tile(const region_t *reg, const uint32_t image_id,
         uint32_t *w, uint32_t *h, unsigned char **data);

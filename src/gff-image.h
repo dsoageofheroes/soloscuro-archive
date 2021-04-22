@@ -36,10 +36,13 @@ gff_palettes_t* read_palettes_type(int gff_idx, int res_id);
 int get_frame_count(int gff_index, int type_id, int res_id);
 int get_frame_width(int gff_index, int type_id, int res_id, int frame_id);
 int get_frame_height(int gff_index, int type_id, int res_id, int frame_id);
+extern int gff_image_is_png(int gff_idx, int type_id, int res_id, int frame_id);
 unsigned char* get_frame_rgba(int gff_index, int type_id, int res_id, int frame_id);
 unsigned char* get_frame_rgba_with_palette(int gff_index, int type_id, int res_id, int frame_id, int palette_id);
 unsigned char* get_frame_rgba_palette(int gff_index, int type_id, int res_id, int frame_id, const gff_palette_t *pal);
 unsigned char* get_frame_rgba_palette_img(gff_image_entry_t *img, int frame_id, const gff_palette_t *pal);
+extern int gff_image_load_png(const int gff_index, int type_id, const uint32_t image_id,
+        const int frame_id, uint32_t *w, uint32_t *h, unsigned char **data);
 unsigned char* get_portrait(unsigned char* bmp_table, unsigned int *width, unsigned int *height);
 unsigned char* create_font_rgba(int gff_index, int c, int fg_color, int bg_color);
 extern int gff_get_number_of_palettes();

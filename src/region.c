@@ -33,14 +33,20 @@ static int is_region(const int gff_idx) {
     return has_rmap && has_gmap && has_tile && has_etab;
 }
 
+extern region_t* region_create_empty() {
+    region_t *reg = calloc(1, sizeof(region_t));
+    reg->entities = entity_list_create();
+
+    return reg;
+}
+
 region_t* region_create(const int gff_file) {
     if (!is_region(gff_file)) { return NULL; } // guard
 
     uint32_t *tids = NULL;
-    region_t *reg = calloc(1, sizeof(region_t));
+    region_t *reg = region_create_empty();
 
     reg->gff_file = gff_file;
-    reg->entities = entity_list_create();
 
     tids = gff_get_id_list(reg->gff_file, GFF_ETAB); // temporary to find current id for palette!
     if (!tids) { error("Unable to find current id for map\n"); return NULL; }
@@ -96,9 +102,12 @@ void region_free(region_t *reg) {
 int region_get_tile(const region_t *reg, const uint32_t image_id,
         uint32_t *w, uint32_t *h, unsigned char **data) {
     if (!data) { return 0; }
-    *w = get_frame_width(reg->gff_file, GFF_TILE, reg->tile_ids[image_id], 0);
-    *h = get_frame_height(reg->gff_file, GFF_TILE, reg->tile_ids[image_id], 0);
-    *data = get_frame_rgba_with_palette(reg->gff_file, GFF_TILE, reg->tile_ids[image_id], 0, reg->palette_id);
+    if (gff_image_is_png(reg->gff_file, GFF_TILE, image_id, 0)) {
+        return gff_image_load_png(reg->gff_file, GFF_TILE, image_id, 0, w, h, data);
+    }
+    *w = get_frame_width(reg->gff_file, GFF_TILE, image_id, 0);
+    *h = get_frame_height(reg->gff_file, GFF_TILE, image_id, 0);
+    *data = get_frame_rgba_with_palette(reg->gff_file, GFF_TILE, image_id, 0, reg->palette_id);
     if (!data) { return 0; }
 
     return 1;
