@@ -2,7 +2,6 @@
 #include "../src/gff.h"
 #include "../src/dsl.h"
 
-
 void setUp() {
     gff_init();
     //gff_load_directory("/home/pwest/dosbox/DARKSUN");

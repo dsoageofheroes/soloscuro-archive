@@ -6,6 +6,8 @@ DEPS       = $(wildcard src/*.h)
 POWER_LIB  = src/powers/obj/*
 ALL_SOURCES := $(shell find src/ -name '*.c')
 TEST_OBJS  = $(SRCS:src/%.c=obj-test/%.o)
+TEST_OBJS  += $(SPELL_OBJS)
+TEST_OBJS  += obj/spng.o
 
 .PRECIOUS: *.o
 
@@ -55,7 +57,7 @@ coverage:
 	mkdir -p coverage
 
 %test: bin libxmimidi.so coverage $(TEST_OBJS) obj-test
-	$(CC) -fprofile-arcs -ftest-coverage -I ext/ -I src/ -g -O2 obj-test/*.o src/powers/obj/*.o test/$@.c test/base.c test/unity.c -o bin/$@ -L ./ -llua5.3 -lxmimidi
+	$(CC) -fprofile-arcs -ftest-coverage -I ext/ -I src/ -g -O2 obj-test/*.o src/powers/obj/*.o test/$@.c test/base.c test/unity.c -o bin/$@ -L ./ -llua5.3 -lxmimidi obj/spng.o -lm -lz
 	LD_LIBRARY_PATH=./ bin/$@
 	mv *gcda coverage/
 	mv *gcno coverage/
