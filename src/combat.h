@@ -1,7 +1,7 @@
 #ifndef DS_COMBAT_H
 #define DS_COMBAT_H
 
-#include "ds-object.h"
+#include "ssi-object.h"
 #include "wizard.h"
 #include "entity.h"
 #include "region.h"

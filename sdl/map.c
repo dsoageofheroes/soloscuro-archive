@@ -12,7 +12,7 @@
 #include "../src/port.h"
 #include "../src/trigger.h"
 #include "../src/dsl-manager.h"
-#include "../src/ds-object.h"
+#include "../src/ssi-object.h"
 #include "../src/region-manager.h"
 #include "../src/ds-scmd.h"
 #include "../src/ds-player.h"

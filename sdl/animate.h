@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <SDL2/SDL.h>
-#include "../src/ds-object.h"
+#include "../src/ssi-object.h"
 #include "../src/ds-scmd.h"
 #include "../src/entity.h"
 #include "map.h"

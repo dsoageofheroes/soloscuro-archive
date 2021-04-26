@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 #include "../src/gff-map.h"
-#include "ds-object.h"
+#include "ssi-object.h"
 #include "combat-region.h"
 #include "passive.h"
 #include "entity.h"

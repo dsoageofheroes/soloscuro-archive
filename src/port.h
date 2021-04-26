@@ -5,7 +5,7 @@
 #ifndef PORT_H
 #define PORT_H
 
-#include "ds-object.h"
+#include "ssi-object.h"
 #include "region.h"
 #include "combat.h"
 #include "gff.h"

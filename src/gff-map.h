@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #include "ds-scmd.h"
-#include "ds-object.h"
+#include "ssi-object.h"
 #include "ds-combat.h"
 
 #define MAP_LOS     (0x80) // Runtime flag to determine if block is in sight.

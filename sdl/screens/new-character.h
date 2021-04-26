@@ -4,7 +4,7 @@
 #include <SDL2/SDL.h>
 #include "../../src/wizard.h"
 #include "../screen-manager.h"
-#include "../../src/ds-object.h"
+#include "../../src/ssi-object.h"
 #include "../../src/entity.h"
 #include "../font.h"
 #include "../label.h"

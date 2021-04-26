@@ -5,7 +5,7 @@
 
 #include "lua-inc.h"
 #include "dsl.h"
-#include "ds-object.h"
+#include "ssi-object.h"
 #include "dsl-var.h"
 #include "gff.h"
 #include "gff-image.h"

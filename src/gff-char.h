@@ -5,7 +5,7 @@
 
 #include "wizard.h"
 #include "entity.h"
-#include "ds-object.h"
+#include "ssi-object.h"
 
 typedef struct player_character_s {
     ds_character_t pc;

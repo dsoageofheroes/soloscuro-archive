@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "ds-object.h"
+#include "ssi-object.h"
 #include "entity.h"
 #include "wizard.h"
 
