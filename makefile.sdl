@@ -22,4 +22,4 @@ obj/screens: obj
 	mkdir -p obj/screens
 
 valgrind: mdark
-	LD_LIBRARY_PATH=./ valgrind --gen-suppressions=all --suppressions=./sup/linux_sdl_gl.sup --leak-check=full --show-leak-kinds=all ./mdark
+	LD_LIBRARY_PATH=./ valgrind --gen-suppressions=all --suppressions=./sup/linux_sdl_gl.sup --leak-check=full --show-leak-kinds=all ./mdark --lua lua/test.lua

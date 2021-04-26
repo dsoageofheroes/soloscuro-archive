@@ -27,14 +27,14 @@ libxmimidi.so:
 obj-test:
 	mkdir -p obj-test
 
-obj/spng.o : ext/spng/spng.c ext/spng/spng.h
+obj/spng.o : obj ext/spng/spng.c ext/spng/spng.h
 	$(CC) -c $(CFLAGS) -I ext/spng/ ext/spng/spng.c -o obj/spng.o
 
 obj/%.o : src/%.c $(DEPS)
 	$(CC) -c $(CFLAGS) $< -o $@
 
 obj-test/%.o: src/%.c $(DEPS)
-	$(CC) -I ext/ -fprofile-arcs -ftest-coverage -c $< -o $@
+	$(CC) -g -I ext/ -fprofile-arcs -ftest-coverage -c $< -o $@
 
 obj/spells:
 	mkdir -p obj/spells
@@ -56,8 +56,8 @@ lua-test: libds.so bin
 coverage:
 	mkdir -p coverage
 
-%test: bin libxmimidi.so coverage $(TEST_OBJS) obj-test
-	$(CC) -fprofile-arcs -ftest-coverage -I ext/ -I src/ -g -O2 obj-test/*.o src/powers/obj/*.o test/$@.c test/base.c test/unity.c -o bin/$@ -L ./ -llua5.3 -lxmimidi obj/spng.o -lm -lz
+%test: bin libxmimidi.so coverage $(TEST_OBJS) obj-test POWERS
+	$(CC) -fprofile-arcs -ftest-coverage -I ext/ -I src/ -g obj-test/*.o src/powers/obj/* test/$@.c test/base.c test/unity.c -o bin/$@ -L ./ -llua5.3 -lxmimidi obj/spng.o -lm -lz
 	LD_LIBRARY_PATH=./ bin/$@
 	mv *gcda coverage/
 	mv *gcno coverage/

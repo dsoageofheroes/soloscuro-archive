@@ -67,3 +67,6 @@ extern void port_combat_action(entity_action_t *ca) {
 
 extern void port_play_sound_effect(const uint16_t id) {
 }
+
+extern void port_start() {
+}
