@@ -7,7 +7,6 @@
 #include "region.h"
 #include "entity-list.h"
 #include "entity-animation.h"
-#include "ds-combat.h"
 
 #define COMBAT_ERROR    (9999)
 
