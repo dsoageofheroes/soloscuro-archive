@@ -63,7 +63,8 @@ extern void audio_init() {
     spec.channels = 2;
     spec.samples = 2048;
 
-    memset(xmi_buf, 0x0, XMI_BUF_SIZE);
+    memset(xmi_buf, 0x0, sizeof(xmi_buf));
+    memset(&audio_format, 0x0, sizeof(audio_format));
 
     midi_player = adl_init(spec.freq);
     if (!midi_player) {

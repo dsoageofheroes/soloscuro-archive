@@ -4,7 +4,7 @@
 #include "dsl.h"
 #include "wizard.h"
 #include "dsl-manager.h"
-#include "ds-item.h"
+#include "ssi-item.h"
 #include "region-manager.h"
 #include "ds-state.h"
 #include "ds-string.h"
@@ -46,8 +46,7 @@ void dsl_init() {
     powers_init();
     dsl_init_vars();
     ds_player_init();
-    ds_item_init();
-    dsl_object_init();
+    ssi_item_init();
     trigger_init();
     dsl_manager_init();
     region_manager_init();
@@ -73,10 +72,9 @@ void dsl_cleanup() {
     free(gTextstring);
     free(dsl_local_strings);
     free(dsl_global_strings);
-    dsl_object_cleanup();
     dsl_cleanup_vars();
     dsl_manager_cleanup();
-    ds_item_close();
+    ssi_item_close();
     trigger_cleanup();
     region_manager_cleanup();
     player_cleanup();

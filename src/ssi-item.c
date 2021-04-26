@@ -1,4 +1,4 @@
-#include "ds-item.h"
+#include "ssi-item.h"
 #include "dsl.h"
 #include "gff-common.h"
 #include "gff.h"
@@ -11,7 +11,7 @@ static size_t num_item1rs = 0;
 static char *names = NULL;
 static size_t num_names = 0;
 
-void ds_item_init() {
+void ssi_item_init() {
     gff_chunk_header_t chunk = gff_find_chunk_header(DSLDATA_GFF_INDEX, GFF_IT1R, 1);
     if (chunk.length == 0 || (chunk.length % sizeof(ds_item1r_t)) != 0) {
         error("***********************item1r not loadable*********************\n");
@@ -42,7 +42,7 @@ void ds_item_init() {
 
 #define BUF_MAX (1<<12)
 
-int ds_item_load(ds1_item_t *item, int32_t id) {
+int ssi_item_load(ds1_item_t *item, int32_t id) {
     if (item == NULL) { return 0; }
     if (id < 0) { id *= -1; }
     char buf[BUF_MAX];
@@ -67,17 +67,17 @@ int ds_item_load(ds1_item_t *item, int32_t id) {
     return 1;
 }
 
-const char *ds_item_name(const int32_t name_idx) {
+const char *ssi_item_name(const int32_t name_idx) {
     if (name_idx < 0 || name_idx >= num_names) { return NULL; }
     return names + 25 * name_idx;
 }
 
-const ds_item1r_t *ds_get_item1r(const int32_t item_idx) {
+const ds_item1r_t *ssi_get_item1r(const int32_t item_idx) {
     if (item_idx < 0 || item_idx >= num_item1rs) { return NULL; }
     return item1rs + item_idx;
 }
 
-void ds_item_close() {
+void ssi_item_close() {
     if (item1rs) {
         free(item1rs);
         item1rs = NULL;
@@ -88,7 +88,7 @@ void ds_item_close() {
     }
 }
 
-int32_t ds_item_get_bmp_id(ds1_item_t *item) {
+int32_t ssi_item_get_bmp_id(ds1_item_t *item) {
     disk_object_t dobj;
     if (!item) { return -1; }
 
@@ -101,7 +101,7 @@ int32_t ds_item_get_bmp_id(ds1_item_t *item) {
     return dobj.bmp_id;
 }
 
-int ds_item_allowed_in_slot(ds1_item_t *item, const int slot) {
+int ssi_item_allowed_in_slot(ds1_item_t *item, const int slot) {
     if (!item || slot < 0 || slot > 25) { return 0; }
     ds_item1r_t *it1r = item1rs + item->item_index;
 

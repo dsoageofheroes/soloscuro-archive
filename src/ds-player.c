@@ -4,7 +4,6 @@
 #include "gfftypes.h"
 #include "gff.h"
 #include "ds-player.h"
-#include "ds-item.h"
 #include "wizard.h"
 #include "rules.h"
 

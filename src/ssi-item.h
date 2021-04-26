@@ -1,5 +1,5 @@
-#ifndef DS_ITEM_H
-#define DS_ITEM_H
+#ifndef SSI_ITEM_H
+#define SSI_ITEM_H
 
 #include <stdint.h>
 
@@ -36,13 +36,13 @@ typedef struct ds_inventory_s {
     ds1_item_t bp[12];
 } ds_inventory_t;
 
-void ds_item_init();
-int ds_item_load(ds1_item_t *item, int32_t id);
-const char *ds_item_name(const int32_t name_idx);
-const ds_item1r_t *ds_get_item1r(const int32_t item_idx);
-int32_t ds_item_get_bmp_id(ds1_item_t *item);
-void ds_item_close();
-int ds_item_allowed_in_slot(ds1_item_t *item, const int slot);
+void ssi_item_init();
+int ssi_item_load(ds1_item_t *item, int32_t id);
+const char *ssi_item_name(const int32_t name_idx);
+const ds_item1r_t *ssi_get_item1r(const int32_t item_idx);
+int32_t ssi_item_get_bmp_id(ds1_item_t *item);
+void ssi_item_close();
+int ssi_item_allowed_in_slot(ds1_item_t *item, const int slot);
 //int ds_item_read(const int32_t id, 
 
 #endif

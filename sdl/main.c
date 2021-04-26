@@ -310,6 +310,7 @@ static void cleanup() {
 
 
 extern void port_start() {
+    audio_init();
     gui_init();
 
     font_init(renderer);
@@ -318,7 +319,6 @@ extern void port_start() {
 
     player_init();
     mouse_init(renderer);
-    audio_init();
 
     map_load_region(region_manager_get_current(), renderer);
 

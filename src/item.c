@@ -1,7 +1,7 @@
 #include <string.h>
 
 #include "item.h"
-#include "ds-item.h"
+#include "ssi-item.h"
 #include "dsl.h"
 #include "port.h"
 
@@ -20,7 +20,7 @@ static int32_t get_bmp_id(item_t *item) {
 
 void item_convert_from_ds1(item_t *item, const ds1_item_t *ds1_item) {
     if (!item || !ds1_item) { return; }
-    const ds_item1r_t *ds1_item1r = ds_get_item1r(ds1_item->item_index);
+    const ds_item1r_t *ds1_item1r = ssi_get_item1r(ds1_item->item_index);
 
     if (!ds1_item1r) {
         error("Unable to find item1r for %d\n", ds1_item->item_index);
@@ -28,7 +28,7 @@ void item_convert_from_ds1(item_t *item, const ds1_item_t *ds1_item) {
     }
 
     item->ds_id = ds1_item->id;
-    strncpy(item->name, ds_item_name(ds1_item->name_idx), ITEM_NAME_MAX - 1);
+    strncpy(item->name, ssi_item_name(ds1_item->name_idx), ITEM_NAME_MAX - 1);
 
     if (ds1_item1r->flags & DS1_ARMOR_FLAG) {
         item->type = ITEM_ARMOR;

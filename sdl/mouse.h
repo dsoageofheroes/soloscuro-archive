@@ -2,7 +2,7 @@
 #define SDL_MOUSE_H
 
 #include <SDL2/SDL.h>
-#include "../src/ds-item.h"
+#include "../src/ssi-item.h"
 #include "sprite.h"
 #include "../src/powers.h"
 

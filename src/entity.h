@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "ds-scmd.h"
-#include "ds-item.h"
+#include "ssi-item.h"
 #include "gff-map.h"
 #include "psionic.h"
 #include "item.h"

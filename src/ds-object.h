@@ -2,7 +2,7 @@
 #define DS_OBJECT_H
 
 #include <stdint.h>
-#include "ds-item.h"
+#include "ssi-item.h"
 #include "ds-scmd.h"
 
 #define DS_OBJECT_ID 0

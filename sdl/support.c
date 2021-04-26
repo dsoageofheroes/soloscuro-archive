@@ -126,7 +126,7 @@ static void write_rdff(int idx, const char *base_path) {
     fprintf(f, "id, quantity, next, value, pack_index, item_index, icon, charges, data0, slot, name, bonus, priority, special\n");
     gff_get_resource_ids(idx, GFF_RDFF, res_ids);
     for (int i = 0; i < res_max; i++) {
-        if (ds_item_load(&item, res_ids[i])) {
+        if (ssi_item_load(&item, res_ids[i])) {
             fprintf(f, "%d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d (%s), %d, %d, %d\n",
                 item.id,
                 item.quantity,
@@ -139,7 +139,7 @@ static void write_rdff(int idx, const char *base_path) {
                 item.data0,
                 item.slot,
                 item.name_idx,
-                ds_item_name(item.name_idx),
+                ssi_item_name(item.name_idx),
                 item.bonus,
                 item.priority,
                 item.special);
@@ -152,7 +152,7 @@ static void write_it1r(int idx, const char *base_path) {
     //int res_max = gff_get_resource_length(idx, GFF_IT1R);
     //printf("THere are %d it1rs\n", res_max);
     size_t pos = 0;
-    const ds_item1r_t * it1r = ds_get_item1r(pos);
+    const ds_item1r_t * it1r = ssi_get_item1r(pos);
     char buf[128];
 
     snprintf(buf, 128, "%s/it1r.csv", base_path);
@@ -181,7 +181,7 @@ static void write_it1r(int idx, const char *base_path) {
         /*
     */
         pos++;
-        it1r = ds_get_item1r(pos);
+        it1r = ssi_get_item1r(pos);
     }
     fclose(f);
 }

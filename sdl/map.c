@@ -47,7 +47,7 @@ void map_cleanup() {
 
 void map_free(map_t *map) {
     if (!map) { return; }
-    region_free(map->region);
+    //TODO: unload region!
     free(map);
 }
 
@@ -74,7 +74,7 @@ static void map_load_current_region() {
     map->tiles = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * max_id);
     memset(map->tiles, 0x0, sizeof(SDL_Texture*) * max_id);
 
-    for (uint32_t i = 0; i <= map->region->num_tiles; i++) {
+    for (uint32_t i = 0; i < map->region->num_tiles; i++) {
         region_get_tile(map->region, ids[i], &width, &height, &data);
 
         if (data && *data) {
