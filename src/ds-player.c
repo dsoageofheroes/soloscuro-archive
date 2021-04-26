@@ -34,6 +34,11 @@ void ds_player_init() {
     }
 }
 
+entity_t* player_get(const int slot) {
+    if (slot < 0 || slot >= MAX_PCS) { return NULL; }
+    return players[slot];
+}
+
 entity_t* player_get_entity(const int slot) {
     if (slot < 0 || slot >= MAX_PCS) { return NULL; }
     if (!players[slot]) {

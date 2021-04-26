@@ -739,6 +739,10 @@ static void gff_close_file(gff_file_t *gff) {
         free(gff->entry_table);
         gff->entry_table = NULL;
     }
+    if (gff->pals) {
+        free(gff->pals);
+        gff->pals = NULL;
+    }
     gff->file = NULL;
     gff->filename = NULL;
 }

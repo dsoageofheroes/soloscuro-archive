@@ -455,6 +455,7 @@ unsigned char* get_frame_rgba_palette(int gff_idx, int type_id, int res_id, int 
     unsigned char *data;
 
     gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, type_id, res_id);
+    if (chunk.length < 1) { return NULL; }
     img = (gff_image_entry_t*) malloc(sizeof(gff_image_entry_t*) * chunk.length);
     gff_read_chunk(gff_idx, &chunk, &(img->data), chunk.length);
     img->data_len = chunk.length;

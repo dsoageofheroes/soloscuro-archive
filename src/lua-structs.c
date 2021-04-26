@@ -428,9 +428,6 @@ static int region_set_tile_id(lua_State *l) {
     if (!region->tile_ids) {
         region->num_tiles = 256;
         region->tile_ids = calloc(1, region->num_tiles * sizeof(uint32_t));
-        //for (int i = 0; i < region->num_tiles; i++) {
-            //region->tile_ids[i] = 0;
-        //}
     }
 
     region->tile_ids[pos] = id;

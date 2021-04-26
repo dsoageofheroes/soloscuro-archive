@@ -97,18 +97,22 @@ void region_free(region_t *reg) {
         free(reg->tile_ids);
         reg->tile_ids = NULL;
     }
+    combat_free(&(reg->cr));
+    free(reg);
 }
 
 int region_get_tile(const region_t *reg, const uint32_t image_id,
         uint32_t *w, uint32_t *h, unsigned char **data) {
     if (!data) { return 0; }
+
     if (gff_image_is_png(reg->gff_file, GFF_TILE, image_id, 0)) {
         return gff_image_load_png(reg->gff_file, GFF_TILE, image_id, 0, w, h, data);
     }
-    *w = get_frame_width(reg->gff_file, GFF_TILE, image_id, 0);
-    *h = get_frame_height(reg->gff_file, GFF_TILE, image_id, 0);
+
     *data = get_frame_rgba_with_palette(reg->gff_file, GFF_TILE, image_id, 0, reg->palette_id);
     if (!data) { return 0; }
+    *w = get_frame_width(reg->gff_file, GFF_TILE, image_id, 0);
+    *h = get_frame_height(reg->gff_file, GFF_TILE, image_id, 0);
 
     return 1;
 }

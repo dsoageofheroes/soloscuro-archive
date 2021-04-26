@@ -22,17 +22,23 @@ void region_manager_init() {
 void region_manager_cleanup() {
     for (int i = 0; i < MAX_REGIONS; i++) {
         if (ssi_regions[i]) {
-            region_free(ssi_regions[i]);
             combat_free(&(ssi_regions[i]->cr));
-            free(ssi_regions[i]);
+            region_free(ssi_regions[i]);
+            ssi_regions[i] = NULL;
+        }
+        if (sol_regions[i]) {
+            combat_free(&(sol_regions[i]->cr));
+            region_free(sol_regions[i]);
             ssi_regions[i] = NULL;
         }
     }
     memset(ssi_regions, 0x0, sizeof(ssi_regions));
+    memset(sol_regions, 0x0, sizeof(sol_regions));
 }
 
 region_t* region_manager_get_region(const int region_id) {
     char gff_name[32];
+    entity_t *dude = NULL;
 
     if (region_id >= MAX_REGIONS && region_id < 2 * MAX_REGIONS) { return sol_regions[region_id - MAX_REGIONS]; }
 
@@ -47,7 +53,11 @@ region_t* region_manager_get_region(const int region_id) {
 
     current_region = region_id;
 	for (int i = 0; i < MAX_PCS; i++) {
-        player_get_entity(i)->region = region_id;
+        dude = player_get(i);
+        if (dude) {
+            dude->region = region_id;
+            //player_get_entity(i)->region = region_id;
+        }
     }
 
     return ssi_regions[region_id];
