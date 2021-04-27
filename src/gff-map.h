@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "ds-scmd.h"
+#include "ssi-scmd.h"
 #include "ssi-object.h"
 
 #define MAP_LOS     (0x80) // Runtime flag to determine if block is in sight.

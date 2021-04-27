@@ -567,7 +567,7 @@ static scmd_t* get_cmd(lua_State *L) {
 static int lua_scmd_index_is_default(lua_State *L) {
     scmd_t *scmd = (scmd_t *)lua_touserdata(L, 1);
     lua_Integer scmd_index = luaL_checkinteger(L, 2);
-    lua_pushboolean(L, dsl_scmd_is_default(scmd, scmd_index));
+    lua_pushboolean(L, ssi_scmd_is_default(scmd, scmd_index));
     return 1;
 }
 

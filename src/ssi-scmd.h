@@ -1,6 +1,6 @@
 // SCMD (Script CoMmanDs)
-#ifndef DS_SCMD_H
-#define DS_SCMD_H
+#ifndef SSI_SCMD_H
+#define SSI_SCMD_H
 
 typedef struct _scmd_t {
     uint8_t bmp_idx; // 0-254 = valid, 255 = none
@@ -40,8 +40,8 @@ typedef struct _disk_object_s {
 #define SCMD_DEFAULT_DELAY (16)
 #define SCMD_TICKS_PER_SECOND (96)
 
-scmd_t* dsl_scmd_get(const int gff_idx, const int res_id, const int index);
-scmd_t* ds_scmd_empty();
-int dsl_scmd_is_default(const scmd_t *scmd, const int scmd_index);
+scmd_t* ssi_scmd_get(const int gff_idx, const int res_id, const int index);
+scmd_t* ssi_scmd_empty();
+int ssi_scmd_is_default(const scmd_t *scmd, const int scmd_index);
 
 #endif

@@ -79,7 +79,7 @@ static void set_sprite_from_ojff(sprite_info_t *spr, const uint32_t id) {
     spr->xoffset = dobj.xoffset;
     spr->yoffset = dobj.yoffset;
     //printf("id = %d, length = %d, bmp_id = %d", id, chunk.length, spr->bmp_id);
-    spr->scmd = dsl_scmd_get(OBJEX_GFF_INDEX, dobj.script_id, 0);
+    spr->scmd = ssi_scmd_get(OBJEX_GFF_INDEX, dobj.script_id, 0);
 }
 
 extern void power_list_free(power_list_t *pl) {

@@ -4,7 +4,7 @@
 #define PASSIVE_H
 
 #include <stdint.h>
-#include "ds-scmd.h"
+#include "ssi-scmd.h"
 #include "gff-map.h"
 
 typedef struct passive_s {

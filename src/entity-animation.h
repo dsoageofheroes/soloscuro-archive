@@ -2,7 +2,7 @@
 #define ENTITY_ANIMAION_H
 
 #include <stdint.h>
-#include "ds-scmd.h"
+#include "ssi-scmd.h"
 
 enum entity_action_e {
     EA_NONE,

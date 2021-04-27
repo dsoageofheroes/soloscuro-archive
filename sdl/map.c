@@ -14,7 +14,7 @@
 #include "../src/dsl-manager.h"
 #include "../src/ssi-object.h"
 #include "../src/region-manager.h"
-#include "../src/ds-scmd.h"
+#include "../src/ssi-scmd.h"
 #include "../src/player.h"
 #include "../src/dsl-var.h"
 
@@ -48,6 +48,14 @@ void map_cleanup() {
 void map_free(map_t *map) {
     if (!map) { return; }
     //TODO: unload region!
+    for (uint32_t i = 0; i < map->region->num_tiles; i++) {
+        if (map->tiles[i]) {
+            SDL_DestroyTexture(map->tiles[i]);
+            map->tiles[i] = NULL;
+        }
+    }
+    free(map->tiles);
+    map->tiles = NULL;
     free(map);
 }
 

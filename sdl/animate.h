@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <SDL2/SDL.h>
 #include "../src/ssi-object.h"
-#include "../src/ds-scmd.h"
+#include "../src/ssi-scmd.h"
 #include "../src/entity.h"
 #include "map.h"
 

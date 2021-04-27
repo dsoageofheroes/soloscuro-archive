@@ -2,7 +2,7 @@
 #define ITEM_H
 
 #include <stdint.h>
-#include "ds-scmd.h"
+#include "ssi-scmd.h"
 
 // First the DS1 items structs
 typedef struct _ds1_item_t { // Not confirmed at all...

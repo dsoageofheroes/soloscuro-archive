@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include "ssi-item.h"
-#include "ds-scmd.h"
+#include "ssi-scmd.h"
 
 #define COMBAT_NAME_SIZE (18)
 

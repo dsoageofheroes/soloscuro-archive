@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
-#include "ds-scmd.h"
+#include "ssi-scmd.h"
 #include "ssi-item.h"
 #include "gff-map.h"
 #include "psionic.h"

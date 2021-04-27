@@ -64,7 +64,7 @@ scmd_t* gff_map_get_object_scmd(int gff_index, int res_id, int obj_id, int scmd_
     gff_map_object_t *entry_table = open_files[gff_index].entry_table;
     if (entry_table == NULL) { return NULL; }
     gff_read_object(entry_table[obj_id].index, &disk_object);
-    return dsl_scmd_get(OBJEX_GFF_INDEX, disk_object.script_id, scmd_index);
+    return ssi_scmd_get(OBJEX_GFF_INDEX, disk_object.script_id, scmd_index);
 }
 
 unsigned char* gff_map_get_object_bmp_pal(int gff_index, int res_id, int obj_id, int *w, int *h, int frame_id,

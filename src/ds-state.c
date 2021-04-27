@@ -6,7 +6,7 @@
 #include "ds-state.h"
 #include "../sdl/gameloop.h"
 #include "port.h"
-#include "ds-scmd.h"
+#include "ssi-scmd.h"
 #include "replay.h"
 #include "region-manager.h"
 #include "trigger.h"
@@ -488,7 +488,7 @@ static int dsl_clone(lua_State *l) {
         entry_id = dude->ds_id;
 
         if (dude) {
-            if (dude->sprite.scmd == NULL) { dude->sprite.scmd = ds_scmd_empty(); }
+            if (dude->sprite.scmd == NULL) { dude->sprite.scmd = ssi_scmd_empty(); }
             region_move_to_nearest(region_manager_get_current(), dude);
             region_add_entity(region_manager_get_current(), dude);
             port_add_entity(dude, pal);

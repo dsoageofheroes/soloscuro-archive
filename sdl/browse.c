@@ -1512,7 +1512,7 @@ static void render_entry_scmd() {
     int num_entries = 0;
     const int max_entries = 36;
     int ypos = 40;
-    scmd_t* scmd = dsl_scmd_get(gff_idx, res_ids[res_idx], 0);
+    scmd_t* scmd = ssi_scmd_get(gff_idx, res_ids[res_idx], 0);
     while (num_entries < max_entries && scmd->flags != SCMD_JUMP) {
         snprintf(buf, BUF_MAX, "%c%c: bmp: %d, delay: %d, offset: (%d, %d), hot: (%d, %d)", 
             scmd->flags & SCMD_LAST ? 'L' : ' ',

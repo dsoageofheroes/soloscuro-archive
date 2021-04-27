@@ -7,7 +7,6 @@
 #include "main.h"
 #include "../src/dsl.h"
 #include "../src/combat.h"
-#include "../src/ds-scmd.h"
 
 #define MAX_ZPOS (128)
 

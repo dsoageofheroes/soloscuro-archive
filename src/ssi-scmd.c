@@ -1,5 +1,5 @@
 #include "dsl.h"
-#include "ds-scmd.h"
+#include "ssi-scmd.h"
 #include <stdlib.h>
 
 static scmd_t* get_script(unsigned char* scmd_entry, const int index) {
@@ -41,11 +41,11 @@ static scmd_t empty_scmd = {
     .soundidx = 0
 };
 
-scmd_t* ds_scmd_empty() {
+extern scmd_t* ssi_scmd_empty() {
     return &empty_scmd;
 }
 
-scmd_t* dsl_scmd_get(const int gff_idx, const int res_id, const int index) {
+extern scmd_t* ssi_scmd_get(const int gff_idx, const int res_id, const int index) {
     if (res_id <= 0 || res_id >= SCMD_MAX) { return &empty_scmd; } // needs a better check...
 
     gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_SCMD, res_id);
@@ -57,7 +57,7 @@ scmd_t* dsl_scmd_get(const int gff_idx, const int res_id, const int index) {
     return get_script(scmds[res_id], index);
 }
 
-int dsl_scmd_is_default(const scmd_t *scmd, const int scmd_index) {
+extern int ssi_scmd_is_default(const scmd_t *scmd, const int scmd_index) {
     if (scmd == NULL) { return 0; }
     if (scmd_index < 0 || scmd_index >= SCMD_MAX_SIZE) {
         error("index for get_script is out of bounds!(%d)\n", scmd_index);

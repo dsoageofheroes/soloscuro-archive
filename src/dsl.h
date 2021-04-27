@@ -17,7 +17,7 @@ void dsl_debug(const char *file, const int line_num, const char *pretty, const c
 
 #include "gff.h"
 #include "gfftypes.h"
-#include "ds-scmd.h"
+#include "ssi-scmd.h"
 
 #define check_index_t uint16_t
 #define NULL_CHECK (0xFFFF)
