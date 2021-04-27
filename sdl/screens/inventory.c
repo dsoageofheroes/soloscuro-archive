@@ -221,7 +221,7 @@ static int display_attack(entity_t *entity, item_t *item, const int xpos, const 
 
 static void render_character() {
     char buf[BUF_MAX];
-    entity_t *player = player_get_entity(char_selected);
+    entity_t *player = player_get(char_selected);
     inventory_t *player_items = (inventory_t*)player->inv;
     const float zoom = main_get_zoom();
 
@@ -294,7 +294,7 @@ void inventory_screen_render(void *data, SDL_Renderer *renderer) {
     const float zoom = main_get_zoom();
 
     description[0] = '\0';
-    entity_t *player = player_get_entity(char_selected);
+    entity_t *player = player_get(char_selected);
     item_t *items = player->inv;
     animate_sprite_t *as = NULL;
 
@@ -437,7 +437,7 @@ int inventory_screen_handle_mouse_down(const uint32_t button, const uint32_t x, 
 
 static void clicked_slot(const int slot) {
     item_t* mouse_item = mouse_get_item();
-    entity_t *player = player_get_entity(char_selected);
+    entity_t *player = player_get(char_selected);
     item_t *player_item = player->inv + slot;
 
     printf("clicked_slot: %d\n", slot);

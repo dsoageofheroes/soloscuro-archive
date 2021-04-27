@@ -30,7 +30,7 @@ static player_sprites_t players[MAX_PCS];
 #define sprite_t uint16_t
 
 void player_init() {
-    dude_t *dude = player_get_active();
+    //dude_t *dude = player_get_active();
     player_zpos = 0;
     memset(players, 0x00, sizeof(player_sprites_t) * MAX_PCS);
 
@@ -38,13 +38,13 @@ void player_init() {
         players[i].main = players[i].port = SPRITE_ERROR;
     }
 
-    dude->mapx = 30;
-    dude->mapy = 10;
+    //dude->mapx = 30;
+    //dude->mapy = 10;
 }
 
 void player_load_graphics(const int slot) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes;
-    dude_t *dude = player_get_entity(slot);
+    dude_t *dude = player_get(slot);
     dude->sprite.scmd = combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
     if (!dude->sprite.data) {
         dude->sprite.scmd = combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
@@ -154,7 +154,7 @@ static uint32_t get_bmp_idx(const entity_t *dude) {
 static void load_character_sprite(SDL_Renderer *renderer, const int slot, const float zoom) {
     if (slot < 0 || slot >= MAX_PCS) { return; }
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
-    dude_t *dude = player_get_entity(slot);
+    dude_t *dude = player_get(slot);
 
     free_sprites(slot);
 
@@ -229,7 +229,7 @@ static void load_character_sprite(SDL_Renderer *renderer, const int slot, const 
 
 extern void player_condense() {
     for (int i = 0; i < MAX_PCS; i++) {
-        entity_t *player = player_get_entity(i);
+        entity_t *player = player_get(i);
         if (player != player_get_active() && player->name) {
             port_update_entity(player, -999, -999);
         }

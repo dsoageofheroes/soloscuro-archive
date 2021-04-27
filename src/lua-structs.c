@@ -48,21 +48,21 @@ static int load_player (lua_State *l) {
     int n = luaL_checkinteger(l, 1);
 
     lua_newtable(l); // entity table
-    lua_pushlightuserdata(l, player_get_entity(n));
+    lua_pushlightuserdata(l, player_get(n));
     lua_setfield(l, -2, "ptr__");
 
-    push_table_start(l, &(player_get_entity(n)->stats), "stats");
+    push_table_start(l, &(player_get(n)->stats), "stats");
 
-    push_table(l, &(player_get_entity(n)->stats.attacks[0]), "attack1", "soloscuro.attack");
-    push_table(l, &(player_get_entity(n)->stats.attacks[1]), "attack2", "soloscuro.attack");
-    push_table(l, &(player_get_entity(n)->stats.attacks[2]), "attack3", "soloscuro.attack");
-    push_table(l, &(player_get_entity(n)->stats.saves), "saves", "soloscuro.saves");
+    push_table(l, &(player_get(n)->stats.attacks[0]), "attack1", "soloscuro.attack");
+    push_table(l, &(player_get(n)->stats.attacks[1]), "attack2", "soloscuro.attack");
+    push_table(l, &(player_get(n)->stats.attacks[2]), "attack3", "soloscuro.attack");
+    push_table(l, &(player_get(n)->stats.saves), "saves", "soloscuro.saves");
 
     push_table_end(l, "soloscuro.stats");
 
-    push_table(l, &(player_get_entity(n)->class[0]), "class1", "soloscuro.class");
-    push_table(l, &(player_get_entity(n)->class[1]), "class2", "soloscuro.class");
-    push_table(l, &(player_get_entity(n)->class[2]), "class3", "soloscuro.class");
+    push_table(l, &(player_get(n)->class[0]), "class1", "soloscuro.class");
+    push_table(l, &(player_get(n)->class[1]), "class2", "soloscuro.class");
+    push_table(l, &(player_get(n)->class[2]), "class3", "soloscuro.class");
 
     luaL_setmetatable(l, "soloscuro.entity"); // entity meta
 

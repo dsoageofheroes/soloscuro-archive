@@ -13,50 +13,46 @@ static entity_t *players[MAX_PCS] = {NULL, NULL, NULL, NULL};
 
 static int active = 0;
 
-void player_cleanup() {
+extern void player_cleanup() {
     for (int i = 0; i < MAX_PCS; i++) {
         player_free(i);
     }
 }
 
 extern void player_free(const int slot) {
-    //entity_free(players[slot]);
+    if (players[slot]) {
+        entity_free(players[slot]);
+    }
     players[slot] = NULL;
 }
 
-void sol_player_init() {
+extern void sol_player_init() {
     // Setup the slots for reading/writing
     for (int i = 0; i < MAX_PCS; i++) {
         if (!players[i]) {
-            players[i] = player_get_entity(i);
+            players[i] = player_get(i);
         }
     }
 }
 
-entity_t* player_get(const int slot) {
+extern entity_t* player_get(const int slot) {
     if (slot < 0 || slot >= MAX_PCS) { return NULL; }
     return players[slot];
 }
 
-entity_t* player_get_entity(const int slot) {
-    if (slot < 0 || slot >= MAX_PCS) { return NULL; }
-    if (!players[slot]) {
-        players[slot] = calloc(1, sizeof(entity_t));
-        for (int i = 0; i < 3; i++) {
-            players[slot]->class[i].class = -1;
-            players[slot]->class[i].level = -1;
-        }
-    }
-    return players[slot];
+extern void player_set(const int slot, entity_t *dude) {
+    if (slot < 0 || slot >= MAX_PCS || !dude) { return; }
+    players[slot] = dude;
 }
 
 extern int player_exists(const int slot) {
     if (slot < 0 || slot >= MAX_PCS) { return 0; }
-    return (player_get_entity(slot)->name != NULL);
+    dude_t *player = player_get(slot);
+    return player && (player->name != NULL);
 }
 
 extern entity_t* player_get_active() {
-    return player_get_entity(active);
+    return player_get(active);
 }
 
 extern int player_get_slot(entity_t *entity) {

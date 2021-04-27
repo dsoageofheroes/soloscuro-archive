@@ -326,7 +326,6 @@ extern void port_free_sprite(sprite_info_t *spr) {
 }
 
 void port_enter_combat() {
-    //gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     // Right now we need to migrate player to combat, we will see if that is better.
     //player_remove_animation();
     // Need to disperse players (and setup combat items.)
@@ -334,8 +333,8 @@ void port_enter_combat() {
     //screen_push_screen(main_get_rend(), &combat_status_screen, 295, 5);
     dude_t *main_player = player_get_active();
     for (int i = 0; i < 4; i++) {
-        dude_t *next_player = player_get_entity(i);
-        if (next_player != player_get_active() && next_player->name) { // next_player exists.
+        dude_t *next_player = player_get(i);
+        if (next_player && next_player != player_get_active() && next_player->name) { // next_player exists.
             next_player->mapx = main_player->mapx;
             next_player->mapy = main_player->mapy;
             region_move_to_nearest(region_manager_get_current(), next_player);

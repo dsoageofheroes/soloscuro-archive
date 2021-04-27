@@ -153,14 +153,14 @@ void view_character_init(SDL_Renderer *renderer, const uint32_t _x, const uint32
 static void render_character(SDL_Renderer *renderer) {
     const float zoom = main_get_zoom();
 
-    label_set_group(player_get_entity(player_selected), SCREEN_VIEW_CHARACTER);
+    label_set_group(player_get(player_selected), SCREEN_VIEW_CHARACTER);
     label_set_positions(143 * zoom, 30 * zoom, SCREEN_VIEW_CHARACTER);
     label_render_stats(xoffset, yoffset);
     label_render_gra(xoffset + (64 * zoom), yoffset - (49 * zoom));
     label_render_class_and_combat(xoffset + (64 * zoom), yoffset - (42 * zoom));
 
     sprite_set_frame(slots, 0);
-    item_t *items = player_get_entity(player_selected)->inv;
+    item_t *items = player_get(player_selected)->inv;
     animate_sprite_t *as = NULL;
     sprite_set_location(slots, xoffset + (205 * zoom), yoffset + (41 * zoom));
     sprite_render(main_get_rend(), slots);
@@ -303,7 +303,7 @@ void view_character_render(void *data, SDL_Renderer *renderer) {
 
     for (int i = 0; i < 4; i++) {
         if (player_exists(i)) {
-            entity_t *player = player_get_entity(i);
+            entity_t *player = player_get(i);
             int x = 56, y = 64;
             if (i == 1 || i == 3) { y += 60; }
             if (i == 2 || i == 3) { x += 50; }
@@ -393,7 +393,7 @@ int view_character_handle_mouse_down(const uint32_t button, const uint32_t x, co
                 && player_exists(i)
                 ) {
             player_selected = i;
-            strcpy(description, player_get_entity(player_selected)->name);
+            strcpy(description, player_get(player_selected)->name);
         }
     }
     return 1; // means I captured the mouse click

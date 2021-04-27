@@ -123,7 +123,7 @@ extern int combat_initiate(region_t *reg, const uint16_t x, const uint16_t y) {
 
     for (int i = 0; i < MAX_PCS; i++) {
         if (player_exists(i)) {
-            entity_list_add(reg->cr.combatants, player_get_entity(i));
+            entity_list_add(reg->cr.combatants, player_get(i));
         }
     }
 
@@ -148,7 +148,7 @@ extern int combat_initiate(region_t *reg, const uint16_t x, const uint16_t y) {
 
 static int which_player(combat_entry_t *node) {
     for (int i = 0; i < MAX_PCS; i++) {
-        entity_t *player = player_get_entity(i);
+        entity_t *player = player_get(i);
         if (player == node->entity) { // Warning: pointer test, be teh same, not just a clone.
             return i;
         }
@@ -194,7 +194,7 @@ static void queue_add(action_node_t **head, action_node_t **tail, action_node_t 
 static entity_t* player_exists_in_pos(region_t *reg, const uint16_t x, const uint16_t y) {
     for (int i = 0; i < MAX_PCS; i++) {
         if (!player_exists(i)) { continue; }
-        entity_t *player = player_get_entity(i);
+        entity_t *player = player_get(i);
         //printf("(%d, %d) -> player(%d, %d)\n", x, y, player->mapx, player->mapy);
         if (player->mapx == x && player->mapy == y) { return player; }
     }
@@ -524,7 +524,7 @@ static void do_combat_rounds(region_t *reg) {
     //printf("player = %d, name = %s\n", current_player, current_turn->entity->name);
     if (current_player >= 0) {
         wait_on_player = 1;
-        move_entity(reg, player_get_entity(current_player), player_action);
+        move_entity(reg, player_get(current_player), player_action);
         return; // Need to wait on player input.
     }
 
@@ -581,7 +581,7 @@ static void do_player_turn(region_t *reg) {
         return;
     }
 
-    move_entity(reg, player_get_entity(current_player), player_action);
+    move_entity(reg, player_get(current_player), player_action);
     // Players move quicker.
     if (ticks_per_game_round > 0) { ticks_per_game_round = 20; }
 }

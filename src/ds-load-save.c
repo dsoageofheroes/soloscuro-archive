@@ -49,7 +49,7 @@ static void add_player_to_save(const int id, const int player) {
     char *buf = malloc(buf_len);
     rdff_header_t rdff;
     int num_items = 0;
-    dude_t *dude = player_get_entity(player);
+    dude_t *dude = player_get(player);
     item_t *item = dude->inv;
 
     for (int i = 0; i < 26; i++) {
@@ -235,7 +235,10 @@ static int load_player(const int id, const int player, const int res_id) {
     if (gff_read_chunk(id, &chunk, &buf, sizeof(buf)) < 34) { return 0; }
 
     player_free(player);
-    dude = player_get_entity(player);
+    dude = player_get(player);
+    if (dude) { entity_free (dude); }
+    player_set(player, entity_create_fake(30, 10));
+    dude = player_get(player);
     entity_load_from_gff(dude, id, player, res_id);
 
     rdff = (rdff_disk_object_t*) (buf);
@@ -250,7 +253,7 @@ static int load_player(const int id, const int player, const int res_id) {
         offset += rdff->len;
     } else if (rdff->type == PLAYER_OBJECT) {
         player_free(player);
-        dude = player_get_entity(player);
+        dude = player_get(player);
         entity_load_from_object(dude, buf + offset);
         dude->sprite.scmd = combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
         offset += rdff->len;
