@@ -22,7 +22,7 @@
 #include "../src/replay.h"
 #include "../src/region-manager.h"
 #include "../src/ds-load-save.h"
-#include "../src/ds-player.h"
+#include "../src/player.h"
 
 void browse_loop(SDL_Surface*, SDL_Renderer *rend);
 void screen_debug_init(SDL_Surface *sur, SDL_Renderer *rend, const char *arg);

@@ -10,7 +10,7 @@
 #include "ds-string.h"
 #include "dsl-var.h"
 //#include "gameloop.h"
-#include "ds-player.h"
+#include "player.h"
 #include "replay.h"
 #include "trigger.h"
 
@@ -45,7 +45,7 @@ void dsl_init() {
     initialize_dsl_stack();
     powers_init();
     dsl_init_vars();
-    ds_player_init();
+    sol_player_init();
     ssi_item_init();
     trigger_init();
     dsl_manager_init();

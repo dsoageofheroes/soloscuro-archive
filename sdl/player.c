@@ -9,7 +9,7 @@
 #include "../src/entity-animation.h"
 #include "../src/port.h"
 #include "../src/region-manager.h"
-#include "../src/ds-player.h"
+#include "../src/player.h"
 #include "../src/dsl-var.h"
 #include "../src/gff-map.h"
 #include "../src/gff-image.h"

@@ -3,7 +3,7 @@
 #include "../src/dsl.h"
 #include "../src/region.h"
 #include "../src/region-manager.h"
-#include "../src/ds-player.h"
+#include "../src/player.h"
 
 void setUp() {
     gff_init();

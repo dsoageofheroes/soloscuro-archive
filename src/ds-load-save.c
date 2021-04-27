@@ -1,5 +1,5 @@
 #include "ds-load-save.h"
-#include "ds-player.h"
+#include "player.h"
 #include "region.h"
 #include "region-manager.h"
 #include "ds-state.h"

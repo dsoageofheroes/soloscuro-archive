@@ -2,9 +2,10 @@ dofile("./lua/player_input.lua")
 dofile("./lua/settings.lua")
 
 function init()
+--[[
     --ds.run_browser() -- uncomment to just run the brower.
     -- after runnign the browser you probably should exit, unless you want to run the game.
-    --game_settings()
+    game_settings()
     --ds.load_region(42) -- right now only 42 works (there is some hard-coding.)
 
     ds.load_charsave(0, 15) -- load character from charsave.gff
@@ -34,13 +35,16 @@ function init()
     reg.gff_file = simple_gff
     print (reg.gff_file)
 
+    reg:set_tile_id(1, 142)
     for i=1,98 do
         for j=1,128 do
-            reg:set_tile(i, j, 142)
+            reg:set_tile(i, j, 1)
         end
     end 
 
+    soloscuro.set_region(reg)
     soloscuro.start_game()
+    --]]
 
     return true -- returning true, means that lua has setup the game, don't do the default
                 -- returning false, would allow the engine to proceed with normal startup

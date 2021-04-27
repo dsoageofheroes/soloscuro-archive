@@ -6,7 +6,7 @@
 #define MAX_PCS (4)
 
 // New Interface
-void ds_player_init();
+void sol_player_init();
 extern int player_exists(const int slot);
 extern entity_t* player_get_entity(const int slot); // DEPRECATED!!!
 extern entity_t* player_get(const int slot);

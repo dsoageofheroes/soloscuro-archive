@@ -1,7 +1,7 @@
 #include "region-manager.h"
 #include "gff.h"
 #include "gfftypes.h"
-#include "ds-player.h"
+#include "player.h"
 #include "ds-state.h"
 #include "port.h"
 #include <string.h>

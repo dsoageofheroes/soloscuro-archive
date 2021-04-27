@@ -3,7 +3,7 @@
 #include "gff-common.h"
 #include "gfftypes.h"
 #include "gff.h"
-#include "ds-player.h"
+#include "player.h"
 #include "wizard.h"
 #include "rules.h"
 
@@ -24,7 +24,7 @@ extern void player_free(const int slot) {
     players[slot] = NULL;
 }
 
-void ds_player_init() {
+void sol_player_init() {
     // Setup the slots for reading/writing
     for (int i = 0; i < MAX_PCS; i++) {
         if (!players[i]) {

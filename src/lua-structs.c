@@ -1,5 +1,5 @@
 #include "lua-structs.h"
-#include "ds-player.h"
+#include "player.h"
 #include "region.h"
 #include "region-manager.h"
 #include "gff.h"

@@ -15,7 +15,7 @@
 #include "../src/ssi-object.h"
 #include "../src/region-manager.h"
 #include "../src/ds-scmd.h"
-#include "../src/ds-player.h"
+#include "../src/player.h"
 #include "../src/dsl-var.h"
 
 #define MAX_ANIMS (256)

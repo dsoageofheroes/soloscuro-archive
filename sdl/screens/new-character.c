@@ -7,7 +7,7 @@
 #include "../textbox.h"
 #include "../sprite.h"
 #include "../../src/wizard.h"
-#include "../../src/ds-player.h"
+#include "../../src/player.h"
 #include "../../src/rules.h"
 #include <string.h>
 #include <time.h>

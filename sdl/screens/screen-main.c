@@ -2,7 +2,7 @@
 #include "../main.h"
 #include "../../src/gff.h"
 #include "../../src/gfftypes.h"
-#include "../../src/ds-player.h"
+#include "../../src/player.h"
 #include "../sprite.h"
 #include "../map.h"
 #include "../player.h"

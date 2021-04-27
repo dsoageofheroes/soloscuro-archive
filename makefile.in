@@ -65,7 +65,7 @@ coverage:
 %test-lua: bin
 	LD_LIBRARY_PATH=./ lua5.3 test/$@.lua -v
 
-clean:
+engine_clean:
 	cd src/powers ; make clean
 	rm -rf $(EXEC) obj gff-inspector libds.$(LIB_EXT) libxmimidi.$(LIB_EXT) bin/ mdark mdark.exe *dll
 

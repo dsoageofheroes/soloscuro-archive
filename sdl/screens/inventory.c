@@ -10,7 +10,7 @@
 #include "popup.h"
 #include "../../src/dsl.h"
 #include "add-load-save.h"
-#include "../../src/ds-player.h"
+#include "../../src/player.h"
 #include "../../src/ds-load-save.h"
 #include "../font.h"
 #include "../sprite.h"
