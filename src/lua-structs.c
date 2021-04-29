@@ -125,21 +125,29 @@ static int start_game (lua_State *l) {
     return 0;
 }
 
-static const struct luaL_Reg entity_lib [] = {
+static const struct luaL_Reg sol_lib [] = {
     //{"new", entity_new},
-    {"load_player", load_player},
     {"create_region", create_region},
+    {"load_player", load_player},
     {"set_region", set_region},
     {"open_gff", open_gff},
     {"start_game", start_game},
     {NULL, NULL}
 };
 
+extern const struct luaL_Reg* lua_struct_get_funcs() {
+    return sol_lib;
+}
+
 static int entity_get(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
     entity_t *dude = get_userdata(l, -3);
 
     //printf("indexing '%s' of object %p\n", str, dude);
+    if (!dude) {
+        lua_pushnil(l);
+        return 1;
+    }
     GET_STRING_TABLE(dude, name);
     GET_INTEGER_TABLE(dude, size);
     GET_INTEGER_TABLE(dude, race);
@@ -481,9 +489,9 @@ static void setup_metatable(lua_State *l, const char *name, const luaL_Reg *meth
 }
 
 extern void lua_struct_register(lua_State *l) {
-    lua_newtable(l);
-    luaL_setfuncs(l, entity_lib, 0);
-    lua_setglobal(l, "soloscuro");
+    //lua_newtable(l);
+    //luaL_setfuncs(l, sol_lib, 0);
+    //lua_setglobal(l, "soloscuro");
 
     setup_metatable(l, "soloscuro.entity", entity_methods, "entity__");
     setup_metatable(l, "soloscuro.stats", stats_methods, "stats__");

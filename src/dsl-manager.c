@@ -5,7 +5,7 @@
 #include "port.h"
 #include "dsl-manager.h"
 #include "dsl-lua.h"
-#include "lua-structs.h"
+#include "sol-lua.h"
 #include "ds-state.h"
 #include "gff.h"
 #include "gfftypes.h"
@@ -80,8 +80,7 @@ void dsl_lua_load_scripts() {
     printf("Detected " PRI_SIZET " master GPL files.\n", amt);
     for (i = 0; i < amt; i++) { mas_max = mas_max > ids[i] ? mas_max : ids[i]; }
     mas_max++;
-    mas_scripts = malloc(sizeof(char*) * mas_max);
-    memset(mas_scripts, 0x0, sizeof(char*) * mas_max);
+    mas_scripts = calloc(1, sizeof(char*) * mas_max);
     free(ids);
 
     ids = gff_get_id_list(DSLDATA_GFF_INDEX, GFF_GPL);
@@ -89,8 +88,7 @@ void dsl_lua_load_scripts() {
     printf("Detected " PRI_SIZET " standard GPL files.\n", amt);
     for (i = 0; i < amt; i++) { gpl_max = gpl_max > ids[i] ? gpl_max : ids[i]; }
     gpl_max++;
-    gpl_scripts = malloc(sizeof(char*) * gpl_max);
-    memset(gpl_scripts, 0x0, sizeof(char*) * gpl_max);
+    gpl_scripts = calloc(1, sizeof(char*) * gpl_max);
     free(ids);
 }
 
@@ -115,7 +113,7 @@ uint8_t dsl_lua_execute_script(size_t file, size_t addr, uint8_t is_mas) {
     clua = l = luaL_newstate();
     luaL_openlibs(l);
     dsl_state_register(l);
-    lua_struct_register(l);
+    sol_lua_register(l);
     if (luaL_dostring(l, scripts[file])) {
         error("Error: unable to load %s script " PRI_SIZET ":" PRI_SIZET "\n",
             is_mas ? "MAS" : "GPL",
@@ -147,7 +145,15 @@ void dsl_execute_string(const char *str) {
             error("%s\n", lua_tostring(clua, -1));
         }
     } else {
-        error("Unable to execute '%s', no lua context!\n", str);
+        lua_State *l = luaL_newstate();
+        luaL_openlibs(l);
+        dsl_state_register(l);
+        sol_lua_register(l);
+        if (luaL_dostring(l, str)) {
+            error("Unable to execute '%s'!\n", str);
+            error("%s\n", lua_tostring(clua, -1));
+        }
+        lua_close(l);
     }
 }
 
@@ -163,6 +169,7 @@ void dsl_manager_cleanup() {
         }
         free(mas_scripts);
     }
+    mas_scripts = NULL;
 
     if (gpl_scripts) {
         for (i = 0; i < gpl_max; i++) {
@@ -173,6 +180,7 @@ void dsl_manager_cleanup() {
         }
         free(gpl_scripts);
     }
+    gpl_scripts = NULL;
 
     dsl_state_cleanup();
 }
