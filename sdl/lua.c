@@ -8,6 +8,7 @@
 #include "screens/inventory.h"
 #include "../src/lua-inc.h"
 #include "../src/lua-structs.h"
+#include "../src/sol-lua.h"
 
 static lua_State *ui_lua = NULL;
 static void ui_lua_state_register(lua_State *l);
@@ -23,7 +24,7 @@ static void ui_lua_run(const char *filename, const char *name) {
     luaL_openlibs(ui_lua);
 
     ui_lua_state_register(ui_lua);
-    lua_struct_register(ui_lua);
+    sol_lua_register(ui_lua);
 
     if (luaL_loadfile(ui_lua, filename)) {
         error("unable to open '%s'.\n", filename);
@@ -96,7 +97,8 @@ static void load_game() {
 extern int ui_lua_load_preload(const char *filename) {
     ui_lua = luaL_newstate();
     luaL_openlibs(ui_lua);
-    lua_struct_register(ui_lua);
+    //lua_struct_register(ui_lua);
+    sol_lua_register(ui_lua);
 
     if (luaL_loadfile(ui_lua, "solconfig.lua")) {
         write_generic_settings();
@@ -150,114 +152,7 @@ extern void ui_lua_close() {
     }
 }
 
-static int uil_toggle_inventory(lua_State *l) {
-    screen_toggle_screen(main_get_rend(), &inventory_screen, 0, 0);
-    return 0;
-}
-
-static int lua_return_bool(lua_State *l, int ret) {
-    if (!ret) {
-        lua_pushboolean(l, 0);
-        return 1;
-    }
-
-    lua_pushboolean(l, 1);
-    return 1;
-}
-
-static int uil_load_charsave(lua_State *l) {
-    lua_Integer slot = luaL_checkinteger(l, 1);
-    lua_Integer id = luaL_checkinteger(l, 2);
-
-    if (!ds_load_character_charsave(slot, id)) {
-        lua_pushboolean(l, 0);
-        return 1;
-    }
-
-    player_load(slot, main_get_zoom());
-    player_load_graphics(slot);
-    lua_pushboolean(l, 1);
-    return 1;
-}
-
-static int uil_load_region(lua_State *l) {
-    return lua_return_bool(l,
-        screen_load_region(main_get_rend(), luaL_checkinteger(l, 1)));
-}
-
-static int uil_set_player_frame_delay(lua_State *l) {
-    player_set_delay(luaL_checkinteger(l, 1));
-    return 0;
-}
-
-static int uil_set_player_move(lua_State *l) {
-    player_set_move(luaL_checkinteger(l, 1));
-    return 0;
-}
-
-static int uil_player_move(lua_State *l) {
-    player_move(luaL_checkinteger(l, 1));
-    return 0;
-}
-
-static int uil_player_unmove(lua_State *l) {
-    player_unmove(luaL_checkinteger(l, 1));
-    return 0;
-}
-
-static int uil_set_xscroll(lua_State *l) {
-    main_set_xscroll(luaL_checkinteger(l, 1));
-    return 0;
-}
-
-static int uil_set_yscroll(lua_State *l) {
-    main_set_yscroll(luaL_checkinteger(l, 1));
-    return 0;
-}
-
-static int uil_set_ignore_repeat(lua_State *l) {
-    main_set_ignore_repeat(lua_toboolean(l, 1));
-    return 0;
-}
-
-static int uil_set_quiet(lua_State *l) {
-    dsl_set_quiet(luaL_checkinteger(l, 1));
-    return 0;
-}
-
-static int uil_load_directory(lua_State *l) {
-    const char *str = luaL_checkstring(l, 1);
-    printf("str = %s\n", str);
-    gff_load_directory(str);
-    return 0;
-}
-
-extern void browse_loop(SDL_Surface*, SDL_Renderer *rend);
-static int uil_run_browser(lua_State *l) {
-    browse_loop(main_get_screen(), main_get_rend());
-    return 0;
-}
-
-static int uil_exit_game(lua_State *l) {
-    main_exit_game();
-    return 0;
-}
-
 static const struct luaL_Reg ds_funcs[] = {
-    {"load_charsave", uil_load_charsave},
-    {"load_region", uil_load_region},
-    {"set_player_frame_delay", uil_set_player_frame_delay},
-    {"set_player_move", uil_set_player_move},
-    {"set_xscroll", uil_set_xscroll},
-    {"set_yscroll", uil_set_yscroll},
-    {"player_move", uil_player_move},
-    {"player_unmove", uil_player_unmove},
-    {"toggle_inventory", uil_toggle_inventory},
-    {"set_ignore_repeat", uil_set_ignore_repeat},
-    {"set_quiet", uil_set_quiet},
-    {"load_directory", uil_load_directory},
-    {"run_browser", uil_run_browser},
-    {"exit_game", uil_exit_game},
     {NULL, NULL},
 };
 

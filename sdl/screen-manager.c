@@ -10,6 +10,8 @@
 #include "../src/dsl.h"
 #include "../src/player.h"
 #include "../src/region.h"
+#include "../src/port.h"
+#include "screens/inventory.h"
 
 #define MAX_SCREENS (10)
 
@@ -80,6 +82,12 @@ void screen_toggle_screen(SDL_Renderer *renderer, sops_t *the_screen, const uint
     screen_pop();
 }
 
+extern void port_toggle_screen(const screen_t screen) {
+    switch (screen) {
+        case SCREEN_INV: screen_toggle_screen(main_get_rend(), &inventory_screen, 0, 0); break;
+    }
+}
+
 void screen_push_screen(SDL_Renderer *renderer, sops_t *screen, const uint32_t x, const uint32_t y) {
     for (uint32_t i = 0; i < screen_pos; i++) {
         if (screens[i].render == screen->render) { return; }
@@ -93,6 +101,10 @@ void port_change_region(region_t *reg) {
     for (int i = 0; i < MAX_PCS; i++) {
         player_load(i, main_get_zoom());
     }
+}
+
+int port_load_region(const int region) {
+    return screen_load_region(main_get_rend(), region);
 }
 
 int screen_load_region(SDL_Renderer *renderer, const int region) {

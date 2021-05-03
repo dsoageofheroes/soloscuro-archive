@@ -236,6 +236,10 @@ extern void player_condense() {
     }
 }
 
+extern void port_player_load(const int slot) {
+    player_load(slot, main_get_zoom());
+    player_load_graphics(slot);
+}
 
 void player_load(const int slot, const float zoom) {
     load_character_sprite(main_get_rend(), slot, zoom);

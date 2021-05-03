@@ -28,7 +28,7 @@ void test_basic(void) {
 const char basic_test[] = 
     "soloscuro.load_charsave(0, 15) -- load character from charsave.gff\n"
     "soloscuro.load_charsave(1, 16) -- load character from charsave.gff\n"
-    //"soloscuro.set_ignore_repeat(true) -- set to false if you want repeats\n"
+    "soloscuro.set_ignore_repeat(true) -- set to false if you want repeats\n"
     "e = soloscuro.load_player(0)\n"
     "print (e.name)\n"
     //"e.mapx = 33\n"

@@ -23,6 +23,7 @@
 #include "../src/region-manager.h"
 #include "../src/ds-load-save.h"
 #include "../src/player.h"
+#include "../src/port.h"
 
 void browse_loop(SDL_Surface*, SDL_Renderer *rend);
 void screen_debug_init(SDL_Surface *sur, SDL_Renderer *rend, const char *arg);
@@ -523,4 +524,18 @@ void main_exit_system() {
     /*
     */
     game_loop_signal(WAIT_FINAL, 0);
+}
+
+extern void port_set_config(game_config_t gc, ssize_t val) {
+    switch(gc) {
+        case CONFIG_REPEAT: main_set_ignore_repeat(val); break;
+        case CONFIG_XSCROLL: main_set_xscroll(val); break;
+        case CONFIG_YSCROLL: main_set_yscroll(val); break;
+        case CONFIG_PLAYER_FRAME_DELAY: player_set_delay(val); break;
+        case CONFIG_PLAYER_SET_MOVE: player_set_move(val); break;
+        case CONFIG_PLAYER_MOVE: player_move(val); break;
+        case CONFIG_PLAYER_UNMOVE: player_unmove(val); break;
+        case CONFIG_SET_QUIET: dsl_set_quiet(val); break;
+        case CONFIG_EXIT: main_exit_game(); break;
+    }
 }

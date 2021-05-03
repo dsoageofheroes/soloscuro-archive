@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include "region.h"
+#include "port.h"
 #include "gff-image.h"
 
 void game_loop_signal(int signal, int _accum) {
@@ -69,4 +70,17 @@ extern void port_play_sound_effect(const uint16_t id) {
 }
 
 extern void port_start() {
+}
+
+extern void port_set_config(game_config_t gc, ssize_t val) {
+}
+
+extern void port_player_load(const int slot) {
+}
+
+extern void port_toggle_screen(const screen_t screen) {
+}
+
+extern int port_load_region(const int region) {
+    return 1;
 }

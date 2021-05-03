@@ -53,7 +53,29 @@ extern void port_change_region(region_t *reg);
 extern void port_combat_action(entity_action_t *ca);
 extern void port_load_item(item_t *item);
 extern void port_free_item(item_t *item);
+extern void port_player_load(const int slot);
+extern int port_load_region(const int region);
 
 extern void port_start();
+
+typedef enum game_config_e {
+    CONFIG_REPEAT,
+    CONFIG_XSCROLL,
+    CONFIG_YSCROLL,
+    CONFIG_PLAYER_FRAME_DELAY,
+    CONFIG_PLAYER_SET_MOVE,
+    CONFIG_PLAYER_MOVE,
+    CONFIG_PLAYER_UNMOVE,
+    CONFIG_SET_QUIET,
+    CONFIG_EXIT,
+} game_config_t;
+
+extern void port_set_config(game_config_t gc, ssize_t val);
+
+typedef enum screen_e {
+    SCREEN_INV,
+} screen_t;
+
+extern void port_toggle_screen(const screen_t screen);
 
 #endif
