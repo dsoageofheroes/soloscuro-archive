@@ -22,6 +22,6 @@ uint16_t player_get_sprite(const int slot);
 entity_t* player_get_entity(const int slot);
 extern void player_condense();
 
-enum{PLAYER_UP = 0x01, PLAYER_DOWN = 0x02, PLAYER_LEFT = 0x04, PLAYER_RIGHT = 0x08};
+//enum{PLAYER_UP = 0x01, PLAYER_DOWN = 0x02, PLAYER_LEFT = 0x04, PLAYER_RIGHT = 0x08};
 
 #endif

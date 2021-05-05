@@ -7,7 +7,7 @@ SDL_OBJS += $(wildcard sdl/obj/screens/*o)
 POWER_LIB = src/powers/obj/*
 LIB_EXT   = so
 CFLAGS    = -g -O2 -I src/ -I ext/ -L./ -Werror -Wall -llua5.3 -lxmimidi -lm -O2 -DDEBUG=1 -fPIC 
-CFLAGS    += -ggdb -fsanitize=address -fno-omit-frame-pointer 
+CFLAGS    += -ggdb -fsanitize=address -fno-omit-frame-pointer
 SDL_FLAGS = -g -O2 -I src/ -I sdl/ -I ext/ -L./ -Llibs/linux/ -Werror -Wall -llua5.3 -lxmimidi -lm -O2 -DDEBUG=1  -lSDL2_ttf -lADLMIDI -lsndfile
 LUA_LIB   = -llua5.3
 

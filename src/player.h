@@ -15,4 +15,6 @@ extern entity_t* player_get_active();
 extern int player_get_slot(entity_t *entity);
 extern void player_free(const int slot);
 
+enum{PLAYER_UP = 0x01, PLAYER_DOWN = 0x02, PLAYER_LEFT = 0x04, PLAYER_RIGHT = 0x08};
+
 #endif

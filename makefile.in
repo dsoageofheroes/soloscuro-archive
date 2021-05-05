@@ -8,8 +8,10 @@ ALL_SOURCES := $(shell find src/ -name '*.c')
 TEST_OBJS  = $(SRCS:src/%.c=obj-test/%.o)
 TEST_OBJS  += $(SPELL_OBJS)
 TEST_OBJS  += obj/spng.o
+CFLAGS    += -ggdb -fsanitize=address -fno-omit-frame-pointer 
 
 .PRECIOUS: *.o
+.SECONDARY: $(TEST_OBJS)
 
 all: obj $(EXEC) libds.so
 
@@ -34,7 +36,7 @@ obj/%.o : src/%.c $(DEPS)
 	$(CC) -c $(CFLAGS) $< -o $@
 
 obj-test/%.o: src/%.c $(DEPS)
-	$(CC) -g -I ext/ -fprofile-arcs -ftest-coverage -c $< -o $@
+	$(CC) $(CFLAGS) -g -I ext/ -fprofile-arcs -ftest-coverage -c $< -o $@
 
 obj/spells:
 	mkdir -p obj/spells
@@ -50,14 +52,11 @@ gff-inspector: $(OBJS) tools/gff-inspector.c
 bin:
 	mkdir -p bin
 
-lua-test: libds.so bin
-	$(CC) $(CFLAGS) test/lua-test.c -o bin/lua-test -lds -llua5.3
-
 coverage:
 	mkdir -p coverage
 
 %test: bin libxmimidi.so coverage $(TEST_OBJS) obj-test POWERS
-	$(CC) -fprofile-arcs -ftest-coverage -I ext/ -I src/ -g obj-test/*.o src/powers/obj/* test/$@.c test/base.c test/unity.c -o bin/$@ -L ./ -llua5.3 -lxmimidi obj/spng.o -lm -lz
+	$(CC) $(CFLAGS) -fprofile-arcs -ftest-coverage -I ext/ -I src/ -g obj-test/*.o src/powers/obj/* test/$@.c test/base.c test/unity.c -o bin/$@ -L ./ -llua5.3 -lxmimidi obj/spng.o -lm -lz
 	LD_LIBRARY_PATH=./ bin/$@
 	mv *gcda coverage/
 	mv *gcno coverage/

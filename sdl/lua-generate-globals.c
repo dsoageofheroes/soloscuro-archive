@@ -3,7 +3,7 @@
 
 #define BUF_MAX (128)
 
-extern void uil_set_globals(lua_State *l) {
+extern void port_set_lua_globals(lua_State *l) {
     char buf[BUF_MAX];
     snprintf(buf, BUF_MAX, "DSLK_RETURN = %d", SDLK_RETURN); luaL_dostring(l, buf);
     snprintf(buf, BUF_MAX, "DSLK_ESCAPE = %d", SDLK_ESCAPE); luaL_dostring(l, buf);

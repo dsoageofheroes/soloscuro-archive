@@ -9,6 +9,7 @@
 #include "region.h"
 #include "combat.h"
 #include "gff.h"
+#include "lua-inc.h"
 
 #ifdef _WIN32
 #  ifdef _WIN64
@@ -68,6 +69,7 @@ typedef enum game_config_e {
     CONFIG_PLAYER_UNMOVE,
     CONFIG_SET_QUIET,
     CONFIG_EXIT,
+    CONFIG_RUN_BROWSER,
 } game_config_t;
 
 extern void port_set_config(game_config_t gc, ssize_t val);
@@ -77,5 +79,6 @@ typedef enum screen_e {
 } screen_t;
 
 extern void port_toggle_screen(const screen_t screen);
+extern void port_set_lua_globals(lua_State *l);
 
 #endif

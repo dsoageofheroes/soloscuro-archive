@@ -26,10 +26,10 @@
 
 -- DOWN: NO MODIFIERS
 KEYS_NOMODS_DOWN				= {}
-KEYS_NOMODS_DOWN[DSLK_l]			= function() ds.toggle_inventory() end
-KEYS_NOMODS_DOWN[DSLK_h]			= function() ds.player_move(PLAYER_LEFT) end
-KEYS_NOMODS_DOWN[DSLK_KP_8]			= function() ds.set_yscroll(-5) end
-KEYS_NOMODS_DOWN[DSLK_ESCAPE]			= function() ds.exit_game() key_handled = true end
+KEYS_NOMODS_DOWN[DSLK_l]			= function() soloscuro.toggle_inventory() end
+KEYS_NOMODS_DOWN[DSLK_h]			= function() soloscuro.player_move(PLAYER_LEFT) end
+KEYS_NOMODS_DOWN[DSLK_KP_8]			= function() soloscuro.set_yscroll(-5) end
+KEYS_NOMODS_DOWN[DSLK_ESCAPE]			= function() soloscuro.exit_game() key_handled = true end
 
 
 -- DOWN: ALT
@@ -38,7 +38,7 @@ KEYS_ALT_DOWN					= {}
 
 -- DOWN: CTRL
 KEYS_CTRL_DOWN					= {}
-KEYS_CTRL_DOWN[DSLK_o]				= function() ds.toggle_inventory() end
+KEYS_CTRL_DOWN[DSLK_o]				= function() soloscuro.toggle_inventory() end
 
 
 -- DOWN: SHIFT
@@ -59,8 +59,8 @@ KEYS_ALT_CTRL_SHIFT_DOWN			= {}
 
 -- UP: NO MODIFIERS
 KEYS_NOMODS_UP					= {}
-KEYS_NOMODS_UP[DSLK_h]				= function() ds.player_unmove(PLAYER_LEFT) end
-KEYS_NOMODS_UP[DSLK_KP_8]			= function() ds.set_yscroll(0) end
+KEYS_NOMODS_UP[DSLK_h]				= function() soloscuro.player_unmove(PLAYER_LEFT) end
+KEYS_NOMODS_UP[DSLK_KP_8]			= function() soloscuro.set_yscroll(0) end
 
 
 -- UP: ALT
@@ -69,7 +69,7 @@ KEYS_ALT_UP					= {}
 
 -- UP: CTRL
 KEYS_CTRL_UP					= {}
-KEYS_CTRL_UP[DSLK_o]				= function() ds.toggle_inventory() end
+KEYS_CTRL_UP[DSLK_o]				= function() soloscuro.toggle_inventory() end
 
 
 -- UP: SHIFT

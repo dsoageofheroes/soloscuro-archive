@@ -1,7 +1,6 @@
 #include <SDL2/SDL.h>
 #include <stdio.h>
 #include "map.h"
-#include "uil.h"
 #include "audio.h"
 #include "font.h"
 #include "player.h"
@@ -24,6 +23,7 @@
 #include "../src/ds-load-save.h"
 #include "../src/player.h"
 #include "../src/port.h"
+#include "../src/sol-lua.h"
 
 void browse_loop(SDL_Surface*, SDL_Renderer *rend);
 void screen_debug_init(SDL_Surface *sur, SDL_Renderer *rend, const char *arg);
@@ -133,7 +133,7 @@ void handle_input() {
             case SDL_KEYUP:
                 if (ignore_repeat && event.key.repeat != 0) { break; }
                 if (textbox_handle_keyup(textbox, event.key.keysym)) { return; }
-                if (ui_lua_keyup(event.key.keysym.sym)) { break; }
+                if (sol_lua_keyup(event.key.keysym.sym)) { break; }
                 if (event.key.keysym.sym == SDLK_s) { player_unmove(PLAYER_LEFT); }
                 if (event.key.keysym.sym == SDLK_e) { player_unmove(PLAYER_UP); }
                 if (event.key.keysym.sym == SDLK_f) { player_unmove(PLAYER_RIGHT); }
@@ -163,7 +163,7 @@ void handle_input() {
             case SDL_KEYDOWN:
                 if (ignore_repeat && event.key.repeat != 0) { break; }
                 if (textbox_handle_keydown(textbox, event.key.keysym)) { return; }
-                if (ui_lua_keydown(event.key.keysym.sym)) { break; }
+                if (sol_lua_keydown(event.key.keysym.sym)) { break; }
                 if (event.key.keysym.sym == SDLK_ESCAPE) {
                     game_loop_signal(WAIT_FINAL, 0);
                 }
@@ -291,7 +291,7 @@ static void gui_init() {
 }
 
 static void cleanup() {
-    ui_lua_close();
+    sol_lua_close();
     // Order matters.
     audio_cleanup();
     player_close();
@@ -334,7 +334,7 @@ static void init(int args, char *argv[]) {
 
     for (int i = 0; i < args; i++) {
         if (!strcmp(argv[i], "--lua") && i < (args - 1)) {
-            ui_lua_load(argv[i + 1]);
+            sol_lua_load(argv[i + 1]);
             exit(0);
         }
     }
@@ -386,7 +386,7 @@ static void init(int args, char *argv[]) {
         }
     }
 
-    if (run_lua && ui_lua_load("lua/main.lua") ) {
+    if (run_lua && sol_lua_load("lua/main.lua") ) {
         printf("Init being handled by lua.\n");
         return;
     }
@@ -418,7 +418,7 @@ int main(int argc, char *argv[]) {
 
     // Order matters.
     gff_init();
-    ui_lua_load_preload("lua/settings.lua");
+    sol_lua_load_preload("lua/settings.lua");
     if (gff_get_game_type() == DARKSUN_UNKNOWN) {
         if (!ds1_gffs) {
             error("Unable to get the location of the DarkSun 1 GFFs, please pass with '--ds1 <location>'\n");
@@ -521,8 +521,6 @@ void game_loop() {
 }
 
 void main_exit_system() {
-    /*
-    */
     game_loop_signal(WAIT_FINAL, 0);
 }
 
@@ -537,5 +535,6 @@ extern void port_set_config(game_config_t gc, ssize_t val) {
         case CONFIG_PLAYER_UNMOVE: player_unmove(val); break;
         case CONFIG_SET_QUIET: dsl_set_quiet(val); break;
         case CONFIG_EXIT: main_exit_game(); break;
+        case CONFIG_RUN_BROWSER: main_set_browser_mode(); break;
     }
 }
