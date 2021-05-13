@@ -335,6 +335,8 @@ static void init(int args, char *argv[]) {
     for (int i = 0; i < args; i++) {
         if (!strcmp(argv[i], "--lua") && i < (args - 1)) {
             sol_lua_load(argv[i + 1]);
+            cleanup();
+            replay_cleanup();
             exit(0);
         }
     }

@@ -290,4 +290,5 @@ void player_close() {
     for (int i = 0; i < MAX_PCS; i++) {
         free_sprites(i);
     }
+    player_cleanup();
 }

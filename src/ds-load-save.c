@@ -229,7 +229,6 @@ static int load_player(const int id, const int player, const int res_id) {
     char buf[BUF_MAX];
     rdff_header_t *rdff;
     size_t offset = 0;
-    int num_items;
     dude_t *dude = NULL;
     gff_chunk_header_t chunk = gff_find_chunk_header(id, GFF_CHAR, res_id);
     if (gff_read_chunk(id, &chunk, &buf, sizeof(buf)) < 34) { return 0; }
@@ -242,7 +241,6 @@ static int load_player(const int id, const int player, const int res_id) {
     entity_load_from_gff(dude, id, player, res_id);
 
     rdff = (rdff_disk_object_t*) (buf);
-    num_items = rdff->blocknum - 2;
     offset += sizeof(rdff_disk_object_t);
     if (rdff->type == COMBAT_OBJECT) {
         warn("Combat object encountered in save. Ignoring.\n");
@@ -264,19 +262,6 @@ static int load_player(const int id, const int player, const int res_id) {
     if (rdff->type == ENTITY_NAME) {
         offset += sizeof(rdff_disk_object_t);
         dude->name = strdup(buf + offset);
-        offset += rdff->len;
-    }
-
-    for (int i = 0; i < num_items; i++) {
-        rdff = (rdff_disk_object_t*) (buf + offset);
-        offset += sizeof(rdff_disk_object_t);
-        if (rdff->type == ITEM_OBJECT ) {
-            int slot = ((ds1_item_t*)(buf + offset))->slot;
-            item_convert_from_ds1(dude->inv + slot, (ds1_item_t*)(buf + offset));
-        }else if (rdff->type == FULL_ITEM_OBJECT) {
-            int slot = rdff->index;
-            item_load_from(dude->inv + slot, buf + offset);
-        }
         offset += rdff->len;
     }
 

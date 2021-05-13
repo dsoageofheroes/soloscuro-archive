@@ -121,7 +121,8 @@ extern void item_free_inventory(item_t *inv) {
     item_t *items = (item_t*)inv;
 
     for (int i = 0; i < 26; i++) {
-        if (items[i].ds_id) {
+        //if (items[i].ds_id) {
+        if (items[i].sprite.data) {
             port_free_item(items + i);
         }
     }
