@@ -409,7 +409,7 @@ int view_character_handle_mouse_up(const uint32_t button, const uint32_t x, cons
         for (int i = 0; i < 4; i++) {
             if (sprite_in_rect(ports[i], x, y)) {
                 slot_clicked = i;
-                screen_push_screen(rend, &popup_screen, 100, 75);
+                window_push(rend, &popup_window, 100, 75);
                 popup_set_message("INACTIVE CHARACTER");
                 popup_set_option(0, "NEW");
                 popup_set_option(1, "ADD");
@@ -428,7 +428,7 @@ int view_character_handle_mouse_up(const uint32_t button, const uint32_t x, cons
             if (power_to_display) {
                 mouse_set_as_power(power_to_display);
                 power_to_display = NULL;
-                screen_pop();
+                window_pop();
                 return 1;
             }
         }
@@ -438,9 +438,9 @@ int view_character_handle_mouse_up(const uint32_t button, const uint32_t x, cons
     sprite_set_frame(powers, 0);
     sprite_set_frame(status, 0);
 
-    if (sprite_in_rect(game_return, x, y)) { screen_pop(); } 
+    if (sprite_in_rect(game_return, x, y)) { window_pop(); } 
     if (sprite_in_rect(character, x, y)) { mode = 0; }
-    if (sprite_in_rect(inv, x, y)) { screen_push_screen(rend, &inventory_screen, 0, 0); }
+    if (sprite_in_rect(inv, x, y)) { window_push(rend, &inventory_window, 0, 0); }
     if (sprite_in_rect(powers, x, y)) { mode = 2; }
     if (sprite_in_rect(status, x, y)) { mode = 3; }
 
@@ -486,14 +486,14 @@ void view_character_return_control () {
     if (last_selection == SELECT_POPUP) {
         if (popup_get_selection() == POPUP_0) { // new
             popup_clear_selection();
-            screen_push_screen(rend, &new_character_screen, 0, 0);
+            window_push(rend, &new_character_window, 0, 0);
             last_selection = SELECT_NEW;
             return;
         }
         if (popup_get_selection() == POPUP_1) { // ADD
             popup_clear_selection();
             add_load_save_set_mode(ACTION_ADD);
-            screen_push_screen(rend, &als_screen, 0, 0);
+            window_push(rend, &als_window, 0, 0);
             last_selection = SELECT_ALS;
             return;
         }
@@ -508,7 +508,7 @@ void view_character_return_control () {
                 warn ("TODO: Add back character creation!\n");
                 //gff_char_add_character(pc, psi, spells, psionics, name);
             } else {
-                screen_push_screen(rend, &popup_screen, 100, 75);
+                window_push(rend, &popup_window, 100, 75);
                 popup_set_message("Character was invalid.");
                 popup_set_option(0, "TRY AGAIN");
                 popup_set_option(1, "ADD");
@@ -531,7 +531,7 @@ void view_character_return_control () {
     last_selection = SELECT_NONE;
 }
 
-sops_t view_character_screen = {
+wops_t view_character_window = {
     .init = view_character_init,
     .cleanup = view_character_free,
     .render = view_character_render,

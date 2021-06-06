@@ -84,7 +84,7 @@ static uint16_t view_sprite_create(SDL_Renderer *renderer, gff_palette_t *pal,
     return sprite_create(renderer, &tmp, pal, 0, 0, zoom, gff_idx, type_id, res_id);
 }
 
-void inventory_screen_init(SDL_Renderer *renderer, const uint32_t _xoffset, const uint32_t _yoffset) {
+void inventory_window_init(SDL_Renderer *renderer, const uint32_t _xoffset, const uint32_t _yoffset) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     rend = renderer;
     const float zoom = main_get_zoom();
@@ -290,7 +290,7 @@ static void render_backpack_slot(const int slot, const int frame, const int x, c
     }
 }
 
-void inventory_screen_render(void *data, SDL_Renderer *renderer) {
+void inventory_window_render(void *data, SDL_Renderer *renderer) {
     const float zoom = main_get_zoom();
 
     description[0] = '\0';
@@ -412,7 +412,7 @@ static int get_sprite_mouse_is_on(const uint32_t x, const uint32_t y) {
     return SPRITE_ERROR;
 }
 
-int inventory_screen_handle_mouse_movement(const uint32_t x, const uint32_t y) {
+int inventory_window_handle_mouse_movement(const uint32_t x, const uint32_t y) {
     static uint16_t last_sprite = SPRITE_ERROR;
 
     uint16_t cur_sprite = get_sprite_mouse_is_on(x, y);
@@ -431,7 +431,7 @@ int inventory_screen_handle_mouse_movement(const uint32_t x, const uint32_t y) {
     return 1;// handle
 }
 
-int inventory_screen_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
+int inventory_window_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
     return 1; // means I captured the mouse click
 }
 
@@ -460,14 +460,14 @@ static void clicked_slot(const int slot) {
     }
 }
 
-int inventory_screen_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
+int inventory_window_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
     const float zoom = main_get_zoom();
 
     for (int i = 0; i < 4; i++) {
         if (sprite_in_rect(ports[i], x, y)) {
             if (button == SDL_BUTTON_RIGHT) {
                 slot_clicked = i;
-                screen_push_screen(rend, &popup_screen, 100, 75);
+                window_push(rend, &popup_window, 100, 75);
                 popup_set_message("INACTIVE CHARACTER");
                 popup_set_option(0, "NEW");
                 popup_set_option(1, "ADD");
@@ -479,7 +479,7 @@ int inventory_screen_handle_mouse_up(const uint32_t button, const uint32_t x, co
         }
     }
 
-    if (sprite_in_rect(game_return, x, y)) { screen_pop(); } 
+    if (sprite_in_rect(game_return, x, y)) { window_pop(); } 
 
     for (int i = 9; i < 23; i++) {
         sprite_set_frame(slots, i);
@@ -503,7 +503,7 @@ int inventory_screen_handle_mouse_up(const uint32_t button, const uint32_t x, co
     return 1; // means I captured the mouse click
 }
 
-void inventory_screen_free() {
+void inventory_window_free() {
     sprite_free(panel);
     sprite_free(frame_message);
     sprite_free(parchment);
@@ -523,17 +523,17 @@ void inventory_screen_free() {
     sprite_free(slots);
 }
 
-void inventory_screen_return_control () {
+void inventory_window_return_control () {
     if (last_selection == SELECT_POPUP) {
         if (popup_get_selection() == POPUP_0) { // new
             popup_clear_selection();
-            screen_push_screen(rend, &new_character_screen, 0, 0);
+            window_push(rend, &new_character_window, 0, 0);
             last_selection = SELECT_NEW;
             return;
         }
         if (popup_get_selection() == POPUP_1) { // ADD
             popup_clear_selection();
-            screen_push_screen(rend, &als_screen, 0, 0);
+            window_push(rend, &als_window, 0, 0);
             last_selection = SELECT_ALS;
             return;
         }
@@ -549,7 +549,7 @@ void inventory_screen_return_control () {
                 //gff_char_add_character(pc, psi, spells, psionics, name);
                 player_load(slot_clicked, main_get_zoom());
             } else {
-                screen_push_screen(rend, &popup_screen, 100, 75);
+                window_push(rend, &popup_window, 100, 75);
                 popup_set_message("Character was invalid.");
                 popup_set_option(0, "TRY AGAIN");
                 popup_set_option(1, "ADD");
@@ -572,14 +572,14 @@ void inventory_screen_return_control () {
     last_selection = SELECT_NONE;
 }
 
-sops_t inventory_screen = {
-    .init = inventory_screen_init,
-    .cleanup = inventory_screen_free,
-    .render = inventory_screen_render,
-    .mouse_movement = inventory_screen_handle_mouse_movement,
-    .mouse_down = inventory_screen_handle_mouse_down,
-    .mouse_up = inventory_screen_handle_mouse_up,
-    .return_control = inventory_screen_return_control,
+wops_t inventory_window = {
+    .init = inventory_window_init,
+    .cleanup = inventory_window_free,
+    .render = inventory_window_render,
+    .mouse_movement = inventory_window_handle_mouse_movement,
+    .mouse_down = inventory_window_handle_mouse_down,
+    .mouse_up = inventory_window_handle_mouse_up,
+    .return_control = inventory_window_return_control,
     .grey_out_map = 1,
     .data = NULL
 };

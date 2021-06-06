@@ -1,8 +1,8 @@
 main: the initial menu
 map: view a map
-narrate: screen when talking/selecting actions
+narrate: window when talking/selecting actions
 view-character-menu: select a character, view spells, view effect
-chracter-creation-screen: screen to create a character
+chracter-creation-window: window to create a character
 inventory-menu: manipulate inventory of characters
 simple-dialog: The "Exit: save game" menu and others.
 load-save-menu: Select to laod or save a game

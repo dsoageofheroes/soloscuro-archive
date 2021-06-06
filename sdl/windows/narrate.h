@@ -2,7 +2,7 @@
 #define SCRREN_NARRATE_H
 
 #include <SDL2/SDL.h>
-#include "../screen-manager.h"
+#include "../window-manager.h"
 
 void narrate_init(SDL_Renderer *renderer, const uint32_t x, const uint32_t y);
 void narrate_render(void *data, SDL_Renderer *renderer);
@@ -12,6 +12,6 @@ void narrate_clear();
 void narrate_free();
 int narrate_is_open();
 
-extern sops_t narrate_screen;
+extern wops_t narrate_window;
 
 #endif

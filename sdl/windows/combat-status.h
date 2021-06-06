@@ -2,7 +2,7 @@
 #define COMBAT_STATUS_H
 
 #include <SDL2/SDL.h>
-#include "../screen-manager.h"
+#include "../window-manager.h"
 #include "../../src/combat.h"
 
 typedef struct combat_status_s {
@@ -14,6 +14,6 @@ typedef struct combat_status_s {
 
 combat_status_t* combat_status_get();
 
-extern sops_t combat_status_screen;
+extern wops_t combat_status_window;
 
 #endif

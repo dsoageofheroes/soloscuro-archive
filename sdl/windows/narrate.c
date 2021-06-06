@@ -193,7 +193,7 @@ int8_t port_narrate_open(int16_t action, const char *text, int16_t index) {
 }
 
 int narrate_handle_mouse_movement(const uint32_t x, const uint32_t y) {
-    return display; // zero means I did not handle the mouse, so another screen may.
+    return display; // zero means I did not handle the mouse, so another window may.
 }
 
 int narrate_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
@@ -215,7 +215,7 @@ int narrate_handle_mouse_down(const uint32_t button, const uint32_t x, const uin
         }
     }
 
-    return display; // zero means I did not handle the mouse click, so another screen may.
+    return display; // zero means I did not handle the mouse click, so another window may.
 }
 
 void narrate_free() {
@@ -231,7 +231,7 @@ int port_ask_yes_no() {
     return 0;
 }
 
-sops_t narrate_screen = {
+wops_t narrate_window = {
     .init = narrate_init,
     .cleanup = narrate_free,
     .render = narrate_render,

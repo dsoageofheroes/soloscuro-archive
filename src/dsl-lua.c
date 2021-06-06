@@ -1160,12 +1160,12 @@ void dsl_lua_music(void) {
 void dsl_lua_tport(void) {
     dsl_lua_get_parameters(5);
     if ((param.val[0] != PARTY) && (param.val[0] != IS_POV)) {
-        //warn("I need to teleport everything to region %d at (%d, %d) priority: %d, onscreen %d\n",
+        //warn("I need to teleport everything to region %d at (%d, %d) priority: %d, onwindow %d\n",
             //param.val[1], param.val[2], param.val[3], param.val[4], param.val[5]);
         lprintf("dsl.tport_everything( %s, %s, %s, %s, %s)\n",
             lparams.params[1], lparams.params[2], lparams.params[3], lparams.params[4], lparams.params[5]);
     } else {
-        //warn("I need to teleport party to region %d at (%d, %d) priority: %d, onscreen %d\n",
+        //warn("I need to teleport party to region %d at (%d, %d) priority: %d, onwindow %d\n",
             //param.val[1], param.val[2], param.val[3], param.val[4], param.val[5]);
         lprintf("dsl.tport_party( %s, %s, %s, %s, %s)\n",
             lparams.params[1], lparams.params[2], lparams.params[3], lparams.params[4], lparams.params[5]);

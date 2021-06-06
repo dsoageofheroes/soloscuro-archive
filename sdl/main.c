@@ -7,14 +7,14 @@
 #include "../src/lua-inc.h"
 #include "mouse.h"
 #include "textbox.h"
-#include "screen-manager.h"
+#include "window-manager.h"
 #include "gameloop.h"
-#include "screens/narrate.h"
-#include "screens/screen-main.h"
-#include "screens/inventory.h"
-#include "screens/add-load-save.h"
-#include "screens/view-character.h"
-#include "screens/game-menu.h"
+#include "windows/narrate.h"
+#include "windows/window-main.h"
+#include "windows/inventory.h"
+#include "windows/add-load-save.h"
+#include "windows/view-character.h"
+#include "windows/game-menu.h"
 #include "../src/combat.h"
 #include "../src/dsl.h"
 #include "../src/dsl-manager.h"
@@ -26,7 +26,7 @@
 #include "../src/sol-lua.h"
 
 void browse_loop(SDL_Surface*, SDL_Renderer *rend);
-void screen_debug_init(SDL_Surface *sur, SDL_Renderer *rend, const char *arg);
+void window_debug_init(SDL_Surface *sur, SDL_Renderer *rend, const char *arg);
 void export_all_images(const char *filename);
 void export_all_items(const char *base_path);
 void export_all_xmis(const char *base_path);
@@ -34,7 +34,7 @@ void export_all_xmis(const char *base_path);
 static uint32_t last_tick = 0;
 static const uint32_t TICK_AMT = 1000 / TICKS_PER_SEC;// Not fully correct...
 static SDL_Window *win = NULL;
-static SDL_Surface *screen = NULL;
+static SDL_Surface *window = NULL;
 static SDL_Renderer *renderer = NULL;
 static float zoom = 2.0;
 static uint8_t ignore_repeat = 1, browser_mode = 0;
@@ -52,7 +52,7 @@ void main_set_textbox(textbox_t *tb) {
 }
 
 SDL_Renderer *main_get_rend() { return renderer; }
-SDL_Surface *main_get_screen() { return screen; }
+SDL_Surface *main_get_window() { return window; }
 float main_get_zoom() { return zoom; }
 
 extern uint32_t getCameraX() { return xmappos; }
@@ -78,7 +78,7 @@ void handle_mouse_motion() {
 
     SDL_GetMouseState(&x, &y);
 
-    screen_handle_mouse(x, y);
+    window_handle_mouse(x, y);
 }
 
 void handle_mouse_down(uint32_t button) {
@@ -86,7 +86,7 @@ void handle_mouse_down(uint32_t button) {
 
     SDL_GetMouseState(&x, &y);
 
-    screen_handle_mouse_down(button, x, y);
+    window_handle_mouse_down(button, x, y);
 }
 
 void handle_mouse_up(uint32_t button) {
@@ -94,7 +94,7 @@ void handle_mouse_up(uint32_t button) {
 
     SDL_GetMouseState(&x, &y);
 
-    screen_handle_mouse_up(button, x, y);
+    window_handle_mouse_up(button, x, y);
 }
 
 void main_exit_game() {
@@ -152,11 +152,11 @@ void handle_input() {
                 if (event.key.keysym.sym == SDLK_KP_9) { player_directions[9] = 0; }
                 if (event.key.keysym.sym == SDLK_F11) {
                     add_load_save_set_mode(ACTION_SAVE);
-                    screen_push_screen(renderer, &als_screen, 0, 0);
+                    window_push(renderer, &als_window, 0, 0);
                 }
                 if (event.key.keysym.sym == SDLK_F12) {
                     add_load_save_set_mode(ACTION_LOAD);
-                    screen_push_screen(renderer, &als_screen, 0, 0);
+                    window_push(renderer, &als_window, 0, 0);
                 }
                 break;
                 break;
@@ -168,13 +168,13 @@ void handle_input() {
                     game_loop_signal(WAIT_FINAL, 0);
                 }
                 if (event.key.keysym.sym == SDLK_TAB) {
-                    screen_toggle_screen(renderer, &game_menu_screen, 0, 0);
+                    window_toggle(renderer, &game_menu_window, 0, 0);
                 }
                 if (event.key.keysym.sym == SDLK_i) {
-                    screen_toggle_screen(renderer, &inventory_screen, 0, 0);
+                    window_toggle(renderer, &inventory_window, 0, 0);
                 }
                 if (event.key.keysym.sym == SDLK_c) {
-                    screen_toggle_screen(renderer, &view_character_screen, 0, 0);
+                    window_toggle(renderer, &view_character_window, 0, 0);
                 }
                 if (event.key.keysym.sym == SDLK_s) { player_move(PLAYER_LEFT); }
                 if (event.key.keysym.sym == SDLK_e) { player_move(PLAYER_UP); }
@@ -236,7 +236,7 @@ void main_center_on_player() {
 void render() {
     region_tick(region_manager_get_current());
     combat_update(region_manager_get_current());
-    screen_render(renderer, xmappos, ymappos);
+    window_render(renderer, xmappos, ymappos);
 }
 
 // Simple timing for now...
@@ -278,13 +278,13 @@ static void gui_init() {
     }
 
     //Get window surface
-    screen = SDL_GetWindowSurface( win );
+    window = SDL_GetWindowSurface( win );
 
     renderer = SDL_CreateRenderer(win, -1, 0);
 
     last_tick = SDL_GetTicks();
 
-    screen_init(renderer);
+    window_init(renderer);
 }
 
 void port_init() {
@@ -303,14 +303,14 @@ void port_close() {
     // Order matters.
     audio_cleanup();
     player_close();
-    screen_free();
+    window_free();
 
     dsl_cleanup();
     gff_cleanup();
     mouse_free();
 
     SDL_DestroyRenderer(renderer);
-    //SDL_DestroySurface(screen);
+    //SDL_DestroySurface(window);
     SDL_DestroyWindow( win );
 
     //Quit SDL subsystems
@@ -355,19 +355,19 @@ static void init(int args, char *argv[]) {
     audio_init();
 
     if (browser_mode) {
-        browse_loop(screen, renderer);
+        browse_loop(window, renderer);
         exit(1);
     }
 
     for (int i = 0; i < args; i++) {
         if (!strcmp(argv[i], "--browse") && i < (args)) {
             printf("Entering browsing mode!\n");
-            browse_loop(screen, renderer);
+            browse_loop(window, renderer);
             exit(1);
         }
-        if (!strcmp(argv[i], "--screen") && i < (args - 1)) {
-            printf("Entering screen mode!\n");
-            screen_debug_init(screen, renderer, argv[i + 1]);
+        if (!strcmp(argv[i], "--window") && i < (args - 1)) {
+            printf("Entering window mode!\n");
+            window_debug_init(window, renderer, argv[i + 1]);
             return;
         }
         if (!strcmp(argv[i], "--extract-images") && i < (args - 1)) {
@@ -399,7 +399,7 @@ static void init(int args, char *argv[]) {
     ls_load_save_file("save00.sav");
     main_center_on_player();
     // Start the main game.
-    //screen_push_screen(renderer, &main_screen, 0, 0);
+    //window_push(renderer, &main_window, 0, 0);
 }
 
 static char *ds1_gffs = NULL;

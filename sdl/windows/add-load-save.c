@@ -1,5 +1,5 @@
 #include "add-load-save.h"
-#include "screen-main.h"
+#include "window-main.h"
 #include "popup.h"
 #include "../textbox.h"
 #include "../main.h"
@@ -286,7 +286,7 @@ int add_load_save_handle_mouse_down(const uint32_t button, const uint32_t x, con
 static void load_game() {
     char buf[128];
     snprintf(buf, 128, SAVE_FORMAT, selection);
-    screen_clear();
+    window_clear();
     player_close();
     player_init();
     ls_load_save_file(buf);
@@ -326,18 +326,18 @@ int add_load_save_handle_mouse_up(const uint32_t button, const uint32_t x, const
         sprite_set_frame(action_btn, 0);
         if (selection != -1) {
             last_action = mode;
-            screen_pop();
+            window_pop();
         }
     }
     if (sprite_in_rect(exit_btn, x, y)) {
         sprite_set_frame(exit_btn, 0);
-        screen_pop();
+        window_pop();
     }
     if (sprite_in_rect(delete_btn, x, y)) {
         sprite_set_frame(delete_btn, 0);
         if (selection != -1) {
             sprite_set_frame(delete_btn, 3);
-            screen_push_screen(renderer, &popup_screen, 90, 62);
+            window_push(renderer, &popup_window, 90, 62);
             popup_set_message("DELETE THIS PERSON?");
             popup_set_option(0, "YES");
             popup_set_option(1, "NO");
@@ -382,7 +382,7 @@ void add_load_save_free() {
 int add_load_save_get_action() { return last_action; }
 uint32_t add_load_save_get_selection() { return char_selected; }
 
-sops_t als_screen = {
+wops_t als_window = {
     .init = add_load_save_init,
     .cleanup = add_load_save_free,
     .render = add_load_save_render,

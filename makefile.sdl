@@ -1,9 +1,9 @@
 #SDL_SRCS  = $(wildcard sdl/*.c)
-#SDL_SRCS  += $(wildcard sdl/screens/*.c)
+#SDL_SRCS  += $(wildcard sdl/windows/*.c)
 #SDL_DEPS  = $(wildcard sdl/*.h)
 #SDL_OBJS  = $(SDL_SRCS:sdl/%.c=obj/sdl/%.o)
 SDL_OBJS = $(wildcard sdl/obj/*o)
-SDL_OBJS += $(wildcard sdl/obj/screens/*o)
+SDL_OBJS += $(wildcard sdl/obj/windows/*o)
 POWER_LIB = src/powers/obj/*
 LIB_EXT   = so
 CFLAGS    = -g -O2 -I src/ -I ext/ -L./ -Werror -Wall -llua5.3 -lxmimidi -lm -O2 -DDEBUG=1 -fPIC 
@@ -21,11 +21,11 @@ SDL:
 obj/%.o : sdl/%.c $(DEPS) $(SDL_DEPS)
 	$(CC) -c $(CFLAGS) $(SDL_FLAGS) $< -o $@
 
-mdark : obj/screens SDL libds.so libxmimidi.so
+mdark : obj/windows SDL libds.so libxmimidi.so
 	$(CC) $(CFLAGS) $(SDL_FLAGS) $(SDL_OBJS) -o $@ -lds -lSDL2
 
-obj/screens: obj
-	mkdir -p obj/screens
+obj/windows: obj
+	mkdir -p obj/windows
 
 valgrind: mdark
 	LD_LIBRARY_PATH=./ valgrind --gen-suppressions=all --suppressions=./sup/linux_sdl_gl.sup --leak-check=full --show-leak-kinds=all ./mdark --lua lua/test.lua

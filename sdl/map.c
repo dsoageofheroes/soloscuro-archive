@@ -6,8 +6,8 @@
 #include "player.h"
 #include "audio.h"
 #include "mouse.h"
-#include "screens/narrate.h"
-#include "screens/combat-status.h"
+#include "windows/narrate.h"
+#include "windows/combat-status.h"
 #include "../src/dsl.h"
 #include "../src/port.h"
 #include "../src/trigger.h"
@@ -124,9 +124,9 @@ void map_load_region(region_t *reg, SDL_Renderer *renderer) {
     map_load_current_region();
 
     // TODO: NEED TO CLEAR ALL SCREENS
-    screen_push_screen(renderer, &map_screen, 0, 0);
-    screen_push_screen(renderer, &narrate_screen, 0, 0);
-    screen_push_screen(renderer, &combat_status_screen, 295, 5);
+    window_push(renderer, &map_window, 0, 0);
+    window_push(renderer, &narrate_window, 0, 0);
+    window_push(renderer, &combat_status_window, 295, 5);
 }
 
 void map_load_map(SDL_Renderer *renderer, int id) {
@@ -338,7 +338,7 @@ void port_enter_combat() {
     //player_remove_animation();
     // Need to disperse players (and setup combat items.)
     // bring up combat status.
-    //screen_push_screen(main_get_rend(), &combat_status_screen, 295, 5);
+    //window_push_window(main_get_rend(), &combat_status_window, 295, 5);
     dude_t *main_player = player_get_active();
     for (int i = 0; i < 4; i++) {
         dude_t *next_player = player_get(i);
@@ -356,7 +356,7 @@ void port_exit_combat() {
     // condense players.
     player_condense();
     // remove combat status.
-    //screen_pop();
+    //window_pop();
     // assign experience.
 }
 
@@ -518,7 +518,7 @@ extern void port_free_item(item_t *item) {
     item->sprite.data = NULL;
 }
 
-sops_t map_screen = {
+wops_t map_window = {
     .init = NULL,
     .cleanup = map_cleanup,
     .render = map_render,

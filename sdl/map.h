@@ -4,7 +4,7 @@
 #include <SDL2/SDL.h>
 #include "animate.h"
 #include "../src/region.h"
-#include "screen-manager.h"
+#include "window-manager.h"
 
 typedef struct map_s {
     region_t *region;
@@ -27,6 +27,6 @@ int cmap_is_danger(const int row, const int column);
 uint32_t getCameraX();
 uint32_t getCameraY();
 
-extern sops_t map_screen;
+extern wops_t map_window;
 
 #endif

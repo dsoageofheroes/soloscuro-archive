@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "map.h"
 #include "font.h"
-#include "screens/narrate.h"
+#include "windows/narrate.h"
 #include "gameloop.h"
 #include "audio.h"
 #include "../src/dsl.h"

@@ -4,7 +4,7 @@
 #include "../src/combat.h"
 #include "../src/dsl.h"
 #include "sprite.h"
-#include "screens/narrate.h"
+#include "windows/narrate.h"
 #include "../src/trigger.h"
 #include "../src/entity-animation.h"
 #include "../src/port.h"

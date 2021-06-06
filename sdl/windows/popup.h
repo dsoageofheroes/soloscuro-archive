@@ -2,7 +2,7 @@
 #define POPUP_H
 
 #include <SDL2/SDL.h>
-#include "../screen-manager.h"
+#include "../window-manager.h"
 
 enum {
     POPUP_0,
@@ -17,6 +17,6 @@ void popup_set_option(const int idx, const char *msg);
 uint8_t popup_get_selection();
 void popup_clear_selection();
 
-extern sops_t popup_screen;
+extern wops_t popup_window;
 
 #endif

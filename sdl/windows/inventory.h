@@ -2,8 +2,8 @@
 #define SCREEN_INVENTORY_H
 
 #include <SDL2/SDL.h>
-#include "../screen-manager.h"
+#include "../window-manager.h"
 
-extern sops_t inventory_screen;
+extern wops_t inventory_window;
 
 #endif

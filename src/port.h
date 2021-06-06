@@ -81,7 +81,7 @@ typedef enum game_config_e {
 
 extern void port_set_config(game_config_t gc, ssize_t val);
 
-//extern void port_toggle_screen(const screen_t screen);
+extern void port_toggle_window(const window_t window);
 extern void port_set_lua_globals(lua_State *l);
 
 #endif

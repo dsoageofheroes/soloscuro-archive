@@ -2,7 +2,7 @@
 #define ADD_LOAD_SAVE_H
 
 #include <SDL2/SDL.h>
-#include "../screen-manager.h"
+#include "../window-manager.h"
 
 enum {
     ACTION_NONE,
@@ -16,6 +16,6 @@ int add_load_save_get_action();
 uint32_t add_load_save_get_selection();
 void add_load_save_set_mode(int _mode);
 
-extern sops_t als_screen;
+extern wops_t als_window;
 
 #endif

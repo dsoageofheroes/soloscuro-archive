@@ -1,4 +1,4 @@
-#include "screen-main.h"
+#include "window-main.h"
 #include "../main.h"
 #include "../../src/gff.h"
 #include "../../src/gfftypes.h"
@@ -44,13 +44,13 @@ void main_init(SDL_Renderer *_renderer, const uint32_t x, const uint32_t y) {
 
 static void click_action() {
     if (count_down_spr == exit_dos) { main_exit_system(); }
-    if (count_down_spr == create_characters) { screen_push_screen(renderer, &view_character_screen, 0, 10); }
+    if (count_down_spr == create_characters) { window_push(renderer, &view_character_window, 0, 10); }
     if (count_down_spr == start) {
         if(player_get_active()->name) {
-            screen_pop();
-            screen_load_region(renderer, 42);
+            window_pop();
+            window_load_region(renderer, 42);
         } else {
-            screen_push_screen(renderer, &popup_screen, 100, 75);
+            window_push(renderer, &popup_window, 100, 75);
             popup_set_message("CREATE CHARACTER");
             popup_set_option(0, "Ok");
             popup_set_option(1, "");
@@ -59,7 +59,7 @@ static void click_action() {
     }
     if (count_down_spr == load_save) {
         add_load_save_set_mode(ACTION_LOAD);
-        screen_push_screen(renderer, &als_screen, 0, 0);
+        window_push(renderer, &als_window, 0, 0);
     }
 }
 
@@ -114,7 +114,7 @@ int main_handle_mouse_movement(const uint32_t x, const uint32_t y) {
 int main_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
     mouse_down = 1;
     return 1; // means I captured the mouse click
-    //return 0; // zero means I did not handle the mouse click, so another screen may.
+    //return 0; // zero means I did not handle the mouse click, so another window may.
 }
 
 int main_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
@@ -122,7 +122,7 @@ int main_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t
     count_down = 32;
     count_down_spr = get_sprite(x, y);
     return 1; // means I captured the mouse click
-    //return 0; // zero means I did not handle the mouse click, so another screen may.
+    //return 0; // zero means I did not handle the mouse click, so another window may.
 }
 
 void main_free() {
@@ -134,7 +134,7 @@ void main_free() {
     sprite_free(exit_dos);
 }
 
-sops_t main_screen = {
+wops_t main_window = {
     .init = main_init,
     .cleanup = main_free,
     .render = main_render,

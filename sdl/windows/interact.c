@@ -107,12 +107,12 @@ int interact_handle_mouse_movement(const uint32_t x, const uint32_t y) {
 
 int interact_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
     return 1; // means I captured the mouse click
-    //return 0; // zero means I did not handle the mouse click, so another screen may.
+    //return 0; // zero means I did not handle the mouse click, so another window may.
 }
 
 int interact_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
     return 1; // means I captured the mouse click
-    //return 0; // zero means I did not handle the mouse click, so another screen may.
+    //return 0; // zero means I did not handle the mouse click, so another window may.
 }
 
 void interact_free() {
@@ -125,7 +125,7 @@ void interact_free() {
     sprite_free(box);
 }
 
-sops_t interact_screen = {
+wops_t interact_window = {
     .init = interact_init,
     .cleanup = interact_free,
     .render = interact_render,

@@ -2,8 +2,8 @@
 #define GAME_MENU_H
 
 #include <SDL2/SDL.h>
-#include "../screen-manager.h"
+#include "../window-manager.h"
 
-extern sops_t game_menu_screen;
+extern wops_t game_menu_window;
 
 #endif

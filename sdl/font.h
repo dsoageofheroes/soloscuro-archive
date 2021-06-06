@@ -2,7 +2,7 @@
 #define FONT_H
 
 #include <SDL2/SDL.h>
-#include "screen-manager.h"
+#include "window-manager.h"
 
 typedef uint16_t font_t;
 

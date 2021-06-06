@@ -26,7 +26,7 @@ static uint16_t spheres[4];
 static uint16_t ps_sel[4]; // seletion for psionics/spheres.
 static uint16_t die[11];
 static uint16_t races[14];
-static uint16_t spr;// sprite of the character on screen
+static uint16_t spr;// sprite of the character on window
 static uint16_t psionic_label; // 2047
 static uint16_t sphere_label; // 2046
 static uint16_t done_button;
@@ -903,12 +903,12 @@ int new_character_handle_mouse_up(const uint32_t button, const uint32_t x, const
 
     if (last_sprite_mousedowned == done_button && sprite_in_rect(done_button, x, y)) {
         is_valid = 1;
-        screen_pop();
+        window_pop();
     }
 
     if (last_sprite_mousedowned == exit_button && sprite_in_rect(exit_button, x, y)) {
         is_valid = 0;
-        screen_pop();
+        window_pop();
     }
 
     return 1; // handle
@@ -951,7 +951,7 @@ void new_character_free() {
     main_set_textbox(NULL);
 }
 
-sops_t new_character_screen = {
+wops_t new_character_window = {
     .init = new_character_init,
     .cleanup = new_character_free,
     .render = new_character_render,

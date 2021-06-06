@@ -376,19 +376,19 @@ int combat_status_handle_mouse_movement(const uint32_t x, const uint32_t y) {
 
 int combat_status_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
     //return 1; // means I captured the mouse click
-    return 0; // zero means I did not handle the mouse click, so another screen may.
+    return 0; // zero means I did not handle the mouse click, so another window may.
 }
 
 int combat_status_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
     //return 1; // means I captured the mouse click
-    return 0; // zero means I did not handle the mouse click, so another screen may.
+    return 0; // zero means I did not handle the mouse click, so another window may.
 }
 
 void combat_status_free() {
     sprite_free(background);
 }
 
-sops_t combat_status_screen = {
+wops_t combat_status_window = {
     .init = combat_status_init,
     .cleanup = combat_status_free,
     .render = combat_status_render,

@@ -122,7 +122,7 @@ int popup_handle_mouse_down(const uint32_t button, const uint32_t x, const uint3
     if (sprite_in_rect(option[2], x, y)) { return option[2]; }
 
     return 1; // means I captured the mouse click
-    //return 0; // zero means I did not handle the mouse click, so another screen may.
+    //return 0; // zero means I did not handle the mouse click, so another window may.
 }
 
 int popup_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
@@ -132,11 +132,11 @@ int popup_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_
     if (sprite_in_rect(popup_return, x, y)) { selection = POPUP_CANCEL; }
 
     if (selection != POPUP_NOTHING) {
-        screen_pop();
+        window_pop();
     }
 
     return 1; // means I captured the mouse click
-    //return 0; // zero means I did not handle the mouse click, so another screen may.
+    //return 0; // zero means I did not handle the mouse click, so another window may.
 }
 
 void popup_free() {
@@ -150,7 +150,7 @@ void popup_free() {
 uint8_t popup_get_selection() { return selection; }
 void popup_clear_selection() { selection = POPUP_NOTHING; }
 
-sops_t popup_screen = {
+wops_t popup_window = {
     .init = popup_init,
     .cleanup = popup_free,
     .render = popup_render,
