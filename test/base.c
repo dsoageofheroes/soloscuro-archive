@@ -84,3 +84,6 @@ extern void port_toggle_screen(const screen_t screen) {
 extern int port_load_region(const int region) {
     return 1;
 }
+
+extern void port_set_lua_globals(lua_State *l) {
+}

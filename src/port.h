@@ -31,6 +31,10 @@
 #  define PRI_LI "%lld"
 #endif
 
+typedef enum window_e {
+    WINDOW_INVENTORY,
+} window_t;
+
 // Narrate functions
 extern int8_t port_narrate_open(int16_t action, const char *text, int16_t index);
 extern void port_narrate_clear();
@@ -56,8 +60,11 @@ extern void port_load_item(item_t *item);
 extern void port_free_item(item_t *item);
 extern void port_player_load(const int slot);
 extern int port_load_region(const int region);
+extern void port_load_window(const int slot);
 
 extern void port_start();
+extern void port_init();
+extern void port_close();
 
 typedef enum game_config_e {
     CONFIG_REPEAT,
@@ -74,11 +81,7 @@ typedef enum game_config_e {
 
 extern void port_set_config(game_config_t gc, ssize_t val);
 
-typedef enum screen_e {
-    SCREEN_INV,
-} screen_t;
-
-extern void port_toggle_screen(const screen_t screen);
+//extern void port_toggle_screen(const screen_t screen);
 extern void port_set_lua_globals(lua_State *l);
 
 #endif

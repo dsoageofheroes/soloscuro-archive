@@ -4,7 +4,7 @@
 #include "../src/rules.h"
 #include "../src/dsl.h"
 #include "../src/ds-load-save.h"
-#include "../src/ds-player.h"
+#include "../src/player.h"
 #include <string.h>
 #include <stdlib.h>
 

@@ -275,7 +275,7 @@ void port_remove_entity(entity_t *entity) {
         if (anim_nodes[i] && anim_nodes[i]->anim && anim_nodes[i]->anim->entity == entity) {
             animate_list_remove(anim_nodes[i], anim_nodes[i]->anim->entity ? anim_nodes[i]->anim->entity->mapz : 0);
             sprite_free(anims[i].spr);
-            //free(anim_nodes[i]);
+            free(anim_nodes[i]);
             anim_nodes[i] = NULL;
         }
     }

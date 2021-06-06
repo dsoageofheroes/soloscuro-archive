@@ -82,9 +82,9 @@ void screen_toggle_screen(SDL_Renderer *renderer, sops_t *the_screen, const uint
     screen_pop();
 }
 
-extern void port_toggle_screen(const screen_t screen) {
-    switch (screen) {
-        case SCREEN_INV: screen_toggle_screen(main_get_rend(), &inventory_screen, 0, 0); break;
+extern void port_toggle_screen(const window_t window) {
+    switch (window) {
+        case WINDOW_INVENTORY: screen_toggle_screen(main_get_rend(), &inventory_screen, 0, 0); break;
     }
 }
 

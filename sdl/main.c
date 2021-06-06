@@ -254,9 +254,6 @@ void tick() {
     }
 }
 
-void port_init(int argc, char *argv[]) {
-}
-
 void port_cleanup() {
 }
 
@@ -290,8 +287,19 @@ static void gui_init() {
     screen_init(renderer);
 }
 
-static void cleanup() {
-    sol_lua_close();
+void port_init() {
+    audio_init();
+    gui_init();
+
+    font_init(renderer);
+
+    gameloop_init();
+
+    player_init();
+    mouse_init(renderer);
+}
+
+void port_close() {
     // Order matters.
     audio_cleanup();
     player_close();
@@ -309,18 +317,13 @@ static void cleanup() {
     SDL_Quit();
 }
 
+static void cleanup() {
+    port_close();
+    sol_lua_close();
+}
 
 extern void port_start() {
-    audio_init();
-    gui_init();
-
-    font_init(renderer);
-
-    gameloop_init();
-
-    player_init();
-    mouse_init(renderer);
-
+    port_init();
     map_load_region(region_manager_get_current(), renderer);
 
     game_loop();

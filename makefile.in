@@ -18,7 +18,7 @@ all: obj $(EXEC) libds.so
 .PHONY: POWERS
 
 libds.so: obj obj/spells $(OBJS) libxmimidi.so POWERS
-	$(CC) -L./ $(OBJS) $(POWER_LIB) -shared -o libds.$(LIB_EXT) -llua5.3 -lxmimidi
+	$(CC) -L./ $(CFLAGS) $(OBJS) $(POWER_LIB) -shared -o libds.$(LIB_EXT) -llua5.3 -lxmimidi
 
 POWERS:
 	cd src/powers ; CC="$(CC)" CFLAGS="-O2" make
@@ -36,7 +36,7 @@ obj/%.o : src/%.c $(DEPS)
 	$(CC) -c $(CFLAGS) $< -o $@
 
 obj-test/%.o: src/%.c $(DEPS)
-	$(CC) $(CFLAGS) -g -I ext/ -fprofile-arcs -ftest-coverage -c $< -o $@
+	$(CC) $(COVFLAGS) -g -I ext/ -fprofile-arcs -ftest-coverage -c $< -o $@
 
 obj/spells:
 	mkdir -p obj/spells
@@ -56,13 +56,10 @@ coverage:
 	mkdir -p coverage
 
 %test: bin libxmimidi.so coverage $(TEST_OBJS) obj-test POWERS
-	$(CC) $(CFLAGS) -fprofile-arcs -ftest-coverage -I ext/ -I src/ -g obj-test/*.o src/powers/obj/* test/$@.c test/base.c test/unity.c -o bin/$@ -L ./ -llua5.3 -lxmimidi obj/spng.o -lm -lz
+	$(CC) $(COVFLAGS) -I ext/ -I src/ obj-test/*.o src/powers/obj/* test/$@.c test/base.c test/unity.c -o bin/$@ -L ./ -llua5.3 -lxmimidi obj/spng.o -lm -lz
 	LD_LIBRARY_PATH=./ bin/$@
-	mv *gcda coverage/
-	mv *gcno coverage/
-
-%test-lua: bin
-	LD_LIBRARY_PATH=./ lua5.3 test/$@.lua -v
+	lcov --quiet --capture --directory ./ --output-file coverage/$@.info
+	rm *gcno *gcda
 
 engine_clean:
 	cd src/powers ; make clean
@@ -70,3 +67,12 @@ engine_clean:
 
 flip:
 	ls imgs/ | xargs -I {} convert imgs/{} -flip imgs/{}
+
+coverage/base-test.info: bin libxmimidi.so coverage $(TEST_OBJS) obj-test POWERS
+	$(CC) $(COVFLAGS) -I ext/ -I src/ obj-test/*.o src/powers/obj/* test/base-test.c test/base.c test/unity.c -o bin/base-test -L ./ -llua5.3 -lxmimidi obj/spng.o -lm -lz
+	LD_LIBRARY_PATH=./ bin/base-test
+	lcov --capture --directory ./ --output-file coverage/base-test.info
+	rm *gcno *gcda
+
+report: coverage/base-test.info
+	genhtml -b coverage/base-test.info coverage/*info --output-directory out
