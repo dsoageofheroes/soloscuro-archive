@@ -227,6 +227,7 @@ static void render_powers(SDL_Renderer *renderer) {
     label_render(&power_name, renderer);
     label_render(&power_level, renderer);
 
+    return;
     for (int i = 0; i < MAX_POWERS && power_list[i]; i++) {
         animate_sprite_node_t *asn = (animate_sprite_node_t*) power_list[i]->icon.data;
         sprite_set_location(asn->anim->spr, xoffset + (170 + (i % 5) * 20) * zoom,

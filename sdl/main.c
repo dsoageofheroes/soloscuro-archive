@@ -322,11 +322,15 @@ static void cleanup() {
     sol_lua_close();
 }
 
+extern void port_game_loop() {
+    game_loop();
+}
+
 extern void port_start() {
     port_init();
     map_load_region(region_manager_get_current(), renderer);
 
-    game_loop();
+    port_game_loop();
 
     cleanup();
     replay_cleanup();

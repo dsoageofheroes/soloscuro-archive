@@ -78,7 +78,7 @@ extern void port_set_config(game_config_t gc, ssize_t val) {
 extern void port_player_load(const int slot) {
 }
 
-extern void port_toggle_screen(const screen_t screen) {
+extern void port_toggle_screen(const window_t window) {
 }
 
 extern int port_load_region(const int region) {
@@ -86,4 +86,20 @@ extern int port_load_region(const int region) {
 }
 
 extern void port_set_lua_globals(lua_State *l) {
+}
+
+extern void port_toggle_window(const window_t window) {
+}
+
+extern void port_load_window(const window_t window) {
+}
+
+extern void port_game_loop() {
+}
+
+extern void port_init() {
+}
+
+extern uint32_t port_sprite_geth(const uint16_t id) {
+    return id;
 }

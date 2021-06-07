@@ -234,6 +234,10 @@ uint32_t sprite_geth(const uint16_t id) {
     return loc->h;
 }
 
+extern uint32_t port_sprite_geth(const uint16_t id) {
+    return sprite_geth(id);
+}
+
 uint32_t sprite_getw(const uint16_t id) {
     if (!valid_id(id)) { return 0; }
     SDL_Rect *loc = (sprites[id].loc + sprites[id].pos);

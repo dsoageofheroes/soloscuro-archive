@@ -228,14 +228,6 @@ void port_animate_entity(entity_t *dude) {
     if (anim->pos == SCMD_MAX_SIZE) { anim->pos = 0; }
 }
 
-animate_sprite_node_t* animate_sprite_node_create() {
-    animate_sprite_node_t *ret = calloc(1, sizeof(animate_sprite_node_t));
-    if (!ret) { return NULL; }
-    ret->anim = calloc(1, sizeof(animate_sprite_t));
-    if (!ret) { free(ret); return NULL;}
-    return ret;
-}
-
 void animate_sprite_node_free(animate_sprite_node_t *node) {
     if (!node) { return; }
 

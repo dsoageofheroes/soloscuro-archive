@@ -12,6 +12,7 @@
 #include "../src/region.h"
 #include "../src/port.h"
 #include "windows/inventory.h"
+#include "windows/view-character.h"
 
 #define MAX_SCREENS (10)
 
@@ -58,6 +59,13 @@ void window_load(SDL_Renderer *renderer, int layer, wops_t *window, const uint32
     }
 }
 
+extern void port_load_window(const window_t window) {
+    switch (window) {
+        case WINDOW_VIEW: window_toggle(main_get_rend(), &view_character_window, 0, 0); break;
+        case WINDOW_INVENTORY: window_toggle(main_get_rend(), &inventory_window, 0, 0); break;
+    }
+}
+
 void window_toggle(SDL_Renderer *renderer, wops_t *the_window, const uint32_t x, const uint32_t y) {
     uint32_t pos;
     wops_t tmp;
@@ -84,6 +92,7 @@ void window_toggle(SDL_Renderer *renderer, wops_t *the_window, const uint32_t x,
 
 extern void port_toggle_window(const window_t window) {
     switch (window) {
+        case WINDOW_VIEW: window_toggle(main_get_rend(), &view_character_window, 0, 0); break;
         case WINDOW_INVENTORY: window_toggle(main_get_rend(), &inventory_window, 0, 0); break;
     }
 }

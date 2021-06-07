@@ -61,7 +61,7 @@ static int set_yscroll(lua_State *l) {
 }
 
 static int toggle_inventory(lua_State *l) {
-    //port_toggle_screen(SCREEN_INV);
+    port_toggle_window(WINDOW_INVENTORY);
     return 0;
 }
 
@@ -103,7 +103,22 @@ static int load_directory(lua_State *l) {
 
 static int load_window(lua_State *l) {
     const char *str = luaL_checkstring(l, 1);
-    printf("str = '%s'\n", str);
+    static char has_been_initialized = 0;
+
+    if (!has_been_initialized) {
+        port_init();
+        has_been_initialized = 1;
+    }
+
+    if (!strcmp(str, "view")) {
+        port_load_window(WINDOW_VIEW);
+    }
+
+    return 0;
+}
+
+static int game_loop(lua_State *l) {
+    port_game_loop();
     return 0;
 }
 
@@ -126,6 +141,7 @@ static const struct luaL_Reg sol_funcs[] = {
     {"set_quiet", set_quiet},
     {"load_directory", load_directory},
     {"load_window", load_window},
+    {"game_loop", game_loop},
     //{"run_browser", sol_run_browser},
     {"exit_game", exit_game},
     {NULL, NULL},

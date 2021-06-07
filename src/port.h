@@ -32,6 +32,7 @@
 #endif
 
 typedef enum window_e {
+    WINDOW_VIEW,
     WINDOW_INVENTORY,
 } window_t;
 
@@ -60,7 +61,6 @@ extern void port_load_item(item_t *item);
 extern void port_free_item(item_t *item);
 extern void port_player_load(const int slot);
 extern int port_load_region(const int region);
-extern void port_load_window(const int slot);
 
 extern void port_start();
 extern void port_init();
@@ -82,6 +82,9 @@ typedef enum game_config_e {
 extern void port_set_config(game_config_t gc, ssize_t val);
 
 extern void port_toggle_window(const window_t window);
+extern void port_load_window(const window_t window);
 extern void port_set_lua_globals(lua_State *l);
+extern void port_game_loop();
+extern uint32_t port_sprite_geth(const uint16_t id);
 
 #endif

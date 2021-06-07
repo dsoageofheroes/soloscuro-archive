@@ -1,0 +1,2 @@
+#leak:libSDL2-2.0.so
+leak:sdl_init
