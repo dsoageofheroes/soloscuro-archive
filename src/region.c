@@ -236,7 +236,6 @@ extern int region_location_blocked(const region_t *reg, const int32_t x, const i
 }
 
 extern void region_add_entity(region_t *reg, entity_t *entity) {
-    printf("Adding: %s %p %p\n", entity->name, reg, entity);
     if (!reg || !entity) { return; }
     //entity_t * dude = NULL;
 

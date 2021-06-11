@@ -18,25 +18,23 @@
 
 //static animate_sprite_node_t *player_node[MAX_PCS] = {NULL, NULL, NULL, NULL} ;
 static uint32_t get_bmp_idx(const entity_t *dude);
-static int player_zpos;
+//static int player_zpos = 0;
 
 typedef struct player_sprites_s {
     uint16_t main;
     uint16_t port;
 } player_sprites_t;
 
-static player_sprites_t players[MAX_PCS];
+static player_sprites_t players[MAX_PCS] = { 
+    {SPRITE_ERROR, SPRITE_ERROR},
+    {SPRITE_ERROR, SPRITE_ERROR},
+    {SPRITE_ERROR, SPRITE_ERROR},
+    {SPRITE_ERROR, SPRITE_ERROR}};
 
 #define sprite_t uint16_t
 
 void player_init() {
     //dude_t *dude = player_get_active();
-    player_zpos = 0;
-    memset(players, 0x00, sizeof(player_sprites_t) * MAX_PCS);
-
-    for (int i = 0; i < 4; i++) {
-        players[i].main = players[i].port = SPRITE_ERROR;
-    }
 
     //dude->mapx = 30;
     //dude->mapy = 10;
@@ -267,6 +265,11 @@ void player_center_portrait(const int slot, const int x, const int y, const int 
 
 uint16_t player_get_sprite(const int slot) {
     if (slot < 0 || slot >= MAX_PCS) { return SPRITE_ERROR; }
+
+    if (players[slot].main == SPRITE_ERROR) {
+        load_character_sprite(main_get_rend(), slot, main_get_zoom());
+    }
+
     return players[slot].main;
 }
 
@@ -287,8 +290,16 @@ void player_set_move(const int amt) {
 }
 
 void player_close() {
+    //dude_t *dude;
+
     for (int i = 0; i < MAX_PCS; i++) {
+        //dude = player_get(i);
         free_sprites(i);
+        //port_remove_entity(dude);
+        //printf("dude = %p\n", dude);
+        //if (dude && dude->sprite.data) {
+            //sprite_free(((animate_sprite_node_t*)dude->sprite.data)->anim->spr);
+        //}
     }
     player_cleanup();
 }

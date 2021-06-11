@@ -165,7 +165,8 @@ static void render_character(SDL_Renderer *renderer) {
     sprite_set_location(slots, xoffset + (205 * zoom), yoffset + (41 * zoom));
     sprite_render(main_get_rend(), slots);
     if (items) {
-        as = items[2].sprite.data;
+        //as = items[2].sprite.data;
+        as = items[2].sprite.anim;
         if (as) {
             sprite_center_spr(as->spr, slots);
             sprite_render(renderer, as->spr);
@@ -175,7 +176,8 @@ static void render_character(SDL_Renderer *renderer) {
     sprite_set_location(slots, xoffset + (223 * zoom), yoffset + (41 * zoom));
     sprite_render(main_get_rend(), slots);
     if (items) {
-        as = items[3].sprite.data;
+        //as = items[3].sprite.data;
+        as = items[3].sprite.anim;
         if (as) {
             sprite_center_spr(as->spr, slots);
             sprite_render(renderer, as->spr);
@@ -185,7 +187,8 @@ static void render_character(SDL_Renderer *renderer) {
     sprite_set_location(slots, xoffset + (241 * zoom), yoffset + (41 * zoom));
     sprite_render(main_get_rend(), slots);
     if (items) {
-        as = items[10].sprite.data;
+        //as = items[10].sprite.data;
+        as = items[10].sprite.anim;
         if (as) {
             sprite_center_spr(as->spr, slots);
             sprite_render(renderer, as->spr);
@@ -197,7 +200,7 @@ static power_t* find_power(const uint32_t x, const uint32_t y) {
     size_t power_pos = 0;
     while (power_list[power_pos]) {
         animate_sprite_node_t *asn = (animate_sprite_node_t*) power_list[power_pos]->icon.data;
-        if (sprite_in_rect(asn->anim->spr, x, y)) {
+        if (asn && sprite_in_rect(asn->anim->spr, x, y)) {
             return power_list[power_pos];
         }
         power_pos++;
@@ -227,16 +230,15 @@ static void render_powers(SDL_Renderer *renderer) {
     label_render(&power_name, renderer);
     label_render(&power_level, renderer);
 
-    return;
     for (int i = 0; i < MAX_POWERS && power_list[i]; i++) {
-        animate_sprite_node_t *asn = (animate_sprite_node_t*) power_list[i]->icon.data;
-        sprite_set_location(asn->anim->spr, xoffset + (170 + (i % 5) * 20) * zoom,
+        animate_sprite_t *as = power_get_icon(power_list[i]);
+        //printf("i = %d, asn = %p, spr = %d\n", i, asn, asn->anim->spr);
+        sprite_set_location(as->spr, xoffset + (170 + (i % 5) * 20) * zoom,
             yoffset + (42 + (i / 5) * 20) * zoom);
-        sprite_render(renderer, asn->anim->spr);
+        sprite_render(renderer, as->spr);
     }
 
     sprite_highlight(mousex, mousey);
-    //power_list_t* wizard_get_spells(const int level);
 }
 
 static int get_next_len(const char *str, const int max) {
@@ -340,6 +342,7 @@ void view_character_render(void *data, SDL_Renderer *renderer) {
         case 2: render_powers(renderer); break;
         default: break;
     }
+    return;
 
     if (power_to_display) {
         render_power_to_display(renderer);

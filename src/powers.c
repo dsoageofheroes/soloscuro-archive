@@ -21,6 +21,18 @@ extern void power_list_add(power_list_t *pl, power_t *pw) {
     pl->head = to_add;
 }
 
+extern animate_sprite_t* power_get_icon(power_t *pw) {
+    gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
+
+    if (!pw) { return NULL; }
+
+    if (!port_valid_sprite(&pw->icon)) {
+        port_load_sprite(&(pw->icon), pal, RESOURCE_GFF_INDEX, GFF_ICON, pw->icon.bmp_id);
+    }
+
+    return pw->icon.anim;
+}
+
 extern void power_free(power_t *pw) {
     if (pw->icon.data) {
         port_free_sprite(&(pw->icon));

@@ -274,7 +274,8 @@ static void render_backpack_slot(const int slot, const int frame, const int x, c
     sprite_set_frame(slots, frame);
     sprite_set_location(slots, x, y);
     sprite_render(rend, slots);
-    animate_sprite_t *as = items[slot].sprite.data;
+    //animate_sprite_t *as = items[slot].sprite.data;
+    animate_sprite_t *as = items[slot].sprite.anim;
 
     if (as) {
         sprite_center_spr(as->spr, slots);
@@ -342,7 +343,9 @@ void inventory_window_render(void *data, SDL_Renderer *renderer) {
     }
 
     for (int i = 9; i < 23; i++) {
-        as = items[i - 9].sprite.data;
+        //as = items[i - 9].sprite.data;
+        printf("TODO: FIXME!\n");
+        as = items[i - 9].sprite.anim;
         sprite_set_frame(slots, i);
         int32_t x = sprite_getx(slots);
         int32_t y = sprite_gety(slots);

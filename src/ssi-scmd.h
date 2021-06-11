@@ -2,7 +2,7 @@
 #ifndef SSI_SCMD_H
 #define SSI_SCMD_H
 
-typedef struct _scmd_t {
+typedef struct scmd_s {
     uint8_t bmp_idx; // 0-254 = valid, 255 = none
     uint8_t delay;   // 0-255 = valid, ticks are 96 per second
     uint8_t flags;   // See SCMD flags
@@ -13,7 +13,7 @@ typedef struct _scmd_t {
     uint8_t soundidx;  // sound index to play
 } scmd_t;
 
-typedef struct _disk_object_s {
+typedef struct disk_object_s {
     uint16_t flags;
     int16_t  xoffset;
     int16_t  yoffset;

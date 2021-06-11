@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "ssi-scmd.h"
+#include "animation.h"
 
 // First the DS1 items structs
 typedef struct _ds1_item_t { // Not confirmed at all...
@@ -49,15 +50,6 @@ typedef struct _item_name_t {
 //End of DS1 item structs
 
 // Regular items.
-
-typedef struct sprite_info_s {
-    int16_t bmp_id;     // Which bmp this is.
-    int16_t xoffset;    // bitmap offset x
-    int16_t yoffset;    // bitmap offset y
-    uint16_t flags;     // sprite/scmd flags
-    scmd_t *scmd;       // the animation script
-    void *data;         // used for special data the UI needs (IE: SDL.)
-} sprite_info_t;
 
 typedef enum item_type_e {
     ITEM_CONSUMABLE,

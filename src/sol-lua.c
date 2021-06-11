@@ -112,6 +112,8 @@ static int load_window(lua_State *l) {
 
     if (!strcmp(str, "view")) {
         port_load_window(WINDOW_VIEW);
+    } else if (!strcmp(str, "inventory")) {
+        port_load_window(WINDOW_INVENTORY);
     }
 
     return 0;

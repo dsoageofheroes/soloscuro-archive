@@ -73,6 +73,7 @@ typedef struct power_overlay_s {
 
 extern void powers_init();
 extern void powers_cleanup();
+extern animate_sprite_t* power_get_icon(power_t *pw);
 extern void powers_set_cast(power_t *powers, const uint32_t id);
 extern void powers_set_icon(power_t *powers, const uint32_t id);
 extern void powers_set_thrown(power_t *powers, const uint32_t id);

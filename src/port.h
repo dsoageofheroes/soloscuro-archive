@@ -52,6 +52,7 @@ extern void port_swap_enitity(int obj_id, entity_t *dude);
 extern void port_update_entity(entity_t *entity, const uint16_t xdiff, const uint16_t ydiff);
 extern void port_load_sprite(sprite_info_t *spr, gff_palette_t *pal, const int gff_index, const int type, const uint32_t id);
 extern void port_free_sprite(sprite_info_t *spr);
+extern int port_valid_sprite(sprite_info_t *spr);
 
 extern void port_play_sound_effect(const uint16_t id);
 

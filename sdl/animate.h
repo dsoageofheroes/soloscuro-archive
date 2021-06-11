@@ -1,8 +1,8 @@
 #ifndef ANIMATE_H
 #define ANIMATE_H
 
-#include "../src/animation.h"
 #include <SDL2/SDL.h>
+#include "../src/animation.h"
 #include "map.h"
 
 void animate_init();

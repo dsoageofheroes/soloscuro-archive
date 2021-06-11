@@ -320,10 +320,19 @@ extern void port_load_sprite(sprite_info_t *spr, gff_palette_t *pal, const int g
         error("port_load_sprite not implemented for sprites with a scmd!\n");
         //exit(1);
     }
+    // Check if spr is already exisitng, if yes, deallocate then recreate!
 
-    asn = animate_sprite_node_create();
-    spr->data = asn;
-    asn->anim->spr = sprite_new(main_get_rend(), pal, 0, 0, main_get_zoom(), gff_index, type, id);
+    if (!spr->data) {
+        asn = animate_sprite_node_create();
+        spr->data = asn;
+        spr->anim = asn->anim;
+        spr->anim->spr = SPRITE_ERROR;
+    }
+
+    if (spr->anim->spr == SPRITE_ERROR) {
+        spr->anim->spr = sprite_new(main_get_rend(), pal, 0, 0, main_get_zoom(), gff_index, type, id);
+    }
+    //printf("valid = %d\n", sprite_valid(asn->anim->spr));
 }
 
 extern void port_free_sprite(sprite_info_t *spr) {
@@ -502,18 +511,16 @@ int map_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_
 extern void port_load_item(item_t *item) {
     //warn("Need to load item %d.\n", item->ds_id);
     animate_sprite_t *as = calloc(1, sizeof(animate_sprite_t));
-    item->sprite.data = as;
+    item->sprite.data = (void*)as;
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     as->spr = sprite_new(main_get_rend(), pal, 0, 0, main_get_zoom(),
             OBJEX_GFF_INDEX, GFF_BMP, item->sprite.bmp_id);
-    printf("ITEM---------->spr = %d\n", as->spr);
     as->entity = NULL;
 }
 
 extern void port_free_item(item_t *item) {
     if (!item || item->sprite.data == NULL) { return; }
     animate_sprite_t *as = (animate_sprite_t*)item->sprite.data;
-    printf("ITEM---FREE------->spr = %d\n", as->spr);
     sprite_free(as->spr);
     as->spr = SPRITE_ERROR;
     free(as);

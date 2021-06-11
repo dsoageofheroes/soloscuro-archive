@@ -1,5 +1,6 @@
 #include "sprite.h"
 #include "main.h"
+#include "../src/animation.h"
 
 #define MAX_SPRITES (1<<10)
 
@@ -77,11 +78,13 @@ uint16_t sprite_create(SDL_Renderer *renderer, SDL_Rect *initial,
         gff_palette_t *pal,
         const int offsetx, const int offsety, const float zoom,
         const int gff_idx, const int type_id, const int res_id) {
-
     sprite_t *sprite;
+    if (!renderer) { return SPRITE_ERROR; }
+
     int sprite_id = get_next_sprite_id();
     sprite = sprites + sprite_id;
     if (sprite_id == SPRITE_ERROR) { return sprite_id; }
+    memset(sprite, 0x0, sizeof(sprite_t));
 
     sprite_append_full(sprite_id, renderer, initial, pal,
         offsetx, offsety, zoom, gff_idx, type_id, res_id);
@@ -97,6 +100,7 @@ uint16_t sprite_append(uint16_t sprite_id, SDL_Renderer *renderer,
         const int offsetx, const int offsety, const float zoom,
         const int gff_idx, const int type_id, const int res_id) {
     SDL_Rect tmp = {offsetx, offsety, 0, 0};
+    if (!renderer) { return SPRITE_ERROR; }
     return sprite_append_full(sprite_id, renderer, &tmp, pal, 0, 0, zoom, gff_idx, type_id, res_id);
 }
 
@@ -138,6 +142,13 @@ static uint16_t sprite_append_full(uint16_t sprite_id, SDL_Renderer *renderer, S
 static int valid_id(const uint16_t id) {
     return (id < MAX_SPRITES && sprites[id].in_use);
 }
+
+extern int port_valid_sprite(sprite_info_t *spr) {
+    if (!spr || !spr->data || !spr->data->anim) { return 0; }
+    return valid_id (spr->data->anim->spr);
+}
+
+uint32_t sprite_valid(const uint16_t id) { return valid_id(id); }
 
 uint16_t sprite_get_frame(const uint16_t id) {
     if (!valid_id(id)) { return SPRITE_ERROR; }
