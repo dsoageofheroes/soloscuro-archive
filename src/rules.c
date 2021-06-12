@@ -1080,6 +1080,46 @@ static void loop_class_stats(entity_t *pc, int class) {
     if (pc->stats.cha   < class_mininum[class][5]) { pc->stats.cha   = class_mininum[class][5]; }
 }
 
+static int get_class_max_hp(int class, int level, int con_mod) {
+    if (class < 0 || class > REAL_CLASS_MAX) { return 0; }
+
+    return level * (hit_die[class] + con_mod);
+}
+
+static void adjust_creation_hp(entity_t *pc) {
+    int min_hp = 0; // Right now min_hp is looking for max level
+    int max_hp = 0;
+    int num_levels = 0;
+
+    if (pc->class[0].class > -1) {
+        min_hp = (pc->class[0].level > min_hp) ? pc->class[0].level : min_hp;
+        max_hp += get_class_max_hp(pc->class[0].class, pc->class[0].level, con_mods[pc->stats.con][0]);
+        num_levels++;
+    }
+    if (pc->class[1].class > -1) {
+        min_hp = (pc->class[1].level > min_hp) ? pc->class[1].level : min_hp;
+        max_hp += get_class_max_hp(pc->class[1].class, pc->class[1].level, con_mods[pc->stats.con][0]);
+        num_levels++;
+    }
+    if (pc->class[2].class > -1) {
+        min_hp = (pc->class[2].level > min_hp) ? pc->class[2].level : min_hp;
+        max_hp += get_class_max_hp(pc->class[2].class, pc->class[2].level, con_mods[pc->stats.con][0]);
+        num_levels++;
+    }
+
+    // min_hp is the max level, apply con bonus.
+    min_hp += min_hp + min_hp * con_mods[pc->stats.con][0];
+
+    if (num_levels > 0) {
+        max_hp += (num_levels - 1); // force rounding
+        max_hp /= num_levels;
+    }
+
+    if (pc->stats.hp < min_hp) { pc->stats.high_hp = pc->stats.hp = max_hp; }
+    if (pc->stats.hp > max_hp) { pc->stats.high_hp = pc->stats.hp = min_hp; }
+    //printf("(%d, %d) %d %d %d\n", min_hp, max_hp, pc->class[0].class, pc->class[1].class, pc->class[2].class);
+}
+
 void dnd2e_loop_creation_stats(entity_t *pc) {
     if (!pc || pc->race < 0 || pc->race > RACE_THRIKREEN) { return; }
 
@@ -1100,6 +1140,8 @@ void dnd2e_loop_creation_stats(entity_t *pc) {
     loop_class_stats(pc, pc->class[0].class);
     loop_class_stats(pc, pc->class[1].class);
     loop_class_stats(pc, pc->class[2].class);
+
+    adjust_creation_hp(pc);
 }
 
 int dnd2e_character_is_valid(const entity_t *pc) {
