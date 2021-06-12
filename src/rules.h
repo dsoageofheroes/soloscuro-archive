@@ -56,7 +56,7 @@ enum {
 int dnd2e_is_class_allowed(const uint8_t race, const class_t classes[3]);
 int dnd2e_is_alignment_allowed(const uint8_t alignment, const class_t classes[3], int target_is_pc);
 void dnd2e_randomize_stats_pc(entity_t *pc);
-void dnd2e_loop_racial_stats(entity_t *pc);
+void dnd2e_loop_creation_stats(entity_t *pc);
 void dnd2e_set_exp(entity_t *pc, const uint32_t amt);
 void dnd2e_award_exp(entity_t *pc, const uint32_t amt);
 int dnd2e_character_is_valid(const entity_t *pc);

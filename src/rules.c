@@ -692,6 +692,50 @@ static const int8_t racial_stats[][6][2] = {
       {  3, 15 }, },
 };
 
+static const int8_t class_mininum[][6] = {
+    // REAL_CLASS_NONE,
+    { 0, 0, 0, 0, 0, 0 },
+    // REAL_CLASS_AIR_CLERIC,
+    { 0, 0, 0, 0, 9, 0 },
+    // REAL_CLASS_EARTH_CLERIC,
+    { 0, 0, 0, 0, 9, 0 },
+    // REAL_CLASS_FIRE_CLERIC,
+    { 0, 0, 0, 0, 9, 0 },
+    // REAL_CLASS_WATER_CLERIC,
+    { 0, 0, 0, 0, 9, 0 },
+    // REAL_CLASS_AIR_DRUID,
+    { 0, 0, 0, 0,12,15 },
+    // REAL_CLASS_EARTH_DRUID,
+    { 0, 0, 0, 0,12,15 },
+    // REAL_CLASS_FIRE_DRUID,
+    { 0, 0, 0, 0,12,15 },
+    // REAL_CLASS_WATER_DRUID,
+    { 0, 0, 0, 0,12,15 },
+    // REAL_CLASS_FIGHTER,
+    { 9, 0, 0, 0, 0, 0 },
+    // REAL_CLASS_GLADIATOR,
+    { 13, 12, 15, 0, 0, 0 },
+    // REAL_CLASS_PRESERVER,
+    { 0, 0, 0, 9, 0, 0 },
+    // REAL_CLASS_PSIONICIST,
+    { 0, 0,11,12,15, 0 },
+    // REAL_CLASS_AIR_RANGER,
+    {13,13,14, 0,14, 0 },
+    // REAL_CLASS_EARTH_RANGER,
+    {13,13,14, 0,14, 0 },
+    // REAL_CLASS_FIRE_RANGER,
+    {13,13,14, 0,14, 0 },
+    // REAL_CLASS_WATER_RANGER,
+    {13,13,14, 0,14, 0 },
+    // REAL_CLASS_THIEF,
+    { 0, 9, 0, 0, 0, 0 },
+    // REAL_CLASS_DEFILER,
+    { 0, 0, 0, 9, 0, 0 },
+    // REAL_CLASS_TEMPLAR,
+    { 0, 0, 0,10, 9, 0 },
+    // REAL_CLASS_MAX,
+};
+
 static int has_class(entity_t *pc, const int16_t class){
     return pc->class[0].class == class
         || pc->class[1].class == class
@@ -1019,14 +1063,25 @@ void dnd2e_randomize_stats_pc(entity_t *pc) {
     pc->stats.cha = 10 + (rand() % 11);
     pc->stats.base_ac = 10;
     dnd2e_apply_race_mods(pc);
-    dnd2e_loop_racial_stats(pc);
+    dnd2e_loop_creation_stats(pc);
 
     //TODO Fix exp giving out.
     dnd2e_set_exp(pc, 3000); // Also sets HP & PSP
 }
 
-void dnd2e_loop_racial_stats(entity_t *pc) {
-    if (pc->race < 0 || pc->race > RACE_THRIKREEN) { return; }
+static void loop_class_stats(entity_t *pc, int class) {
+    if (!pc || class < 0 || class > REAL_CLASS_MAX) { return; }
+
+    if (pc->stats.str   < class_mininum[class][0]) { pc->stats.str   = class_mininum[class][0]; }
+    if (pc->stats.dex   < class_mininum[class][1]) { pc->stats.dex   = class_mininum[class][1]; }
+    if (pc->stats.con   < class_mininum[class][2]) { pc->stats.con   = class_mininum[class][2]; }
+    if (pc->stats.intel < class_mininum[class][3]) { pc->stats.intel = class_mininum[class][3]; }
+    if (pc->stats.wis   < class_mininum[class][4]) { pc->stats.wis   = class_mininum[class][4]; }
+    if (pc->stats.cha   < class_mininum[class][5]) { pc->stats.cha   = class_mininum[class][5]; }
+}
+
+void dnd2e_loop_creation_stats(entity_t *pc) {
+    if (!pc || pc->race < 0 || pc->race > RACE_THRIKREEN) { return; }
 
     if (pc->stats.str   < racial_stats[pc->race][0][0]) { pc->stats.str   = racial_stats[pc->race][0][1]; }
     if (pc->stats.dex   < racial_stats[pc->race][1][0]) { pc->stats.dex   = racial_stats[pc->race][1][1]; }
@@ -1041,6 +1096,10 @@ void dnd2e_loop_racial_stats(entity_t *pc) {
     if (pc->stats.intel > racial_stats[pc->race][3][1]) { pc->stats.intel = racial_stats[pc->race][3][0]; }
     if (pc->stats.wis   > racial_stats[pc->race][4][1]) { pc->stats.wis   = racial_stats[pc->race][4][0]; }
     if (pc->stats.cha   > racial_stats[pc->race][5][1]) { pc->stats.cha   = racial_stats[pc->race][5][0]; }
+
+    loop_class_stats(pc, pc->class[0].class);
+    loop_class_stats(pc, pc->class[1].class);
+    loop_class_stats(pc, pc->class[2].class);
 }
 
 int dnd2e_character_is_valid(const entity_t *pc) {
