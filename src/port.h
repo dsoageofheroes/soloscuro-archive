@@ -34,6 +34,8 @@
 typedef enum window_e {
     WINDOW_VIEW,
     WINDOW_INVENTORY,
+    WINDOW_MAIN,
+    WINDOW_CHARACTER_CREATION,
 } window_t;
 
 // Narrate functions

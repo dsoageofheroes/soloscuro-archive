@@ -139,7 +139,7 @@ void view_character_init(SDL_Renderer *renderer, const uint32_t _x, const uint32
     set_zoom(&description_loc, zoom);
 
     strcpy(description, "description");
-    if (player_get_active()->name) {
+    if (player_get_active() && player_get_active()->name) {
         strcpy(description, player_get_active()->name);
     }
     strcpy(message, "message");
@@ -422,8 +422,9 @@ int view_character_handle_mouse_up(const uint32_t button, const uint32_t x, cons
             }
         }
         if (mode == 2) {
-            power_to_display = find_power(x, y);
-            strcpy(message, power_to_display->name);
+            if ((power_to_display = find_power(x, y))) {
+                strcpy(message, power_to_display->name);
+            }
         }
     }
     if (button == SDL_BUTTON_LEFT) {

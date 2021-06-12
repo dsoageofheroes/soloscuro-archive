@@ -343,9 +343,7 @@ void inventory_window_render(void *data, SDL_Renderer *renderer) {
     }
 
     for (int i = 9; i < 23; i++) {
-        //as = items[i - 9].sprite.data;
-        printf("TODO: FIXME!\n");
-        as = items[i - 9].sprite.anim;
+        as = item_icon(items + i - 9);
         sprite_set_frame(slots, i);
         int32_t x = sprite_getx(slots);
         int32_t y = sprite_gety(slots);
@@ -443,8 +441,6 @@ static void clicked_slot(const int slot) {
     entity_t *player = player_get(char_selected);
     item_t *player_item = player->inv + slot;
 
-    printf("clicked_slot: %d\n", slot);
-
     if (mouse_item) { // mouse has an item
         if (!item_allowed_in_slot(mouse_get_item(), slot)) { return; }
         if (player_item->ds_id) { // If we are doing a swap
@@ -482,7 +478,10 @@ int inventory_window_handle_mouse_up(const uint32_t button, const uint32_t x, co
         }
     }
 
-    if (sprite_in_rect(game_return, x, y)) { window_pop(); } 
+    if (sprite_in_rect(game_return, x, y)) {
+        window_pop();
+        return 1;
+    } 
 
     for (int i = 9; i < 23; i++) {
         sprite_set_frame(slots, i);

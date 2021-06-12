@@ -153,6 +153,7 @@ static void load_character_sprite(SDL_Renderer *renderer, const int slot, const 
     if (slot < 0 || slot >= MAX_PCS) { return; }
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     dude_t *dude = player_get(slot);
+    if (!dude) { return; }
 
     free_sprites(slot);
 

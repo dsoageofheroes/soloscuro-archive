@@ -112,6 +112,7 @@ extern item_t* item_dup(item_t *item) {
 
 void item_free(item_t *item) {
     if (item) {
+        port_free_item(item);
         free(item);
     }
 }
@@ -139,4 +140,17 @@ extern int item_get_wizard_level(item_t *item) {
 extern int item_get_priest_level(item_t *item) {
     if (!item) { return 0; }
     return 0;
+}
+
+extern animate_sprite_t* item_icon(item_t *item) {
+    gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
+
+    if (!item) { return NULL; }
+
+    if (!port_valid_sprite(&item->sprite)) {
+        if (!item->sprite.bmp_id) { return NULL; }
+        port_load_sprite(&item->sprite, pal, OBJEX_GFF_INDEX, GFF_BMP, item->sprite.bmp_id);
+    }
+
+    return item->sprite.anim;
 }

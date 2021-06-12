@@ -86,7 +86,6 @@ static void map_load_current_region() {
         region_get_tile(map->region, ids[i], &width, &height, &data);
 
         if (data && *data) {
-        printf("*data = %p, (%d, %d), ids[%d] = %d\n", data, width, height, i, ids[i]);
             tile = SDL_CreateRGBSurfaceFrom(data, width, height, 32, 4*width, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
 
             map->tiles[i + offset] = SDL_CreateTextureFromSurface(cren, tile);
@@ -318,11 +317,14 @@ extern void port_load_sprite(sprite_info_t *spr, gff_palette_t *pal, const int g
 
     if (spr->scmd) {
         error("port_load_sprite not implemented for sprites with a scmd!\n");
-        //exit(1);
     }
     // Check if spr is already exisitng, if yes, deallocate then recreate!
 
-    if (!spr->data) {
+    if (!spr->anim) {
+        if (spr->data) {
+            //free(spr->data);
+            animation_node_free(spr->data);
+        }
         asn = animate_sprite_node_create();
         spr->data = asn;
         spr->anim = asn->anim;
@@ -520,10 +522,8 @@ extern void port_load_item(item_t *item) {
 
 extern void port_free_item(item_t *item) {
     if (!item || item->sprite.data == NULL) { return; }
-    animate_sprite_t *as = (animate_sprite_t*)item->sprite.data;
-    sprite_free(as->spr);
-    as->spr = SPRITE_ERROR;
-    free(as);
+
+    animate_sprite_node_free(item->sprite.data);
     item->sprite.data = NULL;
 }
 

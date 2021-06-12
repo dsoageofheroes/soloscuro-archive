@@ -114,6 +114,10 @@ static int load_window(lua_State *l) {
         port_load_window(WINDOW_VIEW);
     } else if (!strcmp(str, "inventory")) {
         port_load_window(WINDOW_INVENTORY);
+    } else if (!strcmp(str, "main")) {
+        port_load_window(WINDOW_MAIN);
+    } else if (!strcmp(str, "character-creation")) {
+        port_load_window(WINDOW_CHARACTER_CREATION);
     }
 
     return 0;

@@ -433,7 +433,7 @@ void update_stats_alignment_hp(int i, uint32_t button)
         break;
     }
 
-    dnd2e_fix_stats_pc(&pc);
+    dnd2e_loop_racial_stats(&pc);
 }
 
 static int find_class_selection(const uint8_t real_class) {
@@ -635,7 +635,7 @@ static void fix_race_gender() { // move the race/gender to the appropiate spot
     set_class_frames(); // go ahead and setup the new class frames
     select_class(2); // Default to Fighter whenever race changes
     dnd2e_randomize_stats_pc(&pc);
-    dnd2e_fix_stats_pc(&pc); // in case something need adjustment
+    dnd2e_loop_racial_stats(&pc); // in case something need adjustment
 }
 
 static void fix_alignment(int direction) { // direction: -1 = previous alignment, 1 = next alignment

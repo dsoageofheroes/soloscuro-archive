@@ -123,7 +123,7 @@ extern void mouse_free() {
         item_cursor = NULL;
     }
     if (item_data) {
-        free(item_data);
+        item_free(item_data);
         item_data = NULL;
     }
     if (power_cursor) {
@@ -152,8 +152,13 @@ extern item_t* mouse_get_item() {
 }
 
 extern void mouse_free_item() {
-    item_data = NULL;
+    if (item_data) {
+        free(item_data);
+        item_data = NULL;
+    }
+
     if (item_cursor) { SDL_FreeCursor(item_cursor); }
+
     SDL_SetCursor(cursors[0]);
 }
 

@@ -626,6 +626,72 @@ static int8_t wizard_thac0[] = {
     20, 20, 20, 20, 19, 19, 19, 18, 18, 18, 17, 17, 17, 16, 16, 16, 15, 15, 15, 14, 14
 };
 
+static const int8_t racial_stats[][6][2] = {
+    // Monster
+    { {  1, 25 },
+      {  1, 25 },
+      {  1, 25 },
+      {  1, 25 },
+      {  1, 25 },
+      {  1, 25 }, },
+    // Human
+    { {  9, 20 },
+      {  9, 20 },
+      {  9, 20 },
+      {  9, 20 },
+      {  9, 20 },
+      {  9, 20 }, },
+    // Dwarf
+    { { 11, 21 },
+      {  4, 19 },
+      { 16, 22 },
+      {  5, 20 },
+      {  5, 20 },
+      {  3, 18 }, },
+    // Elf
+    { {  5, 20 },
+      { 14, 22 },
+      {  6, 18 },
+      {  9, 21 },
+      {  4, 19 },
+      {  5, 20 }, },
+    // half-elf
+    { {  5, 20 },
+      {  9, 21 },
+      {  4, 19 },
+      {  5, 20 },
+      {  5, 20 },
+      {  5, 20 }, },
+    // half-giant
+    { { 21, 24 },
+      {  8, 15 },
+      { 17, 22 },
+      {  3, 13 },
+      {  3, 15 },
+      {  3, 15 }, },
+    // halfling
+    { {  3, 16 },
+      { 14, 22 },
+      {  4, 19 },
+      {  5, 20 },
+      {  9, 22 },
+      {  4, 19 }, },
+    // Mul
+    { { 12, 22 },
+      {  5, 20 },
+      {  9, 21 },
+      {  4, 19 },
+      {  5, 20 },
+      {  3, 18 }, },
+    // Thri-kreen
+    { {  8, 20 },
+      { 17, 22 },
+      {  8, 20 },
+      {  4, 19 },
+      {  6, 21 },
+      {  3, 15 }, },
+};
+
 static int has_class(entity_t *pc, const int16_t class){
     return pc->class[0].class == class
         || pc->class[1].class == class
@@ -844,6 +910,9 @@ int32_t dnd2e_exp_to_next_level_up(entity_t *pc) {
 
 int16_t dnd2e_get_ac_pc(entity_t *pc) {
     int ac_bonus = 0;
+
+    if (!dnd2e_character_is_valid(pc)) { return 10; }
+
     if (pc->inv) {
         item_t *item = pc->inv;
         for (int i = 0; i <= SLOT_FOOT; i++) {
@@ -922,6 +991,8 @@ enum {
 int16_t dnd2e_get_attack_mod_pc(const entity_t *pc, const item_t *item) {
     uint16_t material_mod = 0;
 
+    if (!dnd2e_character_is_valid(pc)) { return 0; }
+
     if (item == NULL || !item->ds_id) {
         return pc->stats.attacks[0].bonus
             + str_mods[pc->stats.str][STR_DAM];
@@ -948,22 +1019,31 @@ void dnd2e_randomize_stats_pc(entity_t *pc) {
     pc->stats.cha = 10 + (rand() % 11);
     pc->stats.base_ac = 10;
     dnd2e_apply_race_mods(pc);
-    dnd2e_fix_stats_pc(pc); // Get our base stats correct first.
+    dnd2e_loop_racial_stats(pc);
 
     //TODO Fix exp giving out.
     dnd2e_set_exp(pc, 3000); // Also sets HP & PSP
 }
 
-void dnd2e_fix_stats_pc(entity_t *pc) {
-    if (pc->stats.str < 5) { pc->stats.str = 9; }
-    if (pc->stats.dex < 5) { pc->stats.dex = 9; }
-    if (pc->stats.con < 5) { pc->stats.con = 9; }
-    if (pc->stats.intel < 5) { pc->stats.intel = 9; }
-    if (pc->stats.wis < 5) { pc->stats.wis = 9; }
-    if (pc->stats.cha < 5) { pc->stats.cha = 9; }
+void dnd2e_loop_racial_stats(entity_t *pc) {
+    if (pc->race < 0 || pc->race > RACE_THRIKREEN) { return; }
+
+    if (pc->stats.str   < racial_stats[pc->race][0][0]) { pc->stats.str   = racial_stats[pc->race][0][1]; }
+    if (pc->stats.dex   < racial_stats[pc->race][1][0]) { pc->stats.dex   = racial_stats[pc->race][1][1]; }
+    if (pc->stats.con   < racial_stats[pc->race][2][0]) { pc->stats.con   = racial_stats[pc->race][2][1]; }
+    if (pc->stats.intel < racial_stats[pc->race][3][0]) { pc->stats.intel = racial_stats[pc->race][3][1]; }
+    if (pc->stats.wis   < racial_stats[pc->race][4][0]) { pc->stats.wis   = racial_stats[pc->race][4][1]; }
+    if (pc->stats.cha   < racial_stats[pc->race][5][0]) { pc->stats.cha   = racial_stats[pc->race][5][1]; }
+
+    if (pc->stats.str   > racial_stats[pc->race][0][1]) { pc->stats.str   = racial_stats[pc->race][0][0]; }
+    if (pc->stats.dex   > racial_stats[pc->race][1][1]) { pc->stats.dex   = racial_stats[pc->race][1][0]; }
+    if (pc->stats.con   > racial_stats[pc->race][2][1]) { pc->stats.con   = racial_stats[pc->race][2][0]; }
+    if (pc->stats.intel > racial_stats[pc->race][3][1]) { pc->stats.intel = racial_stats[pc->race][3][0]; }
+    if (pc->stats.wis   > racial_stats[pc->race][4][1]) { pc->stats.wis   = racial_stats[pc->race][4][0]; }
+    if (pc->stats.cha   > racial_stats[pc->race][5][1]) { pc->stats.cha   = racial_stats[pc->race][5][0]; }
 }
 
-int dnd2e_character_is_valid(entity_t *pc) {
+int dnd2e_character_is_valid(const entity_t *pc) {
     if (pc->stats.str < 0 || pc->stats.str > 25) { return 0; }
     if (pc->stats.dex < 0 || pc->stats.dex > 25) { return 0; }
     if (pc->stats.con < 0 || pc->stats.con > 25) { return 0; }

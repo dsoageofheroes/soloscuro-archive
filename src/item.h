@@ -120,6 +120,7 @@ extern void item_free(item_t *item);
 extern item_t* item_dup(item_t *item);
 extern void item_load_from(item_t *item, const char *data);
 extern void item_free_inventory(item_t *item);
+extern animate_sprite_t* item_icon(item_t *item);
 
 extern int item_get_wizard_level(item_t *item);
 extern int item_get_priest_level(item_t *item);

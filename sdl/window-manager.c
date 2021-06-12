@@ -13,6 +13,8 @@
 #include "../src/port.h"
 #include "windows/inventory.h"
 #include "windows/view-character.h"
+#include "windows/window-main.h"
+#include "windows/new-character.h"
 
 #define MAX_SCREENS (10)
 
@@ -63,6 +65,8 @@ extern void port_load_window(const window_t window) {
     switch (window) {
         case WINDOW_VIEW: window_toggle(main_get_rend(), &view_character_window, 0, 0); break;
         case WINDOW_INVENTORY: window_toggle(main_get_rend(), &inventory_window, 0, 0); break;
+        case WINDOW_MAIN: window_toggle(main_get_rend(), &main_window, 0, 0); break;
+        case WINDOW_CHARACTER_CREATION: window_toggle(main_get_rend(), &new_character_window, 0, 0); break;
     }
 }
 
@@ -94,6 +98,8 @@ extern void port_toggle_window(const window_t window) {
     switch (window) {
         case WINDOW_VIEW: window_toggle(main_get_rend(), &view_character_window, 0, 0); break;
         case WINDOW_INVENTORY: window_toggle(main_get_rend(), &inventory_window, 0, 0); break;
+        case WINDOW_MAIN: window_toggle(main_get_rend(), &main_window, 0, 0); break;
+        case WINDOW_CHARACTER_CREATION: window_toggle(main_get_rend(), &new_character_window, 0, 0); break;
     }
 }
 
