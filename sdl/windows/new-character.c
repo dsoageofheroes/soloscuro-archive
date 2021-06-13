@@ -846,8 +846,10 @@ int new_character_handle_mouse_up(const uint32_t button, const uint32_t x, const
         if (last_sprite_mousedowned == classes[i] && sprite_in_rect(classes[i], x, y)) {
             if (sprite_get_frame(class_sel[i]) == 1) {
                 deselect_class(i);
+                dnd2e_set_starting_level(&pc);
             } else if (sprite_get_frame(classes[i]) < 2) {
                 select_class(i);
+                dnd2e_set_starting_level(&pc);
             } 
         }
     }

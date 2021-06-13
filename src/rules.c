@@ -860,8 +860,8 @@ static void set_psp(entity_t *pc) {
     if (pc->stats.intel > 15) {
         pc->stats.high_psp += pc->stats.intel - 15;
     }
-    if (pc->stats.wis > 15) {
-        pc->stats.high_psp += 20 + 2 * (pc->stats.intel - 15);
+    if (pc->stats.wis >= 15) {
+        pc->stats.high_psp += 20 + 2 * (pc->stats.wis - 15);
     }
     if (has_class(pc, REAL_CLASS_PSIONICIST)) {
         int psi_level = 0;
@@ -873,6 +873,7 @@ static void set_psp(entity_t *pc) {
             pc->stats.high_psp += (20 + 2 * (pc->stats.intel - 15)) * (psi_level - 1);
         }
     }
+    pc->stats.psp = pc->stats.high_psp;
 }
 
 static void do_level_up(entity_t *pc, const uint32_t class_idx, const uint32_t class) {
@@ -920,7 +921,7 @@ void dnd2e_set_exp(entity_t *pc, const uint32_t amt) {
 
 void dnd2e_award_exp_to_class(entity_t *pc, const int index, const uint32_t amt) {
     pc->class[index].current_xp += amt;
-    int next_level = get_class_level(pc->class[index].level, pc->class[index].current_xp);
+    int next_level = get_class_level(pc->class[index].class, pc->class[index].current_xp);
     while (next_level > pc->class[index].level) {
         do_level_up(pc, index, pc->class[index].level);
     }
@@ -1054,6 +1055,39 @@ int16_t dnd2e_get_attack_mod_pc(const entity_t *pc, const item_t *item) {
             str_mods[pc->stats.str][STR_DAM];
 }
 
+static int calc_starting_exp(entity_t *pc) {
+    int num_classes = 0;
+    int most_exp_class = -1;
+
+    if (pc->class[0].class >= 0) {
+        num_classes++;
+        most_exp_class = pc->class[0].class;
+    }
+
+    if (pc->class[1].class >= 0) {
+        num_classes++;
+        if (most_exp_class < 0
+            || get_xp_table(most_exp_class)[3*3] < get_xp_table(pc->class[1].class)[3*3]
+            ) {
+            most_exp_class = pc->class[1].class;
+        }
+    }
+
+    if (pc->class[2].class >= 0) {
+        num_classes++;
+        if (most_exp_class < 0
+            || get_xp_table(most_exp_class)[3*3] < get_xp_table(pc->class[2].class)[3*3]
+            ) {
+            most_exp_class = pc->class[2].class;
+        }
+    }
+
+    if (num_classes < 1) { return 0; }
+    if (num_classes < 2) { return get_xp_table(most_exp_class)[3*3]; }
+
+    return get_xp_table(most_exp_class)[2*3] * num_classes;
+}
+
 void dnd2e_randomize_stats_pc(entity_t *pc) {
     pc->stats.str = 10 + (rand() % 11);
     pc->stats.dex = 10 + (rand() % 11);
@@ -1062,11 +1096,14 @@ void dnd2e_randomize_stats_pc(entity_t *pc) {
     pc->stats.wis = 10 + (rand() % 11);
     pc->stats.cha = 10 + (rand() % 11);
     pc->stats.base_ac = 10;
+
     dnd2e_apply_race_mods(pc);
     dnd2e_loop_creation_stats(pc);
+    dnd2e_set_starting_level(pc);
+}
 
-    //TODO Fix exp giving out.
-    dnd2e_set_exp(pc, 3000); // Also sets HP & PSP
+void dnd2e_set_starting_level(entity_t *pc) {
+    dnd2e_set_exp(pc, calc_starting_exp(pc)); // Also sets HP & PSP
 }
 
 static void loop_class_stats(entity_t *pc, int class) {
@@ -1142,6 +1179,7 @@ void dnd2e_loop_creation_stats(entity_t *pc) {
     loop_class_stats(pc, pc->class[2].class);
 
     adjust_creation_hp(pc);
+    set_psp(pc);
 }
 
 int dnd2e_character_is_valid(const entity_t *pc) {
