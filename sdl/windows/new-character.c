@@ -286,8 +286,10 @@ static void new_character_init(SDL_Renderer* _renderer, const uint32_t _x, const
     srand(time(NULL));
     load_character_sprite();
     dnd2e_randomize_stats_pc(&pc);
+    item_set_starting(&pc);
     set_class_frames(); // go ahead and setup the new class frames
     select_class(2); // Fighter is the default class
+    item_set_starting(&pc);
     label_create_group();
 }
 
@@ -637,6 +639,7 @@ static void fix_race_gender() { // move the race/gender to the appropiate spot
     select_class(2); // Default to Fighter whenever race changes
     dnd2e_randomize_stats_pc(&pc);
     dnd2e_loop_creation_stats(&pc); // in case something need adjustment
+    item_set_starting(&pc);
 }
 
 static void fix_alignment(int direction) { // direction: -1 = previous alignment, 1 = next alignment
@@ -847,9 +850,11 @@ int new_character_handle_mouse_up(const uint32_t button, const uint32_t x, const
             if (sprite_get_frame(class_sel[i]) == 1) {
                 deselect_class(i);
                 dnd2e_set_starting_level(&pc);
+                item_set_starting(&pc);
             } else if (sprite_get_frame(classes[i]) < 2) {
                 select_class(i);
                 dnd2e_set_starting_level(&pc);
+                item_set_starting(&pc);
             } 
         }
     }

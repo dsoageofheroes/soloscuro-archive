@@ -268,8 +268,8 @@ int add_load_save_handle_mouse_down(const uint32_t button, const uint32_t x, con
         sprite_set_frame(down_arrow, 3);
     }
     for (int i = 0; i < 10; i++) {
-        sprite_set_location(bar, zoom * 45, zoom * (31 + i * 11));
-        if (sprite_in_rect(bar, mousex, mousey)) {
+        sprite_set_location(bar, xoffset + (zoom * 45), yoffset + (zoom * (31 + i * 11)));
+        if (sprite_in_rect(bar, x, y)) {
             selection = top_entry + i;
             if (selection < num_valid_entries) {
                 char_selected = res_ids[valids[selection]];

@@ -4,6 +4,7 @@
 #include "ssi-item.h"
 #include "dsl.h"
 #include "port.h"
+#include "entity.h"
 
 static int32_t get_bmp_id(item_t *item) {
     disk_object_t dobj;
@@ -153,4 +154,75 @@ extern animate_sprite_t* item_icon(item_t *item) {
     }
 
     return item->sprite.anim;
+}
+
+static void add_ds1_starting_item(entity_t *pc, const int slot, const int item_index, const int id) {
+    ds1_item_t ds1_item;
+    ds1_item.slot = SLOT_HAND0;
+    ds1_item.item_index = item_index;
+    ssi_item_load(&ds1_item, id);
+    item_convert_from_ds1(pc->inv + slot, &ds1_item);
+}
+
+extern void item_set_starting(dude_t *dude) {
+    if (!dude) { return; }
+    int has_gladiator = entity_has_class(dude, REAL_CLASS_GLADIATOR);
+    int has_fighter = entity_has_class(dude, REAL_CLASS_FIGHTER);
+    int has_ranger = entity_has_class(dude, REAL_CLASS_AIR_RANGER)
+        || entity_has_class(dude, REAL_CLASS_EARTH_RANGER)
+        || entity_has_class(dude, REAL_CLASS_FIRE_RANGER)
+        || entity_has_class(dude, REAL_CLASS_WATER_RANGER);
+    int has_druid = entity_has_class(dude, REAL_CLASS_AIR_DRUID)
+        || entity_has_class(dude, REAL_CLASS_EARTH_DRUID)
+        || entity_has_class(dude, REAL_CLASS_FIRE_DRUID)
+        || entity_has_class(dude, REAL_CLASS_WATER_DRUID);
+    int has_cleric = entity_has_class(dude, REAL_CLASS_AIR_CLERIC)
+        || entity_has_class(dude, REAL_CLASS_EARTH_CLERIC)
+        || entity_has_class(dude, REAL_CLASS_FIRE_CLERIC)
+        || entity_has_class(dude, REAL_CLASS_WATER_CLERIC);
+    int has_psionicist = entity_has_class(dude, REAL_CLASS_PSIONICIST);
+    int has_thief = entity_has_class(dude, REAL_CLASS_THIEF);
+    int has_preserver = entity_has_class(dude, REAL_CLASS_PRESERVER);
+
+    item_free_inventory(dude->inv);
+    if (dude->inv) {
+        memset(dude->inv, 0x0, sizeof(inventory_t));
+    } else {
+        dude->inv = calloc(1, sizeof(inventory_t));
+    }
+
+    if (has_gladiator || has_fighter || has_ranger || has_thief) {
+        add_ds1_starting_item(dude, SLOT_HAND0, 81, -1012); // bone sword
+    } else if (has_druid || has_cleric || has_psionicist) {
+        add_ds1_starting_item(dude, SLOT_HAND0, 18, -1185); // club
+    } else if (has_preserver) {
+        add_ds1_starting_item(dude, SLOT_HAND0, 3, -1019); // quaterstaff
+    } else {
+        return; // Dude has no class!
+    }
+
+    if (has_gladiator) {
+        add_ds1_starting_item(dude, SLOT_HAND1, 18, -1185); // club
+    } else if (has_fighter || has_ranger || has_cleric || has_thief) {
+        add_ds1_starting_item(dude, SLOT_HAND1, 4, -1020); // leather shield
+    }
+
+    if (has_gladiator || has_fighter || has_ranger || has_cleric) {
+        add_ds1_starting_item(dude, SLOT_ARM, 7, -1023); // leather arm armor
+    }
+
+    if (has_fighter) {
+        add_ds1_starting_item(dude, SLOT_LEGS, 8, -1026); // leather leg armor
+    }
+
+    if (has_fighter || has_gladiator || has_ranger || has_cleric || has_thief) {
+        add_ds1_starting_item(dude, SLOT_CHEST, 6, -1022); // leather chest armor
+    }
+
+    if (has_ranger || has_psionicist) {
+        add_ds1_starting_item(dude, SLOT_MISSILE, 1, -1017); // Bow
+        add_ds1_starting_item(dude, SLOT_AMMO, 62, -1070); // arrows
+    } else if (has_druid || has_thief || has_preserver) {
+        add_ds1_starting_item(dude, SLOT_MISSILE, 64, -1015); // sling
+    }
 }

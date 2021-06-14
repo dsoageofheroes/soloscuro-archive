@@ -736,13 +736,6 @@ static const int8_t class_mininum[][6] = {
     // REAL_CLASS_MAX,
 };
 
-static int has_class(entity_t *pc, const int16_t class){
-    return pc->class[0].class == class
-        || pc->class[1].class == class
-        || pc->class[2].class == class;
-}
-
-
 static const uint32_t* get_xp_table(const uint8_t class) {
     switch (class) {
         case REAL_CLASS_AIR_CLERIC:
@@ -863,7 +856,7 @@ static void set_psp(entity_t *pc) {
     if (pc->stats.wis >= 15) {
         pc->stats.high_psp += 20 + 2 * (pc->stats.wis - 15);
     }
-    if (has_class(pc, REAL_CLASS_PSIONICIST)) {
+    if (entity_has_class(pc, REAL_CLASS_PSIONICIST)) {
         int psi_level = 0;
         if (pc->class[0].class == REAL_CLASS_PSIONICIST) { psi_level = pc->class[0].level; }
         if (pc->class[1].class == REAL_CLASS_PSIONICIST) { psi_level = pc->class[1].level; }

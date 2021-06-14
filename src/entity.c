@@ -266,6 +266,14 @@ extern uint32_t entity_get_total_exp(entity_t *entity) {
     return total_exp;
 }
 
+extern int entity_has_class(const entity_t *dude, const uint16_t class) {
+    return dude &&
+        (dude->class[0].class == class
+          || dude->class[1].class == class
+          || dude->class[2].class == class
+          );
+}
+
 void entity_free(entity_t *dude) {
     if (!dude) { return; }
 

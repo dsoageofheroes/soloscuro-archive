@@ -128,4 +128,7 @@ extern int item_get_priest_level(item_t *item);
 // DS1 specific functions
 extern void item_convert_from_ds1(item_t *item, const ds1_item_t *ds1_item);
 
+struct entity_s;
+extern void item_set_starting(struct entity_s *pc);
+
 #endif
