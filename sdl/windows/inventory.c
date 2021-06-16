@@ -483,6 +483,11 @@ int inventory_window_handle_mouse_up(const uint32_t button, const uint32_t x, co
         return 1;
     } 
 
+    if (sprite_in_rect(character, x, y)) {
+        window_push(main_get_rend(), &view_character_window, 0, 10);
+        return 1;
+    } 
+
     for (int i = 9; i < 23; i++) {
         sprite_set_frame(slots, i);
         if (sprite_in_rect(slots, x, y)) {

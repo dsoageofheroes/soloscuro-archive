@@ -104,8 +104,16 @@ extern void port_toggle_window(const window_t window) {
 }
 
 void window_push(SDL_Renderer *renderer, wops_t *window, const uint32_t x, const uint32_t y) {
+    wops_t tmp;
     for (uint32_t i = 0; i < window_pos; i++) {
-        if (windows[i].render == window->render) { return; }
+        if (windows[i].render == window->render) {
+            tmp = windows[i];
+            for (uint32_t j = i + 1; j < window_pos; j++) {
+                windows[j] = windows[j - 1];
+            }
+            windows[window_pos] = tmp;
+            return;
+        }
     }
     window_load(renderer, window_pos++, window, x, y);
 }

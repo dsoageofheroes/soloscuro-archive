@@ -192,11 +192,12 @@ void add_load_save_render(void *data, SDL_Renderer *renderer) {
     for (unsigned int i = 0; i < 10; i++) {
         sprite_set_frame(bar, 0);
         sprite_set_location(bar, zoom * 45 + xoffset, zoom * (31 + i * 11) + yoffset);
-        if (sprite_in_rect(bar, mousex, mousey)) {
+
+        if (selection >= 0 && (i == (selection - top_entry))) {
             sprite_set_frame(bar, 1);
         }
-        if (i == selection - top_entry) {
-            sprite_set_frame(bar, 3);
+        if (sprite_in_rect(bar, mousex, mousey)) {
+            sprite_set_frame(bar, sprite_get_frame(bar) + 2);
         }
         sprite_render(renderer, bar);
     }

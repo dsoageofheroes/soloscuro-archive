@@ -191,6 +191,11 @@ extern void item_set_starting(dude_t *dude) {
         dude->inv = calloc(1, sizeof(inventory_t));
     }
 
+    if (dude->race == RACE_THRIKREEN) {
+        add_ds1_starting_item(dude, SLOT_MISSILE, 48, -1010);
+        return;
+    }
+
     if (has_gladiator || has_fighter || has_ranger || has_thief) {
         add_ds1_starting_item(dude, SLOT_HAND0, 81, -1012); // bone sword
     } else if (has_druid || has_cleric || has_psionicist) {
