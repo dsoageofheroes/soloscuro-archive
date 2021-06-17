@@ -105,11 +105,11 @@ extern void port_toggle_window(const window_t window) {
 
 void window_push(SDL_Renderer *renderer, wops_t *window, const uint32_t x, const uint32_t y) {
     wops_t tmp;
-    for (uint32_t i = 0; i < window_pos; i++) {
+    for (uint32_t i = 0; i <= window_pos; i++) {
         if (windows[i].render == window->render) {
             tmp = windows[i];
-            for (uint32_t j = i + 1; j < window_pos; j++) {
-                windows[j] = windows[j - 1];
+            for (uint32_t j = i + 1; j <= window_pos; j++) {
+                windows[j - 1] = windows[j];
             }
             windows[window_pos] = tmp;
             return;
@@ -142,6 +142,15 @@ int window_load_region(SDL_Renderer *renderer, const int region) {
 
 void window_render(SDL_Renderer *renderer, const uint32_t xmappos, const uint32_t ymappos) {
     SDL_RenderClear(renderer);
+
+    printf("window_render: ");
+    for (int i = 0; i < MAX_SCREENS; i++) {
+        if (windows[i].render) {
+            printf("%s ", windows[i].name);
+        }
+    }
+    printf("\n");
+
     for (int i = 0; i < MAX_SCREENS; i++) {
         if (windows[i].render) {
             windows[i].render(windows[i].data, renderer);
@@ -210,7 +219,7 @@ void window_clear() {
 void window_pop() {
     int grey_out_map = 0;
 
-    destroy_window(--window_pos);
+    destroy_window(window_pos--);
 
     if (window_pos > 0 && windows[window_pos - 1].return_control) {
         windows[window_pos - 1].return_control();

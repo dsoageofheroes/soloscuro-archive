@@ -14,6 +14,7 @@ typedef struct wops_s{
     void (*return_control) ();
     uint32_t (*get_width) ();
     uint32_t (*get_height) ();
+    const char *name;
     uint8_t grey_out_map;
     void *data;
 } wops_t;

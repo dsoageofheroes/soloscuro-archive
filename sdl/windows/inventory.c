@@ -222,6 +222,7 @@ static int display_attack(entity_t *entity, item_t *item, const int xpos, const 
 static void render_character() {
     char buf[BUF_MAX];
     entity_t *player = player_get(char_selected);
+    if (!player) { return; }
     inventory_t *player_items = (inventory_t*)player->inv;
     const float zoom = main_get_zoom();
 
@@ -275,7 +276,7 @@ static void render_backpack_slot(const int slot, const int frame, const int x, c
     sprite_set_location(slots, x, y);
     sprite_render(rend, slots);
     //animate_sprite_t *as = items[slot].sprite.data;
-    animate_sprite_t *as = items[slot].sprite.anim;
+    animate_sprite_t *as = items ? items[slot].sprite.anim : NULL;
 
     if (as) {
         sprite_center_spr(as->spr, slots);
@@ -296,7 +297,7 @@ void inventory_window_render(void *data, SDL_Renderer *renderer) {
 
     description[0] = '\0';
     entity_t *player = player_get(char_selected);
-    item_t *items = player->inv;
+    item_t *items = player ? player->inv : NULL;
     animate_sprite_t *as = NULL;
 
     sprite_render(renderer, panel);
@@ -343,7 +344,7 @@ void inventory_window_render(void *data, SDL_Renderer *renderer) {
     }
 
     for (int i = 9; i < 23; i++) {
-        as = item_icon(items + i - 9);
+        as = items ? item_icon(items + i - 9) : NULL;
         sprite_set_frame(slots, i);
         int32_t x = sprite_getx(slots);
         int32_t y = sprite_gety(slots);
@@ -587,6 +588,7 @@ wops_t inventory_window = {
     .mouse_down = inventory_window_handle_mouse_down,
     .mouse_up = inventory_window_handle_mouse_up,
     .return_control = inventory_window_return_control,
+    .name = "inventory",
     .grey_out_map = 1,
     .data = NULL
 };

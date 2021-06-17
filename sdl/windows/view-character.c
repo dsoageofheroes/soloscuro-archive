@@ -153,6 +153,8 @@ void view_character_init(SDL_Renderer *renderer, const uint32_t _x, const uint32
 static void render_character(SDL_Renderer *renderer) {
     const float zoom = main_get_zoom();
 
+    if (!player_get(player_selected)) { return; }
+
     label_set_group(player_get(player_selected), SCREEN_VIEW_CHARACTER);
     label_set_positions(143 * zoom, 30 * zoom, SCREEN_VIEW_CHARACTER);
     label_render_stats(xoffset, yoffset);
@@ -296,7 +298,15 @@ void view_character_render(void *data, SDL_Renderer *renderer) {
     sprite_render(renderer, game_return);
 
     for (int i = 0; i < 4; i++) {
+        sprite_set_frame(ai[i], 0);
+        if (player_ai(i)) {
+            sprite_set_frame(ai[i], 1);
+        }
         sprite_render(renderer, ai[i]);
+        sprite_set_frame(leader[i], 0);
+        if (player_exists(i) && player_get(i) == player_get_active()) {
+            sprite_set_frame(leader[i], 1);
+        }
         sprite_render(renderer, leader[i]);
     }
 
@@ -399,6 +409,12 @@ int view_character_handle_mouse_down(const uint32_t button, const uint32_t x, co
             player_selected = i;
             strcpy(description, player_get(player_selected)->name);
         }
+        if (sprite_in_rect(leader[i], x, y)) {
+            player_set_active(i);
+        }
+        if (sprite_in_rect(ai[i], x, y)) {
+            player_set_ai(i, !player_ai(i));
+        }
     }
     return 1; // means I captured the mouse click
 }
@@ -443,9 +459,9 @@ int view_character_handle_mouse_up(const uint32_t button, const uint32_t x, cons
     sprite_set_frame(powers, 0);
     sprite_set_frame(status, 0);
 
-    if (sprite_in_rect(game_return, x, y)) { window_pop(); } 
+    if (sprite_in_rect(game_return, x, y)) { window_pop(); return 1; } 
     if (sprite_in_rect(character, x, y)) { mode = 0; }
-    if (sprite_in_rect(inv, x, y)) { window_push(rend, &inventory_window, 0, 0); }
+    if (sprite_in_rect(inv, x, y)) { window_push(rend, &inventory_window, 0, 0); return 1;}
     if (sprite_in_rect(powers, x, y)) { mode = 2; }
     if (sprite_in_rect(status, x, y)) { mode = 3; }
 
@@ -544,6 +560,7 @@ wops_t view_character_window = {
     .mouse_down = view_character_handle_mouse_down,
     .mouse_up = view_character_handle_mouse_up,
     .return_control = view_character_return_control,
+    .name = "view",
     .grey_out_map = 1,
     .data = NULL
 };

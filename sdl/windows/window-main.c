@@ -42,12 +42,14 @@ void main_init(SDL_Renderer *_renderer, const uint32_t x, const uint32_t y) {
     exit_dos = main_sprite_create(renderer, pal, 90 + x / zoom, 100 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2051);
 }
 
-static void click_action() {
+static int click_action() {
+    int ret = 0;
     if (count_down_spr == exit_dos) { main_exit_system(); }
     if (count_down_spr == create_characters) { window_push(renderer, &view_character_window, 0, 10); }
     if (count_down_spr == start) {
         if(player_get_active()->name) {
             window_pop();
+            ret = 1;
             window_load_region(renderer, 42);
         } else {
             window_push(renderer, &popup_window, 100, 75);
@@ -57,10 +59,13 @@ static void click_action() {
             popup_set_option(2, "CANCEL");
         }
     }
+
     if (count_down_spr == load_save) {
         add_load_save_set_mode(ACTION_LOAD);
         window_push(renderer, &als_window, 0, 0);
     }
+
+    return ret;
 }
 
 void main_render(void *data, SDL_Renderer *renderer) {
@@ -75,7 +80,7 @@ void main_render(void *data, SDL_Renderer *renderer) {
         count_down--;
         if (count_down == 0) {
             sprite_set_frame(count_down_spr, 0);
-            click_action();
+            if (click_action()) { return; }
             count_down_spr = SPRITE_ERROR;
         }
     }
@@ -141,6 +146,7 @@ wops_t main_window = {
     .mouse_movement = main_handle_mouse_movement,
     .mouse_down = main_handle_mouse_down,
     .mouse_up = main_handle_mouse_up,
+    .name = "main",
     .grey_out_map = 0,
     .data = NULL
 };

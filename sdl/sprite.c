@@ -191,6 +191,8 @@ void sprite_render(SDL_Renderer *renderer, const uint16_t sprite_id) {
     if (sprite_id == (uint16_t)SPRITE_ERROR) { return; }
     sprite_t *sprite = sprites + sprite_id;
     /*
+    printf("sprite_render: %d(%p)\n", sprite_id, sprite);
+    printf("sprite_Render: text = %p\n", sprite->tex);
     printf("->%p [%d] {%d, %d, %d, %d}\n", sprite->tex[sprite->pos], sprite->pos,
             sprite->loc[sprite->pos].x,
             sprite->loc[sprite->pos].y,
@@ -292,7 +294,7 @@ uint32_t sprite_get_xdiff_from_start(const uint16_t id) {
 // Free a sprite at an ID (do not use it again!)
 void sprite_free(const uint16_t id) {
     if (!valid_id(id)) { return; }
-    //printf("HERE: %d, %d\n", sprites[id].in_use, sprites[id].len);
+    //printf("sprite_free (%d): %d, %d\n", id, sprites[id].in_use, sprites[id].len);
     if (sprites[id].in_use) {
         for (int i = 0; i < sprites[id].len; i++) {
             SDL_DestroyTexture(sprites[id].tex[i]);
