@@ -4,6 +4,7 @@
 #include "port.h"
 #include "dsl.h"
 #include "player.h"
+#include "region-manager.h"
 #include <string.h>
 
 #define MAX_SOL_FUNCS (1<<10)
@@ -67,7 +68,14 @@ static int toggle_inventory(lua_State *l) {
 
 static int load_region(lua_State *l) {
     return lua_return_bool(l,
-        port_load_region(luaL_checkinteger(l, 1)));
+        port_load_region(lua_tointeger(l, 1)));
+}
+
+static int change_region(lua_State *l) {
+    region_t* reg = region_manager_get_region(luaL_checkinteger(l, 1));
+    if (!reg) { return lua_return_bool(l, 0); }
+    region_manager_set_current(reg);
+    return lua_return_bool(l, 1);
 }
 
 static int set_player_frame_delay(lua_State *l) {
@@ -118,6 +126,12 @@ static int load_window(lua_State *l) {
         port_load_window(WINDOW_MAIN);
     } else if (!strcmp(str, "character-creation")) {
         port_load_window(WINDOW_CHARACTER_CREATION);
+    } else if (!strcmp(str, "map")) {
+        port_load_window(WINDOW_MAP);
+    } else if (!strcmp(str, "narrate")) {
+        port_load_window(WINDOW_NARRATE);
+    } else if (!strcmp(str, "combat")) {
+        port_load_window(WINDOW_COMBAT);
     }
 
     return 0;
@@ -136,6 +150,7 @@ static int exit_game(lua_State *l) {
 static const struct luaL_Reg sol_funcs[] = {
     {"load_charsave", sol_load_charsave},
     {"load_region", load_region},
+    {"change_region", change_region},
     {"set_player_frame_delay", set_player_frame_delay},
     {"set_player_move", set_player_move},
     {"set_xscroll", set_xscroll},

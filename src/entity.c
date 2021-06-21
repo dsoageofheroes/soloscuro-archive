@@ -126,7 +126,7 @@ entity_t* entity_create_from_objex(const int id) {
                 warn("Item loading from rdff not implemented.\n");
                 break;
             case COMBAT_OBJECT:
-                dude->sprite.scmd = combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
+                dude->anim.scmd = combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
                 apply_combat(dude, (ds1_combat_t *) (rdff + 1));
                 break;
             case CHAR_OBJECT:
@@ -173,7 +173,7 @@ extern void entity_load_from_object(entity_t *entity, const char *data) {
     entity->effects = effects;
 
     if (!entity->inv) {
-        entity->inv = calloc(1, sizeof(inventory_t));
+        entity->inv = inventory_create();
     }
     entity->sprite.data = NULL;
 }
@@ -200,7 +200,7 @@ void entity_load_from_gff(entity_t *entity, const int gff_idx, const int player,
     offset += rdff->len;
 
     if (!entity->inv) {
-        entity->inv = calloc(1, sizeof(inventory_t));
+        entity->inv = inventory_create();
     }
 
     for (int i = 0; i < num_items; i++) {
@@ -230,6 +230,7 @@ entity_t* entity_create_from_etab(gff_map_object_t *entry_table, uint32_t id) {
     gff_read_object(gm->index, &disk_object);
     dude->object_flags = disk_object.flags;
     dude->sprite.bmp_id = disk_object.bmp_id;
+    dude->anim.spr = SPRITE_ERROR;
     dude->ds_id = gm->index;
 
     dude->mapx = (gm->xpos) / 16;
@@ -252,6 +253,7 @@ extern void entity_copy_item(entity_t *entity, item_t *item, const size_t slot) 
 
 extern void entity_clear_item(entity_t *entity, const size_t slot) {
     memset(entity->inv + slot, 0x0, sizeof(item_t));
+    entity->inv[slot].anim.spr = SPRITE_ERROR;
 }
 
 extern uint32_t entity_get_total_exp(entity_t *entity) {
@@ -327,6 +329,7 @@ extern entity_t* entity_create_fake(const int mapx, const int mapy) {
     dude_t *dude = calloc(1, sizeof(dude_t));
     dude->mapx = mapx;
     dude->mapy = mapy;
+    dude->anim.spr = SPRITE_ERROR;
     return dude;
 }
 

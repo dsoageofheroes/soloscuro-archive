@@ -6,6 +6,14 @@
 #include "port.h"
 #include "entity.h"
 
+extern item_t* inventory_create() {
+    item_t *ret = calloc(1, sizeof(inventory_t));
+    for (int i = 0; i < 26; i++) {
+        ret[i].anim.spr = SPRITE_ERROR;
+    }
+    return ret;
+}
+
 static int32_t get_bmp_id(item_t *item) {
     disk_object_t dobj;
     if (!item) { return -1; }
@@ -111,6 +119,12 @@ extern item_t* item_dup(item_t *item) {
     return ret;
 }
 
+void item_free_except_graphics(item_t *item) {
+    if (item) {
+        free(item);
+    }
+}
+
 void item_free(item_t *item) {
     if (item) {
         port_free_item(item);
@@ -150,10 +164,10 @@ extern animate_sprite_t* item_icon(item_t *item) {
 
     if (!port_valid_sprite(&item->sprite)) {
         if (!item->sprite.bmp_id) { return NULL; }
-        port_load_sprite(&item->sprite, pal, OBJEX_GFF_INDEX, GFF_BMP, item->sprite.bmp_id);
+        port_load_sprite(&item->anim, pal, OBJEX_GFF_INDEX, GFF_BMP, item->sprite.bmp_id);
     }
 
-    return item->sprite.anim;
+    return &(item->anim);
 }
 
 static void add_ds1_starting_item(entity_t *pc, const int slot, const int item_index, const int id) {
@@ -188,7 +202,7 @@ extern void item_set_starting(dude_t *dude) {
     if (dude->inv) {
         memset(dude->inv, 0x0, sizeof(inventory_t));
     } else {
-        dude->inv = calloc(1, sizeof(inventory_t));
+        dude->inv = inventory_create();
     }
 
     if (dude->race == RACE_THRIKREEN) {

@@ -426,7 +426,7 @@ extern int entity_animation_list_execute(entity_animation_list_t *list, region_t
     switch(list->head->ca.action) {
         case EA_MELEE:
             play_melee_sound(source);
-            source->sprite.scmd = get_entity_scmd(source->sprite.scmd, list->head->ca.action);
+            source->anim.scmd = get_entity_scmd(source->anim.scmd, list->head->ca.action);
             port_update_entity(source, 0, 0);
             break;
         case EA_RED_DAMAGE:
@@ -435,7 +435,7 @@ extern int entity_animation_list_execute(entity_animation_list_t *list, region_t
         case EA_MAGIC_DAMAGE:
         case EA_BROWN_DAMAGE:
             play_damage_sound(target);
-            source->sprite.scmd = get_scmd(source->sprite.scmd, 0, 0);
+            source->anim.scmd = get_scmd(source->anim.scmd, 0, 0);
             port_update_entity(source, 0, 0);
             port_combat_action(&(list->head->ca));
             break;

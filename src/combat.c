@@ -117,7 +117,7 @@ extern int combat_initiate(region_t *reg, const uint16_t x, const uint16_t y) {
 
     // Freeze all combats.
     entity_list_for_each(reg->cr.combatants, enemy) {
-        enemy->sprite.scmd = entity_animation_get_scmd(enemy->sprite.scmd, 0, 0, EA_NONE);
+        enemy->anim.scmd = entity_animation_get_scmd(enemy->anim.scmd, 0, 0, EA_NONE);
         port_update_entity(enemy, 0, 0);
     }
 
@@ -337,7 +337,7 @@ static void apply_action_animation(const enum entity_action_e action) {
     }
 
     //printf("(%d, %d) applying xdiff = %d, ydiff = %d\n", current_turn->entity->mapx, current_turn->entity->mapy, xdiff, ydiff);
-    current_turn->entity->sprite.scmd = entity_animation_get_scmd(current_turn->entity->sprite.scmd,
+    current_turn->entity->anim.scmd = entity_animation_get_scmd(current_turn->entity->anim.scmd,
             xdiff, ydiff, EA_NONE);
     port_update_entity(current_turn->entity, xdiff, ydiff);
 }
@@ -347,7 +347,7 @@ static void end_turn() {
     monster_step = -1;
 
     if (entity) {
-        entity->sprite.scmd = entity_animation_get_scmd(entity->sprite.scmd, 0, 0, EA_NONE);
+        entity->anim.scmd = entity_animation_get_scmd(entity->anim.scmd, 0, 0, EA_NONE);
     }
     current_turn = current_turn->next;
     /*
@@ -470,7 +470,7 @@ static void move_entity(region_t *reg, entity_t *entity, const enum entity_actio
 
     switch(action) {
         case EA_NONE:
-            entity->sprite.scmd = entity_animation_get_scmd(entity->sprite.scmd, 0, 0, EA_NONE);
+            entity->anim.scmd = entity_animation_get_scmd(entity->anim.scmd, 0, 0, EA_NONE);
             port_update_entity(entity, 0, 0);
             ticks_per_game_round = 0;
             break;
@@ -484,7 +484,7 @@ static void move_entity(region_t *reg, entity_t *entity, const enum entity_actio
         case EA_WALK_RIGHT:
             enemy = entity_in_way(reg, entity, action);
             if (enemy && enemy->allegiance != entity->allegiance) {
-                entity->sprite.scmd = entity_animation_face_direction(entity->sprite.scmd, action);
+                entity->anim.scmd = entity_animation_face_direction(entity->anim.scmd, action);
                 player_melee(reg, entity, enemy);
                 return;
             }
@@ -651,9 +651,9 @@ extern int combat_activate_power(power_t *pw, entity_t *source, entity_t *target
 
     //entity_animation_list_t* list = entity_animation_list_create();
     power_load(pw);
-    pw->cast.bmp_id = 0;
-    pw->hit.bmp_id = 0;
-    pw->thrown.bmp_id = 0;
+    //pw->cast.bmp_id = 0;
+    //pw->hit.bmp_id = 0;
+    //pw->thrown.bmp_id = 0;
 
     if (!target) { // time to make a fake target for the power.
         target = entity_create_fake(x, y);

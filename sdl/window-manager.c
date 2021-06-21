@@ -67,6 +67,9 @@ extern void port_load_window(const window_t window) {
         case WINDOW_INVENTORY: window_toggle(main_get_rend(), &inventory_window, 0, 0); break;
         case WINDOW_MAIN: window_toggle(main_get_rend(), &main_window, 0, 0); break;
         case WINDOW_CHARACTER_CREATION: window_toggle(main_get_rend(), &new_character_window, 0, 0); break;
+        case WINDOW_MAP: window_toggle(main_get_rend(), &map_window, 0, 0); break;
+        case WINDOW_NARRATE: window_toggle(main_get_rend(), &narrate_window, 0, 0); break;
+        case WINDOW_COMBAT: window_toggle(main_get_rend(), &combat_status_window, 0, 0); break;
     }
 }
 
@@ -100,6 +103,9 @@ extern void port_toggle_window(const window_t window) {
         case WINDOW_INVENTORY: window_toggle(main_get_rend(), &inventory_window, 0, 0); break;
         case WINDOW_MAIN: window_toggle(main_get_rend(), &main_window, 0, 0); break;
         case WINDOW_CHARACTER_CREATION: window_toggle(main_get_rend(), &new_character_window, 0, 0); break;
+        case WINDOW_MAP: window_toggle(main_get_rend(), &map_window, 0, 0); break;
+        case WINDOW_NARRATE: window_toggle(main_get_rend(), &narrate_window, 0, 0); break;
+        case WINDOW_COMBAT: window_toggle(main_get_rend(), &combat_status_window, 0, 0); break;
     }
 }
 
@@ -111,7 +117,7 @@ void window_push(SDL_Renderer *renderer, wops_t *window, const uint32_t x, const
             for (uint32_t j = i + 1; j <= window_pos; j++) {
                 windows[j - 1] = windows[j];
             }
-            windows[window_pos] = tmp;
+            windows[window_pos - 1] = tmp;
             return;
         }
     }
@@ -142,14 +148,6 @@ int window_load_region(SDL_Renderer *renderer, const int region) {
 
 void window_render(SDL_Renderer *renderer, const uint32_t xmappos, const uint32_t ymappos) {
     SDL_RenderClear(renderer);
-
-    printf("window_render: ");
-    for (int i = 0; i < MAX_SCREENS; i++) {
-        if (windows[i].render) {
-            printf("%s ", windows[i].name);
-        }
-    }
-    printf("\n");
 
     for (int i = 0; i < MAX_SCREENS; i++) {
         if (windows[i].render) {
@@ -219,8 +217,9 @@ void window_clear() {
 void window_pop() {
     int grey_out_map = 0;
 
-    destroy_window(window_pos--);
+    destroy_window(--window_pos);
 
+    printf("window_pos = %d\n", window_pos);
     if (window_pos > 0 && windows[window_pos - 1].return_control) {
         windows[window_pos - 1].return_control();
     }

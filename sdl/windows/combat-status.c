@@ -39,6 +39,7 @@ static void start_node() {
     audio_play_voc(RESOURCE_GFF_INDEX, GFF_BVOC, list->sound, 1.0);
 }
 
+/*
 static void add_node_list(animate_sprite_node_t *an, uint16_t sound, entity_action_t *ca) {
     // DO NOT STORE CA!!!!!!!!!!!!
     animate_sprite_node_list_t *rover = list;
@@ -58,6 +59,7 @@ static void add_node_list(animate_sprite_node_t *an, uint16_t sound, entity_acti
     while(rover->next) { rover = rover->next; }
     rover->next = toadd;
 }
+*/
 
 static void clear() {
     //sprite_set_location(combat_attacks, -1000, -1000);
@@ -295,7 +297,7 @@ int get_direction(entity_t *source, entity_t *target) {
 void port_combat_action(entity_action_t *ca) {
     // DO NOT STORE THE POINTER TO CA!!!!!!!!
     float const zoom = main_get_zoom();
-    animate_sprite_node_t *asn = NULL, *source = NULL, *cast = NULL,
+    animate_sprite_t *as = NULL, *source = NULL, *cast = NULL,
         *dest = NULL, *hit = NULL, *throw = NULL;
     int dir = 0;
 
@@ -314,55 +316,55 @@ void port_combat_action(entity_action_t *ca) {
         case EA_GREEN_DAMAGE:
         case EA_MAGIC_DAMAGE:
         case EA_BROWN_DAMAGE:
-            asn = ca->target->sprite.data;
-            sprite_center_spr(combat_attacks, asn->anim->spr);
+            as = &(ca->target->anim);
+            sprite_center_spr(combat_attacks, as->spr);
             show_attack = 1;
             damage_amount = ca->amt;
             return;
         case EA_POWER_CAST:
-            source = ca->source->sprite.data;
-            cast = ca->power->cast.data;
-            sprite_center_spr(cast->anim->spr, source->anim->spr);
-            cast->anim->x = sprite_getx(cast->anim->spr) + getCameraX();
-            cast->anim->y = sprite_gety(cast->anim->spr) + getCameraY();
-            cast->anim->destx = cast->anim->x;
-            cast->anim->desty = cast->anim->y;
-            cast->anim->scmd = combat_get_scmd(COMBAT_POWER_CAST);
-            add_node_list(cast, ca->power->cast_sound, ca);
+            source = &(ca->source->anim);
+            cast = &(ca->power->cast);
+            sprite_center_spr(cast->spr, source->spr);
+            cast->x = sprite_getx(cast->spr) + getCameraX();
+            cast->y = sprite_gety(cast->spr) + getCameraY();
+            cast->destx = cast->x;
+            cast->desty = cast->y;
+            cast->scmd = combat_get_scmd(COMBAT_POWER_CAST);
+            //add_node_list(cast, ca->power->cast_sound, ca);
             break;
         case EA_POWER_THROW:
             dir = get_direction(ca->source, ca->target);
-            throw = ca->power->thrown.data;
-            source = ca->source->sprite.data;
-            dest = ca->target->sprite.data;
-            if (sprite_num_frames(throw->anim->spr) < 30) {
-                throw->anim->scmd = combat_get_scmd(COMBAT_POWER_THROW_STATIC_U + dir);
+            throw = &(ca->power->thrown);
+            source = &(ca->source->anim);
+            dest = &(ca->target->anim);
+            if (sprite_num_frames(throw->spr) < 30) {
+                throw->scmd = combat_get_scmd(COMBAT_POWER_THROW_STATIC_U + dir);
             } else {
-                throw->anim->scmd = combat_get_scmd(COMBAT_POWER_THROW_ANIM_U + dir);
+                throw->scmd = combat_get_scmd(COMBAT_POWER_THROW_ANIM_U + dir);
             }
-            throw->anim->x = sprite_getx(source->anim->spr) + getCameraX();
-            throw->anim->y = sprite_gety(source->anim->spr) + getCameraY();
-            throw->anim->destx = dest
-                ? sprite_getx(dest->anim->spr) + sprite_getw(dest->anim->spr) / 2 + getCameraX()
+            throw->x = sprite_getx(source->spr) + getCameraX();
+            throw->y = sprite_gety(source->spr) + getCameraY();
+            throw->destx = dest
+                ? sprite_getx(dest->spr) + sprite_getw(dest->spr) / 2 + getCameraX()
                 : ca->target->mapx * 16 * zoom;
-            throw->anim->desty = dest
-                ? sprite_gety(dest->anim->spr) + sprite_geth(dest->anim->spr) / 2 + getCameraY()
+            throw->desty = dest
+                ? sprite_gety(dest->spr) + sprite_geth(dest->spr) / 2 + getCameraY()
                 : ca->target->mapy * 16 * zoom;
             //printf("(%d, %d) -> (%d, %d)\n", throw->anim->x, throw->anim->y,
                 //throw->anim->destx, throw->anim->desty);
-            throw->anim->movex = abs(throw->anim->destx - throw->anim->x) / 30;
-            throw->anim->movey = abs(throw->anim->desty - throw->anim->y) / 30;
-            add_node_list(throw, ca->power->thrown_sound, ca);
+            throw->movex = abs(throw->destx - throw->x) / 30;
+            throw->movey = abs(throw->desty - throw->y) / 30;
+            //add_node_list(throw, ca->power->thrown_sound, ca);
         case EA_POWER_HIT:
-            dest = ca->target->sprite.data;
-            hit = ca->power->hit.data;
-            sprite_center_spr(hit->anim->spr, dest->anim->spr);
-            hit->anim->x = sprite_getx(hit->anim->spr) + getCameraX();
-            hit->anim->y = sprite_gety(hit->anim->spr) + getCameraY();
-            hit->anim->destx = hit->anim->x;
-            hit->anim->desty = hit->anim->y;
-            hit->anim->scmd = combat_get_scmd(COMBAT_POWER_CAST);
-            add_node_list(hit, ca->power->hit_sound, ca);
+            dest = &(ca->target->anim);
+            hit = &(ca->power->hit);
+            sprite_center_spr(hit->spr, dest->spr);
+            hit->x = sprite_getx(hit->spr) + getCameraX();
+            hit->y = sprite_gety(hit->spr) + getCameraY();
+            hit->destx = hit->x;
+            hit->desty = hit->y;
+            hit->scmd = combat_get_scmd(COMBAT_POWER_CAST);
+            //add_node_list(hit, ca->power->hit_sound, ca);
         default:
             break;
     }

@@ -488,7 +488,7 @@ static int dsl_clone(lua_State *l) {
         entry_id = dude->ds_id;
 
         if (dude) {
-            if (dude->sprite.scmd == NULL) { dude->sprite.scmd = ssi_scmd_empty(); }
+            if (dude->anim.scmd == NULL) { dude->anim.scmd = ssi_scmd_empty(); }
             region_move_to_nearest(region_manager_get_current(), dude);
             region_add_entity(region_manager_get_current(), dude);
             port_add_entity(dude, pal);

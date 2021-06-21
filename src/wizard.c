@@ -148,26 +148,32 @@ int spell_has_spell(ssi_spell_list_t *spells, uint16_t spell) {
 
 extern void spells_set_icon(power_t *spell, const uint16_t id) {
     if (!spell) { return; }
+    /*
     spell->icon.bmp_id = id;
     spell->icon.xoffset = spell->icon.yoffset = spell->icon.flags = 0;
-    spell->icon.scmd = NULL;
+    spell->icon.anim.scmd = NULL;
     spell->icon.data = NULL;
+    */
 }
 
 extern void spells_set_thrown(power_t *spell, const uint16_t id) {
     if (!spell) { return; }
+    /*
     spell->thrown.bmp_id = id;
     spell->thrown.xoffset = spell->icon.yoffset = spell->icon.flags = 0;
-    spell->thrown.scmd = NULL;
+    spell->thrown.anim.scmd = NULL;
     spell->thrown.data = NULL;
+    */
 }
 
 extern void spells_set_hit(power_t *spell, const uint16_t id) {
     if (!spell) { return; }
+    /*
     spell->hit.bmp_id = id;
     spell->hit.xoffset = spell->icon.yoffset = spell->icon.flags = 0;
-    spell->hit.scmd = NULL;
+    spell->hit.anim.scmd = NULL;
     spell->hit.data = NULL;
+    */
 }
 
 extern char* spells_read_description(const uint16_t id) {

@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "dsl-manager.h"
 
 #define MAX_REGIONS (0xFF)
 
@@ -22,12 +23,10 @@ void region_manager_init() {
 void region_manager_cleanup() {
     for (int i = 0; i < MAX_REGIONS; i++) {
         if (ssi_regions[i]) {
-            combat_free(&(ssi_regions[i]->cr));
             region_free(ssi_regions[i]);
             ssi_regions[i] = NULL;
         }
         if (sol_regions[i]) {
-            combat_free(&(sol_regions[i]->cr));
             region_free(sol_regions[i]);
             ssi_regions[i] = NULL;
         }
@@ -49,6 +48,21 @@ region_t* region_manager_get_region(const int region_id) {
 
         ssi_regions[region_id] = region_create(gff_index);
         entity_list_load_etab(ssi_regions[region_id]->entities, gff_index, region_id);
+        entity_list_for_each(ssi_regions[region_id]->entities, dude) {
+            animation_list_add(ssi_regions[region_id]->anims, &dude->anim);
+        }
+
+/*
+        entity_list_for_each(ssi_regions[region_id]->entities, dude) {
+            animation_list_add(ssi_regions[region_id]->anims, dude->sprite.anim);
+        }
+        dude = player_get_active();
+        if (dude) {
+            dude->region = region_id;
+            animation_list_add(ssi_regions[region_id]->anims, dude->sprite.anim);
+        }
+        printf("->%p\n", ssi_regions[region_id]->anims->head);
+        */
     }
 
     current_region = region_id;
@@ -174,6 +188,7 @@ extern int region_manager_add_region(region_t *region) {
 }
 
 extern void region_manager_set_current(region_t *region) {
+    if (!region) { return; }
     for (int i = 0; i < MAX_REGIONS; i++) {
         if (ssi_regions[i] == region) { current_region = i; }
         if (sol_regions[i] == region) { current_region = MAX_REGIONS + i; }

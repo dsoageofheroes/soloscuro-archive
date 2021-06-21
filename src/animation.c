@@ -12,6 +12,8 @@ animation_list_t* animation_list_create() {
 void animation_list_free(animation_list_t *al) {
     if (!al) { return; }
 
+    while (al->head) { animation_node_free(animation_list_remove(al, al->head)); }
+
     free(al);
 }
 
@@ -25,6 +27,13 @@ animate_sprite_node_t* animate_sprite_node_create() {
 
 void animation_node_free(animation_node_t *node) {
     free(node);
+}
+
+animation_node_t* animation_list_find(animation_list_t *al, animate_sprite_t *anim) {
+    for (animation_node_t *rover = al ? al->head : NULL; rover; rover = rover->next) {
+        if (rover->anim == anim) { return rover; }
+    }
+    return NULL;
 }
 
 animation_node_t* animation_list_add(animation_list_t *al, animate_sprite_t *anim) {
@@ -44,9 +53,10 @@ animation_node_t* animation_list_add(animation_list_t *al, animate_sprite_t *ani
 
     al->head->prev = to_add;
     al->head = to_add;
-    //sprite_set_frame(node->anim->spr, node->anim->scmd->bmp_idx);
-    //animate_list[zpos] = node;
     animation_shift_node(to_add);
+
+    // The shift can change the head, so lets update it.
+    while (al->head->prev) { al->head = al->head->prev; }
 
     return to_add;
 }
@@ -83,6 +93,11 @@ animation_node_t* animation_list_remove(animation_list_t *al, animation_node_t *
 
 // The assembly makes even less sense...
 static int is_less(animate_sprite_t *a0, animate_sprite_t *a1) {
+    if (a0 && a0->entity && a1 && a1->entity) {
+        if (a0->entity->mapz != a1->entity->mapz) {
+            return a0->entity->mapz < a1->entity->mapz;
+        }
+    }
     int map0y = (a0 && a0->entity)
         ? (a0->entity->mapy)// * 16 + a0->entity->sprite.yoffset)
         : 0;

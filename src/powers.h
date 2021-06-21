@@ -34,10 +34,11 @@ typedef struct power_s {
     int32_t         range;
     int32_t         aoe;
     enum            target_shape shape;
-    sprite_info_t   icon;
-    sprite_info_t   cast;
-    sprite_info_t   thrown;
-    sprite_info_t   hit;
+    uint16_t           icon_id;
+    animate_sprite_t   icon;
+    animate_sprite_t   cast;
+    animate_sprite_t   thrown;
+    animate_sprite_t   hit;
     uint16_t        cast_sound, thrown_sound, hit_sound;
     int8_t          level;
     power_actions_t actions;
@@ -71,17 +72,18 @@ typedef struct power_overlay_s {
 // If AOE, then many children entities are created that point to the parent/master spell entity.
 // This allows each tile/square its own trigger and the parent/master can clean up the children when the duration is over.
 
-extern void powers_init();
-extern void powers_cleanup();
+extern void              powers_init();
+extern void              powers_cleanup();
+extern power_t*          power_create();
 extern animate_sprite_t* power_get_icon(power_t *pw);
-extern void powers_set_cast(power_t *powers, const uint32_t id);
-extern void powers_set_icon(power_t *powers, const uint32_t id);
-extern void powers_set_thrown(power_t *powers, const uint32_t id);
-extern void powers_set_hit(power_t *powers, const uint32_t id);
-extern void power_load(power_t *powers);
-extern void power_free(power_t *pw);
+extern void              powers_set_cast(power_t *powers, const uint32_t id);
+extern void              powers_set_icon(power_t *powers, const uint32_t id);
+extern void              powers_set_thrown(power_t *powers, const uint32_t id);
+extern void              powers_set_hit(power_t *powers, const uint32_t id);
+extern void              power_load(power_t *powers);
+extern void              power_free(power_t *pw);
 extern enum target_shape power_get_target_type(power_t *power);
-extern size_t select_by_game(const size_t ds1, const size_t ds2, const size_t dso);
-extern char* spin_read_description(const uint16_t id);
+extern size_t            select_by_game(const size_t ds1, const size_t ds2, const size_t dso);
+extern char*             spin_read_description(const uint16_t id);
 
 #endif

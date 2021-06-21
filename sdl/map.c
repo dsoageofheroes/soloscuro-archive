@@ -30,6 +30,20 @@ static uint16_t tile_highlight = SPRITE_ERROR;
 
 static void clear_animations();
 void map_free(map_t *map);
+static void map_load_current_region();
+static map_t *create_map();
+
+static void sprite_load_animation(entity_t *entity, gff_palette_t *pal);
+void map_render_anims(SDL_Renderer *renderer);
+
+void map_load(SDL_Renderer *renderer, const uint32_t _x, const uint32_t _y) {
+    if (!cmap && region_manager_get_current()) {
+        cmap = create_map();
+        cren = renderer;
+        cmap->region = region_manager_get_current();
+        map_load_current_region();
+    }
+}
 
 void map_init(map_t *map) {
     map->tiles = NULL;
@@ -98,13 +112,53 @@ static void map_load_current_region() {
 
     dude_t *dude;
     entity_list_for_each(map->region->entities, dude) {
-        port_add_entity(dude, pal);
+        //port_add_entity(dude, pal);
+        sprite_load_animation(dude, pal);
+    }
+
+    if (player_get_active()) {
+        if (player_get_active()->anim.spr == SPRITE_ERROR) {
+            sprite_load_animation(player_get_active(), pal);
+        }
+        animation_list_add(map->region->anims, &(player_get_active()->anim));
     }
 
     cmap = map;
 
     //TODO: Find out what maps to which areas.
     audio_play_xmi(RESOURCE_GFF_INDEX, GFF_GSEQ, 2);
+
+    dsl_lua_execute_script(cmap->region->map_id, 0, 1);
+}
+
+static void sprite_load_animation(entity_t *entity, gff_palette_t *pal) {
+    const float zoom = main_get_zoom();
+    //anims[anim_pos].scmd = entity->sprite.anim.scmd;
+    //anims[anim_pos].spr =
+    entity->anim.spr =
+        sprite_new(cren, pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP, entity->sprite.bmp_id);
+    if (entity->name) { // If it is a combat entity, then we need to add the combat sprites
+        sprite_append(entity->anim.spr, cren, pal, 0, 0, zoom,
+            OBJEX_GFF_INDEX, GFF_BMP, entity->sprite.bmp_id + 1);
+    }
+    entity->anim.delay = 0;
+    entity->anim.pos = 0;
+    entity->anim.w = sprite_getw(entity->anim.spr);
+    entity->anim.h = sprite_geth(entity->anim.spr);
+    entity->anim.x = (entity->mapx * 16 + entity->sprite.xoffset) * zoom;
+    entity->anim.y = (entity->mapy * 16 + entity->sprite.yoffset + entity->mapz) * zoom;
+    entity->anim.destx = entity->anim.x;
+    entity->anim.destx -= sprite_getw(entity->anim.spr) / 2;
+    entity->anim.desty = entity->anim.y;
+
+    if (entity->name) {
+        entity->anim.desty -= sprite_geth(entity->anim.spr) - (8 * main_get_zoom());
+    }
+    entity->anim.movey = entity->anim.movex = entity->anim.left_over = 0.0;
+    entity->anim.entity = entity;
+    //printf("%d: %d %d %d (%d, %d)\n", obj->combat_id, obj->mapx, obj->mapy, obj->mapz, anims[anim_pos].x, anims[anim_pos].y);
+    //printf("             (%d, %d)\n", anims[anim_pos].destx, anims[anim_pos].desty);
+    //printf("%s: @ %p\n", entity->name, entity->sprite.data);
 }
 
 static map_t *create_map() {
@@ -131,6 +185,7 @@ void map_load_region(region_t *reg, SDL_Renderer *renderer) {
 void map_load_map(SDL_Renderer *renderer, int id) {
     map_free(cmap);
     if (!cmap) { cmap = create_map(); }
+    map_init(cmap);
 
     cren = renderer;
     cmap->region = region_manager_get_region(id);
@@ -228,15 +283,113 @@ void map_render(void *data, SDL_Renderer *renderer) {
         tile_loc.x = -xoffset;
         tile_loc.y += stretch * 16;
     }
-    animate_list_render(renderer);
+
+    //anim = map->region->anims->head->anim;
+    //for (animation_node_t *__el_rover = (map->region->anims->head); __el_rover;
+        //__el_rover = __el_rover->next, anim = __el_rover->anim) {
+    //}
+    map_render_anims(renderer);
+    /*
+    animation_list_for_each(map->region->anims, anim) {
+        if (anim->spr != SPRITE_ERROR){
+            //printf("render: %d\n", anim->spr);
+            sprite_set_location(anim->spr,
+                anim->x - xoffset, // + scmd_xoffset,
+                anim->y - yoffset); // + anim->scmd->yoffset);
+            sprite_render(renderer, anim->spr);
+        }
+    }
+    */
+    //animate_list_render(renderer);
 
     if (main_get_debug()) { show_debug_info(); }
+}
+
+static SDL_RendererFlip map_animate_tick(animate_sprite_t *anim, const uint32_t xoffset, const uint32_t yoffset) {
+    size_t pos = anim->pos;
+    SDL_RendererFlip flip = 0;
+
+    sprite_set_frame(anim->spr, anim->scmd[pos].bmp_idx);
+    if (anim->scmd[pos].flags & SCMD_LAST) { goto out; }
+
+    if (anim->scmd[pos].flags & SCMD_JUMP && anim->delay == 0) {
+        pos = anim->pos = 0;
+        sprite_set_frame(anim->spr, anim->scmd[pos].bmp_idx);
+        anim->delay = anim->scmd[pos].delay;
+    }
+
+    if (anim->delay == 0) {
+        anim->pos++; pos++;
+        sprite_set_frame(anim->spr, anim->scmd[pos].bmp_idx);
+        anim->delay = anim->scmd[pos].delay;
+        goto out;
+    }
+
+    while (anim->delay == 0 && pos > 0) {
+        anim->pos++; pos++;
+        if (pos >= SCMD_MAX_SIZE) {
+            anim->pos = pos = 0;
+        }
+    }
+
+    anim->delay--;
+
+out:
+    if (anim->scmd[pos].flags & SCMD_XMIRROR
+        || (anim->entity && anim->entity->sprite.flags & 0x80)) {
+        flip |= SDL_FLIP_HORIZONTAL;
+    }
+    if (anim->scmd[pos].flags & SCMD_YMIRROR) {
+        flip |= SDL_FLIP_VERTICAL;
+    }
+
+    anim->left_over += fmod(anim->movex, 1.0);
+    float movex_amt = floor(anim->movex + anim->left_over);
+    float movey_amt = floor(anim->movey + anim->left_over);
+    anim->left_over = fmod(anim->left_over, 1.0);
+
+    if (anim->x < anim->destx) { anim->x += movex_amt; }
+    if (anim->y < anim->desty) { anim->y += movey_amt; }
+    if (anim->x > anim->destx) { anim->x -= movex_amt; }
+    if (anim->y > anim->desty) { anim->y -= movey_amt; }
+
+    /*
+    if (anim->scmd == combat_get_scmd(COMBAT_POWER_THROW_STATIC_U)) {
+        printf("%s: (%d, %d) -> (%d, %d) (move_amt = (%f, %f))\n",
+            anim->entity ? anim->entity->name : "THROW",
+            anim->x, anim->y, anim->destx, anim->desty, movex_amt, movey_amt);
+    }
+    */
+    sprite_set_location(anim->spr,
+        anim->x - xoffset, // + scmd_xoffset,
+        anim->y - yoffset); // + anim->scmd->yoffset);
+
+    if (main_get_debug() && anim->entity) {
+        map_highlight_tile(anim->entity->mapx, anim->entity->mapy, 4);
+    }
+
+    return flip;
+}
+
+void map_render_anims(SDL_Renderer *renderer) {
+    const uint32_t xoffset = getCameraX();
+    const uint32_t yoffset = getCameraY();
+    animate_sprite_t *anim;
+
+    animation_list_for_each(cmap->region->anims, anim) {
+        if (anim->spr != SPRITE_ERROR){
+            //printf("render: %d\n", anim->spr);
+            //sprite_render(renderer, anim->spr);
+            sprite_render_flip(renderer, anim->spr, map_animate_tick(anim, xoffset, yoffset));
+        }
+    }
 }
 
 void port_add_entity(entity_t *entity, gff_palette_t *pal) {
     const float zoom = main_get_zoom();
 
-    anims[anim_pos].scmd = entity->sprite.scmd;
+    return;
+    //anims[anim_pos].scmd = entity->sprite.anim.scmd;
     anims[anim_pos].spr =
         sprite_new(cren, pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP, entity->sprite.bmp_id);
     if (entity->name) { // If it is a combat entity, then we need to add the combat sprites
@@ -258,9 +411,9 @@ void port_add_entity(entity_t *entity, gff_palette_t *pal) {
     }
     anims[anim_pos].movey = anims[anim_pos].movex = anims[anim_pos].left_over = 0.0;
     anims[anim_pos].entity = entity;
-    anim_nodes[anim_pos] = animate_list_add(anims + anim_pos, entity->mapz);
+    //anim_nodes[anim_pos] = animate_list_add(anims + anim_pos, entity->mapz);
     entity->sprite.data = anim_nodes[anim_pos];
-    anim_nodes[anim_pos]->anim->entity = entity;
+    //anim_nodes[anim_pos]->anim->entity = entity;
     //printf("%d: %d %d %d (%d, %d)\n", obj->combat_id, obj->mapx, obj->mapy, obj->mapz, anims[anim_pos].x, anims[anim_pos].y);
     //printf("             (%d, %d)\n", anims[anim_pos].destx, anims[anim_pos].desty);
     //printf("%s: @ %p\n", entity->name, entity->sprite.data);
@@ -289,9 +442,7 @@ static void entity_instant_move(entity_t *entity) {
 }
 
 void port_update_entity(entity_t *entity, const uint16_t xdiff, const uint16_t ydiff) {
-    animate_sprite_node_t *asn = (animate_sprite_node_t*) entity->sprite.data;
-    if (!asn) { return; }
-    animate_sprite_t *as = asn->anim;
+    animate_sprite_t *as = &(entity->anim);
     const float zoom = main_get_zoom();
     //printf("cur:%d %d\n", as->x, as->y);
     //printf("dest: %d, %d\n", as->destx, as->desty);
@@ -306,33 +457,29 @@ void port_update_entity(entity_t *entity, const uint16_t xdiff, const uint16_t y
         as->destx -= (as->w - 16 * zoom) / 2;
     }
     as->desty -= as->h - (16 * zoom);
-    animate_set_animation(as, entity->sprite.scmd, 20);
-
-    animate_shift_node(asn, entity->mapz);
 }
 
-extern void port_load_sprite(sprite_info_t *spr, gff_palette_t *pal, const int gff_index, const int type, const uint32_t id) {
-    animate_sprite_node_t *asn = NULL;
-    if (!spr) { return; }
+extern void port_load_sprite(animate_sprite_t *anim, gff_palette_t *pal, const int gff_index, const int type, const uint32_t id) {
+    if (!anim) { return; }
 
-    if (spr->scmd) {
+    if (anim->scmd) {
         error("port_load_sprite not implemented for sprites with a scmd!\n");
     }
     // Check if spr is already exisitng, if yes, deallocate then recreate!
 
-    if (!spr->anim) {
-        if (spr->data) {
+    //if (anim->spr == SPRITE_ERROR) {
+        //if (spr->data) {
             //free(spr->data);
-            animation_node_free(spr->data);
-        }
-        asn = animate_sprite_node_create();
-        spr->data = asn;
-        spr->anim = asn->anim;
-        spr->anim->spr = SPRITE_ERROR;
-    }
+            //animation_node_free(spr->data);
+        //}
+        //asn = animate_sprite_node_create();
+        //spr->data = asn;
+        //spr->anim = *(asn->anim);
+        //spr->anim->spr = SPRITE_ERROR;
+    //}
 
-    if (spr->anim->spr == SPRITE_ERROR) {
-        spr->anim->spr = sprite_new(main_get_rend(), pal, 0, 0, main_get_zoom(), gff_index, type, id);
+    if (anim->spr == SPRITE_ERROR) {
+        anim->spr = sprite_new(main_get_rend(), pal, 0, 0, main_get_zoom(), gff_index, type, id);
     }
     //printf("valid = %d\n", sprite_valid(asn->anim->spr));
 }
@@ -341,7 +488,7 @@ extern void port_free_sprite(sprite_info_t *spr) {
     if (!spr) { return; }
 
     if (spr->data) {
-        animate_sprite_node_free(spr->data);
+        //animate_sprite_node_free(spr->data);
         spr->data = NULL;
     }
 }
@@ -512,23 +659,29 @@ int map_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_
 
 extern void port_load_item(item_t *item) {
     //warn("Need to load item %d.\n", item->ds_id);
-    animate_sprite_t *as = calloc(1, sizeof(animate_sprite_t));
-    item->sprite.data = (void*)as;
+    if (!item) { return; }
+    //animate_sprite_t *as = calloc(1, sizeof(animate_sprite_t));
+    //item->sprite.data = (void*)as;
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
-    as->spr = sprite_new(main_get_rend(), pal, 0, 0, main_get_zoom(),
+    //as->spr = sprite_new(main_get_rend(), pal, 0, 0, main_get_zoom(),
+            //OBJEX_GFF_INDEX, GFF_BMP, item->sprite.bmp_id);
+    //as->entity = NULL;
+    item->anim.spr = sprite_new(main_get_rend(), pal, 0, 0, main_get_zoom(),
             OBJEX_GFF_INDEX, GFF_BMP, item->sprite.bmp_id);
-    as->entity = NULL;
+    item->anim.entity = NULL;
 }
 
 extern void port_free_item(item_t *item) {
-    if (!item || item->sprite.data == NULL) { return; }
+    if (!item) { return; }
 
-    animate_sprite_node_free(item->sprite.data);
-    item->sprite.data = NULL;
+    if (item->anim.spr != SPRITE_ERROR) {
+        sprite_free(item->anim.spr);
+        item->anim.spr = SPRITE_ERROR;
+    }
 }
 
 wops_t map_window = {
-    .init = NULL,
+    .init = map_load,
     .cleanup = map_cleanup,
     .render = map_render,
     .mouse_movement = map_handle_mouse,

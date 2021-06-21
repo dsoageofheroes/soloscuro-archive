@@ -83,6 +83,7 @@ typedef struct entity_s {
     stats_t stats;
     class_t class[3];
     sprite_info_t sprite;
+    animate_sprite_t anim;
     ability_set_t abilities;
     struct entity_animation_list_s actions;
     effect_node_t *effects; // anything currently affecting the entity.

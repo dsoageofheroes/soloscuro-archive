@@ -1,3 +1,4 @@
+#include "animation.h"
 #include "combat.h"
 #include "entity-animation.h"
 #include "dsl.h"
@@ -36,6 +37,7 @@ static int is_region(const int gff_idx) {
 extern region_t* region_create_empty() {
     region_t *reg = calloc(1, sizeof(region_t));
     reg->entities = entity_list_create();
+    reg->anims = animation_list_create();
 
     return reg;
 }
@@ -78,10 +80,16 @@ region_t* region_create(const int gff_file) {
 extern void region_remove_entity(region_t *reg, entity_t *entity) {
     if (!reg || !entity) { return; }
     entity_list_remove(reg->entities, entity_list_find(reg->entities, entity));
+    animation_list_remove(reg->anims, animation_list_find(reg->anims, &(entity->anim)));
 }
 
 void region_free(region_t *reg) {
     if (!reg) { return; }
+
+    if (reg->anims) {
+        animation_list_free(reg->anims);
+        reg->anims = NULL;
+    }
 
     if (reg->entities) {
         entity_list_free_all(reg->entities);
@@ -237,14 +245,9 @@ extern int region_location_blocked(const region_t *reg, const int32_t x, const i
 
 extern void region_add_entity(region_t *reg, entity_t *entity) {
     if (!reg || !entity) { return; }
-    //entity_t * dude = NULL;
 
     entity_list_add(reg->entities, entity);
-
-    //printf("---------------\n");
-    //entity_list_for_each(reg->entities, dude) {
-        //printf("Entity's name: %s\n", dude->name);
-    //}
+    animation_list_add(reg->anims, &(entity->anim));
 }
 
 //TODO: Ignores walls, but that might be okay right now.
@@ -302,7 +305,7 @@ extern void region_tick(region_t *reg) {
                     xdiff = ydiff = 0;
                 }
             }
-            bad_dude->sprite.scmd = entity_animation_get_scmd(bad_dude->sprite.scmd, xdiff, ydiff, EA_NONE);
+            bad_dude->anim.scmd = entity_animation_get_scmd(bad_dude->anim.scmd, xdiff, ydiff, EA_NONE);
             if (calc_distance_to_player(bad_dude) < 5) {
                 combat_initiate(reg, bad_dude->mapx, bad_dude->mapy);
                 return;

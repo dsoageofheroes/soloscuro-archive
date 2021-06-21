@@ -635,15 +635,17 @@ int16_t request_to_do(int16_t name, int16_t rectype, int (*request_proc)(int16_t
 }
 
 int req_animation(int16_t object, long notused1, long notused2) {
-    debug("Request animation on %d\n", object);
-    dude_t *dude = region_find_entity_by_id(region_manager_get_current(), object);
+    warn("Request animation on %d not implemented\n", object);
+    //dude_t *dude = region_find_entity_by_id(region_manager_get_current(), object);
     dsl_set_gname(GNAME_PASSIVE, object);
 
+/*
     if (dude) {
         port_animate_entity(dude);
     } else {
         error("Unable to find object %d\n", object);
     }
+    */
 
     return 0;
 }

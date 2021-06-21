@@ -79,20 +79,21 @@ typedef struct item_attack_s {
 #define ITEM_NAME_MAX (32)
 
 typedef struct item_s { 
-    int16_t          ds_id;
-    char             name[ITEM_NAME_MAX];
-    item_type_t      type;
-    uint16_t         quantity;
-    uint16_t         value;
-    uint16_t         charges;
-    uint16_t         legal_class;
-    uint8_t          placement; // where on the user
-    uint8_t          weight;
-    uint8_t          material;
-    int8_t           ac;
-    item_attack_t    attack;
-    sprite_info_t    sprite;
-    effect_node_t    *effect;
+    int16_t           ds_id;
+    char              name[ITEM_NAME_MAX];
+    item_type_t       type;
+    uint16_t          quantity;
+    uint16_t          value;
+    uint16_t          charges;
+    uint16_t          legal_class;
+    uint8_t           placement; // where on the user
+    uint8_t           weight;
+    uint8_t           material;
+    int8_t            ac;
+    item_attack_t     attack;
+    sprite_info_t     sprite;
+    animate_sprite_t  anim;
+    effect_node_t     *effect;
 } item_t;
 
 typedef struct inventory_s {
@@ -115,8 +116,10 @@ typedef struct inventory_s {
 
 #define ITEM_SLOT_MAX (sizeof(inventory_t) / sizeof(item_t))
 
+extern item_t* inventory_create();
 extern int item_allowed_in_slot(item_t *item, const int slot);
 extern void item_free(item_t *item);
+extern void item_free_except_graphics(item_t *item);
 extern item_t* item_dup(item_t *item);
 extern void item_load_from(item_t *item, const char *data);
 extern void item_free_inventory(item_t *item);

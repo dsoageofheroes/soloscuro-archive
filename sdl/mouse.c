@@ -134,7 +134,7 @@ extern void mouse_free() {
 
 extern void mouse_set_as_item(item_t *item) {
     if (item_data) { 
-        item_free(item_data);
+        item_free_except_graphics(item_data);
         item_data = NULL;
     }
 
@@ -171,6 +171,6 @@ extern void mouse_set_as_power(power_t *pw) {
     if (power_cursor) { SDL_FreeCursor(power_cursor); }
 
     power = pw;
-    power_cursor = create_cursor(RESOURCE_GFF_INDEX, GFF_ICON, pw->icon.bmp_id);
+    power_cursor = create_cursor(RESOURCE_GFF_INDEX, GFF_ICON, pw->icon_id);
     mouse_set_state(MOUSE_POWER);
 }

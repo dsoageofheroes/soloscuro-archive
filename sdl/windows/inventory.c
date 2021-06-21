@@ -275,8 +275,7 @@ static void render_backpack_slot(const int slot, const int frame, const int x, c
     sprite_set_frame(slots, frame);
     sprite_set_location(slots, x, y);
     sprite_render(rend, slots);
-    //animate_sprite_t *as = items[slot].sprite.data;
-    animate_sprite_t *as = items ? items[slot].sprite.anim : NULL;
+    animate_sprite_t *as = items ? &(items[slot].anim) : NULL;
 
     if (as) {
         sprite_center_spr(as->spr, slots);
@@ -348,7 +347,7 @@ void inventory_window_render(void *data, SDL_Renderer *renderer) {
         sprite_set_frame(slots, i);
         int32_t x = sprite_getx(slots);
         int32_t y = sprite_gety(slots);
-        if (as) {
+        if (as && as->spr != SPRITE_ERROR) {
             sprite_set_frame(slots, 2);
             sprite_set_location(slots, x, y);
             sprite_render(renderer, slots);
@@ -449,7 +448,7 @@ static void clicked_slot(const int slot) {
             player_item = item_dup(player_item);
             entity_copy_item(player, mouse_item, slot);
             mouse_set_as_item(player_item);
-            item_free(player_item);
+            item_free_except_graphics(player_item);
         } else {
             entity_copy_item(player, mouse_item, slot);
             mouse_free_item();

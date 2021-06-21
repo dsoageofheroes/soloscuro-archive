@@ -5,6 +5,12 @@
 #include "gfftypes.h"
 #include "port.h"
 
+extern power_t* power_create() {
+    power_t *ret = calloc(1, sizeof(power_t));
+    ret->hit.spr = ret->thrown.spr = ret->cast.spr = ret->icon.spr = SPRITE_ERROR;
+    return ret;
+}
+
 extern power_list_t* power_list_create() {
     return calloc(1, sizeof(power_list_t*));
 }
@@ -26,15 +32,15 @@ extern animate_sprite_t* power_get_icon(power_t *pw) {
 
     if (!pw) { return NULL; }
 
-    if (!port_valid_sprite(&pw->icon)) {
-        port_load_sprite(&(pw->icon), pal, RESOURCE_GFF_INDEX, GFF_ICON, pw->icon.bmp_id);
+    if (pw->icon.spr == SPRITE_ERROR) {
+        port_load_sprite(&(pw->icon), pal, RESOURCE_GFF_INDEX, GFF_ICON, pw->icon_id);
     }
 
-    return pw->icon.anim;
+    return &(pw->icon);
 }
 
 extern void power_free(power_t *pw) {
-    if (pw->icon.data) {
+    /*if (pw->icon.data) {
         port_free_sprite(&(pw->icon));
         pw->icon.data = NULL;
     }
@@ -50,6 +56,7 @@ extern void power_free(power_t *pw) {
         port_free_sprite(&(pw->cast));
         pw->cast.data = NULL;
     }
+    */
     if (pw->description) {
         free(pw->description);
         pw->description = NULL;
@@ -79,7 +86,7 @@ extern void power_list_free_instance(power_list_t *pl, power_instance_t *pi) {
     free(pi);
 }
 
-static void set_sprite_from_ojff(sprite_info_t *spr, const uint32_t id) {
+/*static void set_sprite_from_ojff(sprite_info_t *spr, const uint32_t id) {
     disk_object_t dobj;
     gff_chunk_header_t chunk = gff_find_chunk_header(OBJEX_GFF_INDEX, GFF_OJFF, id);
     if (chunk.length <= 0) { return; }
@@ -91,8 +98,9 @@ static void set_sprite_from_ojff(sprite_info_t *spr, const uint32_t id) {
     spr->xoffset = dobj.xoffset;
     spr->yoffset = dobj.yoffset;
     //printf("id = %d, length = %d, bmp_id = %d", id, chunk.length, spr->bmp_id);
-    spr->scmd = ssi_scmd_get(OBJEX_GFF_INDEX, dobj.script_id, 0);
+    //spr->anim.scmd = ssi_scmd_get(OBJEX_GFF_INDEX, dobj.script_id, 0);
 }
+*/
 
 extern void power_list_free(power_list_t *pl) {
     if (!pl) { return; }
@@ -106,25 +114,25 @@ extern void power_list_free(power_list_t *pl) {
 
 extern void powers_set_cast(power_t *power, const uint32_t id) {
     if (!power) { return; }
-    set_sprite_from_ojff(&(power->cast), id);
+    //set_sprite_from_ojff(&(power->cast), id);
 }
 
 extern void powers_set_icon(power_t *power, const uint32_t id) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     if (!power) { return; }
 
-    power->icon.bmp_id = id;
+    power->icon_id = id;
     port_load_sprite(&(power->icon), pal, RESOURCE_GFF_INDEX, GFF_ICON, id);
 }
 
 extern void powers_set_thrown(power_t *power, const uint32_t id) {
     if (!power) { return; }
-    set_sprite_from_ojff(&(power->thrown), id);
+    //set_sprite_from_ojff(&(power->thrown), id);
 }
 
 extern void powers_set_hit(power_t *power, const uint32_t id) {
     if (!power) { return; }
-    set_sprite_from_ojff(&(power->hit), id);
+    //set_sprite_from_ojff(&(power->hit), id);
 }
 
 extern void powers_init() {
@@ -161,13 +169,14 @@ extern enum target_shape power_get_target_type(power_t *power) {
     return power->shape;
 }
 
-static void load_power_sprite(sprite_info_t *spr) {
-    gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
-    port_load_sprite(spr, pal, OBJEX_GFF_INDEX, GFF_BMP, spr->bmp_id);
-}
+//static void load_power_sprite(sprite_info_t *spr) {
+    //gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
+    //port_load_sprite(spr, pal, OBJEX_GFF_INDEX, GFF_BMP, spr->bmp_id);
+//}
 
 extern void power_load(power_t *power) {
     if (!power) { return; }
+    /*
     if (!power->cast.data) {
         load_power_sprite(&(power->cast));
     }
@@ -177,4 +186,5 @@ extern void power_load(power_t *power) {
     if (!power->hit.data) {
         load_power_sprite(&(power->hit));
     }
+    */
 }

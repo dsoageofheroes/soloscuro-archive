@@ -24,6 +24,7 @@ typedef struct region_s {
     uint32_t map_id;
     passive_t passives[MAX_PASSIVES];
     entity_list_t *entities;
+    animation_list_t *anims;
     combat_region_t cr;
 } region_t;
 
