@@ -1,5 +1,6 @@
 #include "animation.h"
 #include "port.h"
+#include <math.h>
 
 // the shift function can put the list head int he incorrect spot.
 // This function fixes that.
@@ -150,3 +151,19 @@ void animation_shift_node(animate_sprite_node_t *an) {
     }
 }
 
+void animate_sprite_tick(entity_action_t *action, entity_t *entity ) {
+    if (!entity || !action) { return; }
+    animate_sprite_t *anim = &entity->anim;
+
+    anim->left_over += fmod(anim->movex, 1.0);
+    float movex_amt = floor(anim->movex + anim->left_over);
+    float movey_amt = floor(anim->movey + anim->left_over);
+    anim->left_over = fmod(anim->left_over, 1.0);
+
+    //printf("anim: (%f, %f) (%d, %d) -> ", movex_amt, movey_amt, anim->x, anim->y);
+    if (anim->x < anim->destx) { anim->x += movex_amt; }
+    if (anim->y < anim->desty) { anim->y += movey_amt; }
+    if (anim->x > anim->destx) { anim->x -= movex_amt; }
+    if (anim->y > anim->desty) { anim->y -= movey_amt; }
+    //printf("(%d %d)\n", anim->x, anim->y);
+}

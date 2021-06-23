@@ -66,3 +66,14 @@ extern int ssi_scmd_is_default(const scmd_t *scmd, const int scmd_index) {
     uint16_t scmd_idx = *((uint16_t*)(((unsigned char *)scmd) + scmd_index));
     return scmd_idx == 0;
 }
+
+int ssi_scmd_next_pos(const scmd_t *scmd, const int scmd_index) {
+    if (!scmd) { return -1; }
+    if (scmd[scmd_index].flags & SCMD_LAST) {
+        return scmd_index;
+    }
+    if (scmd[scmd_index].flags & SCMD_JUMP) {
+        return 0;
+    }
+    return scmd_index + 1;
+}

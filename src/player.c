@@ -70,6 +70,10 @@ extern entity_t* player_get_active() {
     return player_get(active);
 }
 
+extern int player_get_active_slot() {
+    return active;
+}
+
 extern int player_get_slot(entity_t *entity) {
     for (int i = 0; i < MAX_PCS; i++) {
         if (entity == players[i]) { return i; }

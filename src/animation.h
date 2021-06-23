@@ -41,10 +41,14 @@ typedef struct animation_list_s {
     animation_node_t *head;
 } animation_list_t;
 
+struct entity_s;
+struct entity_action_s;
+
 animate_sprite_node_t* animate_sprite_node_create();
 void                   animation_node_free(animation_node_t *node);
 void                   animation_shift_node(animate_sprite_node_t *an);
 
+void                   animate_sprite_tick(struct entity_action_s *action, struct entity_s *entity );
 animation_list_t*      animation_list_create();
 void                   animation_list_free(animation_list_t *al);
 animation_node_t*      animation_list_add(animation_list_t *al, animate_sprite_t *anim);

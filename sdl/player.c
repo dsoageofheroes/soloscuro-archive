@@ -31,6 +31,8 @@ static player_sprites_t players[MAX_PCS] = {
     {SPRITE_ERROR, SPRITE_ERROR},
     {SPRITE_ERROR, SPRITE_ERROR}};
 
+enum entity_action_e last_action[MAX_PCS] = { EA_WALK_DOWN, EA_WALK_DOWN, EA_WALK_DOWN, EA_WALK_DOWN };
+
 #define sprite_t uint16_t
 
 void player_init() {
@@ -54,7 +56,9 @@ void player_update() {
     entity_t *dude = player_get_active();
     int xdiff = 0, ydiff = 0;
     const enum combat_turn_t combat_turn = combat_player_turn();
+    enum entity_action_e action;
 
+    if (entity_animation_execute(dude)) { --count; return; }
     if (--count > 0) { return; }
 
     if (entity_animation_list_execute(&(dude->actions), region_manager_get_current())) {
@@ -82,12 +86,35 @@ void player_update() {
     trigger_box_check(dude->mapx, dude->mapy);
     trigger_tile_check(dude->mapx, dude->mapy);
 
-    dude->anim.scmd = entity_animation_get_scmd(dude->anim.scmd,
-            xdiff, ydiff, EA_NONE);
-    port_update_entity(dude, xdiff, ydiff);
-
     // We aren't moving...
-    if (xdiff == 0 && ydiff == 0) { return; }
+    if (xdiff == 0 && ydiff == 0) {
+        dude->anim.movex = dude->anim.movey = 0.0;
+        dude->anim.scmd = entity_animation_face_direction(dude->anim.scmd,
+            last_action[player_get_active_slot()]);
+        return;
+    }
+
+    action =
+          (xdiff == 1 && ydiff == 1) ? EA_WALK_DOWNRIGHT
+        : (xdiff == 1 && ydiff == -1) ? EA_WALK_UPRIGHT
+        : (xdiff == -1 && ydiff == -1) ? EA_WALK_UPLEFT
+        : (xdiff == -1 && ydiff == 1) ? EA_WALK_DOWNLEFT
+        : (xdiff == 1) ? EA_WALK_RIGHT
+        : (xdiff == -1) ? EA_WALK_LEFT
+        : (ydiff == 1) ? EA_WALK_DOWN
+        : (ydiff == -1) ? EA_WALK_UP
+        : EA_NONE;
+    last_action[player_get_active_slot()] = action;
+
+    entity_animation_list_add(&(dude->actions), action, dude, NULL, NULL, ticks_per_move);
+    //dude->anim.scmd = entity_animation_get_scmd(dude->anim.scmd,
+            //xdiff, ydiff, EA_NONE);
+    //port_update_entity(dude, xdiff, ydiff);
+    //dude->anim.scmd = entity_animation_get_scmd(dude->anim.scmd, xdiff, ydiff, EA_WALK_LEFT);
+    dude->mapx += xdiff;
+    dude->mapy += ydiff;
+    dude->anim.destx += (xdiff * 32);
+    dude->anim.desty += (ydiff * 32);
 
     count = ticks_per_move;
 }

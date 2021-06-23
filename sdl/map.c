@@ -305,6 +305,7 @@ void map_render(void *data, SDL_Renderer *renderer) {
     if (main_get_debug()) { show_debug_info(); }
 }
 
+static int do_shift = 0;
 static SDL_RendererFlip map_animate_tick(animate_sprite_t *anim, const uint32_t xoffset, const uint32_t yoffset) {
     size_t pos = anim->pos;
     SDL_RendererFlip flip = 0;
@@ -353,6 +354,8 @@ out:
     if (anim->x > anim->destx) { anim->x -= movex_amt; }
     if (anim->y > anim->desty) { anim->y -= movey_amt; }
 
+    do_shift = !(movex_amt && movey_amt);
+
     /*
     if (anim->scmd == combat_get_scmd(COMBAT_POWER_THROW_STATIC_U)) {
         printf("%s: (%d, %d) -> (%d, %d) (move_amt = (%f, %f))\n",
@@ -381,6 +384,7 @@ void map_render_anims(SDL_Renderer *renderer) {
             //printf("render: %d\n", anim->spr);
             //sprite_render(renderer, anim->spr);
             sprite_render_flip(renderer, anim->spr, map_animate_tick(anim, xoffset, yoffset));
+            if (do_shift) { animation_shift_node(__el_rover); }
         }
     }
 }

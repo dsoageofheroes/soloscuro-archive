@@ -303,15 +303,15 @@ extern scmd_t* entity_animation_face_direction(scmd_t *current_scmd, const enum 
         case EA_WALK_DOWNLEFT:
         case EA_WALK_UPLEFT:
         case EA_WALK_LEFT:
-            return combat_get_scmd(COMBAT_SCMD_STAND_LEFT);
+            return combat_stand_left;
         case EA_WALK_DOWNRIGHT:
         case EA_WALK_UPRIGHT:
         case EA_WALK_RIGHT:
-            return combat_get_scmd(COMBAT_SCMD_STAND_RIGHT);
+            return combat_stand_right;
         case EA_WALK_UP:
-            return combat_get_scmd(COMBAT_SCMD_STAND_UP);
+            return combat_stand_up;
         case EA_WALK_DOWN:
-            return combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
+            return combat_stand_down;
         default:
             return current_scmd;
     }
@@ -374,13 +374,83 @@ static void play_damage_sound(entity_t *target) {
 }
 
 // sound 63: is PC doing range attack
-extern int entity_animation_execute(region_t *reg) {
+extern int entity_animation_region_execute(region_t *reg) {
     entity_animation_list_t list;
     list.head = next_animation_head;
     int ret = entity_animation_list_execute(&list, reg);
     next_animation_head = list.head;
 
     return ret;
+}
+
+static void set_anim(entity_t *entity) {
+    entity_action_t *action = &(entity->actions.head->ca);
+    const int distance = 32;
+    const int ticks_per_move = action->start_amt;
+    entity->anim.flags = 0x0;
+    entity->anim.left_over = 0x0;
+    switch (action->action) {
+        case EA_WALK_UPLEFT:
+        case EA_WALK_UPRIGHT:
+        case EA_WALK_DOWNLEFT:
+        case EA_WALK_DOWNRIGHT:
+            entity->anim.movex = distance == 0 ? 0 : distance / ((float)ticks_per_move * 2);
+            entity->anim.movey = distance == 0 ? 0 : distance / ((float)ticks_per_move * 2);
+            break;
+        case EA_WALK_LEFT:
+        case EA_WALK_RIGHT:
+            entity->anim.movex = distance == 0 ? 0 : distance / ((float)ticks_per_move * 2);
+            entity->anim.movey = 0.0;
+            break;
+        case EA_WALK_UP:
+        case EA_WALK_DOWN:
+            entity->anim.movey = distance == 0 ? 0 : distance / ((float)ticks_per_move * 2);
+            entity->anim.movex = 0.0;
+            break;
+        default:
+            entity->anim.movex = entity->anim.movey = 0;
+            break;
+    }
+}
+
+extern int entity_animation_execute(entity_t *entity) {
+    if (!entity || !entity->actions.head) { return 0; }
+    entity_action_t *action = &(entity->actions.head->ca);
+
+    //printf("action->amt = %d (%d), ticks = %d, scmd_pos = %d of %d\n", action->amt, action->start_amt,
+        //action->ticks, action->scmd_pos, entity->anim.scmd[action->scmd_pos].delay);
+    if (action->amt == action->start_amt) {
+        set_anim(entity);
+    }
+
+    action->amt--;
+    action->ticks++;
+
+    if (entity->anim.scmd[action->scmd_pos].delay < action->ticks) {
+        action->scmd_pos = ssi_scmd_next_pos(entity->anim.scmd, action->scmd_pos);
+        action->ticks = 0;
+    }
+
+    //animate_sprite_tick(action, entity);
+
+    if (action->amt <= 0) {
+        entity->anim.x = entity->anim.destx;
+        entity->anim.y = entity->anim.desty;
+        entity_animation_node_t *to_delete = entity->actions.head;
+        entity->actions.head = entity->actions.head->next;
+        if (!entity->actions.head) {
+            //entity->anim.scmd = entity_animation_face_direction(entity->anim.scmd, to_delete->ca.action);
+            //entity->anim.scmd = combat_stand_left;
+            entity->anim.flags = 0x0;
+            entity->anim.pos = 0;
+            entity->anim.flags = 0;
+            entity->anim.left_over = 0x0;
+            entity->anim.movex = entity->anim.movey = 0;
+        }
+        free (to_delete);
+    }
+
+    return 1;
 }
 
 entity_animation_list_t* entity_animation_list_create() {
@@ -396,6 +466,18 @@ void entity_animation_list_free(entity_animation_list_t *list) {
     }
 }
 
+static scmd_t* entity_get_next_scmd(const entity_t *entity, const enum entity_action_e action) {
+    switch (action) {
+        case EA_WALK_LEFT: return combat_move_left;
+        case EA_WALK_RIGHT: return combat_move_right;
+        case EA_WALK_UP: return combat_move_up;
+        case EA_WALK_DOWN: return combat_move_down;
+        default:
+            break;
+    }
+    return entity->anim.scmd;
+}
+
 void entity_animation_list_add(entity_animation_list_t *list, enum entity_action_e action,
         entity_t *source, entity_t *target, power_t *power, const int32_t amt) {
     if (!list) { return; }
@@ -407,7 +489,15 @@ void entity_animation_list_add(entity_animation_list_t *list, enum entity_action
     toadd->ca.target = target;
     toadd->ca.power  = power;
     toadd->ca.amt = amt;
+    toadd->ca.start_amt = amt;
+    toadd->ca.ticks = 0;
+    toadd->ca.scmd_pos = 0;
     toadd->next = NULL;
+
+    if (source) {
+         source->anim.scmd = entity_get_next_scmd(source, action);
+        //source->anim.scmd = entity_animation_get_scmd(source->anim.scmd, -1, 0, action);
+    }
 
     if (!list->head) {
         list->head = toadd;

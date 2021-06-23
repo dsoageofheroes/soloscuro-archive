@@ -13,6 +13,7 @@ extern void      player_set(const int slot, entity_t *dude);
 extern void      player_set_active(const int slot);
 extern void      player_cleanup();
 extern entity_t* player_get_active();
+extern int       player_get_active_slot();
 extern int       player_get_slot(entity_t *entity);
 extern void      player_free(const int slot);
 extern int       player_ai(const int slot);

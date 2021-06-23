@@ -38,11 +38,11 @@ struct power_s;
 struct region_s;
 
 typedef struct entity_action_s {
-    enum entity_action_e action;
     struct entity_s *source;
     struct entity_s *target;
     struct power_s  *power;
-    int32_t amt;
+    enum entity_action_e action;
+    int32_t amt, start_amt, ticks, scmd_pos;
 } entity_action_t;
 
 typedef struct entity_animation_node_s {
@@ -60,7 +60,7 @@ extern void entity_animation_add(enum entity_action_e action, struct entity_s *s
 extern scmd_t* entity_animation_get_scmd(scmd_t *current_scmd, const int xdiff, const int ydiff,
         const enum entity_action_e action);
 extern scmd_t* entity_animation_face_direction(scmd_t *current_scmd, const enum entity_action_e action);
-extern int entity_animation_execute(struct region_s *reg);
+extern int entity_animation_region_execute(struct region_s *reg);
 extern int entity_animation_has_more();
 
 entity_animation_list_t* entity_animation_list_create();
@@ -69,4 +69,6 @@ void entity_animation_list_add(entity_animation_list_t *list, enum entity_action
         struct entity_s *source, struct entity_s *target, struct power_s *power, const int32_t amt);
 extern int entity_animation_list_execute(entity_animation_list_t *list, struct region_s *reg);
 
+struct entity_s;
+extern int entity_animation_execute(struct entity_s *entity);
 #endif

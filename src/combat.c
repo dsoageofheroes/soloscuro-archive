@@ -586,7 +586,7 @@ static void do_player_turn(region_t *reg) {
     if (ticks_per_game_round > 0) { ticks_per_game_round = 20; }
 }
 
-static entity_action_t clear = { EA_NONE, NULL, NULL, 0 };
+static entity_action_t clear = { NULL, NULL, 0, EA_NONE };
 
 void combat_update(region_t *reg) {
     if (reg == NULL) { return; }
@@ -594,7 +594,7 @@ void combat_update(region_t *reg) {
     if (cr == NULL) { return; }
 
     if (wait_on_player) {
-        if (entity_animation_execute(reg)) {
+        if (entity_animation_region_execute(reg)) {
             check_current_turn();
             return;
         }
@@ -607,7 +607,7 @@ void combat_update(region_t *reg) {
     ticks_per_game_round = 30;
 
     if (in_combat) {
-        if (entity_animation_execute(reg)) {
+        if (entity_animation_region_execute(reg)) {
             check_current_turn();
             return;
         }
