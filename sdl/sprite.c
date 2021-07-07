@@ -91,6 +91,7 @@ uint16_t sprite_create(SDL_Renderer *renderer, SDL_Rect *initial,
 
     sprite->pos = 0;
     sprite->in_use = 1;
+    //printf("sprite[%d]: %d frames, tex[0] = %p\n", sprite_id, sprite->len, sprite->tex[0]);
 
     return sprite_id;
 }
@@ -206,11 +207,12 @@ void sprite_render_flip(SDL_Renderer *renderer, const uint16_t sprite_id, SDL_Re
     if (sprite_id == (uint16_t)SPRITE_ERROR) { return; }
     sprite_t *sprite = sprites + sprite_id;
     /*
-    printf("->%p {%d, %d, %d, %d}\n", sprite->tex[sprite->pos],
-            sprite->loc.x,
-            sprite->loc.y,
-            sprite->loc.w,
-            sprite->loc.h);
+    printf("->%p {%d, %d, %d, %d} len = %d\n", sprite->tex[sprite->pos],
+            sprite->loc[sprite->pos].x,
+            sprite->loc[sprite->pos].y,
+            sprite->loc[sprite->pos].w,
+            sprite->loc[sprite->pos].h,
+            sprite->len);
             */
     SDL_RenderCopyEx(renderer, sprite->tex[sprite->pos], NULL, (sprite->loc + sprite->pos), 0, NULL, flip);
 }

@@ -85,6 +85,7 @@ entity_t* entity_create_from_objex(const int id) {
 
     if (!dude) { goto error; }
     memset(dude, 0x0, sizeof(dude_t));
+    dude->anim.spr = SPRITE_ERROR;
 
     gff_chunk_header_t chunk = gff_find_chunk_header(OBJEX_GFF_INDEX, GFF_RDFF, -1 * id);
 

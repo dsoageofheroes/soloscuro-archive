@@ -488,10 +488,11 @@ static int dsl_clone(lua_State *l) {
         entry_id = dude->ds_id;
 
         if (dude) {
-            if (dude->anim.scmd == NULL) { dude->anim.scmd = ssi_scmd_empty(); }
             region_move_to_nearest(region_manager_get_current(), dude);
             region_add_entity(region_manager_get_current(), dude);
-            port_add_entity(dude, pal);
+            port_load_sprite(&(dude->anim), pal, OBJEX_GFF_INDEX, GFF_BMP, dude->sprite.bmp_id,
+                (dude->name) ? 2 : 1);
+            dude->anim.scmd = combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
         }
     }
 

@@ -463,7 +463,8 @@ void port_update_entity(entity_t *entity, const uint16_t xdiff, const uint16_t y
     as->desty -= as->h - (16 * zoom);
 }
 
-extern void port_load_sprite(animate_sprite_t *anim, gff_palette_t *pal, const int gff_index, const int type, const uint32_t id) {
+extern void port_load_sprite(animate_sprite_t *anim, gff_palette_t *pal, const int gff_index,
+                const int type, const uint32_t id, const int num_load) {
     if (!anim) { return; }
 
     if (anim->scmd) {
@@ -484,6 +485,12 @@ extern void port_load_sprite(animate_sprite_t *anim, gff_palette_t *pal, const i
 
     if (anim->spr == SPRITE_ERROR) {
         anim->spr = sprite_new(main_get_rend(), pal, 0, 0, main_get_zoom(), gff_index, type, id);
+
+        // Now append anything else needed.
+        for (int i = 1; i < num_load; i++) {
+            sprite_append(anim->spr, cren, pal, 0, 0, main_get_zoom(),
+                gff_index, type, id + i);
+        }
     }
     //printf("valid = %d\n", sprite_valid(asn->anim->spr));
 }

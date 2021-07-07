@@ -16,8 +16,6 @@
 #include "../src/gff.h"
 #include "../src/gfftypes.h"
 
-//static animate_sprite_node_t *player_node[MAX_PCS] = {NULL, NULL, NULL, NULL} ;
-//static int player_zpos = 0;
 static void load_character_sprite(SDL_Renderer *renderer, const int slot, const float zoom);
 
 typedef struct player_sprites_s {

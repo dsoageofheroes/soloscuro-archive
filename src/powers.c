@@ -33,7 +33,7 @@ extern animate_sprite_t* power_get_icon(power_t *pw) {
     if (!pw) { return NULL; }
 
     if (pw->icon.spr == SPRITE_ERROR) {
-        port_load_sprite(&(pw->icon), pal, RESOURCE_GFF_INDEX, GFF_ICON, pw->icon_id);
+        port_load_sprite(&(pw->icon), pal, RESOURCE_GFF_INDEX, GFF_ICON, pw->icon_id, 1);
     }
 
     return &(pw->icon);
@@ -122,7 +122,7 @@ extern void powers_set_icon(power_t *power, const uint32_t id) {
     if (!power) { return; }
 
     power->icon_id = id;
-    port_load_sprite(&(power->icon), pal, RESOURCE_GFF_INDEX, GFF_ICON, id);
+    port_load_sprite(&(power->icon), pal, RESOURCE_GFF_INDEX, GFF_ICON, id, 1);
 }
 
 extern void powers_set_thrown(power_t *power, const uint32_t id) {

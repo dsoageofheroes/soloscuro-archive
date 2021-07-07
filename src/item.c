@@ -164,7 +164,7 @@ extern animate_sprite_t* item_icon(item_t *item) {
 
     if (!port_valid_sprite(&item->sprite)) {
         if (!item->sprite.bmp_id) { return NULL; }
-        port_load_sprite(&item->anim, pal, OBJEX_GFF_INDEX, GFF_BMP, item->sprite.bmp_id);
+        port_load_sprite(&item->anim, pal, OBJEX_GFF_INDEX, GFF_BMP, item->sprite.bmp_id, 1);
     }
 
     return &(item->anim);

@@ -55,7 +55,8 @@ extern void port_remove_entity(entity_t *entity);
 extern void port_animate_entity(entity_t *obj);
 extern void port_swap_enitity(int obj_id, entity_t *dude);
 extern void port_update_entity(entity_t *entity, const uint16_t xdiff, const uint16_t ydiff);
-extern void port_load_sprite(animate_sprite_t *anim, gff_palette_t *pal, const int gff_index, const int type, const uint32_t id);
+extern void port_load_sprite(animate_sprite_t *anim, gff_palette_t *pal, const int gff_index,
+                const int type, const uint32_t id, const int num_load);
 extern void port_free_sprite(sprite_info_t *spr);
 extern int port_valid_sprite(sprite_info_t *spr);
 
