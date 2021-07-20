@@ -34,10 +34,6 @@ enum entity_action_e last_action[MAX_PCS] = { EA_WALK_DOWN, EA_WALK_DOWN, EA_WAL
 #define sprite_t uint16_t
 
 void player_init() {
-    //dude_t *dude = player_get_active();
-
-    //dude->mapx = 30;
-    //dude->mapy = 10;
 }
 
 void player_load_graphics(const int slot) {
@@ -46,7 +42,7 @@ void player_load_graphics(const int slot) {
     load_character_sprite(main_get_rend(), slot, main_get_zoom());
 }
 
-static int ticks_per_move = 10;
+static int ticks_per_move = 30;
 static int count = 0;
 static int direction = 0x0;
 
@@ -56,13 +52,14 @@ void player_update() {
     const enum combat_turn_t combat_turn = combat_player_turn();
     enum entity_action_e action;
 
-    if (entity_animation_execute(dude)) { --count; return; }
+    //if (entity_animation_execute(dude)) { --count; return; }
+    //entity_animation_list_execute(&(dude->actions), region_manager_get_current());
     if (--count > 0) { return; }
 
-    if (entity_animation_list_execute(&(dude->actions), region_manager_get_current())) {
-        count = ticks_per_move;
-        return;
-    }
+    //if (entity_animation_list_execute(&(dude->actions), region_manager_get_current())) {
+        //count = ticks_per_move;
+        //return;
+    //}
 
     // update when we can have the player take a turn.
     if (combat_turn != NO_COMBAT) { return; }
@@ -89,6 +86,7 @@ void player_update() {
         dude->anim.movex = dude->anim.movey = 0.0;
         dude->anim.scmd = entity_animation_face_direction(dude->anim.scmd,
             last_action[player_get_active_slot()]);
+        entity_animation_list_add(&(dude->actions), EA_NONE, dude, NULL, NULL, 1);
         return;
     }
 
@@ -104,17 +102,17 @@ void player_update() {
         : EA_NONE;
     last_action[player_get_active_slot()] = action;
 
-    entity_animation_list_add(&(dude->actions), action, dude, NULL, NULL, ticks_per_move);
-    //dude->anim.scmd = entity_animation_get_scmd(dude->anim.scmd,
-            //xdiff, ydiff, EA_NONE);
-    //port_update_entity(dude, xdiff, ydiff);
-    //dude->anim.scmd = entity_animation_get_scmd(dude->anim.scmd, xdiff, ydiff, EA_WALK_LEFT);
+    entity_animation_list_add_speed(&(dude->actions), action, dude, NULL, NULL, ticks_per_move, 2);
+    count = ticks_per_move / 2;
+
     dude->mapx += xdiff;
     dude->mapy += ydiff;
     dude->anim.destx += (xdiff * 32);
     dude->anim.desty += (ydiff * 32);
-
-    count = ticks_per_move;
+    region_t *reg = region_manager_get_current();
+    if (reg) {
+        animation_shift_entity(reg->entities, entity_list_find(reg->entities, dude));
+    }
 }
 
 void player_move(const uint8_t _direction) {
@@ -217,6 +215,7 @@ extern void player_condense() {
 extern void port_player_load(const int slot) {
     player_load(slot, main_get_zoom());
     player_load_graphics(slot);
+    port_place_entity(player_get(slot));
 }
 
 void player_load(const int slot, const float zoom) {

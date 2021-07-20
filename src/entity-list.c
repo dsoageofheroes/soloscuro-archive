@@ -10,42 +10,42 @@ entity_list_t* entity_list_create() {
 }
 
 void entity_list_free(entity_list_t *list) {
-    while (*list) {
-        entity_list_remove(list, *list);
+    while (list && list->head) {
+        entity_list_remove(list, list->head);
     }
     free(list);
 }
 
 void entity_list_free_all(entity_list_t *list) {
-    while (*list) {
-        entity_free((*list)->entity);
-        entity_list_remove(list, *list);
+    while (list->head) {
+        entity_free(list->head->entity);
+        entity_list_remove(list, list->head);
     }
     free(list);
 }
 
-void entity_list_add(entity_list_t *list, entity_t *entity) {
-    if (!list) { return; }
+extern entity_list_node_t* entity_list_add(entity_list_t *list, entity_t *entity) {
+    if (!list) { return NULL; }
     entity_list_node_t *node = malloc(sizeof(entity_list_node_t));
 
     node->entity = entity;
-    node->next = *list;
+    node->next = list->head;
     node->prev = NULL;
 
-    if (*list) {
-        (*list)->prev = node;
+    if (list->head) {
+        list->head->prev = node;
     }
 
-    *list = node;
+    return list->head = node;
 }
 
 void entity_list_remove(entity_list_t *list, entity_list_node_t *node) {
     if (node == NULL || list == NULL) { return; }
 
-    if (node == *list) {
-        *list = node->next;
-        if (*list) {
-            (*list)->prev = NULL;
+    if (node == list->head) {
+        list->head = node->next;
+        if (list->head) {
+            list->head->prev = NULL;
         }
         free(node);
         return;
@@ -60,7 +60,7 @@ void entity_list_remove(entity_list_t *list, entity_list_node_t *node) {
 }
 
 entity_list_node_t* entity_list_find(entity_list_t *list, entity_t *entity) {
-    entity_list_node_t* rover = *list;
+    entity_list_node_t* rover = list->head;
 
     while(rover) {
         if (rover->entity == entity) {
@@ -91,6 +91,10 @@ void entity_list_load_etab(entity_list_t *list, const int gff_idx, const int map
     for (int i = 0; i < num_objs; i++) {
         dude_t *dude = entity_create_from_etab(open_files[gff_idx].entry_table, i);
         dude->anim.scmd = gff_map_get_object_scmd(gff_idx, map_id, i, 0);
-        entity_list_add(list, dude);
+        animation_shift_entity(list, entity_list_add(list, dude));
+        if (dude->anim.scmd != NULL && !(dude->anim.scmd->flags & SCMD_LAST)) {
+            entity_animation_list_start_scmd(dude);
+            warn("Need to setup animations!\n");
+        }
     }
 }

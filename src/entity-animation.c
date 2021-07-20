@@ -413,13 +413,47 @@ static void set_anim(entity_t *entity) {
     }
 }
 
+static scmd_t* entity_get_next_scmd(const entity_t *entity, const enum entity_action_e action) {
+    switch (action) {
+        case EA_WALK_UPLEFT:
+        case EA_WALK_DOWNLEFT:
+        case EA_WALK_LEFT: return combat_move_left;
+        case EA_WALK_UPRIGHT:
+        case EA_WALK_DOWNRIGHT:
+        case EA_WALK_RIGHT: return combat_move_right;
+        case EA_WALK_UP: return combat_move_up;
+        case EA_WALK_DOWN: return combat_move_down;
+        ////case EA_SCMD:
+            //printf("EA_SCMD! %p\n", entity->actions.head);
+            //entity->actions.head->ca.scmd_pos = 
+                //ssi_scmd_next_pos(entity->anim.scmd, entity->actions.head->ca.scmd_pos);
+            //printf("EA_SCMD!\n");
+            //break;
+        default:
+            break;
+    }
+    return entity->anim.scmd;
+}
+
+extern int entity_animation_list_start_scmd(struct entity_s *entity) {
+    if (!entity || !entity->anim.scmd) { return 0; }
+
+    entity_animation_list_add(&entity->actions, EA_SCMD, NULL, NULL,
+        NULL, ssi_scmd_total_delay(entity->anim.scmd, 0));
+    set_anim(entity);
+
+    return 1;
+}
+
 extern int entity_animation_execute(entity_t *entity) {
     if (!entity || !entity->actions.head) { return 0; }
     entity_action_t *action = &(entity->actions.head->ca);
 
+    for (int i = 0; i < action->speed; i++) {
     //printf("action->amt = %d (%d), ticks = %d, scmd_pos = %d of %d\n", action->amt, action->start_amt,
         //action->ticks, action->scmd_pos, entity->anim.scmd[action->scmd_pos].delay);
-    if (action->amt == action->start_amt) {
+    if (action->start_amt != -1 && action->amt == action->start_amt) {
+        entity->anim.scmd = entity_get_next_scmd(entity, action->action);
         set_anim(entity);
     }
 
@@ -427,19 +461,21 @@ extern int entity_animation_execute(entity_t *entity) {
     action->ticks++;
 
     if (entity->anim.scmd[action->scmd_pos].delay < action->ticks) {
-        action->scmd_pos = ssi_scmd_next_pos(entity->anim.scmd, action->scmd_pos);
+        //if (entity->name) { printf("->%s: ticks, amt = %d\n", entity->name, action->amt); }
+        entity->anim.pos = action->scmd_pos = ssi_scmd_next_pos(entity->anim.scmd, action->scmd_pos);
+        port_entity_update_scmd(entity);
         action->ticks = 0;
     }
 
     //animate_sprite_tick(action, entity);
 
-    if (action->amt <= 0) {
+    if (action->start_amt >= 0 && action->amt <= 0) {
         entity->anim.x = entity->anim.destx;
         entity->anim.y = entity->anim.desty;
         entity_animation_node_t *to_delete = entity->actions.head;
         entity->actions.head = entity->actions.head->next;
         if (!entity->actions.head) {
-            //entity->anim.scmd = entity_animation_face_direction(entity->anim.scmd, to_delete->ca.action);
+            entity->anim.scmd = entity_animation_face_direction(entity->anim.scmd, to_delete->ca.action);
             //entity->anim.scmd = combat_stand_left;
             entity->anim.flags = 0x0;
             entity->anim.pos = 0;
@@ -448,6 +484,10 @@ extern int entity_animation_execute(entity_t *entity) {
             entity->anim.movex = entity->anim.movey = 0;
         }
         free (to_delete);
+        return 1;
+    }
+
+    animate_sprite_tick(action, entity);
     }
 
     return 1;
@@ -460,26 +500,23 @@ entity_animation_list_t* entity_animation_list_create() {
 void entity_animation_list_free(entity_animation_list_t *list) {
     if (!list) { return; }
 
-    //TODO:
     if (list->head) {
-        printf("NEED TO FREE!!!!!\n");
+        entity_animation_node_t *to_delete = NULL;
+        for (entity_animation_node_t *rover = list->head; rover ; rover = rover->next) {
+            if (to_delete) { free(to_delete); }
+            to_delete = rover;
+        }
+        free(to_delete);
+        list->head = NULL;
     }
-}
-
-static scmd_t* entity_get_next_scmd(const entity_t *entity, const enum entity_action_e action) {
-    switch (action) {
-        case EA_WALK_LEFT: return combat_move_left;
-        case EA_WALK_RIGHT: return combat_move_right;
-        case EA_WALK_UP: return combat_move_up;
-        case EA_WALK_DOWN: return combat_move_down;
-        default:
-            break;
-    }
-    return entity->anim.scmd;
 }
 
 void entity_animation_list_add(entity_animation_list_t *list, enum entity_action_e action,
         entity_t *source, entity_t *target, power_t *power, const int32_t amt) {
+     entity_animation_list_add_speed(list, action, source, target, power, amt, 1);
+}
+extern void entity_animation_list_add_speed(entity_animation_list_t *list, enum entity_action_e action,
+        struct entity_s *source, struct entity_s *target, struct power_s *power, const int32_t amt, const int32_t speed) {
     if (!list) { return; }
     entity_animation_node_t *toadd = malloc(sizeof(entity_animation_node_t));
     entity_animation_node_t *rover = list->head;
@@ -492,12 +529,8 @@ void entity_animation_list_add(entity_animation_list_t *list, enum entity_action
     toadd->ca.start_amt = amt;
     toadd->ca.ticks = 0;
     toadd->ca.scmd_pos = 0;
+    toadd->ca.speed = speed;
     toadd->next = NULL;
-
-    if (source) {
-         source->anim.scmd = entity_get_next_scmd(source, action);
-        //source->anim.scmd = entity_animation_get_scmd(source->anim.scmd, -1, 0, action);
-    }
 
     if (!list->head) {
         list->head = toadd;

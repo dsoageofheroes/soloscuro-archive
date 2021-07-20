@@ -30,6 +30,7 @@ enum entity_action_e {
     EA_POWER_THROW,
     EA_POWER_HIT,
     EA_POWER_APPLY,
+    EA_SCMD,
     EA_END,
 };
 
@@ -43,6 +44,7 @@ typedef struct entity_action_s {
     struct power_s  *power;
     enum entity_action_e action;
     int32_t amt, start_amt, ticks, scmd_pos;
+    int32_t speed;
 } entity_action_t;
 
 typedef struct entity_animation_node_s {
@@ -67,7 +69,10 @@ entity_animation_list_t* entity_animation_list_create();
 void entity_animation_list_free(entity_animation_list_t *list);
 void entity_animation_list_add(entity_animation_list_t *list, enum entity_action_e action,
         struct entity_s *source, struct entity_s *target, struct power_s *power, const int32_t amt);
+void entity_animation_list_add_speed(entity_animation_list_t *list, enum entity_action_e action,
+        struct entity_s *source, struct entity_s *target, struct power_s *power, const int32_t amt, const int32_t speed);
 extern int entity_animation_list_execute(entity_animation_list_t *list, struct region_s *reg);
+extern int entity_animation_list_start_scmd(struct entity_s *entity);
 
 struct entity_s;
 extern int entity_animation_execute(struct entity_s *entity);

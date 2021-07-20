@@ -43,10 +43,13 @@ typedef struct animation_list_s {
 
 struct entity_s;
 struct entity_action_s;
+struct entity_list_node_s;
+struct entity_list_s;
 
 animate_sprite_node_t* animate_sprite_node_create();
 void                   animation_node_free(animation_node_t *node);
 void                   animation_shift_node(animate_sprite_node_t *an);
+extern void            animation_shift_entity(struct entity_list_s *list, struct entity_list_node_s *en);
 
 void                   animate_sprite_tick(struct entity_action_s *action, struct entity_s *entity );
 animation_list_t*      animation_list_create();

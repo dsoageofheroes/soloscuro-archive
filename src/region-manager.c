@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "dsl-manager.h"
+#include "dsl.h"
 
 #define MAX_REGIONS (0xFF)
 
@@ -48,9 +49,9 @@ region_t* region_manager_get_region(const int region_id) {
 
         ssi_regions[region_id] = region_create(gff_index);
         entity_list_load_etab(ssi_regions[region_id]->entities, gff_index, region_id);
-        entity_list_for_each(ssi_regions[region_id]->entities, dude) {
-            animation_list_add(ssi_regions[region_id]->anims, &dude->anim);
-        }
+        //entity_list_for_each(ssi_regions[region_id]->entities, dude) {
+            //animation_list_add(ssi_regions[region_id]->anims, &dude->anim);
+        //}
 
 /*
         entity_list_for_each(ssi_regions[region_id]->entities, dude) {
@@ -189,8 +190,19 @@ extern int region_manager_add_region(region_t *region) {
 
 extern void region_manager_set_current(region_t *region) {
     if (!region) { return; }
+    region_manager_remove_players();
     for (int i = 0; i < MAX_REGIONS; i++) {
         if (ssi_regions[i] == region) { current_region = i; }
         if (sol_regions[i] == region) { current_region = MAX_REGIONS + i; }
+    }
+    entity_list_add(region->entities, player_get_active());
+}
+
+extern void region_manager_remove_players() {
+    region_t* reg = region_manager_get_current();
+    if (!reg) { return; }
+
+    for (int i = 0; i < MAX_PCS; i++) {
+        entity_list_remove(reg->entities, entity_list_find(reg->entities, player_get(i)));
     }
 }

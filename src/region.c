@@ -8,6 +8,7 @@
 #include "gff.h"
 #include "gfftypes.h"
 #include "port.h"
+#include "region-manager.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -37,7 +38,7 @@ static int is_region(const int gff_idx) {
 extern region_t* region_create_empty() {
     region_t *reg = calloc(1, sizeof(region_t));
     reg->entities = entity_list_create();
-    reg->anims = animation_list_create();
+    //reg->anims = animation_list_create();
 
     return reg;
 }
@@ -80,16 +81,17 @@ region_t* region_create(const int gff_file) {
 extern void region_remove_entity(region_t *reg, entity_t *entity) {
     if (!reg || !entity) { return; }
     entity_list_remove(reg->entities, entity_list_find(reg->entities, entity));
-    animation_list_remove(reg->anims, animation_list_find(reg->anims, &(entity->anim)));
+    //animation_list_remove(reg->anims, animation_list_find(reg->anims, &(entity->anim)));
 }
 
 void region_free(region_t *reg) {
     if (!reg) { return; }
 
-    if (reg->anims) {
-        animation_list_free(reg->anims);
-        reg->anims = NULL;
-    }
+    //if (reg->anims) {
+        //animation_list_free(reg->anims);
+        //reg->anims = NULL;
+    //}
+    region_manager_remove_players();
 
     if (reg->entities) {
         entity_list_free_all(reg->entities);
@@ -178,13 +180,10 @@ static void load_passives(region_t *reg, const int gff_idx, const int map_id) {
         }
         gff_read_chunk(gff_idx, &chunk, open_files[gff_idx].entry_table, chunk.length);
     }
-    //gff_map_object_t *entry_table = open_files[gff_idx].entry_table;
-    //gff_map_object_t *entry_table = reg->entry_table;
+
     int len = gff_map_get_num_objects(gff_idx, map_id);
-    //memset(&reg->passives, 0x0, sizeof(passive_t) * MAX_REGION_OBJS);
 
     for (int i = 0; i < len; i++) {
-        //load_object_from_etab(rl->objs + i, entry_table, i);
         passive_load_from_etab(reg->passives + i, reg->entry_table, i);
         reg->passives[i].scmd = gff_map_get_object_scmd(gff_idx, map_id, i, 0);
     }
@@ -246,8 +245,8 @@ extern int region_location_blocked(const region_t *reg, const int32_t x, const i
 extern void region_add_entity(region_t *reg, entity_t *entity) {
     if (!reg || !entity) { return; }
 
-    entity_list_add(reg->entities, entity);
-    animation_list_add(reg->anims, &(entity->anim));
+    animation_shift_entity(reg->entities, entity_list_add(reg->entities, entity));
+    //animation_list_add(reg->anims, &(entity->anim));
 }
 
 //TODO: Ignores walls, but that might be okay right now.
@@ -275,18 +274,29 @@ extern void region_tick(region_t *reg) {
     dude_t *bad_dude = NULL;
     int xdiff, ydiff;
     int posx, posy;
-    static int ticks_per_game_round = 30;
+    enum entity_action_e action;
+    //static int ticks_per_game_round = 30;
+
+/*
+    entity_list_for_each(reg->entities, bad_dude) {
+        if (entity_animation_execute(bad_dude)) {
+            //printf("ACTION! %d, %d\n", bad_dude->mapx, bad_dude->mapy);
+            continue;
+        }
+    }
+    */
+
+    //ticks_per_game_round--;
+    //if (ticks_per_game_round > 0) { return; }
+    //ticks_per_game_round = 30;
 
     if (!reg || combat_player_turn() != NO_COMBAT) { return; }
 
-    ticks_per_game_round--;
-    if (ticks_per_game_round > 0) { return; }
-    ticks_per_game_round = 30;
-
     entity_list_for_each(reg->entities, bad_dude) {
-        //if (bad_dude->name) {
-            //printf("bad_dude->name = %s\n", bad_dude->name);
-        //}
+        if (entity_animation_execute(bad_dude)) {
+            //printf("ACTION! %s %d, %d\n", bad_dude->name, bad_dude->mapx, bad_dude->mapy);
+            continue;
+        }
         if (bad_dude->abilities.hunt) {
             xdiff = player_get_active()->mapx - bad_dude->mapx;
             ydiff = player_get_active()->mapy - bad_dude->mapy;
@@ -305,12 +315,28 @@ extern void region_tick(region_t *reg) {
                     xdiff = ydiff = 0;
                 }
             }
-            bad_dude->anim.scmd = entity_animation_get_scmd(bad_dude->anim.scmd, xdiff, ydiff, EA_NONE);
+            action =
+                  (xdiff == 1 && ydiff == 1) ? EA_WALK_DOWNRIGHT
+                : (xdiff == 1 && ydiff == -1) ? EA_WALK_UPRIGHT
+                : (xdiff == -1 && ydiff == -1) ? EA_WALK_UPLEFT
+                : (xdiff == -1 && ydiff == 1) ? EA_WALK_DOWNLEFT
+                : (xdiff == 1) ? EA_WALK_RIGHT
+                : (xdiff == -1) ? EA_WALK_LEFT
+                : (ydiff == 1) ? EA_WALK_DOWN
+                : (ydiff == -1) ? EA_WALK_UP
+                : EA_NONE;
+            entity_animation_list_add(&(bad_dude->actions), action, bad_dude, NULL, NULL, 30);
+            bad_dude->mapx += xdiff;
+            bad_dude->mapy += ydiff;
+            bad_dude->anim.destx += (xdiff * 32);
+            bad_dude->anim.desty += (ydiff * 32);
+            //animation_shift_entity(reg->entities, __el_rover);
+            //bad_dude->anim.scmd = entity_animation_get_scmd(bad_dude->anim.scmd, xdiff, ydiff, EA_NONE);
             if (calc_distance_to_player(bad_dude) < 5) {
-                combat_initiate(reg, bad_dude->mapx, bad_dude->mapy);
-                return;
+                //combat_initiate(reg, bad_dude->mapx, bad_dude->mapy);
+                //return;
             }
-            port_update_entity(bad_dude, xdiff, ydiff);
+            //port_update_entity(bad_dude, xdiff, ydiff);
         } else {
             //if (bad_dude->name) {
                 //port_update_entity(bad_dude, 0, 0);

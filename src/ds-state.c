@@ -492,6 +492,8 @@ static int dsl_clone(lua_State *l) {
             region_add_entity(region_manager_get_current(), dude);
             port_load_sprite(&(dude->anim), pal, OBJEX_GFF_INDEX, GFF_BMP, dude->sprite.bmp_id,
                 (dude->name) ? 2 : 1);
+            port_place_entity(dude);
+            //TODO: Should reshift the entity?
             dude->anim.scmd = combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
         }
     }

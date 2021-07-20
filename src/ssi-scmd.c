@@ -2,6 +2,18 @@
 #include "ssi-scmd.h"
 #include <stdlib.h>
 
+static unsigned char scmds[SCMD_MAX][SCMD_MAX];
+static scmd_t empty_scmd = {
+    .bmp_idx = 0,
+    .delay = 0,
+    .flags = SCMD_LAST,
+    .xoffset = 0,
+    .yoffset = 0,
+    .xoffsethot = 0,
+    .yoffsethot = 0,
+    .soundidx = 0
+};
+
 static scmd_t* get_script(unsigned char* scmd_entry, const int index) {
     if (scmd_entry == NULL) { return NULL; }
     if (index < 0 || index >= SCMD_MAX_SIZE) {
@@ -28,18 +40,6 @@ static void print_scmd(scmd_t *scmd) {
     );
 }
 */
-
-static unsigned char scmds[SCMD_MAX][SCMD_MAX];
-static scmd_t empty_scmd = {
-    .bmp_idx = 0,
-    .delay = 0,
-    .flags = SCMD_LAST,
-    .xoffset = 0,
-    .yoffset = 0,
-    .xoffsethot = 0,
-    .yoffsethot = 0,
-    .soundidx = 0
-};
 
 extern scmd_t* ssi_scmd_empty() {
     return &empty_scmd;
@@ -76,4 +76,18 @@ int ssi_scmd_next_pos(const scmd_t *scmd, const int scmd_index) {
         return 0;
     }
     return scmd_index + 1;
+}
+
+extern int ssi_scmd_total_delay(const scmd_t *scmd, int scmd_index) {
+    int sum = 0;
+    if (!scmd) { return 0; }
+
+    while (!(scmd[scmd_index].flags & SCMD_LAST) && !(scmd[scmd_index].flags & SCMD_JUMP)) {
+        sum += scmd[scmd_index].delay;
+        scmd_index++;
+    }
+
+    sum += scmd[scmd_index].delay;
+
+    return (scmd[scmd_index].flags & SCMD_JUMP) ? -1 : sum;
 }

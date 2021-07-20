@@ -93,5 +93,7 @@ extern void port_load_window(const window_t window);
 extern void port_set_lua_globals(lua_State *l);
 extern void port_game_loop();
 extern uint32_t port_sprite_geth(const uint16_t id);
+extern void port_place_entity(entity_t *entity);
+extern void port_entity_update_scmd(entity_t *entity);
 
 #endif

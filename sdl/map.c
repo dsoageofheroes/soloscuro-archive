@@ -120,7 +120,8 @@ static void map_load_current_region() {
         if (player_get_active()->anim.spr == SPRITE_ERROR) {
             sprite_load_animation(player_get_active(), pal);
         }
-        animation_list_add(map->region->anims, &(player_get_active()->anim));
+        //animation_list_add(map->region->anims, &(player_get_active()->anim));
+        port_place_entity(player_get_active());
     }
 
     cmap = map;
@@ -305,7 +306,8 @@ void map_render(void *data, SDL_Renderer *renderer) {
     if (main_get_debug()) { show_debug_info(); }
 }
 
-static int do_shift = 0;
+//static int do_shift = 0;
+/*
 static SDL_RendererFlip map_animate_tick(animate_sprite_t *anim, const uint32_t xoffset, const uint32_t yoffset) {
     size_t pos = anim->pos;
     SDL_RendererFlip flip = 0;
@@ -356,13 +358,11 @@ out:
 
     do_shift = !(movex_amt && movey_amt);
 
-    /*
-    if (anim->scmd == combat_get_scmd(COMBAT_POWER_THROW_STATIC_U)) {
-        printf("%s: (%d, %d) -> (%d, %d) (move_amt = (%f, %f))\n",
-            anim->entity ? anim->entity->name : "THROW",
-            anim->x, anim->y, anim->destx, anim->desty, movex_amt, movey_amt);
-    }
-    */
+    //if (anim->scmd == combat_get_scmd(COMBAT_POWER_THROW_STATIC_U)) {
+        //printf("%s: (%d, %d) -> (%d, %d) (move_amt = (%f, %f))\n",
+            //anim->entity ? anim->entity->name : "THROW",
+            //anim->x, anim->y, anim->destx, anim->desty, movex_amt, movey_amt);
+    //}
     sprite_set_location(anim->spr,
         anim->x - xoffset, // + scmd_xoffset,
         anim->y - yoffset); // + anim->scmd->yoffset);
@@ -373,19 +373,52 @@ out:
 
     return flip;
 }
+*/
 
 void map_render_anims(SDL_Renderer *renderer) {
     const uint32_t xoffset = getCameraX();
     const uint32_t yoffset = getCameraY();
+    entity_t *dude;
     animate_sprite_t *anim;
+    SDL_RendererFlip flip = 0;
 
+/*
     animation_list_for_each(cmap->region->anims, anim) {
+        flip = 0;
         if (anim->spr != SPRITE_ERROR){
             //printf("render: %d\n", anim->spr);
             //sprite_render(renderer, anim->spr);
-            sprite_render_flip(renderer, anim->spr, map_animate_tick(anim, xoffset, yoffset));
-            if (do_shift) { animation_shift_node(__el_rover); }
+            //sprite_render_flip(renderer, anim->spr, map_animate_tick(anim, xoffset, yoffset));
+            if (anim->scmd[anim->pos].flags & SCMD_XMIRROR
+                || (anim->entity && anim->entity->sprite.flags & 0x80)) {
+                flip |= SDL_FLIP_HORIZONTAL;
+            }
+            if (anim->scmd[anim->pos].flags & SCMD_YMIRROR) {
+                flip |= SDL_FLIP_VERTICAL;
+            }
+            sprite_set_location(anim->spr,
+                anim->x - xoffset, // + scmd_xoffset,
+                anim->y - yoffset); // + anim->scmd->yoffset);
+            sprite_render_flip(renderer, anim->spr, flip);
+            //if (do_shift) { animation_shift_node(__el_rover); }
         }
+    }
+    */
+    entity_list_for_each(cmap->region->entities, dude) {
+        if (dude->anim.spr == SPRITE_ERROR) { continue; }
+        flip = 0;
+        anim = &(dude->anim);
+        if (anim->scmd[anim->pos].flags & SCMD_XMIRROR
+            || (anim->entity && anim->entity->sprite.flags & 0x80)) {
+            flip |= SDL_FLIP_HORIZONTAL;
+        }
+        if (anim->scmd[anim->pos].flags & SCMD_YMIRROR) {
+            flip |= SDL_FLIP_VERTICAL;
+        }
+        sprite_set_location(anim->spr,
+            anim->x - xoffset, // + scmd_xoffset,
+            anim->y - yoffset); // + anim->scmd->yoffset);
+        sprite_render_flip(renderer, anim->spr, flip);
     }
 }
 
@@ -443,6 +476,21 @@ static void entity_instant_move(entity_t *entity) {
     animate_sprite_node_t *asn = (animate_sprite_node_t*) entity->sprite.data;
     asn->anim->x = asn->anim->destx;
     asn->anim->y = asn->anim->desty;
+}
+
+void port_place_entity(entity_t *entity) {
+    animate_sprite_t *as = &(entity->anim);
+    const float zoom = main_get_zoom();
+
+    as->x = as->destx = entity->mapx * 16 * zoom;
+    as->y = as->desty = entity->mapy * 16 * zoom;
+    as->w = sprite_getw(entity->anim.spr);
+    as->h = sprite_geth(entity->anim.spr);
+    if (as->w > 16 * zoom) {
+        //printf("width = %d\n", as->w);
+        as->x = as->destx -= (as->w - 16 * zoom) / 2;
+    }
+    as->y = as->desty -= as->h - (16 * zoom);
 }
 
 void port_update_entity(entity_t *entity, const uint16_t xdiff, const uint16_t ydiff) {

@@ -1,6 +1,7 @@
 #include "sprite.h"
 #include "main.h"
 #include "../src/animation.h"
+#include "../src/entity.h"
 
 #define MAX_SPRITES (1<<10)
 
@@ -203,6 +204,12 @@ void sprite_render(SDL_Renderer *renderer, const uint16_t sprite_id) {
     SDL_RenderCopy(renderer, sprite->tex[sprite->pos], NULL, (sprite->loc + sprite->pos));
 }
 
+void port_sprite_render_flip(const uint16_t sprite_id, SDL_RendererFlip flip) {
+    if (sprite_id == (uint16_t)SPRITE_ERROR) { return; }
+    sprite_t *sprite = sprites + sprite_id;
+    SDL_RenderCopyEx(main_get_rend(), sprite->tex[sprite->pos], NULL, (sprite->loc + sprite->pos), 0, NULL, flip);
+}
+
 void sprite_render_flip(SDL_Renderer *renderer, const uint16_t sprite_id, SDL_RendererFlip flip) {
     if (sprite_id == (uint16_t)SPRITE_ERROR) { return; }
     sprite_t *sprite = sprites + sprite_id;
@@ -308,4 +315,8 @@ void sprite_free(const uint16_t id) {
         sprites[id].tex = NULL;
         sprites[id].in_use = 0;
     }
+}
+
+extern void port_entity_update_scmd(entity_t *entity) {
+    sprite_set_frame(entity->anim.spr, entity->anim.scmd[entity->anim.pos].bmp_idx);
 }

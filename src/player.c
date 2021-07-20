@@ -6,6 +6,7 @@
 #include "player.h"
 #include "wizard.h"
 #include "rules.h"
+#include "region-manager.h"
 
 static entity_t *players[MAX_PCS] = {NULL, NULL, NULL, NULL};
 static int ai[MAX_PCS] = {0, 0, 0, 0};
@@ -15,6 +16,7 @@ static int ai[MAX_PCS] = {0, 0, 0, 0};
 static int active = -1;
 
 extern void player_cleanup() {
+    region_manager_remove_players();
     for (int i = 0; i < MAX_PCS; i++) {
         player_free(i);
     }

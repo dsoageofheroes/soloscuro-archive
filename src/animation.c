@@ -2,7 +2,7 @@
 #include "port.h"
 #include <math.h>
 
-// the shift function can put the list head int he incorrect spot.
+// the shift function can put the list head in the incorrect spot.
 // This function fixes that.
 static void animation_list_fix_head(animation_list_t *al);
 
@@ -92,42 +92,34 @@ animation_node_t* animation_list_remove(animation_list_t *al, animation_node_t *
     return animation_node_normal_remove(node);
 }
 
-// The assembly makes even less sense...
-static int is_less(animate_sprite_t *a0, animate_sprite_t *a1) {
-    if (a0 && a0->entity && a1 && a1->entity) {
-        if (a0->entity->mapz != a1->entity->mapz) {
-            return a0->entity->mapz < a1->entity->mapz;
-        }
+// The assembly didn't make sense, so I'm taking a guess...
+static int is_less(entity_t *e0, entity_t *e1) {
+    int map0y = e0->mapy; // * 16 + a0->entity->sprite.yoffset)
+    int map1y = e1->mapy; // * 16 + a1->entity->sprite.yoffset)
+
+    if (e0->mapz != e1->mapz) {
+        return e0->mapz > e1->mapz;
     }
-    int map0y = (a0 && a0->entity)
-        ? (a0->entity->mapy)// * 16 + a0->entity->sprite.yoffset)
-        : 0;
 
-    int map1y = (a1 && a1->entity)
-        ? (a1->entity->mapy)// * 16 + a1->entity->sprite.yoffset)
-        : 0;
-
-    if (map0y == map1y && a0 && a0->entity && a1 && a1->entity) {
-        //map0y = -a0->entity->sprite.yoffset;
-        //map1y = -a1->entity->sprite.yoffset;
-        map0y = port_sprite_geth(a0->spr);
-        map1y = port_sprite_geth(a1->spr);
+    if (map0y == map1y) {
+        map0y = port_sprite_geth(e0->anim.spr);
+        map1y = port_sprite_geth(e0->anim.spr);
     }
 
     return map0y < map1y;
 }
 
 // This function assumes an AND an->next are valid!
-static void swap_with_next(animate_sprite_node_t *an) {
-    animate_sprite_node_t *next = an->next;
-    animate_sprite_node_t *prev = an->prev;
+static void swap_with_next(entity_list_node_t *en) {
+    entity_list_node_t *next = en->next;
+    entity_list_node_t *prev = en->prev;
 
-    if (next->next) { next->next->prev = an; }
+    if (next->next) { next->next->prev = en; }
 
     next->prev = prev;
-    an->next = next->next;
-    an->prev = next;
-    next->next = an;
+    en->next = next->next;
+    en->prev = next;
+    next->next = en;
 
     if (prev) { prev->next = next; }
 }
@@ -142,28 +134,37 @@ static void animation_list_fix_head(animation_list_t *al) {
 
 // WARNING: This may change the head of the animation list!
 void animation_shift_node(animate_sprite_node_t *an) {
-    while (an && an->next && is_less(an->next->anim, an->anim)) {
-        swap_with_next(an);
-    }
-
-    while (an && an->prev && is_less(an->anim, an->prev->anim)) {
-        swap_with_next(an->prev);
-    }
+    exit(1);
 }
 
 void animate_sprite_tick(entity_action_t *action, entity_t *entity ) {
     if (!entity || !action) { return; }
     animate_sprite_t *anim = &entity->anim;
 
-    anim->left_over += fmod(anim->movex, 1.0);
+    anim->left_over += fmod(anim->movex ? anim->movex : anim->movey, 1.0);
     float movex_amt = floor(anim->movex + anim->left_over);
     float movey_amt = floor(anim->movey + anim->left_over);
     anim->left_over = fmod(anim->left_over, 1.0);
 
-    //printf("anim: (%f, %f) (%d, %d) -> ", movex_amt, movey_amt, anim->x, anim->y);
+    //if (entity->name) { printf("anim: %s (%f, %f)\n", entity->name, anim->movex, anim->movey); }
+    //if (entity->name) { printf("anim: %s (%f, %f) (%d, %d) -> ", entity->name, movex_amt, movey_amt, anim->x, anim->y); }
     if (anim->x < anim->destx) { anim->x += movex_amt; }
     if (anim->y < anim->desty) { anim->y += movey_amt; }
     if (anim->x > anim->destx) { anim->x -= movex_amt; }
     if (anim->y > anim->desty) { anim->y -= movey_amt; }
-    //printf("(%d %d)\n", anim->x, anim->y);
+    //if (entity->name) { printf("(%d %d)\n", anim->x, anim->y); }
+}
+
+extern void animation_shift_entity(entity_list_t *list, entity_list_node_t *en) {
+    if (!en || !list) { return; }
+
+    while (en->next && is_less(en->next->entity, en->entity)) {
+        swap_with_next(en);
+    }
+
+    while (en->prev && is_less(en->entity, en->prev->entity)) {
+        swap_with_next(en->prev);
+    }
+    
+    while(list->head->prev) { list->head = list->head->prev; }
 }
