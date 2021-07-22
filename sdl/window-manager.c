@@ -3,6 +3,7 @@
 #include "main.h"
 #include "animate.h"
 #include "player.h"
+#include "player.h"
 #include "windows/narrate.h"
 #include "windows/combat-status.h"
 #include "sprite.h"
@@ -10,6 +11,7 @@
 #include "../src/dsl.h"
 #include "../src/player.h"
 #include "../src/region.h"
+#include "../src/settings.h"
 #include "../src/port.h"
 #include "windows/inventory.h"
 #include "windows/view-character.h"
@@ -29,8 +31,8 @@ void window_init(SDL_Renderer *renderer) {
     animate_init();
 }
 
-static uint32_t default_get_width() { return 320 * main_get_zoom(); }
-static uint32_t default_get_height() { return 200 * main_get_zoom(); }
+static uint32_t default_get_width() { return 320 * settings_zoom(); }
+static uint32_t default_get_height() { return 200 * settings_zoom(); }
 
 void window_load(SDL_Renderer *renderer, int layer, wops_t *window, const uint32_t x, const uint32_t y) {
     int grey_out_map = 0;
@@ -128,7 +130,7 @@ void port_change_region(region_t *reg) {
     map_load_region(reg, main_get_rend());
 
     for (int i = 0; i < MAX_PCS; i++) {
-        player_load(i, main_get_zoom());
+        player_load(i, settings_zoom());
     }
 }
 

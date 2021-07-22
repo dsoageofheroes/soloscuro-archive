@@ -450,44 +450,42 @@ extern int entity_animation_execute(entity_t *entity) {
     entity_action_t *action = &(entity->actions.head->ca);
 
     for (int i = 0; i < action->speed; i++) {
-    //printf("action->amt = %d (%d), ticks = %d, scmd_pos = %d of %d\n", action->amt, action->start_amt,
-        //action->ticks, action->scmd_pos, entity->anim.scmd[action->scmd_pos].delay);
-    if (action->start_amt != -1 && action->amt == action->start_amt) {
-        entity->anim.scmd = entity_get_next_scmd(entity, action->action);
-        set_anim(entity);
-    }
-
-    action->amt--;
-    action->ticks++;
-
-    if (entity->anim.scmd[action->scmd_pos].delay < action->ticks) {
-        //if (entity->name) { printf("->%s: ticks, amt = %d\n", entity->name, action->amt); }
-        entity->anim.pos = action->scmd_pos = ssi_scmd_next_pos(entity->anim.scmd, action->scmd_pos);
-        port_entity_update_scmd(entity);
-        action->ticks = 0;
-    }
-
-    //animate_sprite_tick(action, entity);
-
-    if (action->start_amt >= 0 && action->amt <= 0) {
-        entity->anim.x = entity->anim.destx;
-        entity->anim.y = entity->anim.desty;
-        entity_animation_node_t *to_delete = entity->actions.head;
-        entity->actions.head = entity->actions.head->next;
-        if (!entity->actions.head) {
-            entity->anim.scmd = entity_animation_face_direction(entity->anim.scmd, to_delete->ca.action);
-            //entity->anim.scmd = combat_stand_left;
-            entity->anim.flags = 0x0;
-            entity->anim.pos = 0;
-            entity->anim.flags = 0;
-            entity->anim.left_over = 0x0;
-            entity->anim.movex = entity->anim.movey = 0;
+        //printf("action->amt = %d (%d), ticks = %d, scmd_pos = %d of %d\n", action->amt, action->start_amt,
+            //action->ticks, action->scmd_pos, entity->anim.scmd[action->scmd_pos].delay);
+        if (action->start_amt != -1 && action->amt == action->start_amt) {
+            entity->anim.scmd = entity_get_next_scmd(entity, action->action);
+            set_anim(entity);
         }
-        free (to_delete);
-        return 1;
-    }
 
-    animate_sprite_tick(action, entity);
+        action->amt--;
+        action->ticks++;
+
+        if (entity->anim.scmd[action->scmd_pos].delay < action->ticks) {
+            //if (entity->name) { printf("->%s: ticks, amt = %d\n", entity->name, action->amt); }
+            entity->anim.pos = action->scmd_pos = ssi_scmd_next_pos(entity->anim.scmd, action->scmd_pos);
+            port_entity_update_scmd(entity);
+            action->ticks = 0;
+        }
+
+        if (action->start_amt >= 0 && action->amt <= 0) {
+            entity->anim.x = entity->anim.destx;
+            entity->anim.y = entity->anim.desty;
+            entity_animation_node_t *to_delete = entity->actions.head;
+            entity->actions.head = entity->actions.head->next;
+            if (!entity->actions.head) {
+                entity->anim.scmd = entity_animation_face_direction(entity->anim.scmd, to_delete->ca.action);
+                //entity->anim.scmd = combat_stand_left;
+                entity->anim.flags = 0x0;
+                entity->anim.pos = 0;
+                entity->anim.flags = 0;
+                entity->anim.left_over = 0x0;
+                entity->anim.movex = entity->anim.movey = 0;
+            }
+            free (to_delete);
+            return 1;
+        }
+
+        animate_sprite_tick(action, entity);
     }
 
     return 1;

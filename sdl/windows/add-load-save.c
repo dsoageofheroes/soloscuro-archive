@@ -11,6 +11,7 @@
 #include "../../src/gff.h"
 #include "../../src/gff-char.h"
 #include "../../src/gfftypes.h"
+#include "../../src/settings.h"
 
 #define SAVE_FORMAT "save%02d.sav"
 
@@ -141,7 +142,7 @@ static void setup_save_load_selection() {
 
 void add_load_save_init(SDL_Renderer *_renderer, const uint32_t x, const uint32_t y) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
-    const float zoom = main_get_zoom();
+    const float zoom = settings_zoom();
     selection = -1;
     renderer = _renderer;
     num_valid_entries = 0;
@@ -181,7 +182,7 @@ void add_load_save_init(SDL_Renderer *_renderer, const uint32_t x, const uint32_
 }
 
 void add_load_save_render(void *data, SDL_Renderer *renderer) {
-    const float zoom = main_get_zoom();
+    const float zoom = settings_zoom();
     sprite_render(renderer, background);
     sprite_render(renderer, up_arrow);
     sprite_render(renderer, down_arrow);
@@ -252,7 +253,7 @@ int add_load_save_handle_mouse_movement(const uint32_t x, const uint32_t y) {
 }
 
 int add_load_save_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
-    const float zoom = main_get_zoom();
+    const float zoom = settings_zoom();
     if (sprite_in_rect(action_btn, x, y)) {
         sprite_set_frame(action_btn, 2);
     }

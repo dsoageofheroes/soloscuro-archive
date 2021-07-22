@@ -2,6 +2,7 @@
 #include "main.h"
 #include "../src/animation.h"
 #include "../src/entity.h"
+#include "../src/settings.h"
 
 #define MAX_SPRITES (1<<10)
 
@@ -183,8 +184,8 @@ void sprite_render_box(SDL_Renderer *renderer, const uint16_t sprite_id,
     SDL_Rect src = *(sprites[sprite_id].loc);
     src.x = src.y = 0;
     src.w = w;
-    src.h = w / main_get_zoom();
-    src.h = h / main_get_zoom();
+    src.h = w / settings_zoom();
+    src.h = h / settings_zoom();
 
     SDL_RenderCopy(renderer, sprite->tex[sprite->pos], &src, &dest); //(sprite->loc + sprite->pos));
 }

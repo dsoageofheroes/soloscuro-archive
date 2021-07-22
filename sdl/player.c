@@ -3,6 +3,7 @@
 #include "main.h"
 #include "../src/combat.h"
 #include "../src/dsl.h"
+#include "../src/settings.h"
 #include "sprite.h"
 #include "windows/narrate.h"
 #include "../src/trigger.h"
@@ -39,7 +40,7 @@ void player_init() {
 void player_load_graphics(const int slot) {
     dude_t *dude = player_get(slot);
     dude->anim.scmd = combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
-    load_character_sprite(main_get_rend(), slot, main_get_zoom());
+    load_character_sprite(main_get_rend(), slot, settings_zoom());
 }
 
 static int ticks_per_move = 30;
@@ -213,7 +214,7 @@ extern void player_condense() {
 }
 
 extern void port_player_load(const int slot) {
-    player_load(slot, main_get_zoom());
+    player_load(slot, settings_zoom());
     player_load_graphics(slot);
     port_place_entity(player_get(slot));
 }
@@ -246,7 +247,7 @@ uint16_t player_get_sprite(const int slot) {
     if (slot < 0 || slot >= MAX_PCS) { return SPRITE_ERROR; }
 
     if (players[slot].main == SPRITE_ERROR) {
-        load_character_sprite(main_get_rend(), slot, main_get_zoom());
+        load_character_sprite(main_get_rend(), slot, settings_zoom());
     }
 
     return players[slot].main;

@@ -12,6 +12,7 @@
 #include "add-load-save.h"
 #include "../../src/player.h"
 #include "../../src/ds-load-save.h"
+#include "../../src/settings.h"
 #include "../font.h"
 #include "../sprite.h"
 #include "../mouse.h"
@@ -87,7 +88,7 @@ static uint16_t view_sprite_create(SDL_Renderer *renderer, gff_palette_t *pal,
 void inventory_window_init(SDL_Renderer *renderer, const uint32_t _xoffset, const uint32_t _yoffset) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     rend = renderer;
-    const float zoom = main_get_zoom();
+    const float zoom = settings_zoom();
     mousex = mousey = 0;
     char_selected = 0;
     xoffset = _xoffset;
@@ -189,7 +190,7 @@ static int display_attack(entity_t *entity, item_t *item, const int xpos, const 
     char buf[BUF_MAX];
     int pos = 0;
     int offset = 0;
-    const float zoom = main_get_zoom();
+    const float zoom = settings_zoom();
 
     if (item && item->type != ITEM_MELEE && item->type != ITEM_MISSILE_THROWN
             && item->type != ITEM_MISSILE_USE_AMMO) { return 0;}
@@ -224,7 +225,7 @@ static void render_character() {
     entity_t *player = player_get(char_selected);
     if (!player) { return; }
     inventory_t *player_items = (inventory_t*)player->inv;
-    const float zoom = main_get_zoom();
+    const float zoom = settings_zoom();
 
     if (player->name == NULL) { return; } // no character.
     strcpy(name, player->name);
@@ -292,7 +293,7 @@ static void render_backpack_slot(const int slot, const int frame, const int x, c
 }
 
 void inventory_window_render(void *data, SDL_Renderer *renderer) {
-    const float zoom = main_get_zoom();
+    const float zoom = settings_zoom();
 
     description[0] = '\0';
     entity_t *player = player_get(char_selected);
@@ -460,7 +461,7 @@ static void clicked_slot(const int slot) {
 }
 
 int inventory_window_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
-    const float zoom = main_get_zoom();
+    const float zoom = settings_zoom();
 
     for (int i = 0; i < 4; i++) {
         if (sprite_in_rect(ports[i], x, y)) {
@@ -554,7 +555,7 @@ void inventory_window_return_control () {
             if (dnd2e_character_is_valid(pc)) {// && dnd2e_psin_is_valid(pc, psi)) {
                 warn ("TODO: PUT BACK IN CHARACTER ADDING!\n");
                 //gff_char_add_character(pc, psi, spells, psionics, name);
-                player_load(slot_clicked, main_get_zoom());
+                player_load(slot_clicked, settings_zoom());
             } else {
                 window_push(rend, &popup_window, 100, 75);
                 popup_set_message("Character was invalid.");
@@ -571,7 +572,7 @@ void inventory_window_return_control () {
             if (!ds_load_character_charsave(slot_clicked, sel)) {
                 printf("Char loading failed.\n");
             } else {
-                player_load(slot_clicked, main_get_zoom());
+                player_load(slot_clicked, settings_zoom());
                 char_selected = slot_clicked;
             }
         }

@@ -5,6 +5,7 @@
 #include "font.h"
 #include "player.h"
 #include "../src/lua-inc.h"
+#include "../src/settings.h"
 #include "mouse.h"
 #include "textbox.h"
 #include "window-manager.h"
@@ -36,7 +37,7 @@ static const uint32_t TICK_AMT = 1000 / TICKS_PER_SEC;// Not fully correct...
 static SDL_Window *win = NULL;
 static SDL_Surface *window = NULL;
 static SDL_Renderer *renderer = NULL;
-static float zoom = 2.0;
+//static float zoom = 2.0;
 static uint8_t ignore_repeat = 1, browser_mode = 0;
 static int show_debug = 0;
 
@@ -53,7 +54,6 @@ void main_set_textbox(textbox_t *tb) {
 
 SDL_Renderer *main_get_rend() { return renderer; }
 SDL_Surface *main_get_window() { return window; }
-float main_get_zoom() { return zoom; }
 
 extern uint32_t getCameraX() { return xmappos; }
 extern uint32_t getCameraY() { return ymappos; }
@@ -229,8 +229,8 @@ void main_center_on_player() {
     SDL_GetRendererOutputSize(renderer, &w, &h);
     dude_t *dude = player_get_active();
 
-    xmappos = dude->mapx * 16 * main_get_zoom() - w / 2;
-    ymappos = dude->mapy * 16 * main_get_zoom() - h / 2;
+    xmappos = dude->mapx * 16 * settings_zoom() - w / 2;
+    ymappos = dude->mapy * 16 * settings_zoom() - h / 2;
 }
 
 void render() {

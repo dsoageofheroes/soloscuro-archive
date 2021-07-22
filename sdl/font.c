@@ -1,6 +1,7 @@
 #include "font.h"
 #include "main.h"
 #include "../src/dsl.h"
+#include "../src/settings.h"
 #include <SDL2/SDL_ttf.h>
 
 #define MAX_CHARS (128)
@@ -130,7 +131,7 @@ extern void font_init(SDL_Renderer *renderer) {
     create_font(renderer, FONT_REDDARK, 0xD72128FF, 0x000000FF);
     create_font(renderer, FONT_BLUE, 0x287DC7FF, 0x101038FF);
     TTF_Init();
-    font = TTF_OpenFont( "DarkSun.ttf", 8 * main_get_zoom() );
+    font = TTF_OpenFont( "DarkSun.ttf", 8 * settings_zoom() );
 }
 
 void font_render_center(SDL_Renderer *rend, font_t font, const char *str, const SDL_Rect loc) {

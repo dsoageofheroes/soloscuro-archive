@@ -635,17 +635,20 @@ int16_t request_to_do(int16_t name, int16_t rectype, int (*request_proc)(int16_t
 }
 
 int req_animation(int16_t object, long notused1, long notused2) {
-    warn("Request animation on %d not implemented\n", object);
-    //dude_t *dude = region_find_entity_by_id(region_manager_get_current(), object);
+    dude_t *dude = region_find_entity_by_id(region_manager_get_current(), object);
     dsl_set_gname(GNAME_PASSIVE, object);
 
-/*
     if (dude) {
-        port_animate_entity(dude);
+        dude->anim.pos++;
+        while (! (dude->anim.scmd[dude->anim.pos].flags & SCMD_LAST) && dude->anim.pos < SCMD_MAX_SIZE) {
+            dude->anim.pos++;
+        }
+
+        if (dude->anim.pos == SCMD_MAX_SIZE) { dude->anim.pos = 0; }
+        port_entity_update_scmd(dude);
     } else {
         error("Unable to find object %d\n", object);
     }
-    */
 
     return 0;
 }

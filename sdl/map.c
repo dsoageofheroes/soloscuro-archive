@@ -11,6 +11,7 @@
 #include "../src/dsl.h"
 #include "../src/port.h"
 #include "../src/trigger.h"
+#include "../src/settings.h"
 #include "../src/dsl-manager.h"
 #include "../src/ssi-object.h"
 #include "../src/region-manager.h"
@@ -133,7 +134,7 @@ static void map_load_current_region() {
 }
 
 static void sprite_load_animation(entity_t *entity, gff_palette_t *pal) {
-    const float zoom = main_get_zoom();
+    const float zoom = settings_zoom();
     //anims[anim_pos].scmd = entity->sprite.anim.scmd;
     //anims[anim_pos].spr =
     entity->anim.spr =
@@ -153,7 +154,7 @@ static void sprite_load_animation(entity_t *entity, gff_palette_t *pal) {
     entity->anim.desty = entity->anim.y;
 
     if (entity->name) {
-        entity->anim.desty -= sprite_geth(entity->anim.spr) - (8 * main_get_zoom());
+        entity->anim.desty -= sprite_geth(entity->anim.spr) - (8 * settings_zoom());
     }
     entity->anim.movey = entity->anim.movex = entity->anim.left_over = 0.0;
     entity->anim.entity = entity;
@@ -230,7 +231,7 @@ void map_apply_alpha(const uint8_t alpha) {
 extern void map_highlight_tile(const int tilex, const int tiley, const int frame) {
     const uint32_t xoffset = getCameraX();
     const uint32_t yoffset = getCameraY();
-    const float zoom = main_get_zoom();
+    const float zoom = settings_zoom();
     const int x = tilex * (16 * zoom) - xoffset;
     const int y = tiley * (16 * zoom) - yoffset;
 
@@ -242,12 +243,12 @@ extern void map_highlight_tile(const int tilex, const int tiley, const int frame
 static void show_debug_info() {
     const uint32_t xoffset = getCameraX();
     const uint32_t yoffset = getCameraY();
-    const float zoom = main_get_zoom();
+    const float zoom = settings_zoom();
     int x = (xoffset + mousex) / (16 * zoom);
     int y = (yoffset + mousey) / (16 * zoom);
 
     if (tile_highlight == SPRITE_ERROR) {
-        const float zoom = main_get_zoom();
+        const float zoom = settings_zoom();
         gff_palette_t* pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
         tile_highlight = sprite_new(main_get_rend(), pal, 0, 0, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20088);
     }
@@ -263,7 +264,7 @@ static void show_debug_info() {
 }
 
 void map_render(void *data, SDL_Renderer *renderer) {
-    const int stretch = main_get_zoom();
+    const int stretch = settings_zoom();
     const uint32_t xoffset = getCameraX();
     const uint32_t yoffset = getCameraY();
     SDL_Rect tile_loc = { -xoffset, -yoffset, stretch * 16, stretch * 16 };
@@ -423,7 +424,7 @@ void map_render_anims(SDL_Renderer *renderer) {
 }
 
 void port_add_entity(entity_t *entity, gff_palette_t *pal) {
-    const float zoom = main_get_zoom();
+    const float zoom = settings_zoom();
 
     return;
     //anims[anim_pos].scmd = entity->sprite.anim.scmd;
@@ -441,10 +442,10 @@ void port_add_entity(entity_t *entity, gff_palette_t *pal) {
     anims[anim_pos].y = (entity->mapy * 16 + entity->sprite.yoffset + entity->mapz) * zoom;
     anims[anim_pos].destx = anims[anim_pos].x;
     anims[anim_pos].destx -= sprite_getw(anims[anim_pos].spr) / 2;
-    //anims[anim_pos].destx -= (8 * main_get_zoom());
+    //anims[anim_pos].destx -= (8 * settings_zoom());
     anims[anim_pos].desty = anims[anim_pos].y;
     if (entity->name) {
-        anims[anim_pos].desty -= sprite_geth(anims[anim_pos].spr) - (8 * main_get_zoom());
+        anims[anim_pos].desty -= sprite_geth(anims[anim_pos].spr) - (8 * settings_zoom());
     }
     anims[anim_pos].movey = anims[anim_pos].movex = anims[anim_pos].left_over = 0.0;
     anims[anim_pos].entity = entity;
@@ -480,7 +481,7 @@ static void entity_instant_move(entity_t *entity) {
 
 void port_place_entity(entity_t *entity) {
     animate_sprite_t *as = &(entity->anim);
-    const float zoom = main_get_zoom();
+    const float zoom = settings_zoom();
 
     as->x = as->destx = entity->mapx * 16 * zoom;
     as->y = as->desty = entity->mapy * 16 * zoom;
@@ -495,15 +496,15 @@ void port_place_entity(entity_t *entity) {
 
 void port_update_entity(entity_t *entity, const uint16_t xdiff, const uint16_t ydiff) {
     animate_sprite_t *as = &(entity->anim);
-    const float zoom = main_get_zoom();
+    const float zoom = settings_zoom();
     //printf("cur:%d %d\n", as->x, as->y);
     //printf("dest: %d, %d\n", as->destx, as->desty);
     as->x = as->destx;
     as->y = as->desty;
     entity->mapx += xdiff;
     entity->mapy += ydiff;
-    as->destx = entity->mapx * 16 * main_get_zoom();
-    as->desty = entity->mapy * 16 * main_get_zoom();
+    as->destx = entity->mapx * 16 * settings_zoom();
+    as->desty = entity->mapy * 16 * settings_zoom();
     if (as->w > 16 * zoom) {
         //printf("width = %d\n", as->w);
         as->destx -= (as->w - 16 * zoom) / 2;
@@ -532,11 +533,11 @@ extern void port_load_sprite(animate_sprite_t *anim, gff_palette_t *pal, const i
     //}
 
     if (anim->spr == SPRITE_ERROR) {
-        anim->spr = sprite_new(main_get_rend(), pal, 0, 0, main_get_zoom(), gff_index, type, id);
+        anim->spr = sprite_new(main_get_rend(), pal, 0, 0, settings_zoom(), gff_index, type, id);
 
         // Now append anything else needed.
         for (int i = 1; i < num_load; i++) {
-            sprite_append(anim->spr, cren, pal, 0, 0, main_get_zoom(),
+            sprite_append(anim->spr, cren, pal, 0, 0, settings_zoom(),
                 gff_index, type, id + i);
         }
     }
@@ -613,7 +614,7 @@ entity_t* get_entity_at_location(const uint32_t x, const uint32_t y) {
 static void update_mouse_icon() {
     enum mouse_state ms = mouse_get_state();
     entity_t *dude = get_entity_at_location(mousex, mousey);
-    const float zoom = main_get_zoom();
+    const float zoom = settings_zoom();
 
     if (ms == MOUSE_MELEE || ms == MOUSE_NO_MELEE) {
         int x = (getCameraX() + mousex) / (16 * zoom);
@@ -689,7 +690,7 @@ int map_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_
     enum mouse_state ms = mouse_get_state();
     const uint32_t xoffset = getCameraX();
     const uint32_t yoffset = getCameraY();
-    const float zoom = main_get_zoom();
+    const float zoom = settings_zoom();
     int tilex = (xoffset + mousex) / (16 * zoom);
     int tiley = (yoffset + mousey) / (16 * zoom);
 
@@ -722,10 +723,10 @@ extern void port_load_item(item_t *item) {
     //animate_sprite_t *as = calloc(1, sizeof(animate_sprite_t));
     //item->sprite.data = (void*)as;
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
-    //as->spr = sprite_new(main_get_rend(), pal, 0, 0, main_get_zoom(),
+    //as->spr = sprite_new(main_get_rend(), pal, 0, 0, settings_zoom(),
             //OBJEX_GFF_INDEX, GFF_BMP, item->sprite.bmp_id);
     //as->entity = NULL;
-    item->anim.spr = sprite_new(main_get_rend(), pal, 0, 0, main_get_zoom(),
+    item->anim.spr = sprite_new(main_get_rend(), pal, 0, 0, settings_zoom(),
             OBJEX_GFF_INDEX, GFF_BMP, item->sprite.bmp_id);
     item->anim.entity = NULL;
 }

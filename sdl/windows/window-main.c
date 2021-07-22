@@ -3,6 +3,7 @@
 #include "../../src/gff.h"
 #include "../../src/gfftypes.h"
 #include "../../src/player.h"
+#include "../../src/settings.h"
 #include "../sprite.h"
 #include "../map.h"
 #include "../player.h"
@@ -30,7 +31,7 @@ uint16_t main_sprite_create(SDL_Renderer *renderer, gff_palette_t *pal,
 void main_init(SDL_Renderer *_renderer, const uint32_t x, const uint32_t y) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     renderer = _renderer;
-    const float zoom = main_get_zoom();
+    const float zoom = settings_zoom();
     xoffset = x;
     yoffset = y;
 

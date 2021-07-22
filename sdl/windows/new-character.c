@@ -9,6 +9,7 @@
 #include "../../src/wizard.h"
 #include "../../src/player.h"
 #include "../../src/rules.h"
+#include "../../src/settings.h"
 #include <string.h>
 #include <time.h>
 
@@ -175,7 +176,7 @@ static uint16_t new_sprite_create(SDL_Renderer *renderer, gff_palette_t *pal,
 }
 
 static void load_character_sprite() {
-    const float zoom = main_get_zoom();
+    const float zoom = settings_zoom();
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     int race = (pc.race - 1) * 2;
     int gender = pc.gender - 1;
@@ -188,7 +189,7 @@ static void load_character_sprite() {
     spr = new_sprite_create(renderer, pal,
                             offsetx / zoom + race_sprite_offsets_x[race + gender],
                             offsety / zoom + race_sprite_offsets_y[race + gender],
-                            main_get_zoom(), OBJEX_GFF_INDEX, GFF_BMP,
+                            settings_zoom(), OBJEX_GFF_INDEX, GFF_BMP,
                             race_sprite_ids[race + gender]);
 }
 
@@ -208,7 +209,7 @@ static void init_pc() {
 
 static void new_character_init(SDL_Renderer* _renderer, const uint32_t _x, const uint32_t _y) {
     gff_palette_t* pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
-    const float zoom = main_get_zoom();
+    const float zoom = settings_zoom();
     offsetx = _x; offsety = _y;
     uint32_t x = _x / zoom;
     uint32_t y = _y / zoom;

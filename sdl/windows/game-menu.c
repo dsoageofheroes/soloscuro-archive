@@ -6,6 +6,7 @@
 #include "../font.h"
 #include "../../src/gff.h"
 #include "../../src/gfftypes.h"
+#include "../../src/settings.h"
 #include <string.h>
 
 #define NUM_ARROWS (3)
@@ -39,7 +40,7 @@ static void set_locations(uint16_t sprite, const uint32_t x, const uint32_t y) {
 }
 
 static void open_sound() {
-    const float zoom = main_get_zoom();
+    const float zoom = settings_zoom();
 
     set_locations(right_arrow[0], (xoffset + 159) * zoom, (yoffset + 29) * zoom);
     set_locations(right_arrow[1], (xoffset + 159) * zoom, (yoffset + 46) * zoom);
@@ -54,7 +55,7 @@ static void open_sound() {
 
 void game_menu_init(SDL_Renderer *renderer, const uint32_t x, const uint32_t y) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
-    const float zoom = main_get_zoom();
+    const float zoom = settings_zoom();
     xoffset = x / zoom;
     yoffset = y / zoom;
 
@@ -219,8 +220,8 @@ void game_menu_free() {
     sprite_free(full_bar);
 }
 
-static uint32_t game_menu_get_width() { return 210 * main_get_zoom(); }
-static uint32_t game_menu_get_height() { return 116 * main_get_zoom(); }
+static uint32_t game_menu_get_width() { return 210 * settings_zoom(); }
+static uint32_t game_menu_get_height() { return 116 * settings_zoom(); }
 
 wops_t game_menu_window = {
     .init = game_menu_init,

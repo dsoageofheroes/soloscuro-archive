@@ -1,6 +1,7 @@
 #include "label.h"
 #include "main.h"
 #include "../src/rules.h"
+#include "../src/settings.h"
 
 static label_t labels[LABEL_END];
 static int labels_created = 0;
@@ -96,7 +97,7 @@ extern void label_group_set_font(font_t font) {
 extern void label_create_group() {
     int oX = 8, oY = 249;
     char buf[64];
-    const float zoom = main_get_zoom();
+    const float zoom = settings_zoom();
 
     if (labels_created) { return; }
 

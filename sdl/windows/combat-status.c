@@ -10,6 +10,7 @@
 #include "../../src/port.h"
 #include "../../src/gfftypes.h"
 #include "../../src/region-manager.h"
+#include "../../src/settings.h"
 #include <string.h>
 
 static uint16_t background;
@@ -105,11 +106,11 @@ const static char *statuses[] = {
 
 void combat_status_init(SDL_Renderer *renderer, const uint32_t x, const uint32_t y) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
-    const float zoom = main_get_zoom();
-    xoffset = main_get_width() - 100 * main_get_zoom();
-    yoffset = 5 * main_get_zoom();
+    const float zoom = settings_zoom();
+    xoffset = main_get_width() - 100 * settings_zoom();
+    yoffset = 5 * settings_zoom();
 
-    background = sprite_new(renderer, pal, 0 + xoffset / main_get_zoom(), 0 + yoffset / main_get_zoom(), zoom, RESOURCE_GFF_INDEX, GFF_BMP, 5016);
+    background = sprite_new(renderer, pal, 0 + xoffset / settings_zoom(), 0 + yoffset / settings_zoom(), zoom, RESOURCE_GFF_INDEX, GFF_BMP, 5016);
     combat_attacks = sprite_new(renderer, pal, 0, 0, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 5014);
 }
 
@@ -151,7 +152,7 @@ static void draw_cone(SDL_Renderer *renderer, int sx, int sy, int range) {
 static int count = 30;
 
 void combat_status_render(void *data, SDL_Renderer *renderer) {
-    const float zoom = main_get_zoom();
+    const float zoom = settings_zoom();
     const int delta = 5 * zoom;
     SDL_Rect loc;
     char buf[128];
@@ -221,7 +222,7 @@ void combat_status_render(void *data, SDL_Renderer *renderer) {
         loc.x = sprite_getx(combat_attacks);
         loc.y = sprite_gety(combat_attacks)
             + sprite_geth(combat_attacks) / 2
-            - 8 / 2 * main_get_zoom(); // last one is font size / 2
+            - 8 / 2 * settings_zoom(); // last one is font size / 2
         loc.w = sprite_getw(combat_attacks);
         snprintf(buf, 128, "%d", damage_amount);
         font_render_center(renderer, FONT_GREYLIGHT, buf, loc);
@@ -296,7 +297,7 @@ int get_direction(entity_t *source, entity_t *target) {
 // DO NOT STORE THE POINTER TO CA!!!!!!!!
 void port_combat_action(entity_action_t *ca) {
     // DO NOT STORE THE POINTER TO CA!!!!!!!!
-    float const zoom = main_get_zoom();
+    float const zoom = settings_zoom();
     animate_sprite_t *as = NULL, *source = NULL, *cast = NULL,
         *dest = NULL, *hit = NULL, *throw = NULL;
     int dir = 0;

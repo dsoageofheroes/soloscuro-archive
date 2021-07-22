@@ -3,18 +3,19 @@
 #include "textbox.h"
 #include "../src/gff.h"
 #include "../src/gfftypes.h"
+#include "../src/settings.h"
 #include "font.h"
 
 textbox_t* textbox_create(const size_t len, const uint16_t _xpos, const uint16_t _ypos) {
     gff_palette_t* pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     textbox_t *ret = calloc(1, sizeof(textbox_t));
 
-    ret->xpos = _xpos * main_get_zoom();
-    ret->ypos = _ypos * main_get_zoom();
+    ret->xpos = _xpos * settings_zoom();
+    ret->ypos = _ypos * settings_zoom();
     ret->text = calloc(1, len);
     ret->text_len = len;
     ret->text_cursor = sprite_new(main_get_rend(), pal, ret->xpos, ret->ypos, // Blinking text cursor (for the player's name)
-        main_get_zoom(), RESOURCE_GFF_INDEX, GFF_ICON, 100);
+        settings_zoom(), RESOURCE_GFF_INDEX, GFF_ICON, 100);
     sprite_set_frame(ret->text_cursor, 1);
 
     return ret;
@@ -40,10 +41,10 @@ int textbox_is_in(textbox_t *tb, const uint16_t x, const uint16_t y) {
     if (!tb) { return 0; }
     int text_width = 8 * tb->text_len;
 
-    if (x < tb->xpos || x > tb->xpos + (text_width * main_get_zoom())) { return 0;}
-    if (y < tb->ypos || y > tb->ypos + (8 * main_get_zoom())) { return 0;}
+    if (x < tb->xpos || x > tb->xpos + (text_width * settings_zoom())) { return 0;}
+    if (y < tb->ypos || y > tb->ypos + (8 * settings_zoom())) { return 0;}
 
-    tb->cursor_pos = (x - tb->xpos) / (8 * main_get_zoom());
+    tb->cursor_pos = (x - tb->xpos) / (8 * settings_zoom());
     return 1;
 }
 
@@ -120,8 +121,8 @@ void textbox_render(textbox_t *tb) {
     if (tb->in_focus) {
         tb->cursor_countdown--;
         if (tb->cursor_countdown >= 30) {
-            const uint16_t cx = tb->xpos - (2 * main_get_zoom()) + calc_offset(tb);
-            const uint16_t cy = tb->ypos + (1 * main_get_zoom());
+            const uint16_t cx = tb->xpos - (2 * settings_zoom()) + calc_offset(tb);
+            const uint16_t cy = tb->ypos + (1 * settings_zoom());
             sprite_set_location(tb->text_cursor, cx, cy);
             sprite_render(main_get_rend(), tb->text_cursor);
         }

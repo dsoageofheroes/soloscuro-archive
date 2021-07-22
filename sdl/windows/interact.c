@@ -6,6 +6,7 @@
 #include "../font.h"
 #include "../../src/gff.h"
 #include "../../src/gfftypes.h"
+#include "../../src/settings.h"
 #include <string.h>
 
 static uint16_t background;
@@ -36,7 +37,7 @@ uint16_t interact_sprite_create(SDL_Renderer *renderer, gff_palette_t *pal,
 
 void interact_init(SDL_Renderer *renderer, const uint32_t x, const uint32_t y) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
-    const float zoom = main_get_zoom();
+    const float zoom = settings_zoom();
 
     background = sprite_new(renderer, pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 3020);
     talk = sprite_new(renderer, pal, 3 + x, 58 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 15105);

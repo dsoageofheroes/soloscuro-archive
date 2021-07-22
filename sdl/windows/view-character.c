@@ -4,6 +4,7 @@
 #include "../../src/gff-char.h"
 #include "../../src/gfftypes.h"
 #include "../../src/rules.h"
+#include "../../src/settings.h"
 #include "narrate.h"
 #include "../player.h"
 #include "inventory.h"
@@ -82,8 +83,8 @@ static void set_power(const int type, const int level) {
 void view_character_init(SDL_Renderer *renderer, const uint32_t _x, const uint32_t _y) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     rend = renderer;
-    const float zoom = main_get_zoom();
-    uint32_t x = _x / main_get_zoom(), y = _y / main_get_zoom();
+    const float zoom = settings_zoom();
+    uint32_t x = _x / settings_zoom(), y = _y / settings_zoom();
     xoffset = _x;
     yoffset = _y;
     player_selected = player_get_slot(player_get_active());
@@ -151,7 +152,7 @@ void view_character_init(SDL_Renderer *renderer, const uint32_t _x, const uint32
 }
 
 static void render_character(SDL_Renderer *renderer) {
-    const float zoom = main_get_zoom();
+    const float zoom = settings_zoom();
 
     if (!player_get(player_selected)) { return; }
 
@@ -212,7 +213,7 @@ static power_t* find_power(const uint32_t x, const uint32_t y) {
 }
 
 static void sprite_highlight(const uint32_t x, const uint32_t y) {
-    const float zoom = main_get_zoom();
+    const float zoom = settings_zoom();
     power_t *pw = find_power(x, y);
 
     if (!pw) { return; }
@@ -225,7 +226,7 @@ static void sprite_highlight(const uint32_t x, const uint32_t y) {
 }
 
 static void render_powers(SDL_Renderer *renderer) {
-    const float zoom = main_get_zoom();
+    const float zoom = settings_zoom();
     sprite_render(renderer, buttons[0]);
     sprite_render(renderer, buttons[1]);
 
@@ -254,7 +255,7 @@ static int get_next_len(const char *str, const int max) {
 }
 
 static void render_power_to_display(SDL_Renderer *renderer) {
-    const float zoom = main_get_zoom();
+    const float zoom = settings_zoom();
     char *msg = power_to_display->description;
     int next_index = 0, pos = 0, amt = 20;
     int lines = 0;
@@ -281,7 +282,7 @@ static void render_power_to_display(SDL_Renderer *renderer) {
 
 void view_character_render(void *data, SDL_Renderer *renderer) {
     char buf[BUF_MAX];
-    const float zoom = main_get_zoom();
+    const float zoom = settings_zoom();
 
     sprite_render(renderer, sun);
     sprite_render(renderer, panel);
@@ -546,7 +547,7 @@ void view_character_return_control () {
             if (!ds_load_character_charsave(slot_clicked, sel)) {
                 printf("Char loading failed.\n");
             } else {
-                player_load(slot_clicked, main_get_zoom());
+                player_load(slot_clicked, settings_zoom());
             }
         }
     }
