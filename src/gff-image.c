@@ -338,7 +338,7 @@ unsigned char* create_font_rgba(int gff_idx, int c, int fg_color, int bg_color) 
 
     if (!master_palette || c < 0 || c >= font->num) {return NULL;}
 
-    ds_char_t *ds_char = (ds_char_t*)(((uint8_t*)font) + font->char_offset[c]);
+    ds_char_t *ds_char = (ds_char_t*)(((uint8_t*)font) + *(font->char_offset + c));
     pixel_idx = ds_char->data;
 
     if (font->height <= 0 || ds_char->width <= 0) { return NULL; }

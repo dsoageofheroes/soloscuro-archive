@@ -895,8 +895,8 @@ static void render_entry_font() {
     gff_read_chunk(gff_idx, &chunk, font, chunk.length);
     snprintf(buf, BUF_MAX, "RESOURCE %d of %d \n", res_idx, res_max - 1);
     print_line_len(renderer, 0, buf, 320, 20, BUF_MAX);
-    for (int c = 0; c < 255; c++) {
-        ds_char_t *ds_char = (ds_char_t*)(((uint8_t*)font) + font->char_offset[c]);
+    for (unsigned short c = 0; c < 255; c++) {
+        ds_char_t *ds_char = (ds_char_t*)(((uint8_t*)font) + *(font->char_offset + c));
         if (ds_char->width) {
             char *data = (char*)create_font_rgba(gff_idx, c, 0xFFFF00FF, 0x000000FF);
             loc.w = ds_char->width;

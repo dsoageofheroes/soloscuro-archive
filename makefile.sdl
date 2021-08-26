@@ -8,7 +8,7 @@ POWER_LIB = src/powers/obj/*
 LIB_EXT   = so
 CFLAGS    = -g -O2 -I src/ -I ext/ -L./ -Werror -Wall -llua5.3 -lxmimidi -lm -O2 -DDEBUG=1 -fPIC 
 CFLAGS    += -ggdb -fsanitize=address -fno-omit-frame-pointer
-SDL_FLAGS = -g -O2 -I src/ -I sdl/ -I ext/ -L./ -Llibs/linux/ -Werror -Wall -llua5.3 -lxmimidi -lm -O2 -DDEBUG=1  -lSDL2_ttf -lADLMIDI -lsndfile
+SDL_FLAGS = -g -O2 -I src/ -I sdl/ -I ext/ -L./ -Llibs/linux/ -Wall -llua5.3 -lxmimidi -lm -O2 -DDEBUG=1 -lSDL2  -lSDL2_ttf -lADLMIDI -lsndfile
 LUA_LIB   = -llua5.3
 
 .PHONY: clean test all SDL
@@ -22,7 +22,7 @@ obj/%.o : sdl/%.c $(DEPS) $(SDL_DEPS)
 	$(CC) -c $(CFLAGS) $(SDL_FLAGS) $< -o $@
 
 mdark : obj/windows SDL libds.so libxmimidi.so
-	$(CC) $(CFLAGS) $(SDL_FLAGS) $(SDL_OBJS) -o $@ -lds -lSDL2
+	$(CC) $(CFLAGS) $(SDL_FLAGS) $(SDL_OBJS) -o $@ ${SDL_FLAGS} -lds
 
 obj/windows: obj
 	mkdir -p obj/windows
