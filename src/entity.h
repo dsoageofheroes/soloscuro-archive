@@ -11,6 +11,8 @@
 
 typedef struct ability_set_s {
     unsigned int hunt             : 1;
+    unsigned int attackable       : 1;
+    unsigned int talkable         : 1;
     psi_abilities_t psi;
     //struct spell_abilities_s spells; // NOT shown
     //struct class_abilities_s class;  // Not shown

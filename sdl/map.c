@@ -599,12 +599,10 @@ entity_t* get_entity_at_location(const uint32_t x, const uint32_t y) {
     if (!cmap) { return 0; }
 
     entity_list_for_each(cmap->region->entities, dude) {
-        animate_sprite_node_t *asn = dude->sprite.data;
-        //printf("%d: %d, %d (%d, %d)\n", dude->ds_id, dude->mapx * 16, dude->mapy * 16, x, y);
-        if (asn && dude->object_flags & CLICKABLE) {
-            if (sprite_in_rect(asn->anim->spr, x, y)) {
-                return dude;
-            }
+        if (dude->anim.spr == SPRITE_ERROR) { continue; }
+        //printf("%d(%s/%d): %d, %d (%d, %d)\n", dude->ds_id, dude->name ? dude->name : "", dude->anim.spr, dude->mapx * 16, dude->mapy * 16, x, y);
+        if (sprite_in_rect(dude->anim.spr, x, y)) {
+            return dude;
         }
     }
 
