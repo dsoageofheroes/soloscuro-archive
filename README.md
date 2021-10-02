@@ -11,17 +11,32 @@ Goals: To create an engine for Dark Sun 1, 2, and Crimson Sands.
 <http://dso.paulofthewest.com/downloads.html>
 
 ### Linux dev setup
-1) run
+1) install pre-reqs:
+   ``` $ sudo apt install sndfile-tools libsndfile1-dev libsdl2-* lua5.3 liblua5.3-dev cmake ```
+2) build libADLMIDI
+   ``` $ git clone git@github.com:Wohlstand/libADLMIDI.git
+       $ cd libADLMIDI 
+       $ mkdir build
+       $ cd build
+       $ cmake -DCMAKE_BUILD_TYPE=Release -DlibADLMIDI_SHARED=ON ..
+       $ make
+       $ sudo make install
+   ```
+3) setup and build
  
-   ```$ make -f makefile.sdl mdark```
-   
-2)   fix any lib issues that come up (keep in mind we use Lua 5.3!)
-3)   put your darksun1 gffs into a directory ds1/ inside your repo.
-4)   to run:
+   ```
+   $ cd <soloscuro>
+   $ cp <libADLMIDI>/build/libADLMIDI.so* .
+   $ make -f makefile.sdl mdark
+   ```
+4)   put your darksun1 gffs into a directory ds1/ inside your repo.
+5)   Right now the engine does not have a solid entry point. You can run a test:
 
-   ```$ LD_LIBRARY_PATH=./ ./mdark```
+   ```$ LD_LIBRARY_PATH=./ ./mdark --lua lua/test/main.lua```
+   Naturally, there are other tests you can view in lua/test/
    
-5) There are other options (that I need to get to documenting), please message us on discord.
+   You may also load up the gff viewer (browser):
+   ```$ LD_LIBRARY_PATH=./ ./mdark --browse```
 
 ### Windows dev setup with msys2:
 
