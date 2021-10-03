@@ -581,16 +581,12 @@ void port_exit_combat() {
 }
 
 void port_swap_enitity(int obj_id, entity_t *dude) {
-    animate_sprite_node_t *asn = (animate_sprite_node_t*) dude->sprite.data;
     gff_palette_t *pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + cmap->region->map_id - 1;
     const int zoom = 2.0;
 
-    if (asn) {
-        sprite_free(asn->anim->spr);
-        asn->anim->spr = sprite_new(cren, pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP, dude->sprite.bmp_id);
-    } else {
-        error("Unable to find animation for obj_id!\n");
-    }
+    sprite_free(dude->anim.spr);
+    dude->anim.spr =
+        sprite_new(cren, pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP, dude->sprite.bmp_id);
 }
 
 #define CLICKABLE (0x10)

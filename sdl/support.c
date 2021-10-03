@@ -80,6 +80,7 @@ static void write_image(const char *base_path, const int gff_idx, const int type
         uint32_t *data = (uint32_t*)get_frame_rgba_palette_img(cimg, cframe, pal);
         uint16_t w = get_frame_width(gff_idx, type_id, res_id, cframe);
         uint16_t h = get_frame_height(gff_idx, type_id, res_id, cframe);
+	printf("    frame %d is %d x %x\n", cframe, w, h);
         snprintf(filename, 1<<10, "%s/%d-%s-res%d-frame%d.bmp", base_path, gff_idx, type, res_id, cframe);
         printf("%s  (%p)\n", filename, data);
         FILE *file = fopen(filename, "w+");
@@ -87,7 +88,7 @@ static void write_image(const char *base_path, const int gff_idx, const int type
         bmp_ptr[4] = w;
         bmp_ptr[5] = h;
         fwrite(bmp_header, sizeof(bmp_header), 1, file);
-        fwrite(data, 32 * w * h, 1, file);
+        fwrite(data, 4 * w * h, 1, file);
         fclose(file);
         free(data);
     }
@@ -96,6 +97,7 @@ static void write_image(const char *base_path, const int gff_idx, const int type
 
 void export_all_images(const char *base_path) {
     uint32_t res_ids[RES_MAX];
+    printf("START EXPORT ALL IMAGES\n");
     for (int i = 0; i < NUM_FILES; i++) {
         if (open_files[i].file) {
             for (int j = 0; j < gff_get_number_of_types(i); j++) {
