@@ -218,6 +218,21 @@ int narrate_handle_mouse_down(const uint32_t button, const uint32_t x, const uin
     return display; // zero means I did not handle the mouse click, so another window may.
 }
 
+int narrate_handle_key_down(const SDL_Keysym button) {
+    if (!display) { return 0; }
+
+    printf("narrate key: %d\n", button.sym);
+    switch (button.sym) {
+        case SDLK_RETURN:
+            if (game_loop_is_waiting_for(WAIT_NARRATE_CONTINUE)) {
+                narrate_clear();
+                game_loop_signal(WAIT_NARRATE_CONTINUE, 0);
+            }
+        break;
+    }
+    return 1; // Handle the key
+}
+
 void narrate_free() {
     SDL_DestroyTexture(background);
     SDL_DestroyTexture(border);
@@ -237,6 +252,7 @@ wops_t narrate_window = {
     .render = narrate_render,
     .mouse_movement = narrate_handle_mouse_movement,
     .mouse_down = narrate_handle_mouse_down,
+    .key_down = narrate_handle_key_down,
     .mouse_up = NULL,
     .grey_out_map = 0,
     .data = NULL

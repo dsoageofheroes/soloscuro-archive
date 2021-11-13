@@ -33,6 +33,7 @@ static void clear_animations();
 void map_free(map_t *map);
 static void map_load_current_region();
 static map_t *create_map();
+static dude_t *cdude = NULL;
 
 static void sprite_load_animation(entity_t *entity, gff_palette_t *pal);
 void map_render_anims(SDL_Renderer *renderer);
@@ -135,8 +136,6 @@ static void map_load_current_region() {
 
 static void sprite_load_animation(entity_t *entity, gff_palette_t *pal) {
     const float zoom = settings_zoom();
-    //anims[anim_pos].scmd = entity->sprite.anim.scmd;
-    //anims[anim_pos].spr =
     entity->anim.spr =
         sprite_new(cren, pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP, entity->sprite.bmp_id);
     if (entity->name) { // If it is a combat entity, then we need to add the combat sprites
@@ -286,95 +285,10 @@ void map_render(void *data, SDL_Renderer *renderer) {
         tile_loc.y += stretch * 16;
     }
 
-    //anim = map->region->anims->head->anim;
-    //for (animation_node_t *__el_rover = (map->region->anims->head); __el_rover;
-        //__el_rover = __el_rover->next, anim = __el_rover->anim) {
-    //}
     map_render_anims(renderer);
-    /*
-    animation_list_for_each(map->region->anims, anim) {
-        if (anim->spr != SPRITE_ERROR){
-            //printf("render: %d\n", anim->spr);
-            sprite_set_location(anim->spr,
-                anim->x - xoffset, // + scmd_xoffset,
-                anim->y - yoffset); // + anim->scmd->yoffset);
-            sprite_render(renderer, anim->spr);
-        }
-    }
-    */
-    //animate_list_render(renderer);
 
     if (main_get_debug()) { show_debug_info(); }
 }
-
-//static int do_shift = 0;
-/*
-static SDL_RendererFlip map_animate_tick(animate_sprite_t *anim, const uint32_t xoffset, const uint32_t yoffset) {
-    size_t pos = anim->pos;
-    SDL_RendererFlip flip = 0;
-
-    sprite_set_frame(anim->spr, anim->scmd[pos].bmp_idx);
-    if (anim->scmd[pos].flags & SCMD_LAST) { goto out; }
-
-    if (anim->scmd[pos].flags & SCMD_JUMP && anim->delay == 0) {
-        pos = anim->pos = 0;
-        sprite_set_frame(anim->spr, anim->scmd[pos].bmp_idx);
-        anim->delay = anim->scmd[pos].delay;
-    }
-
-    if (anim->delay == 0) {
-        anim->pos++; pos++;
-        sprite_set_frame(anim->spr, anim->scmd[pos].bmp_idx);
-        anim->delay = anim->scmd[pos].delay;
-        goto out;
-    }
-
-    while (anim->delay == 0 && pos > 0) {
-        anim->pos++; pos++;
-        if (pos >= SCMD_MAX_SIZE) {
-            anim->pos = pos = 0;
-        }
-    }
-
-    anim->delay--;
-
-out:
-    if (anim->scmd[pos].flags & SCMD_XMIRROR
-        || (anim->entity && anim->entity->sprite.flags & 0x80)) {
-        flip |= SDL_FLIP_HORIZONTAL;
-    }
-    if (anim->scmd[pos].flags & SCMD_YMIRROR) {
-        flip |= SDL_FLIP_VERTICAL;
-    }
-
-    anim->left_over += fmod(anim->movex, 1.0);
-    float movex_amt = floor(anim->movex + anim->left_over);
-    float movey_amt = floor(anim->movey + anim->left_over);
-    anim->left_over = fmod(anim->left_over, 1.0);
-
-    if (anim->x < anim->destx) { anim->x += movex_amt; }
-    if (anim->y < anim->desty) { anim->y += movey_amt; }
-    if (anim->x > anim->destx) { anim->x -= movex_amt; }
-    if (anim->y > anim->desty) { anim->y -= movey_amt; }
-
-    do_shift = !(movex_amt && movey_amt);
-
-    //if (anim->scmd == combat_get_scmd(COMBAT_POWER_THROW_STATIC_U)) {
-        //printf("%s: (%d, %d) -> (%d, %d) (move_amt = (%f, %f))\n",
-            //anim->entity ? anim->entity->name : "THROW",
-            //anim->x, anim->y, anim->destx, anim->desty, movex_amt, movey_amt);
-    //}
-    sprite_set_location(anim->spr,
-        anim->x - xoffset, // + scmd_xoffset,
-        anim->y - yoffset); // + anim->scmd->yoffset);
-
-    if (main_get_debug() && anim->entity) {
-        map_highlight_tile(anim->entity->mapx, anim->entity->mapy, 4);
-    }
-
-    return flip;
-}
-*/
 
 void map_render_anims(SDL_Renderer *renderer) {
     const uint32_t xoffset = getCameraX();
@@ -383,28 +297,6 @@ void map_render_anims(SDL_Renderer *renderer) {
     animate_sprite_t *anim;
     SDL_RendererFlip flip = 0;
 
-/*
-    animation_list_for_each(cmap->region->anims, anim) {
-        flip = 0;
-        if (anim->spr != SPRITE_ERROR){
-            //printf("render: %d\n", anim->spr);
-            //sprite_render(renderer, anim->spr);
-            //sprite_render_flip(renderer, anim->spr, map_animate_tick(anim, xoffset, yoffset));
-            if (anim->scmd[anim->pos].flags & SCMD_XMIRROR
-                || (anim->entity && anim->entity->sprite.flags & 0x80)) {
-                flip |= SDL_FLIP_HORIZONTAL;
-            }
-            if (anim->scmd[anim->pos].flags & SCMD_YMIRROR) {
-                flip |= SDL_FLIP_VERTICAL;
-            }
-            sprite_set_location(anim->spr,
-                anim->x - xoffset, // + scmd_xoffset,
-                anim->y - yoffset); // + anim->scmd->yoffset);
-            sprite_render_flip(renderer, anim->spr, flip);
-            //if (do_shift) { animation_shift_node(__el_rover); }
-        }
-    }
-    */
     entity_list_for_each(cmap->region->entities, dude) {
         if (dude->anim.spr == SPRITE_ERROR) { continue; }
         flip = 0;
@@ -519,18 +411,6 @@ extern void port_load_sprite(animate_sprite_t *anim, gff_palette_t *pal, const i
     if (anim->scmd) {
         error("port_load_sprite not implemented for sprites with a scmd!\n");
     }
-    // Check if spr is already exisitng, if yes, deallocate then recreate!
-
-    //if (anim->spr == SPRITE_ERROR) {
-        //if (spr->data) {
-            //free(spr->data);
-            //animation_node_free(spr->data);
-        //}
-        //asn = animate_sprite_node_create();
-        //spr->data = asn;
-        //spr->anim = *(asn->anim);
-        //spr->anim->spr = SPRITE_ERROR;
-    //}
 
     if (anim->spr == SPRITE_ERROR) {
         anim->spr = sprite_new(main_get_rend(), pal, 0, 0, settings_zoom(), gff_index, type, id);
@@ -592,12 +472,15 @@ void port_swap_enitity(int obj_id, entity_t *dude) {
 #define CLICKABLE (0x10)
 entity_t* get_entity_at_location(const uint32_t x, const uint32_t y) {
     entity_t *dude = NULL;
+    const int mapx = x - getCameraX();
+    const int mapy = y - getCameraY();
     if (!cmap) { return 0; }
 
     entity_list_for_each(cmap->region->entities, dude) {
         if (dude->anim.spr == SPRITE_ERROR) { continue; }
-        //printf("%d(%s/%d): %d, %d (%d, %d)\n", dude->ds_id, dude->name ? dude->name : "", dude->anim.spr, dude->mapx * 16, dude->mapy * 16, x, y);
-        if (sprite_in_rect(dude->anim.spr, x, y)) {
+
+        if (sprite_in_rect(dude->anim.spr, mapx, mapy)) {
+            //printf("%s: %d: %d, %d (%d, %d)\n", dude->name, dude->ds_id, dude->mapx * 16, dude->mapy * 16, mapx, mapy);
             return dude;
         }
     }
@@ -607,8 +490,10 @@ entity_t* get_entity_at_location(const uint32_t x, const uint32_t y) {
 
 static void update_mouse_icon() {
     enum mouse_state ms = mouse_get_state();
-    entity_t *dude = get_entity_at_location(mousex, mousey);
+    cdude = get_entity_at_location(getCameraX() + mousex, getCameraY() + mousey);
     const float zoom = settings_zoom();
+
+    //printf("update_mouse_icon!, cdude = %p\n", cdude);
 
     if (ms == MOUSE_MELEE || ms == MOUSE_NO_MELEE) {
         int x = (getCameraX() + mousex) / (16 * zoom);
@@ -626,7 +511,7 @@ static void update_mouse_icon() {
         }
     }
 
-    if (!dude) {
+    if (!cdude) {
         if (ms == MOUSE_MELEE) { mouse_set_state(MOUSE_NO_MELEE);
         } else if (ms == MOUSE_RANGE) { mouse_set_state(MOUSE_NO_RANGE);
         } else if (ms == MOUSE_TALK) { mouse_set_state(MOUSE_NO_TALK);
@@ -680,7 +565,6 @@ static void mouse_cycle() {
 }
 
 int map_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
-    dude_t *dude = NULL;
     enum mouse_state ms = mouse_get_state();
     const uint32_t xoffset = getCameraX();
     const uint32_t yoffset = getCameraY();
@@ -690,9 +574,9 @@ int map_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_
 
     if (!cmap) { return 0; }
 
-    if (ms == MOUSE_TALK && (dude = get_entity_at_location(x, y))) {
+    if (ms == MOUSE_TALK && cdude) {//(dude = get_entity_at_location(x, y))) {
         mouse_set_state(MOUSE_POINTER);
-        talk_click(dude->ds_id);
+        talk_click(cdude->ds_id);
         return 1;
     }
 

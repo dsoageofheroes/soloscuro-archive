@@ -161,6 +161,7 @@ void handle_input() {
                 break;
                 break;
             case SDL_KEYDOWN:
+                if (window_handle_key_down(event.key.keysym)) { break; }
                 if (ignore_repeat && event.key.repeat != 0) { break; }
                 if (textbox_handle_keydown(textbox, event.key.keysym)) { return; }
                 if (sol_lua_keydown(event.key.keysym.sym)) { break; }

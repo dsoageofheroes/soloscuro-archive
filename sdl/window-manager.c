@@ -177,6 +177,15 @@ void window_handle_mouse_down(const uint32_t button, const uint32_t x, const uin
     }
 }
 
+int window_handle_key_down(const SDL_Keysym button) {
+    for (int i = MAX_SCREENS-1; i >= 0; i--) {
+        if (windows[i].key_down && windows[i].key_down(button)) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 void window_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
     for (int i = MAX_SCREENS-1; i >= 0; i--) {
         if (windows[i].mouse_up && windows[i].mouse_up(button, x, y)) {

@@ -11,6 +11,7 @@ typedef struct wops_s{
     int (*mouse_movement) (const uint32_t x, const uint32_t y);
     int (*mouse_up) (const uint32_t button, const uint32_t x, const uint32_t y);
     int (*mouse_down) (const uint32_t button, const uint32_t x, const uint32_t y);
+    int (*key_down) (const SDL_Keysym button);
     void (*return_control) ();
     uint32_t (*get_width) ();
     uint32_t (*get_height) ();
@@ -28,6 +29,7 @@ void window_pop();
 void window_handle_mouse(const uint32_t x, const uint32_t y);
 void window_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y);
 void window_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y);
+int window_handle_key_down(const SDL_Keysym button);
 int window_load_region(SDL_Renderer *renderer, const int region);
 void window_clear();
 void window_free();
