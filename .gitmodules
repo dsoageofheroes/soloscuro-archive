@@ -1,0 +1,3 @@
+[submodule "ext/libadlmidi"]
+	path = ext/libadlmidi
+	url = https://github.com/Wohlstand/libADLMIDI

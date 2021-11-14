@@ -1,0 +1,8 @@
+lib/libADLMIDI.so:
+	mkdir -p build/libadlmidi
+	mkdir -p lib
+	cd build/libadlmidi ; pwd
+	cd build/libadlmidi ; cmake -DCMAKE_BUILD_TYPE=Release -DlibADLMIDI_SHARED=ON ../../ext/libadlmidi
+	cd build/libadlmidi ; make -j 8
+	cp build/libadlmidi/libADLMIDI.so* lib/
+

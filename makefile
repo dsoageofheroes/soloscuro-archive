@@ -7,4 +7,10 @@ COVFLAGS  = -g ${CFLAGS} -O0 -fprofile-arcs -ftest-coverage
 
 .PHONY: clean test all
 
-include makefile.in
+all:
+	make -f makefile.sdl
+
+clean:
+	make -f makefile.sdl clean
+
+#include makefile.in

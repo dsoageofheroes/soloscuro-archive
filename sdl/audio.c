@@ -1,7 +1,8 @@
 #include "audio.h"
 #include "main.h"
 #include "../src/dsl.h"
-#include "../ext/libadlmidi/adlmidi.h"
+//#include "../ext/libadlmidi/adlmidi.h"
+#include "adlmidi.h"
 #include <SDL2/SDL.h>
 #include <sndfile.h>
 

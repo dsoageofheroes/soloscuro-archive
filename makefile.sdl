@@ -1,34 +1,43 @@
-#SDL_SRCS  = $(wildcard sdl/*.c)
-#SDL_SRCS  += $(wildcard sdl/windows/*.c)
-#SDL_DEPS  = $(wildcard sdl/*.h)
-#SDL_OBJS  = $(SDL_SRCS:sdl/%.c=obj/sdl/%.o)
-SDL_OBJS = $(wildcard sdl/obj/*o)
-SDL_OBJS += $(wildcard sdl/obj/windows/*o)
-POWER_LIB = src/powers/obj/*
-LIB_EXT   = so
-CFLAGS    = -g -O2 -I src/ -I ext/ -L./ -Werror -Wall -llua5.3 -lxmimidi -lm -O2 -DDEBUG=1 -fPIC 
-CFLAGS    += -ggdb -fsanitize=address -fno-omit-frame-pointer
-SDL_FLAGS = -g -O2 -I src/ -I sdl/ -I ext/ -L./ -Llibs/linux/ -Wall -llua5.3 -lxmimidi -lm -O2 -DDEBUG=1 -lSDL2  -lSDL2_ttf -lADLMIDI -lsndfile
-LUA_LIB   = -llua5.3
+TARGET_EXEC ?= mdark
 
-.PHONY: clean test all SDL
+BUILD_DIR ?= ./build
+LIB_DIR  ?= ./lib
+SRC_DIRS ?= ./sdl
 
-include makefile.in
+SRCS := $(shell find $(SRC_DIRS) -name *.c) ext/spng/spng.c
+OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
+DEPS := $(OBJS:.o=.d)
+LDFLAGS := -Llib/ -lz -lm -llua5.3 -lds -lxmimidi -lSDL2  -lSDL2_ttf -lADLMIDI -lsndfile
+CFLAGS  := -fPIC
 
-SDL:
-	cd sdl ; make -j 8
+INC_DIRS := $(shell find $(SRC_DIRS) -type d) ext/ ext/libadlmidi/include
+INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
-obj/%.o : sdl/%.c $(DEPS) $(SDL_DEPS)
-	$(CC) -c $(CFLAGS) $(SDL_FLAGS) $< -o $@
+CPPFLAGS ?= $(INC_FLAGS) -MMD -MP
 
-mdark : obj/windows SDL libds.so libxmimidi.so
-	$(CC) $(CFLAGS) $(SDL_FLAGS) $(SDL_OBJS) -o $@ ${SDL_FLAGS} -lds
+$(BUILD_DIR)/$(TARGET_EXEC): lib/libds.so lib/libxmimidi.so $(OBJS) lib/libADLMIDI.so
+	$(CC) $(OBJS) -o $@ $(LDFLAGS)
 
-obj/windows: obj
-	mkdir -p obj/windows
+lib/libds.so:
+	make -f makefile.ds
 
-valgrind: mdark
-	LD_LIBRARY_PATH=./ valgrind --gen-suppressions=all --suppressions=./sup/linux_sdl_gl.sup --leak-check=full --show-leak-kinds=all ./mdark --lua lua/test.lua
+lib/libxmimidi.so:
+	make -f makefile.xmimidi
 
-clean: engine_clean
-	cd sdl ; make clean
+lib/libADLMIDI.so:
+	make -f makefile.adlmidi
+
+# c source
+$(BUILD_DIR)/%.c.o: %.c
+	$(MKDIR_P) $(dir $@)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+.PHONY: clean
+
+clean:
+	$(RM) -r $(BUILD_DIR) $(LIB_DIR)
+
+-include $(DEPS)
+
+MKDIR_P ?= mkdir -p
+
