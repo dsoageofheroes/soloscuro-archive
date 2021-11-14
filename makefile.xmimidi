@@ -1,0 +1,3 @@
+lib/libxmimidi.so:
+	mkdir -p lib/
+	$(CC) -O2 ext/xmi2mid.c -shared -o lib/libxmimidi.so
