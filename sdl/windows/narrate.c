@@ -5,6 +5,7 @@
 #include "../../src/gfftypes.h"
 #include "../../src/gameloop.h"
 #include "../font.h"
+#include "../main.h"
 #include <string.h>
 #include <ctype.h>
 
@@ -84,7 +85,8 @@ void load_portraits(SDL_Renderer *renderer) {
     if (ids) { free(ids); }
 }
 
-void narrate_init(SDL_Renderer *renderer, const uint32_t x, const uint32_t y) {
+void narrate_init(const uint32_t x, const uint32_t y) {
+    SDL_Renderer *renderer = main_get_rend();
     uint32_t palette_id = gff_get_palette_id(RESOURCE_GFF_INDEX, 0);
     background = create_texture(renderer, RESOURCE_GFF_INDEX, GFF_BMP, 3007, 0, palette_id, &background_loc);
     border = create_texture(renderer, RESOURCE_GFF_INDEX, GFF_BMP, 12000, 0, palette_id, &border_loc);
@@ -132,7 +134,8 @@ void port_narrate_close() {
     clear();
 }
 
-void narrate_render(void *data, SDL_Renderer *renderer) {
+void narrate_render(void *data) {
+    SDL_Renderer *renderer = main_get_rend();
     if (display) {
         SDL_RenderCopy(renderer, background, NULL, &background_loc);
         SDL_RenderCopy(renderer, border, NULL, &border_loc);

@@ -5,9 +5,9 @@
 
 // wops = Window OPerationS
 typedef struct wops_s{
-    void (*init) (SDL_Renderer*, const uint32_t x, const uint32_t y);
+    void (*init) (const uint32_t x, const uint32_t y);
     void (*cleanup) ();
-    void (*render) (void*, SDL_Renderer*);
+    void (*render) (void*);
     int (*mouse_movement) (const uint32_t x, const uint32_t y);
     int (*mouse_up) (const uint32_t button, const uint32_t x, const uint32_t y);
     int (*mouse_down) (const uint32_t button, const uint32_t x, const uint32_t y);

@@ -4,8 +4,8 @@
 #include <SDL2/SDL.h>
 #include "../window-manager.h"
 
-void narrate_init(SDL_Renderer *renderer, const uint32_t x, const uint32_t y);
-void narrate_render(void *data, SDL_Renderer *renderer);
+void narrate_init(const uint32_t x, const uint32_t y);
+void narrate_render(void *data);
 int narrate_handle_mouse_movement(const uint32_t x, const uint32_t y);
 int narrate_handle_mouse_click(const uint32_t button, const uint32_t x, const uint32_t y);
 void narrate_clear();

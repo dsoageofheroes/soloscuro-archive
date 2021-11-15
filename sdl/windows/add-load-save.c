@@ -140,11 +140,11 @@ static void setup_save_load_selection() {
     }
 }
 
-void add_load_save_init(SDL_Renderer *_renderer, const uint32_t x, const uint32_t y) {
+void add_load_save_init(const uint32_t x, const uint32_t y) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     const float zoom = settings_zoom();
     selection = -1;
-    renderer = _renderer;
+    renderer = main_get_rend();
     num_valid_entries = 0;
     xoffset = x;
     yoffset = y;
@@ -181,7 +181,8 @@ void add_load_save_init(SDL_Renderer *_renderer, const uint32_t x, const uint32_
     }
 }
 
-void add_load_save_render(void *data, SDL_Renderer *renderer) {
+void add_load_save_render(void *data) {
+    SDL_Renderer *renderer = main_get_rend();
     const float zoom = settings_zoom();
     sprite_render(renderer, background);
     sprite_render(renderer, up_arrow);

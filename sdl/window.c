@@ -25,13 +25,13 @@ void load_window(const char *arg) {
     }
     if (!strcmp(arg, "view")) {
         window_push(renderer, &view_character_window, 0, 10);
-        narrate_init(renderer, 0, 0); // to setup print_line
+        narrate_init(0, 0); // to setup print_line
     }
     if (!strcmp(arg, "new")) {
         window_push(renderer, &new_character_window, 0, 0);
     }
     if (!strcmp(arg, "popup")) {
-        narrate_init(renderer, 0, 0); // to setup print_line
+        narrate_init(0, 0); // to setup print_line
         window_push(renderer, &popup_window, 10, 10);
         popup_set_message("Exit game?");
         popup_set_option(0, "Save");

@@ -15,7 +15,7 @@ INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
 CPPFLAGS ?= $(INC_FLAGS) -MMD -MP
 
-$(BUILD_DIR)/$(TARGET_EXEC): $(OBJS) lib/libADLMIDI.so
+$(BUILD_DIR)/$(TARGET_EXEC): lib/libADLMIDI.so $(OBJS)
 	make -f makefile.ds
 	make -f makefile.xmimidi
 	$(CC) $(OBJS) -o $@ $(LDFLAGS)

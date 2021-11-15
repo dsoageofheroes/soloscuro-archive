@@ -85,9 +85,8 @@ static uint16_t view_sprite_create(SDL_Renderer *renderer, gff_palette_t *pal,
     return sprite_create(renderer, &tmp, pal, 0, 0, zoom, gff_idx, type_id, res_id);
 }
 
-void inventory_window_init(SDL_Renderer *renderer, const uint32_t _xoffset, const uint32_t _yoffset) {
+void inventory_window_init(const uint32_t _xoffset, const uint32_t _yoffset) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
-    rend = renderer;
     const float zoom = settings_zoom();
     mousex = mousey = 0;
     char_selected = 0;
@@ -95,6 +94,7 @@ void inventory_window_init(SDL_Renderer *renderer, const uint32_t _xoffset, cons
     yoffset = _yoffset;
     uint32_t x = xoffset / zoom;
     uint32_t y = yoffset / zoom;
+    SDL_Renderer *renderer = rend = main_get_rend();
 
     memset(name, 0x0, sizeof(name));
     memset(description, 0x0, sizeof(description));
@@ -292,8 +292,9 @@ static void render_backpack_slot(const int slot, const int frame, const int x, c
     }
 }
 
-void inventory_window_render(void *data, SDL_Renderer *renderer) {
+void inventory_window_render(void *data) {
     const float zoom = settings_zoom();
+    SDL_Renderer *renderer = main_get_rend();
 
     description[0] = '\0';
     entity_t *player = player_get(char_selected);

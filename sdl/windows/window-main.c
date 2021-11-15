@@ -28,9 +28,9 @@ uint16_t main_sprite_create(SDL_Renderer *renderer, gff_palette_t *pal,
     return sprite_create(renderer, &tmp, pal, 0, 0, zoom, gff_idx, type_id, res_id);
 }
 
-void main_init(SDL_Renderer *_renderer, const uint32_t x, const uint32_t y) {
+void main_init(const uint32_t x, const uint32_t y) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
-    renderer = _renderer;
+    SDL_Renderer *renderer = main_get_rend();
     const float zoom = settings_zoom();
     xoffset = x;
     yoffset = y;
@@ -69,7 +69,8 @@ static int click_action() {
     return ret;
 }
 
-void main_render(void *data, SDL_Renderer *renderer) {
+void main_render(void *data) {
+    SDL_Renderer *renderer = main_get_rend();
     sprite_render(renderer, sun);
     sprite_render(renderer, background);
 

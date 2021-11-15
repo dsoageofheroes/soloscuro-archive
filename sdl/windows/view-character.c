@@ -80,9 +80,9 @@ static void set_power(const int type, const int level) {
     label_set_text(&power_level, buf);
 }
 
-void view_character_init(SDL_Renderer *renderer, const uint32_t _x, const uint32_t _y) {
+void view_character_init(const uint32_t _x, const uint32_t _y) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
-    rend = renderer;
+    SDL_Renderer * renderer = rend = main_get_rend();
     const float zoom = settings_zoom();
     uint32_t x = _x / settings_zoom(), y = _y / settings_zoom();
     xoffset = _x;
@@ -280,9 +280,10 @@ static void render_power_to_display(SDL_Renderer *renderer) {
 
 #define BUF_MAX (1<<12)
 
-void view_character_render(void *data, SDL_Renderer *renderer) {
+void view_character_render(void *data) {
     char buf[BUF_MAX];
     const float zoom = settings_zoom();
+    SDL_Renderer *renderer = main_get_rend();
 
     sprite_render(renderer, sun);
     sprite_render(renderer, panel);

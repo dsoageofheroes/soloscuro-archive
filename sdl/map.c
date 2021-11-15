@@ -38,10 +38,10 @@ static dude_t *cdude = NULL;
 static void sprite_load_animation(entity_t *entity, gff_palette_t *pal);
 void map_render_anims(SDL_Renderer *renderer);
 
-void map_load(SDL_Renderer *renderer, const uint32_t _x, const uint32_t _y) {
+void map_load(const uint32_t _x, const uint32_t _y) {
     if (!cmap && region_manager_get_current()) {
         cmap = create_map();
-        cren = renderer;
+        cren = main_get_rend();
         cmap->region = region_manager_get_current();
         map_load_current_region();
     }
@@ -262,13 +262,14 @@ static void show_debug_info() {
     }
 }
 
-void map_render(void *data, SDL_Renderer *renderer) {
+void map_render(void *data) {
     const int stretch = settings_zoom();
     const uint32_t xoffset = getCameraX();
     const uint32_t yoffset = getCameraY();
     SDL_Rect tile_loc = { -xoffset, -yoffset, stretch * 16, stretch * 16 };
     uint32_t tile_id = 0;
     map_t *map = cmap;
+    SDL_Renderer *renderer = main_get_rend();
 
     SDL_SetRenderDrawColor( renderer, 0x00, 0x00, 0x00, 0xFF );
     SDL_RenderClear(renderer);

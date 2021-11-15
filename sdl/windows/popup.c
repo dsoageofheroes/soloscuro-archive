@@ -48,9 +48,10 @@ static SDL_Rect setup_loc(const SDL_Rect rect, const uint32_t x, const uint32_t 
     return ret;
 }
 
-void popup_init(SDL_Renderer *renderer, const uint32_t x, const uint32_t y) {
+void popup_init(const uint32_t x, const uint32_t y) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     const float zoom = settings_zoom();
+    SDL_Renderer *renderer = main_get_rend();
 
     background = popup_sprite_create(renderer, pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 14000);
     popup_return = popup_sprite_create(renderer, pal, 103 + x, 36 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 5012);
@@ -73,7 +74,9 @@ void popup_init(SDL_Renderer *renderer, const uint32_t x, const uint32_t y) {
     selection = POPUP_NOTHING;
 }
 
-void popup_render(void *data, SDL_Renderer *renderer) {
+void popup_render(void *data) {
+    SDL_Renderer *renderer = main_get_rend();
+
     sprite_render(renderer, background);
     sprite_render(renderer, popup_return);
     sprite_render(renderer, option[0]);

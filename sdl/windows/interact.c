@@ -35,9 +35,10 @@ uint16_t interact_sprite_create(SDL_Renderer *renderer, gff_palette_t *pal,
     return sprite_create(renderer, &tmp, pal, 0, 0, zoom, gff_idx, type_id, res_id);
 }
 
-void interact_init(SDL_Renderer *renderer, const uint32_t x, const uint32_t y) {
+void interact_init(const uint32_t x, const uint32_t y) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     const float zoom = settings_zoom();
+    SDL_Renderer *renderer = main_get_rend();
 
     background = sprite_new(renderer, pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 3020);
     talk = sprite_new(renderer, pal, 3 + x, 58 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 15105);
@@ -59,7 +60,8 @@ void interact_init(SDL_Renderer *renderer, const uint32_t x, const uint32_t y) {
     memset(info_text, 0x0, sizeof(info_text));
 }
 
-void interact_render(void *data, SDL_Renderer *renderer) {
+void interact_render(void *data) {
+    SDL_Renderer *renderer = main_get_rend();
     float amt = entity
         ? entity->stats.hp / (float) entity->stats.high_hp
         : 0;

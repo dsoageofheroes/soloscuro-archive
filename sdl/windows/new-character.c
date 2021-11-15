@@ -207,14 +207,14 @@ static void init_pc() {
     get_random_name();
 }
 
-static void new_character_init(SDL_Renderer* _renderer, const uint32_t _x, const uint32_t _y) {
+static void new_character_init(const uint32_t _x, const uint32_t _y) {
     gff_palette_t* pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     const float zoom = settings_zoom();
     offsetx = _x; offsety = _y;
     uint32_t x = _x / zoom;
     uint32_t y = _y / zoom;
-    renderer = _renderer;
     current_textbox = TEXTBOX_NONE;
+    renderer = main_get_rend();
 
     is_valid = 0;
     spr = SPRITE_ERROR;
@@ -321,7 +321,8 @@ static int get_race_id() { // for the large portrait
     return 12 + (pc.race - RACE_MUL);
 }
 
-void new_character_render(void* data, SDL_Renderer* renderer) {
+void new_character_render(void* data) {
+    SDL_Renderer *renderer = main_get_rend();
 
     sprite_render(renderer, background);
     for (int i = 0; i < 5; i++) {

@@ -53,9 +53,10 @@ static void open_sound() {
     set_locations(bars[2], (xoffset + 68) * zoom, (yoffset + 64) * zoom);
 }
 
-void game_menu_init(SDL_Renderer *renderer, const uint32_t x, const uint32_t y) {
+void game_menu_init(const uint32_t x, const uint32_t y) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     const float zoom = settings_zoom();
+    SDL_Renderer *renderer = main_get_rend();
     xoffset = x / zoom;
     yoffset = y / zoom;
 
@@ -115,7 +116,8 @@ static void print_text_help() {
     }
 }
 
-void game_menu_render(void *data, SDL_Renderer *renderer) {
+void game_menu_render(void *data) {
+    SDL_Renderer *renderer = main_get_rend();
     sprite_render(renderer, background);
 
     switch(state) {

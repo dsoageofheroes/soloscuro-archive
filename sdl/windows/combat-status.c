@@ -104,11 +104,12 @@ const static char *statuses[] = {
     "Gone"
 };
 
-void combat_status_init(SDL_Renderer *renderer, const uint32_t x, const uint32_t y) {
+void combat_status_init(const uint32_t x, const uint32_t y) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     const float zoom = settings_zoom();
     xoffset = main_get_width() - 100 * settings_zoom();
     yoffset = 5 * settings_zoom();
+    SDL_Renderer *renderer = main_get_rend();
 
     background = sprite_new(renderer, pal, 0 + xoffset / settings_zoom(), 0 + yoffset / settings_zoom(), zoom, RESOURCE_GFF_INDEX, GFF_BMP, 5016);
     combat_attacks = sprite_new(renderer, pal, 0, 0, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 5014);
@@ -151,12 +152,13 @@ static void draw_cone(SDL_Renderer *renderer, int sx, int sy, int range) {
 
 static int count = 30;
 
-void combat_status_render(void *data, SDL_Renderer *renderer) {
+void combat_status_render(void *data) {
     const float zoom = settings_zoom();
     const int delta = 5 * zoom;
     SDL_Rect loc;
     char buf[128];
     static int last_action = 0;
+    SDL_Renderer *renderer = main_get_rend();
 
     // Okay this can be confusing.
     // The if decides when to proceed to the next action on the combat list

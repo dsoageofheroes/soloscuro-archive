@@ -49,7 +49,7 @@ void window_load(SDL_Renderer *renderer, int layer, wops_t *window, const uint32
     if (!windows[layer].get_height) { windows[layer].get_height = default_get_height; }
 
     if (windows[layer].init) {
-        windows[layer].init(renderer,
+        windows[layer].init(
             ((main_get_width() - windows[layer].get_width()) / 2),
             ((main_get_height() - windows[layer].get_height()) / 2));
     }
@@ -153,7 +153,7 @@ void window_render(SDL_Renderer *renderer, const uint32_t xmappos, const uint32_
 
     for (int i = 0; i < MAX_SCREENS; i++) {
         if (windows[i].render) {
-            windows[i].render(windows[i].data, renderer);
+            windows[i].render(windows[i].data);
         }
     }
     //font_render_ttf("TEST!!!!!!!!!!!", 100, 100, 0xFFFF00FF);
