@@ -5,7 +5,7 @@
 #include "lua-inc.h"
 #include "ds-narrate.h"
 #include "replay.h"
-#include "../sdl/gameloop.h"
+#include "gameloop.h"
 #include "trigger.h"
 //#include "port.h"
 
@@ -63,7 +63,7 @@ static int replay_signal(lua_State *l) {
     //printf("REPLAY: signal: %lld, %lld\n", signal, _accum);
     fflush(stdout);
     //printf("NEED TO GET game_loop_signal back!\n");
-    game_loop_signal(signal, _accum);
+    sol_game_loop_signal(signal, _accum);
 
     return 0;
 }

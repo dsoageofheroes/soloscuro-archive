@@ -9,7 +9,7 @@
 #include "mouse.h"
 #include "textbox.h"
 #include "window-manager.h"
-#include "gameloop.h"
+#include "../src/gameloop.h"
 #include "windows/narrate.h"
 #include "windows/window-main.h"
 #include "windows/inventory.h"
@@ -98,7 +98,7 @@ void handle_mouse_up(uint32_t button) {
 }
 
 void main_exit_game() {
-    game_loop_signal(WAIT_FINAL, 0);
+    sol_game_loop_signal(WAIT_FINAL, 0);
 }
 
 static void main_combat_update() {
@@ -159,14 +159,13 @@ void handle_input() {
                     window_push(renderer, &als_window, 0, 0);
                 }
                 break;
-                break;
             case SDL_KEYDOWN:
                 if (window_handle_key_down(event.key.keysym)) { break; }
                 if (ignore_repeat && event.key.repeat != 0) { break; }
                 if (textbox_handle_keydown(textbox, event.key.keysym)) { return; }
                 if (sol_lua_keydown(event.key.keysym.sym)) { break; }
                 if (event.key.keysym.sym == SDLK_ESCAPE) {
-                    game_loop_signal(WAIT_FINAL, 0);
+                    sol_game_loop_signal(WAIT_FINAL, 0);
                 }
                 if (event.key.keysym.sym == SDLK_TAB) {
                     window_toggle(renderer, &game_menu_window, 0, 0);
@@ -199,9 +198,9 @@ void handle_input() {
                 handle_mouse_motion();
                 break;
             case SDL_MOUSEBUTTONDOWN:
-                if (game_loop_is_waiting_for(WAIT_NARRATE_CONTINUE)) {
+                if (sol_game_loop_is_waiting_for(WAIT_NARRATE_CONTINUE)) {
                     narrate_clear();
-                    game_loop_signal(WAIT_NARRATE_CONTINUE, 0);
+                    sol_game_loop_signal(WAIT_NARRATE_CONTINUE, 0);
                 }
                 handle_mouse_down(event.button.button);
                 break;
@@ -220,6 +219,10 @@ void handle_input() {
     }
 }
 
+void port_handle_input() {
+    handle_input();
+}
+
 void main_set_xscroll(int amt) { xmapdiff = amt; }
 void main_set_yscroll(int amt) { ymapdiff = amt; }
 void main_set_ignore_repeat(int repeat) { ignore_repeat = repeat; }
@@ -232,6 +235,10 @@ void main_center_on_player() {
 
     xmappos = dude->mapx * 16 * settings_zoom() - w / 2;
     ymappos = dude->mapy * 16 * settings_zoom() - h / 2;
+}
+
+void port_window_render() {
+    window_render(renderer, xmappos, ymappos);
 }
 
 void render() {
@@ -254,6 +261,8 @@ void tick() {
         SDL_Delay(amt_to_wait);
     }
 }
+
+void port_tick() { tick(); }
 
 void port_cleanup() {
 }
@@ -294,7 +303,7 @@ void port_init() {
 
     font_init(renderer);
 
-    gameloop_init();
+    sol_gameloop_init();
 
     player_init();
     mouse_init(renderer);
@@ -324,7 +333,7 @@ static void cleanup() {
 }
 
 extern void port_game_loop() {
-    game_loop();
+    sol_game_loop();
 }
 
 extern void port_start() {
@@ -353,7 +362,7 @@ static void init(int args, char *argv[]) {
 
     font_init(renderer);
 
-    gameloop_init();
+    sol_gameloop_init();
 
     player_init();
     mouse_init(renderer);
@@ -444,7 +453,7 @@ int main(int argc, char *argv[]) {
         replay_game(replay);
     }
 
-    game_loop();
+    sol_game_loop();
 
     cleanup();
     replay_cleanup();
@@ -452,86 +461,12 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-static int done = 0;
-static int accum = 0;
-static uint8_t wait_flags[WAIT_MAX_SIGNALS];
-
-extern int main_still_running() { return !done; }
-
 typedef struct animation_s {
     struct animation_s *next;
 } animation_t;
 
-void gameloop_init() {
-    memset(wait_flags, 0x0, sizeof(uint8_t) * WAIT_MAX_SIGNALS);
-    wait_flags[WAIT_FINAL] = 1;
-}
-
-int main_player_freeze() {
-    return wait_flags[WAIT_NARRATE_CONTINUE]
-        || wait_flags[WAIT_NARRATE_SELECT];
-}
-
-//static animation_t *animations[TICKS_PER_SEC];
-int game_loop_is_waiting_for(int signal) {
-    if (signal < 0 || signal >= WAIT_MAX_SIGNALS) {
-        error("Received signal %d!\n", signal);
-        return 0;
-    }
-
-    return wait_flags[signal];
-}
-
-void game_loop_signal(int signal, int _accum) {
-    if (signal < 0 || signal >= WAIT_MAX_SIGNALS) {
-        error("Received signal %d!\n", signal);
-        return;
-    }
-    replay_print("rep.signal(%d, %d)\n", signal, _accum);
-    if (wait_flags[signal]) {
-        wait_flags[signal]--;
-        accum = _accum;
-        done = 1;
-    } else {
-        warn("signal %d received, but not waiting on it...\n", signal);
-        done = 1;
-    }
-}
-
-int game_loop_wait_for_signal(int signal) {
-    if (signal < 0 || signal >= WAIT_MAX_SIGNALS) {
-        error("Received signal %d!\n", signal);
-        return 0 ;
-    }
-    wait_flags[signal]++;
-    while (wait_flags[signal]) {
-        handle_input();
-        //Logic here...
-        render();
-        tick();
-    }
-    done = 0;
-    return accum;
-}
-
-void game_loop() {
-    int rep_times = 0;
-
-    while (!done) {
-        handle_input();
-        //Logic here...
-        render();
-        tick();
-        rep_times++;
-        if (in_replay_mode() && rep_times > 10) {
-            replay_next();
-            rep_times = 0;
-        }
-    }
-}
-
 void main_exit_system() {
-    game_loop_signal(WAIT_FINAL, 0);
+    sol_game_loop_signal(WAIT_FINAL, 0);
 }
 
 extern void port_set_config(game_config_t gc, ssize_t val) {

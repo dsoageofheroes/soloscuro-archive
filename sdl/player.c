@@ -11,6 +11,7 @@
 #include "../src/port.h"
 #include "../src/region-manager.h"
 #include "../src/player.h"
+#include "../src/gameloop.h"
 #include "../src/dsl-var.h"
 #include "../src/gff-map.h"
 #include "../src/gff-image.h"
@@ -70,7 +71,7 @@ void player_update() {
     if (direction & PLAYER_LEFT)  { xdiff -= 1; }
     if (direction & PLAYER_RIGHT) { xdiff += 1; }
 
-    if (main_player_freeze() || region_is_block(region_manager_get_current(),
+    if (sol_player_freeze() || region_is_block(region_manager_get_current(),
                 //dude->mapx + xdiff, dude->mapy + ydiff)) {
                 dude->mapy + ydiff, dude->mapx + xdiff)) {
         xdiff = ydiff = 0;

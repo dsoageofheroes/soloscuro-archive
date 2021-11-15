@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <math.h>
 #include "animate.h"
-#include "gameloop.h"
 #include "sprite.h"
 #include "main.h"
 #include "../src/dsl.h"
+#include "../src/gameloop.h"
 #include "../src/combat.h"
 
 #define MAX_ZPOS (128)

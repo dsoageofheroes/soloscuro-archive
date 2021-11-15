@@ -5,7 +5,7 @@
 #include "ds-narrate.h"
 #include "dsl.h"
 #include "dsl-var.h"
-#include "../sdl/gameloop.h"
+#include "gameloop.h"
 #include "port.h"
 #include "replay.h"
 
@@ -19,7 +19,7 @@ static char menu_text[MAX_MENUS][MAX_LINE];
 int8_t narrate_open(int16_t action, const char *text, int16_t index) {
     if (action == NAR_SHOW_TEXT) {
         if (strncmp("END", text, 3) == 0) {
-            game_loop_wait_for_signal(WAIT_NARRATE_CONTINUE);
+            sol_game_loop_wait_for_signal(WAIT_NARRATE_CONTINUE);
             return 0;
         }
         if (strncmp("CLOSE", text, 5) == 0) {

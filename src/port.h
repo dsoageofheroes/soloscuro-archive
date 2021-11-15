@@ -96,4 +96,8 @@ extern uint32_t port_sprite_geth(const uint16_t id);
 extern void port_place_entity(entity_t *entity);
 extern void port_entity_update_scmd(entity_t *entity);
 
+extern void port_handle_input();
+extern void port_tick();
+extern void port_window_render();
+
 #endif

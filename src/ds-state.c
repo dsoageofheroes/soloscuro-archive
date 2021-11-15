@@ -4,7 +4,7 @@
 #include "ds-narrate.h"
 #include "region.h"
 #include "ds-state.h"
-#include "../sdl/gameloop.h"
+#include "gameloop.h"
 #include "port.h"
 #include "ssi-scmd.h"
 #include "replay.h"
@@ -553,7 +553,7 @@ static int lua_narrate_open(lua_State *l) {
 }
 
 static int lua_narrate_show(lua_State *l) {
-    lua_pushboolean(l, game_loop_wait_for_signal(WAIT_NARRATE_SELECT));
+    lua_pushboolean(l, sol_game_loop_wait_for_signal(WAIT_NARRATE_SELECT));
     return 1;
 }
 

@@ -1,7 +1,6 @@
 /* This is a debug program for testing the various available windows. */
 #include <SDL2/SDL.h>
 #include <stdio.h>
-#include "gameloop.h"
 #include "window-manager.h"
 #include "windows/add-load-save.h"
 #include "windows/game-menu.h"
@@ -14,6 +13,7 @@
 #include "windows/new-character.h"
 #include "windows/combat-status.h"
 #include "../src/dsl.h"
+#include "../src/gameloop.h"
 #include "../src/region.h"
 
 static SDL_Renderer *renderer = NULL;

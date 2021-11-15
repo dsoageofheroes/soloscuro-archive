@@ -1,7 +1,7 @@
 #include "audio.h"
 #include "main.h"
 #include "../src/dsl.h"
-//#include "../ext/libadlmidi/adlmidi.h"
+#include "../src/gameloop.h"
 #include "adlmidi.h"
 #include <SDL2/SDL.h>
 #include <sndfile.h>
@@ -331,7 +331,7 @@ extern void audio_play_voc(const int gff_idx, uint32_t type, uint32_t res_id, co
 }
 
 static void soloscuro_audio_callback(void *midi_player, uint8_t *stream, int len) {
-    if (!main_still_running()) { return; }
+    if (!sol_still_running()) { return; }
     struct ADL_MIDIPlayer* p = (struct ADL_MIDIPlayer*)midi_player;
 
     /* Convert bytes length into total count of samples in all channels */

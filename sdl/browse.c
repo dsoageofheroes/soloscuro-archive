@@ -3,10 +3,10 @@
 #include "map.h"
 #include "font.h"
 #include "windows/narrate.h"
-#include "gameloop.h"
 #include "audio.h"
 #include "../src/dsl.h"
 #include "../src/region.h"
+#include "../src/gameloop.h"
 #include "../src/gff.h"
 #include "../src/gff-map.h"
 #include "../src/gff-image.h"
@@ -158,8 +158,8 @@ static void browse_handle_input() {
                 //handle_mouse_motion();
                 break;
             case SDL_MOUSEBUTTONDOWN:
-                if (game_loop_is_waiting_for(WAIT_NARRATE_CONTINUE)) {
-                    game_loop_signal(WAIT_NARRATE_CONTINUE, 0);
+                if (sol_game_loop_is_waiting_for(WAIT_NARRATE_CONTINUE)) {
+                    sol_game_loop_signal(WAIT_NARRATE_CONTINUE, 0);
                 }
                 //handle_mouse_click();
                 break;
