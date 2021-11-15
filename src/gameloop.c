@@ -10,7 +10,7 @@ static int done = 0;
 static uint8_t wait_flags[WAIT_MAX_SIGNALS];
 static int accum = 0;
 
-void sol_render() {
+static void sol_render() {
     region_tick(region_manager_get_current());
     combat_update(region_manager_get_current());
     port_window_render();
@@ -18,13 +18,12 @@ void sol_render() {
 
 extern int sol_still_running() { return !done; }
 
-int sol_player_freeze() {
+extern int sol_player_freeze() {
     return wait_flags[WAIT_NARRATE_CONTINUE]
         || wait_flags[WAIT_NARRATE_SELECT];
 }
 
-//static animation_t *animations[TICKS_PER_SEC];
-int sol_game_loop_is_waiting_for(int signal) {
+extern int sol_game_loop_is_waiting_for(int signal) {
     if (signal < 0 || signal >= WAIT_MAX_SIGNALS) {
         error("Received signal %d!\n", signal);
         return 0;
@@ -33,7 +32,7 @@ int sol_game_loop_is_waiting_for(int signal) {
     return wait_flags[signal];
 }
 
-void sol_game_loop_signal(int signal, int _accum) {
+extern void sol_game_loop_signal(int signal, int _accum) {
     if (signal < 0 || signal >= WAIT_MAX_SIGNALS) {
         error("Received signal %d!\n", signal);
         return;
@@ -49,7 +48,7 @@ void sol_game_loop_signal(int signal, int _accum) {
     }
 }
 
-int sol_game_loop_wait_for_signal(int signal) {
+extern int sol_game_loop_wait_for_signal(int signal) {
     if (signal < 0 || signal >= WAIT_MAX_SIGNALS) {
         error("Received signal %d!\n", signal);
         return 0 ;
@@ -65,18 +64,15 @@ int sol_game_loop_wait_for_signal(int signal) {
     return accum;
 }
 
-
-void sol_gameloop_init() {
+extern void sol_gameloop_init() {
     memset(wait_flags, 0x0, sizeof(uint8_t) * WAIT_MAX_SIGNALS);
     wait_flags[WAIT_FINAL] = 1;
 }
-
 
 extern void sol_game_loop() {
     //int rep_times = 0;
 
     while (!done) {
-        printf("ds_game_loop!\n");
         port_handle_input();
         //Logic here...
         sol_render();
