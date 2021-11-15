@@ -46,14 +46,14 @@ void main_init(const uint32_t x, const uint32_t y) {
 static int click_action() {
     int ret = 0;
     if (count_down_spr == exit_dos) { main_exit_system(); }
-    if (count_down_spr == create_characters) { window_push(renderer, &view_character_window, 0, 10); }
+    if (count_down_spr == create_characters) { window_push(&view_character_window, 0, 10); }
     if (count_down_spr == start) {
         if(player_get_active()->name) {
             window_pop();
             ret = 1;
-            window_load_region(renderer, 42);
+            window_load_region(42);
         } else {
-            window_push(renderer, &popup_window, 100, 75);
+            window_push(&popup_window, 100, 75);
             popup_set_message("CREATE CHARACTER");
             popup_set_option(0, "Ok");
             popup_set_option(1, "");
@@ -63,7 +63,7 @@ static int click_action() {
 
     if (count_down_spr == load_save) {
         add_load_save_set_mode(ACTION_LOAD);
-        window_push(renderer, &als_window, 0, 0);
+        window_push(&als_window, 0, 0);
     }
 
     return ret;

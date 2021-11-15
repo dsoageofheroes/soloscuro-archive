@@ -141,7 +141,7 @@ void font_render_center(SDL_Renderer *rend, font_t font, const char *str, const 
     print_line_len(rend, font, str, loc.x + offset, loc.y, len);
 }
 
-extern void font_free(SDL_Renderer *renderer) {
+extern void font_free() {
     for (int i = 0; i < MAX_CHARS; i++) {
         SDL_DestroyTexture(font_table[0][i]);
     }

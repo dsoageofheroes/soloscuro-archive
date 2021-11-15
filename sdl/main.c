@@ -61,6 +61,18 @@ extern int main_get_debug() { return show_debug; }
 
 static void main_toggle_debug() { show_debug = !show_debug; }
 
+extern void port_start_display_frame() {
+    SDL_RenderClear(main_get_rend());
+};
+
+extern void port_commit_display_frame() {
+    SDL_RenderPresent(main_get_rend());
+};
+
+static enum entity_action_e sdl_to_ea(const SDL_Keysym key) {
+    return EA_ACTIVATE;
+}
+
 uint32_t main_get_width() {
     return 800;
 }
@@ -152,15 +164,15 @@ void handle_input() {
                 if (event.key.keysym.sym == SDLK_KP_9) { player_directions[9] = 0; }
                 if (event.key.keysym.sym == SDLK_F11) {
                     add_load_save_set_mode(ACTION_SAVE);
-                    window_push(renderer, &als_window, 0, 0);
+                    window_push(&als_window, 0, 0);
                 }
                 if (event.key.keysym.sym == SDLK_F12) {
                     add_load_save_set_mode(ACTION_LOAD);
-                    window_push(renderer, &als_window, 0, 0);
+                    window_push(&als_window, 0, 0);
                 }
                 break;
             case SDL_KEYDOWN:
-                if (window_handle_key_down(event.key.keysym)) { break; }
+                if (window_handle_key_down(sdl_to_ea(event.key.keysym))) { break; }
                 if (ignore_repeat && event.key.repeat != 0) { break; }
                 if (textbox_handle_keydown(textbox, event.key.keysym)) { return; }
                 if (sol_lua_keydown(event.key.keysym.sym)) { break; }
@@ -168,13 +180,13 @@ void handle_input() {
                     sol_game_loop_signal(WAIT_FINAL, 0);
                 }
                 if (event.key.keysym.sym == SDLK_TAB) {
-                    window_toggle(renderer, &game_menu_window, 0, 0);
+                    window_toggle(&game_menu_window, 0, 0);
                 }
                 if (event.key.keysym.sym == SDLK_i) {
-                    window_toggle(renderer, &inventory_window, 0, 0);
+                    window_toggle(&inventory_window, 0, 0);
                 }
                 if (event.key.keysym.sym == SDLK_c) {
-                    window_toggle(renderer, &view_character_window, 0, 0);
+                    window_toggle(&view_character_window, 0, 0);
                 }
                 if (event.key.keysym.sym == SDLK_s) { player_move(PLAYER_LEFT); }
                 if (event.key.keysym.sym == SDLK_e) { player_move(PLAYER_UP); }
@@ -238,13 +250,13 @@ void main_center_on_player() {
 }
 
 void port_window_render() {
-    window_render(renderer, xmappos, ymappos);
+    window_render(xmappos, ymappos);
 }
 
 void render() {
     region_tick(region_manager_get_current());
     combat_update(region_manager_get_current());
-    window_render(renderer, xmappos, ymappos);
+    window_render(xmappos, ymappos);
 }
 
 // Simple timing for now...
@@ -294,7 +306,9 @@ static void gui_init() {
 
     last_tick = SDL_GetTicks();
 
-    window_init(renderer);
+    sprite_init();
+    window_init();
+    animate_init();
 }
 
 void port_init() {
@@ -338,7 +352,7 @@ extern void port_game_loop() {
 
 extern void port_start() {
     port_init();
-    map_load_region(region_manager_get_current(), renderer);
+    map_load_region(region_manager_get_current());
 
     port_game_loop();
 

@@ -168,27 +168,27 @@ static map_t *create_map() {
     return ret;
 }
 
-void map_load_region(region_t *reg, SDL_Renderer *renderer) {
+void map_load_region(region_t *reg) {
     map_free(cmap);
     if (!cmap) { cmap = create_map(); }
     map_init(cmap);
-    cren = renderer;
+    cren = main_get_rend();
     cmap->region = reg;
     //cmap->region = region_manager_get_region(reg->map_id);
     map_load_current_region();
 
     // TODO: NEED TO CLEAR ALL SCREENS
-    window_push(renderer, &map_window, 0, 0);
-    window_push(renderer, &narrate_window, 0, 0);
-    window_push(renderer, &combat_status_window, 295, 5);
+    window_push(&map_window, 0, 0);
+    window_push(&narrate_window, 0, 0);
+    window_push(&combat_status_window, 295, 5);
 }
 
-void map_load_map(SDL_Renderer *renderer, int id) {
+void map_load_map(int id) {
     map_free(cmap);
     if (!cmap) { cmap = create_map(); }
     map_init(cmap);
 
-    cren = renderer;
+    cren = main_get_rend();
     cmap->region = region_manager_get_region(id);
 
     map_load_current_region();

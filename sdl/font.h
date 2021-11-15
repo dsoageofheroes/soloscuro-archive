@@ -19,7 +19,7 @@ enum {
 };
 
 extern void font_init(SDL_Renderer *renderer);
-extern void font_free(SDL_Renderer *renderer);
+extern void font_free();
 uint32_t font_pixel_width(font_t font, const char *text, const uint32_t len);
 uint16_t font_char_width(font_t font, const int c);
 uint32_t font_pixel_height(font_t font);

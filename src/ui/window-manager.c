@@ -1,40 +1,38 @@
+#include <stdlib.h>
+#include <string.h>
+
 #include "window-manager.h"
-#include "map.h"
-#include "main.h"
-#include "animate.h"
+#include "dsl.h"
 #include "player.h"
-#include "player.h"
-#include "windows/narrate.h"
-#include "windows/combat-status.h"
-#include "sprite.h"
-#include "font.h"
-#include "../src/dsl.h"
-#include "../src/player.h"
-#include "../src/region.h"
-#include "../src/settings.h"
-#include "../src/port.h"
-#include "windows/inventory.h"
-#include "windows/view-character.h"
-#include "windows/window-main.h"
-#include "windows/new-character.h"
+#include "region.h"
+#include "settings.h"
+#include "port.h"
+#include "entity-animation.h"
+#include "../sdl/player.h"
+#include "../sdl/windows/narrate.h"
+#include "../sdl/windows/inventory.h"
+#include "../sdl/windows/combat-status.h"
+#include "../sdl/windows/new-character.h"
+#include "../sdl/windows/view-character.h"
+#include "../sdl/windows/window-main.h"
+
+#include "../sdl/map.h"
 
 #define MAX_SCREENS (10)
 
 static wops_t windows[MAX_SCREENS];
 static uint32_t window_pos = 0;
 
-void window_init(SDL_Renderer *renderer) {
-    sprite_init();
-
+void window_init() {
     memset(windows, 0x0, sizeof(wops_t) * MAX_SCREENS);
-
-    animate_init();
 }
 
 static uint32_t default_get_width() { return 320 * settings_zoom(); }
 static uint32_t default_get_height() { return 200 * settings_zoom(); }
+uint32_t main_get_width()  { return 800; }
+uint32_t main_get_height() { return 600; }
 
-void window_load(SDL_Renderer *renderer, int layer, wops_t *window, const uint32_t x, const uint32_t y) {
+void window_load(int layer, wops_t *window, const uint32_t x, const uint32_t y) {
     int grey_out_map = 0;
 
     if (layer < 0 || layer > MAX_SCREENS) { return; }
@@ -65,17 +63,17 @@ void window_load(SDL_Renderer *renderer, int layer, wops_t *window, const uint32
 
 extern void port_load_window(const window_t window) {
     switch (window) {
-        case WINDOW_VIEW: window_toggle(main_get_rend(), &view_character_window, 0, 0); break;
-        case WINDOW_INVENTORY: window_toggle(main_get_rend(), &inventory_window, 0, 0); break;
-        case WINDOW_MAIN: window_toggle(main_get_rend(), &main_window, 0, 0); break;
-        case WINDOW_CHARACTER_CREATION: window_toggle(main_get_rend(), &new_character_window, 0, 0); break;
-        case WINDOW_MAP: window_toggle(main_get_rend(), &map_window, 0, 0); break;
-        case WINDOW_NARRATE: window_toggle(main_get_rend(), &narrate_window, 0, 0); break;
-        case WINDOW_COMBAT: window_toggle(main_get_rend(), &combat_status_window, 0, 0); break;
+        case WINDOW_VIEW: window_toggle(&view_character_window, 0, 0); break;
+        case WINDOW_INVENTORY: window_toggle(&inventory_window, 0, 0); break;
+        case WINDOW_MAIN: window_toggle(&main_window, 0, 0); break;
+        case WINDOW_CHARACTER_CREATION: window_toggle(&new_character_window, 0, 0); break;
+        case WINDOW_MAP: window_toggle(&map_window, 0, 0); break;
+        case WINDOW_NARRATE: window_toggle(&narrate_window, 0, 0); break;
+        case WINDOW_COMBAT: window_toggle(&combat_status_window, 0, 0); break;
     }
 }
 
-void window_toggle(SDL_Renderer *renderer, wops_t *the_window, const uint32_t x, const uint32_t y) {
+void window_toggle(wops_t *the_window, const uint32_t x, const uint32_t y) {
     uint32_t pos;
     wops_t tmp;
     for (pos = 0; pos < window_pos; pos++) {
@@ -83,7 +81,7 @@ void window_toggle(SDL_Renderer *renderer, wops_t *the_window, const uint32_t x,
     }
 
     if (pos >= window_pos) { // not found so turn on.
-        window_load(renderer, window_pos++, the_window, x, y);
+        window_load(window_pos++, the_window, x, y);
         return;
     }
 
@@ -101,17 +99,17 @@ void window_toggle(SDL_Renderer *renderer, wops_t *the_window, const uint32_t x,
 
 extern void port_toggle_window(const window_t window) {
     switch (window) {
-        case WINDOW_VIEW: window_toggle(main_get_rend(), &view_character_window, 0, 0); break;
-        case WINDOW_INVENTORY: window_toggle(main_get_rend(), &inventory_window, 0, 0); break;
-        case WINDOW_MAIN: window_toggle(main_get_rend(), &main_window, 0, 0); break;
-        case WINDOW_CHARACTER_CREATION: window_toggle(main_get_rend(), &new_character_window, 0, 0); break;
-        case WINDOW_MAP: window_toggle(main_get_rend(), &map_window, 0, 0); break;
-        case WINDOW_NARRATE: window_toggle(main_get_rend(), &narrate_window, 0, 0); break;
-        case WINDOW_COMBAT: window_toggle(main_get_rend(), &combat_status_window, 0, 0); break;
+        case WINDOW_VIEW: window_toggle(&view_character_window, 0, 0); break;
+        case WINDOW_INVENTORY: window_toggle(&inventory_window, 0, 0); break;
+        case WINDOW_MAIN: window_toggle(&main_window, 0, 0); break;
+        case WINDOW_CHARACTER_CREATION: window_toggle(&new_character_window, 0, 0); break;
+        case WINDOW_MAP: window_toggle(&map_window, 0, 0); break;
+        case WINDOW_NARRATE: window_toggle(&narrate_window, 0, 0); break;
+        case WINDOW_COMBAT: window_toggle(&combat_status_window, 0, 0); break;
     }
 }
 
-void window_push(SDL_Renderer *renderer, wops_t *window, const uint32_t x, const uint32_t y) {
+void window_push(wops_t *window, const uint32_t x, const uint32_t y) {
     wops_t tmp;
     for (uint32_t i = 0; i <= window_pos; i++) {
         if (windows[i].render == window->render) {
@@ -123,11 +121,11 @@ void window_push(SDL_Renderer *renderer, wops_t *window, const uint32_t x, const
             return;
         }
     }
-    window_load(renderer, window_pos++, window, x, y);
+    window_load(window_pos++, window, x, y);
 }
 
 void port_change_region(region_t *reg) {
-    map_load_region(reg, main_get_rend());
+    map_load_region(reg);
 
     for (int i = 0; i < MAX_PCS; i++) {
         player_load(i, settings_zoom());
@@ -135,30 +133,29 @@ void port_change_region(region_t *reg) {
 }
 
 int port_load_region(const int region) {
-    return window_load_region(main_get_rend(), region);
+    return window_load_region(region);
 }
 
-int window_load_region(SDL_Renderer *renderer, const int region) {
-    map_load_map(renderer, region);
+int window_load_region(const int region) {
+    map_load_map(region);
 
-    window_push(renderer, &map_window, 0, 0);
-    window_push(renderer, &narrate_window, 0, 0);
-    window_push(renderer, &combat_status_window, 295, 5);
+    window_push(&map_window, 0, 0);
+    window_push(&narrate_window, 0, 0);
+    window_push(&combat_status_window, 295, 5);
 
     return 1;
 }
 
-void window_render(SDL_Renderer *renderer, const uint32_t xmappos, const uint32_t ymappos) {
-    SDL_RenderClear(renderer);
+void window_render(const uint32_t xmappos, const uint32_t ymappos) {
+    port_start_display_frame();
 
     for (int i = 0; i < MAX_SCREENS; i++) {
         if (windows[i].render) {
             windows[i].render(windows[i].data);
         }
     }
-    //font_render_ttf("TEST!!!!!!!!!!!", 100, 100, 0xFFFF00FF);
-    //player_render(renderer);
-    SDL_RenderPresent(renderer);
+
+    port_commit_display_frame();
 }
 
 void window_handle_mouse(const uint32_t x, const uint32_t y) {
@@ -177,9 +174,9 @@ void window_handle_mouse_down(const uint32_t button, const uint32_t x, const uin
     }
 }
 
-int window_handle_key_down(const SDL_Keysym button) {
+int window_handle_key_down(const enum entity_action_e action) {
     for (int i = MAX_SCREENS-1; i >= 0; i--) {
-        if (windows[i].key_down && windows[i].key_down(button)) {
+        if (windows[i].key_down && windows[i].key_down(action)) {
             return 1;
         }
     }
@@ -192,23 +189,6 @@ void window_handle_mouse_up(const uint32_t button, const uint32_t x, const uint3
             i = 0; // exit loop, mouse has been handled!
         }
     }
-}
-
-SDL_Texture* create_texture(SDL_Renderer *renderer, const uint32_t gff_file,
-        const uint32_t type, const uint32_t id, const uint32_t frame_id,
-        const uint32_t palette_id, SDL_Rect *loc) {
-    unsigned char *data;
-    SDL_Surface *surface = NULL;
-    SDL_Texture *ret = NULL;
-    loc->w = get_frame_width(gff_file, type, id, frame_id);
-    loc->h = get_frame_height(gff_file, type, id, frame_id);
-    data = get_frame_rgba_with_palette(gff_file, type, id, frame_id, palette_id);
-    surface = SDL_CreateRGBSurfaceFrom(data, loc->w, loc->h, 32, 4*loc->w,
-            0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
-    ret = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
-    free(data);
-    return ret;
 }
 
 static void destroy_window(const int pos) {
@@ -251,5 +231,5 @@ void window_free() {
         }
     }
     animate_close();
-    font_free(main_get_rend());
+    font_free();
 }

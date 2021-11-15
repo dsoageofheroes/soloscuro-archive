@@ -3,7 +3,7 @@
 
 #include <SDL2/SDL.h>
 #include "../../src/wizard.h"
-#include "../window-manager.h"
+#include "window-manager.h"
 #include "../../src/ssi-object.h"
 #include "../../src/entity.h"
 #include "../font.h"

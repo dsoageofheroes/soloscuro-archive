@@ -8,7 +8,7 @@ DEPS := $(OBJS:.o=.d)
 LDFLAGS := -llua5.3
 CFLAGS  := -fPIC -Werror -O2
 
-INC_DIRS := $(shell find $(SRC_DIRS) -type d) ext/
+INC_DIRS := $(shell find $(SRC_DIRS) -type d) ext/ include/
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
 CPPFLAGS ?= $(INC_FLAGS) -MMD -MP

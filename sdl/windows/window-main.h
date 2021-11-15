@@ -2,7 +2,7 @@
 #define SCREEN_MAIN_H
 
 #include <SDL2/SDL.h>
-#include "../window-manager.h"
+#include "window-manager.h"
 
 void main_render(void *data);
 int main_handle_mouse_movement(const uint32_t x, const uint32_t y);

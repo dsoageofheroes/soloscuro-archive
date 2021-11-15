@@ -2,7 +2,7 @@
 #define COMBAT_STATUS_H
 
 #include <SDL2/SDL.h>
-#include "../window-manager.h"
+#include "window-manager.h"
 #include "../../src/combat.h"
 
 typedef struct combat_status_s {

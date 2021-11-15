@@ -99,5 +99,7 @@ extern void port_entity_update_scmd(entity_t *entity);
 extern void port_handle_input();
 extern void port_tick();
 extern void port_window_render();
+extern void port_start_display_frame();
+extern void port_commit_display_frame();
 
 #endif

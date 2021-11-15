@@ -340,7 +340,7 @@ int add_load_save_handle_mouse_up(const uint32_t button, const uint32_t x, const
         sprite_set_frame(delete_btn, 0);
         if (selection != -1) {
             sprite_set_frame(delete_btn, 3);
-            window_push(renderer, &popup_window, 90, 62);
+            window_push(&popup_window, 90, 62);
             popup_set_message("DELETE THIS PERSON?");
             popup_set_option(0, "YES");
             popup_set_option(1, "NO");

@@ -2,7 +2,7 @@
 #define ADD_LOAD_SAVE_H
 
 #include <SDL2/SDL.h>
-#include "../window-manager.h"
+#include "window-manager.h"
 
 enum {
     ACTION_NONE,

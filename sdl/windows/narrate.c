@@ -1,26 +1,27 @@
 #include "narrate.h"
+#include "utils.h"
+#include "sprite.h"
 #include "../../src/dsl.h"
 #include "../../src/ds-narrate.h"
+#include "../../src/entity-animation.h"
 #include "../../src/gff.h"
 #include "../../src/gfftypes.h"
 #include "../../src/gameloop.h"
 #include "../font.h"
 #include "../main.h"
+#include "../../src/settings.h"
 #include <string.h>
 #include <ctype.h>
 
 #define STARTX (60)
-#define MAX_CHARS (256)
 #define MAX_PORTRAITS (256)
 #define MAX_TEXT (4096)
 #define MAX_LINE (128)
 #define MAX_OPTIONS (32)
 
-static SDL_Texture *background = NULL;
-static SDL_Rect background_loc = { STARTX + 0, 0, 0, 0 };
-static SDL_Rect menu_loc =       { STARTX + 0, 480, 0, 0 };
-static SDL_Texture *border = NULL;
-static SDL_Rect border_loc = { STARTX + 10, 10, 0, 0 };
+static uint16_t background;
+static uint32_t xoffset, yoffset;
+static uint16_t border;
 
 static SDL_Texture *portraits[MAX_PORTRAITS];
 static SDL_Rect portraits_loc[MAX_PORTRAITS];
@@ -78,7 +79,7 @@ void load_portraits(SDL_Renderer *renderer) {
         free(data);
         portraits_loc[id].w = 2 * w;
         portraits_loc[id].h = 2 * h;
-        portraits_loc[id].x = STARTX + 26;
+        portraits_loc[id].x = STARTX + 26 + 20; // fix this
         portraits_loc[id].y = 24;
     }
 
@@ -87,17 +88,20 @@ void load_portraits(SDL_Renderer *renderer) {
 
 void narrate_init(const uint32_t x, const uint32_t y) {
     SDL_Renderer *renderer = main_get_rend();
-    uint32_t palette_id = gff_get_palette_id(RESOURCE_GFF_INDEX, 0);
-    background = create_texture(renderer, RESOURCE_GFF_INDEX, GFF_BMP, 3007, 0, palette_id, &background_loc);
-    border = create_texture(renderer, RESOURCE_GFF_INDEX, GFF_BMP, 12000, 0, palette_id, &border_loc);
-    background_loc.w *= 2;
-    background_loc.h *= 2;
-    menu_loc.w = background_loc.w;
-    menu_loc.h = background_loc.h;
-    border_loc.w *= 2;
-    border_loc.h *= 2;
+    const float zoom = settings_zoom();
+    xoffset = 0;//x / zoom;
+    yoffset = 0;//y / zoom;
+    gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
+
+    background = sprite_new(renderer, pal, 0 + xoffset, 0 + yoffset, zoom,
+            RESOURCE_GFF_INDEX, GFF_BMP, 3007);
+    sprite_set_location(background, sprite_getx(background) + (main_get_width() - sprite_getw(background)) / 2, sprite_gety(background));
+    border = sprite_new(renderer, pal, 0, 0, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 12000);
+    sprite_set_location(border,
+            sprite_getx(background) + 5 * zoom,
+            sprite_gety(background) + 5 * zoom);
     load_portraits(renderer);
-    SDL_SetTextureAlphaMod( background, 192 );
+    sprite_set_alpha(background, 192);
     display = 0; // start off as off
 }
 
@@ -118,11 +122,18 @@ void print_text(SDL_Renderer *renderer) {
 
 void print_menu(SDL_Renderer *renderer) {
     size_t x = 140, y = 490;
-    SDL_RenderCopy(renderer, background, NULL, &menu_loc);
+    uint32_t sx = sprite_getx(background);
+    uint32_t sy = sprite_gety(background);
+
+    sprite_set_location(background, sx, y - 5);
+    sprite_render(renderer, background);
+
     for (int i = 0; i < MAX_OPTIONS; i++) {
         print_line_len(renderer, 0, menu_options[i], x, y, 0x7FFFFFFF);
         y += 20;
     }
+
+    sprite_set_location(background, sx, sy);
 }
 
 void port_narrate_clear() {
@@ -137,8 +148,9 @@ void port_narrate_close() {
 void narrate_render(void *data) {
     SDL_Renderer *renderer = main_get_rend();
     if (display) {
-        SDL_RenderCopy(renderer, background, NULL, &background_loc);
-        SDL_RenderCopy(renderer, border, NULL, &border_loc);
+        sprite_render(renderer, background);
+        sprite_render(renderer, border);
+        //SDL_RenderCopy(renderer, border, NULL, &border_loc);
         SDL_RenderCopy(renderer, portraits[portrait_index], NULL, &portraits_loc[portrait_index]);
         print_text(renderer);
         if (display_menu) {
@@ -221,24 +233,25 @@ int narrate_handle_mouse_down(const uint32_t button, const uint32_t x, const uin
     return display; // zero means I did not handle the mouse click, so another window may.
 }
 
-int narrate_handle_key_down(const SDL_Keysym button) {
+int narrate_handle_key_down(const enum entity_action_e action) {
     if (!display) { return 0; }
 
-    printf("narrate key: %d\n", button.sym);
-    switch (button.sym) {
-        case SDLK_RETURN:
+    printf("narrate action: %d\n", action);
+    switch (action) {
+        case EA_ACTIVATE:
             if (sol_game_loop_is_waiting_for(WAIT_NARRATE_CONTINUE)) {
                 narrate_clear();
                 sol_game_loop_signal(WAIT_NARRATE_CONTINUE, 0);
             }
+        default:
         break;
     }
     return 1; // Handle the key
 }
 
 void narrate_free() {
-    SDL_DestroyTexture(background);
-    SDL_DestroyTexture(border);
+    sprite_free(background);
+    sprite_free(border);
     for (int i = 0; i < MAX_PORTRAITS; i++) {
         SDL_DestroyTexture(portraits[i]);
     }

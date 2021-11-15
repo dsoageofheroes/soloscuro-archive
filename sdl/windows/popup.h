@@ -2,7 +2,7 @@
 #define POPUP_H
 
 #include <SDL2/SDL.h>
-#include "../window-manager.h"
+#include "window-manager.h"
 
 enum {
     POPUP_0,
