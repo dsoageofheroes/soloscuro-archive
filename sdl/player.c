@@ -16,7 +16,7 @@
 #include "../src/gff-map.h"
 #include "../src/gff-image.h"
 #include "../src/gff.h"
-#include "../src/gfftypes.h"
+#include "gfftypes.h"
 
 static void load_character_sprite(SDL_Renderer *renderer, const int slot, const float zoom);
 

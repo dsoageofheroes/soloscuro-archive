@@ -31,6 +31,8 @@
 #  define PRI_LI "%lld"
 #endif
 
+#define sol_sprite_t uint32_t
+
 typedef enum window_e {
     WINDOW_VIEW,
     WINDOW_INVENTORY,
@@ -101,5 +103,8 @@ extern void port_tick();
 extern void port_window_render();
 extern void port_start_display_frame();
 extern void port_commit_display_frame();
+extern sol_sprite_t port_sprite_create_from_data(unsigned char *data, const uint32_t w, const uint32_t h);
+extern void port_sprite_set_location(const sol_sprite_t id, const uint32_t x, const uint32_t y);
+extern void port_sprite_render(const sol_sprite_t id);
 
 #endif

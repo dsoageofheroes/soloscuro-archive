@@ -3,6 +3,7 @@
 #include "../src/animation.h"
 #include "../src/entity.h"
 #include "../src/settings.h"
+#include "../src/port.h"
 
 #define MAX_SPRITES (1<<10)
 
@@ -320,4 +321,34 @@ void sprite_free(const uint16_t id) {
 
 extern void port_entity_update_scmd(entity_t *entity) {
     sprite_set_frame(entity->anim.spr, entity->anim.scmd[entity->anim.pos].bmp_idx);
+}
+
+extern sol_sprite_t port_sprite_create_from_data(unsigned char *data, const uint32_t w, const uint32_t h) {
+    int sprite_id = get_next_sprite_id();
+    if (sprite_id == SPRITE_ERROR) { return SPRITE_ERROR; }
+    sprite_t *sprite = sprites + sprite_id;
+    SDL_Surface *surface = NULL;
+
+    surface = SDL_CreateRGBSurfaceFrom(data, w, h, 32,
+            4*w, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
+    sprite->len = 1;
+    sprite->pos = 0;
+    sprite->loc = (SDL_Rect*) malloc(sizeof(SDL_Rect));
+    sprite->loc->w = w * settings_zoom();
+    sprite->loc->h = h * settings_zoom();
+    sprite->loc->x = sprite->loc->y = 0;
+    sprite->tex = (SDL_Texture**)realloc(sprite->tex, sizeof(SDL_Texture*) * sprite->len);
+
+    sprite->tex[0] = SDL_CreateTextureFromSurface(main_get_rend(), surface);
+    SDL_FreeSurface(surface);
+
+    return sprite_id;
+}
+
+extern void port_sprite_set_location(const sol_sprite_t id, const uint32_t x, const uint32_t y) {
+    sprite_set_location(id, x, y);
+}
+
+extern void port_sprite_render(const sol_sprite_t id) {
+    sprite_render(main_get_rend(), id);
 }

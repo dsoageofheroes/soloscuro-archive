@@ -1,11 +1,12 @@
 #include "narrate.h"
 #include "utils.h"
 #include "sprite.h"
+#include "portrait.h"
 #include "../../src/dsl.h"
 #include "../../src/ds-narrate.h"
 #include "../../src/entity-animation.h"
 #include "../../src/gff.h"
-#include "../../src/gfftypes.h"
+#include "gfftypes.h"
 #include "../../src/gameloop.h"
 #include "../font.h"
 #include "../main.h"
@@ -13,7 +14,6 @@
 #include <string.h>
 #include <ctype.h>
 
-#define STARTX (60)
 #define MAX_PORTRAITS (256)
 #define MAX_TEXT (4096)
 #define MAX_LINE (128)
@@ -22,9 +22,6 @@
 static uint16_t background;
 static uint32_t xoffset, yoffset;
 static uint16_t border;
-
-static SDL_Texture *portraits[MAX_PORTRAITS];
-static SDL_Rect portraits_loc[MAX_PORTRAITS];
 
 static int display = 0;
 static int display_menu = 0;
@@ -50,42 +47,6 @@ static void clear() {
 
 int narrate_is_open() { return display; }
 
-#define PORT_MAX (1<<14)
-void load_portraits(SDL_Renderer *renderer) {
-    unsigned char *data;
-    unsigned char buf[PORT_MAX];
-    unsigned int w, h, id;
-    SDL_Surface *surface = NULL;
-    unsigned int *ids = gff_get_id_list(DSLDATA_GFF_INDEX, GFF_PORT);
-    unsigned int num_ids = gff_get_resource_length(DSLDATA_GFF_INDEX, GFF_PORT);
-    memset(portraits_loc, 0x0, sizeof(SDL_Rect) * MAX_PORTRAITS);
-    memset(portraits, 0x0, sizeof(SDL_Texture*) * MAX_PORTRAITS);
-    memset(narrate_text, 0x0, sizeof(char) * MAX_TEXT);
-    memset(menu_options, 0x0, sizeof(char) * MAX_LINE * MAX_OPTIONS);
-
-    for (int i = 0; i < num_ids; i++) {
-        id = ids[i];
-        gff_chunk_header_t chunk = gff_find_chunk_header(DSLDATA_GFF_INDEX, GFF_PORT, id);
-        if (chunk.length > PORT_MAX) {
-            error ("chunk.length (%d) is greater than PORT_MAX (%d)\n", chunk.length, PORT_MAX);
-            exit (1);
-        }
-        gff_read_chunk(DSLDATA_GFF_INDEX, &chunk, buf, chunk.length);
-        data = get_portrait(buf, &w, &h);
-        surface = SDL_CreateRGBSurfaceFrom(data, w, h, 32,
-            4*w, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
-        portraits[id] = SDL_CreateTextureFromSurface(renderer, surface);
-        SDL_FreeSurface(surface);
-        free(data);
-        portraits_loc[id].w = 2 * w;
-        portraits_loc[id].h = 2 * h;
-        portraits_loc[id].x = STARTX + 26 + 20; // fix this
-        portraits_loc[id].y = 24;
-    }
-
-    if (ids) { free(ids); }
-}
-
 void narrate_init(const uint32_t x, const uint32_t y) {
     SDL_Renderer *renderer = main_get_rend();
     const float zoom = settings_zoom();
@@ -93,6 +54,7 @@ void narrate_init(const uint32_t x, const uint32_t y) {
     yoffset = 0;//y / zoom;
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
 
+    sol_portrait_load();
     background = sprite_new(renderer, pal, 0 + xoffset, 0 + yoffset, zoom,
             RESOURCE_GFF_INDEX, GFF_BMP, 3007);
     sprite_set_location(background, sprite_getx(background) + (main_get_width() - sprite_getw(background)) / 2, sprite_gety(background));
@@ -100,7 +62,6 @@ void narrate_init(const uint32_t x, const uint32_t y) {
     sprite_set_location(border,
             sprite_getx(background) + 5 * zoom,
             sprite_gety(background) + 5 * zoom);
-    load_portraits(renderer);
     sprite_set_alpha(background, 192);
     display = 0; // start off as off
 }
@@ -150,8 +111,7 @@ void narrate_render(void *data) {
     if (display) {
         sprite_render(renderer, background);
         sprite_render(renderer, border);
-        //SDL_RenderCopy(renderer, border, NULL, &border_loc);
-        SDL_RenderCopy(renderer, portraits[portrait_index], NULL, &portraits_loc[portrait_index]);
+        sol_portrait_display(portrait_index, sprite_getx(border) + 8 * settings_zoom(), 12 * settings_zoom());
         print_text(renderer);
         if (display_menu) {
             print_menu(renderer);
@@ -252,9 +212,6 @@ int narrate_handle_key_down(const enum entity_action_e action) {
 void narrate_free() {
     sprite_free(background);
     sprite_free(border);
-    for (int i = 0; i < MAX_PORTRAITS; i++) {
-        SDL_DestroyTexture(portraits[i]);
-    }
 }
 
 int port_ask_yes_no() {

@@ -1,7 +1,7 @@
 #include "new-character.h"
 #include "../main.h"
 #include "../../src/gff.h"
-#include "../../src/gfftypes.h"
+#include "gfftypes.h"
 #include "narrate.h"
 #include "popup.h"
 #include "../textbox.h"

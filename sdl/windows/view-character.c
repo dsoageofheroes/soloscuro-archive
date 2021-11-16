@@ -2,7 +2,7 @@
 #include "../main.h"
 #include "../../src/gff.h"
 #include "../../src/gff-char.h"
-#include "../../src/gfftypes.h"
+#include "gfftypes.h"
 #include "../../src/rules.h"
 #include "../../src/settings.h"
 #include "narrate.h"

@@ -8,7 +8,7 @@
 #include "../font.h"
 #include "../../src/gff.h"
 #include "../../src/port.h"
-#include "../../src/gfftypes.h"
+#include "gfftypes.h"
 #include "../../src/region-manager.h"
 #include "../../src/settings.h"
 #include <string.h>

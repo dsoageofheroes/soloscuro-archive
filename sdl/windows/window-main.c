@@ -1,7 +1,7 @@
 #include "window-main.h"
 #include "../main.h"
 #include "../../src/gff.h"
-#include "../../src/gfftypes.h"
+#include "gfftypes.h"
 #include "../../src/player.h"
 #include "../../src/settings.h"
 #include "../sprite.h"

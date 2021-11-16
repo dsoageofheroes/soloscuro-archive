@@ -1,5 +1,5 @@
-#ifndef SCREEN_MANAGER_H
-#define SCREEN_MANAGER_H
+#ifndef SOL_WINDOW_MANAGER_H
+#define SOL_WINDOW_MANAGER_H
 
 #include "../src/entity-animation.h"
 

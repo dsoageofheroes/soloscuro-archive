@@ -2,7 +2,7 @@
 #include "sprite.h"
 #include "textbox.h"
 #include "../src/gff.h"
-#include "../src/gfftypes.h"
+#include "gfftypes.h"
 #include "../src/settings.h"
 #include "font.h"
 
