@@ -4,7 +4,7 @@
 #include "../src/entity-animation.h"
 
 // wops = Window OPerationS
-typedef struct wops_s {
+typedef struct sol_wops_s {
     void (*init) (const uint32_t x, const uint32_t y);
     void (*cleanup) ();
     void (*render) (void*);
@@ -18,20 +18,20 @@ typedef struct wops_s {
     const char *name;
     uint8_t grey_out_map;
     void *data;
-} wops_t;
+} sol_wops_t;
 
-void window_init();
-void window_render(const uint32_t xmappos, const uint32_t ymappos);
-void window_load(int layer, wops_t *window, const uint32_t x, const uint32_t y);
-void window_push(wops_t *window, const uint32_t x, const uint32_t y);
-void window_toggle(wops_t *window, const uint32_t x, const uint32_t y);
-void window_pop();
-void window_handle_mouse(const uint32_t x, const uint32_t y);
-void window_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y);
-void window_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y);
-int window_handle_key_down(const enum entity_action_e);
-int window_load_region(const int region);
-void window_clear();
-void window_free();
+void sol_window_init();
+void sol_window_render(const uint32_t xmappos, const uint32_t ymappos);
+void sol_window_load(int layer, sol_wops_t *window, const uint32_t x, const uint32_t y);
+void sol_window_push(sol_wops_t *window, const uint32_t x, const uint32_t y);
+void sol_window_toggle(sol_wops_t *window, const uint32_t x, const uint32_t y);
+void sol_window_pop();
+void sol_window_handle_mouse(const uint32_t x, const uint32_t y);
+void sol_window_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y);
+void sol_window_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y);
+int  sol_window_handle_key_down(const enum entity_action_e);
+int  sol_window_load_region(const int region);
+void sol_window_clear();
+void sol_window_free();
 
 #endif

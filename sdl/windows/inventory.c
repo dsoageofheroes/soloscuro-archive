@@ -468,11 +468,11 @@ int inventory_window_handle_mouse_up(const uint32_t button, const uint32_t x, co
         if (sprite_in_rect(ports[i], x, y)) {
             if (button == SDL_BUTTON_RIGHT) {
                 slot_clicked = i;
-                window_push(&popup_window, 100, 75);
-                popup_set_message("INACTIVE CHARACTER");
-                popup_set_option(0, "NEW");
-                popup_set_option(1, "ADD");
-                popup_set_option(2, "CANCEL");
+                sol_window_push(&popup_window, 100, 75);
+                sol_popup_set_message("INACTIVE CHARACTER");
+                sol_popup_set_option(0, "NEW");
+                sol_popup_set_option(1, "ADD");
+                sol_popup_set_option(2, "CANCEL");
                 last_selection = SELECT_POPUP;
             } else if (button == SDL_BUTTON_LEFT) {
                 char_selected = i;
@@ -481,12 +481,12 @@ int inventory_window_handle_mouse_up(const uint32_t button, const uint32_t x, co
     }
 
     if (sprite_in_rect(game_return, x, y)) {
-        window_pop();
+        sol_window_pop();
         return 1;
     } 
 
     if (sprite_in_rect(character, x, y)) {
-        window_push(&view_character_window, 0, 10);
+        sol_window_push(&view_character_window, 0, 10);
         return 1;
     } 
 
@@ -534,15 +534,15 @@ void inventory_window_free() {
 
 void inventory_window_return_control () {
     if (last_selection == SELECT_POPUP) {
-        if (popup_get_selection() == POPUP_0) { // new
-            popup_clear_selection();
-            window_push(&new_character_window, 0, 0);
+        if (sol_popup_get_selection() == POPUP_0) { // new
+            sol_popup_clear_selection();
+            sol_window_push(&new_character_window, 0, 0);
             last_selection = SELECT_NEW;
             return;
         }
-        if (popup_get_selection() == POPUP_1) { // ADD
-            popup_clear_selection();
-            window_push(&als_window, 0, 0);
+        if (sol_popup_get_selection() == POPUP_1) { // ADD
+            sol_popup_clear_selection();
+            sol_window_push(&als_window, 0, 0);
             last_selection = SELECT_ALS;
             return;
         }
@@ -558,11 +558,11 @@ void inventory_window_return_control () {
                 //gff_char_add_character(pc, psi, spells, psionics, name);
                 sol_player_load(slot_clicked, settings_zoom());
             } else {
-                window_push(&popup_window, 100, 75);
-                popup_set_message("Character was invalid.");
-                popup_set_option(0, "TRY AGAIN");
-                popup_set_option(1, "ADD");
-                popup_set_option(2, "CANCEL");
+                sol_window_push(&popup_window, 100, 75);
+                sol_popup_set_message("Character was invalid.");
+                sol_popup_set_option(0, "TRY AGAIN");
+                sol_popup_set_option(1, "ADD");
+                sol_popup_set_option(2, "CANCEL");
                 last_selection = SELECT_POPUP;
                 return;
             }
@@ -581,7 +581,7 @@ void inventory_window_return_control () {
     last_selection = SELECT_NONE;
 }
 
-wops_t inventory_window = {
+sol_wops_t inventory_window = {
     .init = inventory_window_init,
     .cleanup = inventory_window_free,
     .render = inventory_window_render,

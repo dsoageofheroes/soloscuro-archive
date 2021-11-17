@@ -913,12 +913,12 @@ int new_character_handle_mouse_up(const uint32_t button, const uint32_t x, const
 
     if (last_sprite_mousedowned == done_button && sprite_in_rect(done_button, x, y)) {
         is_valid = 1;
-        window_pop();
+        sol_window_pop();
     }
 
     if (last_sprite_mousedowned == exit_button && sprite_in_rect(exit_button, x, y)) {
         is_valid = 0;
-        window_pop();
+        sol_window_pop();
     }
 
     return 1; // handle
@@ -961,7 +961,7 @@ void new_character_free() {
     main_set_textbox(NULL);
 }
 
-wops_t new_character_window = {
+sol_wops_t new_character_window = {
     .init = new_character_init,
     .cleanup = new_character_free,
     .render = new_character_render,

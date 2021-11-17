@@ -3,7 +3,7 @@
 #include "narrate.h"
 #include "../../sdl/windows/inventory.h"
 #include "../../sdl/windows/new-character.h"
-#include "../../sdl/windows/popup.h"
+#include "popup.h"
 #include "../../sdl/windows/add-load-save.h"
 #include "../../src/gff.h"
 #include "../../src/gff-char.h"
@@ -420,11 +420,11 @@ int view_character_handle_mouse_up(const uint32_t button, const uint32_t x, cons
         for (int i = 0; i < 4; i++) {
             if (sol_sprite_in_rect(ports[i], x, y)) {
                 slot_clicked = i;
-                window_push(&popup_window, 100, 75);
-                popup_set_message("INACTIVE CHARACTER");
-                popup_set_option(0, "NEW");
-                popup_set_option(1, "ADD");
-                popup_set_option(2, "CANCEL");
+                sol_window_push(&popup_window, 100, 75);
+                sol_popup_set_message("INACTIVE CHARACTER");
+                sol_popup_set_option(0, "NEW");
+                sol_popup_set_option(1, "ADD");
+                sol_popup_set_option(2, "CANCEL");
                 last_selection = SELECT_POPUP;
             }
         }
@@ -440,7 +440,7 @@ int view_character_handle_mouse_up(const uint32_t button, const uint32_t x, cons
             if (power_to_display) {
                 sol_mouse_set_as_power(power_to_display);
                 power_to_display = NULL;
-                window_pop();
+                sol_window_pop();
                 return 1;
             }
         }
@@ -450,9 +450,9 @@ int view_character_handle_mouse_up(const uint32_t button, const uint32_t x, cons
     sol_sprite_set_frame(powers, 0);
     sol_sprite_set_frame(status, 0);
 
-    if (sol_sprite_in_rect(game_return, x, y)) { window_pop(); return 1; } 
+    if (sol_sprite_in_rect(game_return, x, y)) { sol_window_pop(); return 1; } 
     if (sol_sprite_in_rect(character, x, y)) { mode = 0; }
-    if (sol_sprite_in_rect(inv, x, y)) { window_push(&inventory_window, 0, 0); return 1;}
+    if (sol_sprite_in_rect(inv, x, y)) { sol_window_push(&inventory_window, 0, 0); return 1;}
     if (sol_sprite_in_rect(powers, x, y)) { mode = 2; }
     if (sol_sprite_in_rect(status, x, y)) { mode = 3; }
 
@@ -496,16 +496,16 @@ void view_character_free() {
 void view_character_return_control () {
     label_group_set_font(FONT_YELLOW);
     if (last_selection == SELECT_POPUP) {
-        if (popup_get_selection() == POPUP_0) { // new
-            popup_clear_selection();
-            window_push(&new_character_window, 0, 0);
+        if (sol_popup_get_selection() == POPUP_0) { // new
+            sol_popup_clear_selection();
+            sol_window_push(&new_character_window, 0, 0);
             last_selection = SELECT_NEW;
             return;
         }
-        if (popup_get_selection() == POPUP_1) { // ADD
-            popup_clear_selection();
+        if (sol_popup_get_selection() == POPUP_1) { // ADD
+            sol_popup_clear_selection();
             add_load_save_set_mode(ACTION_ADD);
-            window_push(&als_window, 0, 0);
+            sol_window_push(&als_window, 0, 0);
             last_selection = SELECT_ALS;
             return;
         }
@@ -520,11 +520,11 @@ void view_character_return_control () {
                 warn ("TODO: Add back character creation!\n");
                 //gff_char_add_character(pc, psi, spells, psionics, name);
             } else {
-                window_push(&popup_window, 100, 75);
-                popup_set_message("Character was invalid.");
-                popup_set_option(0, "TRY AGAIN");
-                popup_set_option(1, "ADD");
-                popup_set_option(2, "CANCEL");
+                sol_window_push(&popup_window, 100, 75);
+                sol_popup_set_message("Character was invalid.");
+                sol_popup_set_option(0, "TRY AGAIN");
+                sol_popup_set_option(1, "ADD");
+                sol_popup_set_option(2, "CANCEL");
                 last_selection = SELECT_POPUP;
                 return;
             }
@@ -543,7 +543,7 @@ void view_character_return_control () {
     last_selection = SELECT_NONE;
 }
 
-wops_t view_character_window = {
+sol_wops_t view_character_window = {
     .init = view_character_init,
     .cleanup = view_character_free,
     .render = view_character_render,

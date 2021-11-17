@@ -55,6 +55,10 @@ typedef enum sol_font_e {
     NUM_FONTS
 } sol_font_t;
 
+typedef struct sol_dim_s {
+    uint16_t x, y, w, h;
+} sol_dim_t;
+
 // Narrate functions
 extern int8_t port_narrate_open(int16_t action, const char *text, int16_t index);
 extern void port_narrate_clear();

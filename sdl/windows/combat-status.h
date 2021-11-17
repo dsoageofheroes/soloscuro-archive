@@ -14,6 +14,6 @@ typedef struct combat_status_s {
 
 combat_status_t* combat_status_get();
 
-extern wops_t combat_status_window;
+extern sol_wops_t combat_status_window;
 
 #endif

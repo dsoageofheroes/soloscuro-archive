@@ -198,7 +198,7 @@ int game_menu_handle_mouse_up(const uint32_t button, const uint32_t x, const uin
     if (sprite_in_rect(left_arrow[1], x, y)) { audio_set_voc_volume(audio_get_voc_volume() - .1); }
     if (sprite_in_rect(right_arrow[1], x, y)) { audio_set_voc_volume(audio_get_voc_volume() + .1); }
 
-    if (sprite_in_rect(game_return, x, y)) { window_pop(); } 
+    if (sprite_in_rect(game_return, x, y)) { sol_window_pop(); } 
 
     return 1; // means I captured the mouse click
     //return 0; // zero means I did not handle the mouse click, so another window may.
@@ -225,7 +225,7 @@ void game_menu_free() {
 static uint32_t game_menu_get_width() { return 210 * settings_zoom(); }
 static uint32_t game_menu_get_height() { return 116 * settings_zoom(); }
 
-wops_t game_menu_window = {
+sol_wops_t game_menu_window = {
     .init = game_menu_init,
     .cleanup = game_menu_free,
     .render = game_menu_render,

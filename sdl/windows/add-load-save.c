@@ -279,7 +279,7 @@ int add_load_save_handle_mouse_down(const uint32_t button, const uint32_t x, con
 static void load_game() {
     char buf[128];
     snprintf(buf, 128, SAVE_FORMAT, selection);
-    window_clear();
+    sol_window_clear();
     player_close();
     player_init();
     ls_load_save_file(buf);
@@ -319,22 +319,22 @@ int add_load_save_handle_mouse_up(const uint32_t button, const uint32_t x, const
         sprite_set_frame(action_btn, 0);
         if (selection != -1) {
             last_action = mode;
-            window_pop();
+            sol_window_pop();
         }
     }
     if (sprite_in_rect(exit_btn, x, y)) {
         sprite_set_frame(exit_btn, 0);
-        window_pop();
+        sol_window_pop();
     }
     if (sprite_in_rect(delete_btn, x, y)) {
         sprite_set_frame(delete_btn, 0);
         if (selection != -1) {
             sprite_set_frame(delete_btn, 3);
-            window_push(&popup_window, 90, 62);
-            popup_set_message("DELETE THIS PERSON?");
-            popup_set_option(0, "YES");
-            popup_set_option(1, "NO");
-            popup_set_option(2, "CANCEL");
+            sol_window_push(&popup_window, 90, 62);
+            sol_popup_set_message("DELETE THIS PERSON?");
+            sol_popup_set_option(0, "YES");
+            sol_popup_set_option(1, "NO");
+            sol_popup_set_option(2, "CANCEL");
         }
     }
     if (sprite_in_rect(up_arrow, x, y)) {
@@ -350,12 +350,12 @@ int add_load_save_handle_mouse_up(const uint32_t button, const uint32_t x, const
 
 void add_load_save_return_control () {
     sprite_set_frame(delete_btn, 0);
-    if (popup_get_selection() == POPUP_0) {
+    if (sol_popup_get_selection() == POPUP_0) {
         //printf("Need to delete! %d\n", res_ids[valids[selection]]);
         gff_char_delete(res_ids[valids[selection]]);
         setup_character_selection();
     }
-    popup_clear_selection();
+    sol_popup_clear_selection();
 }
 
 void add_load_save_free() {
@@ -375,7 +375,7 @@ void add_load_save_free() {
 int add_load_save_get_action() { return last_action; }
 uint32_t add_load_save_get_selection() { return char_selected; }
 
-wops_t als_window = {
+sol_wops_t als_window = {
     .init = add_load_save_init,
     .cleanup = add_load_save_free,
     .render = add_load_save_render,

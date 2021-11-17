@@ -4,6 +4,6 @@
 #include <SDL2/SDL.h>
 #include "window-manager.h"
 
-extern wops_t inventory_window;
+extern sol_wops_t inventory_window;
 
 #endif

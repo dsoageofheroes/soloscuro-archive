@@ -27,6 +27,6 @@ int cmap_is_danger(const int row, const int column);
 uint32_t getCameraX();
 uint32_t getCameraY();
 
-extern wops_t map_window;
+extern sol_wops_t map_window;
 
 #endif

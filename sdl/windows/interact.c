@@ -128,7 +128,7 @@ void interact_free() {
     sprite_free(box);
 }
 
-wops_t interact_window = {
+sol_wops_t interact_window = {
     .init = interact_init,
     .cleanup = interact_free,
     .render = interact_render,

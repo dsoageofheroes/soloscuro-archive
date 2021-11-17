@@ -216,7 +216,7 @@ int port_ask_yes_no() {
     return 0;
 }
 
-wops_t narrate_window = {
+sol_wops_t narrate_window = {
     .init = narrate_init,
     .cleanup = narrate_free,
     .render = narrate_render,

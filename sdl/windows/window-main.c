@@ -34,24 +34,24 @@ void main_init(const uint32_t x, const uint32_t y) {
 static int click_action() {
     int ret = 0;
     if (count_down_spr == exit_dos) { sol_game_loop_signal(WAIT_FINAL, 0); }
-    if (count_down_spr == create_characters) { window_push(&view_character_window, 0, 10); }
+    if (count_down_spr == create_characters) { sol_window_push(&view_character_window, 0, 10); }
     if (count_down_spr == start) {
         if(player_get_active()->name) {
-            window_pop();
+            sol_window_pop();
             ret = 1;
-            window_load_region(42);
+            sol_window_load_region(42);
         } else {
-            window_push(&popup_window, 100, 75);
-            popup_set_message("CREATE CHARACTER");
-            popup_set_option(0, "Ok");
-            popup_set_option(1, "");
-            popup_set_option(2, "CANCEL");
+            sol_window_push(&popup_window, 100, 75);
+            sol_popup_set_message("CREATE CHARACTER");
+            sol_popup_set_option(0, "Ok");
+            sol_popup_set_option(1, "");
+            sol_popup_set_option(2, "CANCEL");
         }
     }
 
     if (count_down_spr == load_save) {
         add_load_save_set_mode(ACTION_LOAD);
-        window_push(&als_window, 0, 0);
+        sol_window_push(&als_window, 0, 0);
     }
 
     return ret;
@@ -128,7 +128,7 @@ void main_free() {
     sol_sprite_free(exit_dos);
 }
 
-wops_t main_window = {
+sol_wops_t main_window = {
     .init = main_init,
     .cleanup = main_free,
     .render = main_render,

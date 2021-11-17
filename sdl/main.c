@@ -90,7 +90,7 @@ void handle_mouse_motion() {
 
     SDL_GetMouseState(&x, &y);
 
-    window_handle_mouse(x, y);
+    sol_window_handle_mouse(x, y);
 }
 
 void handle_mouse_down(uint32_t button) {
@@ -98,7 +98,7 @@ void handle_mouse_down(uint32_t button) {
 
     SDL_GetMouseState(&x, &y);
 
-    window_handle_mouse_down(button, x, y);
+    sol_window_handle_mouse_down(button, x, y);
 }
 
 void handle_mouse_up(uint32_t button) {
@@ -106,7 +106,7 @@ void handle_mouse_up(uint32_t button) {
 
     SDL_GetMouseState(&x, &y);
 
-    window_handle_mouse_up(button, x, y);
+    sol_window_handle_mouse_up(button, x, y);
 }
 
 void main_exit_game() {
@@ -164,15 +164,15 @@ void handle_input() {
                 if (event.key.keysym.sym == SDLK_KP_9) { player_directions[9] = 0; }
                 if (event.key.keysym.sym == SDLK_F11) {
                     add_load_save_set_mode(ACTION_SAVE);
-                    window_push(&als_window, 0, 0);
+                    sol_window_push(&als_window, 0, 0);
                 }
                 if (event.key.keysym.sym == SDLK_F12) {
                     add_load_save_set_mode(ACTION_LOAD);
-                    window_push(&als_window, 0, 0);
+                    sol_window_push(&als_window, 0, 0);
                 }
                 break;
             case SDL_KEYDOWN:
-                if (window_handle_key_down(sdl_to_ea(event.key.keysym))) { break; }
+                if (sol_window_handle_key_down(sdl_to_ea(event.key.keysym))) { break; }
                 if (ignore_repeat && event.key.repeat != 0) { break; }
                 if (textbox_handle_keydown(textbox, event.key.keysym)) { return; }
                 if (sol_lua_keydown(event.key.keysym.sym)) { break; }
@@ -180,13 +180,13 @@ void handle_input() {
                     sol_game_loop_signal(WAIT_FINAL, 0);
                 }
                 if (event.key.keysym.sym == SDLK_TAB) {
-                    window_toggle(&game_menu_window, 0, 0);
+                    sol_window_toggle(&game_menu_window, 0, 0);
                 }
                 if (event.key.keysym.sym == SDLK_i) {
-                    window_toggle(&inventory_window, 0, 0);
+                    sol_window_toggle(&inventory_window, 0, 0);
                 }
                 if (event.key.keysym.sym == SDLK_c) {
-                    window_toggle(&view_character_window, 0, 0);
+                    sol_window_toggle(&view_character_window, 0, 0);
                 }
                 if (event.key.keysym.sym == SDLK_s) { player_move(PLAYER_LEFT); }
                 if (event.key.keysym.sym == SDLK_e) { player_move(PLAYER_UP); }
@@ -250,13 +250,13 @@ void main_center_on_player() {
 }
 
 void port_window_render() {
-    window_render(xmappos, ymappos);
+    sol_window_render(xmappos, ymappos);
 }
 
 void render() {
     region_tick(region_manager_get_current());
     combat_update(region_manager_get_current());
-    window_render(xmappos, ymappos);
+    sol_window_render(xmappos, ymappos);
 }
 
 // Simple timing for now...
@@ -307,7 +307,7 @@ static void gui_init() {
     last_tick = SDL_GetTicks();
 
     sprite_init();
-    window_init();
+    sol_window_init();
     animate_init();
 }
 
@@ -327,7 +327,7 @@ void port_close() {
     // Order matters.
     audio_cleanup();
     player_close();
-    window_free();
+    sol_window_free();
 
     dsl_cleanup();
     gff_cleanup();

@@ -393,7 +393,7 @@ void combat_status_free() {
     sprite_free(background);
 }
 
-wops_t combat_status_window = {
+sol_wops_t combat_status_window = {
     .init = combat_status_init,
     .cleanup = combat_status_free,
     .render = combat_status_render,

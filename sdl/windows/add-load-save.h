@@ -16,6 +16,6 @@ int add_load_save_get_action();
 uint32_t add_load_save_get_selection();
 void add_load_save_set_mode(int _mode);
 
-extern wops_t als_window;
+extern sol_wops_t als_window;
 
 #endif

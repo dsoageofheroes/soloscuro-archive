@@ -9,6 +9,6 @@ int main_handle_mouse_movement(const uint32_t x, const uint32_t y);
 int main_handle_mouse_click(const uint32_t button, const uint32_t x, const uint32_t y);
 void main_free();
 
-extern wops_t main_window;
+extern sol_wops_t main_window;
 
 #endif

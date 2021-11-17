@@ -178,9 +178,9 @@ void map_load_region(region_t *reg) {
     map_load_current_region();
 
     // TODO: NEED TO CLEAR ALL SCREENS
-    window_push(&map_window, 0, 0);
-    window_push(&narrate_window, 0, 0);
-    window_push(&combat_status_window, 295, 5);
+    sol_window_push(&map_window, 0, 0);
+    sol_window_push(&narrate_window, 0, 0);
+    sol_window_push(&combat_status_window, 295, 5);
 }
 
 void map_load_map(int id) {
@@ -619,7 +619,7 @@ extern void port_free_item(item_t *item) {
     }
 }
 
-wops_t map_window = {
+sol_wops_t map_window = {
     .init = map_load,
     .cleanup = map_cleanup,
     .render = map_render,

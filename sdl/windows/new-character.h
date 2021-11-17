@@ -20,6 +20,6 @@ ssi_spell_list_t* new_character_get_spell_list();
 psionic_list_t* new_character_get_psionic_list();
 char* new_character_get_name();
 
-extern wops_t new_character_window;
+extern sol_wops_t new_character_window;
 
 #endif
