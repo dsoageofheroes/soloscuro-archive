@@ -206,7 +206,7 @@ void sprite_render(SDL_Renderer *renderer, const uint16_t sprite_id) {
     SDL_RenderCopy(renderer, sprite->tex[sprite->pos], NULL, (sprite->loc + sprite->pos));
 }
 
-void port_sprite_render_flip(const uint16_t sprite_id, SDL_RendererFlip flip) {
+void sol_sprite_render_flip(const uint16_t sprite_id, SDL_RendererFlip flip) {
     if (sprite_id == (uint16_t)SPRITE_ERROR) { return; }
     sprite_t *sprite = sprites + sprite_id;
     SDL_RenderCopyEx(main_get_rend(), sprite->tex[sprite->pos], NULL, (sprite->loc + sprite->pos), 0, NULL, flip);
@@ -256,10 +256,6 @@ uint32_t sprite_geth(const uint16_t id) {
     if (!valid_id(id)) { return 0; }
     SDL_Rect *loc = (sprites[id].loc + sprites[id].pos);
     return loc->h;
-}
-
-extern uint32_t port_sprite_geth(const uint16_t id) {
-    return sprite_geth(id);
 }
 
 uint32_t sprite_getw(const uint16_t id) {
@@ -323,7 +319,7 @@ extern void port_entity_update_scmd(entity_t *entity) {
     sprite_set_frame(entity->anim.spr, entity->anim.scmd[entity->anim.pos].bmp_idx);
 }
 
-extern sol_sprite_t port_sprite_create_from_data(unsigned char *data, const uint32_t w, const uint32_t h) {
+extern sol_sprite_t sol_sprite_create_from_data(unsigned char *data, const uint32_t w, const uint32_t h) {
     int sprite_id = get_next_sprite_id();
     if (sprite_id == SPRITE_ERROR) { return SPRITE_ERROR; }
     sprite_t *sprite = sprites + sprite_id;
@@ -345,10 +341,30 @@ extern sol_sprite_t port_sprite_create_from_data(unsigned char *data, const uint
     return sprite_id;
 }
 
-extern void port_sprite_set_location(const sol_sprite_t id, const uint32_t x, const uint32_t y) {
+extern void sol_sprite_set_location(const sol_sprite_t id, const uint32_t x, const uint32_t y) {
     sprite_set_location(id, x, y);
 }
 
-extern void port_sprite_render(const sol_sprite_t id) {
+extern void sol_sprite_render(const sol_sprite_t id) {
     sprite_render(main_get_rend(), id);
 }
+
+extern sol_sprite_t sol_sprite_new(gff_palette_t *pal,
+        const int offsetx, const int offsety, const float zoom,
+        const int gff_idx, const int type_id, const int res_id) {
+    return sprite_new(main_get_rend(), pal, offsetx, offsety, zoom, gff_idx, type_id, res_id);
+}
+
+extern uint32_t sol_sprite_getx(const sol_sprite_t id) { return sprite_getx(id); }
+extern uint32_t sol_sprite_gety(const sol_sprite_t id) { return sprite_gety(id); }
+extern uint32_t sol_sprite_getw(const sol_sprite_t id) { return sprite_getw(id); }
+extern uint32_t sol_sprite_geth(const sol_sprite_t id) { return sprite_geth(id); }
+extern void sol_sprite_set_alpha(const sol_sprite_t id, const uint8_t alpha) { sprite_set_alpha(id, alpha); }
+extern void sol_sprite_free(const sol_sprite_t id) { sprite_free(id); }
+extern void sol_sprite_set_frame(const uint16_t id, const uint16_t frame) { sprite_set_frame(id, frame); }
+extern uint16_t sol_sprite_get_frame(const uint16_t id) { return sprite_get_frame(id); }
+extern int sol_sprite_in_rect(const uint16_t id, const uint32_t x, const uint32_t y) { return sprite_in_rect(id, x, y); }
+extern void sol_sprite_center_spr(const int dest, const int src) { sprite_center_spr(dest, src); }
+extern void sol_sprite_render_box(const uint16_t sprite_id, const uint16_t x,
+    const uint16_t y, const uint16_t w, const uint16_t h) { sprite_render_box(main_get_rend(), sprite_id, x, y, w, h); }
+extern void sol_sprite_center(const int id, const int x, const int y, const int w, const int h) { sprite_center(id, x, y, w, h); }

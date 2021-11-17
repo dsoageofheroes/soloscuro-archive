@@ -166,7 +166,7 @@ extern power_t* mouse_get_power() {
     return power;
 }
 
-extern void mouse_set_as_power(power_t *pw) {
+extern void sol_mouse_set_as_power(power_t *pw) {
     if (!pw) { return; }
     if (power_cursor) { SDL_FreeCursor(power_cursor); }
 

@@ -9,11 +9,11 @@
 #include "port.h"
 #include "entity-animation.h"
 #include "../sdl/player.h"
-#include "../sdl/windows/narrate.h"
+#include "narrate.h"
 #include "../sdl/windows/inventory.h"
 #include "../sdl/windows/combat-status.h"
 #include "../sdl/windows/new-character.h"
-#include "../sdl/windows/view-character.h"
+#include "view-character.h"
 #include "../sdl/windows/window-main.h"
 
 #include "../sdl/map.h"
@@ -128,7 +128,7 @@ void port_change_region(region_t *reg) {
     map_load_region(reg);
 
     for (int i = 0; i < MAX_PCS; i++) {
-        player_load(i, settings_zoom());
+        sol_player_load(i, settings_zoom());
     }
 }
 

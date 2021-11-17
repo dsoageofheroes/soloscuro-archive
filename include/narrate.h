@@ -1,7 +1,6 @@
 #ifndef SCRREN_NARRATE_H
 #define SCRREN_NARRATE_H
 
-#include <SDL2/SDL.h>
 #include "window-manager.h"
 
 void narrate_init(const uint32_t x, const uint32_t y);

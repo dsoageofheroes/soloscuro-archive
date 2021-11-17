@@ -30,7 +30,7 @@ void sol_portrait_load() {
         }
         gff_read_chunk(DSLDATA_GFF_INDEX, &chunk, buf, chunk.length);
         data = get_portrait(buf, &w, &h);
-        portraits[id] = port_sprite_create_from_data(data, w, h);
+        portraits[id] = sol_sprite_create_from_data(data, w, h);
         free(data);
     }
 
@@ -38,7 +38,7 @@ void sol_portrait_load() {
 }
 
 void sol_portrait_display(const uint32_t id, const uint32_t x, const uint32_t y) {
-    port_sprite_set_location(portraits[id], x, y);
-    port_sprite_render(portraits[id]);
+    sol_sprite_set_location(portraits[id], x, y);
+    sol_sprite_render(portraits[id]);
 }
 

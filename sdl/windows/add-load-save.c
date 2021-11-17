@@ -3,7 +3,6 @@
 #include "popup.h"
 #include "../textbox.h"
 #include "../main.h"
-#include "../font.h"
 #include "../sprite.h"
 #include "../map.h"
 #include "../player.h"
@@ -11,26 +10,20 @@
 #include "../../src/gff.h"
 #include "../../src/gff-char.h"
 #include "gfftypes.h"
+#include "../../src/port.h"
 #include "../../src/settings.h"
 
 #define SAVE_FORMAT "save%02d.sav"
 
-static uint16_t background;
-static uint16_t up_arrow, down_arrow;
-static uint16_t action_btn, exit_btn, delete_btn;
-static uint16_t title;
-static uint16_t bar;
+static sol_sprite_t background;
+static sol_sprite_t up_arrow, down_arrow;
+static sol_sprite_t action_btn, exit_btn, delete_btn;
+static sol_sprite_t title;
+static sol_sprite_t bar;
 static uint32_t xoffset, yoffset;
 static textbox_t *name_tb = NULL;
 
 extern char *strdup(const char *s);
-
-static uint16_t new_sprite_create(SDL_Renderer *renderer, gff_palette_t *pal,
-        const int offsetx, const int offsety, const float zoom,
-        const int gff_idx, const int type_id, const int res_id) {
-    SDL_Rect tmp = {offsetx, offsety, 0, 0};
-    return sprite_create(renderer, &tmp, pal, 0, 0, zoom, gff_idx, type_id, res_id);
-}
 
 #define RES_MAX (1<<10)
 
@@ -44,7 +37,6 @@ static uint32_t top_entry = 0;
 static uint32_t num_valid_entries = 0;
 static int last_action = ACTION_NONE;
 static uint32_t res_ids[RES_MAX]; // for the deletion.
-static SDL_Renderer *renderer = NULL;
 static int mode = ACTION_ADD; // ADD, LOAD, SAVE
 
 void add_load_save_set_mode(int _mode) { mode = _mode; }
@@ -144,53 +136,51 @@ void add_load_save_init(const uint32_t x, const uint32_t y) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     const float zoom = settings_zoom();
     selection = -1;
-    renderer = main_get_rend();
     num_valid_entries = 0;
     xoffset = x;
     yoffset = y;
 
-    background = new_sprite_create(renderer, pal, 0 + x / zoom, 0 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 3009);
-    up_arrow = new_sprite_create(renderer, pal, 215 + x / zoom, 30 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2093);
-    down_arrow = new_sprite_create(renderer, pal, 215 + x / zoom, 130 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2094);
-    exit_btn = new_sprite_create(renderer, pal, 230 + x / zoom, 50 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2058);
-    delete_btn = new_sprite_create(renderer, pal, 215 + x / zoom, 150 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2097);
-    bar = new_sprite_create(renderer, pal, 45 + x / zoom, 31 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 18100);
+    background = sol_sprite_new(pal, 0 + x / zoom, 0 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 3009);
+    up_arrow = sol_sprite_new(pal, 215 + x / zoom, 30 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2093);
+    down_arrow = sol_sprite_new(pal, 215 + x / zoom, 130 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2094);
+    exit_btn = sol_sprite_new(pal, 230 + x / zoom, 50 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2058);
+    delete_btn = sol_sprite_new(pal, 215 + x / zoom, 150 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2097);
+    bar = sol_sprite_new(pal, 45 + x / zoom, 31 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 18100);
     name_tb = textbox_create(32, 50 + x / zoom, 148 + y / zoom);
     main_set_textbox(name_tb);
 
     switch(mode) {
         case ACTION_ADD:
-            title = new_sprite_create(renderer, pal, 115 + x / zoom, 0 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6036); // Add
-            action_btn = new_sprite_create(renderer, pal, 230 + x / zoom, 30 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6037); // add
+            title = sol_sprite_new(pal, 115 + x / zoom, 0 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6036); // Add
+            action_btn = sol_sprite_new(pal, 230 + x / zoom, 30 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6037); // add
             setup_character_selection();
             break;
         case ACTION_SAVE:
-            title = new_sprite_create(renderer, pal, 115 + x / zoom, 0 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2056); // SAVE
-            action_btn = new_sprite_create(renderer, pal, 230 + x / zoom, 30 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2057); // save
+            title = sol_sprite_new(pal, 115 + x / zoom, 0 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2056); // SAVE
+            action_btn = sol_sprite_new(pal, 230 + x / zoom, 30 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2057); // save
             setup_save_load_selection();
             break;
         case ACTION_LOAD:
-            title = new_sprite_create(renderer, pal, 115 + x / zoom, 0 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6030); // Load
-            action_btn = new_sprite_create(renderer, pal, 230 + x / zoom, 30 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6031); // load
+            title = sol_sprite_new(pal, 115 + x / zoom, 0 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6030); // Load
+            action_btn = sol_sprite_new(pal, 230 + x / zoom, 30 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6031); // load
             setup_save_load_selection();
             break;
         case ACTION_DROP:
-            title = new_sprite_create(renderer, pal, 115 + x / zoom, 0 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6038); // Drop
-            action_btn = new_sprite_create(renderer, pal, 230 + x / zoom, 30 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6039); // drop
+            title = sol_sprite_new(pal, 115 + x / zoom, 0 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6038); // Drop
+            action_btn = sol_sprite_new(pal, 230 + x / zoom, 30 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6039); // drop
             break;
     }
 }
 
 void add_load_save_render(void *data) {
-    SDL_Renderer *renderer = main_get_rend();
     const float zoom = settings_zoom();
-    sprite_render(renderer, background);
-    sprite_render(renderer, up_arrow);
-    sprite_render(renderer, down_arrow);
-    sprite_render(renderer, exit_btn);
-    sprite_render(renderer, delete_btn);
-    sprite_render(renderer, title);
-    sprite_render(renderer, action_btn);
+    sol_sprite_render(background);
+    sol_sprite_render(up_arrow);
+    sol_sprite_render(down_arrow);
+    sol_sprite_render(exit_btn);
+    sol_sprite_render(delete_btn);
+    sol_sprite_render(title);
+    sol_sprite_render(action_btn);
     for (unsigned int i = 0; i < 10; i++) {
         sprite_set_frame(bar, 0);
         sprite_set_location(bar, zoom * 45 + xoffset, zoom * (31 + i * 11) + yoffset);
@@ -201,11 +191,11 @@ void add_load_save_render(void *data) {
         if (sprite_in_rect(bar, mousex, mousey)) {
             sprite_set_frame(bar, sprite_get_frame(bar) + 2);
         }
-        sprite_render(renderer, bar);
+        sol_sprite_render(bar);
     }
 
     for (uint16_t i = top_entry; i < top_entry + 10 && i < num_valid_entries; i++) {
-        print_line_len(renderer, (selection != i) ? FONT_GREY : FONT_REDDARK,
+        sol_print_line_len((selection != i) ? FONT_GREY : FONT_REDDARK,
                 entries[valids[i]],
                 zoom * 47 + xoffset, zoom * (31 + (i - top_entry) * 11) + yoffset, 1<<10);
     }

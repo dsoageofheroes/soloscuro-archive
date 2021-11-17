@@ -1,34 +1,27 @@
 #include "view-character.h"
-#include "../main.h"
+#include "gfftypes.h"
+#include "narrate.h"
+#include "../../sdl/windows/inventory.h"
+#include "../../sdl/windows/new-character.h"
+#include "../../sdl/windows/popup.h"
+#include "../../sdl/windows/add-load-save.h"
 #include "../../src/gff.h"
 #include "../../src/gff-char.h"
-#include "gfftypes.h"
 #include "../../src/rules.h"
 #include "../../src/settings.h"
-#include "narrate.h"
-#include "../player.h"
-#include "inventory.h"
-#include "new-character.h"
-#include "popup.h"
-#include "../mouse.h"
 #include "../../src/dsl.h"
-#include "add-load-save.h"
 #include "../../src/player.h"
 #include "../../src/ds-load-save.h"
-#include "../font.h"
-#include "../sprite.h"
 
+#define MAX_POWERS (50)
 // Sprites
-static uint16_t ai[4];
-static uint16_t leader[4];
-static uint16_t ports[4];
-static uint16_t buttons[3];
+static sol_sprite_t ai[4], leader[4], ports[4], buttons[3];
 static label_t power_name, power_level;
-static uint16_t effects, view_char, use, panel, sun;
-static uint16_t character, inv, powers, status;
-static uint16_t game_menu, game_return;
-static uint16_t slots;
-static uint16_t power_highlight, power_background;
+static sol_sprite_t effects, view_char, use, panel, sun;
+static sol_sprite_t character, inv, powers, status;
+static sol_sprite_t game_menu, game_return;
+static sol_sprite_t slots;
+static sol_sprite_t power_highlight, power_background;
 enum {SELECT_NONE, SELECT_POPUP, SELECT_NEW, SELECT_ALS};
 static int8_t last_selection = SELECT_NONE;
 static uint8_t slot_clicked;
@@ -36,7 +29,6 @@ static int32_t player_selected = 0;
 static uint32_t xoffset, yoffset;
 static uint32_t mousex = 0, mousey = 0;
 static int mode = 2; // 0 = char, 2 = powers, 3 = status
-#define MAX_POWERS (50)
 static power_t *power_list[MAX_POWERS];
 static power_t *power_to_display = NULL;
 static int level = 1;
@@ -48,8 +40,6 @@ static SDL_Rect initial_locs[] = {{ 155, 28, 0, 0 }, // description
 static SDL_Rect description_loc, message_loc;
 static char description[25];
 static char message[128];
-
-static SDL_Renderer *rend;
 
 static void set_zoom(SDL_Rect *loc, float zoom) {
     loc->x *= zoom;
@@ -82,7 +72,6 @@ static void set_power(const int type, const int level) {
 
 void view_character_init(const uint32_t _x, const uint32_t _y) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
-    SDL_Renderer * renderer = rend = main_get_rend();
     const float zoom = settings_zoom();
     uint32_t x = _x / settings_zoom(), y = _y / settings_zoom();
     xoffset = _x;
@@ -93,42 +82,42 @@ void view_character_init(const uint32_t _x, const uint32_t _y) {
     memset(message, 0x0, sizeof(message));
     memset(power_list, 0x0, sizeof(power_t*) * MAX_POWERS);
 
-    panel = sprite_new(renderer, pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 11000);
-    effects = sprite_new(renderer, pal, 80 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20075);
-    view_char = sprite_new(renderer, pal, 60 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20079);
-    use = sprite_new(renderer, pal, 115 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20080);
-    sun = sprite_new(renderer, pal, 50 + x, 0 + y - 11, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20028);
+    panel = sol_sprite_new(pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 11000);
+    effects = sol_sprite_new(pal, 80 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20075);
+    view_char = sol_sprite_new(pal, 60 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20079);
+    use = sol_sprite_new(pal, 115 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20080);
+    sun = sol_sprite_new(pal, 50 + x, 0 + y - 11, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20028);
 
-    character = sprite_new(renderer, pal, 45 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 10100);
-    inv = sprite_new(renderer, pal, 68 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11102);
-    powers = sprite_new(renderer, pal, 91 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11103);
-    status = sprite_new(renderer, pal, 112 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11104);
-    game_return = sprite_new(renderer, pal, 252 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 10108);
-    game_menu = sprite_new(renderer, pal, 222 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11101);
-    slots = sprite_new(renderer, pal, 53 + x, 3 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 13007);
-    power_highlight = sprite_new(renderer, pal, 53 + x, 3 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20088);
-    power_background = sprite_new(renderer, pal, 53 + x, 3 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 15002);
+    character = sol_sprite_new(pal, 45 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 10100);
+    inv = sol_sprite_new(pal, 68 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11102);
+    powers = sol_sprite_new(pal, 91 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11103);
+    status = sol_sprite_new(pal, 112 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11104);
+    game_return = sol_sprite_new(pal, 252 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 10108);
+    game_menu = sol_sprite_new(pal, 222 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11101);
+    slots = sol_sprite_new(pal, 53 + x, 3 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 13007);
+    power_highlight = sol_sprite_new(pal, 53 + x, 3 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20088);
+    power_background = sol_sprite_new(pal, 53 + x, 3 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 15002);
 
-    ai[0] = sprite_new(renderer, pal, 45 + x, 40 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111);
-    ai[1] = sprite_new(renderer, pal, 45 + x, 100 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111);
-    ai[2] = sprite_new(renderer, pal, 95 + x, 40 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111);
-    ai[3] = sprite_new(renderer, pal, 95 + x, 100 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111);
-    leader[0] = sprite_new(renderer, pal, 45 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11106);
-    leader[1] = sprite_new(renderer, pal, 45 + x, 90 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11106);
-    leader[2] = sprite_new(renderer, pal, 95 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11106);
-    leader[3] = sprite_new(renderer, pal, 95 + x, 90 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11106);
-    ports[0] = sprite_new(renderer, pal, 55 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11100);
-    ports[1] = sprite_new(renderer, pal, 55 + x, 90 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11100);
-    ports[2] = sprite_new(renderer, pal, 105 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11100);
-    ports[3] = sprite_new(renderer, pal, 105 + x, 90 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11100);
-    buttons[0] = sprite_new(renderer, pal, 131 + x, 157 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11109);
-    buttons[1] = sprite_new(renderer, pal, 172 + x, 157 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11110);
-    buttons[2] = sprite_new(renderer, pal, 172 + x, 157 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 13006);
+    ai[0] = sol_sprite_new(pal, 45 + x, 40 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111);
+    ai[1] = sol_sprite_new(pal, 45 + x, 100 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111);
+    ai[2] = sol_sprite_new(pal, 95 + x, 40 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111);
+    ai[3] = sol_sprite_new(pal, 95 + x, 100 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111);
+    leader[0] = sol_sprite_new(pal, 45 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11106);
+    leader[1] = sol_sprite_new(pal, 45 + x, 90 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11106);
+    leader[2] = sol_sprite_new(pal, 95 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11106);
+    leader[3] = sol_sprite_new(pal, 95 + x, 90 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11106);
+    ports[0] = sol_sprite_new(pal, 55 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11100);
+    ports[1] = sol_sprite_new(pal, 55 + x, 90 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11100);
+    ports[2] = sol_sprite_new(pal, 105 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11100);
+    ports[3] = sol_sprite_new(pal, 105 + x, 90 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11100);
+    buttons[0] = sol_sprite_new(pal, 131 + x, 157 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11109);
+    buttons[1] = sol_sprite_new(pal, 172 + x, 157 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11110);
+    buttons[2] = sol_sprite_new(pal, 172 + x, 157 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 13006);
     power_name = create_label_at_pos(0, -1, "MAGE", FONT_GREY, (135 + x) * zoom, (158 + y) * zoom);
     power_level = create_label_at_pos(0, -1, "LEVEL 1", FONT_GREY, (175 + x) * zoom, (158 + y) * zoom);
 
     for (int i = 0; i < 4; i++) {
-        sprite_set_frame(ports[i], 2);
+        sol_sprite_set_frame(ports[i], 2);
     }
 
     description_loc = apply_params(initial_locs[0], x, y);
@@ -151,7 +140,7 @@ void view_character_init(const uint32_t _x, const uint32_t _y) {
     set_power(0, level);
 }
 
-static void render_character(SDL_Renderer *renderer) {
+static void render_character() {
     const float zoom = settings_zoom();
 
     if (!player_get(player_selected)) { return; }
@@ -162,39 +151,39 @@ static void render_character(SDL_Renderer *renderer) {
     label_render_gra(xoffset + (64 * zoom), yoffset - (49 * zoom));
     label_render_class_and_combat(xoffset + (64 * zoom), yoffset - (42 * zoom));
 
-    sprite_set_frame(slots, 0);
+    sol_sprite_set_frame(slots, 0);
     item_t *items = player_get(player_selected)->inv;
     animate_sprite_t *as = NULL;
-    sprite_set_location(slots, xoffset + (205 * zoom), yoffset + (41 * zoom));
-    sprite_render(main_get_rend(), slots);
+    sol_sprite_set_location(slots, xoffset + (205 * zoom), yoffset + (41 * zoom));
+    sol_sprite_render(slots);
     if (items) {
         //as = items[2].sprite.data;
         as = &(items[2].anim);
         if (as) {
-            sprite_center_spr(as->spr, slots);
-            sprite_render(renderer, as->spr);
+            sol_sprite_center_spr(as->spr, slots);
+            sol_sprite_render(as->spr);
         }
     }
 
-    sprite_set_location(slots, xoffset + (223 * zoom), yoffset + (41 * zoom));
-    sprite_render(main_get_rend(), slots);
+    sol_sprite_set_location(slots, xoffset + (223 * zoom), yoffset + (41 * zoom));
+    sol_sprite_render(slots);
     if (items) {
         //as = items[3].sprite.data;
         as = &(items[3].anim);
         if (as) {
-            sprite_center_spr(as->spr, slots);
-            sprite_render(renderer, as->spr);
+            sol_sprite_center_spr(as->spr, slots);
+            sol_sprite_render(as->spr);
         }
     }
 
-    sprite_set_location(slots, xoffset + (241 * zoom), yoffset + (41 * zoom));
-    sprite_render(main_get_rend(), slots);
+    sol_sprite_set_location(slots, xoffset + (241 * zoom), yoffset + (41 * zoom));
+    sol_sprite_render(slots);
     if (items) {
         //as = items[10].sprite.data;
         as = &(items[10].anim);
         if (as) {
-            sprite_center_spr(as->spr, slots);
-            sprite_render(renderer, as->spr);
+            sol_sprite_center_spr(as->spr, slots);
+            sol_sprite_render(as->spr);
         }
     }
 }
@@ -203,7 +192,7 @@ static power_t* find_power(const uint32_t x, const uint32_t y) {
     size_t power_pos = 0;
     while (power_list[power_pos]) {
         animate_sprite_t *as = &(power_list[power_pos]->icon);
-        if (as && sprite_in_rect(as->spr, x, y)) {
+        if (as && sol_sprite_in_rect(as->spr, x, y)) {
             return power_list[power_pos];
         }
         power_pos++;
@@ -219,25 +208,25 @@ static void sprite_highlight(const uint32_t x, const uint32_t y) {
     if (!pw) { return; }
 
     animate_sprite_t *as = &(pw->icon);
-    sprite_set_frame(power_highlight, 4);
-    sprite_set_location(power_highlight, sprite_getx(as->spr) - 1 * zoom,
-            sprite_gety(as->spr) - 1 * zoom);
-    sprite_render(main_get_rend(), power_highlight);
+    sol_sprite_set_frame(power_highlight, 4);
+    sol_sprite_set_location(power_highlight, sol_sprite_getx(as->spr) - 1 * zoom,
+            sol_sprite_gety(as->spr) - 1 * zoom);
+    sol_sprite_render(power_highlight);
 }
 
-static void render_powers(SDL_Renderer *renderer) {
+static void render_powers() {
     const float zoom = settings_zoom();
-    sprite_render(renderer, buttons[0]);
-    sprite_render(renderer, buttons[1]);
+    sol_sprite_render(buttons[0]);
+    sol_sprite_render(buttons[1]);
 
-    label_render(&power_name, renderer);
-    label_render(&power_level, renderer);
+    label_render(&power_name);
+    label_render(&power_level);
 
     for (int i = 0; i < MAX_POWERS && power_list[i]; i++) {
         animate_sprite_t *as = power_get_icon(power_list[i]);
-        sprite_set_location(as->spr, xoffset + (170 + (i % 5) * 20) * zoom,
+        sol_sprite_set_location(as->spr, xoffset + (170 + (i % 5) * 20) * zoom,
             yoffset + (42 + (i / 5) * 20) * zoom);
-        sprite_render(renderer, as->spr);
+        sol_sprite_render(as->spr);
     }
 
     sprite_highlight(mousex, mousey);
@@ -254,7 +243,7 @@ static int get_next_len(const char *str, const int max) {
     return ret;
 }
 
-static void render_power_to_display(SDL_Renderer *renderer) {
+static void render_power_to_display() {
     const float zoom = settings_zoom();
     char *msg = power_to_display->description;
     int next_index = 0, pos = 0, amt = 20;
@@ -262,14 +251,14 @@ static void render_power_to_display(SDL_Renderer *renderer) {
 
     return;
 
-    sprite_set_location(power_background, xoffset + (90 * zoom) , yoffset + (48 * zoom));
-    sprite_render(main_get_rend(), power_background);
+    sol_sprite_set_location(power_background, xoffset + (90 * zoom) , yoffset + (48 * zoom));
+    sol_sprite_render(power_background);
     animate_sprite_t *as = &(power_to_display->icon);
-    sprite_set_location(as->spr, xoffset + (100) * zoom, yoffset + (58 * zoom));
-    sprite_render(renderer, as->spr);
+    sol_sprite_set_location(as->spr, xoffset + (100) * zoom, yoffset + (58 * zoom));
+    sol_sprite_render(as->spr);
 
     while ((next_index = get_next_len(msg + pos, amt))) {
-        print_line_len(renderer, FONT_BLACK, msg + pos, 
+        sol_print_line_len(FONT_BLACK, msg + pos, 
                 (lines == 0) ? xoffset + (120 * zoom) : xoffset + (100 * zoom),
                 yoffset + ((64 + 10 * lines) * zoom), next_index);
         pos += next_index;
@@ -283,39 +272,38 @@ static void render_power_to_display(SDL_Renderer *renderer) {
 void view_character_render(void *data) {
     char buf[BUF_MAX];
     const float zoom = settings_zoom();
-    SDL_Renderer *renderer = main_get_rend();
 
-    sprite_render(renderer, sun);
-    sprite_render(renderer, panel);
-    sprite_render(renderer, view_char);
+    sol_sprite_render(sun);
+    sol_sprite_render(panel);
+    sol_sprite_render(view_char);
 
-    sprite_set_frame((mode == 0) ? character
+    sol_sprite_set_frame((mode == 0) ? character
             : (mode == 2) ? powers
             : status, 3);
 
-    sprite_render(renderer, character);
-    sprite_render(renderer, inv);
-    sprite_render(renderer, powers);
-    sprite_render(renderer, status);
-    sprite_render(renderer, game_menu);
-    sprite_render(renderer, game_return);
+    sol_sprite_render(character);
+    sol_sprite_render(inv);
+    sol_sprite_render(powers);
+    sol_sprite_render(status);
+    sol_sprite_render(game_menu);
+    sol_sprite_render(game_return);
 
     for (int i = 0; i < 4; i++) {
-        sprite_set_frame(ai[i], 0);
+        sol_sprite_set_frame(ai[i], 0);
         if (player_ai(i)) {
-            sprite_set_frame(ai[i], 1);
+            sol_sprite_set_frame(ai[i], 1);
         }
-        sprite_render(renderer, ai[i]);
-        sprite_set_frame(leader[i], 0);
+        sol_sprite_render(ai[i]);
+        sol_sprite_set_frame(leader[i], 0);
         if (player_exists(i) && player_get(i) == player_get_active()) {
-            sprite_set_frame(leader[i], 1);
+            sol_sprite_set_frame(leader[i], 1);
         }
-        sprite_render(renderer, leader[i]);
+        sol_sprite_render(leader[i]);
     }
 
-    print_line_len(renderer, FONT_YELLOW, description, description_loc.x, description_loc.y, sizeof(description));
+    sol_print_line_len(FONT_YELLOW, description, description_loc.x, description_loc.y, sizeof(description));
     //print_line_len(renderer, FONT_GREY, message, message_loc.x, message_loc.y, sizeof(message));
-    font_render_center(renderer, FONT_GREY, message, message_loc);
+    sol_font_render_center(FONT_GREY, message, message_loc.x, message_loc.y, message_loc.w);
 
     for (int i = 0; i < 4; i++) {
         if (player_exists(i)) {
@@ -324,63 +312,63 @@ void view_character_render(void *data) {
             if (i == 1 || i == 3) { y += 60; }
             if (i == 2 || i == 3) { x += 50; }
             snprintf(buf, BUF_MAX, "%d/%d", player->stats.hp, player->stats.high_hp);
-            print_line_len(renderer, FONT_YELLOW, buf, xoffset + x * zoom, yoffset + (y + 0) * zoom, BUF_MAX);
+            sol_print_line_len(FONT_YELLOW, buf, xoffset + x * zoom, yoffset + (y + 0) * zoom, BUF_MAX);
             snprintf(buf, BUF_MAX, "%d/%d", player->stats.psp, player->stats.high_psp);
-            print_line_len(renderer, FONT_BLUE, buf, xoffset + x * zoom, yoffset + (y + 8) * zoom, BUF_MAX);
+            sol_print_line_len(FONT_BLUE, buf, xoffset + x * zoom, yoffset + (y + 8) * zoom, BUF_MAX);
             if (player->combat_status) {
                 snprintf(buf, BUF_MAX, "%d", player->combat_status);
             } else {
                 snprintf(buf, BUF_MAX, "Okay");
             }
-            print_line_len(renderer, FONT_YELLOW, buf, xoffset + x * zoom, yoffset + (y + 16) * zoom, BUF_MAX);
-            sprite_set_frame(ports[i], (i == player_selected) ? 3 : 0);
-            sprite_render(renderer, ports[i]);
-            player_center(i, xoffset + x * zoom, yoffset + (y - 34) * zoom, 34 * zoom, 34 * zoom);
-            uint16_t spr = player_get_sprite(i);
-            if (sprite_geth(spr) > 30 * zoom) {
-                sprite_set_frame(spr, 0);
-                sprite_render_box(rend, spr, xoffset + x * zoom, yoffset + (y - 34) * zoom,
+            sol_print_line_len(FONT_YELLOW, buf, xoffset + x * zoom, yoffset + (y + 16) * zoom, BUF_MAX);
+            sol_sprite_set_frame(ports[i], (i == player_selected) ? 3 : 0);
+            sol_sprite_render(ports[i]);
+            sol_player_center(i, xoffset + x * zoom, yoffset + (y - 34) * zoom, 34 * zoom, 34 * zoom);
+            sol_sprite_t spr = sol_player_get_sprite(i);
+            if (sol_sprite_geth(spr) > 30 * zoom) {
+                sol_sprite_set_frame(spr, 0);
+                sol_sprite_render_box(spr, xoffset + x * zoom, yoffset + (y - 34) * zoom,
                     34 * zoom, 34 * zoom);
             } else {
-                player_render(rend, i);
+                sol_player_render(i);
             }
         } else {
-            sprite_set_frame(ports[i], 2);
-            sprite_render(renderer, ports[i]);
+            sol_sprite_set_frame(ports[i], 2);
+            sol_sprite_render(ports[i]);
         }
     }
 
     switch(mode) {
-        case 0: render_character(renderer); break;
-        case 2: render_powers(renderer); break;
+        case 0: render_character(); break;
+        case 2: render_powers(); break;
         default: break;
     }
     return;
 
     if (power_to_display) {
-        render_power_to_display(renderer);
+        render_power_to_display();
     }
 }
 
 static int get_sprite_mouse_is_on(const uint32_t x, const uint32_t y) {
-    if (sprite_in_rect(character, x, y)) { return character; }
-    if (sprite_in_rect(inv, x, y)) { return inv; }
-    if (sprite_in_rect(powers, x, y)) { return powers; }
-    if (sprite_in_rect(status, x, y)) { return status; }
-    if (sprite_in_rect(game_menu, x, y)) { return game_menu; }
-    if (sprite_in_rect(game_return, x, y)) { return game_return; }
-    //if (sprite_in_rect(effects, x, y)) { return effects; }
+    if (sol_sprite_in_rect(character, x, y)) { return character; }
+    if (sol_sprite_in_rect(inv, x, y)) { return inv; }
+    if (sol_sprite_in_rect(powers, x, y)) { return powers; }
+    if (sol_sprite_in_rect(status, x, y)) { return status; }
+    if (sol_sprite_in_rect(game_menu, x, y)) { return game_menu; }
+    if (sol_sprite_in_rect(game_return, x, y)) { return game_return; }
+    //if (sol_sprite_in_rect(effects, x, y)) { return effects; }
 
     for (int i = 0; i < 4; i++) {
-        if (sprite_in_rect(ai[i], x, y)) { return ai[i]; }
-        if (sprite_in_rect(leader[i], x, y)) { return leader[i]; }
-        //if (sprite_in_rect(port_background[i], x, y)) { return port_background[i]; }
-        if (sprite_in_rect(ports[i], x, y)) { return ports[i]; }
+        if (sol_sprite_in_rect(ai[i], x, y)) { return ai[i]; }
+        if (sol_sprite_in_rect(leader[i], x, y)) { return leader[i]; }
+        //if (sol_sprite_in_rect(port_background[i], x, y)) { return port_background[i]; }
+        if (sol_sprite_in_rect(ports[i], x, y)) { return ports[i]; }
     }
 
     if (mode == 2) {
-        if (sprite_in_rect(buttons[0], x, y)) { return buttons[0]; }
-        if (sprite_in_rect(buttons[1], x, y)) { return buttons[1]; }
+        if (sol_sprite_in_rect(buttons[0], x, y)) { return buttons[0]; }
+        if (sol_sprite_in_rect(buttons[1], x, y)) { return buttons[1]; }
     }
 
     return SPRITE_ERROR;
@@ -393,9 +381,9 @@ int view_character_handle_mouse_movement(const uint32_t x, const uint32_t y) {
     mousex = x; mousey = y;
 
     if (last_sprite != cur_sprite) {
-        sprite_set_frame(cur_sprite, sprite_get_frame(cur_sprite) + 1);
+        sol_sprite_set_frame(cur_sprite, sol_sprite_get_frame(cur_sprite) + 1);
         if (last_sprite != SPRITE_ERROR) {
-            sprite_set_frame(last_sprite, sprite_get_frame(last_sprite) - 1);
+            sol_sprite_set_frame(last_sprite, sol_sprite_get_frame(last_sprite) - 1);
         }
     }
     
@@ -406,16 +394,16 @@ int view_character_handle_mouse_movement(const uint32_t x, const uint32_t y) {
 int view_character_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
     //static int32_t player_selected = 0;
     for (int i = 0; i < 4; i++) {
-        if (sprite_in_rect(ports[i], x, y)
+        if (sol_sprite_in_rect(ports[i], x, y)
                 && player_exists(i)
                 ) {
             player_selected = i;
             strcpy(description, player_get(player_selected)->name);
         }
-        if (sprite_in_rect(leader[i], x, y)) {
+        if (sol_sprite_in_rect(leader[i], x, y)) {
             player_set_active(i);
         }
-        if (sprite_in_rect(ai[i], x, y)) {
+        if (sol_sprite_in_rect(ai[i], x, y)) {
             player_set_ai(i, !player_ai(i));
         }
     }
@@ -423,14 +411,14 @@ int view_character_handle_mouse_down(const uint32_t button, const uint32_t x, co
 }
 
 int view_character_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
-    if (power_to_display && sprite_in_rect(power_background, x, y)) {
+    if (power_to_display && sol_sprite_in_rect(power_background, x, y)) {
         power_to_display = NULL;
         return 1;
     }
 
     if (button == SDL_BUTTON_RIGHT) {
         for (int i = 0; i < 4; i++) {
-            if (sprite_in_rect(ports[i], x, y)) {
+            if (sol_sprite_in_rect(ports[i], x, y)) {
                 slot_clicked = i;
                 window_push(&popup_window, 100, 75);
                 popup_set_message("INACTIVE CHARACTER");
@@ -450,7 +438,7 @@ int view_character_handle_mouse_up(const uint32_t button, const uint32_t x, cons
         if (mode == 2) {
             power_to_display = find_power(x, y);
             if (power_to_display) {
-                mouse_set_as_power(power_to_display);
+                sol_mouse_set_as_power(power_to_display);
                 power_to_display = NULL;
                 window_pop();
                 return 1;
@@ -458,19 +446,19 @@ int view_character_handle_mouse_up(const uint32_t button, const uint32_t x, cons
         }
     }
 
-    sprite_set_frame(character, 0);
-    sprite_set_frame(powers, 0);
-    sprite_set_frame(status, 0);
+    sol_sprite_set_frame(character, 0);
+    sol_sprite_set_frame(powers, 0);
+    sol_sprite_set_frame(status, 0);
 
-    if (sprite_in_rect(game_return, x, y)) { window_pop(); return 1; } 
-    if (sprite_in_rect(character, x, y)) { mode = 0; }
-    if (sprite_in_rect(inv, x, y)) { window_push(&inventory_window, 0, 0); return 1;}
-    if (sprite_in_rect(powers, x, y)) { mode = 2; }
-    if (sprite_in_rect(status, x, y)) { mode = 3; }
+    if (sol_sprite_in_rect(game_return, x, y)) { window_pop(); return 1; } 
+    if (sol_sprite_in_rect(character, x, y)) { mode = 0; }
+    if (sol_sprite_in_rect(inv, x, y)) { window_push(&inventory_window, 0, 0); return 1;}
+    if (sol_sprite_in_rect(powers, x, y)) { mode = 2; }
+    if (sol_sprite_in_rect(status, x, y)) { mode = 3; }
 
     if (mode == 2) {
-        if (sprite_in_rect(buttons[0], x, y)) { return buttons[0]; }
-        if (sprite_in_rect(buttons[1], x, y)) {
+        if (sol_sprite_in_rect(buttons[0], x, y)) { return buttons[0]; }
+        if (sol_sprite_in_rect(buttons[1], x, y)) {
             level = (level + 1) % 6;
             if (level < 1) { level = 1; }
             set_power(0, level);
@@ -481,28 +469,28 @@ int view_character_handle_mouse_up(const uint32_t button, const uint32_t x, cons
 }
 
 void view_character_free() {
-    sprite_free(sun);
-    sprite_free(panel);
-    sprite_free(use);
-    sprite_free(view_char);
-    sprite_free(effects);
+    sol_sprite_free(sun);
+    sol_sprite_free(panel);
+    sol_sprite_free(use);
+    sol_sprite_free(view_char);
+    sol_sprite_free(effects);
 
     for (int i = 0; i < 4; i++) {
-        sprite_free(ai[i]);
-        sprite_free(leader[i]);
-        sprite_free(ports[i]);
+        sol_sprite_free(ai[i]);
+        sol_sprite_free(leader[i]);
+        sol_sprite_free(ports[i]);
     }
     for (int i = 0; i < 3; i++) {
-        sprite_free(buttons[i]);
+        sol_sprite_free(buttons[i]);
     }
-    sprite_free(game_return);
-    sprite_free(game_menu);
-    sprite_free(character);
-    sprite_free(inv);
-    sprite_free(powers);
-    sprite_free(status);
-    sprite_free(power_highlight);
-    sprite_free(power_background);
+    sol_sprite_free(game_return);
+    sol_sprite_free(game_menu);
+    sol_sprite_free(character);
+    sol_sprite_free(inv);
+    sol_sprite_free(powers);
+    sol_sprite_free(status);
+    sol_sprite_free(power_highlight);
+    sol_sprite_free(power_background);
 }
 
 void view_character_return_control () {
@@ -548,7 +536,7 @@ void view_character_return_control () {
             if (!ds_load_character_charsave(slot_clicked, sel)) {
                 printf("Char loading failed.\n");
             } else {
-                player_load(slot_clicked, settings_zoom());
+                sol_player_load(slot_clicked, settings_zoom());
             }
         }
     }

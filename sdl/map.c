@@ -6,7 +6,7 @@
 #include "player.h"
 #include "audio.h"
 #include "mouse.h"
-#include "windows/narrate.h"
+#include "narrate.h"
 #include "windows/combat-status.h"
 #include "../src/dsl.h"
 #include "../src/port.h"

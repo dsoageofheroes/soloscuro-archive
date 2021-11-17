@@ -384,20 +384,20 @@ void inventory_window_render(void *data) {
     render_character();
 
     for (int i = 0; i < 4; i++) {
-        player_center(i, xoffset + 12 * zoom, yoffset + (4 + 48 * i) * zoom, 34 * zoom, 34 * zoom);
-        uint16_t spr = player_get_sprite(i);
+        sol_player_center(i, xoffset + 12 * zoom, yoffset + (4 + 48 * i) * zoom, 34 * zoom, 34 * zoom);
+        sol_sprite_t spr = sol_player_get_sprite(i);
         if (sprite_geth(spr) > 30 * zoom) {
             sprite_set_frame(spr, 0);
             sprite_render_box(rend, spr, xoffset + 15 * zoom, yoffset + 11 + (48 * i) * zoom,
                 30 * zoom, 30 * zoom);
         } else {
-            player_render(rend, i);
+            sol_player_render(i);
         }
     }
 
     if (player_exists(char_selected)) {
-        player_center_portrait(char_selected, xoffset + (75) * zoom, yoffset + (36) * zoom, 90 * zoom, 125 * zoom);
-        player_render_portrait(rend, char_selected);
+        sol_player_center_portrait(char_selected, xoffset + (75) * zoom, yoffset + (36) * zoom, 90 * zoom, 125 * zoom);
+        player_render_portrait(char_selected);
     }
 }
 
@@ -556,7 +556,7 @@ void inventory_window_return_control () {
             if (dnd2e_character_is_valid(pc)) {// && dnd2e_psin_is_valid(pc, psi)) {
                 warn ("TODO: PUT BACK IN CHARACTER ADDING!\n");
                 //gff_char_add_character(pc, psi, spells, psionics, name);
-                player_load(slot_clicked, settings_zoom());
+                sol_player_load(slot_clicked, settings_zoom());
             } else {
                 window_push(&popup_window, 100, 75);
                 popup_set_message("Character was invalid.");
@@ -573,7 +573,7 @@ void inventory_window_return_control () {
             if (!ds_load_character_charsave(slot_clicked, sel)) {
                 printf("Char loading failed.\n");
             } else {
-                player_load(slot_clicked, settings_zoom());
+                sol_player_load(slot_clicked, settings_zoom());
                 char_selected = slot_clicked;
             }
         }

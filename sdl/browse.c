@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "map.h"
 #include "font.h"
-#include "windows/narrate.h"
+#include "narrate.h"
 #include "audio.h"
 #include "../src/dsl.h"
 #include "../src/region.h"
@@ -16,7 +16,6 @@
 
 #define BUF_MAX (1<<12)
 #define RES_MAX (1<<14)
-#define NAME_MAX (1<<14)
 
 static int done = 0;
 static uint32_t last_tick = 0;

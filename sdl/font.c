@@ -59,7 +59,7 @@ static void create_font(SDL_Renderer *renderer, const uint32_t idx, const uint32
     free(dsfont);
 }
 
-uint32_t font_pixel_width(font_t font, const char *text, const uint32_t len) {
+uint32_t font_pixel_width(sol_font_t font, const char *text, const uint32_t len) {
     uint32_t sum = 0;
     size_t c;
 
@@ -74,11 +74,11 @@ uint32_t font_pixel_width(font_t font, const char *text, const uint32_t len) {
     return sum;
 }
 
-uint16_t font_char_width(font_t font, const int c) {
+uint16_t font_char_width(sol_font_t font, const int c) {
     return font_loc[font][c].w;
 }
 
-uint32_t font_pixel_height(font_t font) {
+uint32_t font_pixel_height(sol_font_t font) {
     return font_loc[font]['T'].h; // font height is the same for all characters
 }
 
@@ -106,7 +106,7 @@ void font_render_ttf(const char *msg, uint16_t x, uint16_t y, uint32_t color) {
     SDL_DestroyTexture( tex );
 }
 
-void print_line_len(SDL_Renderer *renderer, font_t font, const char *text, size_t x, size_t y, const uint32_t len) {
+void print_line_len(SDL_Renderer *renderer, sol_font_t font, const char *text, size_t x, size_t y, const uint32_t len) {
     size_t c;
     if (text == NULL) { return; }
     for (int i = 0; text[i] && i < len; i++) {
@@ -117,6 +117,10 @@ void print_line_len(SDL_Renderer *renderer, font_t font, const char *text, size_
         x += font_loc[font][c].w;
         //debug("Need to print '%c'\n", i);
     }
+}
+
+extern void sol_print_line_len(const sol_font_t font, const char *text, size_t x, size_t y, const uint32_t len) {
+    print_line_len(main_get_rend(), font, text, x, y, len);
 }
 
 extern void font_init(SDL_Renderer *renderer) {
@@ -134,11 +138,17 @@ extern void font_init(SDL_Renderer *renderer) {
     font = TTF_OpenFont( "DarkSun.ttf", 8 * settings_zoom() );
 }
 
-void font_render_center(SDL_Renderer *rend, font_t font, const char *str, const SDL_Rect loc) {
+void font_render_center(SDL_Renderer *rend, sol_font_t font, const char *str, const SDL_Rect loc) {
     int len = strlen(str);
     int pixel_width = (font_pixel_width(font, str, len));
     int offset = (loc.w / 2) - (pixel_width / 2);
     print_line_len(rend, font, str, loc.x + offset, loc.y, len);
+}
+
+extern void sol_font_render_center(sol_font_t font, const char *str, const uint16_t x, const uint16_t y, const uint16_t w) {
+    SDL_Rect loc;
+    loc.x = x; loc.y = y; loc.w = w; loc.h = 10;
+    font_render_center(main_get_rend(), font, str, loc);
 }
 
 extern void font_free() {

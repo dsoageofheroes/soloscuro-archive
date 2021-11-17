@@ -102,8 +102,8 @@ static int is_less(entity_t *e0, entity_t *e1) {
     }
 
     if (map0y == map1y) {
-        map0y = port_sprite_geth(e0->anim.spr);
-        map1y = port_sprite_geth(e0->anim.spr);
+        map0y = sol_sprite_geth(e0->anim.spr);
+        map1y = sol_sprite_geth(e0->anim.spr);
     }
 
     return map0y < map1y;

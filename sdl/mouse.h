@@ -23,7 +23,6 @@ enum mouse_state {
 
 extern void mouse_init(SDL_Renderer *rend);
 extern void mouse_set_as_item(item_t *item);
-extern void mouse_set_as_power(power_t *pw);
 extern power_t* mouse_get_power();
 extern void mouse_free_item();
 extern item_t* mouse_get_item();

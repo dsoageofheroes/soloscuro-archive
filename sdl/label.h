@@ -12,7 +12,7 @@ typedef struct label_s {
     int parent;
     int id;
     char* text;
-    font_t font;
+    sol_font_t font;
     int32_t x;
     int32_t y;
     uint8_t visible; // 1 = Label is visible, 0 = Not visible
@@ -60,16 +60,16 @@ enum screen_type {
 
 
 extern void label_create_group();
-extern void label_render(struct label_s* label, SDL_Renderer* renderer);
+extern void label_render(struct label_s* label);
 extern void label_set(label_t *label, const char *buf, const int32_t x, const int32_t y);
-extern label_t create_label_at_pos(int parent, int id, char* text, font_t font, int16_t x, int16_t y);
-extern label_t create_label(int parent, int id, char* text, font_t font);
+extern label_t create_label_at_pos(int parent, int id, char* text, sol_font_t font, int16_t x, int16_t y);
+extern label_t create_label(int parent, int id, char* text, sol_font_t font);
 extern void label_set_text(struct label_s* label, const char* string);
 extern uint32_t label_pixel_width(struct label_s* label);
 extern label_t* label_point_in(label_t *label, const int32_t x, const int32_t y);
 
 extern void label_create_group();
-extern void label_group_set_font(font_t font);
+extern void label_group_set_font(sol_font_t font);
 extern void label_set_group(entity_t *dude, enum screen_type _screen_type);
 extern void label_set_positions(int32_t oX, int32_t oY, const enum screen_type screen_type);
 extern void label_render_full(const int16_t offsetx, const int16_t offsety);

@@ -9,9 +9,9 @@ static enum screen_type screen_type;
 
 #define BUF_MAX (1<<10)
 
-extern void label_render(struct label_s* label, SDL_Renderer* renderer) {
+extern void label_render(struct label_s* label) {
     if (label->visible) {
-        print_line_len(renderer, label->font, label->text, label->x, label->y, strlen(label->text));
+        sol_print_line_len(label->font, label->text, label->x, label->y, strlen(label->text));
     }
 }
 
@@ -47,7 +47,7 @@ extern uint32_t label_pixel_width(struct label_s* label) {
 }
 
 
-extern label_t create_label(int parent, int id, char* text, font_t font) {
+extern label_t create_label(int parent, int id, char* text, sol_font_t font) {
     label_t new_label;
 
     new_label.parent = parent;
@@ -60,7 +60,7 @@ extern label_t create_label(int parent, int id, char* text, font_t font) {
     return new_label;
 }
 
-extern label_t create_label_at_pos(int parent, int id, char* text, font_t font, int16_t x, int16_t y) {
+extern label_t create_label_at_pos(int parent, int id, char* text, sol_font_t font, int16_t x, int16_t y) {
     label_t new_label = create_label(parent, id, text, font);
 
     new_label.x = x;
@@ -88,7 +88,7 @@ extern label_t* label_group_point_in(const int32_t x, const int32_t y) {
     return NULL;
 }
 
-extern void label_group_set_font(font_t font) {
+extern void label_group_set_font(sol_font_t font) {
     for (int i = 0; i < LABEL_END; i++) {
         labels[i].font = font;
     }

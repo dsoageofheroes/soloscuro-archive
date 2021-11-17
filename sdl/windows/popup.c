@@ -11,7 +11,7 @@
 static uint16_t background, popup_return, option[3];
 static char main_text[32], option_text[3][32];
 static uint8_t selection = POPUP_NOTHING;
-static font_t option_font[3];
+static sol_font_t option_font[3];
 
 SDL_Rect main_loc, option_loc[3];
 

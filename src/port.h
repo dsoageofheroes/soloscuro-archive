@@ -43,6 +43,18 @@ typedef enum window_e {
     WINDOW_COMBAT,
 } window_t;
 
+typedef enum sol_font_e {
+    FONT_YELLOW,
+    FONT_GREY,
+    FONT_GREYLIGHT,
+    FONT_BLACK,
+    FONT_BLACKDARK,
+    FONT_RED,
+    FONT_REDDARK,
+    FONT_BLUE,
+    NUM_FONTS
+} sol_font_t;
+
 // Narrate functions
 extern int8_t port_narrate_open(int16_t action, const char *text, int16_t index);
 extern void port_narrate_clear();
@@ -94,7 +106,6 @@ extern void port_toggle_window(const window_t window);
 extern void port_load_window(const window_t window);
 extern void port_set_lua_globals(lua_State *l);
 extern void port_game_loop();
-extern uint32_t port_sprite_geth(const uint16_t id);
 extern void port_place_entity(entity_t *entity);
 extern void port_entity_update_scmd(entity_t *entity);
 
@@ -103,8 +114,29 @@ extern void port_tick();
 extern void port_window_render();
 extern void port_start_display_frame();
 extern void port_commit_display_frame();
-extern sol_sprite_t port_sprite_create_from_data(unsigned char *data, const uint32_t w, const uint32_t h);
-extern void port_sprite_set_location(const sol_sprite_t id, const uint32_t x, const uint32_t y);
-extern void port_sprite_render(const sol_sprite_t id);
+
+extern sol_sprite_t sol_sprite_new(gff_palette_t *pal,
+        const int offsetx, const int offsety, const float zoom,
+        const int gff_idx, const int type_id, const int res_id);
+extern sol_sprite_t sol_sprite_create_from_data(unsigned char *data, const uint32_t w, const uint32_t h);
+extern void sol_sprite_set_location(const sol_sprite_t id, const uint32_t x, const uint32_t y);
+extern void sol_sprite_render(const sol_sprite_t id);
+extern uint32_t sol_sprite_getx(const sol_sprite_t id);
+extern uint32_t sol_sprite_gety(const sol_sprite_t id);
+extern uint32_t sol_sprite_getw(const sol_sprite_t id);
+extern uint32_t sol_sprite_geth(const sol_sprite_t id);
+extern void sol_sprite_set_alpha(const sol_sprite_t id, const uint8_t alpha);
+extern void sol_sprite_free(const sol_sprite_t id);
+extern void sol_sprite_set_frame(const uint16_t id, const uint16_t frame);
+extern uint16_t sol_sprite_get_frame(const uint16_t id);
+extern int sol_sprite_in_rect(const uint16_t id, const uint32_t x, const uint32_t y);
+extern void sol_print_line_len(const sol_font_t font, const char *text, size_t x, size_t y, const uint32_t len);
+extern void sol_font_render_center(sol_font_t font, const char *str, const uint16_t x, const uint16_t y, const uint16_t w);
+extern void sol_sprite_center_spr(const int dest, const int src);
+extern void sol_sprite_render_box(const uint16_t sprite_id, const uint16_t x,
+    const uint16_t y, const uint16_t w, const uint16_t h);
+extern void sol_sprite_center(const int id, const int x, const int y, const int w, const int h);
+
+extern void sol_mouse_set_as_power(power_t *pw);
 
 #endif

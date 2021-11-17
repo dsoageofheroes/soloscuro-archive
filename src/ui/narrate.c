@@ -1,6 +1,5 @@
 #include "narrate.h"
-#include "utils.h"
-#include "sprite.h"
+#include "../../src/port.h"
 #include "portrait.h"
 #include "../../src/dsl.h"
 #include "../../src/ds-narrate.h"
@@ -8,8 +7,6 @@
 #include "../../src/gff.h"
 #include "gfftypes.h"
 #include "../../src/gameloop.h"
-#include "../font.h"
-#include "../main.h"
 #include "../../src/settings.h"
 #include <string.h>
 #include <ctype.h>
@@ -19,7 +16,7 @@
 #define MAX_LINE (128)
 #define MAX_OPTIONS (32)
 
-static uint16_t background;
+static sol_sprite_t background;
 static uint32_t xoffset, yoffset;
 static uint16_t border;
 
@@ -48,25 +45,26 @@ static void clear() {
 int narrate_is_open() { return display; }
 
 void narrate_init(const uint32_t x, const uint32_t y) {
-    SDL_Renderer *renderer = main_get_rend();
     const float zoom = settings_zoom();
     xoffset = 0;//x / zoom;
     yoffset = 0;//y / zoom;
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
 
     sol_portrait_load();
-    background = sprite_new(renderer, pal, 0 + xoffset, 0 + yoffset, zoom,
+    background = sol_sprite_new(pal, 0 + xoffset, 0 + yoffset, zoom,
             RESOURCE_GFF_INDEX, GFF_BMP, 3007);
-    sprite_set_location(background, sprite_getx(background) + (main_get_width() - sprite_getw(background)) / 2, sprite_gety(background));
-    border = sprite_new(renderer, pal, 0, 0, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 12000);
-    sprite_set_location(border,
-            sprite_getx(background) + 5 * zoom,
-            sprite_gety(background) + 5 * zoom);
-    sprite_set_alpha(background, 192);
+    sol_sprite_set_location(background,
+        sol_sprite_getx(background) + (settings_screen_width() - sol_sprite_getw(background)) / 2,
+        sol_sprite_gety(background));
+    border = sol_sprite_new(pal, 0, 0, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 12000);
+    sol_sprite_set_location(border,
+            sol_sprite_getx(background) + 5 * zoom,
+            sol_sprite_gety(background) + 5 * zoom);
+    sol_sprite_set_alpha(background, 192);
     display = 0; // start off as off
 }
 
-void print_text(SDL_Renderer *renderer) {
+void print_text() {
     const uint32_t len = 48;
     uint32_t amt = 48;
     size_t y = 16;
@@ -74,27 +72,27 @@ void print_text(SDL_Renderer *renderer) {
     while (i < text_pos) {
         amt = len;
         while (i + amt < text_pos && amt > 0 && narrate_text[i + amt] != ' ') { amt--; }
-        print_line_len(renderer, 0, narrate_text + i, 200, y, amt);
+        sol_print_line_len(0, narrate_text + i, 200, y, amt);
         i += amt;
         while (isspace(narrate_text[i])) { i++; }
         y += 16;
     }
 }
 
-void print_menu(SDL_Renderer *renderer) {
+void print_menu() {
     size_t x = 140, y = 490;
-    uint32_t sx = sprite_getx(background);
-    uint32_t sy = sprite_gety(background);
+    uint32_t sx = sol_sprite_getx(background);
+    uint32_t sy = sol_sprite_gety(background);
 
-    sprite_set_location(background, sx, y - 5);
-    sprite_render(renderer, background);
+    sol_sprite_set_location(background, sx, y - 5);
+    sol_sprite_render(background);
 
     for (int i = 0; i < MAX_OPTIONS; i++) {
-        print_line_len(renderer, 0, menu_options[i], x, y, 0x7FFFFFFF);
+        sol_print_line_len(0, menu_options[i], x, y, 0x7FFFFFFF);
         y += 20;
     }
 
-    sprite_set_location(background, sx, sy);
+    sol_sprite_set_location(background, sx, sy);
 }
 
 void port_narrate_clear() {
@@ -107,14 +105,13 @@ void port_narrate_close() {
 }
 
 void narrate_render(void *data) {
-    SDL_Renderer *renderer = main_get_rend();
     if (display) {
-        sprite_render(renderer, background);
-        sprite_render(renderer, border);
-        sol_portrait_display(portrait_index, sprite_getx(border) + 8 * settings_zoom(), 12 * settings_zoom());
-        print_text(renderer);
+        sol_sprite_render(background);
+        sol_sprite_render(border);
+        sol_portrait_display(portrait_index, sol_sprite_getx(border) + 8 * settings_zoom(), 12 * settings_zoom());
+        print_text();
         if (display_menu) {
-            print_menu(renderer);
+            print_menu();
         }
     }
 }
@@ -210,8 +207,8 @@ int narrate_handle_key_down(const enum entity_action_e action) {
 }
 
 void narrate_free() {
-    sprite_free(background);
-    sprite_free(border);
+    sol_sprite_free(background);
+    sol_sprite_free(border);
 }
 
 int port_ask_yes_no() {
