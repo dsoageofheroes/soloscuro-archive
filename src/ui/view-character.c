@@ -510,10 +510,10 @@ void view_character_return_control () {
             return;
         }
     } else if (last_selection == SELECT_NEW) {
-        entity_t *pc = new_character_get_pc();
-        psin_t* psi = new_character_get_psin();
-        ssi_spell_list_t* spells = new_character_get_spell_list();
-        psionic_list_t* psionics = new_character_get_psionic_list();
+        entity_t *pc = sol_new_character_get_pc();
+        psin_t* psi = sol_new_character_get_psin();
+        ssi_spell_list_t* spells = sol_new_character_get_spell_list();
+        psionic_list_t* psionics = sol_new_character_get_psionic_list();
         //char *name = new_character_get_name();
         if (pc && psi && spells && psionics) {
             if (dnd2e_character_is_valid(pc)) {// && dnd2e_psin_is_valid(pc, psi)) {

@@ -1,7 +1,6 @@
 #ifndef NEW_CHARACTER_H
 #define NEW_CHARACTER_H
 
-#include <SDL2/SDL.h>
 #include "../../src/wizard.h"
 #include "window-manager.h"
 #include "../../src/ssi-object.h"
@@ -14,11 +13,11 @@ enum {
 	TEXTBOX_NAME
 };
 
-entity_t *new_character_get_pc();
-psin_t* new_character_get_psin();
-ssi_spell_list_t* new_character_get_spell_list();
-psionic_list_t* new_character_get_psionic_list();
-char* new_character_get_name();
+entity_t*         sol_new_character_get_pc();
+psin_t*           sol_new_character_get_psin();
+ssi_spell_list_t* sol_new_character_get_spell_list();
+psionic_list_t*   sol_new_character_get_psionic_list();
+char*             sol_new_character_get_name();
 
 extern sol_wops_t new_character_window;
 

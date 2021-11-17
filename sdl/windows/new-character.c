@@ -12,30 +12,31 @@
 #include "../../src/settings.h"
 #include <string.h>
 #include <time.h>
+#include <SDL2/SDL.h>
 
 #define BUF_MAX (1<<10)
 
-static uint16_t background;
-static uint16_t parchment[5];
-static uint16_t done;
-static uint16_t text_cursor;
-static uint16_t classes[8];
-static uint16_t class_sel[8];
-static uint16_t stats_align_hp_buttons[8];
-static uint16_t psionic_devotion[3];
-static uint16_t spheres[4];
-static uint16_t ps_sel[4]; // seletion for psionics/spheres.
-static uint16_t die[11];
-static uint16_t races[14];
-static uint16_t spr;// sprite of the character on window
-static uint16_t psionic_label; // 2047
-static uint16_t sphere_label; // 2046
-static uint16_t done_button;
-static uint16_t exit_button;
+static sol_sprite_t background;
+static sol_sprite_t parchment[5];
+static sol_sprite_t done;
+static sol_sprite_t text_cursor;
+static sol_sprite_t classes[8];
+static sol_sprite_t class_sel[8];
+static sol_sprite_t stats_align_hp_buttons[8];
+static sol_sprite_t psionic_devotion[3];
+static sol_sprite_t spheres[4];
+static sol_sprite_t ps_sel[4]; // seletion for psionics/spheres.
+static sol_sprite_t die[11];
+static sol_sprite_t races[14];
+static sol_sprite_t spr;// sprite of the character on window
+static sol_sprite_t psionic_label; // 2047
+static sol_sprite_t sphere_label; // 2046
+static sol_sprite_t done_button;
+static sol_sprite_t exit_button;
 static textbox_t* name_tb;
 
 // Store this so we don't trigger mouseup events in sprites/labels we didn't mousedown in
-static uint16_t last_sprite_mousedowned;
+static sol_sprite_t last_sprite_mousedowned;
 static label_t *last_label_mousedowned;
 
 static uint8_t show_psionic_label = 1;
@@ -54,7 +55,6 @@ static int race_sprite_offsets_y[]   = {   27,   28,   33,   33,   28,   26,   2
 static int race_sprite_ids[]         = { 2095, 2099, 2055, 2053, 2061, 2059, 2095, 2099, 2072, 2074, 2068, 2070, 2093, 2093, 2097, 2097 };
 
 static int offsetx, offsety;
-static SDL_Renderer *renderer;
 static entity_t pc;
 static psin_t psi; // psi group
 static ssi_spell_list_t spells;
@@ -68,27 +68,27 @@ static void update_ui();
 static void select_class(uint8_t class);
 static void fix_alignment(int direction);
 
-entity_t* new_character_get_pc() {
+entity_t* sol_new_character_get_pc() {
     if (!is_valid) { return NULL; }
     return &pc;
 }
 
-psin_t* new_character_get_psin() {
+psin_t* sol_new_character_get_psin() {
     if (!is_valid) { return NULL; }
     return &psi;
 }
 
-ssi_spell_list_t* new_character_get_spell_list() {
+ssi_spell_list_t* sol_new_character_get_spell_list() {
     if (!is_valid) { return NULL; }
     return &spells;
 }
 
-psionic_list_t* new_character_get_psionic_list() {
+psionic_list_t* sol_new_character_get_psionic_list() {
     if (!is_valid) { return NULL; }
     return &psionics;
 }
 
-char* new_character_get_name() {
+char* sol_new_character_get_name() {
     return textbox_get_text(name_tb);
 }
 
@@ -168,13 +168,6 @@ static void set_class_frames() {
     update_ui();
 }
 
-static uint16_t new_sprite_create(SDL_Renderer *renderer, gff_palette_t *pal,
-        const int offsetx, const int offsety, const float zoom,
-        const int gff_idx, const int type_id, const int res_id) {
-    SDL_Rect tmp = {offsetx, offsety, 0, 0};
-    return sprite_create(renderer, &tmp, pal, 0, 0, zoom, gff_idx, type_id, res_id);
-}
-
 static void load_character_sprite() {
     const float zoom = settings_zoom();
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
@@ -186,7 +179,7 @@ static void load_character_sprite() {
         spr = SPRITE_ERROR;
     }
 
-    spr = new_sprite_create(renderer, pal,
+    spr = sol_sprite_new(pal,
                             offsetx / zoom + race_sprite_offsets_x[race + gender],
                             offsety / zoom + race_sprite_offsets_y[race + gender],
                             settings_zoom(), OBJEX_GFF_INDEX, GFF_BMP,
@@ -214,69 +207,68 @@ static void new_character_init(const uint32_t _x, const uint32_t _y) {
     uint32_t x = _x / zoom;
     uint32_t y = _y / zoom;
     current_textbox = TEXTBOX_NONE;
-    renderer = main_get_rend();
 
     is_valid = 0;
     spr = SPRITE_ERROR;
-    background = new_sprite_create(renderer, pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 13001);
-    parchment[0] = new_sprite_create(renderer, pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20084);
-    parchment[1] = new_sprite_create(renderer, pal, 135 + x, 20 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20083);
-    parchment[2] = new_sprite_create(renderer, pal, 130 + x, 70 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20085);
-    parchment[3] = new_sprite_create(renderer, pal, 210 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20086);
-    parchment[4] = new_sprite_create(renderer, pal, 210 + x, 90 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20087);
-    done = new_sprite_create(renderer, pal, 250 + x, 160 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2000);
-    sphere_label = new_sprite_create(renderer, pal, 217 + x, 140 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2046);
-    psionic_label = new_sprite_create(renderer, pal, 217 + x, 140 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2047);
-    done_button = new_sprite_create(renderer, pal, 240 + x, 174 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2000);
-    exit_button = new_sprite_create(renderer, pal, 255 + x, 156 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2058);
+    background = sol_sprite_new(pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 13001);
+    parchment[0] = sol_sprite_new(pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20084);
+    parchment[1] = sol_sprite_new(pal, 135 + x, 20 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20083);
+    parchment[2] = sol_sprite_new(pal, 130 + x, 70 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20085);
+    parchment[3] = sol_sprite_new(pal, 210 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20086);
+    parchment[4] = sol_sprite_new(pal, 210 + x, 90 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20087);
+    done = sol_sprite_new(pal, 250 + x, 160 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2000);
+    sphere_label = sol_sprite_new(pal, 217 + x, 140 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2046);
+    psionic_label = sol_sprite_new(pal, 217 + x, 140 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2047);
+    done_button = sol_sprite_new(pal, 240 + x, 174 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2000);
+    exit_button = sol_sprite_new(pal, 255 + x, 156 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2058);
     name_tb = textbox_create(32, 34 + offsetx / zoom, 124 + offsety / zoom);
     main_set_textbox(name_tb);
 
     init_pc();
-    text_cursor = new_sprite_create(renderer, pal, 170 + x, 150 + y, // Blinking text cursor (for the player's name)
+    text_cursor = sol_sprite_new(pal, 170 + x, 150 + y, // Blinking text cursor (for the player's name)
         zoom, RESOURCE_GFF_INDEX, GFF_ICON, 100);
     sprite_set_frame(text_cursor, 1);
 
     float shrink = .28 / zoom;
     float magnify = 1.0 / shrink;
     for (int i = 0; i < 6; i++) { // STR, DEX, CON, INT, WIS, CHA BUTTONS
-        stats_align_hp_buttons[i] = sprite_new(renderer, pal, (4 + x) * magnify, (138 + y + (i * 7.5)) * magnify,
+        stats_align_hp_buttons[i] = sol_sprite_new(pal, (4 + x) * magnify, (138 + y + (i * 7.5)) * magnify,
             zoom * shrink, RESOURCE_GFF_INDEX, GFF_BMP, 5013);
         sprite_set_frame(stats_align_hp_buttons[i], 1);
     }
-    stats_align_hp_buttons[6] = new_sprite_create(renderer, pal, (79 + x) * magnify, (145 + y) * magnify, // ALIGNMENT BUTTON
+    stats_align_hp_buttons[6] = sol_sprite_new(pal, (79 + x) * magnify, (145 + y) * magnify, // ALIGNMENT BUTTON
         zoom * shrink, RESOURCE_GFF_INDEX, GFF_BMP, 5013);
     sprite_set_frame(stats_align_hp_buttons[6], 1);
-    stats_align_hp_buttons[7] = new_sprite_create(renderer, pal, (89 + x) * magnify, (175 + y) * magnify, // HP BUTTON
+    stats_align_hp_buttons[7] = sol_sprite_new(pal, (89 + x) * magnify, (175 + y) * magnify, // HP BUTTON
         zoom * shrink, RESOURCE_GFF_INDEX, GFF_BMP, 5013);
     sprite_set_frame(stats_align_hp_buttons[7], 1);
 
 
     for (int i = 0; i < 8; i++) {
-        classes[i] = new_sprite_create(renderer, pal, 220 + x, 10 + y + (i * 8),
+        classes[i] = sol_sprite_new(pal, 220 + x, 10 + y + (i * 8),
             zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2002 + i);
-        class_sel[i] = new_sprite_create(renderer, pal, 220 + x, 11 + y + (i * 8),
+        class_sel[i] = sol_sprite_new(pal, 220 + x, 11 + y + (i * 8),
             zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20047);
         sprite_set_frame(classes[i], 2);
     }
     for (int i = 0; i < 3; i++) {
-        psionic_devotion[i] = new_sprite_create(renderer, pal, 217 + x, 105 + y + (i * 8),
+        psionic_devotion[i] = sol_sprite_new(pal, 217 + x, 105 + y + (i * 8),
             zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2038 + i);
         sprite_set_frame(psionic_devotion[i], 0);
     }
     for (int i = 0; i < 4; i++) {
-        spheres[i] = new_sprite_create(renderer, pal, 216 + x, 105 + y + (i * 8),
+        spheres[i] = sol_sprite_new(pal, 216 + x, 105 + y + (i * 8),
             zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2042 + i);
-        ps_sel[i] = new_sprite_create(renderer, pal, 218 + x, 106 + y + (i * 8),
+        ps_sel[i] = sol_sprite_new(pal, 218 + x, 106 + y + (i * 8),
             zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20047);
         sprite_set_frame(spheres[i], 0);
     }
     for (int i = 0; i < 11; i++) {
-        die[i] = new_sprite_create(renderer, pal, 142 + x, 65 + y,
+        die[i] = sol_sprite_new(pal, 142 + x, 65 + y,
             zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20048 + i);
     }
     for (int i = 0; i < 14; i++) {
-        races[i] = new_sprite_create(renderer, pal,
+        races[i] = sol_sprite_new(pal,
                                      x + race_portrait_offsets_x[i == 13 ? 15 : i], // FIXME - Hack until/if female Muls are implemented
                                      y + race_portrait_offsets_y[i == 13 ? 15 : i], // FIXME - Hack until/if female Muls are implemented
                                      zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20000 + i);
@@ -322,42 +314,40 @@ static int get_race_id() { // for the large portrait
 }
 
 void new_character_render(void* data) {
-    SDL_Renderer *renderer = main_get_rend();
-
-    sprite_render(renderer, background);
+    sol_sprite_render(background);
     for (int i = 0; i < 5; i++) {
-        sprite_render(renderer, parchment[i]);
+        sol_sprite_render(parchment[i]);
     }
     for (int i = 0; i < 8; i++) {
-        sprite_render(renderer, stats_align_hp_buttons[i]);
+        sol_sprite_render(stats_align_hp_buttons[i]);
     }
     for (int i = 0; i < 8; i++) {
-        sprite_render(renderer, classes[i]);
-        sprite_render(renderer, class_sel[i]);
+        sol_sprite_render(classes[i]);
+        sol_sprite_render(class_sel[i]);
     }
-    sprite_render(renderer, spr);
+    sol_sprite_render(spr);
     update_die_countdown();
-    sprite_render(renderer, die[die_pos]);
-    sprite_render(renderer, races[get_race_id()]);
+    sol_sprite_render(die[die_pos]);
+    sol_sprite_render(races[get_race_id()]);
 
     show_psionic_label ? strcpy(sphere_text, "PSI DISCIPLINES") :
         strcpy(sphere_text, "CLERICAL SPHERE");
 
-    print_line_len(renderer, FONT_BLACKDARK, sphere_text, 446 + offsetx, 193 + offsety, 1 << 12);
+    sol_print_line_len(FONT_BLACKDARK, sphere_text, 446 + offsetx, 193 + offsety, 1 << 12);
 
     for (int i = 0; i < 4; i++) {
         if (i < 3 && show_psionic_label) {
-            sprite_render(renderer, psionic_devotion[i]);
+            sol_sprite_render(psionic_devotion[i]);
         }
         if (!show_psionic_label) {
-            sprite_render(renderer, spheres[i]);
+            sol_sprite_render(spheres[i]);
         }
-        sprite_render(renderer, ps_sel[i]);
+        sol_sprite_render(ps_sel[i]);
     }
 
-    sprite_render(renderer, show_psionic_label ? sphere_label : psionic_label);
-    sprite_render(renderer, done_button);
-    sprite_render(renderer, exit_button);
+    sol_sprite_render(show_psionic_label ? sphere_label : psionic_label);
+    sol_sprite_render(done_button);
+    sol_sprite_render(exit_button);
 
     label_group_set_font(FONT_GREYLIGHT);
     label_set_group(&pc, SCREEN_NEW_CHARACTER);
@@ -900,7 +890,7 @@ int new_character_handle_mouse_up(const uint32_t button, const uint32_t x, const
             }
         }
 
-        sprite_render(renderer, ps_sel[i]);
+        sol_sprite_render(ps_sel[i]);
     }
 
     if (show_psionic_label && sprite_get_frame(psionic_label) < 2 && last_sprite_mousedowned == psionic_label && sprite_in_rect(psionic_label, x, y)) {
