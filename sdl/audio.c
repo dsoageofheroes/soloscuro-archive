@@ -38,27 +38,27 @@ static SDL_AudioDeviceID audio_device[AUDIO_DEVICE_NUM];
 static SDL_AudioDeviceID music_device;
 static int audio_opened[AUDIO_DEVICE_NUM] = {0, 0, 0, 0};
 
-extern float audio_get_xmi_volume() {
+extern float sol_audio_get_xmi_volume() {
     return midi_volume;
 }
 
-extern void audio_set_xmi_volume(const float vol) {
+extern void sol_audio_set_xmi_volume(const float vol) {
     if (vol < 0) { midi_volume = 0.0; return; }
     if (vol > 1.0) { midi_volume = 1.0; return; }
     midi_volume = vol;
 }
 
-extern float audio_get_voc_volume() {
+extern float sol_audio_get_voc_volume() {
     return voc_volume;
 }
 
-extern void audio_set_voc_volume(const float vol) {
+extern void sol_audio_set_voc_volume(const float vol) {
     if (vol < 0) { voc_volume = 0.0; return; }
     if (vol > 1.0) { voc_volume = 1.0;return;  }
     voc_volume = vol;
 }
 
-extern void audio_init() {
+extern void sol_audio_init() {
     spec.freq = 44100;
     spec.format = AUDIO_S16SYS;
     spec.channels = 2;
@@ -145,7 +145,7 @@ static void load_midi() {
     free(buf);
 }
 
-extern void audio_play_xmi(const int gff_idx, uint32_t type, uint32_t res_id) {
+extern void sol_audio_play_xmi(const int gff_idx, uint32_t type, uint32_t res_id) {
     midi_gff = gff_idx;
     midi_type = type;
     midi_res_id = res_id;
@@ -232,12 +232,11 @@ static int get_audio_id() {
     return min_id;
 }
 
-extern void port_play_sound_effect(const uint16_t id) {
-    //printf("Playing %d.\n", id);
-    audio_play_voc(RESOURCE_GFF_INDEX, GFF_BVOC, id, voc_volume);
+extern void sol_play_sound_effect(const uint16_t id) {
+    sol_audio_play_voc(RESOURCE_GFF_INDEX, GFF_BVOC, id, voc_volume);
 }
 
-extern void audio_play_voc(const int gff_idx, uint32_t type, uint32_t res_id, const float volume) {
+extern void sol_audio_play_voc(const int gff_idx, uint32_t type, uint32_t res_id, const float volume) {
     static float buffer [VOC_BUFFER_LEN];
     int readcount;
     SF_VIRTUAL_IO vout;
@@ -366,7 +365,7 @@ static void soloscuro_audio_callback(void *midi_player, uint8_t *stream, int len
     SDL_memcpy(stream, xmi_buf, samples_count * audio_format.containerSize);
 }
 
-extern void audio_cleanup() {
+extern void sol_audio_cleanup() {
     for (int i = 0; i < AUDIO_DEVICE_NUM; i++) {
         if (audio_opened[i]) {
             SDL_CloseAudioDevice(audio_device[i]);

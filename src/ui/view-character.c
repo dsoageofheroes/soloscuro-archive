@@ -1,7 +1,7 @@
 #include "view-character.h"
 #include "gfftypes.h"
 #include "narrate.h"
-#include "../../sdl/windows/inventory.h"
+#include "inventory.h"
 #include "../../sdl/windows/new-character.h"
 #include "popup.h"
 #include "../../sdl/windows/add-load-save.h"
@@ -504,7 +504,7 @@ void view_character_return_control () {
         }
         if (sol_popup_get_selection() == POPUP_1) { // ADD
             sol_popup_clear_selection();
-            add_load_save_set_mode(ACTION_ADD);
+            sol_add_load_save_set_mode(ACTION_ADD);
             sol_window_push(&als_window, 0, 0);
             last_selection = SELECT_ALS;
             return;
@@ -530,8 +530,8 @@ void view_character_return_control () {
             }
         }
     } else if (last_selection == SELECT_ALS) {
-        if (add_load_save_get_action() == ACTION_ADD) {
-            uint32_t sel = add_load_save_get_selection();
+        if (sol_add_load_save_get_action() == ACTION_ADD) {
+            uint32_t sel = sol_add_load_save_get_selection();
             //if (!ds_player_load_character_charsave(slot_clicked, sel)) {
             if (!ds_load_character_charsave(slot_clicked, sel)) {
                 printf("Char loading failed.\n");

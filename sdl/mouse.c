@@ -25,11 +25,11 @@ static SDL_Cursor *item_cursor;
 static SDL_Cursor *power_cursor;
 static enum mouse_state state = MOUSE_POINTER;
 
-extern enum mouse_state mouse_get_state() {
+extern enum mouse_state sol_mouse_get_state() {
     return state;
 }
 
-extern void mouse_set_state(const enum mouse_state _state) {
+extern void sol_mouse_set_state(const enum mouse_state _state) {
     switch(_state) {
         case MOUSE_POINTER:    SDL_SetCursor(cursors[0]); break;
         case MOUSE_NO_POINTER: SDL_SetCursor(cursors[1]); break;
@@ -92,7 +92,7 @@ static SDL_Cursor* create_cursor(const int gff_idx, const int type_idx, const si
     return c;
 }
 
-extern void mouse_init(SDL_Renderer *rend) {
+extern void sol_mouse_init() {
     if (gff_get_game_type() != DARKSUN_1) {
         warn("Mouse cursor implemented in DS1 only right now. Not loading mouse cursor.");
         return;
@@ -111,7 +111,7 @@ extern void mouse_init(SDL_Renderer *rend) {
     power_cursor = NULL;
 }
 
-extern void mouse_free() {
+extern void sol_mouse_free() {
     for (int i = 0; i < num_cursors; i++) {
         SDL_FreeCursor(cursors[i]);
     }
@@ -132,7 +132,7 @@ extern void mouse_free() {
     }
 }
 
-extern void mouse_set_as_item(item_t *item) {
+extern void sol_mouse_set_as_item(item_t *item) {
     if (item_data) { 
         item_free_except_graphics(item_data);
         item_data = NULL;
@@ -144,14 +144,14 @@ extern void mouse_set_as_item(item_t *item) {
     // So, we will store the texture for later and load the mouse as a surface.
     if (item_cursor) { SDL_FreeCursor(item_cursor); }
     item_cursor = create_cursor(OBJEX_GFF_INDEX, GFF_BMP, item->sprite.bmp_id);
-    mouse_set_state(MOUSE_ITEM);
+    sol_mouse_set_state(MOUSE_ITEM);
 }
 
-extern item_t* mouse_get_item() {
+extern item_t* sol_mouse_get_item() {
     return item_data;
 }
 
-extern void mouse_free_item() {
+extern void sol_mouse_free_item() {
     if (item_data) {
         free(item_data);
         item_data = NULL;
@@ -162,7 +162,7 @@ extern void mouse_free_item() {
     SDL_SetCursor(cursors[0]);
 }
 
-extern power_t* mouse_get_power() {
+extern power_t* sol_mouse_get_power() {
     return power;
 }
 
@@ -172,5 +172,5 @@ extern void sol_mouse_set_as_power(power_t *pw) {
 
     power = pw;
     power_cursor = create_cursor(RESOURCE_GFF_INDEX, GFF_ICON, pw->icon_id);
-    mouse_set_state(MOUSE_POWER);
+    sol_mouse_set_state(MOUSE_POWER);
 }

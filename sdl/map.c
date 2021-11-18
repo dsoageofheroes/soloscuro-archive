@@ -7,7 +7,7 @@
 #include "audio.h"
 #include "mouse.h"
 #include "narrate.h"
-#include "windows/combat-status.h"
+#include "combat-status.h"
 #include "../src/dsl.h"
 #include "../src/port.h"
 #include "../src/trigger.h"
@@ -129,7 +129,7 @@ static void map_load_current_region() {
     cmap = map;
 
     //TODO: Find out what maps to which areas.
-    audio_play_xmi(RESOURCE_GFF_INDEX, GFF_GSEQ, 2);
+    sol_audio_play_xmi(RESOURCE_GFF_INDEX, GFF_GSEQ, 2);
 
     dsl_lua_execute_script(cmap->region->map_id, 0, 1);
 }
@@ -228,8 +228,8 @@ void map_apply_alpha(const uint8_t alpha) {
 }
 
 extern void map_highlight_tile(const int tilex, const int tiley, const int frame) {
-    const uint32_t xoffset = getCameraX();
-    const uint32_t yoffset = getCameraY();
+    const uint32_t xoffset = sol_get_camerax();
+    const uint32_t yoffset = sol_get_cameray();
     const float zoom = settings_zoom();
     const int x = tilex * (16 * zoom) - xoffset;
     const int y = tiley * (16 * zoom) - yoffset;
@@ -240,8 +240,8 @@ extern void map_highlight_tile(const int tilex, const int tiley, const int frame
 }
 
 static void show_debug_info() {
-    const uint32_t xoffset = getCameraX();
-    const uint32_t yoffset = getCameraY();
+    const uint32_t xoffset = sol_get_camerax();
+    const uint32_t yoffset = sol_get_cameray();
     const float zoom = settings_zoom();
     int x = (xoffset + mousex) / (16 * zoom);
     int y = (yoffset + mousey) / (16 * zoom);
@@ -264,8 +264,8 @@ static void show_debug_info() {
 
 void map_render(void *data) {
     const int stretch = settings_zoom();
-    const uint32_t xoffset = getCameraX();
-    const uint32_t yoffset = getCameraY();
+    const uint32_t xoffset = sol_get_camerax();
+    const uint32_t yoffset = sol_get_cameray();
     SDL_Rect tile_loc = { -xoffset, -yoffset, stretch * 16, stretch * 16 };
     uint32_t tile_id = 0;
     map_t *map = cmap;
@@ -292,8 +292,8 @@ void map_render(void *data) {
 }
 
 void map_render_anims(SDL_Renderer *renderer) {
-    const uint32_t xoffset = getCameraX();
-    const uint32_t yoffset = getCameraY();
+    const uint32_t xoffset = sol_get_camerax();
+    const uint32_t yoffset = sol_get_cameray();
     entity_t *dude;
     animate_sprite_t *anim;
     SDL_RendererFlip flip = 0;
@@ -473,8 +473,8 @@ void port_swap_enitity(int obj_id, entity_t *dude) {
 #define CLICKABLE (0x10)
 entity_t* get_entity_at_location(const uint32_t x, const uint32_t y) {
     entity_t *dude = NULL;
-    const int mapx = x - getCameraX();
-    const int mapy = y - getCameraY();
+    const int mapx = x - sol_get_camerax();
+    const int mapy = y - sol_get_cameray();
     if (!cmap) { return 0; }
 
     entity_list_for_each(cmap->region->entities, dude) {
@@ -490,47 +490,47 @@ entity_t* get_entity_at_location(const uint32_t x, const uint32_t y) {
 }
 
 static void update_mouse_icon() {
-    enum mouse_state ms = mouse_get_state();
-    cdude = get_entity_at_location(getCameraX() + mousex, getCameraY() + mousey);
+    enum mouse_state ms = sol_mouse_get_state();
+    cdude = get_entity_at_location(sol_get_camerax() + mousex, sol_get_cameray() + mousey);
     const float zoom = settings_zoom();
 
     //printf("update_mouse_icon!, cdude = %p\n", cdude);
 
     if (ms == MOUSE_MELEE || ms == MOUSE_NO_MELEE) {
-        int x = (getCameraX() + mousex) / (16 * zoom);
-        int y = (getCameraY() + mousey) / (16 * zoom);
+        int x = (sol_get_camerax() + mousex) / (16 * zoom);
+        int y = (sol_get_cameray() + mousey) / (16 * zoom);
         if (abs(player_get_active()->mapx - x) > 1 || abs(player_get_active()->mapy - y) > 1) {
-            mouse_set_state(MOUSE_RANGE);
-            ms = mouse_get_state();
+            sol_mouse_set_state(MOUSE_RANGE);
+            ms = sol_mouse_get_state();
         }
     } else if (ms == MOUSE_RANGE || ms == MOUSE_NO_RANGE) {
-        int x = (getCameraX() + mousex) / (16 * zoom);
-        int y = (getCameraY() + mousey) / (16 * zoom);
+        int x = (sol_get_camerax() + mousex) / (16 * zoom);
+        int y = (sol_get_cameray() + mousey) / (16 * zoom);
         if (abs(player_get_active()->mapx - x) <= 1 && abs(player_get_active()->mapy - y) <= 1) {
-            mouse_set_state(MOUSE_MELEE);
-            ms = mouse_get_state();
+            sol_mouse_set_state(MOUSE_MELEE);
+            ms = sol_mouse_get_state();
         }
     }
 
     if (!cdude) {
-        if (ms == MOUSE_MELEE) { mouse_set_state(MOUSE_NO_MELEE);
-        } else if (ms == MOUSE_RANGE) { mouse_set_state(MOUSE_NO_RANGE);
-        } else if (ms == MOUSE_TALK) { mouse_set_state(MOUSE_NO_TALK);
+        if (ms == MOUSE_MELEE) { sol_mouse_set_state(MOUSE_NO_MELEE);
+        } else if (ms == MOUSE_RANGE) { sol_mouse_set_state(MOUSE_NO_RANGE);
+        } else if (ms == MOUSE_TALK) { sol_mouse_set_state(MOUSE_NO_TALK);
         } else if (ms == MOUSE_POWER) {
-            switch(power_get_target_type(mouse_get_power())) {
+            switch(power_get_target_type(sol_mouse_get_power())) {
                 case TARGET_ALLY:
                 case TARGET_ENEMY:
                 case TARGET_MULTI:
-                    mouse_set_state(MOUSE_NO_POWER);
+                    sol_mouse_set_state(MOUSE_NO_POWER);
                     break;
                 default: break;
             }
         }
     } else {
-        if (ms == MOUSE_NO_MELEE) { mouse_set_state(MOUSE_MELEE);
-        } else if (ms == MOUSE_NO_RANGE) { mouse_set_state(MOUSE_RANGE);
-        } else if (ms == MOUSE_NO_TALK) { mouse_set_state(MOUSE_TALK);
-        } else if (ms == MOUSE_NO_POWER) { mouse_set_state(MOUSE_POWER);
+        if (ms == MOUSE_NO_MELEE) { sol_mouse_set_state(MOUSE_MELEE);
+        } else if (ms == MOUSE_NO_RANGE) { sol_mouse_set_state(MOUSE_RANGE);
+        } else if (ms == MOUSE_NO_TALK) { sol_mouse_set_state(MOUSE_TALK);
+        } else if (ms == MOUSE_NO_POWER) { sol_mouse_set_state(MOUSE_POWER);
         }
     }
 }
@@ -548,16 +548,16 @@ int map_handle_mouse(const uint32_t x, const uint32_t y) {
 
 // User right clicks for the next mouse pointer type;
 static void mouse_cycle() {
-    enum mouse_state ms = mouse_get_state();
+    enum mouse_state ms = sol_mouse_get_state();
 
     if (ms == MOUSE_POINTER || ms == MOUSE_NO_POINTER) {
-        mouse_set_state(MOUSE_MELEE);
+        sol_mouse_set_state(MOUSE_MELEE);
     } else if (ms == MOUSE_MELEE || ms == MOUSE_NO_MELEE || ms == MOUSE_RANGE || ms == MOUSE_NO_RANGE) {
-        mouse_set_state(MOUSE_TALK);
+        sol_mouse_set_state(MOUSE_TALK);
     } else if (ms == MOUSE_NO_TALK || ms == MOUSE_TALK) {
-        mouse_set_state((mouse_get_item()) ? MOUSE_ITEM : MOUSE_POINTER);
+        sol_mouse_set_state((sol_mouse_get_item()) ? MOUSE_ITEM : MOUSE_POINTER);
     } else if (ms == MOUSE_ITEM || ms == MOUSE_POWER || ms == MOUSE_NO_POWER) {
-        mouse_set_state(MOUSE_POINTER);
+        sol_mouse_set_state(MOUSE_POINTER);
     } else {
         error ("unable to cycle from mouse state: %d\n", ms);
     }
@@ -566,9 +566,9 @@ static void mouse_cycle() {
 }
 
 int map_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
-    enum mouse_state ms = mouse_get_state();
-    const uint32_t xoffset = getCameraX();
-    const uint32_t yoffset = getCameraY();
+    enum mouse_state ms = sol_mouse_get_state();
+    const uint32_t xoffset = sol_get_camerax();
+    const uint32_t yoffset = sol_get_cameray();
     const float zoom = settings_zoom();
     int tilex = (xoffset + mousex) / (16 * zoom);
     int tiley = (yoffset + mousey) / (16 * zoom);
@@ -576,15 +576,15 @@ int map_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_
     if (!cmap) { return 0; }
 
     if (ms == MOUSE_TALK && cdude) {//(dude = get_entity_at_location(x, y))) {
-        mouse_set_state(MOUSE_POINTER);
+        sol_mouse_set_state(MOUSE_POINTER);
         talk_click(cdude->ds_id);
         return 1;
     }
 
     if (ms == MOUSE_POWER) {
-        combat_activate_power(mouse_get_power(), player_get_active(),
+        combat_activate_power(sol_mouse_get_power(), player_get_active(),
             get_entity_at_location(x, y), tilex, tiley);
-        mouse_set_state(MOUSE_POINTER);
+        sol_mouse_set_state(MOUSE_POINTER);
         return 1;
     }
 

@@ -1,22 +1,18 @@
+#include "audio.h"
 #include "combat-status.h"
 #include "popup.h"
 #include "narrate.h"
-#include "../animate.h"
-#include "../main.h"
-#include "../audio.h"
-#include "../sprite.h"
-#include "../font.h"
+#include "gfftypes.h"
 #include "../../src/gff.h"
 #include "../../src/port.h"
-#include "gfftypes.h"
 #include "../../src/region-manager.h"
 #include "../../src/settings.h"
+#include "../../src/port.h"
 #include <string.h>
 
-static uint16_t background;
+static sol_sprite_t background, combat_attacks;
 static combat_status_t combat_status;
 static uint32_t xoffset, yoffset;
-static uint16_t combat_attacks;
 static int show_attack = 0;
 static int damage_amount = 0;
 
@@ -36,8 +32,8 @@ animate_sprite_node_list_t *list = NULL;
 
 static void start_node() {
     if (!list || !list->an) { return; }
-    animate_list_node_add(list->an, 100);
-    audio_play_voc(RESOURCE_GFF_INDEX, GFF_BVOC, list->sound, 1.0);
+    //animate_list_node_add(list->an, 100);
+    sol_audio_play_voc(RESOURCE_GFF_INDEX, GFF_BVOC, list->sound, 1.0);
 }
 
 /*
@@ -69,7 +65,7 @@ static void clear() {
 
 static void pop_list() {
     if (!list) { return; }
-    animate_list_remove(list->an, 100);
+    //animate_list_remove(list->an, 100);
     animate_sprite_node_list_t *delme = list;
     list = list->next;
 
@@ -89,7 +85,7 @@ static void pop_list() {
     start_node();
 }
 
-combat_status_t* combat_status_get() { return &combat_status; }
+combat_status_t* sol_combat_status_get() { return &combat_status; }
 
 #define MAX_STATUS 9
 const static char *statuses[] = {
@@ -107,12 +103,11 @@ const static char *statuses[] = {
 void combat_status_init(const uint32_t x, const uint32_t y) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     const float zoom = settings_zoom();
-    xoffset = main_get_width() - 100 * settings_zoom();
+    xoffset = settings_screen_width() - 100 * settings_zoom();
     yoffset = 5 * settings_zoom();
-    SDL_Renderer *renderer = main_get_rend();
 
-    background = sprite_new(renderer, pal, 0 + xoffset / settings_zoom(), 0 + yoffset / settings_zoom(), zoom, RESOURCE_GFF_INDEX, GFF_BMP, 5016);
-    combat_attacks = sprite_new(renderer, pal, 0, 0, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 5014);
+    background = sol_sprite_new(pal, 0 + xoffset / settings_zoom(), 0 + yoffset / settings_zoom(), zoom, RESOURCE_GFF_INDEX, GFF_BMP, 5016);
+    combat_attacks = sol_sprite_new(pal, 0, 0, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 5014);
 }
 
 static void get_status() {
@@ -127,38 +122,14 @@ static void get_status() {
     }
 }
 
-static void draw_cone(SDL_Renderer *renderer, int sx, int sy, int range) {
-    //Lets draw a triangle...
-    SDL_SetRenderDrawColor(renderer, 192, 192, 192, 128);
-    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-    /*
-    for (int i = 0; i < range; i++) {
-        //SDL_RenderDrawPoint(renderer, 100, i + 100);
-        SDL_RenderDrawLine(renderer, 100 + i, 100 - i/2, 100 + i, 100 + i/2);
-    }
-    */
-    for (int w = 0; w < range; w++) {
-        for (int h = 0; h < range; h++) {
-            int dx = range - w;
-            int dy = range - h;
-            // The 1.0 is 1/8th a circle, can be raise to a 2.0 for 1/4th circle or
-            // less than 1.0 for smaller that 1/8.
-            if ((dx*dx + dy*dy) <= (range * range) && dy < 1.0 * dx) {
-                SDL_RenderDrawPoint(renderer, sx + dx, sy + dy);
-            }
-        }
-    }
-}
-
 static int count = 30;
 
 void combat_status_render(void *data) {
     const float zoom = settings_zoom();
     const int delta = 5 * zoom;
-    SDL_Rect loc;
+    sol_dim_t loc;
     char buf[128];
     static int last_action = 0;
-    SDL_Renderer *renderer = main_get_rend();
 
     // Okay this can be confusing.
     // The if decides when to proceed to the next action on the combat list
@@ -197,37 +168,37 @@ void combat_status_render(void *data) {
     if (combat_player_turn() == NO_COMBAT) { return; }
 
     if (2 == 1) {
-        draw_cone(renderer, 100, 100, 200);
+        sol_draw_cone(100, 100, 200);
     }
 
-    sprite_render(renderer, background);
+    sol_sprite_render(background);
     get_status();
 
     loc.x = xoffset;
     loc.y = yoffset + 2 * zoom;
-    loc.w = sprite_getw(background);
+    loc.w = sol_sprite_getw(background);
 
-    font_render_center(renderer, FONT_GREYLIGHT, combat_status.name, loc);
+    sol_font_render_center(FONT_GREYLIGHT, combat_status.name, loc.x, loc.y, loc.w);
     snprintf(buf, 127, "%d/%d", combat_status.current_hp, combat_status.max_hp);
     loc.y += 6 * zoom;
-    font_render_center(renderer, FONT_GREYLIGHT, buf, loc);
+    sol_font_render_center(FONT_GREYLIGHT, buf, loc.x, loc.y, loc.w);
     loc.y += 6 * zoom;
     if (combat_status.status >= 0 && combat_status.status < MAX_STATUS) {
-        font_render_center(renderer, FONT_GREYLIGHT, statuses[combat_status.status], loc);
+        sol_font_render_center(FONT_GREYLIGHT, statuses[combat_status.status], loc.x, loc.y, loc.w);
     }
     loc.y += 6 * zoom;
     snprintf(buf, 127, "Move : %d", combat_status.move);
-    font_render_center(renderer, FONT_GREYLIGHT, buf, loc);
+    sol_font_render_center(FONT_GREYLIGHT, buf, loc.x, loc.y, loc.w);
 
     if (show_attack) {
-        sprite_render(renderer, combat_attacks);
-        loc.x = sprite_getx(combat_attacks);
-        loc.y = sprite_gety(combat_attacks)
-            + sprite_geth(combat_attacks) / 2
+        sol_sprite_render(combat_attacks);
+        loc.x = sol_sprite_getx(combat_attacks);
+        loc.y = sol_sprite_gety(combat_attacks)
+            + sol_sprite_geth(combat_attacks) / 2
             - 8 / 2 * settings_zoom(); // last one is font size / 2
-        loc.w = sprite_getw(combat_attacks);
+        loc.w = sol_sprite_getw(combat_attacks);
         snprintf(buf, 128, "%d", damage_amount);
-        font_render_center(renderer, FONT_GREYLIGHT, buf, loc);
+        sol_font_render_center(FONT_GREYLIGHT, buf, loc.x, loc.y, loc.w);
     }
 
 }
@@ -305,11 +276,11 @@ void port_combat_action(entity_action_t *ca) {
     int dir = 0;
 
     switch (ca->action) {
-        case EA_RED_DAMAGE: sprite_set_frame(combat_attacks, 0); break;
-        case EA_BIG_RED_DAMAGE: sprite_set_frame(combat_attacks, 1); break;
-        case EA_GREEN_DAMAGE: sprite_set_frame(combat_attacks, 2); break;
-        case EA_MAGIC_DAMAGE: sprite_set_frame(combat_attacks, 3); break;
-        case EA_BROWN_DAMAGE: sprite_set_frame(combat_attacks, 4); break;
+        case EA_RED_DAMAGE: sol_sprite_set_frame(combat_attacks, 0); break;
+        case EA_BIG_RED_DAMAGE: sol_sprite_set_frame(combat_attacks, 1); break;
+        case EA_GREEN_DAMAGE: sol_sprite_set_frame(combat_attacks, 2); break;
+        case EA_MAGIC_DAMAGE: sol_sprite_set_frame(combat_attacks, 3); break;
+        case EA_BROWN_DAMAGE: sol_sprite_set_frame(combat_attacks, 4); break;
         default: break;
     }
 
@@ -320,16 +291,16 @@ void port_combat_action(entity_action_t *ca) {
         case EA_MAGIC_DAMAGE:
         case EA_BROWN_DAMAGE:
             as = &(ca->target->anim);
-            sprite_center_spr(combat_attacks, as->spr);
+            sol_sprite_center_spr(combat_attacks, as->spr);
             show_attack = 1;
             damage_amount = ca->amt;
             return;
         case EA_POWER_CAST:
             source = &(ca->source->anim);
             cast = &(ca->power->cast);
-            sprite_center_spr(cast->spr, source->spr);
-            cast->x = sprite_getx(cast->spr) + getCameraX();
-            cast->y = sprite_gety(cast->spr) + getCameraY();
+            sol_sprite_center_spr(cast->spr, source->spr);
+            cast->x = sol_sprite_getx(cast->spr) + sol_get_camerax();
+            cast->y = sol_sprite_gety(cast->spr) + sol_get_camerax();
             cast->destx = cast->x;
             cast->desty = cast->y;
             cast->scmd = combat_get_scmd(COMBAT_POWER_CAST);
@@ -340,18 +311,18 @@ void port_combat_action(entity_action_t *ca) {
             throw = &(ca->power->thrown);
             source = &(ca->source->anim);
             dest = &(ca->target->anim);
-            if (sprite_num_frames(throw->spr) < 30) {
+            if (sol_sprite_num_frames(throw->spr) < 30) {
                 throw->scmd = combat_get_scmd(COMBAT_POWER_THROW_STATIC_U + dir);
             } else {
                 throw->scmd = combat_get_scmd(COMBAT_POWER_THROW_ANIM_U + dir);
             }
-            throw->x = sprite_getx(source->spr) + getCameraX();
-            throw->y = sprite_gety(source->spr) + getCameraY();
+            throw->x = sol_sprite_getx(source->spr) + sol_get_camerax();
+            throw->y = sol_sprite_gety(source->spr) + sol_get_cameray();
             throw->destx = dest
-                ? sprite_getx(dest->spr) + sprite_getw(dest->spr) / 2 + getCameraX()
+                ? sol_sprite_getx(dest->spr) + sol_sprite_getw(dest->spr) / 2 + sol_get_camerax()
                 : ca->target->mapx * 16 * zoom;
             throw->desty = dest
-                ? sprite_gety(dest->spr) + sprite_geth(dest->spr) / 2 + getCameraY()
+                ? sol_sprite_gety(dest->spr) + sol_sprite_geth(dest->spr) / 2 + sol_get_cameray()
                 : ca->target->mapy * 16 * zoom;
             //printf("(%d, %d) -> (%d, %d)\n", throw->anim->x, throw->anim->y,
                 //throw->anim->destx, throw->anim->desty);
@@ -361,9 +332,9 @@ void port_combat_action(entity_action_t *ca) {
         case EA_POWER_HIT:
             dest = &(ca->target->anim);
             hit = &(ca->power->hit);
-            sprite_center_spr(hit->spr, dest->spr);
-            hit->x = sprite_getx(hit->spr) + getCameraX();
-            hit->y = sprite_gety(hit->spr) + getCameraY();
+            sol_sprite_center_spr(hit->spr, dest->spr);
+            hit->x = sol_sprite_getx(hit->spr) + sol_get_camerax();
+            hit->y = sol_sprite_gety(hit->spr) + sol_get_cameray();
             hit->destx = hit->x;
             hit->desty = hit->y;
             hit->scmd = combat_get_scmd(COMBAT_POWER_CAST);
@@ -390,7 +361,7 @@ int combat_status_handle_mouse_up(const uint32_t button, const uint32_t x, const
 }
 
 void combat_status_free() {
-    sprite_free(background);
+    sol_sprite_free(background);
 }
 
 sol_wops_t combat_status_window = {

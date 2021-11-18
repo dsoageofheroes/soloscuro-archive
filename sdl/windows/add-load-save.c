@@ -1,17 +1,17 @@
 #include "add-load-save.h"
-#include "window-main.h"
+#include "gfftypes.h"
 #include "popup.h"
-#include "../textbox.h"
-#include "../main.h"
-#include "../sprite.h"
-#include "../map.h"
-#include "../player.h"
+#include "window-main.h"
 #include "../../src/ds-load-save.h"
 #include "../../src/gff.h"
 #include "../../src/gff-char.h"
-#include "gfftypes.h"
 #include "../../src/port.h"
 #include "../../src/settings.h"
+#include "../../src/dsl.h"
+#include "../textbox.h"
+#include "../main.h"
+#include "../map.h"
+#include "../player.h"
 
 #define SAVE_FORMAT "save%02d.sav"
 
@@ -37,9 +37,9 @@ static uint32_t top_entry = 0;
 static uint32_t num_valid_entries = 0;
 static int last_action = ACTION_NONE;
 static uint32_t res_ids[RES_MAX]; // for the deletion.
-static int mode = ACTION_ADD; // ADD, LOAD, SAVE
+static sol_als_action_t mode = ACTION_ADD; // ADD, LOAD, SAVE
 
-void add_load_save_set_mode(int _mode) { mode = _mode; }
+extern void sol_add_load_save_set_mode(const sol_als_action_t _mode) { mode = _mode; }
 
 static void free_entries() {
     if (entries) {
@@ -169,6 +169,9 @@ void add_load_save_init(const uint32_t x, const uint32_t y) {
             title = sol_sprite_new(pal, 115 + x / zoom, 0 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6038); // Drop
             action_btn = sol_sprite_new(pal, 230 + x / zoom, 30 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6039); // drop
             break;
+        default:
+            error("action %d selected, but not implemented in als!\n", mode);
+            break;
     }
 }
 
@@ -182,14 +185,14 @@ void add_load_save_render(void *data) {
     sol_sprite_render(title);
     sol_sprite_render(action_btn);
     for (unsigned int i = 0; i < 10; i++) {
-        sprite_set_frame(bar, 0);
-        sprite_set_location(bar, zoom * 45 + xoffset, zoom * (31 + i * 11) + yoffset);
+        sol_sprite_set_frame(bar, 0);
+        sol_sprite_set_location(bar, zoom * 45 + xoffset, zoom * (31 + i * 11) + yoffset);
 
         if (selection >= 0 && (i == (selection - top_entry))) {
-            sprite_set_frame(bar, 1);
+            sol_sprite_set_frame(bar, 1);
         }
-        if (sprite_in_rect(bar, mousex, mousey)) {
-            sprite_set_frame(bar, sprite_get_frame(bar) + 2);
+        if (sol_sprite_in_rect(bar, mousex, mousey)) {
+            sol_sprite_set_frame(bar, sol_sprite_get_frame(bar) + 2);
         }
         sol_sprite_render(bar);
     }
@@ -209,33 +212,33 @@ int add_load_save_handle_mouse_movement(const uint32_t x, const uint32_t y) {
     mousex = x;
     mousey = y;
 
-    if (sprite_in_rect(action_btn, x, y)) {
+    if (sol_sprite_in_rect(action_btn, x, y)) {
         cspr = action_btn;
     }
-    if (sprite_in_rect(delete_btn, x, y)) {
+    if (sol_sprite_in_rect(delete_btn, x, y)) {
         cspr = delete_btn;
     }
-    if (sprite_in_rect(exit_btn, x, y)) {
+    if (sol_sprite_in_rect(exit_btn, x, y)) {
         cspr = exit_btn;
     }
-    if (sprite_in_rect(up_arrow, x, y)) {
+    if (sol_sprite_in_rect(up_arrow, x, y)) {
         cspr = up_arrow;
     }
-    if (sprite_in_rect(down_arrow, x, y)) {
+    if (sol_sprite_in_rect(down_arrow, x, y)) {
         cspr = down_arrow;
     }
 
-    sprite_set_frame(action_btn, 0);
-    sprite_set_frame(exit_btn, 0);
-    sprite_set_frame(delete_btn, 0);
+    sol_sprite_set_frame(action_btn, 0);
+    sol_sprite_set_frame(exit_btn, 0);
+    sol_sprite_set_frame(delete_btn, 0);
 
-    if (sprite_get_frame(cspr) < 2) {
-        sprite_set_frame(cspr, 1);
+    if (sol_sprite_get_frame(cspr) < 2) {
+        sol_sprite_set_frame(cspr, 1);
     }
 
     if (last_spr != SPRITE_ERROR && last_spr != cspr) {
-        if (sprite_get_frame(last_spr) < 2) {
-            sprite_set_frame(last_spr, 0);
+        if (sol_sprite_get_frame(last_spr) < 2) {
+            sol_sprite_set_frame(last_spr, 0);
         }
     }
 
@@ -245,24 +248,24 @@ int add_load_save_handle_mouse_movement(const uint32_t x, const uint32_t y) {
 
 int add_load_save_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
     const float zoom = settings_zoom();
-    if (sprite_in_rect(action_btn, x, y)) {
-        sprite_set_frame(action_btn, 2);
+    if (sol_sprite_in_rect(action_btn, x, y)) {
+        sol_sprite_set_frame(action_btn, 2);
     }
-    if (sprite_in_rect(exit_btn, x, y)) {
-        sprite_set_frame(exit_btn, 2);
+    if (sol_sprite_in_rect(exit_btn, x, y)) {
+        sol_sprite_set_frame(exit_btn, 2);
     }
-    if (sprite_in_rect(delete_btn, x, y)) {
-        sprite_set_frame(delete_btn, 2);
+    if (sol_sprite_in_rect(delete_btn, x, y)) {
+        sol_sprite_set_frame(delete_btn, 2);
     }
-    if (sprite_in_rect(up_arrow, x, y)) {
-        sprite_set_frame(up_arrow, 3);
+    if (sol_sprite_in_rect(up_arrow, x, y)) {
+        sol_sprite_set_frame(up_arrow, 3);
     }
-    if (sprite_in_rect(down_arrow, x, y)) {
-        sprite_set_frame(down_arrow, 3);
+    if (sol_sprite_in_rect(down_arrow, x, y)) {
+        sol_sprite_set_frame(down_arrow, 3);
     }
     for (int i = 0; i < 10; i++) {
-        sprite_set_location(bar, xoffset + (zoom * 45), yoffset + (zoom * (31 + i * 11)));
-        if (sprite_in_rect(bar, x, y)) {
+        sol_sprite_set_location(bar, xoffset + (zoom * 45), yoffset + (zoom * (31 + i * 11)));
+        if (sol_sprite_in_rect(bar, x, y)) {
             selection = top_entry + i;
             if (selection < num_valid_entries) {
                 char_selected = res_ids[valids[selection]];
@@ -302,7 +305,7 @@ int16_t find_next_save_file() {
 int add_load_save_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
     char filename[32];
 
-    if (sprite_in_rect(action_btn, x, y)) {
+    if (sol_sprite_in_rect(action_btn, x, y)) {
         if (mode == ACTION_LOAD) {
             load_game();
             return 1;
@@ -316,20 +319,20 @@ int add_load_save_handle_mouse_up(const uint32_t button, const uint32_t x, const
             snprintf(filename, 31, SAVE_FORMAT, selection);
             ls_save_to_file(filename, textbox_get_text(name_tb));
         }
-        sprite_set_frame(action_btn, 0);
+        sol_sprite_set_frame(action_btn, 0);
         if (selection != -1) {
             last_action = mode;
             sol_window_pop();
         }
     }
-    if (sprite_in_rect(exit_btn, x, y)) {
-        sprite_set_frame(exit_btn, 0);
+    if (sol_sprite_in_rect(exit_btn, x, y)) {
+        sol_sprite_set_frame(exit_btn, 0);
         sol_window_pop();
     }
-    if (sprite_in_rect(delete_btn, x, y)) {
-        sprite_set_frame(delete_btn, 0);
+    if (sol_sprite_in_rect(delete_btn, x, y)) {
+        sol_sprite_set_frame(delete_btn, 0);
         if (selection != -1) {
-            sprite_set_frame(delete_btn, 3);
+            sol_sprite_set_frame(delete_btn, 3);
             sol_window_push(&popup_window, 90, 62);
             sol_popup_set_message("DELETE THIS PERSON?");
             sol_popup_set_option(0, "YES");
@@ -337,19 +340,19 @@ int add_load_save_handle_mouse_up(const uint32_t button, const uint32_t x, const
             sol_popup_set_option(2, "CANCEL");
         }
     }
-    if (sprite_in_rect(up_arrow, x, y)) {
-        sprite_set_frame(up_arrow, 0);
+    if (sol_sprite_in_rect(up_arrow, x, y)) {
+        sol_sprite_set_frame(up_arrow, 0);
         if (top_entry > 0) { top_entry--; }
     }
-    if (sprite_in_rect(down_arrow, x, y)) {
-        sprite_set_frame(down_arrow, 0);
+    if (sol_sprite_in_rect(down_arrow, x, y)) {
+        sol_sprite_set_frame(down_arrow, 0);
         if (top_entry < num_valid_entries - 10) { top_entry++; }
     }
     return 1; // means I captured the mouse click
 }
 
 void add_load_save_return_control () {
-    sprite_set_frame(delete_btn, 0);
+    sol_sprite_set_frame(delete_btn, 0);
     if (sol_popup_get_selection() == POPUP_0) {
         //printf("Need to delete! %d\n", res_ids[valids[selection]]);
         gff_char_delete(res_ids[valids[selection]]);
@@ -359,21 +362,21 @@ void add_load_save_return_control () {
 }
 
 void add_load_save_free() {
-    sprite_free(background);
-    sprite_free(up_arrow);
-    sprite_free(down_arrow);
-    sprite_free(exit_btn);
-    sprite_free(delete_btn);
-    sprite_free(action_btn);
-    sprite_free(title);
-    sprite_free(bar);
+    sol_sprite_free(background);
+    sol_sprite_free(up_arrow);
+    sol_sprite_free(down_arrow);
+    sol_sprite_free(exit_btn);
+    sol_sprite_free(delete_btn);
+    sol_sprite_free(action_btn);
+    sol_sprite_free(title);
+    sol_sprite_free(bar);
     free_entries();
     textbox_free(name_tb);
     main_set_textbox(NULL);
 }
 
-int add_load_save_get_action() { return last_action; }
-uint32_t add_load_save_get_selection() { return char_selected; }
+extern int sol_add_load_save_get_action() { return last_action; }
+extern uint32_t sol_add_load_save_get_selection() { return char_selected; }
 
 sol_wops_t als_window = {
     .init = add_load_save_init,

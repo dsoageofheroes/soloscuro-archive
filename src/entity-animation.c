@@ -341,36 +341,36 @@ static void play_death_sound(entity_t *target) {
     if (!target) { return; }
 
     if (target->attack_sound) {
-        port_play_sound_effect(target->attack_sound + 2);
+        sol_play_sound_effect(target->attack_sound + 2);
         return;
     }
 }
 
 static void play_melee_sound(entity_t *source) {
     if (source->attack_sound) {
-        port_play_sound_effect(source->attack_sound);
+        sol_play_sound_effect(source->attack_sound);
         return;
     }
 
     // sound 69: is Thri-keen melee sound
     if (source->race  == RACE_THRIKREEN) {
-        port_play_sound_effect(69);
+        sol_play_sound_effect(69);
         return;
     }
 
     // sound 7: general melee sound.
-    port_play_sound_effect(7);
+    sol_play_sound_effect(7);
 }
 
 static void play_damage_sound(entity_t *target) {
     if (!target) { return; }
 
     if (target->attack_sound) {
-        port_play_sound_effect(target->attack_sound + 1);
+        sol_play_sound_effect(target->attack_sound + 1);
     }
 
     // sound 67: is PC taking damage
-    port_play_sound_effect(67);
+    sol_play_sound_effect(67);
 }
 
 // sound 63: is PC doing range attack

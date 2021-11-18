@@ -368,3 +368,4 @@ extern void sol_sprite_center_spr(const int dest, const int src) { sprite_center
 extern void sol_sprite_render_box(const uint16_t sprite_id, const uint16_t x,
     const uint16_t y, const uint16_t w, const uint16_t h) { sprite_render_box(main_get_rend(), sprite_id, x, y, w, h); }
 extern void sol_sprite_center(const int id, const int x, const int y, const int w, const int h) { sprite_center(id, x, y, w, h); }
+extern uint32_t sol_sprite_num_frames(const uint16_t id) { return sprite_num_frames(id); }

@@ -1543,10 +1543,10 @@ static void play_xmi() {
         case GFF_GSEQ:
         case GFF_LSEQ:
         case GFF_PSEQ:
-            audio_play_xmi(gff_idx, music_type, res_ids[res_idx]);
+            sol_audio_play_xmi(gff_idx, music_type, res_ids[res_idx]);
             break;
         case GFF_BVOC:
-            audio_play_voc(gff_idx, music_type, res_ids[res_idx], 0.5);
+            sol_audio_play_voc(gff_idx, music_type, res_ids[res_idx], 0.5);
             break;
     }
 }

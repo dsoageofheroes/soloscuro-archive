@@ -112,7 +112,7 @@ void sol_player_render(const int slot) {
     sol_sprite_render(players_spr[slot].main);
 }
 
-void player_render_portrait(const int slot) {
+void sol_player_render_portrait(const int slot) {
     if (slot < 0 || slot >= MAX_PCS) { return; }
     sol_sprite_render(players_spr[slot].port);
 }

@@ -3,15 +3,15 @@
 #include <stdio.h>
 #include "window-manager.h"
 #include "windows/add-load-save.h"
-#include "windows/game-menu.h"
-#include "windows/inventory.h"
-#include "windows/interact.h"
+#include "game-menu.h"
+#include "inventory.h"
+#include "interact.h"
 #include "narrate.h"
 #include "windows/window-main.h"
 #include "view-character.h"
 #include "popup.h"
 #include "windows/new-character.h"
-#include "windows/combat-status.h"
+#include "combat-status.h"
 #include "../src/dsl.h"
 #include "../src/gameloop.h"
 #include "../src/region.h"
@@ -53,7 +53,7 @@ void load_window(const char *arg) {
         sol_window_push(&interact_window, 0, 0);
     }
     if (!strcmp(arg, "combat")) {
-        combat_status_t* cs = combat_status_get();
+        combat_status_t* cs = sol_combat_status_get();
         strcpy(cs->name, "Tex");
         cs->current_hp = 10;
         cs->max_hp = 20;

@@ -23,10 +23,6 @@ int cmap_is_block(const int row, const int column);
 int cmap_is_actor(const int row, const int column);
 int cmap_is_danger(const int row, const int column);
 
-// From main.c
-uint32_t getCameraX();
-uint32_t getCameraY();
-
 extern sol_wops_t map_window;
 
 #endif

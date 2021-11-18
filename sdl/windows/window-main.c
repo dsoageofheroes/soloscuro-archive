@@ -1,14 +1,14 @@
 #include "window-main.h"
-#include "../../src/gff.h"
+#include "view-character.h"
+#include "add-load-save.h"
+#include "narrate.h"
+#include "popup.h"
 #include "gfftypes.h"
 #include "../../src/player.h"
 #include "../../src/gameloop.h"
 #include "../../src/port.h"
 #include "../../src/settings.h"
-#include "view-character.h"
-#include "add-load-save.h"
-#include "narrate.h"
-#include "popup.h"
+#include "../../src/gff.h"
 
 static sol_sprite_t background, sun, start, create_characters, load_save, exit_dos;
 static int mousex = 0, mousey = 0;
@@ -50,7 +50,7 @@ static int click_action() {
     }
 
     if (count_down_spr == load_save) {
-        add_load_save_set_mode(ACTION_LOAD);
+        sol_add_load_save_set_mode(ACTION_LOAD);
         sol_window_push(&als_window, 0, 0);
     }
 

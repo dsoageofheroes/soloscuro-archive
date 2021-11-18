@@ -12,10 +12,10 @@
 #include "../src/gameloop.h"
 #include "narrate.h"
 #include "windows/window-main.h"
-#include "windows/inventory.h"
+#include "inventory.h"
 #include "windows/add-load-save.h"
 #include "view-character.h"
-#include "windows/game-menu.h"
+#include "game-menu.h"
 #include "../src/combat.h"
 #include "../src/dsl.h"
 #include "../src/dsl-manager.h"
@@ -55,8 +55,8 @@ void main_set_textbox(textbox_t *tb) {
 SDL_Renderer *main_get_rend() { return renderer; }
 SDL_Surface *main_get_window() { return window; }
 
-extern uint32_t getCameraX() { return xmappos; }
-extern uint32_t getCameraY() { return ymappos; }
+extern uint32_t sol_get_camerax() { return xmappos; }
+extern uint32_t sol_get_cameray() { return ymappos; }
 extern int main_get_debug() { return show_debug; }
 
 static void main_toggle_debug() { show_debug = !show_debug; }
@@ -163,11 +163,11 @@ void handle_input() {
                 if (event.key.keysym.sym == SDLK_KP_8) { player_directions[8] = 0; }
                 if (event.key.keysym.sym == SDLK_KP_9) { player_directions[9] = 0; }
                 if (event.key.keysym.sym == SDLK_F11) {
-                    add_load_save_set_mode(ACTION_SAVE);
+                    sol_add_load_save_set_mode(ACTION_SAVE);
                     sol_window_push(&als_window, 0, 0);
                 }
                 if (event.key.keysym.sym == SDLK_F12) {
-                    add_load_save_set_mode(ACTION_LOAD);
+                    sol_add_load_save_set_mode(ACTION_LOAD);
                     sol_window_push(&als_window, 0, 0);
                 }
                 break;
@@ -312,7 +312,7 @@ static void gui_init() {
 }
 
 void port_init() {
-    audio_init();
+    sol_audio_init();
     gui_init();
 
     font_init(renderer);
@@ -320,18 +320,18 @@ void port_init() {
     sol_gameloop_init();
 
     player_init();
-    mouse_init(renderer);
+    sol_mouse_init(renderer);
 }
 
 void port_close() {
     // Order matters.
-    audio_cleanup();
+    sol_audio_cleanup();
     player_close();
     sol_window_free();
 
     dsl_cleanup();
     gff_cleanup();
-    mouse_free();
+    sol_mouse_free();
 
     SDL_DestroyRenderer(renderer);
     //SDL_DestroySurface(window);
@@ -379,8 +379,8 @@ static void init(int args, char *argv[]) {
     sol_gameloop_init();
 
     player_init();
-    mouse_init(renderer);
-    audio_init();
+    sol_mouse_init(renderer);
+    sol_audio_init();
 
     if (browser_mode) {
         browse_loop(window, renderer);

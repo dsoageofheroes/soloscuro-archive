@@ -7,6 +7,7 @@
 #include "../src/dsl.h"
 #include "../src/gameloop.h"
 #include "../src/combat.h"
+#include "../src/port.h"
 
 #define MAX_ZPOS (128)
 
@@ -80,8 +81,8 @@ out:
 }
 
 void animate_list_render(SDL_Renderer *renderer) {
-    const uint32_t xoffset = getCameraX();
-    const uint32_t yoffset = getCameraY();
+    const uint32_t xoffset = sol_get_camerax();
+    const uint32_t yoffset = sol_get_cameray();
 
     // TODO: Definite performance issues.
     for (int i = 0; i < MAX_ZPOS; i++) {

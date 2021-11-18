@@ -78,7 +78,7 @@ extern void port_load_sprite(animate_sprite_t *anim, gff_palette_t *pal, const i
 extern void port_free_sprite(sprite_info_t *spr);
 extern int port_valid_sprite(sprite_info_t *spr);
 
-extern void port_play_sound_effect(const uint16_t id);
+extern void sol_play_sound_effect(const uint16_t id);
 
 extern void port_change_region(region_t *reg);
 extern void port_combat_action(entity_action_t *ca);
@@ -140,7 +140,12 @@ extern void sol_sprite_center_spr(const int dest, const int src);
 extern void sol_sprite_render_box(const uint16_t sprite_id, const uint16_t x,
     const uint16_t y, const uint16_t w, const uint16_t h);
 extern void sol_sprite_center(const int id, const int x, const int y, const int w, const int h);
+extern uint32_t sol_sprite_num_frames(const uint16_t id);
 
 extern void sol_mouse_set_as_power(power_t *pw);
+extern void sol_draw_cone(int sx, int sy, int range);
+extern uint32_t sol_get_camerax();
+extern uint32_t sol_get_cameray();
+
 
 #endif

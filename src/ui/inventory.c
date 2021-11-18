@@ -1,29 +1,23 @@
+#include "../sdl/windows/add-load-save.h"
+#include "gfftypes.h"
+#include "narrate.h"
+#include "../sdl/windows/new-character.h"
+#include "popup.h"
 #include "view-character.h"
-#include "../main.h"
+#include "mouse.h"
 #include "../../src/gff.h"
 #include "../../src/gff-char.h"
-#include "gfftypes.h"
 #include "../../src/rules.h"
-#include "narrate.h"
-#include "../player.h"
-#include "new-character.h"
-#include "popup.h"
 #include "../../src/dsl.h"
-#include "add-load-save.h"
 #include "../../src/player.h"
 #include "../../src/ds-load-save.h"
 #include "../../src/settings.h"
-#include "../font.h"
-#include "../sprite.h"
-#include "../mouse.h"
 
 // Sprites
-static uint16_t ai[4];
-static uint16_t leader[4];
-static uint16_t ports[4];
-static uint16_t flag_spear, parchment, frame_message, panel, slots;
-static uint16_t character, inv, magic, status;
-static uint16_t game_menu, game_return;
+static sol_sprite_t ai[4], leader[4], ports[4];
+static sol_sprite_t flag_spear, parchment, frame_message, panel, slots;
+static sol_sprite_t character, inv, magic, status;
+static sol_sprite_t game_menu, game_return;
 enum {SELECT_NONE, SELECT_POPUP, SELECT_NEW, SELECT_ALS};
 static int8_t last_selection = SELECT_NONE;
 static uint8_t slot_clicked;
@@ -31,10 +25,10 @@ static uint32_t mousex, mousey;
 static int char_selected;
 static uint32_t xoffset, yoffset;
 
-static SDL_Rect initial_locs[] = {{ 59, 5, 0, 0 }, // name
+static sol_dim_t initial_locs[] = {{ 59, 5, 0, 0 }, // name
                                   { 52, 165, 174, 0 }, // description
 };
-static SDL_Rect slot_locs[] = {
+static sol_dim_t slot_locs[] = {
     {0, 0, 0, 0},
     {0, 0, 0, 0},
     {0, 0, 0, 0},
@@ -60,29 +54,24 @@ static SDL_Rect slot_locs[] = {
     {165, 142, 0, 0}, // foot
 };
 
-static SDL_Rect name_loc, description_loc;
+static sol_dim_t name_loc, description_loc;
 static char name[25];
 static char description[128];
 
-static SDL_Renderer *rend;
-
-static void set_zoom(SDL_Rect *loc, float zoom) {
+static void set_zoom(sol_dim_t *loc, float zoom) {
     loc->x *= zoom;
     loc->y *= zoom;
     loc->w *= zoom;
     loc->h *= zoom;
 }
 
-static SDL_Rect apply_params(const SDL_Rect rect, const uint32_t x, const uint32_t y) {
-    SDL_Rect ret = {rect.x + x, rect.y + y, rect.w, rect.h};
+static sol_dim_t apply_params(const sol_dim_t rect, const uint16_t x, const uint16_t y) {
+    sol_dim_t ret;
+    ret.x = rect.x + x;
+    ret.y = rect.y + y;
+    ret.w = rect.w;
+    ret.h = rect.h;
     return ret;
-}
-
-static uint16_t view_sprite_create(SDL_Renderer *renderer, gff_palette_t *pal,
-        const int offsetx, const int offsety, const float zoom,
-        const int gff_idx, const int type_id, const int res_id) {
-    SDL_Rect tmp = {offsetx, offsety, 0, 0};
-    return sprite_create(renderer, &tmp, pal, 0, 0, zoom, gff_idx, type_id, res_id);
 }
 
 void inventory_window_init(const uint32_t _xoffset, const uint32_t _yoffset) {
@@ -94,49 +83,48 @@ void inventory_window_init(const uint32_t _xoffset, const uint32_t _yoffset) {
     yoffset = _yoffset;
     uint32_t x = xoffset / zoom;
     uint32_t y = yoffset / zoom;
-    SDL_Renderer *renderer = rend = main_get_rend();
 
     memset(name, 0x0, sizeof(name));
     memset(description, 0x0, sizeof(description));
 
-    panel = view_sprite_create(renderer, pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 13001);
-    flag_spear = view_sprite_create(renderer, pal, 232 + x, 5 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 13004);
-    parchment = view_sprite_create(renderer, pal, 75 + x, 36 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 13005);
-    frame_message = view_sprite_create(renderer, pal, 53 + x, 3 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 13000);
+    panel = sol_sprite_new(pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 13001);
+    flag_spear = sol_sprite_new(pal, 232 + x, 5 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 13004);
+    parchment = sol_sprite_new(pal, 75 + x, 36 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 13005);
+    frame_message = sol_sprite_new(pal, 53 + x, 3 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 13000);
     sprite_set_frame(frame_message, 0);
     sprite_set_location(frame_message, (53 + x) * zoom, (183 + y) * zoom);
     sprite_set_frame(frame_message, 3);
     sprite_set_location(frame_message, (45 + x) * zoom, (161 + y) * zoom);
-    slots = view_sprite_create(renderer, pal, 53 + x, 3 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 13007);
+    slots = sol_sprite_new(pal, 53 + x, 3 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 13007);
     for (int i = 0; i < 23; i++) {
-        sprite_set_frame(slots, i);
-        sprite_set_location(slots, (x + slot_locs[i].x) * zoom, (y + slot_locs[i].y) * zoom);
+        sol_sprite_set_frame(slots, i);
+        sol_sprite_set_location(slots, (x + slot_locs[i].x) * zoom, (y + slot_locs[i].y) * zoom);
     }
 
-    character = view_sprite_create(renderer, pal, 160 + x, 181 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 10100);
-    inv = view_sprite_create(renderer, pal, 185 + x, 181 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11102);
-    sprite_set_frame(inv, 3);
-    magic = view_sprite_create(renderer, pal, 210 + x, 181 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11103);
-    status = view_sprite_create(renderer, pal, 235 + x, 181 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11104);
-    game_return = view_sprite_create(renderer, pal, 288 + x, 181 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 10108);
-    game_menu = view_sprite_create(renderer, pal, 258 + x, 181 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11101);
-    sprite_set_frame(game_menu, 2);
+    character = sol_sprite_new(pal, 160 + x, 181 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 10100);
+    inv = sol_sprite_new(pal, 185 + x, 181 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11102);
+    sol_sprite_set_frame(inv, 3);
+    magic = sol_sprite_new(pal, 210 + x, 181 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11103);
+    status = sol_sprite_new(pal, 235 + x, 181 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11104);
+    game_return = sol_sprite_new(pal, 288 + x, 181 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 10108);
+    game_menu = sol_sprite_new(pal, 258 + x, 181 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11101);
+    sol_sprite_set_frame(game_menu, 2);
 
-    ai[0] = view_sprite_create(renderer, pal, 2 + x, 14 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111);
-    ai[1] = view_sprite_create(renderer, pal, 2 + x, 62 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111);
-    ai[2] = view_sprite_create(renderer, pal, 2 + x, 110 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111);
-    ai[3] = view_sprite_create(renderer, pal, 2 + x, 158 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111);
-    leader[0] = view_sprite_create(renderer, pal, 2 + x, 4 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11106);
-    leader[1] = view_sprite_create(renderer, pal, 2 + x, 52 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11106);
-    leader[2] = view_sprite_create(renderer, pal, 2 + x, 100 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11106);
-    leader[3] = view_sprite_create(renderer, pal, 2 + x, 148 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11106);
-    ports[0] = view_sprite_create(renderer, pal, 12 + x, 4 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11100);
-    ports[1] = view_sprite_create(renderer, pal, 12 + x, 52 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11100);
-    ports[2] = view_sprite_create(renderer, pal, 12 + x, 100 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11100);
-    ports[3] = view_sprite_create(renderer, pal, 12 + x, 148 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11100);
+    ai[0] = sol_sprite_new(pal, 2 + x, 14 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111);
+    ai[1] = sol_sprite_new(pal, 2 + x, 62 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111);
+    ai[2] = sol_sprite_new(pal, 2 + x, 110 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111);
+    ai[3] = sol_sprite_new(pal, 2 + x, 158 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111);
+    leader[0] = sol_sprite_new(pal, 2 + x, 4 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11106);
+    leader[1] = sol_sprite_new(pal, 2 + x, 52 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11106);
+    leader[2] = sol_sprite_new(pal, 2 + x, 100 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11106);
+    leader[3] = sol_sprite_new(pal, 2 + x, 148 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11106);
+    ports[0] = sol_sprite_new(pal, 12 + x, 4 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11100);
+    ports[1] = sol_sprite_new(pal, 12 + x, 52 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11100);
+    ports[2] = sol_sprite_new(pal, 12 + x, 100 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11100);
+    ports[3] = sol_sprite_new(pal, 12 + x, 148 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11100);
 
     for (int i = 0; i < 4; i++) {
-        sprite_set_frame(ports[i], 2);
+        sol_sprite_set_frame(ports[i], 2);
     }
 
     name_loc = apply_params(initial_locs[0], x, y);
@@ -167,16 +155,16 @@ static const char *slot_names[] = {
     "BACKPACK"
 };
 
-static int do_slot_highlight(SDL_Renderer *renderer, const uint16_t frame, const uint16_t pos) {
-    if (sprite_in_rect(slots, mousex, mousey)) {
-        uint32_t x = sprite_getx(slots);
-        uint32_t y = sprite_gety(slots);
+static int do_slot_highlight(const uint16_t frame, const uint16_t pos) {
+    if (sol_sprite_in_rect(slots, mousex, mousey)) {
+        uint32_t x = sol_sprite_getx(slots);
+        uint32_t y = sol_sprite_gety(slots);
 
-        sprite_set_frame(slots, 7); // highight
+        sol_sprite_set_frame(slots, 7); // highight
 
-        sprite_set_location(slots, x, y);
-        sprite_render(renderer, slots);
-        sprite_set_frame(slots, frame);
+        sol_sprite_set_location(slots, x, y);
+        sol_sprite_render(slots);
+        sol_sprite_set_frame(slots, frame);
         strcpy(description, slot_names[pos]);
         return 1;
     }
@@ -198,7 +186,7 @@ static int display_attack(entity_t *entity, item_t *item, const int xpos, const 
     if (item == NULL) {
         pos += snprintf(buf, BUF_MAX, "<");
     } else {
-        print_line_len(rend, FONT_YELLOW, item->name, xoffset + 235 * zoom, yoffset + ypos * zoom, BUF_MAX);
+        sol_print_line_len(FONT_YELLOW, item->name, xoffset + 235 * zoom, yoffset + ypos * zoom, BUF_MAX);
         offset += 7;
     }
 
@@ -216,7 +204,7 @@ static int display_attack(entity_t *entity, item_t *item, const int xpos, const 
         pos += snprintf(buf + pos, BUF_MAX - pos, ">");
     }
 
-    print_line_len(rend, FONT_YELLOW, buf, xoffset + 235 * zoom, yoffset + (ypos + offset) * zoom, BUF_MAX);
+    sol_print_line_len(FONT_YELLOW, buf, xoffset + 235 * zoom, yoffset + (ypos + offset) * zoom, BUF_MAX);
     return offset + 7;
 }
 
@@ -230,30 +218,30 @@ static void render_character() {
     if (player->name == NULL) { return; } // no character.
     strcpy(name, player->name);
 
-    print_line_len(rend, FONT_YELLOW, "STR:", xoffset + 235 * zoom, yoffset + 53 * zoom, BUF_MAX);
-    print_line_len(rend, FONT_YELLOW, "DEX:", xoffset + 235 * zoom, yoffset + 60 * zoom, BUF_MAX);
-    print_line_len(rend, FONT_YELLOW, "CON:", xoffset + 235 * zoom, yoffset + 67 * zoom, BUF_MAX);
-    print_line_len(rend, FONT_YELLOW, "INT:", xoffset + 235 * zoom, yoffset + 74 * zoom, BUF_MAX);
-    print_line_len(rend, FONT_YELLOW, "WIS:", xoffset + 235 * zoom, yoffset + 81 * zoom, BUF_MAX);
-    print_line_len(rend, FONT_YELLOW, "CHA:", xoffset + 235 * zoom, yoffset + 88 * zoom, BUF_MAX);
+    sol_print_line_len(FONT_YELLOW, "STR:", xoffset + 235 * zoom, yoffset + 53 * zoom, BUF_MAX);
+    sol_print_line_len(FONT_YELLOW, "DEX:", xoffset + 235 * zoom, yoffset + 60 * zoom, BUF_MAX);
+    sol_print_line_len(FONT_YELLOW, "CON:", xoffset + 235 * zoom, yoffset + 67 * zoom, BUF_MAX);
+    sol_print_line_len(FONT_YELLOW, "INT:", xoffset + 235 * zoom, yoffset + 74 * zoom, BUF_MAX);
+    sol_print_line_len(FONT_YELLOW, "WIS:", xoffset + 235 * zoom, yoffset + 81 * zoom, BUF_MAX);
+    sol_print_line_len(FONT_YELLOW, "CHA:", xoffset + 235 * zoom, yoffset + 88 * zoom, BUF_MAX);
     snprintf(buf, BUF_MAX, "%d\n", player->stats.str);
-    print_line_len(rend, FONT_YELLOW, buf, xoffset + 260 * zoom, yoffset + 53 * zoom, BUF_MAX);
+    sol_print_line_len(FONT_YELLOW, buf, xoffset + 260 * zoom, yoffset + 53 * zoom, BUF_MAX);
     snprintf(buf, BUF_MAX, "%d\n", player->stats.dex);
-    print_line_len(rend, FONT_YELLOW, buf, xoffset + 260 * zoom, yoffset + 60 * zoom, BUF_MAX);
+    sol_print_line_len(FONT_YELLOW, buf, xoffset + 260 * zoom, yoffset + 60 * zoom, BUF_MAX);
     snprintf(buf, BUF_MAX, "%d\n", player->stats.con);
-    print_line_len(rend, FONT_YELLOW, buf, xoffset + 260 * zoom, yoffset + 67 * zoom, BUF_MAX);
+    sol_print_line_len(FONT_YELLOW, buf, xoffset + 260 * zoom, yoffset + 67 * zoom, BUF_MAX);
     snprintf(buf, BUF_MAX, "%d\n", player->stats.intel);
-    print_line_len(rend, FONT_YELLOW, buf, xoffset + 260 * zoom, yoffset + 74 * zoom, BUF_MAX);
+    sol_print_line_len(FONT_YELLOW, buf, xoffset + 260 * zoom, yoffset + 74 * zoom, BUF_MAX);
     snprintf(buf, BUF_MAX, "%d\n", player->stats.wis);
-    print_line_len(rend, FONT_YELLOW, buf, xoffset + 260 * zoom, yoffset + 81 * zoom, BUF_MAX);
+    sol_print_line_len(FONT_YELLOW, buf, xoffset + 260 * zoom, yoffset + 81 * zoom, BUF_MAX);
     snprintf(buf, BUF_MAX, "%d\n", player->stats.cha);
-    print_line_len(rend, FONT_YELLOW, buf, xoffset + 260 * zoom, yoffset + 88 * zoom, BUF_MAX);
+    sol_print_line_len(FONT_YELLOW, buf, xoffset + 260 * zoom, yoffset + 88 * zoom, BUF_MAX);
 
     snprintf(buf, BUF_MAX, "PSI:  %d/%d\n", player->stats.psp, player->stats.high_psp);
-    print_line_len(rend, FONT_YELLOW, buf, xoffset + 235 * zoom, yoffset + 100 * zoom, BUF_MAX);
+    sol_print_line_len(FONT_YELLOW, buf, xoffset + 235 * zoom, yoffset + 100 * zoom, BUF_MAX);
 
     snprintf(buf, BUF_MAX, "AC: %d\n", dnd2e_calc_ac(player));
-    print_line_len(rend, FONT_YELLOW, buf, xoffset + 235 * zoom, yoffset + 115 * zoom, BUF_MAX);
+    sol_print_line_len(FONT_YELLOW, buf, xoffset + 235 * zoom, yoffset + 115 * zoom, BUF_MAX);
 
     int ypos = 125;
     if (player_items->missile.ds_id != 0) {
@@ -270,63 +258,62 @@ static void render_character() {
 }
 
 static void render_backpack_slot(const int slot, const int frame, const int x, const int y, item_t *items) {
-    sprite_set_frame(slots, 5);
-    sprite_set_location(slots, x, y);
-    sprite_render(rend, slots);
-    sprite_set_frame(slots, frame);
-    sprite_set_location(slots, x, y);
-    sprite_render(rend, slots);
+    sol_sprite_set_frame(slots, 5);
+    sol_sprite_set_location(slots, x, y);
+    sol_sprite_render(slots);
+    sol_sprite_set_frame(slots, frame);
+    sol_sprite_set_location(slots, x, y);
+    sol_sprite_render(slots);
     animate_sprite_t *as = items ? &(items[slot].anim) : NULL;
 
     if (as) {
-        sprite_center_spr(as->spr, slots);
-        sprite_render(rend, as->spr);
+        sol_sprite_center_spr(as->spr, slots);
+        sol_sprite_render(as->spr);
     }
 
-    do_slot_highlight(rend, 5, 14);
+    do_slot_highlight(5, 14);
 
-    if (item_allowed_in_slot(mouse_get_item(), slot)) {
-        sprite_set_frame(slots, sprite_in_rect(slots, mousex, mousey) ? 8 : 4);
-        sprite_set_location(slots, x, y);
-        sprite_render(rend, slots);
+    if (item_allowed_in_slot(sol_mouse_get_item(), slot)) {
+        sol_sprite_set_frame(slots, sol_sprite_in_rect(slots, mousex, mousey) ? 8 : 4);
+        sol_sprite_set_location(slots, x, y);
+        sol_sprite_render(slots);
     }
 }
 
 void inventory_window_render(void *data) {
     const float zoom = settings_zoom();
-    SDL_Renderer *renderer = main_get_rend();
 
     description[0] = '\0';
     entity_t *player = player_get(char_selected);
     item_t *items = player ? player->inv : NULL;
     animate_sprite_t *as = NULL;
 
-    sprite_render(renderer, panel);
-    sprite_render(renderer, parchment);
-    sprite_render(renderer, flag_spear);
-    sprite_set_frame(frame_message, 0);
-    sprite_render(renderer, frame_message);
-    sprite_set_frame(frame_message, 1);
-    sprite_render(renderer, frame_message);
-    sprite_set_frame(frame_message, 3);
-    sprite_render(renderer, frame_message);
+    sol_sprite_render(panel);
+    sol_sprite_render(parchment);
+    sol_sprite_render(flag_spear);
+    sol_sprite_set_frame(frame_message, 0);
+    sol_sprite_render(frame_message);
+    sol_sprite_set_frame(frame_message, 1);
+    sol_sprite_render(frame_message);
+    sol_sprite_set_frame(frame_message, 3);
+    sol_sprite_render(frame_message);
 
-    sprite_render(renderer, character);
-    sprite_render(renderer, inv);
-    sprite_render(renderer, magic);
-    sprite_render(renderer, status);
-    sprite_render(renderer, game_menu);
-    sprite_render(renderer, game_return);
+    sol_sprite_render(character);
+    sol_sprite_render(inv);
+    sol_sprite_render(magic);
+    sol_sprite_render(status);
+    sol_sprite_render(game_menu);
+    sol_sprite_render(game_return);
 
     for (int i = 0; i < 4; i++) {
-        sprite_render(renderer, ai[i]);
-        sprite_render(renderer, leader[i]);
-        //sprite_render(renderer, port_background[i]);
-        sprite_set_frame(ports[i], player_exists(i) ? 1 : 2);
-        sprite_render(renderer, ports[i]);
+        sol_sprite_render(ai[i]);
+        sol_sprite_render(leader[i]);
+        //sol_sprite_render(port_background[i]);
+        sol_sprite_set_frame(ports[i], player_exists(i) ? 1 : 2);
+        sol_sprite_render(ports[i]);
         if (sprite_in_rect(ports[i], mousex, mousey)) {
-            sprite_set_frame(ports[i], 1);
-            sprite_render(renderer, ports[i]);
+            sol_sprite_set_frame(ports[i], 1);
+            sol_sprite_render(ports[i]);
             if (player_exists(i)) {
                 snprintf(description, 128, "%s%s",
                         i == char_selected ? "" : "SELECT ",
@@ -336,59 +323,59 @@ void inventory_window_render(void *data) {
             }
         }
         if (char_selected == i) {
-            sprite_set_frame(ports[i], 3);
-            sprite_render(renderer, ports[i]);
+            sol_sprite_set_frame(ports[i], 3);
+            sol_sprite_render(ports[i]);
         } else {
-            sprite_set_frame(ports[i], 0);
-            sprite_render(renderer, ports[i]);
+            sol_sprite_set_frame(ports[i], 0);
+            sol_sprite_render(ports[i]);
         }
     }
 
     for (int i = 9; i < 23; i++) {
         as = items ? item_icon(items + i - 9) : NULL;
-        sprite_set_frame(slots, i);
+        sol_sprite_set_frame(slots, i);
         int32_t x = sprite_getx(slots);
         int32_t y = sprite_gety(slots);
         if (as && as->spr != SPRITE_ERROR) {
-            sprite_set_frame(slots, 2);
-            sprite_set_location(slots, x, y);
-            sprite_render(renderer, slots);
-            sprite_center_spr(as->spr, slots);
-            sprite_render(renderer, as->spr);
+            sol_sprite_set_frame(slots, 2);
+            sol_sprite_set_location(slots, x, y);
+            sol_sprite_render(slots);
+            sol_sprite_center_spr(as->spr, slots);
+            sol_sprite_render(as->spr);
         } else {
-            sprite_render(renderer, slots);
+            sol_sprite_render(slots);
         }
-        do_slot_highlight(renderer, i, i - 9);
-        if (item_allowed_in_slot(mouse_get_item(), i - 9)) {
-            sprite_set_frame(slots, sprite_in_rect(slots, mousex, mousey) ? 8 : 4);
-            sprite_set_location(slots, x, y);
-            sprite_render(rend, slots);
+        do_slot_highlight(i, i - 9);
+        if (item_allowed_in_slot(sol_mouse_get_item(), i - 9)) {
+            sol_sprite_set_frame(slots, sprite_in_rect(slots, mousex, mousey) ? 8 : 4);
+            sol_sprite_set_location(slots, x, y);
+            sol_sprite_render(slots);
         }
     }
 
-    sprite_set_frame(slots, 0);
+    sol_sprite_set_frame(slots, 0);
     for (int i = 0; i < 6; i++) {
         render_backpack_slot(14 + 2 * i, 0, xoffset + 186 * zoom, yoffset + (18 + 18 * i) * zoom, items);
         render_backpack_slot(15 + 2 * i, 0, xoffset + 204 * zoom, yoffset + (18 + 18 * i) * zoom, items);
     }
 
-    if (sprite_in_rect(character, mousex, mousey)) { strcpy(description, "VIEW CHARACTER"); }
-    if (sprite_in_rect(inv, mousex, mousey)) { strcpy(description, "VIEW INVENTORY"); }
-    if (sprite_in_rect(magic, mousex, mousey)) { strcpy(description, "CAST SPELL/USE PSIONIC"); }
-    if (sprite_in_rect(status, mousex, mousey)) { strcpy(description, "CURRENT SPELL EFFECTS"); }
-    if (sprite_in_rect(game_return, mousex, mousey)) { strcpy(description, "GAME RETURN"); }
+    if (sol_sprite_in_rect(character, mousex, mousey)) { strcpy(description, "VIEW CHARACTER"); }
+    if (sol_sprite_in_rect(inv, mousex, mousey)) { strcpy(description, "VIEW INVENTORY"); }
+    if (sol_sprite_in_rect(magic, mousex, mousey)) { strcpy(description, "CAST SPELL/USE PSIONIC"); }
+    if (sol_sprite_in_rect(status, mousex, mousey)) { strcpy(description, "CURRENT SPELL EFFECTS"); }
+    if (sol_sprite_in_rect(game_return, mousex, mousey)) { strcpy(description, "GAME RETURN"); }
 
-    print_line_len(renderer, FONT_YELLOW, name, name_loc.x, name_loc.y, sizeof(name));
-    font_render_center(renderer, FONT_GREY, description, description_loc);
+    sol_print_line_len(FONT_YELLOW, name, name_loc.x, name_loc.y, sizeof(name));
+    sol_font_render_center(FONT_GREY, description, description_loc.x, description_loc.y, description_loc.w);
 
     render_character();
 
     for (int i = 0; i < 4; i++) {
         sol_player_center(i, xoffset + 12 * zoom, yoffset + (4 + 48 * i) * zoom, 34 * zoom, 34 * zoom);
         sol_sprite_t spr = sol_player_get_sprite(i);
-        if (sprite_geth(spr) > 30 * zoom) {
-            sprite_set_frame(spr, 0);
-            sprite_render_box(rend, spr, xoffset + 15 * zoom, yoffset + 11 + (48 * i) * zoom,
+        if (sol_sprite_geth(spr) > 30 * zoom) {
+            sol_sprite_set_frame(spr, 0);
+            sol_sprite_render_box(spr, xoffset + 15 * zoom, yoffset + 11 + (48 * i) * zoom,
                 30 * zoom, 30 * zoom);
         } else {
             sol_player_render(i);
@@ -397,19 +384,19 @@ void inventory_window_render(void *data) {
 
     if (player_exists(char_selected)) {
         sol_player_center_portrait(char_selected, xoffset + (75) * zoom, yoffset + (36) * zoom, 90 * zoom, 125 * zoom);
-        player_render_portrait(char_selected);
+        sol_player_render_portrait(char_selected);
     }
 }
 
 static int get_sprite_mouse_is_on(const uint32_t x, const uint32_t y) {
-    if (sprite_in_rect(character, x, y)) { return character; }
-    if (sprite_in_rect(magic, x, y)) { return magic; }
-    if (sprite_in_rect(status, x, y)) { return status; }
-    if (sprite_in_rect(game_return, x, y)) { return game_return; }
+    if (sol_sprite_in_rect(character, x, y)) { return character; }
+    if (sol_sprite_in_rect(magic, x, y)) { return magic; }
+    if (sol_sprite_in_rect(status, x, y)) { return status; }
+    if (sol_sprite_in_rect(game_return, x, y)) { return game_return; }
 
     for (int i = 0; i < 4; i++) {
-        if (sprite_in_rect(ai[i], x, y)) { return ai[i]; }
-        if (sprite_in_rect(leader[i], x, y)) { return leader[i]; }
+        if (sol_sprite_in_rect(ai[i], x, y)) { return ai[i]; }
+        if (sol_sprite_in_rect(leader[i], x, y)) { return leader[i]; }
     }
 
     return SPRITE_ERROR;
@@ -439,24 +426,24 @@ int inventory_window_handle_mouse_down(const uint32_t button, const uint32_t x, 
 }
 
 static void clicked_slot(const int slot) {
-    item_t* mouse_item = mouse_get_item();
+    item_t* mouse_item = sol_mouse_get_item();
     entity_t *player = player_get(char_selected);
     item_t *player_item = player->inv + slot;
 
     if (mouse_item) { // mouse has an item
-        if (!item_allowed_in_slot(mouse_get_item(), slot)) { return; }
+        if (!item_allowed_in_slot(sol_mouse_get_item(), slot)) { return; }
         if (player_item->ds_id) { // If we are doing a swap
             // Order matters.
             player_item = item_dup(player_item);
             entity_copy_item(player, mouse_item, slot);
-            mouse_set_as_item(player_item);
+            sol_mouse_set_as_item(player_item);
             item_free_except_graphics(player_item);
         } else {
             entity_copy_item(player, mouse_item, slot);
-            mouse_free_item();
+            sol_mouse_free_item();
         }
     } else if (player_item->ds_id) {
-        mouse_set_as_item(player->inv + slot);
+        sol_mouse_set_as_item(player->inv + slot);
         entity_clear_item(player, slot);
     }
 }
@@ -513,23 +500,23 @@ int inventory_window_handle_mouse_up(const uint32_t button, const uint32_t x, co
 }
 
 void inventory_window_free() {
-    sprite_free(panel);
-    sprite_free(frame_message);
-    sprite_free(parchment);
-    sprite_free(flag_spear);
+    sol_sprite_free(panel);
+    sol_sprite_free(frame_message);
+    sol_sprite_free(parchment);
+    sol_sprite_free(flag_spear);
 
     for (int i = 0; i < 4; i++) {
-        sprite_free(ai[i]);
-        sprite_free(leader[i]);
-        sprite_free(ports[i]);
+        sol_sprite_free(ai[i]);
+        sol_sprite_free(leader[i]);
+        sol_sprite_free(ports[i]);
     }
-    sprite_free(game_return);
-    sprite_free(game_menu);
-    sprite_free(character);
-    sprite_free(inv);
-    sprite_free(magic);
-    sprite_free(status);
-    sprite_free(slots);
+    sol_sprite_free(game_return);
+    sol_sprite_free(game_menu);
+    sol_sprite_free(character);
+    sol_sprite_free(inv);
+    sol_sprite_free(magic);
+    sol_sprite_free(status);
+    sol_sprite_free(slots);
 }
 
 void inventory_window_return_control () {
@@ -568,8 +555,8 @@ void inventory_window_return_control () {
             }
         }
     } else if (last_selection == SELECT_ALS) {
-        if (add_load_save_get_action() == ACTION_ADD) {
-            uint32_t sel = add_load_save_get_selection();
+        if (sol_add_load_save_get_action() == ACTION_ADD) {
+            uint32_t sel = sol_add_load_save_get_selection();
             if (!ds_load_character_charsave(slot_clicked, sel)) {
                 printf("Char loading failed.\n");
             } else {

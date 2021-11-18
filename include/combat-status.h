@@ -1,7 +1,6 @@
 #ifndef COMBAT_STATUS_H
 #define COMBAT_STATUS_H
 
-#include <SDL2/SDL.h>
 #include "window-manager.h"
 #include "../../src/combat.h"
 
@@ -12,7 +11,7 @@ typedef struct combat_status_s {
     uint16_t move;
 } combat_status_t;
 
-combat_status_t* combat_status_get();
+combat_status_t* sol_combat_status_get();
 
 extern sol_wops_t combat_status_window;
 
