@@ -3,6 +3,7 @@
 #include "map.h"
 #include "audio.h"
 #include "font.h"
+#include "utils.h"
 #include "player.h"
 #include "../src/lua-inc.h"
 #include "../src/settings.h"
@@ -11,9 +12,9 @@
 #include "window-manager.h"
 #include "../src/gameloop.h"
 #include "narrate.h"
-#include "windows/window-main.h"
+#include "window-main.h"
 #include "inventory.h"
-#include "windows/add-load-save.h"
+#include "add-load-save.h"
 #include "view-character.h"
 #include "game-menu.h"
 #include "../src/combat.h"
@@ -48,7 +49,7 @@ static uint8_t player_directions[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 static textbox_t *textbox = NULL;
 
-void main_set_textbox(textbox_t *tb) {
+extern void sol_textbox_set_current(textbox_t *tb) {
     textbox = tb;
 }
 
@@ -85,6 +86,15 @@ void main_set_browser_mode() {
     browser_mode = 1;
 }
 
+sol_mouse_button_t convert_mouse_button(uint32_t button) {
+    switch(button) {
+        case SDL_BUTTON_RIGHT: return SOL_MOUSE_BUTTON_RIGHT;
+        case SDL_BUTTON_LEFT: return SOL_MOUSE_BUTTON_LEFT;
+        case SDL_BUTTON_MIDDLE: return SOL_MOUSE_BUTTON_MIDDLE;
+    }
+    return SOL_MOUSE_BUTTON_LEFT;
+}
+
 void handle_mouse_motion() {
     int x, y;
 
@@ -93,7 +103,7 @@ void handle_mouse_motion() {
     sol_window_handle_mouse(x, y);
 }
 
-void handle_mouse_down(uint32_t button) {
+void handle_mouse_down(const sol_mouse_button_t button) {
     int x, y;
 
     SDL_GetMouseState(&x, &y);
@@ -101,7 +111,7 @@ void handle_mouse_down(uint32_t button) {
     sol_window_handle_mouse_down(button, x, y);
 }
 
-void handle_mouse_up(uint32_t button) {
+void handle_mouse_up(const sol_mouse_button_t button) {
     int x, y;
 
     SDL_GetMouseState(&x, &y);
@@ -214,10 +224,10 @@ void handle_input() {
                     narrate_clear();
                     sol_game_loop_signal(WAIT_NARRATE_CONTINUE, 0);
                 }
-                handle_mouse_down(event.button.button);
+                handle_mouse_down(convert_mouse_button(event.button.button));
                 break;
             case SDL_MOUSEBUTTONUP:
-                handle_mouse_up(event.button.button);
+                handle_mouse_up(convert_mouse_button(event.button.button));
                 break;
         }
     }
@@ -239,7 +249,7 @@ void main_set_xscroll(int amt) { xmapdiff = amt; }
 void main_set_yscroll(int amt) { ymapdiff = amt; }
 void main_set_ignore_repeat(int repeat) { ignore_repeat = repeat; }
 
-void main_center_on_player() {
+void sol_center_on_player() {
     int w, h;
 
     SDL_GetRendererOutputSize(renderer, &w, &h);
@@ -306,9 +316,8 @@ static void gui_init() {
 
     last_tick = SDL_GetTicks();
 
-    sprite_init();
+    sol_sprite_init();
     sol_window_init();
-    animate_init();
 }
 
 void port_init() {
@@ -319,14 +328,13 @@ void port_init() {
 
     sol_gameloop_init();
 
-    player_init();
     sol_mouse_init(renderer);
 }
 
 void port_close() {
     // Order matters.
     sol_audio_cleanup();
-    player_close();
+    sol_player_close();
     sol_window_free();
 
     dsl_cleanup();
@@ -378,7 +386,6 @@ static void init(int args, char *argv[]) {
 
     sol_gameloop_init();
 
-    player_init();
     sol_mouse_init(renderer);
     sol_audio_init();
 
@@ -425,7 +432,7 @@ static void init(int args, char *argv[]) {
     }
 
     ls_load_save_file("save00.sav");
-    main_center_on_player();
+    sol_center_on_player();
     // Start the main game.
     //window_push(renderer, &main_window, 0, 0);
 }

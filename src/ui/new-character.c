@@ -1,18 +1,17 @@
 #include "new-character.h"
-#include "../main.h"
-#include "../../src/gff.h"
 #include "gfftypes.h"
 #include "narrate.h"
+#include "label.h"
 #include "popup.h"
-#include "../textbox.h"
-#include "../sprite.h"
+#include "sol_textbox.h"
+#include "../../src/gff.h"
 #include "../../src/wizard.h"
 #include "../../src/player.h"
 #include "../../src/rules.h"
 #include "../../src/settings.h"
+
 #include <string.h>
 #include <time.h>
-#include <SDL2/SDL.h>
 
 #define BUF_MAX (1<<10)
 
@@ -37,7 +36,7 @@ static textbox_t* name_tb;
 
 // Store this so we don't trigger mouseup events in sprites/labels we didn't mousedown in
 static sol_sprite_t last_sprite_mousedowned;
-static label_t *last_label_mousedowned;
+static sol_label_t *last_label_mousedowned;
 
 static uint8_t show_psionic_label = 1;
 static int8_t sphere_selection = -1;
@@ -89,7 +88,7 @@ psionic_list_t* sol_new_character_get_psionic_list() {
 }
 
 char* sol_new_character_get_name() {
-    return textbox_get_text(name_tb);
+    return sol_textbox_get_text(name_tb);
 }
 
 // FIXME - For DS2/DSO, there may be new random names (I don't think there are?)
@@ -108,7 +107,7 @@ static void get_random_name() {
     gff_get_resource_ids(RESOURCE_GFF_INDEX, GFF_TEXT, res_ids);
     gff_chunk_header_t chunk = gff_find_chunk_header(RESOURCE_GFF_INDEX, GFF_TEXT, res_ids[chosen_name]);
     gff_read_chunk(RESOURCE_GFF_INDEX, &chunk, name_text, 32);
-    textbox_set_text(name_tb, name_text);
+    sol_textbox_set_text(name_tb, name_text);
 }
 
 static int convert_to_actual_class(const uint8_t class) {
@@ -157,8 +156,8 @@ static void set_class_frames() {
 
     for (int i = 0; i < 8; i++) {
         pc.class[next_class].class = convert_to_actual_class(i);
-        if (sprite_get_frame(class_sel[i]) != 1) {
-            sprite_set_frame(classes[i], 
+        if (sol_sprite_get_frame(class_sel[i]) != 1) {
+            sol_sprite_set_frame(classes[i], 
                 (next_class < 3 && dnd2e_is_class_allowed(pc.race, pc.class
                 ))
                 ? 0 : 2);
@@ -175,7 +174,7 @@ static void load_character_sprite() {
     int gender = pc.gender - 1;
 
     if (spr != SPRITE_ERROR) {
-        sprite_free(spr);
+        sol_sprite_free(spr);
         spr = SPRITE_ERROR;
     }
 
@@ -221,27 +220,27 @@ static void new_character_init(const uint32_t _x, const uint32_t _y) {
     psionic_label = sol_sprite_new(pal, 217 + x, 140 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2047);
     done_button = sol_sprite_new(pal, 240 + x, 174 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2000);
     exit_button = sol_sprite_new(pal, 255 + x, 156 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2058);
-    name_tb = textbox_create(32, 34 + offsetx / zoom, 124 + offsety / zoom);
-    main_set_textbox(name_tb);
+    name_tb = sol_textbox_create(32, 34 + offsetx / zoom, 124 + offsety / zoom);
+    sol_textbox_set_current(name_tb);
 
     init_pc();
     text_cursor = sol_sprite_new(pal, 170 + x, 150 + y, // Blinking text cursor (for the player's name)
         zoom, RESOURCE_GFF_INDEX, GFF_ICON, 100);
-    sprite_set_frame(text_cursor, 1);
+    sol_sprite_set_frame(text_cursor, 1);
 
     float shrink = .28 / zoom;
     float magnify = 1.0 / shrink;
     for (int i = 0; i < 6; i++) { // STR, DEX, CON, INT, WIS, CHA BUTTONS
         stats_align_hp_buttons[i] = sol_sprite_new(pal, (4 + x) * magnify, (138 + y + (i * 7.5)) * magnify,
             zoom * shrink, RESOURCE_GFF_INDEX, GFF_BMP, 5013);
-        sprite_set_frame(stats_align_hp_buttons[i], 1);
+        sol_sprite_set_frame(stats_align_hp_buttons[i], 1);
     }
     stats_align_hp_buttons[6] = sol_sprite_new(pal, (79 + x) * magnify, (145 + y) * magnify, // ALIGNMENT BUTTON
         zoom * shrink, RESOURCE_GFF_INDEX, GFF_BMP, 5013);
-    sprite_set_frame(stats_align_hp_buttons[6], 1);
+    sol_sprite_set_frame(stats_align_hp_buttons[6], 1);
     stats_align_hp_buttons[7] = sol_sprite_new(pal, (89 + x) * magnify, (175 + y) * magnify, // HP BUTTON
         zoom * shrink, RESOURCE_GFF_INDEX, GFF_BMP, 5013);
-    sprite_set_frame(stats_align_hp_buttons[7], 1);
+    sol_sprite_set_frame(stats_align_hp_buttons[7], 1);
 
 
     for (int i = 0; i < 8; i++) {
@@ -249,19 +248,19 @@ static void new_character_init(const uint32_t _x, const uint32_t _y) {
             zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2002 + i);
         class_sel[i] = sol_sprite_new(pal, 220 + x, 11 + y + (i * 8),
             zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20047);
-        sprite_set_frame(classes[i], 2);
+        sol_sprite_set_frame(classes[i], 2);
     }
     for (int i = 0; i < 3; i++) {
         psionic_devotion[i] = sol_sprite_new(pal, 217 + x, 105 + y + (i * 8),
             zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2038 + i);
-        sprite_set_frame(psionic_devotion[i], 0);
+        sol_sprite_set_frame(psionic_devotion[i], 0);
     }
     for (int i = 0; i < 4; i++) {
         spheres[i] = sol_sprite_new(pal, 216 + x, 105 + y + (i * 8),
             zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2042 + i);
         ps_sel[i] = sol_sprite_new(pal, 218 + x, 106 + y + (i * 8),
             zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20047);
-        sprite_set_frame(spheres[i], 0);
+        sol_sprite_set_frame(spheres[i], 0);
     }
     for (int i = 0; i < 11; i++) {
         die[i] = sol_sprite_new(pal, 142 + x, 65 + y,
@@ -283,7 +282,7 @@ static void new_character_init(const uint32_t _x, const uint32_t _y) {
     set_class_frames(); // go ahead and setup the new class frames
     select_class(2); // Fighter is the default class
     item_set_starting(&pc);
-    label_create_group();
+    sol_label_create_group();
 }
 
 static void update_die_countdown() {
@@ -349,19 +348,19 @@ void new_character_render(void* data) {
     sol_sprite_render(done_button);
     sol_sprite_render(exit_button);
 
-    label_group_set_font(FONT_GREYLIGHT);
-    label_set_group(&pc, SCREEN_NEW_CHARACTER);
-    label_set_positions(9, 249, SCREEN_NEW_CHARACTER);
-    label_render_full(offsetx, offsety);
+    sol_label_group_set_font(FONT_GREYLIGHT);
+    sol_label_set_group(&pc, SCREEN_NEW_CHARACTER);
+    sol_label_set_positions(9, 249, SCREEN_NEW_CHARACTER);
+    sol_label_render_full(offsetx, offsety);
 
-    textbox_render(name_tb);
+    sol_textbox_render(name_tb);
 }
 
 void update_stats_alignment_hp(int i, uint32_t button)
 {
     switch (button)
     {
-        case SDL_BUTTON_LEFT:
+        case SOL_MOUSE_BUTTON_LEFT:
             switch (i) {
                 case 0: // STR
                     pc.stats.str++;
@@ -393,7 +392,7 @@ void update_stats_alignment_hp(int i, uint32_t button)
                     break;
             }
         break;
-        case SDL_BUTTON_RIGHT:
+        case SOL_MOUSE_BUTTON_RIGHT:
             switch (i) {
                 case 0: // STR
                     pc.stats.str--;
@@ -472,46 +471,46 @@ static void set_ps_sel_frames() {
 
     // Setup selection correctly
     if (show_psionic_label) {
-        sprite_set_frame(ps_sel[0], spell_has_psin(&psi, PSIONIC_PSYCHOKINETIC));
-        sprite_set_frame(ps_sel[1], spell_has_psin(&psi, PSIONIC_PSYCHOMETABOLISM));
-        sprite_set_frame(ps_sel[2], spell_has_psin(&psi, PSIONIC_TELEPATH));
-        sprite_set_frame(ps_sel[3], 0);
+        sol_sprite_set_frame(ps_sel[0], spell_has_psin(&psi, PSIONIC_PSYCHOKINETIC));
+        sol_sprite_set_frame(ps_sel[1], spell_has_psin(&psi, PSIONIC_PSYCHOMETABOLISM));
+        sol_sprite_set_frame(ps_sel[2], spell_has_psin(&psi, PSIONIC_TELEPATH));
+        sol_sprite_set_frame(ps_sel[3], 0);
 
         ps_selections = spell_has_psin(&psi, PSIONIC_PSYCHOKINETIC)
                + spell_has_psin(&psi, PSIONIC_PSYCHOMETABOLISM)
                + spell_has_psin(&psi, PSIONIC_TELEPATH);
 
         if (ps_selections > 0) {
-            sprite_set_frame(psionic_devotion[0], spell_has_psin(&psi, PSIONIC_PSYCHOKINETIC) ? 0 : 2);
-            sprite_set_frame(psionic_devotion[1], spell_has_psin(&psi, PSIONIC_PSYCHOMETABOLISM) ? 0 : 2);
-            sprite_set_frame(psionic_devotion[2], spell_has_psin(&psi, PSIONIC_TELEPATH) ? 0 : 2);
+            sol_sprite_set_frame(psionic_devotion[0], spell_has_psin(&psi, PSIONIC_PSYCHOKINETIC) ? 0 : 2);
+            sol_sprite_set_frame(psionic_devotion[1], spell_has_psin(&psi, PSIONIC_PSYCHOMETABOLISM) ? 0 : 2);
+            sol_sprite_set_frame(psionic_devotion[2], spell_has_psin(&psi, PSIONIC_TELEPATH) ? 0 : 2);
         } else {
-            sprite_set_frame(psionic_devotion[0], 0);
-            sprite_set_frame(psionic_devotion[1], 0);
-            sprite_set_frame(psionic_devotion[2], 0);
+            sol_sprite_set_frame(psionic_devotion[0], 0);
+            sol_sprite_set_frame(psionic_devotion[1], 0);
+            sol_sprite_set_frame(psionic_devotion[2], 0);
         }
     } else {
-        sprite_set_frame(ps_sel[0], (sphere_selection == 0) ? 1 : 0);
-        sprite_set_frame(ps_sel[1], (sphere_selection == 1) ? 1 : 0);
-        sprite_set_frame(ps_sel[2], (sphere_selection == 2) ? 1 : 0);
-        sprite_set_frame(ps_sel[3], (sphere_selection == 3) ? 1 : 0);
+        sol_sprite_set_frame(ps_sel[0], (sphere_selection == 0) ? 1 : 0);
+        sol_sprite_set_frame(ps_sel[1], (sphere_selection == 1) ? 1 : 0);
+        sol_sprite_set_frame(ps_sel[2], (sphere_selection == 2) ? 1 : 0);
+        sol_sprite_set_frame(ps_sel[3], (sphere_selection == 3) ? 1 : 0);
 
         if (sphere_selection == -1) {
-            sprite_set_frame(spheres[0], 0);
-            sprite_set_frame(spheres[1], 0);
-            sprite_set_frame(spheres[2], 0);
-            sprite_set_frame(spheres[3], 0);
+            sol_sprite_set_frame(spheres[0], 0);
+            sol_sprite_set_frame(spheres[1], 0);
+            sol_sprite_set_frame(spheres[2], 0);
+            sol_sprite_set_frame(spheres[3], 0);
         } else {
-            sprite_set_frame(spheres[0], (sphere_selection == 0) ? 0 : 2);
-            sprite_set_frame(spheres[1], (sphere_selection == 1) ? 0 : 2);
-            sprite_set_frame(spheres[2], (sphere_selection == 2) ? 0 : 2);
-            sprite_set_frame(spheres[3], (sphere_selection == 3) ? 0 : 2);
+            sol_sprite_set_frame(spheres[0], (sphere_selection == 0) ? 0 : 2);
+            sol_sprite_set_frame(spheres[1], (sphere_selection == 1) ? 0 : 2);
+            sol_sprite_set_frame(spheres[2], (sphere_selection == 2) ? 0 : 2);
+            sol_sprite_set_frame(spheres[3], (sphere_selection == 3) ? 0 : 2);
         }
     }
 }
 
 static void toggle_psi(const uint16_t i) {
-    int cframe = sprite_get_frame(ps_sel[i]);
+    int cframe = sol_sprite_get_frame(ps_sel[i]);
     int ps_selections = spell_has_psin(&psi, PSIONIC_PSYCHOKINETIC)
            + spell_has_psin(&psi, PSIONIC_PSYCHOMETABOLISM)
            + spell_has_psin(&psi, PSIONIC_TELEPATH);
@@ -524,8 +523,8 @@ static void toggle_psi(const uint16_t i) {
 }
 
 static void toggle_sphere(const uint16_t i) {
-    int cframe = sprite_get_frame(ps_sel[i]);
-    sprite_set_frame(ps_sel[i], cframe == 1 ? 0 : 1);
+    int cframe = sol_sprite_get_frame(ps_sel[i]);
+    sol_sprite_set_frame(ps_sel[i], cframe == 1 ? 0 : 1);
 
     sphere_selection = (cframe) ? -1 : i;
 
@@ -550,7 +549,7 @@ static void deselect_class(uint8_t class_selection) {
 
     memset(pc.class + 2, 0x0, sizeof(class_t));
     pc.class[2].level = pc.class[2].class = -1;
-    sprite_set_frame(class_sel[class_selection], 0);
+    sol_sprite_set_frame(class_sel[class_selection], 0);
     show_psionic_label = 1;
 
     set_class_frames();
@@ -567,7 +566,7 @@ static void select_class(uint8_t class) {
     int pos = 0;
     if (pc.class[pos].class != -1) { pos++; }
     if (pc.class[pos].class != -1) { pos++; }
-    sprite_set_frame(class_sel[class], 1);
+    sol_sprite_set_frame(class_sel[class], 1);
 
     pc.alignment = pc.class[0].class == -1 ? TRUE_NEUTRAL : pc.alignment;
     pc.class[pos].class = convert_to_actual_class(class);
@@ -620,7 +619,7 @@ static void fix_race_gender() { // move the race/gender to the appropiate spot
     pc.class[0].class = pc.class[1].class = pc.class[2].class = -1;
     pc.class[0].level = pc.class[1].level = pc.class[2].level = -1;
     for (int i = 0; i < 8; i++)
-        sprite_set_frame(class_sel[i], 0);
+        sol_sprite_set_frame(class_sel[i], 0);
 
     if (!changed_name) { // Only automatically generate a name if the player hasn't modified it
         get_random_name();
@@ -666,45 +665,45 @@ int new_character_handle_mouse_movement(const uint32_t x, const uint32_t y) {
     uint16_t cspr = SPRITE_ERROR;
 
     for (int i = 0; i < 8; i++) {
-        if (sprite_in_rect(classes[i], x, y)) {
+        if (sol_sprite_in_rect(classes[i], x, y)) {
             cspr = classes[i];
         }
     }
 
-    if (sprite_in_rect(sphere_label, x, y)) {
+    if (sol_sprite_in_rect(sphere_label, x, y)) {
         cspr = show_psionic_label ? sphere_label : psionic_label;
     }
 
     if (show_psionic_label) {
         for (int i = 0; i < 3; i++) {
-            if (sprite_in_rect(psionic_devotion[i], x, y)) {
+            if (sol_sprite_in_rect(psionic_devotion[i], x, y)) {
                 cspr = psionic_devotion[i];
             }
         }
     }
     else {
         for (int i = 0; i < 4; i++) {
-            if (sprite_in_rect(spheres[i], x, y)) {
+            if (sol_sprite_in_rect(spheres[i], x, y)) {
                 cspr = spheres[i];
             }
         }
     }
-    sprite_set_frame(done_button, 0);
-    sprite_set_frame(exit_button, 0);
-    if (sprite_in_rect(done_button, x, y)) {
+    sol_sprite_set_frame(done_button, 0);
+    sol_sprite_set_frame(exit_button, 0);
+    if (sol_sprite_in_rect(done_button, x, y)) {
         cspr = done_button;
     }
-    if (sprite_in_rect(exit_button, x, y)) {
+    if (sol_sprite_in_rect(exit_button, x, y)) {
         cspr = exit_button;
     }
 
-    if (sprite_get_frame(cspr) < 2) {
-        sprite_set_frame(cspr, 1);
+    if (sol_sprite_get_frame(cspr) < 2) {
+        sol_sprite_set_frame(cspr, 1);
     }
 
     if (last_spr != SPRITE_ERROR && last_spr != cspr) {
-        if (sprite_get_frame(last_spr) < 2) {
-            sprite_set_frame(last_spr, 0);
+        if (sol_sprite_get_frame(last_spr) < 2) {
+            sol_sprite_set_frame(last_spr, 0);
         }
     }
 
@@ -715,80 +714,80 @@ int new_character_handle_mouse_movement(const uint32_t x, const uint32_t y) {
 
 int new_character_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
     // Only support Left and Right mouse buttons for now
-    if (button != SDL_BUTTON_LEFT && button != SDL_BUTTON_RIGHT) {
+    if (button != SOL_MOUSE_BUTTON_LEFT && button != SOL_MOUSE_BUTTON_RIGHT) {
         return 1; // Handle
     }
 
     last_sprite_mousedowned = 0;
-    last_label_mousedowned  = label_group_point_in(x - offsetx, y - offsety);
+    last_label_mousedowned  = sol_label_group_point_in(x - offsetx, y - offsety);
 
-    if (sprite_in_rect(done_button, x, y)) {
+    if (sol_sprite_in_rect(done_button, x, y)) {
         last_sprite_mousedowned = done_button;
-        sprite_set_frame(done_button, 2);
+        sol_sprite_set_frame(done_button, 2);
     }
 
-    if (sprite_in_rect(exit_button, x, y)) {
+    if (sol_sprite_in_rect(exit_button, x, y)) {
         last_sprite_mousedowned = exit_button;
-        sprite_set_frame(exit_button, 2);
+        sol_sprite_set_frame(exit_button, 2);
     }
 
     for (int i = 0; i < 8; i++) {
-        if (sprite_in_rect(stats_align_hp_buttons[i], x, y)) {
+        if (sol_sprite_in_rect(stats_align_hp_buttons[i], x, y)) {
             last_sprite_mousedowned = stats_align_hp_buttons[i];
         }
     }
 
-    if (sprite_in_rect(parchment[2], x, y)) { // Was die[die_pos]
+    if (sol_sprite_in_rect(parchment[2], x, y)) { // Was die[die_pos]
         last_sprite_mousedowned = parchment[2];
     }
 
     for (int i = 0; i < 8; i++) {
-        if (sprite_in_rect(classes[i], x, y)) {
+        if (sol_sprite_in_rect(classes[i], x, y)) {
             last_sprite_mousedowned = classes[i];
         }
     }
 
-    if (sprite_in_rect(parchment[0], x, y)) { // Change race/gender via portrait - Was races[pc.race]
+    if (sol_sprite_in_rect(parchment[0], x, y)) { // Change race/gender via portrait - Was races[pc.race]
         last_sprite_mousedowned = parchment[0];
     }
 
-    if (sprite_in_rect(parchment[1], x, y)) { // Change race/gender via sprite
+    if (sol_sprite_in_rect(parchment[1], x, y)) { // Change race/gender via sprite
         last_sprite_mousedowned = parchment[1];
     }
 
     for (int i = 0; i < 4; i++) {
         if (i < 3 && show_psionic_label) {
-            if (sprite_in_rect(psionic_devotion[i], x, y)) {
+            if (sol_sprite_in_rect(psionic_devotion[i], x, y)) {
                 last_sprite_mousedowned = psionic_devotion[i];
             }
         }
 
         if (!show_psionic_label) {
-            if (sprite_in_rect(spheres[i], x, y)) {
+            if (sol_sprite_in_rect(spheres[i], x, y)) {
                 last_sprite_mousedowned = spheres[i];
             }
         }
     }
 
-    if (show_psionic_label && sprite_get_frame(psionic_label) < 2 && sprite_in_rect(psionic_label, x, y)) {
+    if (show_psionic_label && sol_sprite_get_frame(psionic_label) < 2 && sol_sprite_in_rect(psionic_label, x, y)) {
         last_sprite_mousedowned = psionic_label;
-    } else if (!show_psionic_label && sprite_get_frame(sphere_label) < 2 && sprite_in_rect(sphere_label, x, y)) {
+    } else if (!show_psionic_label && sol_sprite_get_frame(sphere_label) < 2 && sol_sprite_in_rect(sphere_label, x, y)) {
         last_sprite_mousedowned = sphere_label;
     }
     
-    textbox_set_focus(name_tb, (textbox_is_in(name_tb, x, y)));
+    sol_textbox_set_focus(name_tb, (sol_textbox_is_in(name_tb, x, y)));
 
     return 1; // handle
 }
 
 int new_character_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
     // Only support Left and Right mouse buttons for now
-    if (button != SDL_BUTTON_LEFT && button != SDL_BUTTON_RIGHT) {
+    if (button != SOL_MOUSE_BUTTON_LEFT && button != SOL_MOUSE_BUTTON_RIGHT) {
         return 1;
     }
 
     if (last_label_mousedowned != NULL &&
-        last_label_mousedowned == label_group_point_in(x - offsetx, y - offsety))
+        last_label_mousedowned == sol_label_group_point_in(x - offsetx, y - offsety))
     {
         switch (last_label_mousedowned->id)
         {
@@ -828,22 +827,22 @@ int new_character_handle_mouse_up(const uint32_t button, const uint32_t x, const
     }
 
     for (int i = 0; i < 8; i++) {
-        if (last_sprite_mousedowned == stats_align_hp_buttons[i] && sprite_in_rect(stats_align_hp_buttons[i], x, y)) {
+        if (last_sprite_mousedowned == stats_align_hp_buttons[i] && sol_sprite_in_rect(stats_align_hp_buttons[i], x, y)) {
             update_stats_alignment_hp(i, button);
         }
     }
 
-    if (last_sprite_mousedowned == parchment[2] && sprite_in_rect(parchment[2], x, y)) {
+    if (last_sprite_mousedowned == parchment[2] && sol_sprite_in_rect(parchment[2], x, y)) {
         die_countdown = 40;
     }
 
     for (int i = 0; i < 8; i++) {
-        if (last_sprite_mousedowned == classes[i] && sprite_in_rect(classes[i], x, y)) {
-            if (sprite_get_frame(class_sel[i]) == 1) {
+        if (last_sprite_mousedowned == classes[i] && sol_sprite_in_rect(classes[i], x, y)) {
+            if (sol_sprite_get_frame(class_sel[i]) == 1) {
                 deselect_class(i);
                 dnd2e_set_starting_level(&pc);
                 item_set_starting(&pc);
-            } else if (sprite_get_frame(classes[i]) < 2) {
+            } else if (sol_sprite_get_frame(classes[i]) < 2) {
                 select_class(i);
                 dnd2e_set_starting_level(&pc);
                 item_set_starting(&pc);
@@ -852,10 +851,10 @@ int new_character_handle_mouse_up(const uint32_t button, const uint32_t x, const
     }
 
     // Change race/gender via portrait
-    if (last_sprite_mousedowned == parchment[0] && sprite_in_rect(parchment[0], x, y)) {
-        if (button == SDL_BUTTON_LEFT) {
+    if (last_sprite_mousedowned == parchment[0] && sol_sprite_in_rect(parchment[0], x, y)) {
+        if (button == SOL_MOUSE_BUTTON_LEFT) {
             pc.gender++;
-        } else if (button == SDL_BUTTON_RIGHT) {
+        } else if (button == SOL_MOUSE_BUTTON_RIGHT) {
             pc.gender--;
         }
 
@@ -863,10 +862,10 @@ int new_character_handle_mouse_up(const uint32_t button, const uint32_t x, const
     }
 
     // Change race/gender via sprite - FIXME: This should change just the SPRITE (not race/gender) in DSO!
-    if (last_sprite_mousedowned == parchment[1] && sprite_in_rect(parchment[1], x, y)) {
-        if (button == SDL_BUTTON_LEFT) {
+    if (last_sprite_mousedowned == parchment[1] && sol_sprite_in_rect(parchment[1], x, y)) {
+        if (button == SOL_MOUSE_BUTTON_LEFT) {
             pc.gender++;
-        } else if (button == SDL_BUTTON_RIGHT) {
+        } else if (button == SOL_MOUSE_BUTTON_RIGHT) {
             pc.gender--;
         }
 
@@ -875,16 +874,16 @@ int new_character_handle_mouse_up(const uint32_t button, const uint32_t x, const
 
     for (int i = 0; i < 4; i++) {
         if (i < 3 && show_psionic_label) {
-            if (last_sprite_mousedowned == psionic_devotion[i] && sprite_in_rect(psionic_devotion[i], x, y)) {
-                if (sprite_get_frame(psionic_devotion[i]) < 2) {
+            if (last_sprite_mousedowned == psionic_devotion[i] && sol_sprite_in_rect(psionic_devotion[i], x, y)) {
+                if (sol_sprite_get_frame(psionic_devotion[i]) < 2) {
                     toggle_psi(i);
                 }
             }
         }
 
         if (!show_psionic_label) {
-            if (last_sprite_mousedowned == spheres[i] && sprite_in_rect(spheres[i], x, y)) {
-                if (sprite_get_frame(spheres[i]) < 2) {
+            if (last_sprite_mousedowned == spheres[i] && sol_sprite_in_rect(spheres[i], x, y)) {
+                if (sol_sprite_get_frame(spheres[i]) < 2) {
                     toggle_sphere(i);
                 }
             }
@@ -893,20 +892,20 @@ int new_character_handle_mouse_up(const uint32_t button, const uint32_t x, const
         sol_sprite_render(ps_sel[i]);
     }
 
-    if (show_psionic_label && sprite_get_frame(psionic_label) < 2 && last_sprite_mousedowned == psionic_label && sprite_in_rect(psionic_label, x, y)) {
+    if (show_psionic_label && sol_sprite_get_frame(psionic_label) < 2 && last_sprite_mousedowned == psionic_label && sol_sprite_in_rect(psionic_label, x, y)) {
         show_psionic_label = 0;
         set_ps_sel_frames();
-    } else if (!show_psionic_label && sprite_get_frame(sphere_label) < 2 && last_sprite_mousedowned == sphere_label && sprite_in_rect(sphere_label, x, y)) {
+    } else if (!show_psionic_label && sol_sprite_get_frame(sphere_label) < 2 && last_sprite_mousedowned == sphere_label && sol_sprite_in_rect(sphere_label, x, y)) {
         show_psionic_label = 1;
         set_ps_sel_frames();
     }
 
-    if (last_sprite_mousedowned == done_button && sprite_in_rect(done_button, x, y)) {
+    if (last_sprite_mousedowned == done_button && sol_sprite_in_rect(done_button, x, y)) {
         is_valid = 1;
         sol_window_pop();
     }
 
-    if (last_sprite_mousedowned == exit_button && sprite_in_rect(exit_button, x, y)) {
+    if (last_sprite_mousedowned == exit_button && sol_sprite_in_rect(exit_button, x, y)) {
         is_valid = 0;
         sol_window_pop();
     }
@@ -916,39 +915,39 @@ int new_character_handle_mouse_up(const uint32_t button, const uint32_t x, const
 
 static void update_ui() {
     int show_spheres = is_divine_spell_user();
-    sprite_set_frame(sphere_label, show_spheres ? 0 : 2);
-    sprite_set_frame(psionic_label, show_spheres ? 0 : 2);
+    sol_sprite_set_frame(sphere_label, show_spheres ? 0 : 2);
+    sol_sprite_set_frame(psionic_label, show_spheres ? 0 : 2);
 }
 
 void new_character_free() {
-    sprite_free(background);
+    sol_sprite_free(background);
     for (int i = 0; i < 5; i++) {
-        sprite_free(parchment[i]);
+        sol_sprite_free(parchment[i]);
     }
     for (int i = 0; i < 8; i++) {
-        sprite_free(classes[i]);
-        sprite_free(class_sel[i]);
+        sol_sprite_free(classes[i]);
+        sol_sprite_free(class_sel[i]);
     }
     for (int i = 0; i < 3; i++) {
-        sprite_free(psionic_devotion[i]);
+        sol_sprite_free(psionic_devotion[i]);
     }
     for (int i = 0; i < 4; i++) {
-        sprite_free(spheres[i]);
-        sprite_free(ps_sel[i]);
+        sol_sprite_free(spheres[i]);
+        sol_sprite_free(ps_sel[i]);
     }
     for (int i = 0; i < 11; i++) {
-        sprite_free(die[i]);
+        sol_sprite_free(die[i]);
     }
     for (int i = 0; i < 14; i++) {
-        sprite_free(races[i]);
+        sol_sprite_free(races[i]);
     }
-    sprite_free(done);
-    sprite_free(sphere_label);
-    sprite_free(psionic_label);
-    sprite_free(done_button);
-    sprite_free(exit_button);
-    sprite_free(spr);
-    main_set_textbox(NULL);
+    sol_sprite_free(done);
+    sol_sprite_free(sphere_label);
+    sol_sprite_free(psionic_label);
+    sol_sprite_free(done_button);
+    sol_sprite_free(exit_button);
+    sol_sprite_free(spr);
+    sol_textbox_set_current(NULL);
 }
 
 sol_wops_t new_character_window = {

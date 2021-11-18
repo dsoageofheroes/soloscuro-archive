@@ -25,6 +25,7 @@ extern void      sol_player_render(const int slot);
 extern void      sol_player_render_portrait(const int slot);
 extern void      sol_player_load(const int slot, const float zoom);
 extern void      sol_player_load_graphics(const int slot);
+extern void      sol_player_close();
 
 enum{PLAYER_UP = 0x01, PLAYER_DOWN = 0x02, PLAYER_LEFT = 0x04, PLAYER_RIGHT = 0x08};
 

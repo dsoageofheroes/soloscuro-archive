@@ -2,16 +2,15 @@
 #include "gfftypes.h"
 #include "popup.h"
 #include "window-main.h"
+#include "sol_textbox.h"
+#include "mouse.h"
 #include "../../src/ds-load-save.h"
 #include "../../src/gff.h"
 #include "../../src/gff-char.h"
 #include "../../src/port.h"
 #include "../../src/settings.h"
 #include "../../src/dsl.h"
-#include "../textbox.h"
-#include "../main.h"
-#include "../map.h"
-#include "../player.h"
+#include "../../src/player.h"
 
 #define SAVE_FORMAT "save%02d.sav"
 
@@ -146,8 +145,8 @@ void add_load_save_init(const uint32_t x, const uint32_t y) {
     exit_btn = sol_sprite_new(pal, 230 + x / zoom, 50 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2058);
     delete_btn = sol_sprite_new(pal, 215 + x / zoom, 150 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2097);
     bar = sol_sprite_new(pal, 45 + x / zoom, 31 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 18100);
-    name_tb = textbox_create(32, 50 + x / zoom, 148 + y / zoom);
-    main_set_textbox(name_tb);
+    name_tb = sol_textbox_create(32, 50 + x / zoom, 148 + y / zoom);
+    sol_textbox_set_current(name_tb);
 
     switch(mode) {
         case ACTION_ADD:
@@ -203,7 +202,7 @@ void add_load_save_render(void *data) {
                 zoom * 47 + xoffset, zoom * (31 + (i - top_entry) * 11) + yoffset, 1<<10);
     }
 
-    textbox_render(name_tb);
+    sol_textbox_render(name_tb);
 }
 
 int add_load_save_handle_mouse_movement(const uint32_t x, const uint32_t y) {
@@ -246,7 +245,7 @@ int add_load_save_handle_mouse_movement(const uint32_t x, const uint32_t y) {
     return 1; // means I captured the mouse movement
 }
 
-int add_load_save_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
+int add_load_save_handle_mouse_down(const sol_mouse_button_t button, const uint32_t x, const uint32_t y) {
     const float zoom = settings_zoom();
     if (sol_sprite_in_rect(action_btn, x, y)) {
         sol_sprite_set_frame(action_btn, 2);
@@ -269,12 +268,12 @@ int add_load_save_handle_mouse_down(const uint32_t button, const uint32_t x, con
             selection = top_entry + i;
             if (selection < num_valid_entries) {
                 char_selected = res_ids[valids[selection]];
-                textbox_set_text(name_tb, entries[valids[selection]]);
+                sol_textbox_set_text(name_tb, entries[valids[selection]]);
             }
         }
     }
 
-    textbox_set_focus(name_tb, (textbox_is_in(name_tb, x, y)));
+    sol_textbox_set_focus(name_tb, (sol_textbox_is_in(name_tb, x, y)));
 
     return 1; // means I captured the mouse click
 }
@@ -283,10 +282,9 @@ static void load_game() {
     char buf[128];
     snprintf(buf, 128, SAVE_FORMAT, selection);
     sol_window_clear();
-    player_close();
-    player_init();
+    sol_player_close();
     ls_load_save_file(buf);
-    main_center_on_player();
+    sol_center_on_player();
 }
 
 int16_t find_next_save_file() {
@@ -302,7 +300,7 @@ int16_t find_next_save_file() {
     return -1;
 }
 
-int add_load_save_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
+int add_load_save_handle_mouse_up(const sol_mouse_button_t button, const uint32_t x, const uint32_t y) {
     char filename[32];
 
     if (sol_sprite_in_rect(action_btn, x, y)) {
@@ -317,7 +315,7 @@ int add_load_save_handle_mouse_up(const uint32_t button, const uint32_t x, const
             }
             if (selection < 0) { return 0; }
             snprintf(filename, 31, SAVE_FORMAT, selection);
-            ls_save_to_file(filename, textbox_get_text(name_tb));
+            ls_save_to_file(filename, sol_textbox_get_text(name_tb));
         }
         sol_sprite_set_frame(action_btn, 0);
         if (selection != -1) {
@@ -371,8 +369,8 @@ void add_load_save_free() {
     sol_sprite_free(title);
     sol_sprite_free(bar);
     free_entries();
-    textbox_free(name_tb);
-    main_set_textbox(NULL);
+    sol_textbox_free(name_tb);
+    sol_textbox_set_current(NULL);
 }
 
 extern int sol_add_load_save_get_action() { return last_action; }

@@ -2,7 +2,6 @@
 #define MAP_H
 
 #include <SDL2/SDL.h>
-#include "animate.h"
 #include "../src/region.h"
 #include "window-manager.h"
 

@@ -8,13 +8,13 @@
 #include "settings.h"
 #include "port.h"
 #include "entity-animation.h"
-#include "../sdl/player.h"
+#include "font.h"
 #include "narrate.h"
 #include "inventory.h"
 #include "combat-status.h"
-#include "../sdl/windows/new-character.h"
+#include "new-character.h"
 #include "view-character.h"
-#include "../sdl/windows/window-main.h"
+#include "window-main.h"
 
 #include "../sdl/map.h"
 
@@ -166,7 +166,7 @@ extern void sol_window_handle_mouse(const uint32_t x, const uint32_t y) {
     }
 }
 
-extern void sol_window_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
+extern void sol_window_handle_mouse_down(const sol_mouse_button_t button, const uint32_t x, const uint32_t y) {
     for (int i = MAX_SCREENS-1; i >= 0; i--) {
         if (windows[i].mouse_down && windows[i].mouse_down(button, x, y)) {
             i = 0; // exit loop, mouse has been handled!
@@ -183,7 +183,7 @@ extern int sol_window_handle_key_down(const enum entity_action_e action) {
     return 0;
 }
 
-extern void sol_window_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
+extern void sol_window_handle_mouse_up(const sol_mouse_button_t button, const uint32_t x, const uint32_t y) {
     for (int i = MAX_SCREENS-1; i >= 0; i--) {
         if (windows[i].mouse_up && windows[i].mouse_up(button, x, y)) {
             i = 0; // exit loop, mouse has been handled!
@@ -230,6 +230,7 @@ void sol_window_free() {
             windows[i].cleanup();
         }
     }
-    animate_close();
-    font_free();
+    printf("TODO: Do we need to close animations?\n");
+    //animate_close();
+    sol_font_free();
 }

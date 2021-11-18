@@ -59,7 +59,7 @@ static void create_font(SDL_Renderer *renderer, const uint32_t idx, const uint32
     free(dsfont);
 }
 
-uint32_t font_pixel_width(sol_font_t font, const char *text, const uint32_t len) {
+uint32_t sol_font_pixel_width(sol_font_t font, const char *text, const uint32_t len) {
     uint32_t sum = 0;
     size_t c;
 
@@ -78,7 +78,7 @@ uint16_t font_char_width(sol_font_t font, const int c) {
     return font_loc[font][c].w;
 }
 
-uint32_t font_pixel_height(sol_font_t font) {
+extern uint32_t sol_font_pixel_height(sol_font_t font) {
     return font_loc[font]['T'].h; // font height is the same for all characters
 }
 
@@ -140,7 +140,7 @@ extern void font_init(SDL_Renderer *renderer) {
 
 void font_render_center(SDL_Renderer *rend, sol_font_t font, const char *str, const SDL_Rect loc) {
     int len = strlen(str);
-    int pixel_width = (font_pixel_width(font, str, len));
+    int pixel_width = (sol_font_pixel_width(font, str, len));
     int offset = (loc.w / 2) - (pixel_width / 2);
     print_line_len(rend, font, str, loc.x + offset, loc.y, len);
 }
@@ -151,7 +151,7 @@ extern void sol_font_render_center(sol_font_t font, const char *str, const uint1
     font_render_center(main_get_rend(), font, str, loc);
 }
 
-extern void font_free() {
+extern void sol_font_free() {
     for (int i = 0; i < MAX_CHARS; i++) {
         SDL_DestroyTexture(font_table[0][i]);
     }

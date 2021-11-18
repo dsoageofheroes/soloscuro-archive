@@ -1,8 +1,9 @@
 #include "mouse.h"
-#include "animate.h"
 #include "../src/dsl.h"
 #include "../src/gff.h"
 #include "gfftypes.h"
+
+#include <SDL2/SDL.h>
 
 const static size_t ds1_icon_res[] = {
     6001, // regular

@@ -42,4 +42,3 @@ extern void sol_draw_cone(int sx, int sy, int range) {
         }
     }
 }
-

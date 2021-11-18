@@ -119,7 +119,11 @@ extern void port_window_render();
 extern void port_start_display_frame();
 extern void port_commit_display_frame();
 
+extern void sol_sprite_init();
 extern sol_sprite_t sol_sprite_new(gff_palette_t *pal,
+        const int offsetx, const int offsety, const float zoom,
+        const int gff_idx, const int type_id, const int res_id);
+extern uint16_t sol_sprite_append(uint16_t sprite_id, gff_palette_t *pal,
         const int offsetx, const int offsety, const float zoom,
         const int gff_idx, const int type_id, const int res_id);
 extern sol_sprite_t sol_sprite_create_from_data(unsigned char *data, const uint32_t w, const uint32_t h);
@@ -141,11 +145,13 @@ extern void sol_sprite_render_box(const uint16_t sprite_id, const uint16_t x,
     const uint16_t y, const uint16_t w, const uint16_t h);
 extern void sol_sprite_center(const int id, const int x, const int y, const int w, const int h);
 extern uint32_t sol_sprite_num_frames(const uint16_t id);
+extern void sol_sprite_render_flip(const uint16_t sprite_id, const int horizontal_flip, const int vertical_flip);
 
 extern void sol_mouse_set_as_power(power_t *pw);
 extern void sol_draw_cone(int sx, int sy, int range);
 extern uint32_t sol_get_camerax();
 extern uint32_t sol_get_cameray();
 
+extern void sol_center_on_player();
 
 #endif

@@ -1,10 +1,11 @@
-#include "../sdl/windows/add-load-save.h"
+#include "add-load-save.h"
 #include "gfftypes.h"
 #include "narrate.h"
-#include "../sdl/windows/new-character.h"
+#include "new-character.h"
 #include "popup.h"
 #include "view-character.h"
 #include "mouse.h"
+#include "../src/port.h"
 #include "../../src/gff.h"
 #include "../../src/gff-char.h"
 #include "../../src/rules.h"
@@ -12,6 +13,8 @@
 #include "../../src/player.h"
 #include "../../src/ds-load-save.h"
 #include "../../src/settings.h"
+
+#include <string.h>
 
 // Sprites
 static sol_sprite_t ai[4], leader[4], ports[4];
@@ -91,10 +94,10 @@ void inventory_window_init(const uint32_t _xoffset, const uint32_t _yoffset) {
     flag_spear = sol_sprite_new(pal, 232 + x, 5 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 13004);
     parchment = sol_sprite_new(pal, 75 + x, 36 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 13005);
     frame_message = sol_sprite_new(pal, 53 + x, 3 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 13000);
-    sprite_set_frame(frame_message, 0);
-    sprite_set_location(frame_message, (53 + x) * zoom, (183 + y) * zoom);
-    sprite_set_frame(frame_message, 3);
-    sprite_set_location(frame_message, (45 + x) * zoom, (161 + y) * zoom);
+    sol_sprite_set_frame(frame_message, 0);
+    sol_sprite_set_location(frame_message, (53 + x) * zoom, (183 + y) * zoom);
+    sol_sprite_set_frame(frame_message, 3);
+    sol_sprite_set_location(frame_message, (45 + x) * zoom, (161 + y) * zoom);
     slots = sol_sprite_new(pal, 53 + x, 3 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 13007);
     for (int i = 0; i < 23; i++) {
         sol_sprite_set_frame(slots, i);
@@ -311,7 +314,7 @@ void inventory_window_render(void *data) {
         //sol_sprite_render(port_background[i]);
         sol_sprite_set_frame(ports[i], player_exists(i) ? 1 : 2);
         sol_sprite_render(ports[i]);
-        if (sprite_in_rect(ports[i], mousex, mousey)) {
+        if (sol_sprite_in_rect(ports[i], mousex, mousey)) {
             sol_sprite_set_frame(ports[i], 1);
             sol_sprite_render(ports[i]);
             if (player_exists(i)) {
@@ -334,8 +337,8 @@ void inventory_window_render(void *data) {
     for (int i = 9; i < 23; i++) {
         as = items ? item_icon(items + i - 9) : NULL;
         sol_sprite_set_frame(slots, i);
-        int32_t x = sprite_getx(slots);
-        int32_t y = sprite_gety(slots);
+        int32_t x = sol_sprite_getx(slots);
+        int32_t y = sol_sprite_gety(slots);
         if (as && as->spr != SPRITE_ERROR) {
             sol_sprite_set_frame(slots, 2);
             sol_sprite_set_location(slots, x, y);
@@ -347,7 +350,7 @@ void inventory_window_render(void *data) {
         }
         do_slot_highlight(i, i - 9);
         if (item_allowed_in_slot(sol_mouse_get_item(), i - 9)) {
-            sol_sprite_set_frame(slots, sprite_in_rect(slots, mousex, mousey) ? 8 : 4);
+            sol_sprite_set_frame(slots, sol_sprite_in_rect(slots, mousex, mousey) ? 8 : 4);
             sol_sprite_set_location(slots, x, y);
             sol_sprite_render(slots);
         }
@@ -411,9 +414,9 @@ int inventory_window_handle_mouse_movement(const uint32_t x, const uint32_t y) {
     mousey = y;
 
     if (last_sprite != cur_sprite) {
-        sprite_set_frame(cur_sprite, sprite_get_frame(cur_sprite) + 1);
+        sol_sprite_set_frame(cur_sprite, sol_sprite_get_frame(cur_sprite) + 1);
         if (last_sprite != SPRITE_ERROR) {
-            sprite_set_frame(last_sprite, sprite_get_frame(last_sprite) - 1);
+            sol_sprite_set_frame(last_sprite, sol_sprite_get_frame(last_sprite) - 1);
         }
     }
     
@@ -452,8 +455,8 @@ int inventory_window_handle_mouse_up(const uint32_t button, const uint32_t x, co
     const float zoom = settings_zoom();
 
     for (int i = 0; i < 4; i++) {
-        if (sprite_in_rect(ports[i], x, y)) {
-            if (button == SDL_BUTTON_RIGHT) {
+        if (sol_sprite_in_rect(ports[i], x, y)) {
+            if (button == SOL_MOUSE_BUTTON_RIGHT) {
                 slot_clicked = i;
                 sol_window_push(&popup_window, 100, 75);
                 sol_popup_set_message("INACTIVE CHARACTER");
@@ -461,37 +464,37 @@ int inventory_window_handle_mouse_up(const uint32_t button, const uint32_t x, co
                 sol_popup_set_option(1, "ADD");
                 sol_popup_set_option(2, "CANCEL");
                 last_selection = SELECT_POPUP;
-            } else if (button == SDL_BUTTON_LEFT) {
+            } else if (button == SOL_MOUSE_BUTTON_LEFT) {
                 char_selected = i;
             }
         }
     }
 
-    if (sprite_in_rect(game_return, x, y)) {
+    if (sol_sprite_in_rect(game_return, x, y)) {
         sol_window_pop();
         return 1;
     } 
 
-    if (sprite_in_rect(character, x, y)) {
+    if (sol_sprite_in_rect(character, x, y)) {
         sol_window_push(&view_character_window, 0, 10);
         return 1;
     } 
 
     for (int i = 9; i < 23; i++) {
-        sprite_set_frame(slots, i);
-        if (sprite_in_rect(slots, x, y)) {
+        sol_sprite_set_frame(slots, i);
+        if (sol_sprite_in_rect(slots, x, y)) {
             clicked_slot(i-9);
         }
     }
 
-    sprite_set_frame(slots, 5);
+    sol_sprite_set_frame(slots, 5);
     for (int i = 0; i < 6; i++) {
-        sprite_set_location(slots, xoffset + 186 * zoom, yoffset + (18 + 18 * i) * zoom);
-        if (sprite_in_rect(slots, x, y)) {
+        sol_sprite_set_location(slots, xoffset + 186 * zoom, yoffset + (18 + 18 * i) * zoom);
+        if (sol_sprite_in_rect(slots, x, y)) {
             clicked_slot(14 + 2 * i);
         }
-        sprite_set_location(slots, xoffset + 204 * zoom, yoffset + (18 + 18 * i) * zoom);
-        if (sprite_in_rect(slots, x, y)) {
+        sol_sprite_set_location(slots, xoffset + 204 * zoom, yoffset + (18 + 18 * i) * zoom);
+        if (sol_sprite_in_rect(slots, x, y)) {
             clicked_slot(15 + 2 * i);
         }
     }

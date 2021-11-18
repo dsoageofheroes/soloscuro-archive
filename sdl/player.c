@@ -19,9 +19,6 @@
 
 enum entity_action_e last_action[MAX_PCS] = { EA_WALK_DOWN, EA_WALK_DOWN, EA_WALK_DOWN, EA_WALK_DOWN };
 
-void player_init() {
-}
-
 static int ticks_per_move = 30;
 static int count = 0;
 static int direction = 0x0;

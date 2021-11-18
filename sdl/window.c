@@ -2,21 +2,20 @@
 #include <SDL2/SDL.h>
 #include <stdio.h>
 #include "window-manager.h"
-#include "windows/add-load-save.h"
+#include "add-load-save.h"
 #include "game-menu.h"
 #include "inventory.h"
 #include "interact.h"
 #include "narrate.h"
-#include "windows/window-main.h"
+#include "window-main.h"
 #include "view-character.h"
 #include "popup.h"
-#include "windows/new-character.h"
+#include "new-character.h"
 #include "combat-status.h"
 #include "../src/dsl.h"
 #include "../src/gameloop.h"
 #include "../src/region.h"
 #include "sprite.h"
-#include "animate.h"
 
 static SDL_Renderer *renderer = NULL;
 static SDL_Surface *surface = NULL;
@@ -69,7 +68,6 @@ void window_debug_init(SDL_Surface *sur, SDL_Renderer *rend, const char *arg) {
 
     sprite_init();
     sol_window_init();
-    animate_init();
 
     load_window(arg);
 }

@@ -1,8 +1,8 @@
-#ifndef SDL_MOUSE_H
-#define SDL_MOUSE_H
+#ifndef SOL_MOUSE_H
+#define SOL_MOUSE_H
 
 #include "../src/ssi-item.h"
-#include "../sdl/sprite.h"
+#include "../src/port.h"
 #include "../src/powers.h"
 
 enum mouse_state {
@@ -19,6 +19,12 @@ enum mouse_state {
     MOUSE_WAIT,
     MOUSE_ITEM,
 };
+
+typedef enum sol_mouse_button_e {
+    SOL_MOUSE_BUTTON_LEFT,
+    SOL_MOUSE_BUTTON_RIGHT,
+    SOL_MOUSE_BUTTON_MIDDLE,
+} sol_mouse_button_t;
 
 extern void             sol_mouse_init();
 extern void             sol_mouse_set_as_item(item_t *item);

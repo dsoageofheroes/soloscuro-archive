@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include "map.h"
-#include "animate.h"
 #include "sprite.h"
 #include "main.h"
 #include "player.h"
@@ -22,7 +21,6 @@
 #define MAX_ANIMS (256)
 
 static map_t *cmap = NULL;
-static SDL_Renderer *cren = NULL;
 static animate_sprite_t anims[MAX_ANIMS];
 static animate_sprite_node_t *anim_nodes[MAX_ANIMS];
 static int anim_pos = 0;
@@ -41,7 +39,6 @@ void map_render_anims(SDL_Renderer *renderer);
 void map_load(const uint32_t _x, const uint32_t _y) {
     if (!cmap && region_manager_get_current()) {
         cmap = create_map();
-        cren = main_get_rend();
         cmap->region = region_manager_get_current();
         map_load_current_region();
     }
@@ -55,7 +52,7 @@ void map_cleanup() {
     clear_animations();
     map_free(cmap);
     if (tile_highlight != SPRITE_ERROR) {
-        sprite_free(tile_highlight);
+        sol_sprite_free(tile_highlight);
         tile_highlight = SPRITE_ERROR;
     }
     cmap = NULL;
@@ -104,7 +101,7 @@ static void map_load_current_region() {
         if (data && *data) {
             tile = SDL_CreateRGBSurfaceFrom(data, width, height, 32, 4*width, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
 
-            map->tiles[i + offset] = SDL_CreateTextureFromSurface(cren, tile);
+            map->tiles[i + offset] = SDL_CreateTextureFromSurface(main_get_rend(), tile);
             //map->tiles[i] = SDL_CreateTextureFromSurface(cren, tile);
             SDL_FreeSurface(tile);
 
@@ -137,23 +134,23 @@ static void map_load_current_region() {
 static void sprite_load_animation(entity_t *entity, gff_palette_t *pal) {
     const float zoom = settings_zoom();
     entity->anim.spr =
-        sprite_new(cren, pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP, entity->sprite.bmp_id);
+        sol_sprite_new(pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP, entity->sprite.bmp_id);
     if (entity->name) { // If it is a combat entity, then we need to add the combat sprites
-        sprite_append(entity->anim.spr, cren, pal, 0, 0, zoom,
+        sol_sprite_append(entity->anim.spr, pal, 0, 0, zoom,
             OBJEX_GFF_INDEX, GFF_BMP, entity->sprite.bmp_id + 1);
     }
     entity->anim.delay = 0;
     entity->anim.pos = 0;
-    entity->anim.w = sprite_getw(entity->anim.spr);
-    entity->anim.h = sprite_geth(entity->anim.spr);
+    entity->anim.w = sol_sprite_getw(entity->anim.spr);
+    entity->anim.h = sol_sprite_geth(entity->anim.spr);
     entity->anim.x = (entity->mapx * 16 + entity->sprite.xoffset) * zoom;
     entity->anim.y = (entity->mapy * 16 + entity->sprite.yoffset + entity->mapz) * zoom;
     entity->anim.destx = entity->anim.x;
-    entity->anim.destx -= sprite_getw(entity->anim.spr) / 2;
+    entity->anim.destx -= sol_sprite_getw(entity->anim.spr) / 2;
     entity->anim.desty = entity->anim.y;
 
     if (entity->name) {
-        entity->anim.desty -= sprite_geth(entity->anim.spr) - (8 * settings_zoom());
+        entity->anim.desty -= sol_sprite_geth(entity->anim.spr) - (8 * settings_zoom());
     }
     entity->anim.movey = entity->anim.movex = entity->anim.left_over = 0.0;
     entity->anim.entity = entity;
@@ -172,8 +169,6 @@ void map_load_region(region_t *reg) {
     map_free(cmap);
     if (!cmap) { cmap = create_map(); }
     map_init(cmap);
-    cren = main_get_rend();
-    cmap->region = reg;
     //cmap->region = region_manager_get_region(reg->map_id);
     map_load_current_region();
 
@@ -188,7 +183,6 @@ void map_load_map(int id) {
     if (!cmap) { cmap = create_map(); }
     map_init(cmap);
 
-    cren = main_get_rend();
     cmap->region = region_manager_get_region(id);
 
     map_load_current_region();
@@ -198,8 +192,9 @@ void map_load_map(int id) {
 static void clear_animations() {
     for (int i = 0; i < anim_pos; i++) {
         if (anim_nodes[i]) {
-            animate_list_remove(anim_nodes[i], anim_nodes[i]->anim->entity ? anim_nodes[i]->anim->entity->mapz : 0);
-            sprite_free(anims[i].spr);
+            printf("TODO: do I need to remove animations or this function not called?\n");
+            //animate_list_remove(anim_nodes[i], anim_nodes[i]->anim->entity ? anim_nodes[i]->anim->entity->mapz : 0);
+            sol_sprite_free(anims[i].spr);
             anims[i].spr = SPRITE_ERROR;
             anim_nodes[i] = NULL;
         }
@@ -221,7 +216,7 @@ void map_apply_alpha(const uint8_t alpha) {
         if (entity->sprite.data) {
             animate_sprite_node_t *asn = (animate_sprite_node_t*) entity->sprite.data;
             if (asn) {
-                sprite_set_alpha(asn->anim->spr, alpha);
+                sol_sprite_set_alpha(asn->anim->spr, alpha);
             }
         }
     }
@@ -234,9 +229,9 @@ extern void map_highlight_tile(const int tilex, const int tiley, const int frame
     const int x = tilex * (16 * zoom) - xoffset;
     const int y = tiley * (16 * zoom) - yoffset;
 
-    sprite_set_frame(tile_highlight, frame);
-    sprite_set_location(tile_highlight, x - zoom, y - zoom);
-    sprite_render(main_get_rend(), tile_highlight);
+    sol_sprite_set_frame(tile_highlight, frame);
+    sol_sprite_set_location(tile_highlight, x - zoom, y - zoom);
+    sol_sprite_render(tile_highlight);
 }
 
 static void show_debug_info() {
@@ -249,7 +244,7 @@ static void show_debug_info() {
     if (tile_highlight == SPRITE_ERROR) {
         const float zoom = settings_zoom();
         gff_palette_t* pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
-        tile_highlight = sprite_new(main_get_rend(), pal, 0, 0, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20088);
+        tile_highlight = sol_sprite_new(pal, 0, 0, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20088);
     }
 
     map_highlight_tile(x, y, 4);
@@ -296,23 +291,23 @@ void map_render_anims(SDL_Renderer *renderer) {
     const uint32_t yoffset = sol_get_cameray();
     entity_t *dude;
     animate_sprite_t *anim;
-    SDL_RendererFlip flip = 0;
+    int hflip = 0, vflip = 0;
 
     entity_list_for_each(cmap->region->entities, dude) {
+        hflip = vflip = 0;
         if (dude->anim.spr == SPRITE_ERROR) { continue; }
-        flip = 0;
         anim = &(dude->anim);
         if (anim->scmd[anim->pos].flags & SCMD_XMIRROR
             || (anim->entity && anim->entity->sprite.flags & 0x80)) {
-            flip |= SDL_FLIP_HORIZONTAL;
+            hflip = 1;
         }
         if (anim->scmd[anim->pos].flags & SCMD_YMIRROR) {
-            flip |= SDL_FLIP_VERTICAL;
+            vflip = 1;
         }
-        sprite_set_location(anim->spr,
+        sol_sprite_set_location(anim->spr,
             anim->x - xoffset, // + scmd_xoffset,
             anim->y - yoffset); // + anim->scmd->yoffset);
-        sprite_render_flip(renderer, anim->spr, flip);
+        sol_sprite_render_flip(anim->spr, hflip, vflip);
     }
 }
 
@@ -322,23 +317,23 @@ void port_add_entity(entity_t *entity, gff_palette_t *pal) {
     return;
     //anims[anim_pos].scmd = entity->sprite.anim.scmd;
     anims[anim_pos].spr =
-        sprite_new(cren, pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP, entity->sprite.bmp_id);
+        sol_sprite_new(pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP, entity->sprite.bmp_id);
     if (entity->name) { // If it is a combat entity, then we need to add the combat sprites
-        sprite_append(anims[anim_pos].spr, cren, pal, 0, 0, zoom,
+        sol_sprite_append(anims[anim_pos].spr, pal, 0, 0, zoom,
             OBJEX_GFF_INDEX, GFF_BMP, entity->sprite.bmp_id + 1);
     }
     anims[anim_pos].delay = 0;
     anims[anim_pos].pos = 0;
-    anims[anim_pos].w = sprite_getw(anims[anim_pos].spr);
-    anims[anim_pos].h = sprite_geth(anims[anim_pos].spr);
+    anims[anim_pos].w = sol_sprite_getw(anims[anim_pos].spr);
+    anims[anim_pos].h = sol_sprite_geth(anims[anim_pos].spr);
     anims[anim_pos].x = (entity->mapx * 16 + entity->sprite.xoffset) * zoom;
     anims[anim_pos].y = (entity->mapy * 16 + entity->sprite.yoffset + entity->mapz) * zoom;
     anims[anim_pos].destx = anims[anim_pos].x;
-    anims[anim_pos].destx -= sprite_getw(anims[anim_pos].spr) / 2;
+    anims[anim_pos].destx -= sol_sprite_getw(anims[anim_pos].spr) / 2;
     //anims[anim_pos].destx -= (8 * settings_zoom());
     anims[anim_pos].desty = anims[anim_pos].y;
     if (entity->name) {
-        anims[anim_pos].desty -= sprite_geth(anims[anim_pos].spr) - (8 * settings_zoom());
+        anims[anim_pos].desty -= sol_sprite_geth(anims[anim_pos].spr) - (8 * settings_zoom());
     }
     anims[anim_pos].movey = anims[anim_pos].movex = anims[anim_pos].left_over = 0.0;
     anims[anim_pos].entity = entity;
@@ -356,8 +351,9 @@ void port_remove_entity(entity_t *entity) {
     region_remove_entity(region_manager_get_current(), entity);
     for (int i = 0; i < MAX_ANIMS; i++) {
         if (anim_nodes[i] && anim_nodes[i]->anim && anim_nodes[i]->anim->entity == entity) {
-            animate_list_remove(anim_nodes[i], anim_nodes[i]->anim->entity ? anim_nodes[i]->anim->entity->mapz : 0);
-            sprite_free(anims[i].spr);
+            printf("TODO: do I need to remove animations or this function not called? (port_remove_entity)\n");
+            //animate_list_remove(anim_nodes[i], anim_nodes[i]->anim->entity ? anim_nodes[i]->anim->entity->mapz : 0);
+            sol_sprite_free(anims[i].spr);
             //if (entity->sprite.data
             anims[i].spr = SPRITE_ERROR;
             free(anim_nodes[i]);
@@ -378,8 +374,8 @@ void port_place_entity(entity_t *entity) {
 
     as->x = as->destx = entity->mapx * 16 * zoom;
     as->y = as->desty = entity->mapy * 16 * zoom;
-    as->w = sprite_getw(entity->anim.spr);
-    as->h = sprite_geth(entity->anim.spr);
+    as->w = sol_sprite_getw(entity->anim.spr);
+    as->h = sol_sprite_geth(entity->anim.spr);
     if (as->w > 16 * zoom) {
         //printf("width = %d\n", as->w);
         as->x = as->destx -= (as->w - 16 * zoom) / 2;
@@ -414,11 +410,11 @@ extern void port_load_sprite(animate_sprite_t *anim, gff_palette_t *pal, const i
     }
 
     if (anim->spr == SPRITE_ERROR) {
-        anim->spr = sprite_new(main_get_rend(), pal, 0, 0, settings_zoom(), gff_index, type, id);
+        anim->spr = sol_sprite_new(pal, 0, 0, settings_zoom(), gff_index, type, id);
 
         // Now append anything else needed.
         for (int i = 1; i < num_load; i++) {
-            sprite_append(anim->spr, cren, pal, 0, 0, settings_zoom(),
+            sol_sprite_append(anim->spr, pal, 0, 0, settings_zoom(),
                 gff_index, type, id + i);
         }
     }
@@ -465,9 +461,9 @@ void port_swap_enitity(int obj_id, entity_t *dude) {
     gff_palette_t *pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + cmap->region->map_id - 1;
     const int zoom = 2.0;
 
-    sprite_free(dude->anim.spr);
+    sol_sprite_free(dude->anim.spr);
     dude->anim.spr =
-        sprite_new(cren, pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP, dude->sprite.bmp_id);
+        sol_sprite_new(pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP, dude->sprite.bmp_id);
 }
 
 #define CLICKABLE (0x10)
@@ -480,7 +476,7 @@ entity_t* get_entity_at_location(const uint32_t x, const uint32_t y) {
     entity_list_for_each(cmap->region->entities, dude) {
         if (dude->anim.spr == SPRITE_ERROR) { continue; }
 
-        if (sprite_in_rect(dude->anim.spr, mapx, mapy)) {
+        if (sol_sprite_in_rect(dude->anim.spr, mapx, mapy)) {
             //printf("%s: %d: %d, %d (%d, %d)\n", dude->name, dude->ds_id, dude->mapx * 16, dude->mapy * 16, mapx, mapy);
             return dude;
         }
@@ -494,7 +490,7 @@ static void update_mouse_icon() {
     cdude = get_entity_at_location(sol_get_camerax() + mousex, sol_get_cameray() + mousey);
     const float zoom = settings_zoom();
 
-    //printf("update_mouse_icon!, cdude = %p\n", cdude);
+    //printf("update_mouse_icon!, cdude = %p, ms = %d\n", cdude, ms);
 
     if (ms == MOUSE_MELEE || ms == MOUSE_NO_MELEE) {
         int x = (sol_get_camerax() + mousex) / (16 * zoom);
@@ -588,7 +584,7 @@ int map_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_
         return 1;
     }
 
-    if (button == SDL_BUTTON_RIGHT) {
+    if (button == SOL_MOUSE_BUTTON_RIGHT) {
         mouse_cycle();
     }
     //printf("No dude there bruh.\n");
@@ -605,7 +601,7 @@ extern void port_load_item(item_t *item) {
     //as->spr = sprite_new(main_get_rend(), pal, 0, 0, settings_zoom(),
             //OBJEX_GFF_INDEX, GFF_BMP, item->sprite.bmp_id);
     //as->entity = NULL;
-    item->anim.spr = sprite_new(main_get_rend(), pal, 0, 0, settings_zoom(),
+    item->anim.spr = sol_sprite_new(pal, 0, 0, settings_zoom(),
             OBJEX_GFF_INDEX, GFF_BMP, item->sprite.bmp_id);
     item->anim.entity = NULL;
 }
@@ -614,7 +610,7 @@ extern void port_free_item(item_t *item) {
     if (!item) { return; }
 
     if (item->anim.spr != SPRITE_ERROR) {
-        sprite_free(item->anim.spr);
+        sol_sprite_free(item->anim.spr);
         item->anim.spr = SPRITE_ERROR;
     }
 }

@@ -69,13 +69,6 @@ static SDL_Texture* create_texture(SDL_Renderer *renderer, const uint32_t gff_id
     return ret;
 }
 
-uint16_t sprite_new(SDL_Renderer *renderer, gff_palette_t *pal,
-        const int offsetx, const int offsety, const float zoom,
-        const int gff_idx, const int type_id, const int res_id) {
-    SDL_Rect tmp = {offsetx, offsety, 0, 0};
-    return sprite_create(renderer, &tmp, pal, 0, 0, zoom, gff_idx, type_id, res_id);
-}
-
 // Create a sprite and return its ID
 uint16_t sprite_create(SDL_Renderer *renderer, SDL_Rect *initial,
         gff_palette_t *pal,
@@ -97,6 +90,13 @@ uint16_t sprite_create(SDL_Renderer *renderer, SDL_Rect *initial,
     //printf("sprite[%d]: %d frames, tex[0] = %p\n", sprite_id, sprite->len, sprite->tex[0]);
 
     return sprite_id;
+}
+
+uint16_t sprite_new(SDL_Renderer *renderer, gff_palette_t *pal,
+        const int offsetx, const int offsety, const float zoom,
+        const int gff_idx, const int type_id, const int res_id) {
+    SDL_Rect tmp = {offsetx, offsety, 0, 0};
+    return sprite_create(renderer, &tmp, pal, 0, 0, zoom, gff_idx, type_id, res_id);
 }
 
 uint16_t sprite_append(uint16_t sprite_id, SDL_Renderer *renderer,
@@ -206,8 +206,10 @@ void sprite_render(SDL_Renderer *renderer, const uint16_t sprite_id) {
     SDL_RenderCopy(renderer, sprite->tex[sprite->pos], NULL, (sprite->loc + sprite->pos));
 }
 
-void sol_sprite_render_flip(const uint16_t sprite_id, SDL_RendererFlip flip) {
+extern void sol_sprite_render_flip(const uint16_t sprite_id, const int horizontal_flip, const int vertical_flip) {
     if (sprite_id == (uint16_t)SPRITE_ERROR) { return; }
+    SDL_RendererFlip flip = (horizontal_flip) ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
+    flip |= (vertical_flip) ? SDL_FLIP_VERTICAL : SDL_FLIP_NONE;
     sprite_t *sprite = sprites + sprite_id;
     SDL_RenderCopyEx(main_get_rend(), sprite->tex[sprite->pos], NULL, (sprite->loc + sprite->pos), 0, NULL, flip);
 }
@@ -355,6 +357,12 @@ extern sol_sprite_t sol_sprite_new(gff_palette_t *pal,
     return sprite_new(main_get_rend(), pal, offsetx, offsety, zoom, gff_idx, type_id, res_id);
 }
 
+extern uint16_t sol_sprite_append(uint16_t sprite_id, gff_palette_t *pal,
+        const int offsetx, const int offsety, const float zoom,
+        const int gff_idx, const int type_id, const int res_id) {
+    return sprite_append(sprite_id, main_get_rend(), pal, offsetx, offsety, zoom, gff_idx, type_id, res_id);
+}
+
 extern uint32_t sol_sprite_getx(const sol_sprite_t id) { return sprite_getx(id); }
 extern uint32_t sol_sprite_gety(const sol_sprite_t id) { return sprite_gety(id); }
 extern uint32_t sol_sprite_getw(const sol_sprite_t id) { return sprite_getw(id); }
@@ -369,3 +377,4 @@ extern void sol_sprite_render_box(const uint16_t sprite_id, const uint16_t x,
     const uint16_t y, const uint16_t w, const uint16_t h) { sprite_render_box(main_get_rend(), sprite_id, x, y, w, h); }
 extern void sol_sprite_center(const int id, const int x, const int y, const int w, const int h) { sprite_center(id, x, y, w, h); }
 extern uint32_t sol_sprite_num_frames(const uint16_t id) { return sprite_num_frames(id); }
+extern void sol_sprite_init() { sprite_init(); }

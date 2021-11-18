@@ -1,12 +1,8 @@
 #ifndef NEW_CHARACTER_H
 #define NEW_CHARACTER_H
 
-#include "../../src/wizard.h"
 #include "window-manager.h"
-#include "../../src/ssi-object.h"
-#include "../../src/entity.h"
-#include "../font.h"
-#include "../label.h"
+#include "../src/wizard.h"
 
 enum {
 	TEXTBOX_NONE = -1,

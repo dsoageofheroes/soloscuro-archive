@@ -2,9 +2,11 @@
 #include "gfftypes.h"
 #include "narrate.h"
 #include "inventory.h"
-#include "../../sdl/windows/new-character.h"
+#include "new-character.h"
+#include "label.h"
 #include "popup.h"
-#include "../../sdl/windows/add-load-save.h"
+#include "add-load-save.h"
+#include "../src/port.h"
 #include "../../src/gff.h"
 #include "../../src/gff-char.h"
 #include "../../src/rules.h"
@@ -13,10 +15,13 @@
 #include "../../src/player.h"
 #include "../../src/ds-load-save.h"
 
+
+#include <string.h>
+
 #define MAX_POWERS (50)
 // Sprites
 static sol_sprite_t ai[4], leader[4], ports[4], buttons[3];
-static label_t power_name, power_level;
+static sol_label_t power_name, power_level;
 static sol_sprite_t effects, view_char, use, panel, sun;
 static sol_sprite_t character, inv, powers, status;
 static sol_sprite_t game_menu, game_return;
@@ -33,23 +38,23 @@ static power_t *power_list[MAX_POWERS];
 static power_t *power_to_display = NULL;
 static int level = 1;
 
-static SDL_Rect initial_locs[] = {{ 155, 28, 0, 0 }, // description
+static sol_dim_t initial_locs[] = {{ 155, 28, 0, 0 }, // description
                                   { 60, 155, 0, 0 }, // message
 };
 
-static SDL_Rect description_loc, message_loc;
+static sol_dim_t description_loc, message_loc;
 static char description[25];
 static char message[128];
 
-static void set_zoom(SDL_Rect *loc, float zoom) {
+static void set_zoom(sol_dim_t *loc, float zoom) {
     loc->x *= zoom;
     loc->y *= zoom;
     loc->w *= zoom;
     loc->h *= zoom;
 }
 
-static SDL_Rect apply_params(const SDL_Rect rect, const uint32_t x, const uint32_t y) {
-    SDL_Rect ret = {rect.x + x, rect.y + y, rect.w, rect.h};
+static sol_dim_t apply_params(const sol_dim_t rect, const uint32_t x, const uint32_t y) {
+    sol_dim_t ret = {rect.x + x, rect.y + y, rect.w, rect.h};
     return ret;
 }
 
@@ -67,7 +72,7 @@ static void set_power(const int type, const int level) {
         power_list[power_pos++] = NULL;
     }
     snprintf(buf, 63, "LEVEL %d", level);
-    label_set_text(&power_level, buf);
+    sol_label_set_text(&power_level, buf);
 }
 
 void view_character_init(const uint32_t _x, const uint32_t _y) {
@@ -113,8 +118,8 @@ void view_character_init(const uint32_t _x, const uint32_t _y) {
     buttons[0] = sol_sprite_new(pal, 131 + x, 157 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11109);
     buttons[1] = sol_sprite_new(pal, 172 + x, 157 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11110);
     buttons[2] = sol_sprite_new(pal, 172 + x, 157 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 13006);
-    power_name = create_label_at_pos(0, -1, "MAGE", FONT_GREY, (135 + x) * zoom, (158 + y) * zoom);
-    power_level = create_label_at_pos(0, -1, "LEVEL 1", FONT_GREY, (175 + x) * zoom, (158 + y) * zoom);
+    power_name = sol_label_create_at_pos(0, -1, "MAGE", FONT_GREY, (135 + x) * zoom, (158 + y) * zoom);
+    power_level = sol_label_create_at_pos(0, -1, "LEVEL 1", FONT_GREY, (175 + x) * zoom, (158 + y) * zoom);
 
     for (int i = 0; i < 4; i++) {
         sol_sprite_set_frame(ports[i], 2);
@@ -133,9 +138,9 @@ void view_character_init(const uint32_t _x, const uint32_t _y) {
         strcpy(description, player_get_active()->name);
     }
     strcpy(message, "message");
-    label_create_group();
-    label_group_set_font(FONT_YELLOW);
-    label_set_positions(143 * zoom, 30 * zoom, SCREEN_VIEW_CHARACTER);
+    sol_label_create_group();
+    sol_label_group_set_font(FONT_YELLOW);
+    sol_label_set_positions(143 * zoom, 30 * zoom, SCREEN_VIEW_CHARACTER);
 
     set_power(0, level);
 }
@@ -145,11 +150,11 @@ static void render_character() {
 
     if (!player_get(player_selected)) { return; }
 
-    label_set_group(player_get(player_selected), SCREEN_VIEW_CHARACTER);
-    label_set_positions(143 * zoom, 30 * zoom, SCREEN_VIEW_CHARACTER);
-    label_render_stats(xoffset, yoffset);
-    label_render_gra(xoffset + (64 * zoom), yoffset - (49 * zoom));
-    label_render_class_and_combat(xoffset + (64 * zoom), yoffset - (42 * zoom));
+    sol_label_set_group(player_get(player_selected), SCREEN_VIEW_CHARACTER);
+    sol_label_set_positions(143 * zoom, 30 * zoom, SCREEN_VIEW_CHARACTER);
+    sol_label_render_stats(xoffset, yoffset);
+    sol_label_render_gra(xoffset + (64 * zoom), yoffset - (49 * zoom));
+    sol_label_render_class_and_combat(xoffset + (64 * zoom), yoffset - (42 * zoom));
 
     sol_sprite_set_frame(slots, 0);
     item_t *items = player_get(player_selected)->inv;
@@ -219,8 +224,8 @@ static void render_powers() {
     sol_sprite_render(buttons[0]);
     sol_sprite_render(buttons[1]);
 
-    label_render(&power_name);
-    label_render(&power_level);
+    sol_label_render(&power_name);
+    sol_label_render(&power_level);
 
     for (int i = 0; i < MAX_POWERS && power_list[i]; i++) {
         animate_sprite_t *as = power_get_icon(power_list[i]);
@@ -416,7 +421,7 @@ int view_character_handle_mouse_up(const uint32_t button, const uint32_t x, cons
         return 1;
     }
 
-    if (button == SDL_BUTTON_RIGHT) {
+    if (button == SOL_MOUSE_BUTTON_RIGHT) {
         for (int i = 0; i < 4; i++) {
             if (sol_sprite_in_rect(ports[i], x, y)) {
                 slot_clicked = i;
@@ -434,7 +439,7 @@ int view_character_handle_mouse_up(const uint32_t button, const uint32_t x, cons
             }
         }
     }
-    if (button == SDL_BUTTON_LEFT) {
+    if (button == SOL_MOUSE_BUTTON_RIGHT) {
         if (mode == 2) {
             power_to_display = find_power(x, y);
             if (power_to_display) {
@@ -494,7 +499,7 @@ void view_character_free() {
 }
 
 void view_character_return_control () {
-    label_group_set_font(FONT_YELLOW);
+    sol_label_group_set_font(FONT_YELLOW);
     if (last_selection == SELECT_POPUP) {
         if (sol_popup_get_selection() == POPUP_0) { // new
             sol_popup_clear_selection();

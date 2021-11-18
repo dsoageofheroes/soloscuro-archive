@@ -1,12 +1,9 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
-#include "animate.h"
 #include "../src/combat.h"
 #include <stdint.h>
 
-void player_init();
-void player_close();
 void player_move(const uint8_t direction);
 void player_unmove(const uint8_t direction);
 void player_render_portrait(const int slot);

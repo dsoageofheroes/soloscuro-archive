@@ -216,7 +216,7 @@ extern void player_set_ai(const int slot, const int _ai) {
     ai[slot] = _ai;
 }
 
-void player_close() {
+void sol_player_close() {
     //dude_t *dude;
 
     for (int i = 0; i < MAX_PCS; i++) {
