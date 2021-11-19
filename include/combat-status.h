@@ -2,7 +2,7 @@
 #define COMBAT_STATUS_H
 
 #include "window-manager.h"
-#include "../../src/combat.h"
+#include "../src/combat.h"
 
 typedef struct combat_status_s {
     char name[40];

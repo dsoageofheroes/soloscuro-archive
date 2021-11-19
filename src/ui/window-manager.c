@@ -15,8 +15,7 @@
 #include "new-character.h"
 #include "view-character.h"
 #include "window-main.h"
-
-#include "../sdl/map.h"
+#include "map.h"
 
 #define MAX_SCREENS (10)
 
@@ -124,7 +123,7 @@ extern void sol_window_push(sol_wops_t *window, const uint32_t x, const uint32_t
     sol_window_load(window_pos++, window, x, y);
 }
 
-void port_change_region(region_t *reg) {
+void port_change_region(sol_region_t *reg) {
     map_load_region(reg);
 
     for (int i = 0; i < MAX_PCS; i++) {

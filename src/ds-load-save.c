@@ -106,7 +106,7 @@ static void add_player_to_save(const int id, const int player) {
 }
 
 static void save_regions(const int id) {
-    region_t *reg = region_manager_get_current();
+    sol_region_t *reg = region_manager_get_current();
     dude_t *dude = player_get_active();
     dude_t *entity = NULL;
     size_t buf_len = 128, offset = 0;
@@ -149,7 +149,7 @@ static void load_regions(const int id) {
     //entity_t *entity = NULL;
     //gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes;
     dude_t *dude = player_get_active();
-    region_t *reg = region_manager_get_region(dude->region);
+    sol_region_t *reg = region_manager_get_region(dude->region);
     char *buf = NULL;
     rdff_header_t *rdff = NULL;
     size_t offset = 0;

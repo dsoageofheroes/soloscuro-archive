@@ -34,7 +34,7 @@ static void create_font(SDL_Renderer *renderer, const uint32_t idx, const uint32
             break;
     }
     chunk = gff_find_chunk_header(resource_gff, GFF_FONT, 100);
-    dsfont = malloc(chunk.length);
+    dsfont = (ds_font_t*) malloc(chunk.length);
 
     if (!dsfont) {
         error ("unable to malloc for font!\n");
@@ -109,7 +109,7 @@ void font_render_ttf(const char *msg, uint16_t x, uint16_t y, uint32_t color) {
 void print_line_len(SDL_Renderer *renderer, sol_font_t font, const char *text, size_t x, size_t y, const uint32_t len) {
     size_t c;
     if (text == NULL) { return; }
-    for (int i = 0; text[i] && i < len; i++) {
+    for (uint32_t i = 0; text[i] && i < len; i++) {
         c = text[i];
         font_loc[font][c].x = x;
         font_loc[font][c].y = y;

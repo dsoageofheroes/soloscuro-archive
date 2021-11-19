@@ -1,12 +1,9 @@
 #include <stdlib.h>
 #include "map.h"
-#include "sprite.h"
-#include "main.h"
-#include "player.h"
 #include "audio.h"
-#include "mouse.h"
 #include "narrate.h"
 #include "combat-status.h"
+#include "background.h"
 #include "../src/dsl.h"
 #include "../src/port.h"
 #include "../src/trigger.h"
@@ -16,7 +13,11 @@
 #include "../src/region-manager.h"
 #include "../src/ssi-scmd.h"
 #include "../src/player.h"
+#include "../src/port.h"
+#include "../src/settings.h"
 #include "../src/dsl-var.h"
+
+#include <string.h>
 
 #define MAX_ANIMS (256)
 
@@ -34,7 +35,7 @@ static map_t *create_map();
 static dude_t *cdude = NULL;
 
 static void sprite_load_animation(entity_t *entity, gff_palette_t *pal);
-void map_render_anims(SDL_Renderer *renderer);
+void map_render_anims();
 
 void map_load(const uint32_t _x, const uint32_t _y) {
     if (!cmap && region_manager_get_current()) {
@@ -42,10 +43,6 @@ void map_load(const uint32_t _x, const uint32_t _y) {
         cmap->region = region_manager_get_current();
         map_load_current_region();
     }
-}
-
-void map_init(map_t *map) {
-    map->tiles = NULL;
 }
 
 void map_cleanup() {
@@ -61,14 +58,7 @@ void map_cleanup() {
 void map_free(map_t *map) {
     if (!map) { return; }
     //TODO: unload region!
-    for (uint32_t i = 0; i < map->region->num_tiles; i++) {
-        if (map->tiles[i]) {
-            SDL_DestroyTexture(map->tiles[i]);
-            map->tiles[i] = NULL;
-        }
-    }
-    free(map->tiles);
-    map->tiles = NULL;
+    sol_background_free();
     free(map);
 }
 
@@ -77,41 +67,16 @@ int cmap_is_block(const int row, const int column) {
 }
 
 static void map_load_current_region() {
-    SDL_Surface* tile = NULL;
-    uint32_t *ids = NULL;
-    uint32_t width, height;
-    size_t max_id = 0;
-    unsigned char *data;
     gff_palette_t *pal = NULL;
     map_t *map = cmap;
-    int offset = 0;
 
+    sol_background_load_region(map->region);
     if (map->region->map_id < 100 && map->region->map_id > 0) {
         pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + map->region->map_id - 1;
-        offset = 1;
-    }
-    ids = cmap->region->tile_ids;
-    max_id = 256;
-    map->tiles = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * max_id);
-    memset(map->tiles, 0x0, sizeof(SDL_Texture*) * max_id);
-
-    for (uint32_t i = 0; i < map->region->num_tiles; i++) {
-        region_get_tile(map->region, ids[i], &width, &height, &data);
-
-        if (data && *data) {
-            tile = SDL_CreateRGBSurfaceFrom(data, width, height, 32, 4*width, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
-
-            map->tiles[i + offset] = SDL_CreateTextureFromSurface(main_get_rend(), tile);
-            //map->tiles[i] = SDL_CreateTextureFromSurface(cren, tile);
-            SDL_FreeSurface(tile);
-
-            free(data);
-        }
     }
 
     dude_t *dude;
     entity_list_for_each(map->region->entities, dude) {
-        //port_add_entity(dude, pal);
         sprite_load_animation(dude, pal);
     }
 
@@ -119,7 +84,6 @@ static void map_load_current_region() {
         if (player_get_active()->anim.spr == SPRITE_ERROR) {
             sprite_load_animation(player_get_active(), pal);
         }
-        //animation_list_add(map->region->anims, &(player_get_active()->anim));
         port_place_entity(player_get_active());
     }
 
@@ -165,10 +129,9 @@ static map_t *create_map() {
     return ret;
 }
 
-void map_load_region(region_t *reg) {
+void map_load_region(sol_region_t *reg) {
     map_free(cmap);
     if (!cmap) { cmap = create_map(); }
-    map_init(cmap);
     //cmap->region = region_manager_get_region(reg->map_id);
     map_load_current_region();
 
@@ -181,7 +144,6 @@ void map_load_region(region_t *reg) {
 void map_load_map(int id) {
     map_free(cmap);
     if (!cmap) { cmap = create_map(); }
-    map_init(cmap);
 
     cmap->region = region_manager_get_region(id);
 
@@ -206,11 +168,7 @@ static void clear_animations() {
 void map_apply_alpha(const uint8_t alpha) {
     entity_t *entity = NULL;
 
-    if (!cmap || !cmap->region || !cmap->tiles) { return; }
-
-    for (uint32_t i = 0; i < cmap->region->num_tiles; i++) {
-        SDL_SetTextureAlphaMod(cmap->tiles[i + 1], alpha);
-    }
+    sol_background_apply_alpha(alpha);
 
     entity_list_for_each(cmap->region->entities, entity) {
         if (entity->sprite.data) {
@@ -258,35 +216,14 @@ static void show_debug_info() {
 }
 
 void map_render(void *data) {
-    const int stretch = settings_zoom();
-    const uint32_t xoffset = sol_get_camerax();
-    const uint32_t yoffset = sol_get_cameray();
-    SDL_Rect tile_loc = { -xoffset, -yoffset, stretch * 16, stretch * 16 };
-    uint32_t tile_id = 0;
-    map_t *map = cmap;
-    SDL_Renderer *renderer = main_get_rend();
+    sol_background_render();
 
-    SDL_SetRenderDrawColor( renderer, 0x00, 0x00, 0x00, 0xFF );
-    SDL_RenderClear(renderer);
+    map_render_anims();
 
-    for (int x = 0; x < 98; x++) {
-        for (int y = 0; y < 128; y++) {
-            tile_id = cmap->region->tiles[x][y];
-            if (tile_id >= 0) {
-               SDL_RenderCopy(renderer, map->tiles[tile_id], NULL, &tile_loc);
-               tile_loc.x += stretch * 16;
-            }
-        }
-        tile_loc.x = -xoffset;
-        tile_loc.y += stretch * 16;
-    }
-
-    map_render_anims(renderer);
-
-    if (main_get_debug()) { show_debug_info(); }
+    if (settings_in_debug()) { show_debug_info(); }
 }
 
-void map_render_anims(SDL_Renderer *renderer) {
+void map_render_anims() {
     const uint32_t xoffset = sol_get_camerax();
     const uint32_t yoffset = sol_get_cameray();
     entity_t *dude;
@@ -451,7 +388,8 @@ void port_enter_combat() {
 
 void port_exit_combat() {
     // condense players.
-    player_condense();
+    printf("NEED TO CONDENSE PLAYERS!\n");
+    //player_condense();
     // remove combat status.
     //window_pop();
     // assign experience.

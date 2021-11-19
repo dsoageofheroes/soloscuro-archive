@@ -915,7 +915,7 @@ static void render_entry_font() {
     }
 }
 
-static region_t *region = NULL;;
+static struct sol_region_s *region = NULL;;
 static void render_entry_rmap() {
     render_entry_header();
     static char *cfile = NULL;

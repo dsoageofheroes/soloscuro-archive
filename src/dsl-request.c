@@ -184,7 +184,7 @@ uint32_t dsl_request_impl(int16_t token, int16_t name,
             if (!gff_read_object(num1, &dobj)) {
                 error("Unable to satisfy REQUEST_SWAP, not obj: %d\n", num1);
             }
-            region_t *reg = region_manager_get_current();
+            sol_region_t *reg = region_manager_get_current();
             dude_t *dude = region_find_entity_by_id(reg, name);
             dude->sprite.bmp_id = dobj.bmp_id;
             trigger_object_clear(name);

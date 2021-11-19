@@ -289,7 +289,7 @@ static int is_true(lua_State *l) {
 
 static int dsl_getX(lua_State *l) {
     lua_Integer id = luaL_checkinteger(l, 1);
-    region_t *reg = region_manager_get_current();
+    sol_region_t *reg = region_manager_get_current();
     dude_t *dude = NULL;
 
     entity_list_for_each(reg->entities, dude) {
@@ -305,7 +305,7 @@ static int dsl_getX(lua_State *l) {
 
 static int dsl_getY(lua_State *l) {
     lua_Integer id = luaL_checkinteger(l, 1);
-    region_t *reg = region_manager_get_current();
+    sol_region_t *reg = region_manager_get_current();
     dude_t *dude = NULL;
 
     entity_list_for_each(reg->entities, dude) {

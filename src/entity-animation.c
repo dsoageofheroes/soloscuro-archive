@@ -374,7 +374,7 @@ static void play_damage_sound(entity_t *target) {
 }
 
 // sound 63: is PC doing range attack
-extern int entity_animation_region_execute(region_t *reg) {
+extern int entity_animation_region_execute(sol_region_t *reg) {
     entity_animation_list_t list;
     list.head = next_animation_head;
     int ret = entity_animation_list_execute(&list, reg);
@@ -538,7 +538,7 @@ extern void entity_animation_list_add_speed(entity_animation_list_t *list, enum 
     }
 }
 
-extern int entity_animation_list_execute(entity_animation_list_t *list, region_t *reg) {
+extern int entity_animation_list_execute(entity_animation_list_t *list, sol_region_t *reg) {
     if (!list || !list->head) { return 0; }
 
     entity_t *source = list->head->ca.source;

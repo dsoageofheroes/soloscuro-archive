@@ -13,9 +13,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-static void load_tile_ids(region_t *reg);
-static void load_map_flags(region_t *reg);
-static void load_passives(region_t *reg, const int gff_idx, const int map_id);
+static void load_tile_ids(sol_region_t *reg);
+static void load_map_flags(sol_region_t *reg);
+static void load_passives(sol_region_t *reg, const int gff_idx, const int map_id);
 
 #define GMAP_MAX (MAP_ROWS * MAP_COLUMNS)
 
@@ -35,19 +35,19 @@ static int is_region(const int gff_idx) {
     return has_rmap && has_gmap && has_tile && has_etab;
 }
 
-extern region_t* region_create_empty() {
-    region_t *reg = calloc(1, sizeof(region_t));
+extern sol_region_t* region_create_empty() {
+    sol_region_t *reg = calloc(1, sizeof(sol_region_t));
     reg->entities = entity_list_create();
     //reg->anims = animation_list_create();
 
     return reg;
 }
 
-region_t* region_create(const int gff_file) {
+sol_region_t* region_create(const int gff_file) {
     if (!is_region(gff_file)) { return NULL; } // guard
 
     uint32_t *tids = NULL;
-    region_t *reg = region_create_empty();
+    sol_region_t *reg = region_create_empty();
 
     reg->gff_file = gff_file;
 
@@ -78,13 +78,13 @@ region_t* region_create(const int gff_file) {
     return reg;
 }
 
-extern void region_remove_entity(region_t *reg, entity_t *entity) {
+extern void region_remove_entity(sol_region_t *reg, entity_t *entity) {
     if (!reg || !entity) { return; }
     entity_list_remove(reg->entities, entity_list_find(reg->entities, entity));
     //animation_list_remove(reg->anims, animation_list_find(reg->anims, &(entity->anim)));
 }
 
-void region_free(region_t *reg) {
+void region_free(sol_region_t *reg) {
     if (!reg) { return; }
 
     //if (reg->anims) {
@@ -111,7 +111,7 @@ void region_free(region_t *reg) {
     free(reg);
 }
 
-int region_get_tile(const region_t *reg, const uint32_t image_id,
+int region_get_tile(const sol_region_t *reg, const uint32_t image_id,
         uint32_t *w, uint32_t *h, unsigned char **data) {
     if (!data) { return 0; }
 
@@ -127,7 +127,7 @@ int region_get_tile(const region_t *reg, const uint32_t image_id,
     return 1;
 }
 
-static void load_tile_ids(region_t *reg) {
+static void load_tile_ids(sol_region_t *reg) {
     unsigned int *rmap_ids = gff_get_id_list(reg->gff_file, GFF_RMAP);
     unsigned char *data;
     
@@ -152,7 +152,7 @@ out:
     free(rmap_ids);
 }
 
-static void load_map_flags(region_t *reg) {
+static void load_map_flags(sol_region_t *reg) {
     unsigned int *gmap_ids = gff_get_id_list(reg->gff_file, GFF_GMAP);
     gff_chunk_header_t chunk = gff_find_chunk_header(reg->gff_file, GFF_GMAP, gmap_ids[0]);
 
@@ -170,7 +170,7 @@ out:
     free(gmap_ids);
 }
 
-static void load_passives(region_t *reg, const int gff_idx, const int map_id) {
+static void load_passives(sol_region_t *reg, const int gff_idx, const int map_id) {
     if (!open_files[gff_idx].entry_table) {
         gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_ETAB, map_id);
         open_files[gff_idx].entry_table = malloc(chunk.length);
@@ -189,7 +189,7 @@ static void load_passives(region_t *reg, const int gff_idx, const int map_id) {
     }
 }
 
-entity_t* region_find_entity_by_id(region_t *reg, const int id) {
+entity_t* region_find_entity_by_id(sol_region_t *reg, const int id) {
     dude_t *dude = NULL;
 
     entity_list_for_each(reg->entities, dude)  {
@@ -199,7 +199,7 @@ entity_t* region_find_entity_by_id(region_t *reg, const int id) {
     return NULL;
 }
 
-static uint8_t* get_block(region_t *region, const int row, const int column) {
+static uint8_t* get_block(sol_region_t *region, const int row, const int column) {
     size_t pos = row*MAP_COLUMNS + column;
 
     if (!region || !VALID_MAP_ROW(row) || !VALID_MAP_COLUMN(column)
@@ -210,26 +210,26 @@ static uint8_t* get_block(region_t *region, const int row, const int column) {
     return &(region->flags[row][column]);
 }
 
-extern int region_is_block(region_t *region, int row, int column) {
+extern int region_is_block(sol_region_t *region, int row, int column) {
     uint8_t *block = get_block(region, row, column);
 
     return block ? (*block & MAP_BLOCK) : -1;
 }
 
-extern void region_set_block(region_t *region, int row, int column, int val) {
+extern void region_set_block(sol_region_t *region, int row, int column, int val) {
     uint8_t *block = get_block(region, row, column);
 
     if (block) { *block |= val; }
 }
 
-extern void region_clear_block(region_t *region, int row, int column, int val) {
+extern void region_clear_block(sol_region_t *region, int row, int column, int val) {
     uint8_t *block = get_block(region, row, column);
 
     if (block) { region->flags[row][column] &= ~val; }
 }
 
 
-extern int region_location_blocked(const region_t *reg, const int32_t x, const int32_t y) {
+extern int region_location_blocked(const sol_region_t *reg, const int32_t x, const int32_t y) {
     dude_t *dude = NULL;
     //if (reg->flags[x][y]) { return 1; }
     entity_list_for_each(reg->entities, dude) {
@@ -242,7 +242,7 @@ extern int region_location_blocked(const region_t *reg, const int32_t x, const i
     return 0;
 }
 
-extern void region_add_entity(region_t *reg, entity_t *entity) {
+extern void region_add_entity(sol_region_t *reg, entity_t *entity) {
     if (!reg || !entity) { return; }
 
     animation_shift_entity(reg->entities, entity_list_add(reg->entities, entity));
@@ -270,7 +270,7 @@ static int calc_distance_to_player(entity_t *entity) {
 }
 
 
-extern void region_tick(region_t *reg) {
+extern void sol_region_tick(sol_region_t *reg) {
     dude_t *bad_dude = NULL;
     int xdiff, ydiff;
     int posx, posy;
@@ -345,7 +345,7 @@ extern void region_tick(region_t *reg) {
     }
 }
 
-extern void region_move_to_nearest(const region_t *reg, entity_t *entity) {
+extern void region_move_to_nearest(const sol_region_t *reg, entity_t *entity) {
     //if (!region_location_blocked(reg, entity->mapx, entity->mapy)) { return; }
     //printf("Tyring to place: %d, %d\n", entity->mapx, entity->mapy);
     if (!region_location_blocked(reg, entity->mapx, entity->mapy + 1)) {

@@ -38,7 +38,7 @@ static combat_entry_t *combat_order = NULL;
 static combat_entry_t *current_turn = NULL;
 static combat_entry_t *defeated = NULL;
 
-static int is_combat_over(region_t *reg);
+static int is_combat_over(sol_region_t *reg);
 
 const enum combat_turn_t combat_player_turn() {
     if (!in_combat) { return NO_COMBAT; }
@@ -105,7 +105,7 @@ static int get_dist(entity_t *entity, const uint16_t x, const uint16_t y) {
     return (xdiff > ydiff) ? xdiff : ydiff;
 }
 
-extern int combat_initiate(region_t *reg, const uint16_t x, const uint16_t y) {
+extern int combat_initiate(sol_region_t *reg, const uint16_t x, const uint16_t y) {
     const int dist = 10; // distance of the sphere;
     dude_t *enemy = NULL;
 
@@ -191,7 +191,7 @@ static void queue_add(action_node_t **head, action_node_t **tail, action_node_t 
     }
 }
 
-static entity_t* player_exists_in_pos(region_t *reg, const uint16_t x, const uint16_t y) {
+static entity_t* player_exists_in_pos(sol_region_t *reg, const uint16_t x, const uint16_t y) {
     for (int i = 0; i < MAX_PCS; i++) {
         if (!player_exists(i)) { continue; }
         entity_t *player = player_get(i);
@@ -202,7 +202,7 @@ static entity_t* player_exists_in_pos(region_t *reg, const uint16_t x, const uin
     return NULL;
 }
 
-static entity_t* player_to_attack(region_t *reg, action_node_t *node) {
+static entity_t* player_to_attack(sol_region_t *reg, action_node_t *node) {
     entity_t *player = NULL;
     if (!node) { return NULL; }
     if ((player = player_exists_in_pos(reg, node->x + 1, node->y + 0)) != NULL) {
@@ -249,7 +249,7 @@ static entity_t* player_to_attack(region_t *reg, action_node_t *node) {
     return NULL;
 }
 
-static entity_t* entity_at_location(const region_t *reg, entity_t *entity, const int32_t x, const int32_t y) {
+static entity_t* entity_at_location(const sol_region_t *reg, entity_t *entity, const int32_t x, const int32_t y) {
     dude_t *dude = NULL;
     //if (reg->flags[x][y]) { return 1; }
     entity_list_for_each(reg->cr.combatants, dude) {
@@ -262,7 +262,7 @@ static entity_t* entity_at_location(const region_t *reg, entity_t *entity, const
     return NULL;
 }
 
-static void generate_monster_actions(region_t *reg) {
+static void generate_monster_actions(sol_region_t *reg) {
     // Start of AI, lets just go to the closest PC and attack.
     static uint8_t visit_flags[MAP_ROWS][MAP_COLUMNS];
     entity_t *player;
@@ -361,7 +361,7 @@ static void end_turn() {
     player_action = EA_NONE;
 }
 
-extern void combat_is_defeated(region_t *reg, entity_t *dude) {
+extern void combat_is_defeated(sol_region_t *reg, entity_t *dude) {
     combat_entry_t *prev = NULL;
     combat_entry_t *rover = combat_order;
     if (!dude) { return; }
@@ -418,7 +418,7 @@ static void perform_enemy_melee_attack() {
     }
 }
 
-static void check_and_perform_attack(region_t *reg) {
+static void check_and_perform_attack(sol_region_t *reg) {
     entity_action_t *action = monster_actions + monster_step;
 
     switch (action->action) {
@@ -430,7 +430,7 @@ static void check_and_perform_attack(region_t *reg) {
     }
 }
 
-static entity_t* entity_in_way(region_t *reg, entity_t *entity, const enum entity_action_e action) {
+static entity_t* entity_in_way(sol_region_t *reg, entity_t *entity, const enum entity_action_e action) {
     int xdiff = 0, ydiff = 0;
 
     switch(action) {
@@ -449,7 +449,7 @@ static entity_t* entity_in_way(region_t *reg, entity_t *entity, const enum entit
     return entity_at_location(reg, entity, entity->mapx + xdiff, entity->mapy + ydiff);
 }
 
-static void player_melee(region_t *reg, entity_t* entity, entity_t *enemy) {
+static void player_melee(sol_region_t *reg, entity_t* entity, entity_t *enemy) {
     //int amt = 1 + (rand() % 6);
     //int amt = 100; // FTW!
     //combat_animation_add(EA_MELEE, current_turn->entity, NULL, 0);
@@ -465,7 +465,7 @@ static void player_melee(region_t *reg, entity_t* entity, entity_t *enemy) {
     //wait_on_player = 0;
 }
 
-static void move_entity(region_t *reg, entity_t *entity, const enum entity_action_e action) {
+static void move_entity(sol_region_t *reg, entity_t *entity, const enum entity_action_e action) {
     entity_t *enemy;
 
     switch(action) {
@@ -513,7 +513,7 @@ static void next_round() {
     current_turn = combat_order;
 }
 
-static void do_combat_rounds(region_t *reg) {
+static void do_combat_rounds(sol_region_t *reg) {
     //Need to start combat rounds.
     if (!current_turn) {
         next_round();
@@ -542,7 +542,7 @@ static void do_combat_rounds(region_t *reg) {
     monster_step++;
 }
 
-static int is_combat_over(region_t *reg) {
+static int is_combat_over(sol_region_t *reg) {
     combat_entry_t *rover = combat_order;
     uint8_t forces[10]; // represent each opposing force.
     uint8_t num_types = 0;
@@ -575,7 +575,7 @@ static void check_current_turn() {
     }
 }
 
-static void do_player_turn(region_t *reg) {
+static void do_player_turn(sol_region_t *reg) {
     if (ticks_per_game_round > 0) {
         ticks_per_game_round--;
         return;
@@ -588,7 +588,7 @@ static void do_player_turn(region_t *reg) {
 
 static entity_action_t clear = { NULL, NULL, 0, EA_NONE };
 
-void combat_update(region_t *reg) {
+void combat_update(sol_region_t *reg) {
     if (reg == NULL) { return; }
     combat_region_t *cr = &(reg->cr);
     if (cr == NULL) { return; }

@@ -80,7 +80,7 @@ extern int port_valid_sprite(sprite_info_t *spr);
 
 extern void sol_play_sound_effect(const uint16_t id);
 
-extern void port_change_region(region_t *reg);
+extern void port_change_region(sol_region_t *reg);
 extern void port_combat_action(entity_action_t *ca);
 extern void port_load_item(item_t *item);
 extern void port_free_item(item_t *item);
@@ -118,6 +118,8 @@ extern void port_tick();
 extern void port_window_render();
 extern void port_start_display_frame();
 extern void port_commit_display_frame();
+
+#define SPRITE_ERROR (0xFFFF)
 
 extern void sol_sprite_init();
 extern sol_sprite_t sol_sprite_new(gff_palette_t *pal,

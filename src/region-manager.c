@@ -12,8 +12,8 @@
 
 #define MAX_REGIONS (0xFF)
 
-static region_t *ssi_regions[MAX_REGIONS];
-static region_t *sol_regions[MAX_REGIONS];
+static sol_region_t *ssi_regions[MAX_REGIONS];
+static sol_region_t *sol_regions[MAX_REGIONS];
 static int current_region = -1; // will need to eliminate for server code.
 
 void region_manager_init() {
@@ -36,7 +36,7 @@ void region_manager_cleanup() {
     memset(sol_regions, 0x0, sizeof(sol_regions));
 }
 
-region_t* region_manager_get_region(const int region_id) {
+sol_region_t* region_manager_get_region(const int region_id) {
     char gff_name[32];
     entity_t *dude = NULL;
 
@@ -78,7 +78,7 @@ region_t* region_manager_get_region(const int region_id) {
     return ssi_regions[region_id];
 }
 
-region_t* region_manager_get_current() {
+sol_region_t* region_manager_get_current() {
     if (current_region < 0) { return NULL; }
     if (current_region < MAX_REGIONS) {
         return ssi_regions[current_region];
@@ -98,7 +98,7 @@ void ds_region_load_region_from_save(const int id, const int region_id) {
     int gff_index = gff_find_index(gff_name);
     if (gff_index < 0 ) { return; }
 
-    //dsl_region_t *reg = NULL;
+    //dsl_sol_region_t *reg = NULL;
     //entity_t *player = player_get_active();
 
     gff_chunk_header_t chunk = gff_find_chunk_header(id, GFF_ROBJ, region_id);
@@ -150,7 +150,7 @@ void ds_region_load_region_from_save(const int id, const int region_id) {
     }
     //memcpy(reg->flags, buf, sizeof(reg->flags));
     //buf += sizeof(reg->flags);
-    //memcpy(&(reg->cr.hunt), &(((combat_region_t*)buf)->hunt), sizeof(reg->cr.hunt));
+    //memcpy(&(reg->cr.hunt), &(((combat_sol_region_t*)buf)->hunt), sizeof(reg->cr.hunt));
     //buf -= sizeof(reg->flags);
     free(buf);
 
@@ -175,7 +175,7 @@ void ds_region_load_region_from_save(const int id, const int region_id) {
     //ds_regions[region_id] = reg;
 }
 
-extern int region_manager_add_region(region_t *region) {
+extern int region_manager_add_region(sol_region_t *region) {
     int pos = 0;
     for (pos = 0; pos < MAX_REGIONS && sol_regions[pos]; pos++) { ; }
 
@@ -188,7 +188,7 @@ extern int region_manager_add_region(region_t *region) {
     return pos;
 }
 
-extern void region_manager_set_current(region_t *region) {
+extern void region_manager_set_current(sol_region_t *region) {
     if (!region) { return; }
     region_manager_remove_players();
     for (int i = 0; i < MAX_REGIONS; i++) {
@@ -199,7 +199,7 @@ extern void region_manager_set_current(region_t *region) {
 }
 
 extern void region_manager_remove_players() {
-    region_t* reg = region_manager_get_current();
+    sol_region_t* reg = region_manager_get_current();
     if (!reg) { return; }
 
     for (int i = 0; i < MAX_PCS; i++) {

@@ -1,17 +1,15 @@
 #ifndef MAP_H
 #define MAP_H
 
-#include <SDL2/SDL.h>
 #include "../src/region.h"
 #include "window-manager.h"
 
 typedef struct map_s {
-    region_t *region;
-    SDL_Texture **tiles;
+    sol_region_t *region;
 } map_t;
 
 void map_load_map(int id);
-void map_load_region(region_t *reg);
+void map_load_region(sol_region_t *reg);
 void map_render(void *data);
 int map_handle_mouse(const uint32_t x, const uint32_t y);
 int map_handle_mouse_click(const uint32_t button, const uint32_t x, const uint32_t y);

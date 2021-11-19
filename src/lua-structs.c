@@ -96,7 +96,7 @@ static int create_region (lua_State *l) {
 static int set_region (lua_State *l) {
     luaL_checktype(l, 1, LUA_TTABLE);
 
-    region_t *region = get_userdata(l, 1);
+    sol_region_t *region = get_userdata(l, 1);
     region_manager_add_region(region);
     region_manager_set_current(region);
 
@@ -411,7 +411,7 @@ static const luaL_Reg class_methods[] = {
 };
 
 static int region_set_tile(lua_State *l) {
-    region_t *region = get_userdata(l, 1);
+    sol_region_t *region = get_userdata(l, 1);
     const int x = luaL_checkinteger(l, 2);
     const int y = luaL_checkinteger(l, 3);
     const int tile = luaL_checkinteger(l, 4);
@@ -425,7 +425,7 @@ static int region_set_tile(lua_State *l) {
 }
 
 static int region_set_tile_id(lua_State *l) {
-    region_t *region = get_userdata(l, 1);
+    sol_region_t *region = get_userdata(l, 1);
     const int pos = luaL_checkinteger(l, 2);
     const int id = luaL_checkinteger(l, 3);
 
@@ -445,7 +445,7 @@ static int region_set_tile_id(lua_State *l) {
 
 static int region_get(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    region_t *region = get_userdata(l, -3);
+    sol_region_t *region = get_userdata(l, -3);
 
     //printf("indexing '%s' of saves %p\n", str, attack);
     GET_INTEGER_TABLE(region, map_id);
@@ -461,7 +461,7 @@ static int region_get(lua_State *l) {
 
 static int region_set(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    region_t *region = get_userdata(l, -4);
+    sol_region_t *region = get_userdata(l, -4);
 
     if (lua_isinteger(l, 3)) {
         const int num = luaL_checkinteger(l, 3);

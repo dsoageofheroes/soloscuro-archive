@@ -8,6 +8,7 @@
 #include "gff-map.h"
 #include "psionic.h"
 #include "item.h"
+#include "entity-animation.h"
 
 typedef struct ability_set_s {
     unsigned int hunt             : 1;
@@ -63,8 +64,6 @@ typedef struct class_s {
     uint8_t high_level; // for level drain.
     psi_abilities_t psi;
 } class_t;
-
-#include "entity-animation.h"
 
 typedef struct entity_s {
     char *name;

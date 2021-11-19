@@ -92,7 +92,7 @@ typedef struct entity_action_list_s {
 void combat_init(combat_region_t *cr);
 void combat_free(combat_region_t *rc);
 const enum combat_turn_t combat_player_turn();
-extern int combat_initiate(region_t *reg, const uint16_t x, const uint16_t y);
+extern int combat_initiate(sol_region_t *reg, const uint16_t x, const uint16_t y);
 scmd_t* combat_get_scmd(const enum combat_scmd_t type);
 entity_t* combat_get_current(combat_region_t *cr);
 extern void combat_set_hunt(combat_region_t *cr, const uint32_t combat_id);
@@ -100,6 +100,6 @@ extern void combat_player_action(const entity_action_t action);
 extern int combat_activate_power(power_t *pw, entity_t *source, entity_t *target, const int32_t x, const int32_t y);
 
 // pre-processor ordering.
-extern void combat_is_defeated(region_t *reg, entity_t *dude);
+extern void combat_is_defeated(sol_region_t *reg, entity_t *dude);
 
 #endif

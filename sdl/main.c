@@ -4,7 +4,6 @@
 #include "audio.h"
 #include "font.h"
 #include "utils.h"
-#include "player.h"
 #include "../src/lua-inc.h"
 #include "../src/settings.h"
 #include "mouse.h"
@@ -156,10 +155,10 @@ void handle_input() {
                 if (ignore_repeat && event.key.repeat != 0) { break; }
                 if (textbox_handle_keyup(textbox, event.key.keysym)) { return; }
                 if (sol_lua_keyup(event.key.keysym.sym)) { break; }
-                if (event.key.keysym.sym == SDLK_s) { player_unmove(PLAYER_LEFT); }
-                if (event.key.keysym.sym == SDLK_e) { player_unmove(PLAYER_UP); }
-                if (event.key.keysym.sym == SDLK_f) { player_unmove(PLAYER_RIGHT); }
-                if (event.key.keysym.sym == SDLK_d) { player_unmove(PLAYER_DOWN); }
+                if (event.key.keysym.sym == SDLK_s) { sol_player_unmove(PLAYER_LEFT); }
+                if (event.key.keysym.sym == SDLK_e) { sol_player_unmove(PLAYER_UP); }
+                if (event.key.keysym.sym == SDLK_f) { sol_player_unmove(PLAYER_RIGHT); }
+                if (event.key.keysym.sym == SDLK_d) { sol_player_unmove(PLAYER_DOWN); }
                 if (event.key.keysym.sym == SDLK_UP) { ymapdiff = 0;}
                 if (event.key.keysym.sym == SDLK_DOWN) { ymapdiff = 0;}
                 if (event.key.keysym.sym == SDLK_LEFT) { xmapdiff = 0;}
@@ -198,10 +197,10 @@ void handle_input() {
                 if (event.key.keysym.sym == SDLK_c) {
                     sol_window_toggle(&view_character_window, 0, 0);
                 }
-                if (event.key.keysym.sym == SDLK_s) { player_move(PLAYER_LEFT); }
-                if (event.key.keysym.sym == SDLK_e) { player_move(PLAYER_UP); }
-                if (event.key.keysym.sym == SDLK_f) { player_move(PLAYER_RIGHT); }
-                if (event.key.keysym.sym == SDLK_d) { player_move(PLAYER_DOWN); }
+                if (event.key.keysym.sym == SDLK_s) { sol_player_move(PLAYER_LEFT); }
+                if (event.key.keysym.sym == SDLK_e) { sol_player_move(PLAYER_UP); }
+                if (event.key.keysym.sym == SDLK_f) { sol_player_move(PLAYER_RIGHT); }
+                if (event.key.keysym.sym == SDLK_d) { sol_player_move(PLAYER_DOWN); }
                 if (event.key.keysym.sym == SDLK_UP) { ymapdiff = -2;}
                 if (event.key.keysym.sym == SDLK_DOWN) { ymapdiff = 2;}
                 if (event.key.keysym.sym == SDLK_LEFT) { xmapdiff = -2;}
@@ -236,7 +235,7 @@ void handle_input() {
     ymappos += ymapdiff;
     handle_mouse_motion();
     if (region_manager_get_current()) {
-        player_update();
+        sol_player_update();
         main_combat_update();
     }
 }
@@ -264,7 +263,7 @@ void port_window_render() {
 }
 
 void render() {
-    region_tick(region_manager_get_current());
+    sol_region_tick(region_manager_get_current());
     combat_update(region_manager_get_current());
     sol_window_render(xmappos, ymappos);
 }
@@ -495,10 +494,10 @@ extern void port_set_config(game_config_t gc, ssize_t val) {
         case CONFIG_REPEAT: main_set_ignore_repeat(val); break;
         case CONFIG_XSCROLL: main_set_xscroll(val); break;
         case CONFIG_YSCROLL: main_set_yscroll(val); break;
-        case CONFIG_PLAYER_FRAME_DELAY: player_set_delay(val); break;
-        case CONFIG_PLAYER_SET_MOVE: player_set_move(val); break;
-        case CONFIG_PLAYER_MOVE: player_move(val); break;
-        case CONFIG_PLAYER_UNMOVE: player_unmove(val); break;
+        case CONFIG_PLAYER_FRAME_DELAY: sol_player_set_delay(val); break;
+        case CONFIG_PLAYER_SET_MOVE: sol_player_set_move(val); break;
+        case CONFIG_PLAYER_MOVE: sol_player_move(val); break;
+        case CONFIG_PLAYER_UNMOVE: sol_player_unmove(val); break;
         case CONFIG_SET_QUIET: dsl_set_quiet(val); break;
         case CONFIG_EXIT: main_exit_game(); break;
         case CONFIG_RUN_BROWSER: main_set_browser_mode(); break;
