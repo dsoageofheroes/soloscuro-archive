@@ -1,7 +1,6 @@
 #ifndef FONT_H
 #define FONT_H
 
-//#include <SDL2/SDL.h>
 #include "window-manager.h"
 
 extern void sol_font_free();
