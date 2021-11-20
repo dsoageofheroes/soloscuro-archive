@@ -2,7 +2,7 @@
 #include "narrate.h"
 #include "gfftypes.h"
 #include "../../src/entity.h"
-#include "../../src/gff.h"
+#include "gff.h"
 #include "../../src/port.h"
 #include "../../src/settings.h"
 #include <string.h>

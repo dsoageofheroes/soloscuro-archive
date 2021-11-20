@@ -60,9 +60,6 @@ typedef struct sol_dim_s {
 } sol_dim_t;
 
 // Narrate functions
-extern int8_t port_narrate_open(int16_t action, const char *text, int16_t index);
-extern void port_narrate_clear();
-extern void port_narrate_close();
 
 extern int port_ask_yes_no();
 extern void port_enter_combat();

@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 
-#include "ssi-scmd.h"
-#include "ssi-object.h"
+#include "../src/ssi-scmd.h"
+#include "../src/ssi-object.h"
 
 #define MAP_LOS     (0x80) // Runtime flag to determine if block is in sight.
 #define MAP_BLOCK   (0x40) // This tile is blocked (you can't move into it.)
@@ -115,19 +115,15 @@ typedef struct _so_object_t {
 
 #define NULL_OBJECT (9999) // why 9999?  I dunno!
 
-//int gff_load_map_tile_ids(int gff_file, int res_id);
-//int gff_load_map_flags(int gff_file, int res_id);
-//int gff_load_map(int gff_file);
-//int32_t get_tile_id(int gff_file, int row, int column);
-int gff_map_get_num_objects(int gff_index, int res_id);
-int gff_map_get_object_frame_count(int gff_index, int res_id, int obj_id);
-scmd_t* gff_map_get_object_scmd(int gff_index, int res_id, int obj_id, int scmd_index);
-unsigned char* gff_map_get_object_bmp(int gff_index, int res_id, int obj_id, int *w, int *h, int frame_id);
-unsigned char* gff_map_get_object_bmp_pal(int gff_index, int res_id, int obj_id, int *w, int *h, int frame_id,
+extern int            gff_map_get_num_objects(int gff_index, int res_id);
+extern int            gff_map_get_object_frame_count(int gff_index, int res_id, int obj_id);
+extern scmd_t*        gff_map_get_object_scmd(int gff_index, int res_id, int obj_id, int scmd_index);
+extern unsigned char* gff_map_get_object_bmp(int gff_index, int res_id, int obj_id, int *w, int *h, int frame_id);
+extern unsigned char* gff_map_get_object_bmp_pal(int gff_index, int res_id, int obj_id, int *w, int *h, int frame_id,
         int palette_id);
-uint16_t gff_map_get_object_location(int gff_index, int res_id, int obj_id, uint16_t *x, uint16_t *y, uint8_t *z);
-so_object_t* gff_object_inspect(int gff_index, int res_id);
-so_object_t* gff_create_object(char *data, rdff_disk_object_t *entry, int16_t id);
-int gff_read_object(int object_index, disk_object_t *disk_obj);
+extern uint16_t       gff_map_get_object_location(int gff_index, int res_id, int obj_id, uint16_t *x, uint16_t *y, uint8_t *z);
+extern so_object_t*   gff_object_inspect(int gff_index, int res_id);
+extern so_object_t*   gff_create_object(char *data, rdff_disk_object_t *entry, int16_t id);
+extern int            gff_read_object(int object_index, disk_object_t *disk_obj);
 
 #endif

@@ -1,6 +1,6 @@
 #include "gfftypes.h"
 #include "portrait.h"
-#include "../src/gff.h"
+#include "gff.h"
 #include "../src/dsl.h"
 #include "../src/port.h"
 
@@ -29,7 +29,7 @@ void sol_portrait_load() {
             exit (1);
         }
         gff_read_chunk(DSLDATA_GFF_INDEX, &chunk, buf, chunk.length);
-        data = get_portrait(buf, &w, &h);
+        data = gff_get_portrait(buf, &w, &h);
         portraits[id] = sol_sprite_create_from_data(data, w, h);
         free(data);
     }

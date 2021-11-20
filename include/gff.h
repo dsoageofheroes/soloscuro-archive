@@ -119,39 +119,6 @@ typedef struct _gff_file_t {
     gff_palettes_t *pals;
 } gff_file_t;
 
-extern gff_file_t open_files[NUM_FILES];
-
-extern void gff_init();
-extern void gff_load_directory(const char *path);
-extern int gff_get_master();
-extern int gff_create(const char *pathName);
-extern int gff_open(const char *pathName);
-extern const char** gff_list(size_t *len);
-extern void get_gff_type_name(unsigned int gff_type, char *type);
-extern int gff_find_index(const char *name);
-extern int gff_get_number_of_types(int idx);
-extern int gff_get_type_id(int idx, int type_index);
-extern unsigned int gff_get_resource_length(int idx, int type_id);
-extern size_t gff_get_resource_ids(int idx, int type_id, unsigned int *ids);
-extern unsigned int* gff_get_id_list(int idx, int type_id);
-//extern char* gff_get_raw_bytes(int idx, int type_id, int res_id, unsigned long *len);
-extern size_t gff_read_raw_bytes(int idx, int type_id, int res_id, void *buf, const size_t len);
-extern gff_chunk_header_t gff_find_chunk_header(int idx, int type_id, int res_id);
-extern size_t gff_read_chunk(int idx, gff_chunk_header_t *chunk, void *buf, const size_t len);
-extern size_t gff_read_chunk_piece(int idx, gff_chunk_header_t *chunk, void *read_buf, const size_t len);
-size_t gff_write_chunk(const int idx, const gff_chunk_header_t chunk, const char *path);
-size_t gff_add_chunk(const int idx, const int type_id, int res_id, char *buf, const size_t len);
-size_t gff_add_type(const int idx, const int type_id);
-extern int gff_write_raw_bytes(int idx, int type_id, int res_id, const char *path); // DEPRECATED?
-extern void gff_print(int idx, FILE *out);
-extern void gff_close (int gff_file);
-extern void gff_cleanup();
-extern size_t gff_get_palette_id(int idx, int palette_num);
-extern const enum game_type_t gff_get_game_type();
-
-// functions for other modules, NOT "public"
-//extern gff_chunk_list_t* search_for_chunk_by_name(gff_file_t *file, unsigned long name);
-
 // Need to find location for these:
 #define MAX_MONSTERS_PER_REGION (10)
 
@@ -180,5 +147,34 @@ typedef struct _ds_char_t {
     uint16_t width;
     uint8_t  data[0];
 } ds_char_t;
+
+extern gff_file_t open_files[NUM_FILES];
+
+extern void               gff_init();
+extern void               gff_load_directory(const char *path);
+extern int                gff_get_master();
+extern int                gff_create(const char *pathName);
+extern int                gff_open(const char *pathName);
+extern const char**       gff_list(size_t *len);
+extern void               gff_get_gff_type_name(unsigned int gff_type, char *type);
+extern int                gff_find_index(const char *name);
+extern int                gff_get_number_of_types(int idx);
+extern int                gff_get_type_id(int idx, int type_index);
+extern unsigned int       gff_get_resource_length(int idx, int type_id);
+extern size_t             gff_get_resource_ids(int idx, int type_id, unsigned int *ids);
+extern unsigned int*      gff_get_id_list(int idx, int type_id);
+extern size_t             gff_read_raw_bytes(int idx, int type_id, int res_id, void *buf, const size_t len);
+extern gff_chunk_header_t gff_find_chunk_header(int idx, int type_id, int res_id);
+extern size_t             gff_read_chunk(int idx, gff_chunk_header_t *chunk, void *buf, const size_t len);
+extern size_t             gff_read_chunk_piece(int idx, gff_chunk_header_t *chunk, void *read_buf, const size_t len);
+extern size_t             gff_write_chunk(const int idx, const gff_chunk_header_t chunk, const char *path);
+extern size_t             gff_add_chunk(const int idx, const int type_id, int res_id, char *buf, const size_t len);
+extern size_t             gff_add_type(const int idx, const int type_id);
+extern int                gff_write_raw_bytes(int idx, int type_id, int res_id, const char *path); // DEPRECATED?
+extern void               gff_print(int idx, FILE *out);
+extern void               gff_close (int gff_file);
+extern void               gff_cleanup();
+extern size_t             gff_get_palette_id(int idx, int palette_num);
+extern enum game_type_t   gff_get_game_type();
 
 #endif

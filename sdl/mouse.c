@@ -1,6 +1,6 @@
 #include "mouse.h"
 #include "../src/dsl.h"
-#include "../src/gff.h"
+#include "gff.h"
 #include "gfftypes.h"
 
 #include <SDL2/SDL.h>
@@ -69,9 +69,9 @@ static SDL_Cursor* create_cursor(const int gff_idx, const int type_idx, const si
     SDL_Rect loc;
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
 
-    unsigned char *data = get_frame_rgba_palette(gff_idx, type_idx, res_id, 0, pal);
-    loc.w = get_frame_width(gff_idx, type_idx, res_id, 0);
-    loc.h = get_frame_height(gff_idx, type_idx, res_id, 0);
+    unsigned char *data = gff_get_frame_rgba_palette(gff_idx, type_idx, res_id, 0, pal);
+    loc.w = gff_get_frame_width(gff_idx, type_idx, res_id, 0);
+    loc.h = gff_get_frame_height(gff_idx, type_idx, res_id, 0);
     surface = SDL_CreateRGBSurfaceFrom(data, loc.w, loc.h, 32, 4*loc.w,
             0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
     SDL_Surface *stretch = SDL_CreateRGBSurface(0, 2 * loc.w, 2 * loc.h, 32,

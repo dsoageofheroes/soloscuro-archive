@@ -4,7 +4,7 @@
 #define DSL_REGION_H
 
 #include <stdint.h>
-#include "../src/gff-map.h"
+#include "gff-map.h"
 #include "ssi-object.h"
 #include "passive.h"
 #include "entity.h"

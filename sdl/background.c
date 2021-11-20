@@ -1,6 +1,6 @@
 #include "background.h"
 #include "main.h"
-#include "../src/gff.h"
+#include "gff.h"
 #include "../src/port.h"
 #include "../src/settings.h"
 #include <SDL2/SDL.h>

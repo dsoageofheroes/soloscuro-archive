@@ -303,7 +303,7 @@ int gff_open(const char *pathName) {
 
     open_files[idx].filename = filename;
     open_files[idx].start_palette_index = gff_get_number_of_palettes();
-    create_palettes(idx, &(open_files[idx].num_palettes));
+    gff_create_palettes(idx, &(open_files[idx].num_palettes));
     debug("'%s' loaded as '%s' with id: %d\n", pathName, open_files[idx].filename, idx);
 
     return idx;
@@ -608,7 +608,7 @@ extern unsigned int* gff_get_id_list(int idx, int type_id) {
     return ids;
 }
 
-void get_gff_type_name(unsigned int gff_type, char *type) {
+void gff_get_gff_type_name(unsigned int gff_type, char *type) {
     switch(gff_type) {
         case GFF_FORM: strcpy(type, "FORM: Internal Format"); break;
         case GFF_GFFI: strcpy(type, "GFFI: Internal Format"); break; 

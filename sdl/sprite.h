@@ -3,8 +3,6 @@
 
 #include <SDL2/SDL.h>
 
-#include "../src/gff-image.h"
-
 typedef struct sprite_s {
     SDL_Texture **tex;
     SDL_Rect *loc;

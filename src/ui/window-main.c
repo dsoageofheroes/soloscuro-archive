@@ -8,7 +8,7 @@
 #include "../../src/gameloop.h"
 #include "../../src/port.h"
 #include "../../src/settings.h"
-#include "../../src/gff.h"
+#include "gff.h"
 
 static sol_sprite_t background, sun, start, create_characters, load_save, exit_dos;
 static int mousex = 0, mousey = 0;

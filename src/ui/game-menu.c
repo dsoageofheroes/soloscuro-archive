@@ -2,7 +2,7 @@
 #include "game-menu.h"
 #include "narrate.h"
 #include "gfftypes.h"
-#include "../../src/gff.h"
+#include "gff.h"
 #include "../../src/settings.h"
 #include "../../src/port.h"
 #include <string.h>

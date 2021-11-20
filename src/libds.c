@@ -120,7 +120,7 @@ int lua_get_gff_type_name(lua_State *L) {
     char buf[1024];
     int gff_type = luaL_checkinteger(L, 1);
 
-    get_gff_type_name(gff_type, buf);
+    gff_get_gff_type_name(gff_type, buf);
 
     lua_pushstring(L, buf);
 
@@ -195,7 +195,7 @@ int lua_get_frame_count(lua_State *L) {
     lua_Integer type_id = luaL_checkinteger (L, 2);
     lua_Integer res_id = luaL_checkinteger (L, 3);
 
-    lua_pushinteger(L, get_frame_count(gff_index, type_id, res_id));
+    lua_pushinteger(L, gff_get_frame_count(gff_index, type_id, res_id));
 
     return 1;
 }
@@ -206,7 +206,7 @@ int lua_get_frame_width(lua_State *L) {
     lua_Integer res_id = luaL_checkinteger (L, 3);
     lua_Integer frame_id = luaL_checkinteger (L, 4);
 
-    lua_pushinteger(L, get_frame_width(gff_index, type_id, res_id, frame_id));
+    lua_pushinteger(L, gff_get_frame_width(gff_index, type_id, res_id, frame_id));
 
     return 1;
 }
@@ -217,7 +217,7 @@ int lua_get_frame_height(lua_State *L) {
     lua_Integer res_id = luaL_checkinteger (L, 3);
     lua_Integer frame_id = luaL_checkinteger (L, 4);
 
-    lua_pushinteger(L, get_frame_height(gff_index, type_id, res_id, frame_id));
+    lua_pushinteger(L, gff_get_frame_height(gff_index, type_id, res_id, frame_id));
 
     return 1;
 }
@@ -228,9 +228,9 @@ int lua_get_frame_rgba(lua_State *L) {
     lua_Integer res_id = luaL_checkinteger (L, 3);
     lua_Integer frame_id = luaL_checkinteger (L, 4);
 
-    int w = get_frame_width(gff_index, type_id, res_id, frame_id);
-    int h = get_frame_height(gff_index, type_id, res_id, frame_id);
-    char* data = (char*)get_frame_rgba_with_palette(gff_index, type_id, res_id, frame_id, -1);
+    int w = gff_get_frame_width(gff_index, type_id, res_id, frame_id);
+    int h = gff_get_frame_height(gff_index, type_id, res_id, frame_id);
+    char* data = (char*)gff_get_frame_rgba_with_palette(gff_index, type_id, res_id, frame_id, -1);
 
     if (data == NULL) {
         lua_pushinteger(L, 0);
@@ -249,7 +249,7 @@ int lua_get_portrait(lua_State *L) {
     gff_chunk_header_t chunk = gff_find_chunk_header(DSLDATA_GFF_INDEX, GFF_PORT, res_id);
     gff_read_chunk(DSLDATA_GFF_INDEX, &chunk, buf, BUF_MAX);
 
-    char *data = (char*)get_portrait(buf, &w, &h);
+    char *data = (char*)gff_get_portrait(buf, &w, &h);
     if (data == NULL) {
         lua_pushinteger(L, 0);
         lua_pushinteger(L, 0);
@@ -271,9 +271,9 @@ int lua_get_frame_rgba_with_palette(lua_State *L) {
     lua_Integer frame_id = luaL_checkinteger (L, 4);
     lua_Integer palette_id = luaL_checkinteger (L, 5);
 
-    int w = get_frame_width(gff_index, type_id, res_id, frame_id);
-    int h = get_frame_height(gff_index, type_id, res_id, frame_id);
-    char* data = (char*)get_frame_rgba_with_palette(gff_index, type_id, res_id, frame_id, palette_id);
+    int w = gff_get_frame_width(gff_index, type_id, res_id, frame_id);
+    int h = gff_get_frame_height(gff_index, type_id, res_id, frame_id);
+    char* data = (char*)gff_get_frame_rgba_with_palette(gff_index, type_id, res_id, frame_id, palette_id);
 
     if (data == NULL) {
         lua_pushinteger(L, 0);
@@ -297,7 +297,7 @@ int lua_get_chunk_as_midi(lua_State *L) {
     gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, type_id, res_id);
     gff_read_chunk(gff_idx, &chunk, buf, BUF_MAX);
 
-    unsigned char* midi_data = xmi_to_midi((unsigned char*)buf, xmi_len, &midi_len);
+    unsigned char* midi_data = gff_xmi_to_midi((unsigned char*)buf, xmi_len, &midi_len);
     FILE *tmp = fopen("t.mid", "wb+");
     fwrite(midi_data, 1, midi_len, tmp);
     fclose(tmp);
@@ -510,7 +510,7 @@ int lua_create_font_img(lua_State *L) {
 
     ds_font_t *font = (ds_font_t*)buf;
     ds_char_t *ds_char = (ds_char_t*)(((uint8_t*)font) + font->char_offset[c]);
-    char *data = (char*)create_font_rgba(gff_idx, c, fg_color, bg_color);
+    char *data = (char*)gff_create_font_rgba(gff_idx, c, fg_color, bg_color);
 
     if (data == NULL) {
         lua_pushinteger(L, 0);

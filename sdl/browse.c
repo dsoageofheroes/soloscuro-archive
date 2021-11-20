@@ -7,10 +7,10 @@
 #include "../src/dsl.h"
 #include "../src/region.h"
 #include "../src/gameloop.h"
-#include "../src/gff.h"
-#include "../src/gff-map.h"
-#include "../src/gff-image.h"
-#include "../src/gff-xmi.h"
+#include "gff.h"
+#include "gff-map.h"
+#include "gff-image.h"
+#include "gff-xmi.h"
 #include "../src/wizard.h"
 #include "../src/region-manager.h"
 
@@ -293,7 +293,7 @@ static void print_gff_entries() {
     snprintf(buf, BUF_MAX, "ENTRIES:");
     sol_print_line_len(0, buf, 220, 20, BUF_MAX);
     for (int i = 0; i < entry_max; i++) {
-        get_gff_type_name(gff_get_type_id(gff_idx, i), buf);
+        gff_get_gff_type_name(gff_get_type_id(gff_idx, i), buf);
         buf[4] = '\0';
         sol_print_line_len(0, buf, 220, 40 + 20 * i, BUF_MAX);
     }
@@ -495,13 +495,13 @@ static void render_entry_as_image(const int gff_idx, const int type_id, const in
 
     snprintf(buf, BUF_MAX-1, "current frame: %d, total frames: %d\n", cframe, cimg->frame_num);
     sol_print_line_len(0, buf, x, y, BUF_MAX);
-    unsigned char* data = get_frame_rgba_palette_img(cimg, cframe, pal);
+    unsigned char* data = gff_get_frame_rgba_palette_img(cimg, cframe, pal);
     if (!data) {
         sol_print_line_len(0, "BMP Data is not readable.", 320, 60, 128);
         return;
     }
-    loc.w = get_frame_width(gff_idx, type_id, res_id, cframe);
-    loc.h = get_frame_height(gff_idx, type_id, res_id, cframe);
+    loc.w = gff_get_frame_width(gff_idx, type_id, res_id, cframe);
+    loc.h = gff_get_frame_height(gff_idx, type_id, res_id, cframe);
     SDL_Surface *surface = SDL_CreateRGBSurfaceFrom(data, loc.w, loc.h, 32, 
             4*loc.w, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
     SDL_Texture *tex = SDL_CreateTextureFromSurface(renderer, surface);
@@ -605,7 +605,7 @@ static void render_entry_ojff() {
 
 static void render_entry_as_pal(const int type_id) {
     render_entry_header();
-    gff_palettes_t *pals = read_palettes_type(gff_idx, type_id);
+    gff_palettes_t *pals = gff_read_palettes_type(gff_idx, type_id);
     const int pal_break = 64;
 
     for (int i = 0; i < PALETTE_SIZE; i++) {
@@ -897,7 +897,7 @@ static void render_entry_font() {
     for (unsigned short c = 0; c < 255; c++) {
         ds_char_t *ds_char = (ds_char_t*)(((uint8_t*)font) + *(font->char_offset + c));
         if (ds_char->width) {
-            char *data = (char*)create_font_rgba(gff_idx, c, 0xFFFF00FF, 0x000000FF);
+            char *data = (char*)gff_create_font_rgba(gff_idx, c, 0xFFFF00FF, 0x000000FF);
             loc.w = ds_char->width;
             loc.h = font->height;
             surface = SDL_CreateRGBSurfaceFrom(data, loc.w, loc.h, 32, 4*loc.w,

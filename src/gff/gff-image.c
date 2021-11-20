@@ -27,7 +27,7 @@ void gff_image_init() {
 
 #define RES_COUNT (256)
 #define PAL_MAX   (1<<12)
-gff_palettes_t* read_palettes_type(int idx, int type_id) {
+gff_palettes_t* gff_read_palettes_type(int idx, int type_id) {
     //gff_chunk_header_t *header = gff_find_chunk_header(
     char pal[PAL_MAX];
     uint32_t res_ids[RES_COUNT];
@@ -62,12 +62,12 @@ gff_palettes_t* read_palettes_type(int idx, int type_id) {
     return ret;
 }
 
-gff_palettes_t* read_palettes(int idx) {
-    return read_palettes_type(idx, GFF_PAL);
+gff_palettes_t* gff_read_palettes(int idx) {
+    return gff_read_palettes_type(idx, GFF_PAL);
 }
 
-gff_palette_t* create_palettes(int gff_idx, unsigned int *len) {
-    open_files[gff_idx].pals = read_palettes(gff_idx);
+gff_palette_t* gff_create_palettes(int gff_idx, unsigned int *len) {
+    open_files[gff_idx].pals = gff_read_palettes(gff_idx);
 
     for (int i = 0; i < open_files[gff_idx].pals->len; i++) {
         //palettes[num_palettes] = open_files[gff_idx].pals->palettes[i];
@@ -88,7 +88,7 @@ gff_palette_t* create_palettes(int gff_idx, unsigned int *len) {
     return NULL;
 }
 
-int get_frame_count(int gff_idx, int type_id, int res_id) {
+int gff_get_frame_count(int gff_idx, int type_id, int res_id) {
     char buf[16];
     gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, type_id, res_id);
     //printf("chunk: {id = %d, length = %d, location = %d}\n", chunk.id, chunk.length, chunk.location);
@@ -137,7 +137,7 @@ extern int gff_image_is_png(int gff_idx, int type_id, int res_id, int frame_id) 
 
 #define get_distance_to_chunk(a, b) ((unsigned long)a - (unsigned long)b)
 
-int get_frame_width(int gff_idx, int type_id, int res_id, int frame_id) {
+int gff_get_frame_width(int gff_idx, int type_id, int res_id, int frame_id) {
     unsigned char buf[1<<16];
     gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, type_id, res_id);
     gff_read_chunk(gff_idx, &chunk, buf, 1<<16);
@@ -151,7 +151,7 @@ int get_frame_width(int gff_idx, int type_id, int res_id, int frame_id) {
     return width;
 }
 
-int get_frame_height(int gff_idx, int type_id, int res_id, int frame_id) {
+int gff_get_frame_height(int gff_idx, int type_id, int res_id, int frame_id) {
     unsigned char buf[1<<16];
     gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, type_id, res_id);
     gff_read_chunk(gff_idx, &chunk, buf, 1<<16);
@@ -325,7 +325,7 @@ int int_byte_swap(const int val) {
 
 //TODO: PERFORMANCE: we don't *need* to read the chunk every time, just the first.
 #define FONT_NUM (1<<8)
-unsigned char* create_font_rgba(int gff_idx, int c, int fg_color, int bg_color) {
+unsigned char* gff_create_font_rgba(int gff_idx, int c, int fg_color, int bg_color) {
     uint8_t *pixel_idx = NULL;
     ds_font_t font[FONT_NUM]; // a hack, we need extra data to store the fonts!
     gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_FONT, 100);
@@ -373,7 +373,7 @@ unsigned char* create_font_rgba(int gff_idx, int c, int fg_color, int bg_color) 
     return img;
 }
 
-unsigned char* get_frame_rgba_palette_img(gff_image_entry_t *img, int frame_id, const gff_palette_t *pal) {
+unsigned char* gff_get_frame_rgba_palette_img(gff_image_entry_t *img, int frame_id, const gff_palette_t *pal) {
     uint16_t width, height;
     uint32_t frame_offset;
     char *frame_type;
@@ -450,7 +450,7 @@ unsigned char* get_frame_rgba_palette_img(gff_image_entry_t *img, int frame_id, 
     return NULL;
 }
 
-unsigned char* get_frame_rgba_palette(int gff_idx, int type_id, int res_id, int frame_id, const gff_palette_t *pal) {
+unsigned char* gff_get_frame_rgba_palette(int gff_idx, int type_id, int res_id, int frame_id, const gff_palette_t *pal) {
     gff_image_entry_t *img;
     unsigned char *data;
 
@@ -461,12 +461,12 @@ unsigned char* get_frame_rgba_palette(int gff_idx, int type_id, int res_id, int 
     img->data_len = chunk.length;
     img->frame_num = *(uint16_t*)(img->data + 4);
 
-    data = (unsigned char*)get_frame_rgba_palette_img(img, frame_id, pal);
+    data = (unsigned char*)gff_get_frame_rgba_palette_img(img, frame_id, pal);
     free(img);
     return data;
 }
 
-unsigned char* get_frame_rgba_with_palette(int gff_index, int type_id, int res_id, int frame_id, int palette_id) {
+unsigned char* gff_get_frame_rgba_with_palette(int gff_index, int type_id, int res_id, int frame_id, int palette_id) {
     gff_palette_t *cpal = NULL;
     if (palette_id < 0 || palette_id >= num_palettes) {
         cpal = master_palette;
@@ -475,10 +475,10 @@ unsigned char* get_frame_rgba_with_palette(int gff_index, int type_id, int res_i
         cpal = palettes + palette_id;
     }
 
-    return get_frame_rgba_palette(gff_index, type_id, res_id, frame_id, cpal);
+    return gff_get_frame_rgba_palette(gff_index, type_id, res_id, frame_id, cpal);
 }
 
-unsigned char* get_portrait(unsigned char* bmp_table, unsigned int *width, unsigned int *height) {
+unsigned char* gff_get_portrait(unsigned char* bmp_table, unsigned int *width, unsigned int *height) {
     unsigned char *ret = NULL;
     unsigned int frame_offset = *((unsigned int*)(bmp_table + 6 ));
     *width = *(unsigned short*)(bmp_table + frame_offset);

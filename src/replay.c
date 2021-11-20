@@ -3,18 +3,15 @@
 #include <stdarg.h>
 #include <unistd.h>
 #include "lua-inc.h"
-#include "ds-narrate.h"
 #include "replay.h"
 #include "gameloop.h"
 #include "trigger.h"
-//#include "port.h"
+#include "narrate.h"
 
 static FILE *replay = NULL; // to write to
 static FILE *replay_file = NULL; // to read from
 static lua_State *replay_lua = NULL;
 static int replay_mode = 0;
-
-//#define rprintf(...) fprintf(replay, __VA_ARGS__)
 
 void replay_init(const char *path) {
     replay = fopen(path, "w+");

@@ -57,10 +57,10 @@ static SDL_Texture* create_texture(SDL_Renderer *renderer, const uint32_t gff_id
     unsigned char *data;
     SDL_Surface *surface = NULL;
     SDL_Texture *ret = NULL;
-    loc->w = get_frame_width(gff_idx, type_id, res_id, frame_id);
-    loc->h = get_frame_height(gff_idx, type_id, res_id, frame_id);
+    loc->w = gff_get_frame_width(gff_idx, type_id, res_id, frame_id);
+    loc->h = gff_get_frame_height(gff_idx, type_id, res_id, frame_id);
     //data = get_frame_rgba_with_palette(gff_file, type, id, frame_id, palette_id);
-    data = get_frame_rgba_palette(gff_idx, type_id, res_id, frame_id, pal);
+    data = gff_get_frame_rgba_palette(gff_idx, type_id, res_id, frame_id, pal);
     surface = SDL_CreateRGBSurfaceFrom(data, loc->w, loc->h, 32, 4*loc->w,
             0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
     ret = SDL_CreateTextureFromSurface(renderer, surface);
@@ -120,7 +120,7 @@ static uint16_t sprite_append_full(uint16_t sprite_id, SDL_Renderer *renderer, S
 
     //printf("%d, %d, %d\n", gff_idx, type_id, res_id);
     append_start = sprite->len;
-    sprite->len += get_frame_count(gff_idx, type_id, res_id);
+    sprite->len += gff_get_frame_count(gff_idx, type_id, res_id);
     sprite->loc = realloc(sprite->loc, sizeof(SDL_Rect) * sprite->len);
     for (int i = append_start; i < sprite->len; i++) {
         *(sprite->loc + i) = apply_params(*initial, offsetx, offsetx);

@@ -1,7 +1,6 @@
 #include "dsl.h"
 #include "lua-inc.h"
 #include "dsl-manager.h"
-#include "ds-narrate.h"
 #include "region.h"
 #include "ds-state.h"
 #include "gameloop.h"
@@ -10,10 +9,9 @@
 #include "replay.h"
 #include "region-manager.h"
 #include "trigger.h"
+#include "narrate.h"
 #include <string.h>
 #include <stdlib.h>
-
-#include "ds-narrate.h"
 
 #define BUF_SIZE           (1<<12)
 #define MAX_GFLAGS         (800)

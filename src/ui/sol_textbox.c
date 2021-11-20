@@ -1,6 +1,6 @@
 #include "sol_textbox.h"
 #include "gfftypes.h"
-#include "../src/gff.h"
+#include "gff.h"
 #include "../src/settings.h"
 #include "../src/port.h"
 

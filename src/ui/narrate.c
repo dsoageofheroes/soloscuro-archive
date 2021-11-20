@@ -2,10 +2,11 @@
 #include "../../src/port.h"
 #include "portrait.h"
 #include "../../src/dsl.h"
-#include "../../src/ds-narrate.h"
 #include "../../src/entity-animation.h"
-#include "../../src/gff.h"
+#include "gff.h"
 #include "gfftypes.h"
+#include "../src/replay.h"
+#include "../src/dsl-manager.h"
 #include "../../src/gameloop.h"
 #include "../../src/settings.h"
 #include <string.h>
@@ -15,7 +16,12 @@
 #define MAX_TEXT (4096)
 #define MAX_LINE (128)
 #define MAX_OPTIONS (32)
+#define MAX_MENUS (16)
+#define MAX_LINE (128)
 
+static size_t menu_pos = 0;
+static uint32_t menu_addrs[MAX_MENUS];
+static char menu_text[MAX_MENUS][MAX_LINE];
 static sol_sprite_t background;
 static uint32_t xoffset, yoffset;
 static uint16_t border;
@@ -26,7 +32,6 @@ static int end_received = 0, close_received = 0;
 static uint32_t portrait_index = 0;
 static char narrate_text[MAX_TEXT];
 static size_t text_pos = 0;
-static int menu_pos = 0;
 static char menu_options[MAX_OPTIONS][MAX_LINE];
 
 static void clear() {
@@ -95,11 +100,11 @@ void print_menu() {
     sol_sprite_set_location(background, sx, sy);
 }
 
-void port_narrate_clear() {
+void sol_ui_narrate_clear() {
     clear();
 }
 
-void port_narrate_close() {
+void sol_ui_narrate_close() {
     display = 0;
     clear();
 }
@@ -134,14 +139,14 @@ static void add_text(const char *to_add) {
     text_pos += len;
 }
 
-int8_t port_narrate_open(int16_t action, const char *text, int16_t index) {
+int8_t sol_ui_narrate_open(int16_t action, const char *text, int16_t index) {
     display = 1; // start off as off
     switch(action) {
         case NAR_ADD_MENU:
             display_menu = 1;
             //warn("I need to add_menu with index %d, text = '%s'\n", index, text);
             strncpy(menu_options[menu_pos], text, MAX_LINE);
-            menu_options[menu_pos++][MAX_LINE-1] = '\0'; // guard
+            menu_options[menu_pos][MAX_LINE-1] = '\0'; // guard
             break;
         case NAR_PORTRAIT:
             portrait_index = index;
@@ -197,7 +202,7 @@ int narrate_handle_key_down(const enum entity_action_e action) {
     switch (action) {
         case EA_ACTIVATE:
             if (sol_game_loop_is_waiting_for(WAIT_NARRATE_CONTINUE)) {
-                narrate_clear();
+                sol_ui_narrate_clear();
                 sol_game_loop_signal(WAIT_NARRATE_CONTINUE, 0);
             }
         default:
@@ -214,6 +219,85 @@ void narrate_free() {
 int port_ask_yes_no() {
     error("MUST ASK YES NO, for now NO\n");
     return 0;
+}
+
+extern int8_t narrate_open(int16_t action, const char *text, int16_t index) {
+    if (action == NAR_SHOW_TEXT) {
+        if (strncmp("END", text, 3) == 0) {
+            sol_game_loop_wait_for_signal(WAIT_NARRATE_CONTINUE);
+            return 0;
+        }
+        if (strncmp("CLOSE", text, 5) == 0) {
+            sol_ui_narrate_close();
+            return 0;
+        }
+    }
+    sol_ui_narrate_open(action, text, index);
+    switch(action) {
+        case NAR_ADD_MENU:
+            strncpy(menu_text[menu_pos], text, MAX_LINE);
+            menu_addrs[menu_pos++] = index;
+            //warn("I need to add_menu with index %d, text = '%s'\n", index, text);
+            break;
+        case NAR_PORTRAIT:
+            menu_pos = 0;
+            //warn("I need to create narrate_box with portrait index %d, text = '%s'\n", index, text);
+            break;
+        case NAR_SHOW_TEXT:
+            //warn("I need to show text (index =  %d), text = '%s'\n", index, text);
+            break;
+        case NAR_SHOW_MENU:
+            //warn("I need to show menu (index =  %d), text = '%s'\n", index, text);
+            break;
+        case NAR_EDIT_BOX:
+            //warn("I need to show edit box (index =  %d), text = '%s'\n", index, text);
+            break;
+        default:
+            error("narrate_open: ERROR unknown action %d\n", action);
+            exit(1);
+    }
+    /*
+    */
+    /*
+    lua_getglobal(lua_state, "dsl");
+    lua_getfield(lua_state, -1, "narrate_open2");
+    //lua_getglobal(lua_state, "dsl.narrate_open2");
+    //lua_getfield(lua_state, LUA_GLOBALSINDEX, "narrate_open");
+    lua_pushnumber(lua_state, 1);
+    lua_pushnumber(lua_state, 2);
+    lua_pushnumber(lua_state, 3);
+    if (lua_pcall(lua_state, 3, 0, 0) != 0) {
+        error("error running function `dsl.narrate_open': %s\n", lua_tostring(lua_state, -1));
+    } else {
+        error("NON error running function `dsl.narrate_open': %s\n", lua_tostring(lua_state, -1));
+    }
+    */
+    return 0;
+}
+
+static int option_is_exit(const int option) {
+    if (option >= menu_pos || option < 0) { return 0; }
+    if (strncmp("Goodbye.", menu_text[option], 8) == 0) { return 1; }
+    if (strncmp("END", menu_text[option], 3) == 0) { return 1; }
+    if (strncmp("CLOSE", menu_text[option], 5) == 0) { return 1; }
+    return 0;
+}
+
+extern int narrate_select_menu(int option) {
+    int accum = !option_is_exit(option);
+    char buf[1024];
+
+    replay_print("rep.select_menu(%d)\n", option);
+    if (option >= menu_pos || option < 0) {
+        error("select_menu: Menu option %d selected, but only (0 - " PRI_SIZET ") available!\n", option, menu_pos - 1);
+        return -1;
+    }
+    menu_pos = 0;
+    sol_ui_narrate_clear();
+    snprintf(buf, 1024, "func%d()\n", menu_addrs[option]);
+    dsl_execute_string(buf);
+    //game_loop_signal(WAIT_NARRATE_SELECT, accum);
+    return accum;
 }
 
 sol_wops_t narrate_window = {

@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include "../src/dsl.h"
 #include "../src/region.h"
-#include "../src/gff.h"
-#include "../src/gff-map.h"
-#include "../src/gff-xmi.h"
-#include "../src/gff-image.h"
+#include "gff.h"
+#include "gff-map.h"
+#include "gff-xmi.h"
+#include "gff-image.h"
 #include "../src/wizard.h"
 
 #define XMIDI_CONVERT_NOCONVERSION      0x00
@@ -77,9 +77,9 @@ static void write_image(const char *base_path, const int gff_idx, const int type
     cimg->frame_num = *(uint16_t*)(cimg->data + 4);
     printf("%d:%s:%d: has %d frames\n", gff_idx, type, res_id, cimg->frame_num);
     for (int cframe = 0; cframe < cimg->frame_num; cframe++) {
-        uint32_t *data = (uint32_t*)get_frame_rgba_palette_img(cimg, cframe, pal);
-        uint16_t w = get_frame_width(gff_idx, type_id, res_id, cframe);
-        uint16_t h = get_frame_height(gff_idx, type_id, res_id, cframe);
+        uint32_t *data = (uint32_t*)gff_get_frame_rgba_palette_img(cimg, cframe, pal);
+        uint16_t w = gff_get_frame_width(gff_idx, type_id, res_id, cframe);
+        uint16_t h = gff_get_frame_height(gff_idx, type_id, res_id, cframe);
 	printf("    frame %d is %d x %x\n", cframe, w, h);
         snprintf(filename, 1<<10, "%s/%d-%s-res%d-frame%d.bmp", base_path, gff_idx, type, res_id, cframe);
         printf("%s  (%p)\n", filename, data);
@@ -233,28 +233,28 @@ static void write_xmis(const char *base_path, const int gff_idx, const int type_
     fwrite(data, 1, chunk.length, file);
     fclose(file);
 
-    unsigned char *midi = xmi_to_midi_type((unsigned char*)data, chunk.length, &midi_len, XMIDI_CONVERT_NOCONVERSION);
+    unsigned char *midi = gff_xmi_to_midi_type((unsigned char*)data, chunk.length, &midi_len, XMIDI_CONVERT_NOCONVERSION);
     snprintf(filename, 1<<10, "%s%03d-no-conversion.midi", base_path, res_id);
     file = fopen(filename, "wb+");
     fwrite(midi, 1, midi_len, file);
     fclose(file);
     free(midi);
 
-    midi = xmi_to_midi_type((unsigned char*)data, chunk.length, &midi_len, XMIDI_CONVERT_MT32_TO_GM);
+    midi = gff_xmi_to_midi_type((unsigned char*)data, chunk.length, &midi_len, XMIDI_CONVERT_MT32_TO_GM);
     snprintf(filename, 1<<10, "%s%03d-mt32-to-gm.midi", base_path, res_id);
     file = fopen(filename, "wb+");
     fwrite(midi, 1, midi_len, file);
     fclose(file);
     free(midi);
 
-    midi = xmi_to_midi_type((unsigned char*)data, chunk.length, &midi_len, XMIDI_CONVERT_MT32_TO_GS);
+    midi = gff_xmi_to_midi_type((unsigned char*)data, chunk.length, &midi_len, XMIDI_CONVERT_MT32_TO_GS);
     snprintf(filename, 1<<10, "%s%03d-mt32-to-gs.midi", base_path, res_id);
     file = fopen(filename, "wb+");
     fwrite(midi, 1, midi_len, file);
     fclose(file);
     free(midi);
 
-    midi = xmi_to_midi_type((unsigned char*)data, chunk.length, &midi_len, XMIDI_CONVERT_GS127_TO_GS);
+    midi = gff_xmi_to_midi_type((unsigned char*)data, chunk.length, &midi_len, XMIDI_CONVERT_GS127_TO_GS);
     snprintf(filename, 1<<10, "%s%03d-gs127-to-gs.midi", base_path, res_id);
     file = fopen(filename, "wb+");
     fwrite(midi, 1, midi_len, file);

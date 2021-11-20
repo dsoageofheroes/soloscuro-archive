@@ -4,7 +4,7 @@
 #include "label.h"
 #include "popup.h"
 #include "sol_textbox.h"
-#include "../../src/gff.h"
+#include "gff.h"
 #include "../../src/wizard.h"
 #include "../../src/player.h"
 #include "../../src/rules.h"

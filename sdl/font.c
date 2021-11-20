@@ -44,7 +44,7 @@ static void create_font(SDL_Renderer *renderer, const uint32_t idx, const uint32
     gff_read_chunk(resource_gff, &chunk, dsfont, chunk.length);
     for (int c = 0; c < MAX_CHARS; c++ ) {
         ds_char = (ds_char_t*)(((uint8_t*)dsfont) + dsfont->char_offset[c]);
-        data = (char*)create_font_rgba(resource_gff, c, fg_color, bg_color);
+        data = (char*)gff_create_font_rgba(resource_gff, c, fg_color, bg_color);
         font_loc[idx][c].w = ds_char->width;
         font_loc[idx][c].h = dsfont->height;
         surface = SDL_CreateRGBSurfaceFrom(data, font_loc[idx][c].w, font_loc[idx][c].h, 32, 4*font_loc[idx][c].w,

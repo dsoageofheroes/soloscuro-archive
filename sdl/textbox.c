@@ -4,7 +4,7 @@
 #include "gfftypes.h"
 #include "font.h"
 #include "utils.h"
-#include "../src/gff.h"
+#include "gff.h"
 #include "../src/settings.h"
 
 int textbox_handle_keydown(textbox_t *tb, SDL_Keysym ks) {
