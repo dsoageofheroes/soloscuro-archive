@@ -5,9 +5,9 @@
 #include "popup.h"
 #include "sol_textbox.h"
 #include "gff.h"
-#include "../../src/wizard.h"
-#include "../../src/player.h"
-#include "../../src/rules.h"
+#include "wizard.h"
+#include "player.h"
+#include "rules.h"
 #include "../../src/settings.h"
 
 #include <string.h>

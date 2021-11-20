@@ -184,7 +184,7 @@ static void load_passives(sol_region_t *reg, const int gff_idx, const int map_id
     int len = gff_map_get_num_objects(gff_idx, map_id);
 
     for (int i = 0; i < len; i++) {
-        passive_load_from_etab(reg->passives + i, reg->entry_table, i);
+        sol_passive_load_from_etab(reg->passives + i, reg->entry_table, i);
         reg->passives[i].scmd = gff_map_get_object_scmd(gff_idx, map_id, i, 0);
     }
 }

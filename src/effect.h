@@ -71,7 +71,7 @@ enum stat {
     STAT_NUMBER_OF_ATTACKS,
 };
 
-typedef struct effect_s {
+typedef struct sol_effect_s {
     power_t *pw; // the power that generated this effect.
     uint16_t duration_type; // indefinite/rounds
     uint16_t duration_left;
@@ -80,8 +80,8 @@ typedef struct effect_s {
     int32_t (*affect)                (const entity_t *target, enum stat stat, const uint64_t effect_type, const int32_t amt);
     // Some spell have an end of effect trigger. (EX: Spirit Armor: need to save vs spell or suffer 2d3 damage.)
     void    (*end_of_effect_trigger) (entity_t *source);
-} effect_t;
+} sol_effect_t;
 
-void effect_apply_damage(entity_t *source, entity_t *target, const int32_t damage, enum effect_type type);
+void sol_effect_apply_damage(entity_t *source, entity_t *target, const int32_t damage, enum effect_type type);
 
 #endif

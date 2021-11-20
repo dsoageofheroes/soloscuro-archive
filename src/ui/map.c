@@ -12,7 +12,7 @@
 #include "ssi-object.h"
 #include "../src/region-manager.h"
 #include "ssi-scmd.h"
-#include "../src/player.h"
+#include "player.h"
 #include "../src/port.h"
 #include "../src/settings.h"
 #include "gpl-var.h"

@@ -22,7 +22,7 @@ typedef struct sol_region_s {
     uint32_t palette_id;
     uint32_t gff_file;
     uint32_t map_id;
-    passive_t passives[MAX_PASSIVES];
+    sol_passive_t passives[MAX_PASSIVES];
     // entities are to be in display order.
     struct entity_list_s *entities;
     combat_region_t cr;

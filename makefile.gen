@@ -1,0 +1,11 @@
+src/powers/wizard: build
+	mkdir -p src/powers/wizard
+	cd code-generation/powers ; gcc -O2 -o ../../build/extract extract.c
+	cd code-generation/powers ; ../../build/extract ../../src/powers/wizard/
+	rm -rf src/powers/wizard/innate*
+	rm -rf src/powers/wizard/psionic*
+	rm -rf src/powers/wizard/priest*
+
+build:
+	mkdir -p build
+

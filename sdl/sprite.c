@@ -1,7 +1,7 @@
 #include "sprite.h"
 #include "main.h"
-#include "../src/animation.h"
-#include "../src/entity.h"
+#include "animation.h"
+#include "entity.h"
 #include "../src/settings.h"
 #include "../src/port.h"
 

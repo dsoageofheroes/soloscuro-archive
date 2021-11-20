@@ -22,7 +22,7 @@
 #include "../src/replay.h"
 #include "../src/region-manager.h"
 #include "ds-load-save.h"
-#include "../src/player.h"
+#include "player.h"
 #include "../src/port.h"
 #include "../src/sol-lua.h"
 

@@ -2,7 +2,7 @@
 #define SOL_WINDOW_MANAGER_H
 
 #include "mouse.h"
-#include "../src/entity-animation.h"
+#include "entity-animation.h"
 
 // wops = Window OPerationS
 typedef struct sol_wops_s {

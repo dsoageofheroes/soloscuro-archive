@@ -10,7 +10,7 @@
 #include "../../src/port.h"
 #include "../../src/settings.h"
 #include "gpl.h"
-#include "../../src/player.h"
+#include "player.h"
 
 #define SAVE_FORMAT "save%02d.sav"
 

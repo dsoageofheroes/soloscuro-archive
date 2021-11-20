@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 
-#include "../src/wizard.h"
-#include "../src/entity.h"
+#include "wizard.h"
+#include "entity.h"
 #include "ssi-object.h"
 
 typedef struct player_character_s {

@@ -9,10 +9,10 @@
 #include "../src/port.h"
 #include "gff.h"
 #include "gff-char.h"
-#include "../../src/rules.h"
+#include "rules.h"
 #include "../../src/settings.h"
 #include "gpl.h"
-#include "../../src/player.h"
+#include "player.h"
 #include "ds-load-save.h"
 
 

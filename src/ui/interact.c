@@ -1,7 +1,7 @@
 #include "interact.h"
 #include "narrate.h"
 #include "gfftypes.h"
-#include "../../src/entity.h"
+#include "entity.h"
 #include "gff.h"
 #include "../../src/port.h"
 #include "../../src/settings.h"

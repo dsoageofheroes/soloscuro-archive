@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include "font.h"
-#include "../src/entity.h"
+#include "entity.h"
 
 typedef struct sol_label_s {
     char* __m_old_text_do_not_use; // updated by label_pixel_width()

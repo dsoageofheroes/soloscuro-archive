@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "../src/item.h"
+#include "item.h"
 
 #define DS1_WEAPON_MELEE     (1<<0)
 #define DS1_WEAPON_MISSILE   (1<<1)

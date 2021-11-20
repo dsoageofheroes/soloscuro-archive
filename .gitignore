@@ -14,3 +14,6 @@ solconfig.lua
 # Media
 *.sf2
 *.mid
+
+# generated powers
+src/powers/

@@ -3,7 +3,7 @@
 
 #include "ssi-item.h"
 #include "../src/port.h"
-#include "../src/powers.h"
+#include "powers.h"
 
 enum mouse_state {
     MOUSE_POINTER,

@@ -4,7 +4,7 @@
 #include "narrate.h"
 #include "popup.h"
 #include "gfftypes.h"
-#include "../../src/player.h"
+#include "player.h"
 #include "../../src/gameloop.h"
 #include "../../src/port.h"
 #include "../../src/settings.h"

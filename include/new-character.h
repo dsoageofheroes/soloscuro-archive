@@ -2,7 +2,7 @@
 #define NEW_CHARACTER_H
 
 #include "window-manager.h"
-#include "../src/wizard.h"
+#include "wizard.h"
 
 enum {
 	TEXTBOX_NONE = -1,

@@ -18,6 +18,7 @@ CPPFLAGS ?= $(INC_FLAGS) -MMD -MP
 all: deps $(BUILD_DIR)/$(TARGET_EXEC)
 
 deps:
+	make -j4 -f makefile.gen
 	make -j4 -f makefile.ds
 	make -j4 -f makefile.xmimidi
 
@@ -35,7 +36,7 @@ $(BUILD_DIR)/%.c.o: %.c
 .PHONY: clean
 
 clean:
-	$(RM) -r $(BUILD_DIR) $(LIB_DIR)
+	$(RM) -r $(BUILD_DIR) $(LIB_DIR) src/powers/
 
 -include $(DEPS)
 

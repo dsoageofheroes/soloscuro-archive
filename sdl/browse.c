@@ -11,7 +11,7 @@
 #include "gff-map.h"
 #include "gff-image.h"
 #include "gff-xmi.h"
-#include "../src/wizard.h"
+#include "wizard.h"
 #include "../src/region-manager.h"
 
 #define BUF_MAX (1<<12)

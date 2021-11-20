@@ -2,7 +2,7 @@
 #include "../../src/port.h"
 #include "portrait.h"
 #include "gpl.h"
-#include "../../src/entity-animation.h"
+#include "entity-animation.h"
 #include "gff.h"
 #include "gfftypes.h"
 #include "../src/replay.h"

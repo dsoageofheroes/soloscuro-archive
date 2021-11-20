@@ -6,12 +6,14 @@
 
 #define MAX_LEVELS (10)
 #define MAX_POWERS (100)
-int32_t wizard_powers[MAX_LEVELS][MAX_POWERS];
-int32_t priest_powers[MAX_LEVELS][MAX_POWERS];
-int32_t psionic_powers[MAX_LEVELS][MAX_POWERS];
-int32_t innate_powers[MAX_POWERS];
+static int32_t wizard_powers[MAX_LEVELS][MAX_POWERS];
+static int32_t priest_powers[MAX_LEVELS][MAX_POWERS];
+static int32_t psionic_powers[MAX_LEVELS][MAX_POWERS];
+static int32_t innate_powers[MAX_POWERS];
 
-char power_names[1024][64];
+static char power_names[1024][64];
+static const char *base_path = "powers";
+static int debug = 0;
 
 /* DS1 Notes:
  * It appears Monster Summoning I, II, III, and Evard's Black Tentacles are unique to DS1.
@@ -550,6 +552,7 @@ const char *ai[]  = {
 };
 
 static void generate_power_csv() {
+    if (!debug) { return; }
         printf("%s, %s", dsopw.name, dsopw.name2);
         printf(", %s", get_range(dsopw));
         printf(", %s", get_duration(dsopw));
@@ -661,7 +664,7 @@ void add_power() {
     }
 }
 
-int main() {
+int main(int argc, char *argv[]) {
     ds1_file = fopen("dsun1.dat", "rb");
     ds2_file = fopen("dsun2.dat", "rb");
     dso_file = fopen("dso.dat", "rb");
@@ -693,6 +696,12 @@ int main() {
         return 0;
     }
 
+    if (argc > 1) {
+        base_path = argv[1];
+    }
+    debug = (argc > 2);
+    printf("usage: %s <path to output> <print csv to screen>\n", argv[0]);
+
     //power_info_t *ds1powers;
     fseek(ds1_file, 0L, SEEK_END);
     ds1_file_size = ftell(ds1_file);
@@ -701,11 +710,13 @@ int main() {
 
     fread(ds1powers, 1, ds1_file_size, ds1_file);
 
-    printf("Name, Subname, range, duration, area, target, cast (?), ds1 cast sound, ds2/dso cast sound,"
+    if (debug) {
+        printf("Name, Subname, range, duration, area, target, cast (?), ds1 cast sound, ds2/dso cast sound,"
             " special, thrown (?), ds1 thrown sound, ds2/dso thrown sound, hit (?),"
             " ds1 hit sound, ds2/dso hit sound, aoe id, effect id,"
             " effect type, ds1 damage, ds2 damage, dso damage, save,"
             " ds1 ai, ds2 ai, dso ai \n");
+    }
     while (!feof(dso_file) || !feof(dso_extra_file)) {
         if (!feof(dso_file)) {
             if (fread(&dsopw, 1, sizeof(power_entry_t), dso_file) < sizeof(power_entry_t)) {
@@ -992,7 +1003,7 @@ static void generate_apply(power_entry_t pw, char *name, FILE *file) {
     fprintf(file, ";\n");
 
     if (pw.info.damage.sides > 0) {
-        fprintf(file, "    effect_apply_damage(source->entity, entity, damage, effect_type);\n");
+        fprintf(file, "    sol_effect_apply_damage(source->entity, entity, damage, effect_type);\n");
     }
 
     fprintf(file, "}\n");
@@ -1074,7 +1085,7 @@ static char* get_target_shape(power_entry_t pw) {
 static void generate_setup(power_entry_t pw, char *name, FILE *file) {
     fprintf(file, "\nextern void %s_%s_setup  (power_t *power) {\n", type, name);
     fprintf(file, "    power->name                 = \"%s\";\n", pw.name);
-    fprintf(file, "    power->description          = spin_read_description(select_by_game(%d, %d, %d));\n",
+    fprintf(file, "    power->description          = power_spin_read_description(power_select_by_game(%d, %d, %d));\n",
             (!ds1_has_powerp(&pw))
             ? -1
             : (dso_pos < MAX_DSO_ICONS)
@@ -1090,17 +1101,17 @@ static void generate_setup(power_entry_t pw, char *name, FILE *file) {
     fprintf(file, "    power->aoe                  = -99999;\n");
     fprintf(file, "    power->level                = %d;\n", get_level());
     fprintf(file, "    power->shape                = %s;\n", get_target_shape(pw));
-    fprintf(file, "    power->cast_sound           = select_by_game(%d, %d, %d);\n",
+    fprintf(file, "    power->cast_sound           = power_select_by_game(%d, %d, %d);\n",
             ds1pw.cast_sound, ds2pw.info.cast_sound, dsopw.info.cast_sound);
-    fprintf(file, "    power->thrown_sound         = select_by_game(%d, %d, %d);\n",
+    fprintf(file, "    power->thrown_sound         = power_select_by_game(%d, %d, %d);\n",
             ds1pw.thrown_sound, ds2pw.info.thrown_sound, dsopw.info.thrown_sound);
-    fprintf(file, "    power->hit_sound            = select_by_game(%d, %d, %d);\n",
+    fprintf(file, "    power->hit_sound            = power_select_by_game(%d, %d, %d);\n",
             ds1pw.hit_sound, ds2pw.info.hit_sound, dsopw.info.hit_sound);
     fprintf(file, "    power->actions.can_activate = %s_%s_can_activate;\n", type, name);
     fprintf(file, "    power->actions.pay          = %s_%s_pay;\n", type, name);
     fprintf(file, "    power->actions.apply        = %s_%s_apply;\n", type, name);
     fprintf(file, "    power->actions.affect_power = %s_%s_affect_power;\n", type, name);
-    fprintf(file, "    powers_set_icon(power, select_by_game(%d, %d, %d));\n",
+    fprintf(file, "    powers_set_icon(power, power_select_by_game(%d, %d, %d));\n",
             (dso_pos < MAX_DSO_ICONS) 
             ? ds1_icons[dso_pos].icon
             : -1,
@@ -1110,14 +1121,14 @@ static void generate_setup(power_entry_t pw, char *name, FILE *file) {
             (dso_pos < MAX_DSO_ICONS)
             ? dso_icons[dso_pos].icon
             : -1);
-    fprintf(file, "    powers_set_cast(power, select_by_game(%d, %d, %d)); // OJFF\n",
+    fprintf(file, "    powers_set_cast(power, power_select_by_game(%d, %d, %d)); // OJFF\n",
             ds1pw.cast, ds2pw.info.cast, dsopw.info.cast);
-    fprintf(file, "    powers_set_thrown(power, select_by_game(%d, %d, %d)); // OJFF.\n",
+    fprintf(file, "    powers_set_thrown(power, power_select_by_game(%d, %d, %d)); // OJFF.\n",
             8100 + ds1pw.thrown,
             8100 + ds2pw.info.thrown,
             8100 + dsopw.info.thrown
             );
-    fprintf(file, "    powers_set_hit(power, select_by_game(%d, %d, %d)); // OJFF\n",
+    fprintf(file, "    powers_set_hit(power, power_select_by_game(%d, %d, %d)); // OJFF\n",
             ds1pw.hit, ds2pw.info.hit, dsopw.info.hit);
     fprintf(file, "}\n");
 }
@@ -1191,7 +1202,8 @@ static void generate_power(power_entry_t pw) {
     filename[pos] = '\0';
     name[pos] = '\0';
 
-    snprintf(path, 127, "powers/%s-%s.c", type, filename);
+    //snprintf(path, 127, "powers/%s-%s.c", type, filename);
+    snprintf(path, 127, "%s/%s-%s.c", base_path, type, filename);
     file = fopen(path, "wb+");
 
     if (!file) {
@@ -1206,10 +1218,10 @@ static void generate_power(power_entry_t pw) {
     fprintf(file, "#ifndef %s_%s_POWER_H\n", type, name);
     fprintf(file, "#define %s_%s_POWER_H\n\n", type, name);
     fprintf(file, "#include <stdlib.h>\n");
-    fprintf(file, "#include \"../effect.h\"\n");
-    fprintf(file, "#include \"../entity.h\"\n");
-    fprintf(file, "#include \"../rules.h\"\n");
-    fprintf(file, "#include \"../wizard.h\"\n");
+    fprintf(file, "#include \"effect.h\"\n");
+    fprintf(file, "#include \"entity.h\"\n");
+    fprintf(file, "#include \"rules.h\"\n");
+    fprintf(file, "#include \"wizard.h\"\n");
 
     for (int i = 0; i < 64 && name[i]; i++) {
         name[i] = tolower(name[i]);

@@ -1,6 +1,6 @@
 #include "label.h"
 #include "font.h"
-#include "../src/rules.h"
+#include "rules.h"
 #include "../src/settings.h"
 
 #include <string.h>
