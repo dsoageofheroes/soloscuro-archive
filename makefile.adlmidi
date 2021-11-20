@@ -1,4 +1,4 @@
-lib/libADLMIDI.so: ext/libadlmidi
+lib/libADLMIDI.so: ext/libadlmidi/AUTHORS
 	mkdir -p build/libadlmidi
 	mkdir -p lib
 	cd build/libadlmidi ; pwd
@@ -6,5 +6,5 @@ lib/libADLMIDI.so: ext/libadlmidi
 	cd build/libadlmidi ; make -j 8
 	cp build/libadlmidi/libADLMIDI.so* lib/
 
-ext/libadlmidi:
+ext/libadlmidi/AUTHORS:
 	git submodule update --init --recursive
