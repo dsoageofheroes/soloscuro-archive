@@ -40,11 +40,10 @@ typedef struct disk_object_s {
 #define SCMD_DEFAULT_DELAY (16)
 #define SCMD_TICKS_PER_SECOND (96)
 
-scmd_t* ssi_scmd_get(const int gff_idx, const int res_id, const int index);
-scmd_t* ssi_scmd_empty();
-int ssi_scmd_is_default(const scmd_t *scmd, const int scmd_index);
-extern int ssi_scmd_total_delay(const scmd_t *scmd, int scmd_index);
-
-int ssi_scmd_next_pos(const scmd_t *scmd, const int scmd_index);
+extern scmd_t* ssi_scmd_get(const int gff_idx, const int res_id, const int index);
+extern scmd_t* ssi_scmd_empty();
+extern int     ssi_scmd_is_default(const scmd_t *scmd, const int scmd_index);
+extern int     ssi_scmd_total_delay(const scmd_t *scmd, int scmd_index);
+extern int     ssi_scmd_next_pos(const scmd_t *scmd, const int scmd_index);
 
 #endif

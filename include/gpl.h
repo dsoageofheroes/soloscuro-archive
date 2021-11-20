@@ -1,8 +1,10 @@
-// DarkSun Scripting Language (DSL)
-#ifndef DSL_H
-#define DSL_H
+/* Game Programming Language (GPL) copyright SSI
+ * This is an implementation of the Game Programming Lanugage
+ * developed at SSI.
+ */
 
-void dsl_debug(const char *file, const int line_num, const char *pretty, const char *str, ...);
+#ifndef GPL_H
+#define GPL_H
 
 #ifdef DEBUG
 #define  debug(fmt, ...) dsl_debug(__FILE__, __LINE__, __PRETTY_FUNCTION__, fmt, ##__VA_ARGS__)
@@ -19,30 +21,29 @@ void dsl_debug(const char *file, const int line_num, const char *pretty, const c
 #include "gfftypes.h"
 #include "ssi-scmd.h"
 
-#define check_index_t uint16_t
+#define gpl_check_index_t uint16_t
 #define NULL_CHECK (0xFFFF)
 
 #define MAX_PARAMETERS (8)
-typedef struct _param_t {
+typedef struct gpl_param_s {
     int32_t val[MAX_PARAMETERS];
     int32_t *ptr[MAX_PARAMETERS];
-} param_t;
+} gpl_param_t;
 
-extern param_t param;
+extern gpl_param_t param;
 
-void dsl_init();
-void dsl_execute_function(const int gff_idx, const int res_id, const int file_id);
-void dsl_change_region(const int region_id);
-int do_dsl_command(uint8_t cmd);
-uint32_t dsl_request_impl(int16_t token, int16_t name,
+extern void     gpl_init();
+extern void     gpl_execute_function(const int gff_idx, const int res_id, const int file_id);
+extern void     gpl_change_region(const int region_id);
+//int do_dsl_command(uint8_t cmd);
+extern uint32_t gpl_request_impl(int16_t token, int16_t name,
         int32_t num1, int32_t num2);
-void dsl_cleanup();
-void dsl_set_quiet(const int val);
+extern void     gpl_cleanup();
+extern void     gpl_set_quiet(const int val);
 
-
-/* Parsing functions */
-uint8_t peek_one_byte();
-uint8_t get_byte();
+/* Begin Parsing functions */ 
+extern uint8_t  gpl_peek_one_byte();
+extern uint8_t  gpl_get_byte();
 /* End Parsing functions */ 
 
 extern uint8_t command_implemented; // Temporary while I figure out each function.

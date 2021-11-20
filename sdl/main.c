@@ -17,11 +17,11 @@
 #include "view-character.h"
 #include "game-menu.h"
 #include "../src/combat.h"
-#include "../src/dsl.h"
-#include "../src/dsl-manager.h"
+#include "gpl.h"
+#include "gpl-manager.h"
 #include "../src/replay.h"
 #include "../src/region-manager.h"
-#include "../src/ds-load-save.h"
+#include "ds-load-save.h"
 #include "../src/player.h"
 #include "../src/port.h"
 #include "../src/sol-lua.h"
@@ -336,7 +336,7 @@ void port_close() {
     sol_player_close();
     sol_window_free();
 
-    dsl_cleanup();
+    gpl_cleanup();
     gff_cleanup();
     sol_mouse_free();
 
@@ -417,7 +417,7 @@ static void init(int args, char *argv[]) {
             exit(0);
         }
         if (!strcmp(argv[i], "--extract-lua") && i < (args - 1)) {
-            dsl_lua_load_all_scripts();
+            gpl_lua_load_all_scripts();
             exit(0);
         }
         if (!strcmp(argv[i], "--ignore-lua")) {
@@ -465,7 +465,7 @@ int main(int argc, char *argv[]) {
         }
         gff_load_directory(ds1_gffs);
     }
-    dsl_init();
+    gpl_init();
 
     init(argc, argv);
 
@@ -498,7 +498,7 @@ extern void port_set_config(game_config_t gc, ssize_t val) {
         case CONFIG_PLAYER_SET_MOVE: sol_player_set_move(val); break;
         case CONFIG_PLAYER_MOVE: sol_player_move(val); break;
         case CONFIG_PLAYER_UNMOVE: sol_player_unmove(val); break;
-        case CONFIG_SET_QUIET: dsl_set_quiet(val); break;
+        case CONFIG_SET_QUIET: gpl_set_quiet(val); break;
         case CONFIG_EXIT: main_exit_game(); break;
         case CONFIG_RUN_BROWSER: main_set_browser_mode(); break;
     }

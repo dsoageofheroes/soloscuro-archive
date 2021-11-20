@@ -1,6 +1,6 @@
 #include "entity-animation.h"
 #include "combat.h"
-#include "dsl.h"
+#include "gpl.h"
 #include "port.h"
 #include <stdlib.h>
 

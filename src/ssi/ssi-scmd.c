@@ -1,4 +1,4 @@
-#include "dsl.h"
+#include "gpl.h"
 #include "ssi-scmd.h"
 #include <stdlib.h>
 
@@ -67,7 +67,7 @@ extern int ssi_scmd_is_default(const scmd_t *scmd, const int scmd_index) {
     return scmd_idx == 0;
 }
 
-int ssi_scmd_next_pos(const scmd_t *scmd, const int scmd_index) {
+extern int ssi_scmd_next_pos(const scmd_t *scmd, const int scmd_index) {
     if (!scmd) { return -1; }
     if (scmd[scmd_index].flags & SCMD_LAST) {
         return scmd_index;

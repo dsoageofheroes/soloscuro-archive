@@ -1,5 +1,5 @@
 #include "settings.h"
-#include "dsl.h"
+#include "gpl.h"
 
 static float    zoom = 2.0;
 static uint16_t width = 800;

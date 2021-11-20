@@ -1,7 +1,7 @@
 #include "animation.h"
 #include "combat.h"
 #include "entity-animation.h"
-#include "dsl.h"
+#include "gpl.h"
 #include "player.h"
 #include "region.h"
 #include "gff-map.h"

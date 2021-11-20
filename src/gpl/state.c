@@ -1,6 +1,6 @@
-#include "dsl.h"
+#include "gpl.h"
 #include "lua-inc.h"
-#include "dsl-manager.h"
+#include "gpl-manager.h"
 #include "region.h"
 #include "gpl-state.h"
 #include "gameloop.h"
@@ -24,13 +24,13 @@
 #define STRING_SIZE        (1024)
 #define MAX_GNAMES         (13)
 
-static int8_t gpl_global_flags[MAX_GFLAGS];
-static int8_t gpl_local_flags[MAX_LFLAGS];
+static int8_t  gpl_global_flags[MAX_GFLAGS];
+static int8_t  gpl_local_flags[MAX_LFLAGS];
 static int16_t gpl_global_nums[MAX_GNUMS];
 static int16_t gpl_local_nums[MAX_LNUMS];
 static int32_t gpl_global_bnums[MAX_GBIGNUMS];
 static int32_t gpl_local_bnums[MAX_LBIGNUMS];
-static char gpl_global_strs[MAX_GSTRS][STRING_SIZE];
+static char    gpl_global_strs[MAX_GSTRS][STRING_SIZE];
 static int16_t gpl_gnames[MAX_GNAMES];
 
 void gpl_state_init() {
@@ -457,7 +457,7 @@ static int request(lua_State *l) {
 
     //warn("Need to implement: request: cmd: " PRI_LI " obj_type: %s num1: " PRI_LI " num2: " PRI_LI "\n", cmd, obj_type, num1, num2);
     lua_pushinteger(l,
-        dsl_request_impl(cmd, atol(obj_type), num1, num2));
+        gpl_request_impl(cmd, atol(obj_type), num1, num2));
     return 1;
 }
 
@@ -525,7 +525,7 @@ static int call_function(lua_State *l) {
 
     debug("*****************calling file: " PRI_LI " addr: " PRI_LI "\n", file, addr);
     //replay_print("dsl.call_function(" PRI_LI ", " PRI_LI ")\n", file, addr);
-    dsl_lua_execute_script(file, addr, 0);
+    gpl_lua_execute_script(file, addr, 0);
 
     return 0;
 }

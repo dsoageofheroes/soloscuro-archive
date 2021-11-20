@@ -18,14 +18,14 @@ CPPFLAGS ?= $(INC_FLAGS) -MMD -MP
 all: deps $(BUILD_DIR)/$(TARGET_EXEC)
 
 deps:
-	make -f makefile.ds
-	make -f makefile.xmimidi
+	make -j4 -f makefile.ds
+	make -j4 -f makefile.xmimidi
 
 $(BUILD_DIR)/$(TARGET_EXEC): lib/libADLMIDI.so $(OBJS)
 	$(CC) $(OBJS) -o $@ $(LDFLAGS)
 
 lib/libADLMIDI.so:
-	make -f makefile.adlmidi
+	make -j4 -f makefile.adlmidi
 
 # c source
 $(BUILD_DIR)/%.c.o: %.c

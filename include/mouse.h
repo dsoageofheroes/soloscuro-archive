@@ -1,7 +1,7 @@
 #ifndef SOL_MOUSE_H
 #define SOL_MOUSE_H
 
-#include "../src/ssi-item.h"
+#include "ssi-item.h"
 #include "../src/port.h"
 #include "../src/powers.h"
 

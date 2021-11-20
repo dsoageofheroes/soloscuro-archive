@@ -7,8 +7,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "dsl-manager.h"
-#include "dsl.h"
+#include "gpl-manager.h"
+#include "gpl.h"
 
 #define MAX_REGIONS (0xFF)
 

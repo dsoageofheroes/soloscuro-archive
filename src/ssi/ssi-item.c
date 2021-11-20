@@ -1,5 +1,5 @@
 #include "ssi-item.h"
-#include "dsl.h"
+#include "gpl.h"
 #include "gff-common.h"
 #include "gff.h"
 #include "gfftypes.h"

@@ -12,7 +12,7 @@
 #include "popup.h"
 #include "new-character.h"
 #include "combat-status.h"
-#include "../src/dsl.h"
+#include "gpl.h"
 #include "../src/gameloop.h"
 #include "../src/region.h"
 #include "sprite.h"

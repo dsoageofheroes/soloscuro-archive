@@ -2,7 +2,7 @@
 #include <string.h>
 
 #include "window-manager.h"
-#include "dsl.h"
+#include "gpl.h"
 #include "player.h"
 #include "region.h"
 #include "settings.h"

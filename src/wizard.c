@@ -1,7 +1,7 @@
 #include <string.h>
 #include "wizard.h"
 #include "powers.h"
-#include "dsl.h"
+#include "gpl.h"
 #include "gff.h"
 #include "gfftypes.h"
 

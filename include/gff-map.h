@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 
-#include "../src/ssi-scmd.h"
-#include "../src/ssi-object.h"
+#include "ssi-scmd.h"
+#include "ssi-object.h"
 
 #define MAP_LOS     (0x80) // Runtime flag to determine if block is in sight.
 #define MAP_BLOCK   (0x40) // This tile is blocked (you can't move into it.)

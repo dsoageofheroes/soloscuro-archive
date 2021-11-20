@@ -3,7 +3,7 @@
 #include "gff-map.h"
 #include "gff.h"
 #include "gfftypes.h"
-#include "dsl.h"
+#include "gpl.h"
 #include "region.h"
 #include "combat.h"
 

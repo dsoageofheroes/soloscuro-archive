@@ -2,7 +2,7 @@
 #include "lua-structs.h"
 #include "ds-load-save.h"
 #include "port.h"
-#include "dsl.h"
+#include "gpl.h"
 #include "player.h"
 #include "region-manager.h"
 #include <string.h>

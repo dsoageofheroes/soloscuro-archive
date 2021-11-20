@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include "dsl.h"
+#include "gpl.h"
 #include "region.h"
 #include "region-manager.h"
 #include "gpl-state.h"
@@ -132,23 +132,23 @@ enum requests {
 #define GB_DANGER (0x07)
 #define GB_GPL    (0x04)
 
-int req_animation(int16_t object, long notused1, long notused2);
-int req_set_allegiance(int16_t object, long allegiance, long notused2);
-int16_t request_to_do(int16_t name, int16_t rectype, int (*request_proc)(int16_t, long, long), long param1, long
+static int req_animation(int16_t object, long notused1, long notused2);
+static int req_set_allegiance(int16_t object, long allegiance, long notused2);
+static int16_t request_to_do(int16_t name, int16_t rectype, int (*request_proc)(int16_t, long, long), long param1, long
 param2);
 
 #define CAMP_HEAL      (0)
 #define CAMP_RESURRECT (1)
 #define CAMP_TIME      (1000)
 
-void camp(int16_t instr, int16_t hours, int16_t who) {
+static void camp(int16_t instr, int16_t hours, int16_t who) {
     debug("%d camps for %d hours\n", who, hours);
     if (instr == CAMP_RESURRECT) {
         debug("Also ressurect the dead, unstone the petrify, revive undead, etc...\n");
     }
 }
 
-uint32_t dsl_request_impl(int16_t token, int16_t name,
+extern uint32_t gpl_request_impl(int16_t token, int16_t name,
         int32_t num1, int32_t num2) {
     int answer = 0;
     disk_object_t dobj;
@@ -620,7 +620,7 @@ uint32_t dsl_request_impl(int16_t token, int16_t name,
     return answer;
 }
 
-int16_t request_to_do(int16_t name, int16_t rectype, int (*request_proc)(int16_t, long, long), long param1, long param2) {
+static int16_t request_to_do(int16_t name, int16_t rectype, int (*request_proc)(int16_t, long, long), long param1, long param2) {
     if (name < NULL_OBJECT) {
         if (rectype == DO_TO_ALL) {
             debug("Need to add LUA hooks to walk through every object and...\n");
@@ -634,7 +634,7 @@ int16_t request_to_do(int16_t name, int16_t rectype, int (*request_proc)(int16_t
     return 0;
 }
 
-int req_animation(int16_t object, long notused1, long notused2) {
+static int req_animation(int16_t object, long notused1, long notused2) {
     dude_t *dude = region_find_entity_by_id(region_manager_get_current(), object);
     gpl_set_gname(GNAME_PASSIVE, object);
 
@@ -653,7 +653,7 @@ int req_animation(int16_t object, long notused1, long notused2) {
     return 0;
 }
 
-int req_set_allegiance(int16_t object, long allegiance, long notused2) {
+static int req_set_allegiance(int16_t object, long allegiance, long notused2) {
     dude_t *dude = NULL;
 
     entity_list_for_each(region_manager_get_current()->entities, dude) {

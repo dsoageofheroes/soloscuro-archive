@@ -1,7 +1,7 @@
 #include "gff.h"
 #include "gfftypes.h"
 #include "gff-image.h"
-#include "dsl.h"
+#include "gpl.h"
 
 #include <stdlib.h>
 #include <string.h>

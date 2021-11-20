@@ -11,9 +11,9 @@
 #include "gff-char.h"
 #include "../../src/rules.h"
 #include "../../src/settings.h"
-#include "../../src/dsl.h"
+#include "gpl.h"
 #include "../../src/player.h"
-#include "../../src/ds-load-save.h"
+#include "ds-load-save.h"
 
 
 #include <string.h>

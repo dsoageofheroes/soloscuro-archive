@@ -1,6 +1,6 @@
 #include "effect.h"
 #include "port.h"
-#include "dsl.h"
+#include "gpl.h"
 
 #include <string.h>
 

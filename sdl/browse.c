@@ -4,7 +4,7 @@
 #include "font.h"
 #include "narrate.h"
 #include "audio.h"
-#include "../src/dsl.h"
+#include "gpl.h"
 #include "../src/region.h"
 #include "../src/gameloop.h"
 #include "gff.h"

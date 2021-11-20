@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "dsl.h"
+#include "gpl.h"
 #include "gameloop.h"
 #include "port.h"
 #include "region-manager.h"

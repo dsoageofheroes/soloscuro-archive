@@ -1,5 +1,5 @@
 #include "mouse.h"
-#include "../src/dsl.h"
+#include "gpl.h"
 #include "gff.h"
 #include "gfftypes.h"
 

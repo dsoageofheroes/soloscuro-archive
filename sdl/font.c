@@ -1,6 +1,6 @@
 #include "font.h"
 #include "main.h"
-#include "../src/dsl.h"
+#include "gpl.h"
 #include "../src/settings.h"
 #include <SDL2/SDL_ttf.h>
 

@@ -1,6 +1,6 @@
 #include "combat.h"
 #include "item.h"
-#include "dsl.h"
+#include "gpl.h"
 #include "entity.h"
 #include "gff.h"
 #include "port.h"

@@ -2,7 +2,7 @@
 #include "entity-animation.h"
 #include "player.h"
 #include "region.h"
-#include "dsl.h"
+#include "gpl.h"
 #include "port.h"
 #include "rules.h"
 #include <string.h>

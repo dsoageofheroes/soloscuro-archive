@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "../src/dsl.h"
+#include "gpl.h"
 #include "../src/region.h"
 #include "gff.h"
 #include "gff-map.h"

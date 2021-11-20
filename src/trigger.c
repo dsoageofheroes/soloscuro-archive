@@ -1,5 +1,5 @@
-#include "dsl.h"
-#include "dsl-manager.h"
+#include "gpl.h"
+#include "gpl-manager.h"
 #include "gpl-state.h"
 #include "region.h"
 #include "region-manager.h"
@@ -267,7 +267,7 @@ void trigger_noorders(uint32_t x, uint32_t y) {
 
         // Now execute.
         debug("Noorders executing %d:%d\n", rover->noorders.file, rover->noorders.addr);
-        dsl_lua_execute_script(rover->noorders.file, rover->noorders.addr, 0);
+        gpl_lua_execute_script(rover->noorders.file, rover->noorders.addr, 0);
 
         rover = rover->next;
     }
@@ -293,7 +293,7 @@ int trigger_tile_check(uint32_t x, uint32_t y) {
             rover = rover->next;
 
             // execute script, box check is not valid.
-            dsl_lua_execute_script(tile->file, tile->addr, 0);
+            gpl_lua_execute_script(tile->file, tile->addr, 0);
 
             //exit(1);
             //free(rover);
@@ -330,7 +330,7 @@ void trigger_box_check(uint32_t x, uint32_t y) {
             rover = rover->next;
 
             // execute script, box check is not valid.
-            dsl_lua_execute_script(box->file, box->addr, 0);
+            gpl_lua_execute_script(box->file, box->addr, 0);
 
             // put check back in list.
             hold->next = box_list;
@@ -351,11 +351,11 @@ void talk_click(uint32_t obj) {
     gpl_local_clear();
 
     if (tt.obj != 0) {
-        dsl_lua_execute_script(tt.file, tt.addr, 0);
+        gpl_lua_execute_script(tt.file, tt.addr, 0);
     }
 
     if (lt.obj != 0) {
-        dsl_lua_execute_script(lt.file, lt.addr, 0);
+        gpl_lua_execute_script(lt.file, lt.addr, 0);
     }
 }
 

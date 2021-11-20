@@ -3,7 +3,7 @@
 #include "region.h"
 #include "region-manager.h"
 #include "gpl-state.h"
-#include "dsl.h"
+#include "gpl.h"
 #include "gff.h"
 #include "gfftypes.h"
 #include "gff-map.h"
@@ -184,7 +184,7 @@ static void load_regions(const int id) {
     port_change_region(reg);
 }
 
-void ls_save_to_file(const char *path, char *save_name) {
+extern void ls_save_to_file(const char *path, char *save_name) {
     int id = gff_create(path);
 
     gff_add_type(id, GFF_PSIN);
@@ -217,7 +217,7 @@ void ls_save_to_file(const char *path, char *save_name) {
     gff_close(id);
 }
 
-char* ls_create_save_file(char *name) {
+extern char* ls_create_save_file(char *name) {
     char *path = get_next_save_file();
     ls_save_to_file(path, name);
     return path;
@@ -277,12 +277,12 @@ static int load_player(const int id, const int player, const int res_id) {
     return 1;
 }
 
-int ds_load_character_charsave(const int slot, const int res_id) {
+extern int ds_load_character_charsave(const int slot, const int res_id) {
     if (slot < 0 || slot >= 4) { return 0; }
     return load_player(CHARSAVE_GFF_INDEX, slot, res_id);
 }
 
-int ls_load_save_file(const char *path) {
+extern int ls_load_save_file(const char *path) {
     int id = gff_open(path);
     char *triggers = NULL;
     char *buf = NULL;

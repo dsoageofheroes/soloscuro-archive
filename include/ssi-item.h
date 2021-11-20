@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "item.h"
+#include "../src/item.h"
 
 #define DS1_WEAPON_MELEE     (1<<0)
 #define DS1_WEAPON_MISSILE   (1<<1)
@@ -18,7 +18,7 @@ enum {
     SLOT_CLOAK, SLOT_FOOT
 };
 
-typedef struct ds_inventory_s {
+typedef struct ssi_ds_inventory_s {
     ds1_item_t arm;
     ds1_item_t ammo;
     ds1_item_t missile;
@@ -34,15 +34,14 @@ typedef struct ds_inventory_s {
     ds1_item_t cloak;
     ds1_item_t foot;
     ds1_item_t bp[12];
-} ds_inventory_t;
+} ssi_ds_inventory_t;
 
-void ssi_item_init();
-int ssi_item_load(ds1_item_t *item, int32_t id);
-const char *ssi_item_name(const int32_t name_idx);
-const ds_item1r_t *ssi_get_item1r(const int32_t item_idx);
-int32_t ssi_item_get_bmp_id(ds1_item_t *item);
-void ssi_item_close();
-int ssi_item_allowed_in_slot(ds1_item_t *item, const int slot);
-//int ds_item_read(const int32_t id, 
+extern void               ssi_item_init();
+extern int                ssi_item_load(ds1_item_t *item, int32_t id);
+extern const char        *ssi_item_name(const int32_t name_idx);
+extern const ds_item1r_t *ssi_get_item1r(const int32_t item_idx);
+extern int32_t            ssi_item_get_bmp_id(ds1_item_t *item);
+extern void               ssi_item_close();
+extern int                ssi_item_allowed_in_slot(ds1_item_t *item, const int slot);
 
 #endif

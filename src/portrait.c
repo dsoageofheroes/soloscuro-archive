@@ -1,7 +1,7 @@
 #include "gfftypes.h"
 #include "portrait.h"
 #include "gff.h"
-#include "../src/dsl.h"
+#include "gpl.h"
 #include "../src/port.h"
 
 #include <stdlib.h>

@@ -1,5 +1,5 @@
 #include "gpl-string.h"
-#include "dsl.h"
+#include "gpl.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -16,19 +16,19 @@ static char* read_compressed();
 static char* introduce();
 
 extern char* gpl_read_text() {
-    switch(peek_one_byte()) {
+    switch(gpl_peek_one_byte()) {
         case INTRODUCE:
-            get_byte();
+            gpl_get_byte();
             strcpy((char*)gpl_global_string, introduce());
             //printf("INTRODUCE: gpl_global_string = '%s'\n", gpl_global_string);
             return (char*)gpl_global_string;
             break;
         case STRING_UNCOMPRESSED:
             printf("read_text: STRING_UNCOMPRESSED not implemented!\n");
-            get_byte();
+            gpl_get_byte();
             break;
         case STRING_COMPRESSED:
-            get_byte();
+            gpl_get_byte();
             read_compressed();
             //printf("STRING_COMPRESSED: gpl_global_string = '%s'\n", gpl_global_string);
             return (char*)gpl_global_string;
@@ -45,7 +45,7 @@ static char* read_compressed() {
     while (i < (TEXTSTRINGSIZE - 1)) {
         if (idx > 0) {
             buffer = ( (buffer << 8) & 0xFF00);
-            buffer |= (uint32_t)get_byte();
+            buffer |= (uint32_t)gpl_get_byte();
         }
 
         inword = ( (buffer >> idx) & 0x7F);
@@ -68,7 +68,7 @@ static char* read_compressed() {
     }
 
     gpl_global_string[i] = 0;
-    if (peek_one_byte() == 0) {
+    if (gpl_peek_one_byte() == 0) {
         fudge = 1;
     } else {
         fudge = 0;

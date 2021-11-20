@@ -2,7 +2,7 @@
 
 #include "item.h"
 #include "ssi-item.h"
-#include "dsl.h"
+#include "gpl.h"
 #include "port.h"
 #include "entity.h"
 

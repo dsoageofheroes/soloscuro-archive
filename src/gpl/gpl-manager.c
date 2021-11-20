@@ -1,14 +1,16 @@
 #include <string.h>
 #include <stdlib.h>
 #include "lua-inc.h"
-#include "dsl.h"
+#include "gpl.h"
 #include "port.h"
-#include "dsl-manager.h"
-#include "dsl-lua.h"
+#include "gpl-manager.h"
+#include "gpl-lua.h"
 #include "sol-lua.h"
 #include "gpl-state.h"
 #include "gff.h"
 #include "gfftypes.h"
+
+#define BUF_SIZE (1<<12)
 
 static char** mas_scripts = NULL;
 static char** gpl_scripts = NULL;
@@ -18,7 +20,7 @@ static lua_State *clua = NULL;
 static void write_lua(const char *path, const char *lua, const size_t len);
 static void gpl_lua_load_scripts();
 
-void dsl_manager_init() {
+void gpl_manager_init() {
     gpl_state_init();
 
     mas_scripts = gpl_scripts = NULL;
@@ -54,8 +56,8 @@ void gpl_lua_load_script(const uint32_t script_id, const uint8_t is_mas) {
     debug("Converting %s %d to lua, length = %d\n",
         is_mas ? "MAS" : "GPL",
         script_id, chunk.length);
-    //script_ptr = dsl_lua_print(dsl, len, is_master_mas, &script_len);
-    script_ptr = dsl_lua_print(script_id, is_mas, &script_len);
+    //script_ptr = gpl_lua_print(dsl, len, is_master_mas, &script_len);
+    script_ptr = gpl_lua_print(script_id, is_mas, &script_len);
     script[script_id] = malloc(sizeof(char) * (script_len + 1)); // (A)
     strncpy(script[script_id], script_ptr, script_len);
     script[script_id][script_len] = '\0'; // Okay because of (A)
@@ -64,7 +66,7 @@ void gpl_lua_load_script(const uint32_t script_id, const uint8_t is_mas) {
     write_lua(buf, script[script_id], script_len);
 }
 
-void dsl_lua_load_all_scripts() {
+void gpl_lua_load_all_scripts() {
     for (int i = 0; i < 100; i++) {
         gpl_lua_load_script(i, 0);
         gpl_lua_load_script(i, 1);
@@ -92,7 +94,7 @@ void gpl_lua_load_scripts() {
     free(ids);
 }
 
-uint8_t dsl_lua_execute_script(size_t file, size_t addr, uint8_t is_mas) {
+uint8_t gpl_lua_execute_script(size_t file, size_t addr, uint8_t is_mas) {
     lua_State *l = NULL;
     char **scripts = is_mas ? mas_scripts : gpl_scripts;
     size_t size = is_mas ? mas_max : gpl_max;

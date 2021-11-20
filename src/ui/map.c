@@ -4,18 +4,18 @@
 #include "narrate.h"
 #include "combat-status.h"
 #include "background.h"
-#include "../src/dsl.h"
+#include "gpl.h"
 #include "../src/port.h"
 #include "../src/trigger.h"
 #include "../src/settings.h"
-#include "../src/dsl-manager.h"
-#include "../src/ssi-object.h"
+#include "gpl-manager.h"
+#include "ssi-object.h"
 #include "../src/region-manager.h"
-#include "../src/ssi-scmd.h"
+#include "ssi-scmd.h"
 #include "../src/player.h"
 #include "../src/port.h"
 #include "../src/settings.h"
-#include "../src/dsl-var.h"
+#include "gpl-var.h"
 
 #include <string.h>
 
@@ -92,7 +92,7 @@ static void map_load_current_region() {
     //TODO: Find out what maps to which areas.
     sol_audio_play_xmi(RESOURCE_GFF_INDEX, GFF_GSEQ, 2);
 
-    dsl_lua_execute_script(cmap->region->map_id, 0, 1);
+    gpl_lua_execute_script(cmap->region->map_id, 0, 1);
 }
 
 static void sprite_load_animation(entity_t *entity, gff_palette_t *pal) {
@@ -148,7 +148,7 @@ void map_load_map(int id) {
     cmap->region = region_manager_get_region(id);
 
     map_load_current_region();
-    dsl_change_region(42);
+    gpl_change_region(42);
 }
 
 static void clear_animations() {

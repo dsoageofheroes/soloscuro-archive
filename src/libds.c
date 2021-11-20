@@ -4,9 +4,9 @@
 #include <stdlib.h>
 
 #include "lua-inc.h"
-#include "dsl.h"
+#include "gpl.h"
 #include "ssi-object.h"
-#include "dsl-var.h"
+#include "gpl-var.h"
 #include "gff.h"
 #include "gff-image.h"
 #include "gff-xmi.h"
@@ -45,7 +45,7 @@ int lua_gff_load_directory(lua_State *L) {
     const char *path = luaL_checklstring(L, 1, &len);
 
     gff_load_directory(path);
-    dsl_init();
+    gpl_init();
 
     return 0;
 }
@@ -629,7 +629,7 @@ static int lua_scmd_sound_idx(lua_State *L) {
 
 static int lua_dsl_change_region(lua_State *L) {
     lua_Integer region_id = luaL_checkinteger (L, 1);
-    dsl_change_region(region_id);
+    gpl_change_region(region_id);
     return 0;
 }
 

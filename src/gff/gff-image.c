@@ -4,7 +4,7 @@
 #include "gff-image.h"
 #include "gff.h"
 #include "gfftypes.h"
-#include "dsl.h"
+#include "gpl.h"
 #include "../ext/spng/spng.h"
 
 
