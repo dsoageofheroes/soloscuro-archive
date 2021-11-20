@@ -6,8 +6,8 @@
 #include "dsl-manager.h"
 #include "ssi-item.h"
 #include "region-manager.h"
-#include "ds-state.h"
-#include "ds-string.h"
+#include "gpl-state.h"
+#include "gpl-string.h"
 #include "dsl-var.h"
 //#include "gameloop.h"
 #include "player.h"
@@ -33,11 +33,11 @@ void dsl_change_region(const int region_id) {
 }
 
 static void initialize_dsl_stack() {
-    dsl_global_strings = (dsl_string_t*) malloc(GSTRINGVARSIZE);
-    memset(dsl_global_strings, 0, GSTRINGVARSIZE);
-    dsl_local_strings = (dsl_string_t*) malloc(LSTRINGVARSIZE);
-    memset(dsl_local_strings, 0, LSTRINGVARSIZE);
-    gTextstring = (uint8_t*)malloc(TEXTSTRINGSIZE);
+    gpl_global_strings = (gpl_string_t*) malloc(GSTRINGVARSIZE);
+    memset(gpl_global_strings, 0, GSTRINGVARSIZE);
+    gpl_local_strings = (gpl_string_t*) malloc(LSTRINGVARSIZE);
+    memset(gpl_local_strings, 0, LSTRINGVARSIZE);
+    gpl_global_string = (uint8_t*)malloc(TEXTSTRINGSIZE);
 }
 
 void dsl_init() {
@@ -51,7 +51,6 @@ void dsl_init() {
     dsl_manager_init();
     region_manager_init();
     info("Running Master DSL #99.\n");
-    //dsl_execute_subroutine(99, 0, 1);
     dsl_lua_execute_script(99, 0, 1);
 }
 
@@ -69,11 +68,11 @@ void dsl_debug(const char *file, const int line_num, const char *pretty, const c
 
 void dsl_cleanup() {
     powers_cleanup();
-    free(gTextstring);
-    free(dsl_local_strings);
-    free(dsl_global_strings);
+    free(gpl_global_string);
+    free(gpl_local_strings);
+    free(gpl_global_strings);
     dsl_cleanup_vars();
-    dsl_manager_cleanup();
+    gpl_manager_cleanup();
     ssi_item_close();
     trigger_cleanup();
     region_manager_cleanup();

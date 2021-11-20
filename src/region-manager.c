@@ -2,7 +2,7 @@
 #include "gff.h"
 #include "gfftypes.h"
 #include "player.h"
-#include "ds-state.h"
+#include "gpl-state.h"
 #include "port.h"
 #include <string.h>
 #include <stdio.h>
@@ -160,7 +160,7 @@ void ds_region_load_region_from_save(const int id, const int region_id) {
         printf("Error loading file.\n");
         exit(1);
     }
-    dsl_deserialize_globals(buf);
+    gpl_deserialize_globals(buf);
     free(buf);
 
     chunk = gff_find_chunk_header(id, GFF_GDAT, region_id);
@@ -169,7 +169,7 @@ void ds_region_load_region_from_save(const int id, const int region_id) {
         printf("Error loading file.\n");
         exit(1);
     }
-    dsl_deserialize_locals(buf);
+    gpl_deserialize_locals(buf);
     free(buf);
 
     //ds_regions[region_id] = reg;

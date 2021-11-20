@@ -1,6 +1,6 @@
 #include "dsl-lua.h"
-#include "ds-state.h"
-#include "ds-string.h"
+#include "gpl-state.h"
+#include "gpl-string.h"
 #include "dsl-var.h"
 #include "dsl-manager.h"
 #include <stdio.h>
@@ -1714,7 +1714,7 @@ static size_t dsl_lua_read_number(char *buf, const size_t size) {
                     //gBignumptr = (int32_t*) read_text();
                     //debug("DSL_IMMED_STRING, cval = %d, '%s'\n", cval, (char*) gBignumptr);
                     //TODO FIXME: This should just copy directly in!
-                    char *tmp = read_text();
+                    char *tmp = gpl_read_text();
                     buf_pos += strlen(strncpy(buf + buf_pos, tmp, size - buf_pos));
                     //printf("updating buf_pos = %d\n", buf_pos);
                     break;

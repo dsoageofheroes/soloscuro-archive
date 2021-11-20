@@ -2,7 +2,7 @@
 #include "lua-inc.h"
 #include "dsl-manager.h"
 #include "region.h"
-#include "ds-state.h"
+#include "gpl-state.h"
 #include "gameloop.h"
 #include "port.h"
 #include "ssi-scmd.h"
@@ -24,25 +24,25 @@
 #define STRING_SIZE        (1024)
 #define MAX_GNAMES         (13)
 
-static int8_t dsl_global_flags[MAX_GFLAGS];
-static int8_t dsl_local_flags[MAX_LFLAGS];
-static int16_t dsl_global_nums[MAX_GNUMS];
-static int16_t dsl_local_nums[MAX_LNUMS];
-static int32_t dsl_global_bnums[MAX_GBIGNUMS];
-static int32_t dsl_local_bnums[MAX_LBIGNUMS];
-static char dsl_global_strs[MAX_GSTRS][STRING_SIZE];
-static int16_t dsl_gnames[MAX_GNAMES];
+static int8_t gpl_global_flags[MAX_GFLAGS];
+static int8_t gpl_local_flags[MAX_LFLAGS];
+static int16_t gpl_global_nums[MAX_GNUMS];
+static int16_t gpl_local_nums[MAX_LNUMS];
+static int32_t gpl_global_bnums[MAX_GBIGNUMS];
+static int32_t gpl_local_bnums[MAX_LBIGNUMS];
+static char gpl_global_strs[MAX_GSTRS][STRING_SIZE];
+static int16_t gpl_gnames[MAX_GNAMES];
 
-void dsl_state_init() {
-    memset(dsl_global_flags, 0x0, sizeof(int8_t) * MAX_GFLAGS);
-    memset(dsl_global_nums, 0x0, sizeof(int16_t) * MAX_GNUMS);
-    memset(dsl_global_bnums, 0x0, sizeof(int32_t) * MAX_GBIGNUMS);
-    memset(dsl_global_strs, 0x0, sizeof(char) * MAX_GSTRS * STRING_SIZE);
-    memset(dsl_gnames, 0x0, sizeof(int16_t) * MAX_GNAMES);
-    dsl_local_clear();
+void gpl_state_init() {
+    memset(gpl_global_flags, 0x0, sizeof(int8_t) * MAX_GFLAGS);
+    memset(gpl_global_nums, 0x0, sizeof(int16_t) * MAX_GNUMS);
+    memset(gpl_global_bnums, 0x0, sizeof(int32_t) * MAX_GBIGNUMS);
+    memset(gpl_global_strs, 0x0, sizeof(char) * MAX_GSTRS * STRING_SIZE);
+    memset(gpl_gnames, 0x0, sizeof(int16_t) * MAX_GNAMES);
+    gpl_local_clear();
 }
 
-void dsl_state_cleanup() {
+void gpl_state_cleanup() {
 }
 
 static int set_while_callback(lua_State *l) {
@@ -53,10 +53,10 @@ static int set_while_callback(lua_State *l) {
 }
 
 // Public to C library
-void dsl_set_gname(const int index, const int32_t obj) {
+void gpl_set_gname(const int index, const int32_t obj) {
     if (index < 0 || index > MAX_GNAMES) { return; }
     //printf("GNAME----------------------------------------------------->[%d] = %d\n", index, obj);
-    dsl_gnames[index] = obj;
+    gpl_gnames[index] = obj;
 }
 
 // Public to LUA
@@ -67,8 +67,8 @@ static int set_gf(lua_State *l) {
         printf("ERROR: " PRI_LI " is out of range for global flags!\n", id);
         exit(1);
     }
-    dsl_global_flags[id] = val;
-    debug("dsl_globals_flags[" PRI_LI "] = " PRI_LI "\n", id, val);
+    gpl_global_flags[id] = val;
+    debug("gpl_globals_flags[" PRI_LI "] = " PRI_LI "\n", id, val);
     return 0;
 }
 
@@ -78,7 +78,7 @@ static int get_gf(lua_State *l) {
         printf("ERROR: " PRI_LI " is out of range for global flags!\n", id);
         exit(1);
     }
-    lua_pushinteger(l, dsl_global_flags[id]);
+    lua_pushinteger(l, gpl_global_flags[id]);
     return 1;
 }
 
@@ -89,8 +89,8 @@ static int set_lf(lua_State *l) {
         printf("ERROR: " PRI_LI " is out of range for local flags!\n", id);
         exit(1);
     }
-    dsl_local_flags[id] = val;
-    debug("dsl_local_flags[" PRI_LI "] = " PRI_LI "\n", id, val);
+    gpl_local_flags[id] = val;
+    debug("gpl_local_flags[" PRI_LI "] = " PRI_LI "\n", id, val);
     return 0;
 }
 
@@ -100,8 +100,8 @@ static int get_lf(lua_State *l) {
         printf("ERROR: " PRI_LI " is out of range for local flags!\n", id);
         exit(1);
     }
-    //printf("local_flag[" PRI_LI "] = %d (get)\n", id, dsl_local_flags[id]);
-    lua_pushinteger(l, dsl_local_flags[id]);
+    //printf("local_flag[" PRI_LI "] = %d (get)\n", id, gpl_local_flags[id]);
+    lua_pushinteger(l, gpl_local_flags[id]);
     return 1;
 }
 
@@ -112,8 +112,8 @@ static int set_gn(lua_State *l) {
         printf("ERROR: " PRI_LI " is out of range for global nums!\n", id);
         exit(1);
     }
-    dsl_global_nums[id] = val;
-    debug("dsl_globals_nums[" PRI_LI "] = " PRI_LI "\n", id, val);
+    gpl_global_nums[id] = val;
+    debug("gpl_globals_nums[" PRI_LI "] = " PRI_LI "\n", id, val);
     return 0;
 }
 
@@ -123,7 +123,7 @@ static int get_gn(lua_State *l) {
         printf("ERROR: " PRI_LI " is out of range for global nums!\n", id);
         exit(1);
     }
-    lua_pushinteger(l, dsl_global_nums[id]);
+    lua_pushinteger(l, gpl_global_nums[id]);
     return 1;
 }
 
@@ -134,7 +134,7 @@ static int set_ln(lua_State *l) {
         printf("ERROR: " PRI_LI " is out of range for local nums!\n", id);
         exit(1);
     }
-    dsl_local_nums[id] = val;
+    gpl_local_nums[id] = val;
     return 0;
 }
 
@@ -144,7 +144,7 @@ static int get_ln(lua_State *l) {
         printf("ERROR: " PRI_LI " is out of range for local nums!\n", id);
         exit(1);
     }
-    lua_pushinteger(l, dsl_local_nums[id]);
+    lua_pushinteger(l, gpl_local_nums[id]);
     return 1;
 }
 
@@ -155,7 +155,7 @@ static int set_gbn(lua_State *l) {
         error("ERROR: " PRI_LI " is out of range for global big nums!\n", id);
         exit(1);
     }
-    dsl_global_bnums[id] = val;
+    gpl_global_bnums[id] = val;
     return 0;
 }
 
@@ -165,7 +165,7 @@ static int get_gbn(lua_State *l) {
         error("ERROR: " PRI_LI " is out of range for global big nums!\n", id);
         exit(1);
     }
-    lua_pushinteger(l, dsl_global_bnums[id]);
+    lua_pushinteger(l, gpl_global_bnums[id]);
     return 1;
 }
 
@@ -176,7 +176,7 @@ static int set_lbn(lua_State *l) {
         printf("ERROR: " PRI_LI " is out of range for local big nums!\n", id);
         exit(1);
     }
-    dsl_local_bnums[id] = val;
+    gpl_local_bnums[id] = val;
     return 0;
 }
 
@@ -186,7 +186,7 @@ static int get_lbn(lua_State *l) {
         printf("ERROR: " PRI_LI " is out of range for local big nums!\n", id);
         exit(1);
     }
-    lua_pushinteger(l, dsl_local_bnums[id]);
+    lua_pushinteger(l, gpl_local_bnums[id]);
     return 1;
 }
 
@@ -197,7 +197,7 @@ static int set_gstr(lua_State *l) {
         printf("ERROR: " PRI_LI " is out of range for local big nums!\n", id);
         exit(1);
     }
-    strncpy(dsl_global_strs[id], val, STRING_SIZE);
+    strncpy(gpl_global_strs[id], val, STRING_SIZE);
     return 0;
 }
 
@@ -207,7 +207,7 @@ static int get_gstr(lua_State *l) {
         printf("ERROR: " PRI_LI " is out of range for local big nums!\n", id);
         exit(1);
     }
-    lua_pushstring(l, dsl_global_strs[id]);
+    lua_pushstring(l, gpl_global_strs[id]);
     return 1;
 }
 
@@ -217,8 +217,8 @@ static int get_gname(lua_State *l) {
         printf("ERROR: " PRI_LI " is out of range for local big nums!\n", id);
         exit(1);
     }
-    //printf("GNAME----------------------------------------------------->[" PRI_LI "] = %d\n", id, dsl_gnames[id]);
-    lua_pushnumber(l, dsl_gnames[id]);
+    //printf("GNAME----------------------------------------------------->[" PRI_LI "] = %d\n", id, gpl_gnames[id]);
+    lua_pushnumber(l, gpl_gnames[id]);
     return 1;
 }
 
@@ -232,16 +232,16 @@ static int set_gname(lua_State *l) {
     if (id != 1 && id != 2 && id != 3) {
         error("illegal set_gname? id = " PRI_LI "\n", id);
     } else {
-        dsl_gnames[id] = val;
+        gpl_gnames[id] = val;
     }
-    //printf("GNAME----------------------------------------------------->[" PRI_LI "] = %d\n", id, dsl_gnames[id]);
+    //printf("GNAME----------------------------------------------------->[" PRI_LI "] = %d\n", id, gpl_gnames[id]);
     return 0;
 }
 
 static int get_type(lua_State *l) {
     //lua_Integer id = luaL_checkinteger(l, 1);
     error("error: dsl.get_type: not implemented returning -1!\n");
-    //lua_pushnumber(l, dsl_gnames[id]);
+    //lua_pushnumber(l, gpl_gnames[id]);
     lua_pushnumber(l, -1);
     return 1;
 }
@@ -260,7 +260,7 @@ static int get_party(lua_State *l) {
     lua_Integer member = luaL_checkinteger(l, 1);
     //static int idx = -1;
     error("error: dsl.get_party: not implemented returning 9999 for member: " PRI_LI "!\n", member);
-    //lua_pushnumber(l, dsl_gnames[id]);
+    //lua_pushnumber(l, gpl_gnames[id]);
     lua_pushnumber(l, 9999);
     /*
     lua_pushnumber(l, idx);
@@ -285,7 +285,7 @@ static int is_true(lua_State *l) {
     return 1;
 }
 
-static int dsl_getX(lua_State *l) {
+static int gpl_getX(lua_State *l) {
     lua_Integer id = luaL_checkinteger(l, 1);
     sol_region_t *reg = region_manager_get_current();
     dude_t *dude = NULL;
@@ -301,7 +301,7 @@ static int dsl_getX(lua_State *l) {
     return 1;
 }
 
-static int dsl_getY(lua_State *l) {
+static int gpl_getY(lua_State *l) {
     lua_Integer id = luaL_checkinteger(l, 1);
     sol_region_t *reg = region_manager_get_current();
     dude_t *dude = NULL;
@@ -328,7 +328,7 @@ static int read_complex(lua_State *l) {
     return 1;
 }
 
-static int dsl_rand(lua_State *l) {
+static int gpl_rand(lua_State *l) {
     lua_pushinteger(l, rand());
     return 1;
 }
@@ -461,7 +461,7 @@ static int request(lua_State *l) {
     return 1;
 }
 
-static int dsl_clone(lua_State *l) {
+static int gpl_clone(lua_State *l) {
     lua_Integer obj = luaL_checkinteger(l, 1);
     lua_Integer qty = luaL_checkinteger(l, 2);
     lua_Integer x = luaL_checkinteger(l, 3);
@@ -500,7 +500,7 @@ static int dsl_clone(lua_State *l) {
     return 1;
 }
 
-static int dsl_hunt(lua_State *l) {
+static int gpl_hunt(lua_State *l) {
     lua_Integer obj = luaL_checkinteger(l, 1);
     dude_t *dude = NULL;
 
@@ -513,7 +513,7 @@ static int dsl_hunt(lua_State *l) {
     return 0;
 }
 
-static int dsl_ask_yes_no(lua_State *l) {
+static int gpl_ask_yes_no(lua_State *l) {
     debug("Must implement yes no!\n");
     lua_pushinteger(l, port_ask_yes_no());
     return 1;
@@ -530,7 +530,7 @@ static int call_function(lua_State *l) {
     return 0;
 }
 
-static int dsl_exit(lua_State *l) {
+static int gpl_exit(lua_State *l) {
     if (luaL_dostring(l, "return")) {
         error("ERORR MUST IMPLEMENT: NEED TO EXIT.\n");
         exit(1);
@@ -568,7 +568,7 @@ static int lua_debug(lua_State *l) {
 }
 
 
-static const struct luaL_Reg dsl_state_lib[] = {
+static const struct luaL_Reg gpl_state_lib[] = {
     {"set_while_callback", set_while_callback},
     {"set_gf", set_gf},
     {"get_gf", get_gf},
@@ -590,10 +590,10 @@ static const struct luaL_Reg dsl_state_lib[] = {
     {"get_id", get_id},
     {"get_party", get_party},
     {"is_true", is_true},
-    {"getX", dsl_getX},
-    {"getY", dsl_getY},
+    {"getX", gpl_getX},
+    {"getY", gpl_getY},
     {"read_complex", read_complex},
-    {"rand", dsl_rand},
+    {"rand", gpl_rand},
     {"range", range},
     {"attack_trigger", attack_trigger},
     {"attack_trigger_global", attack_trigger_global},
@@ -608,10 +608,10 @@ static const struct luaL_Reg dsl_state_lib[] = {
     {"box_trigger", box_trigger},
     {"call_function", call_function},
     {"request", request},
-    {"clone", dsl_clone},
-    {"hunt", dsl_hunt},
-    {"ask_yes_no", dsl_ask_yes_no},
-    {"exit", dsl_exit},
+    {"clone", gpl_clone},
+    {"hunt", gpl_hunt},
+    {"ask_yes_no", gpl_ask_yes_no},
+    {"exit", gpl_exit},
     {"narrate_open", lua_narrate_open},
     {"narrate_show", lua_narrate_show},
     {"play_sound", lua_play_sound},
@@ -633,78 +633,78 @@ static void set_globals(lua_State *l) {
     luaL_dostring(l, buf);
 }
 
-void dsl_state_register(lua_State *l) {
+void gpl_state_register(lua_State *l) {
     set_globals(l);
     lua_newtable(l);
-    luaL_setfuncs(l, dsl_state_lib, 0);
+    luaL_setfuncs(l, gpl_state_lib, 0);
     lua_setglobal(l, "dsl");
 }
 
-void dsl_local_clear() {
-    memset(dsl_local_flags, 0x0, sizeof(int8_t) * MAX_LFLAGS);
-    memset(dsl_local_nums, 0x0, sizeof(int16_t) * MAX_LNUMS);
-    memset(dsl_local_bnums, 0x0, sizeof(int32_t) * MAX_LBIGNUMS);
-    //memset(dsl_local_bnums, 0x0, sizeof(int32_t) * MAX_LBIGNUMS); string!
+void gpl_local_clear() {
+    memset(gpl_local_flags, 0x0, sizeof(int8_t) * MAX_LFLAGS);
+    memset(gpl_local_nums, 0x0, sizeof(int16_t) * MAX_LNUMS);
+    memset(gpl_local_bnums, 0x0, sizeof(int32_t) * MAX_LBIGNUMS);
+    //memset(gpl_local_bnums, 0x0, sizeof(int32_t) * MAX_LBIGNUMS); string!
 }
 
-char* dsl_serialize_globals(uint32_t *len) {
+char* gpl_serialize_globals(uint32_t *len) {
     *len =
-        sizeof(dsl_global_flags) +
-        sizeof(dsl_global_nums) +
-        sizeof(dsl_global_bnums) +
-        sizeof(dsl_global_strs) +
-        sizeof(dsl_gnames);
+        sizeof(gpl_global_flags) +
+        sizeof(gpl_global_nums) +
+        sizeof(gpl_global_bnums) +
+        sizeof(gpl_global_strs) +
+        sizeof(gpl_gnames);
     char *ret = malloc(*len);
     char *buf = ret;
-    memcpy(buf, dsl_global_flags, sizeof(dsl_global_flags));
-    buf += sizeof(dsl_global_flags);
-    memcpy(buf, dsl_global_nums, sizeof(dsl_global_nums));
-    buf += sizeof(dsl_global_nums);
-    memcpy(buf, dsl_global_bnums, sizeof(dsl_global_bnums));
-    buf += sizeof(dsl_global_bnums);
-    memcpy(buf, dsl_global_strs, sizeof(dsl_global_strs));
-    buf += sizeof(dsl_global_strs);
-    memcpy(buf, dsl_gnames, sizeof(dsl_gnames));
-    buf += sizeof(dsl_gnames);
+    memcpy(buf, gpl_global_flags, sizeof(gpl_global_flags));
+    buf += sizeof(gpl_global_flags);
+    memcpy(buf, gpl_global_nums, sizeof(gpl_global_nums));
+    buf += sizeof(gpl_global_nums);
+    memcpy(buf, gpl_global_bnums, sizeof(gpl_global_bnums));
+    buf += sizeof(gpl_global_bnums);
+    memcpy(buf, gpl_global_strs, sizeof(gpl_global_strs));
+    buf += sizeof(gpl_global_strs);
+    memcpy(buf, gpl_gnames, sizeof(gpl_gnames));
+    buf += sizeof(gpl_gnames);
 
     return ret;
 }
 
-void dsl_deserialize_globals(char *buf) {
-    memcpy(dsl_global_flags, buf, sizeof(dsl_global_flags));
-    buf += sizeof(dsl_global_flags);
-    memcpy(dsl_global_nums, buf, sizeof(dsl_global_nums));
-    buf += sizeof(dsl_global_nums);
-    memcpy(dsl_global_bnums, buf, sizeof(dsl_global_bnums));
-    buf += sizeof(dsl_global_bnums);
-    memcpy(dsl_global_strs, buf, sizeof(dsl_global_strs));
-    buf += sizeof(dsl_global_strs);
-    memcpy(dsl_gnames, buf, sizeof(dsl_gnames));
-    buf += sizeof(dsl_gnames);
+void gpl_deserialize_globals(char *buf) {
+    memcpy(gpl_global_flags, buf, sizeof(gpl_global_flags));
+    buf += sizeof(gpl_global_flags);
+    memcpy(gpl_global_nums, buf, sizeof(gpl_global_nums));
+    buf += sizeof(gpl_global_nums);
+    memcpy(gpl_global_bnums, buf, sizeof(gpl_global_bnums));
+    buf += sizeof(gpl_global_bnums);
+    memcpy(gpl_global_strs, buf, sizeof(gpl_global_strs));
+    buf += sizeof(gpl_global_strs);
+    memcpy(gpl_gnames, buf, sizeof(gpl_gnames));
+    buf += sizeof(gpl_gnames);
 }
 
-void dsl_deserialize_locals(char *buf) {
-    memcpy(dsl_local_flags, buf, sizeof(dsl_local_flags));
-    buf += sizeof(dsl_local_flags);
-    memcpy(dsl_local_nums, buf, sizeof(dsl_local_nums));
-    buf += sizeof(dsl_local_nums);
-    memcpy(dsl_local_bnums, buf, sizeof(dsl_local_bnums));
-    buf += sizeof(dsl_local_bnums);
+void gpl_deserialize_locals(char *buf) {
+    memcpy(gpl_local_flags, buf, sizeof(gpl_local_flags));
+    buf += sizeof(gpl_local_flags);
+    memcpy(gpl_local_nums, buf, sizeof(gpl_local_nums));
+    buf += sizeof(gpl_local_nums);
+    memcpy(gpl_local_bnums, buf, sizeof(gpl_local_bnums));
+    buf += sizeof(gpl_local_bnums);
 }
 
-char* dsl_serialize_locals(uint32_t *len) {
+char* gpl_serialize_locals(uint32_t *len) {
     *len =
-        sizeof(dsl_local_flags) +
-        sizeof(dsl_local_nums) +
-        sizeof(dsl_local_bnums);
+        sizeof(gpl_local_flags) +
+        sizeof(gpl_local_nums) +
+        sizeof(gpl_local_bnums);
     char *ret = malloc(*len);
     char *buf = ret;
-    memcpy(buf, dsl_local_flags, sizeof(dsl_local_flags));
-    buf += sizeof(dsl_local_flags);
-    memcpy(buf, dsl_local_nums, sizeof(dsl_local_nums));
-    buf += sizeof(dsl_local_nums);
-    memcpy(buf, dsl_local_bnums, sizeof(dsl_local_bnums));
-    buf += sizeof(dsl_local_bnums);
+    memcpy(buf, gpl_local_flags, sizeof(gpl_local_flags));
+    buf += sizeof(gpl_local_flags);
+    memcpy(buf, gpl_local_nums, sizeof(gpl_local_nums));
+    buf += sizeof(gpl_local_nums);
+    memcpy(buf, gpl_local_bnums, sizeof(gpl_local_bnums));
+    buf += sizeof(gpl_local_bnums);
 
     return ret;
 }

@@ -1,11 +1,11 @@
-#include "ds-string.h"
+#include "gpl-string.h"
 #include "dsl.h"
 #include <stdio.h>
 #include <string.h>
 
-dsl_string_t* dsl_global_strings = NULL;
-dsl_string_t* dsl_local_strings = NULL;
-uint8_t* gTextstring = NULL;
+gpl_string_t* gpl_global_strings = NULL;
+gpl_string_t* gpl_local_strings = NULL;
+uint8_t*      gpl_global_string = NULL;
 uint8_t fudge;
 
 #define INTRODUCE           (0x01)
@@ -15,13 +15,13 @@ uint8_t fudge;
 static char* read_compressed();
 static char* introduce();
 
-char * read_text() {
+extern char* gpl_read_text() {
     switch(peek_one_byte()) {
         case INTRODUCE:
             get_byte();
-            strcpy((char*)gTextstring, introduce());
-            //printf("INTRODUCE: gTextstring = '%s'\n", gTextstring);
-            return (char*)gTextstring;
+            strcpy((char*)gpl_global_string, introduce());
+            //printf("INTRODUCE: gpl_global_string = '%s'\n", gpl_global_string);
+            return (char*)gpl_global_string;
             break;
         case STRING_UNCOMPRESSED:
             printf("read_text: STRING_UNCOMPRESSED not implemented!\n");
@@ -30,8 +30,8 @@ char * read_text() {
         case STRING_COMPRESSED:
             get_byte();
             read_compressed();
-            //printf("STRING_COMPRESSED: gTextstring = '%s'\n", gTextstring);
-            return (char*)gTextstring;
+            //printf("STRING_COMPRESSED: gpl_global_string = '%s'\n", gpl_global_string);
+            return (char*)gpl_global_string;
             break;
     }
     return NULL;
@@ -49,14 +49,14 @@ static char* read_compressed() {
         }
 
         inword = ( (buffer >> idx) & 0x7F);
-        gTextstring[i] = (uint8_t)inword;
-        if (gTextstring[i] == 0x03) {
-            gTextstring[i] = 0x00;
-            return (char*)gTextstring;
+        gpl_global_string[i] = (uint8_t)inword;
+        if (gpl_global_string[i] == 0x03) {
+            gpl_global_string[i] = 0x00;
+            return (char*)gpl_global_string;
         }
         
-        if (gTextstring[i] < 0x20 || gTextstring[i] > 0x7E) {
-            gTextstring[i] = 0x20;
+        if (gpl_global_string[i] < 0x20 || gpl_global_string[i] > 0x7E) {
+            gpl_global_string[i] = 0x20;
         }
 
         i++;
@@ -67,14 +67,14 @@ static char* read_compressed() {
         }
     }
 
-    gTextstring[i] = 0;
+    gpl_global_string[i] = 0;
     if (peek_one_byte() == 0) {
         fudge = 1;
     } else {
         fudge = 0;
     }
 
-    return (char*)gTextstring;
+    return (char*)gpl_global_string;
 }
 
 static char tempstr[1024];

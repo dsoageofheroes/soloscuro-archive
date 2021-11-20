@@ -2,7 +2,7 @@
 #include "dsl.h"
 #include "region.h"
 #include "region-manager.h"
-#include "ds-state.h"
+#include "gpl-state.h"
 #include "port.h"
 #include "trigger.h"
 
@@ -636,7 +636,7 @@ int16_t request_to_do(int16_t name, int16_t rectype, int (*request_proc)(int16_t
 
 int req_animation(int16_t object, long notused1, long notused2) {
     dude_t *dude = region_find_entity_by_id(region_manager_get_current(), object);
-    dsl_set_gname(GNAME_PASSIVE, object);
+    gpl_set_gname(GNAME_PASSIVE, object);
 
     if (dude) {
         dude->anim.pos++;

@@ -6,7 +6,7 @@
 #include "dsl-manager.h"
 #include "dsl-lua.h"
 #include "sol-lua.h"
-#include "ds-state.h"
+#include "gpl-state.h"
 #include "gff.h"
 #include "gfftypes.h"
 
@@ -16,14 +16,14 @@ static size_t mas_max = 0, gpl_max = 0;
 static lua_State *clua = NULL;
 
 static void write_lua(const char *path, const char *lua, const size_t len);
-static void dsl_lua_load_scripts();
+static void gpl_lua_load_scripts();
 
 void dsl_manager_init() {
-    dsl_state_init();
+    gpl_state_init();
 
     mas_scripts = gpl_scripts = NULL;
 
-    dsl_lua_load_scripts();
+    gpl_lua_load_scripts();
 }
 
 static void write_lua(const char *path, const char *lua, const size_t len) {
@@ -37,7 +37,7 @@ static void write_lua(const char *path, const char *lua, const size_t len) {
 }
 
 #define DSL_MAX (1<<14)
-void dsl_lua_load_script(const uint32_t script_id, const uint8_t is_mas) {
+void gpl_lua_load_script(const uint32_t script_id, const uint8_t is_mas) {
     size_t script_len;
     unsigned char dsl[DSL_MAX];
     char buf[1024];
@@ -66,12 +66,12 @@ void dsl_lua_load_script(const uint32_t script_id, const uint8_t is_mas) {
 
 void dsl_lua_load_all_scripts() {
     for (int i = 0; i < 100; i++) {
-        dsl_lua_load_script(i, 0);
-        dsl_lua_load_script(i, 1);
+        gpl_lua_load_script(i, 0);
+        gpl_lua_load_script(i, 1);
     }
 }
 
-void dsl_lua_load_scripts() {
+void gpl_lua_load_scripts() {
     unsigned int *ids;
     size_t i, amt;
 
@@ -105,14 +105,14 @@ uint8_t dsl_lua_execute_script(size_t file, size_t addr, uint8_t is_mas) {
     if (file < 0 || file >= size) { return 0; }
 
     if (scripts[file] == NULL) {
-        dsl_lua_load_script(file, is_mas);
+        gpl_lua_load_script(file, is_mas);
     }
 
     if (scripts[file] == NULL) { return 0; }
 
     clua = l = luaL_newstate();
     luaL_openlibs(l);
-    dsl_state_register(l);
+    gpl_state_register(l);
     sol_lua_register(l);
     if (luaL_dostring(l, scripts[file])) {
         error("Error: unable to load %s script " PRI_SIZET ":" PRI_SIZET "\n",
@@ -138,7 +138,7 @@ uint8_t dsl_lua_execute_script(size_t file, size_t addr, uint8_t is_mas) {
     return ret;
 }
 
-void dsl_execute_string(const char *str) {
+void gpl_execute_string(const char *str) {
     if (clua) {
         if (luaL_dostring(clua, str)) {
             error("Unable to execute '%s'!\n", str);
@@ -147,7 +147,7 @@ void dsl_execute_string(const char *str) {
     } else {
         lua_State *l = luaL_newstate();
         luaL_openlibs(l);
-        dsl_state_register(l);
+        gpl_state_register(l);
         sol_lua_register(l);
         if (luaL_dostring(l, str)) {
             error("Unable to execute '%s'!\n", str);
@@ -157,7 +157,7 @@ void dsl_execute_string(const char *str) {
     }
 }
 
-void dsl_manager_cleanup() {
+void gpl_manager_cleanup() {
     int i;
 
     if (mas_scripts) {
@@ -182,5 +182,5 @@ void dsl_manager_cleanup() {
     }
     gpl_scripts = NULL;
 
-    dsl_state_cleanup();
+    gpl_state_cleanup();
 }

@@ -2,7 +2,7 @@
 #include "player.h"
 #include "region.h"
 #include "region-manager.h"
-#include "ds-state.h"
+#include "gpl-state.h"
 #include "dsl.h"
 #include "gff.h"
 #include "gfftypes.h"
@@ -135,11 +135,11 @@ static void save_regions(const int id) {
     }
     free(buf);
 
-    buf = dsl_serialize_globals(&len);
+    buf = gpl_serialize_globals(&len);
     gff_add_chunk(id, GFF_GDAT, 99, buf, len);
     free(buf);
 
-    buf = dsl_serialize_locals(&len);
+    buf = gpl_serialize_locals(&len);
     gff_add_chunk(id, GFF_GDAT, dude->region, buf, len);
     free(buf);
 }
@@ -304,7 +304,7 @@ int ls_load_save_file(const char *path) {
         printf("Error loading file.\n");
         exit(1);
     }
-    dsl_deserialize_globals(buf);
+    gpl_deserialize_globals(buf);
     free(buf);
 
     chunk = gff_find_chunk_header(id, GFF_GDAT, player_get_active()->region);
@@ -313,7 +313,7 @@ int ls_load_save_file(const char *path) {
         printf("Error loading file.\n");
         exit(1);
     }
-    dsl_deserialize_locals(buf);
+    gpl_deserialize_locals(buf);
     free(buf);
 
     chunk = gff_find_chunk_header(id, GFF_TRIG, 0);

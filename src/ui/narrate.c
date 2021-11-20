@@ -295,7 +295,7 @@ extern int narrate_select_menu(int option) {
     menu_pos = 0;
     sol_ui_narrate_clear();
     snprintf(buf, 1024, "func%d()\n", menu_addrs[option]);
-    dsl_execute_string(buf);
+    gpl_execute_string(buf);
     //game_loop_signal(WAIT_NARRATE_SELECT, accum);
     return accum;
 }

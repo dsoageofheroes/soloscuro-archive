@@ -1,6 +1,6 @@
 #include "dsl.h"
 #include "dsl-manager.h"
-#include "ds-state.h"
+#include "gpl-state.h"
 #include "region.h"
 #include "region-manager.h"
 #include "replay.h"
@@ -347,8 +347,8 @@ void talk_click(uint32_t obj) {
     look_trigger_t lt = get_look_trigger(obj);
 
     replay_print("rep.talk_click(%d)\n", obj);
-    dsl_set_gname(GNAME_PASSIVE, obj);
-    dsl_local_clear();
+    gpl_set_gname(GNAME_PASSIVE, obj);
+    gpl_local_clear();
 
     if (tt.obj != 0) {
         dsl_lua_execute_script(tt.file, tt.addr, 0);
