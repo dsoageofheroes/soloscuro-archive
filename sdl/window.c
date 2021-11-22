@@ -13,7 +13,7 @@
 #include "new-character.h"
 #include "combat-status.h"
 #include "gpl.h"
-#include "../src/gameloop.h"
+#include "gameloop.h"
 #include "../src/region.h"
 #include "sprite.h"
 

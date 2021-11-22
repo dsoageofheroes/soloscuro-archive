@@ -17,3 +17,4 @@ solconfig.lua
 
 # generated powers
 src/powers/
+src/powers/powers-generator.c

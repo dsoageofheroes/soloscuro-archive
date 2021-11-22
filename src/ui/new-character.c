@@ -8,7 +8,7 @@
 #include "wizard.h"
 #include "player.h"
 #include "rules.h"
-#include "../../src/settings.h"
+#include "settings.h"
 
 #include <string.h>
 #include <time.h>

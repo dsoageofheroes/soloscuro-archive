@@ -5,9 +5,9 @@
 #include "popup.h"
 #include "gfftypes.h"
 #include "player.h"
-#include "../../src/gameloop.h"
+#include "gameloop.h"
 #include "../../src/port.h"
-#include "../../src/settings.h"
+#include "settings.h"
 #include "gff.h"
 
 static sol_sprite_t background, sun, start, create_characters, load_save, exit_dos;

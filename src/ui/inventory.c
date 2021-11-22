@@ -12,7 +12,7 @@
 #include "gpl.h"
 #include "player.h"
 #include "ds-load-save.h"
-#include "../../src/settings.h"
+#include "settings.h"
 
 #include <string.h>
 

@@ -6,7 +6,7 @@
 #include "gff.h"
 #include "../../src/port.h"
 #include "../../src/region-manager.h"
-#include "../../src/settings.h"
+#include "settings.h"
 #include "../../src/port.h"
 #include <string.h>
 

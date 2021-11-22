@@ -6,7 +6,7 @@
 #include "audio.h"
 #include "gpl.h"
 #include "../src/region.h"
-#include "../src/gameloop.h"
+#include "gameloop.h"
 #include "gff.h"
 #include "gff-map.h"
 #include "gff-image.h"

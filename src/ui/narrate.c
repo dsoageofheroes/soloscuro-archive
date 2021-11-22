@@ -7,8 +7,8 @@
 #include "gfftypes.h"
 #include "../src/replay.h"
 #include "gpl-manager.h"
-#include "../../src/gameloop.h"
-#include "../../src/settings.h"
+#include "gameloop.h"
+#include "settings.h"
 #include <string.h>
 #include <ctype.h>
 

@@ -1,7 +1,7 @@
 #include "audio.h"
 #include "main.h"
 #include "gpl.h"
-#include "../src/gameloop.h"
+#include "gameloop.h"
 #include "adlmidi.h"
 #include <SDL2/SDL.h>
 #include <sndfile.h>

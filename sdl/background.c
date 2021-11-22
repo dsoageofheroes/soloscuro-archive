@@ -2,7 +2,7 @@
 #include "main.h"
 #include "gff.h"
 #include "../src/port.h"
-#include "../src/settings.h"
+#include "settings.h"
 #include <SDL2/SDL.h>
 
 static SDL_Texture **tiles = NULL;

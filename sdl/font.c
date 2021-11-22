@@ -1,7 +1,7 @@
 #include "font.h"
 #include "main.h"
 #include "gpl.h"
-#include "../src/settings.h"
+#include "settings.h"
 #include <SDL2/SDL_ttf.h>
 
 #define MAX_CHARS (128)

@@ -7,14 +7,14 @@
 #include "gpl.h"
 #include "../src/port.h"
 #include "../src/trigger.h"
-#include "../src/settings.h"
+#include "settings.h"
 #include "gpl-manager.h"
 #include "ssi-object.h"
 #include "../src/region-manager.h"
 #include "ssi-scmd.h"
 #include "player.h"
 #include "../src/port.h"
-#include "../src/settings.h"
+#include "settings.h"
 #include "gpl-var.h"
 
 #include <string.h>

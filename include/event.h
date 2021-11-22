@@ -23,5 +23,4 @@ enum {
     SOL_CHARACTER,
 };
 
-
 #endif

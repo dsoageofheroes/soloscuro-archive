@@ -1,7 +1,7 @@
 #include "label.h"
 #include "font.h"
 #include "rules.h"
-#include "../src/settings.h"
+#include "settings.h"
 
 #include <string.h>
 

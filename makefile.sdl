@@ -36,7 +36,7 @@ $(BUILD_DIR)/%.c.o: %.c
 .PHONY: clean
 
 clean:
-	$(RM) -r $(BUILD_DIR) $(LIB_DIR) src/powers/
+	$(RM) -r $(BUILD_DIR) $(LIB_DIR) src/powers/wizard
 
 -include $(DEPS)
 

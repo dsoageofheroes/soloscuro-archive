@@ -8,7 +8,7 @@
 #include "gff.h"
 #include "gff-char.h"
 #include "../../src/port.h"
-#include "../../src/settings.h"
+#include "settings.h"
 #include "gpl.h"
 #include "player.h"
 

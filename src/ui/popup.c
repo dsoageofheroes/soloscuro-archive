@@ -3,7 +3,7 @@
 #include "gff.h"
 #include "../../src/port.h"
 #include "gfftypes.h"
-#include "../../src/settings.h"
+#include "settings.h"
 #include <string.h>
 
 static sol_sprite_t background, popup_return, option[3];
