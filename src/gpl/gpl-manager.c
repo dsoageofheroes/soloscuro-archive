@@ -5,7 +5,8 @@
 #include "port.h"
 #include "gpl-manager.h"
 #include "gpl-lua.h"
-#include "sol-lua.h"
+#include "sol-lua-settings.h"
+#include "sol-lua-manager.h"
 #include "gpl-state.h"
 #include "gff.h"
 #include "gfftypes.h"
@@ -115,7 +116,7 @@ uint8_t gpl_lua_execute_script(size_t file, size_t addr, uint8_t is_mas) {
     clua = l = luaL_newstate();
     luaL_openlibs(l);
     gpl_state_register(l);
-    sol_lua_register(l);
+    sol_lua_settings_register(l);
     if (luaL_dostring(l, scripts[file])) {
         error("Error: unable to load %s script " PRI_SIZET ":" PRI_SIZET "\n",
             is_mas ? "MAS" : "GPL",
@@ -150,7 +151,7 @@ void gpl_execute_string(const char *str) {
         lua_State *l = luaL_newstate();
         luaL_openlibs(l);
         gpl_state_register(l);
-        sol_lua_register(l);
+        sol_lua_settings_register(l);
         if (luaL_dostring(l, str)) {
             error("Unable to execute '%s'!\n", str);
             error("%s\n", lua_tostring(clua, -1));

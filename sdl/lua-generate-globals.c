@@ -1,4 +1,4 @@
-#include "../src/lua-inc.h"
+#include "lua-inc.h"
 #include <SDL2/SDL.h>
 
 #define BUF_MAX (128)

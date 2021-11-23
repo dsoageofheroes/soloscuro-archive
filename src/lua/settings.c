@@ -1,15 +1,15 @@
-#include "sol-lua.h"
-#include "lua-structs.h"
+#include "sol-lua-manager.h"
 #include "ds-load-save.h"
-#include "port.h"
+#include "../src/port.h"
 #include "gpl.h"
 #include "player.h"
-#include "region-manager.h"
+#include "sol-lua-manager.h"
+#include "../src/region-manager.h"
 #include <string.h>
 
 #define MAX_SOL_FUNCS (1<<10)
 
-static lua_State *sol_lua = NULL;
+//static lua_State *sol_lua = NULL;
 static struct luaL_Reg sol_lib [MAX_SOL_FUNCS];
 static size_t pos = 0;
 
@@ -168,7 +168,8 @@ static const struct luaL_Reg sol_funcs[] = {
     {NULL, NULL},
 };
 
-extern void sol_lua_register(lua_State *l) {
+extern void sol_lua_settings_register(lua_State *l) {
+    set_globals(l);
     pos = 0;
     memset(sol_lib, 0x0, sizeof(sol_lib));
     add_funcs(lua_struct_get_funcs());
@@ -182,26 +183,8 @@ extern void sol_lua_register(lua_State *l) {
 }
 
 static int sol_lua_error(const char *msg) {
-    error("%s: %s\n", msg, lua_tostring(sol_lua, -1));
+    error("%s: %s\n", msg, lua_tostring(sol_lua_get_state(), -1));
     return 0;
-}
-
-static void sol_lua_run(const char *filename, const char *name) {
-    sol_lua = luaL_newstate();
-    luaL_openlibs(sol_lua);
-
-    set_globals(sol_lua);
-    sol_lua_register(sol_lua);
-
-    if (luaL_loadfile(sol_lua, filename)) {
-        error("unable to open '%s'.\n", filename);
-        sol_lua_close();
-        return;
-    }
-
-    if (lua_pcall(sol_lua, 0, 0, 0)) { sol_lua_error("Can't prime"); }
-    lua_getglobal(sol_lua, name);
-    if (lua_pcall(sol_lua, 0, 1, 0)) { sol_lua_error("Can't call"); }
 }
 
 static void write_generic_settings() {
@@ -221,6 +204,8 @@ static void write_generic_settings() {
 
 static void load_game() {
     const char *lua_str = NULL;
+    lua_State *sol_lua = sol_lua_get_state();
+
     if (lua_pcall(sol_lua, 0, 0, 0)) { sol_lua_error("Can't prime"); }
 
     lua_getglobal(sol_lua, "settings");
@@ -257,21 +242,15 @@ static void load_game() {
         gff_load_directory(lua_str);
         port_set_config(CONFIG_RUN_BROWSER, 1);
     }
-
-    sol_lua_close();
 }
 
 extern int sol_lua_load_preload(const char *filename) {
-    sol_lua = luaL_newstate();
-    luaL_openlibs(sol_lua);
-    //lua_struct_register(sol_lua);
-    sol_lua_register(sol_lua);
+    lua_State *sol_lua = sol_lua_get_state();
 
     if (luaL_loadfile(sol_lua, "solconfig.lua")) {
         write_generic_settings();
 
         if (luaL_loadfile(sol_lua, "solconfig.lua")) {
-            sol_lua_close();
             error("unable to open '%s'.\n", "solconfig.lua");
             return 0;
         }
@@ -279,20 +258,11 @@ extern int sol_lua_load_preload(const char *filename) {
 
     load_game();
 
-    //sol_lua_run(filename, "preload");
-    return 0;
-}
-
-extern int sol_lua_load(const char *filename) {
-    sol_lua_run(filename, "init");
-    if (sol_lua) {
-        return lua_toboolean(sol_lua, -1);
-    }
-
     return 0;
 }
 
 extern int sol_lua_keydown(const int key_code) {
+    lua_State *sol_lua = sol_lua_get_state();
     if (!sol_lua) { return 0; }
 
     lua_getglobal(sol_lua, "keydown");
@@ -303,6 +273,7 @@ extern int sol_lua_keydown(const int key_code) {
 }
 
 extern int sol_lua_keyup(const int key_code) {
+    lua_State *sol_lua = sol_lua_get_state();
     if (!sol_lua) { return 0; }
 
     lua_getglobal(sol_lua, "keyup");
@@ -310,13 +281,6 @@ extern int sol_lua_keyup(const int key_code) {
     if (lua_pcall(sol_lua, 1, 1, 0)) { return sol_lua_error("Can't call keyup()"); }
 
     return lua_toboolean(sol_lua, -1);
-}
-
-extern void sol_lua_close() {
-    if (sol_lua) {
-        lua_close(sol_lua);
-        sol_lua = NULL;
-    }
 }
 
 #define BUF_MAX (128)

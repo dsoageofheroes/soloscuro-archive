@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 #include <stdint.h>
-#include "../src/lua-inc.h"
+#include "lua-inc.h"
 
 #define LUA_MAX_SIZE (1<<18)
 #define MAX_NUM_FUNCTIONS (128)

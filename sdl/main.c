@@ -4,7 +4,7 @@
 #include "audio.h"
 #include "font.h"
 #include "utils.h"
-#include "../src/lua-inc.h"
+#include "lua-inc.h"
 #include "settings.h"
 #include "mouse.h"
 #include "textbox.h"
@@ -24,7 +24,7 @@
 #include "ds-load-save.h"
 #include "player.h"
 #include "../src/port.h"
-#include "../src/sol-lua.h"
+#include "sol-lua-manager.h"
 
 void browse_loop(SDL_Surface*, SDL_Renderer *rend);
 void window_debug_init(SDL_Surface *sur, SDL_Renderer *rend, const char *arg);
@@ -350,7 +350,6 @@ void port_close() {
 
 static void cleanup() {
     port_close();
-    sol_lua_close();
 }
 
 extern void port_game_loop() {
