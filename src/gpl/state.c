@@ -240,7 +240,7 @@ static int set_gname(lua_State *l) {
 
 static int get_type(lua_State *l) {
     //lua_Integer id = luaL_checkinteger(l, 1);
-    error("error: dsl.get_type: not implemented returning -1!\n");
+    error("error: gpl.get_type: not implemented returning -1!\n");
     //lua_pushnumber(l, gpl_gnames[id]);
     lua_pushnumber(l, -1);
     return 1;
@@ -248,9 +248,9 @@ static int get_type(lua_State *l) {
 
 static int get_id(lua_State *l) {
     lua_Integer obj = luaL_checkinteger(l, 1);
-    //printf("!!!!!!!!!!dsl.get_name: not implemented returning -1!\n");
+    //printf("!!!!!!!!!!gpl.get_name: not implemented returning -1!\n");
     //printf("-------->returning " PRI_LI "\n", obj);
-    //error("error: dsl.get_id not implement, just returning obj (" PRI_LI " ).\n", obj);
+    //error("error: gpl.get_id not implement, just returning obj (" PRI_LI " ).\n", obj);
     lua_pushnumber(l, obj);
     //lua_pushnumber(l, -1);
     return 1;
@@ -259,7 +259,7 @@ static int get_id(lua_State *l) {
 static int get_party(lua_State *l) {
     lua_Integer member = luaL_checkinteger(l, 1);
     //static int idx = -1;
-    error("error: dsl.get_party: not implemented returning 9999 for member: " PRI_LI "!\n", member);
+    error("error: gpl.get_party: not implemented returning 9999 for member: " PRI_LI "!\n", member);
     //lua_pushnumber(l, gpl_gnames[id]);
     lua_pushnumber(l, 9999);
     /*
@@ -471,7 +471,7 @@ static int gpl_clone(lua_State *l) {
     int16_t entry_id = -1;
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes;
 
-    debug("dsl-clone: obj: " PRI_LI ", qty: " PRI_LI ", (" PRI_LI ", "
+    debug("gpl-clone: obj: " PRI_LI ", qty: " PRI_LI ", (" PRI_LI ", "
              PRI_LI ") pri: " PRI_LI ", pla:" PRI_LI "\n", obj, qty, x, y,
         priority, placement);
 
@@ -492,7 +492,7 @@ static int gpl_clone(lua_State *l) {
                 (dude->name) ? 2 : 1);
             port_place_entity(dude);
             //TODO: Should reshift the entity?
-            dude->anim.scmd = combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
+            dude->anim.scmd = sol_combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
         }
     }
 
@@ -524,7 +524,7 @@ static int call_function(lua_State *l) {
     lua_Integer addr = luaL_checkinteger(l, 2);
 
     debug("*****************calling file: " PRI_LI " addr: " PRI_LI "\n", file, addr);
-    //replay_print("dsl.call_function(" PRI_LI ", " PRI_LI ")\n", file, addr);
+    //replay_print("gpl.call_function(" PRI_LI ", " PRI_LI ")\n", file, addr);
     gpl_lua_execute_script(file, addr, 0);
 
     return 0;
@@ -637,7 +637,7 @@ void gpl_state_register(lua_State *l) {
     set_globals(l);
     lua_newtable(l);
     luaL_setfuncs(l, gpl_state_lib, 0);
-    lua_setglobal(l, "dsl");
+    lua_setglobal(l, "gpl");
 }
 
 void gpl_local_clear() {

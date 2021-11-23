@@ -32,7 +32,7 @@ void gpl_change_region(const int region_id) {
     gpl_lua_execute_script(region_id, 0, 1);
 }
 
-static void initialize_dsl_stack() {
+static void initialize_gpl_stack() {
     gpl_global_strings = (gpl_string_t*) malloc(GSTRINGVARSIZE);
     memset(gpl_global_strings, 0, GSTRINGVARSIZE);
     gpl_local_strings = (gpl_string_t*) malloc(LSTRINGVARSIZE);
@@ -42,7 +42,7 @@ static void initialize_dsl_stack() {
 
 extern void gpl_init() {
     info("Initalizing DSL.\n");
-    initialize_dsl_stack();
+    initialize_gpl_stack();
     powers_init();
     gpl_init_vars();
     sol_player_init();

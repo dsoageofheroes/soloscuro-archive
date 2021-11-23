@@ -627,7 +627,7 @@ static int lua_scmd_sound_idx(lua_State *L) {
     return 1;
 }
 
-static int lua_dsl_change_region(lua_State *L) {
+static int lua_gpl_change_region(lua_State *L) {
     lua_Integer region_id = luaL_checkinteger (L, 1);
     gpl_change_region(region_id);
     return 0;
@@ -709,7 +709,7 @@ static const struct luaL_Reg lslib [] = {
       {"scmd_index_is_default", lua_scmd_index_is_default},
 
       // MAS functions
-      {"dsl_change_region", lua_dsl_change_region},
+      {"gpl_change_region", lua_gpl_change_region},
 
       // The End
       {NULL, NULL}  /* sentinel */

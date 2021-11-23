@@ -10,7 +10,7 @@
 
 #define COMBAT_ERROR    (9999)
 
-enum combat_scmd_t {
+typedef enum combat_scmd_e {
     COMBAT_SCMD_STAND_DOWN,
     COMBAT_SCMD_STAND_UP,
     COMBAT_SCMD_STAND_RIGHT,
@@ -60,7 +60,7 @@ enum combat_scmd_t {
     COMBAT_POWER_THROW_ANIM_LLU,
     COMBAT_POWER_THROW_ANIM_LU,
     COMBAT_POWER_THROW_ANIM_LUU,
-};
+} combat_scmd_t;
 
 enum {
     COMBAT_STATUS_OK          = 1,
@@ -74,14 +74,14 @@ enum {
     COMBAT_STATUS_MAX
 };
 
-enum combat_turn_t {
+typedef enum combat_turn_e {
     NO_COMBAT,
     NONPLAYER_TURN,
     PLAYER1_TURN,
     PLAYER2_TURN,
     PLAYER3_TURN,
     PLAYER4_TURN,
-};
+} combat_turn_t;
 
 #define MAX_COMBAT_ACTIONS (100)
 typedef struct entity_action_list_s {
@@ -89,17 +89,17 @@ typedef struct entity_action_list_s {
     entity_action_t actions[MAX_COMBAT_ACTIONS];
 } entity_action_list_t;
 
-void combat_init(combat_region_t *cr);
-void combat_free(combat_region_t *rc);
-const enum combat_turn_t combat_player_turn();
-extern int combat_initiate(sol_region_t *reg, const uint16_t x, const uint16_t y);
-scmd_t* combat_get_scmd(const enum combat_scmd_t type);
-entity_t* combat_get_current(combat_region_t *cr);
-extern void combat_set_hunt(combat_region_t *cr, const uint32_t combat_id);
-extern void combat_player_action(const entity_action_t action);
-extern int combat_activate_power(power_t *pw, entity_t *source, entity_t *target, const int32_t x, const int32_t y);
+void          sol_combat_init(combat_region_t *cr);
+void          sol_combat_free(combat_region_t *rc);
+combat_turn_t sol_combat_player_turn();
+extern int    sol_combat_initiate(sol_region_t *reg, const uint16_t x, const uint16_t y);
+scmd_t*       sol_combat_get_scmd(const combat_scmd_t type);
+entity_t*     sol_combat_get_current(combat_region_t *cr);
+extern void   sol_combat_set_hunt(combat_region_t *cr, const uint32_t combat_id);
+extern void   sol_combat_player_action(const entity_action_t action);
+extern int    sol_combat_activate_power(power_t *pw, entity_t *source, entity_t *target, const int32_t x, const int32_t y);
 
 // pre-processor ordering.
-extern void combat_is_defeated(sol_region_t *reg, entity_t *dude);
+extern void   sol_combat_is_defeated(sol_region_t *reg, entity_t *dude);
 
 #endif

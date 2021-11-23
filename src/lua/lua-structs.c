@@ -1,4 +1,3 @@
-#include "lua-structs.h"
 #include "player.h"
 #include "region.h"
 #include "region-manager.h"

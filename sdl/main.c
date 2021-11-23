@@ -125,7 +125,7 @@ void main_exit_game() {
 static void main_combat_update() {
     entity_action_t player_action;
     player_action.action = EA_NONE;
-    switch(combat_player_turn()) {
+    switch(sol_combat_player_turn()) {
         case PLAYER1_TURN:
         case PLAYER2_TURN:
         case PLAYER3_TURN:
@@ -138,7 +138,7 @@ static void main_combat_update() {
             if (player_directions[7]) { player_action.action = EA_WALK_UPLEFT; }
             if (player_directions[8]) { player_action.action = EA_WALK_UP; }
             if (player_directions[9]) { player_action.action = EA_WALK_UPRIGHT; }
-            combat_player_action(player_action);
+            sol_combat_player_action(player_action);
             break;
         default: break;
     }

@@ -42,7 +42,7 @@ static void write_lua(const char *path, const char *lua, const size_t len) {
 #define DSL_MAX (1<<14)
 void gpl_lua_load_script(const uint32_t script_id, const uint8_t is_mas) {
     size_t script_len;
-    unsigned char dsl[DSL_MAX];
+    unsigned char gpl[DSL_MAX];
     char buf[1024];
     char **script = is_mas ? mas_scripts : gpl_scripts;
     char *script_ptr;
@@ -52,12 +52,12 @@ void gpl_lua_load_script(const uint32_t script_id, const uint8_t is_mas) {
     if (chunk.length > DSL_MAX) {
         error("DSL chunk size %d is larger than max (%d)\n", chunk.length, DSL_MAX);
     }
-    if (!gff_read_chunk(DSLDATA_GFF_INDEX, &chunk, dsl, chunk.length)) { return; }
+    if (!gff_read_chunk(DSLDATA_GFF_INDEX, &chunk, gpl, chunk.length)) { return; }
 
     debug("Converting %s %d to lua, length = %d\n",
         is_mas ? "MAS" : "GPL",
         script_id, chunk.length);
-    //script_ptr = gpl_lua_print(dsl, len, is_master_mas, &script_len);
+    //script_ptr = gpl_lua_print(gpl, len, is_master_mas, &script_len);
     script_ptr = gpl_lua_print(script_id, is_mas, &script_len);
     script[script_id] = malloc(sizeof(char) * (script_len + 1)); // (A)
     strncpy(script[script_id], script_ptr, script_len);

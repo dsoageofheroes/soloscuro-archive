@@ -236,7 +236,7 @@ void sol_player_close() {
 
 void sol_player_load_graphics(const int slot) {
     dude_t *dude = player_get(slot);
-    dude->anim.scmd = combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
+    dude->anim.scmd = sol_combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
     load_character_sprite(slot, settings_zoom());
 }
 
@@ -253,7 +253,7 @@ static int direction = 0x0;
 extern void sol_player_update() {
     entity_t *dude = player_get_active();
     int xdiff = 0, ydiff = 0;
-    const enum combat_turn_t combat_turn = combat_player_turn();
+    combat_turn_t combat_turn = sol_combat_player_turn();
     enum entity_action_e action;
 
     //if (entity_animation_execute(dude)) { --count; return; }
@@ -346,10 +346,10 @@ extern void sol_player_set_delay(const int amt) {
     if (amt < 0) { return; }
 
     for (int i = 0; i < 4; i++) {
-        combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_DOWN)[i].delay = amt;
-        combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_UP)[i].delay = amt;
-        combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_LEFT)[i].delay = amt;
-        combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_RIGHT)[i].delay = amt;
+        sol_combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_DOWN)[i].delay = amt;
+        sol_combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_UP)[i].delay = amt;
+        sol_combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_LEFT)[i].delay = amt;
+        sol_combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_RIGHT)[i].delay = amt;
     }
 }
 

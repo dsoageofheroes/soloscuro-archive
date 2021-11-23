@@ -111,7 +111,7 @@ void combat_status_init(const uint32_t x, const uint32_t y) {
 }
 
 static void get_status() {
-    entity_t* dude = combat_get_current(&(region_manager_get_current()->cr));
+    entity_t* dude = sol_combat_get_current(&(region_manager_get_current()->cr));
 
     if (dude) {
         strcpy(combat_status.name, dude->name);
@@ -165,7 +165,7 @@ void combat_status_render(void *data) {
         }
     }
 
-    if (combat_player_turn() == NO_COMBAT) { return; }
+    if (sol_combat_player_turn() == NO_COMBAT) { return; }
 
     if (2 == 1) {
         sol_draw_cone(100, 100, 200);
@@ -303,7 +303,7 @@ void port_combat_action(entity_action_t *ca) {
             cast->y = sol_sprite_gety(cast->spr) + sol_get_camerax();
             cast->destx = cast->x;
             cast->desty = cast->y;
-            cast->scmd = combat_get_scmd(COMBAT_POWER_CAST);
+            cast->scmd = sol_combat_get_scmd(COMBAT_POWER_CAST);
             //add_node_list(cast, ca->power->cast_sound, ca);
             break;
         case EA_POWER_THROW:
@@ -312,9 +312,9 @@ void port_combat_action(entity_action_t *ca) {
             source = &(ca->source->anim);
             dest = &(ca->target->anim);
             if (sol_sprite_num_frames(throw->spr) < 30) {
-                throw->scmd = combat_get_scmd(COMBAT_POWER_THROW_STATIC_U + dir);
+                throw->scmd = sol_combat_get_scmd(COMBAT_POWER_THROW_STATIC_U + dir);
             } else {
-                throw->scmd = combat_get_scmd(COMBAT_POWER_THROW_ANIM_U + dir);
+                throw->scmd = sol_combat_get_scmd(COMBAT_POWER_THROW_ANIM_U + dir);
             }
             throw->x = sol_sprite_getx(source->spr) + sol_get_camerax();
             throw->y = sol_sprite_gety(source->spr) + sol_get_cameray();
@@ -337,7 +337,7 @@ void port_combat_action(entity_action_t *ca) {
             hit->y = sol_sprite_gety(hit->spr) + sol_get_cameray();
             hit->destx = hit->x;
             hit->desty = hit->y;
-            hit->scmd = combat_get_scmd(COMBAT_POWER_CAST);
+            hit->scmd = sol_combat_get_scmd(COMBAT_POWER_CAST);
             //add_node_list(hit, ca->power->hit_sound, ca);
         default:
             break;

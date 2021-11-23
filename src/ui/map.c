@@ -516,7 +516,7 @@ int map_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_
     }
 
     if (ms == MOUSE_POWER) {
-        combat_activate_power(sol_mouse_get_power(), player_get_active(),
+        sol_combat_activate_power(sol_mouse_get_power(), player_get_active(),
             get_entity_at_location(x, y), tilex, tiley);
         sol_mouse_set_state(MOUSE_POINTER);
         return 1;

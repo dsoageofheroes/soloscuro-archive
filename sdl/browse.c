@@ -927,7 +927,7 @@ static void render_entry_rmap() {
     SDL_Rect loc;
 
     if (cfile && cfile != open_files[gff_idx].filename) {
-        printf("Need to clean dsl_region_t!\n");
+        printf("Need to clean gpl_region_t!\n");
         //SDL_DestroyTexture(tiles[0]);
         for (int i = 0; i < tiles_len; i++) {
             if (tiles[i]) {
@@ -1005,7 +1005,7 @@ static void render_entry_gmap() {
             if (region_is_block(region, i, j)) {
                 //printf("(%d, %d)\n, ", i, j);
                 SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, SDL_ALPHA_OPAQUE);
-            /*} else if (dsl_region_is_actor(region, i, j)) {
+            /*} else if (gpl_region_is_actor(region, i, j)) {
                 SDL_SetRenderDrawColor(renderer, 0x00, 0xFF, 0x00, SDL_ALPHA_OPAQUE);*/
             } else { continue; }
             points[0].x = 320 + (j - mapy) * 16 * zoom;

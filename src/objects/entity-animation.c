@@ -252,29 +252,29 @@ static scmd_t *combat_types[] = {
     throw_anim_scmd + 60,
 };
 
-scmd_t* combat_get_scmd(const enum combat_scmd_t type) {
+scmd_t* sol_combat_get_scmd(const combat_scmd_t type) {
     return combat_types[type];
 }
 
 static scmd_t* get_scmd(scmd_t *current_scmd, const int xdiff, const int ydiff) {
-    if (xdiff < 0) { return combat_get_scmd(COMBAT_SCMD_MOVE_LEFT); }
-    if (xdiff > 0) { return combat_get_scmd(COMBAT_SCMD_MOVE_RIGHT); }
-    if (ydiff < 0) { return combat_get_scmd(COMBAT_SCMD_MOVE_UP); }
-    if (ydiff > 0) { return combat_get_scmd(COMBAT_SCMD_MOVE_DOWN); }
+    if (xdiff < 0) { return sol_combat_get_scmd(COMBAT_SCMD_MOVE_LEFT); }
+    if (xdiff > 0) { return sol_combat_get_scmd(COMBAT_SCMD_MOVE_RIGHT); }
+    if (ydiff < 0) { return sol_combat_get_scmd(COMBAT_SCMD_MOVE_UP); }
+    if (ydiff > 0) { return sol_combat_get_scmd(COMBAT_SCMD_MOVE_DOWN); }
 
     // xdiff and ydiff == 0.
-    if (current_scmd == combat_get_scmd(COMBAT_SCMD_MOVE_LEFT) 
-        || current_scmd == combat_get_scmd(COMBAT_SCMD_MELEE_LEFT)) {
-        return combat_get_scmd(COMBAT_SCMD_STAND_LEFT);
-    } else if (current_scmd == combat_get_scmd(COMBAT_SCMD_MOVE_RIGHT)
-        || current_scmd == combat_get_scmd(COMBAT_SCMD_MELEE_RIGHT)) {
-        return combat_get_scmd(COMBAT_SCMD_STAND_RIGHT);
-    } else if (current_scmd == combat_get_scmd(COMBAT_SCMD_MOVE_UP)
-        || current_scmd == combat_get_scmd(COMBAT_SCMD_MELEE_UP)) {
-        return combat_get_scmd(COMBAT_SCMD_STAND_UP);
-    } else if (current_scmd == combat_get_scmd(COMBAT_SCMD_MOVE_DOWN)
-        || current_scmd == combat_get_scmd(COMBAT_SCMD_MELEE_DOWN)) {
-        return combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
+    if (current_scmd == sol_combat_get_scmd(COMBAT_SCMD_MOVE_LEFT) 
+        || current_scmd == sol_combat_get_scmd(COMBAT_SCMD_MELEE_LEFT)) {
+        return sol_combat_get_scmd(COMBAT_SCMD_STAND_LEFT);
+    } else if (current_scmd == sol_combat_get_scmd(COMBAT_SCMD_MOVE_RIGHT)
+        || current_scmd == sol_combat_get_scmd(COMBAT_SCMD_MELEE_RIGHT)) {
+        return sol_combat_get_scmd(COMBAT_SCMD_STAND_RIGHT);
+    } else if (current_scmd == sol_combat_get_scmd(COMBAT_SCMD_MOVE_UP)
+        || current_scmd == sol_combat_get_scmd(COMBAT_SCMD_MELEE_UP)) {
+        return sol_combat_get_scmd(COMBAT_SCMD_STAND_UP);
+    } else if (current_scmd == sol_combat_get_scmd(COMBAT_SCMD_MOVE_DOWN)
+        || current_scmd == sol_combat_get_scmd(COMBAT_SCMD_MELEE_DOWN)) {
+        return sol_combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
     }
 
     return current_scmd;
@@ -284,14 +284,14 @@ static scmd_t* get_entity_scmd(scmd_t *current_scmd, enum entity_action_e action
     current_scmd = get_scmd(current_scmd, 0, 0);
 
     if (action == EA_MELEE) {
-        if (current_scmd == combat_get_scmd(COMBAT_SCMD_STAND_LEFT)) {
-            return combat_get_scmd(COMBAT_SCMD_MELEE_LEFT);
-        } else if (current_scmd == combat_get_scmd(COMBAT_SCMD_STAND_RIGHT)) {
-            return combat_get_scmd(COMBAT_SCMD_MELEE_RIGHT);
-        } else if (current_scmd == combat_get_scmd(COMBAT_SCMD_STAND_UP)) {
-            return combat_get_scmd(COMBAT_SCMD_MELEE_UP);
-        } else if (current_scmd == combat_get_scmd(COMBAT_SCMD_STAND_DOWN)) {
-            return combat_get_scmd(COMBAT_SCMD_MELEE_DOWN);
+        if (current_scmd == sol_combat_get_scmd(COMBAT_SCMD_STAND_LEFT)) {
+            return sol_combat_get_scmd(COMBAT_SCMD_MELEE_LEFT);
+        } else if (current_scmd == sol_combat_get_scmd(COMBAT_SCMD_STAND_RIGHT)) {
+            return sol_combat_get_scmd(COMBAT_SCMD_MELEE_RIGHT);
+        } else if (current_scmd == sol_combat_get_scmd(COMBAT_SCMD_STAND_UP)) {
+            return sol_combat_get_scmd(COMBAT_SCMD_MELEE_UP);
+        } else if (current_scmd == sol_combat_get_scmd(COMBAT_SCMD_STAND_DOWN)) {
+            return sol_combat_get_scmd(COMBAT_SCMD_MELEE_DOWN);
         }
     } 
 
@@ -565,7 +565,7 @@ extern int entity_animation_list_execute(entity_animation_list_t *list, sol_regi
             if (target->stats.hp <= 0) {
                 target->combat_status = COMBAT_STATUS_DYING;
                 play_death_sound(target);
-                combat_is_defeated(reg, target);
+                sol_combat_is_defeated(reg, target);
             }
             break;
         case EA_POWER_CAST:

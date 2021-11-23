@@ -72,7 +72,7 @@ sol_region_t* region_create(const int gff_file) {
     load_tile_ids(reg);
     load_map_flags(reg);
     load_passives(reg, reg->gff_file, reg->map_id);
-    combat_init(&(reg->cr));
+    sol_combat_init(&(reg->cr));
     //region_list_load_objs(ret->list, ret->gff_file, ret->map_id);
 
     return reg;
@@ -107,7 +107,7 @@ void region_free(sol_region_t *reg) {
         free(reg->tile_ids);
         reg->tile_ids = NULL;
     }
-    combat_free(&(reg->cr));
+    sol_combat_free(&(reg->cr));
     free(reg);
 }
 
@@ -290,7 +290,7 @@ extern void sol_region_tick(sol_region_t *reg) {
     //if (ticks_per_game_round > 0) { return; }
     //ticks_per_game_round = 30;
 
-    if (!reg || combat_player_turn() != NO_COMBAT) { return; }
+    if (!reg || sol_combat_player_turn() != NO_COMBAT) { return; }
 
     entity_list_for_each(reg->entities, bad_dude) {
         if (entity_animation_execute(bad_dude)) {

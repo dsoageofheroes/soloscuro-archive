@@ -127,7 +127,7 @@ entity_t* entity_create_from_objex(const int id) {
                 warn("Item loading from rdff not implemented.\n");
                 break;
             case COMBAT_OBJECT:
-                dude->anim.scmd = combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
+                dude->anim.scmd = sol_combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
                 apply_combat(dude, (ds1_combat_t *) (rdff + 1));
                 break;
             case CHAR_OBJECT:

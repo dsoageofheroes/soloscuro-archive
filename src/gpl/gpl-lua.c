@@ -226,7 +226,7 @@ static void lua_exit(const char *msg) {
 }
 
 static int needs_quotes(const char *str) {
-    return !(strncmp("dsl.get_gstr(", str, 12) == 0);
+    return !(strncmp("gpl.get_gstr(", str, 12) == 0);
 }
 
 static void validate_number(const char *num, const char *message) {
@@ -270,143 +270,143 @@ static void gpl_lua_string_copy();
 static void gpl_lua_load_var();
 
 gpl_lua_operation_t gpl_lua_operations[] = {
-    { NULL, "dsl zero" }, // 0x0
-    { NULL, "dsl long divide equal" }, // 0x1
-    { gpl_lua_byte_dec, "dsl byte dec" }, // 0x2
-    { gpl_lua_word_dec, "dsl word dec" }, // 0x3
-    { gpl_lua_long_dec, "dsl long dec" }, // 0x4
-    { gpl_lua_byte_inc, "dsl byte inc" }, // 0x5
-    { gpl_lua_word_inc, "dsl word inc" }, // 0x6
-    { gpl_lua_long_inc, "dsl long inc" }, // 0x7
-    { gpl_lua_hunt, "dsl hunt" }, // 0x8
-    { gpl_lua_getxy, "dsl getxy" }, // 0x9
-    { gpl_lua_string_copy, "dsl string copy" }, // 0xA
-    { gpl_lua_pdamage, "dsl p damage" }, // 0xB
-    { gpl_lua_changemoney, "dsl changemoney" }, // 0xC
-    { gpl_lua_setvar, "dsl setvar" }, // 0xD
-    { gpl_lua_toggle_accum, "dsl toggle accum" }, // 0xE
-    { gpl_lua_getstatus, "dsl getstatus" }, // 0xF
-    { gpl_lua_getlos, "dsl getlos" }, // 0x10
-    { gpl_lua_long_times_equal, "dsl long times equal" }, // 0x11
-    { gpl_lua_jump, "dsl jump" }, // 0x12
-    { gpl_lua_local_sub, "dsl local sub" }, // 0x13
-    { gpl_lua_global_sub, "dsl global sub" }, // 0x14
-    { gpl_lua_local_ret, "dsl local ret" }, // 0x15
-    { gpl_lua_load_var, "dsl load variable" }, // 0x16
-    { gpl_lua_compare, "dsl compare" }, // 0x17
-    { gpl_lua_load_accum, "dsl load accum" }, // 0x18
-    { gpl_lua_global_ret, "dsl global ret" }, // 0x19
-    { gpl_lua_nextto, "dsl nextto" }, // 0x1A
-    { gpl_lua_inlostrigger, "dsl inlostrigger" }, // 0x1B
-    { gpl_lua_notinlostrigger, "dsl notinlostrigger" }, // 0x1C
-    { gpl_lua_clear_los, "dsl clear los" }, // 0x1D
-    { gpl_lua_nametonum, "dsl nametonum" }, // 0x1E
-    { gpl_lua_numtoname, "dsl numtoname" }, // 0x1F
-    { gpl_lua_bitsnoop, "dsl bitsnoop" }, // 0x20
-    { gpl_lua_award, "dsl award" }, // 0x21
-    { gpl_lua_request, "dsl request" }, // 0x22
-    { gpl_lua_source_trace, "dsl source trace" }, // 0x23
-    { gpl_lua_shop, "dsl shop" }, // 0x24
-    { gpl_lua_clone, "dsl clone" }, // 0x25
-    { NULL, "dsl default" }, // 0x26
-    { gpl_lua_ifcompare, "dsl ifcompare" }, // 0x27
-    { NULL, "dsl trace var" }, // 0x28
-    { gpl_lua_orelse, "dsl orelse" }, // 0x29
-    { gpl_lua_clearpic, "dsl clearpic" }, // 0x2A
-    { gpl_lua_continue, "dsl continue" }, // 0x2B
-    { gpl_lua_log, "dsl log" }, // 0x2C
-    { gpl_lua_damage, "dsl damage" }, // 0x2D
-    { gpl_lua_source_line_num, "dsl source line num" }, // 0x2E
-    { gpl_lua_drop, "dsl drop" }, // 0x2F
-    { gpl_lua_passtime, "dsl passtime" }, // 0x30
-    { gpl_lua_exit, "dsl exit dsl" }, // 0x31
-    { gpl_lua_fetch, "dsl fetch" }, // 0x32
-    { gpl_lua_search, "dsl search" }, // 0x33
-    { gpl_lua_getparty, "dsl getparty" }, // 0x34
-    { gpl_lua_fight, "dsl fight" }, // 0x35
-    { gpl_lua_flee, "dsl flee" }, // 0x36
-    { gpl_lua_follow, "dsl follow" }, // 0x37
-    { gpl_lua_getyn, "dsl getyn" }, // 0x38
-    { gpl_lua_give, "dsl give" }, // 0x39
-    { gpl_lua_go, "dsl go" }, // 0x3A
-    { gpl_lua_input_bignum, "dsl input bignum" }, // 0x3B
-    { gpl_lua_goxy, "dsl goxy" }, // 0x3C
-    { gpl_lua_readorders, "dsl readorders" }, // 0x3D
-    { gpl_lua_if, "dsl if" }, // 0x3E
-    { gpl_lua_else, "dsl else" }, // 0x3F
-    { gpl_lua_setrecord, "dsl setrecord" }, // 0x40
-    { gpl_lua_setother, "dsl setother" }, // 0x41
-    { gpl_lua_input_string, "dsl input string" }, // 0x42
-    { gpl_lua_input_number, "dsl input number" }, // 0x43
-    { gpl_lua_input_money, "dsl input money" }, // 0x44
-    { gpl_lua_joinparty, "dsl joinparty" }, // 0x45
-    { gpl_lua_leaveparty, "dsl leaveparty" }, // 0x46
-    { gpl_lua_lockdoor, "dsl lockdoor" }, // 0x47
-    { gpl_lua_menu, "dsl menu" }, // 0x48
-    { gpl_lua_setthing, "dsl setthing" }, // 0x49
-    { NULL, "dsl default" }, // 0x4A
-    { NULL, "dsl local sub trace" }, // 0x4B
-    { NULL, "dsl default" }, // 0x4C
-    { NULL, "dsl default" }, // 0x4D
-    { NULL, "dsl default" }, // 0x4E
-    { gpl_lua_print_string, "dsl print string" }, // 0x4F
-    { gpl_lua_print_number, "dsl print number" }, // 0x50
-    { gpl_lua_printnl, "dsl printnl" }, // 0x51
-    { gpl_lua_rand, "dsl rand" }, // 0x52
-    { NULL, "dsl default" }, // 0x53
-    { gpl_lua_showpic, "dsl showpic" }, // 0x54
-    { NULL, "dsl default" }, // 0x55
-    { NULL, "dsl default" }, // 0x56
-    { NULL, "dsl default" }, // 0x57
-    { gpl_lua_skillroll, "dsl skillroll" }, // 0x58
-    { gpl_lua_statroll, "dsl statroll" }, // 0x59
-    { gpl_lua_string_compare, "dsl string compare" }, // 0x5A
-    { gpl_lua_match_string, "dsl match string" }, // 0x5B
-    { gpl_lua_take, "dsl take" }, // 0x5C
-    { gpl_lua_sound, "dsl sound" }, // 0x5D
-    { gpl_lua_tport, "dsl tport" }, // 0x5E
-    { gpl_lua_music, "dsl music" }, // 0x5F
-    { NULL, "dsl default" }, // 0x60
-    { gpl_lua_cmpend, "dsl cmpend" }, // 0x61
-    { gpl_lua_wait, "dsl wait" }, // 0x62
-    { gpl_lua_while, "dsl while" }, // 0x63
-    { gpl_lua_wend, "dsl wend" }, // 0x64
-    { gpl_lua_attacktrigger, "dsl attacktrigger" }, // 0x65
-    { gpl_lua_looktrigger, "dsl looktrigger" }, // 0x66
-    { gpl_lua_end_control, "dsl endif" }, // 0x67
-    { gpl_lua_move_tiletrigger, "dsl move tiletrigger" }, // 0x68
-    { gpl_lua_door_tiletrigger, "dsl door tiletrigger" }, // 0x69
-    { gpl_lua_move_boxtrigger, "dsl move boxtrigger" }, // 0x6A
-    { gpl_lua_door_boxtrigger, "dsl door boxtrigger" }, // 0x6B
-    { gpl_lua_pickup_itemtrigger, "dsl pickup itemtrigger" }, // 0x6C
-    { gpl_lua_usetrigger, "dsl usetrigger" }, // 0x6D
-    { gpl_lua_talktotrigger, "dsl talktotrigger" }, // 0x6E
-    { gpl_lua_noorderstrigger, "dsl noorderstrigger" }, // 0x6F
-    { gpl_lua_usewithtrigger, "dsl usewithtrigger" }, // 0x70
-    { NULL, "dsl default" }, // 0x71
-    { NULL, "dsl default" }, // 0x72
-    { NULL, "dsl default" }, // 0x73
-    { NULL, "dsl default" }, // 0x74
-    { NULL, "dsl default" }, // 0x75
-    { NULL, "dsl byte plus equal" }, // 0x76
-    { NULL, "dsl byte minus equal" }, // 0x77
-    { NULL, "dsl byte times equal" }, // 0x78
-    { NULL, "dsl byte divide equal" }, // 0x79
-    { gpl_lua_word_plus_equal, "dsl word plus equal" }, // 0x7A
-    { gpl_lua_word_minus_equal, "dsl word minus equal" }, // 0x7B
-    { gpl_lua_word_times_equal, "dsl word times equal" }, // 0x7C
-    { gpl_lua_word_divide_equal, "dsl word divide equal" }, // 0x7D
-    { gpl_lua_long_plus_equal, "dsl long plus equal" }, // 0x7E
-    { gpl_lua_long_minus_equal, "dsl long minus equal" }, // 0x7F
-    { gpl_lua_get_range, "dsl get range" }, // 0x80
+    { NULL, "gpl zero" }, // 0x0
+    { NULL, "gpl long divide equal" }, // 0x1
+    { gpl_lua_byte_dec, "gpl byte dec" }, // 0x2
+    { gpl_lua_word_dec, "gpl word dec" }, // 0x3
+    { gpl_lua_long_dec, "gpl long dec" }, // 0x4
+    { gpl_lua_byte_inc, "gpl byte inc" }, // 0x5
+    { gpl_lua_word_inc, "gpl word inc" }, // 0x6
+    { gpl_lua_long_inc, "gpl long inc" }, // 0x7
+    { gpl_lua_hunt, "gpl hunt" }, // 0x8
+    { gpl_lua_getxy, "gpl getxy" }, // 0x9
+    { gpl_lua_string_copy, "gpl string copy" }, // 0xA
+    { gpl_lua_pdamage, "gpl p damage" }, // 0xB
+    { gpl_lua_changemoney, "gpl changemoney" }, // 0xC
+    { gpl_lua_setvar, "gpl setvar" }, // 0xD
+    { gpl_lua_toggle_accum, "gpl toggle accum" }, // 0xE
+    { gpl_lua_getstatus, "gpl getstatus" }, // 0xF
+    { gpl_lua_getlos, "gpl getlos" }, // 0x10
+    { gpl_lua_long_times_equal, "gpl long times equal" }, // 0x11
+    { gpl_lua_jump, "gpl jump" }, // 0x12
+    { gpl_lua_local_sub, "gpl local sub" }, // 0x13
+    { gpl_lua_global_sub, "gpl global sub" }, // 0x14
+    { gpl_lua_local_ret, "gpl local ret" }, // 0x15
+    { gpl_lua_load_var, "gpl load variable" }, // 0x16
+    { gpl_lua_compare, "gpl compare" }, // 0x17
+    { gpl_lua_load_accum, "gpl load accum" }, // 0x18
+    { gpl_lua_global_ret, "gpl global ret" }, // 0x19
+    { gpl_lua_nextto, "gpl nextto" }, // 0x1A
+    { gpl_lua_inlostrigger, "gpl inlostrigger" }, // 0x1B
+    { gpl_lua_notinlostrigger, "gpl notinlostrigger" }, // 0x1C
+    { gpl_lua_clear_los, "gpl clear los" }, // 0x1D
+    { gpl_lua_nametonum, "gpl nametonum" }, // 0x1E
+    { gpl_lua_numtoname, "gpl numtoname" }, // 0x1F
+    { gpl_lua_bitsnoop, "gpl bitsnoop" }, // 0x20
+    { gpl_lua_award, "gpl award" }, // 0x21
+    { gpl_lua_request, "gpl request" }, // 0x22
+    { gpl_lua_source_trace, "gpl source trace" }, // 0x23
+    { gpl_lua_shop, "gpl shop" }, // 0x24
+    { gpl_lua_clone, "gpl clone" }, // 0x25
+    { NULL, "gpl default" }, // 0x26
+    { gpl_lua_ifcompare, "gpl ifcompare" }, // 0x27
+    { NULL, "gpl trace var" }, // 0x28
+    { gpl_lua_orelse, "gpl orelse" }, // 0x29
+    { gpl_lua_clearpic, "gpl clearpic" }, // 0x2A
+    { gpl_lua_continue, "gpl continue" }, // 0x2B
+    { gpl_lua_log, "gpl log" }, // 0x2C
+    { gpl_lua_damage, "gpl damage" }, // 0x2D
+    { gpl_lua_source_line_num, "gpl source line num" }, // 0x2E
+    { gpl_lua_drop, "gpl drop" }, // 0x2F
+    { gpl_lua_passtime, "gpl passtime" }, // 0x30
+    { gpl_lua_exit, "gpl exit gpl" }, // 0x31
+    { gpl_lua_fetch, "gpl fetch" }, // 0x32
+    { gpl_lua_search, "gpl search" }, // 0x33
+    { gpl_lua_getparty, "gpl getparty" }, // 0x34
+    { gpl_lua_fight, "gpl fight" }, // 0x35
+    { gpl_lua_flee, "gpl flee" }, // 0x36
+    { gpl_lua_follow, "gpl follow" }, // 0x37
+    { gpl_lua_getyn, "gpl getyn" }, // 0x38
+    { gpl_lua_give, "gpl give" }, // 0x39
+    { gpl_lua_go, "gpl go" }, // 0x3A
+    { gpl_lua_input_bignum, "gpl input bignum" }, // 0x3B
+    { gpl_lua_goxy, "gpl goxy" }, // 0x3C
+    { gpl_lua_readorders, "gpl readorders" }, // 0x3D
+    { gpl_lua_if, "gpl if" }, // 0x3E
+    { gpl_lua_else, "gpl else" }, // 0x3F
+    { gpl_lua_setrecord, "gpl setrecord" }, // 0x40
+    { gpl_lua_setother, "gpl setother" }, // 0x41
+    { gpl_lua_input_string, "gpl input string" }, // 0x42
+    { gpl_lua_input_number, "gpl input number" }, // 0x43
+    { gpl_lua_input_money, "gpl input money" }, // 0x44
+    { gpl_lua_joinparty, "gpl joinparty" }, // 0x45
+    { gpl_lua_leaveparty, "gpl leaveparty" }, // 0x46
+    { gpl_lua_lockdoor, "gpl lockdoor" }, // 0x47
+    { gpl_lua_menu, "gpl menu" }, // 0x48
+    { gpl_lua_setthing, "gpl setthing" }, // 0x49
+    { NULL, "gpl default" }, // 0x4A
+    { NULL, "gpl local sub trace" }, // 0x4B
+    { NULL, "gpl default" }, // 0x4C
+    { NULL, "gpl default" }, // 0x4D
+    { NULL, "gpl default" }, // 0x4E
+    { gpl_lua_print_string, "gpl print string" }, // 0x4F
+    { gpl_lua_print_number, "gpl print number" }, // 0x50
+    { gpl_lua_printnl, "gpl printnl" }, // 0x51
+    { gpl_lua_rand, "gpl rand" }, // 0x52
+    { NULL, "gpl default" }, // 0x53
+    { gpl_lua_showpic, "gpl showpic" }, // 0x54
+    { NULL, "gpl default" }, // 0x55
+    { NULL, "gpl default" }, // 0x56
+    { NULL, "gpl default" }, // 0x57
+    { gpl_lua_skillroll, "gpl skillroll" }, // 0x58
+    { gpl_lua_statroll, "gpl statroll" }, // 0x59
+    { gpl_lua_string_compare, "gpl string compare" }, // 0x5A
+    { gpl_lua_match_string, "gpl match string" }, // 0x5B
+    { gpl_lua_take, "gpl take" }, // 0x5C
+    { gpl_lua_sound, "gpl sound" }, // 0x5D
+    { gpl_lua_tport, "gpl tport" }, // 0x5E
+    { gpl_lua_music, "gpl music" }, // 0x5F
+    { NULL, "gpl default" }, // 0x60
+    { gpl_lua_cmpend, "gpl cmpend" }, // 0x61
+    { gpl_lua_wait, "gpl wait" }, // 0x62
+    { gpl_lua_while, "gpl while" }, // 0x63
+    { gpl_lua_wend, "gpl wend" }, // 0x64
+    { gpl_lua_attacktrigger, "gpl attacktrigger" }, // 0x65
+    { gpl_lua_looktrigger, "gpl looktrigger" }, // 0x66
+    { gpl_lua_end_control, "gpl endif" }, // 0x67
+    { gpl_lua_move_tiletrigger, "gpl move tiletrigger" }, // 0x68
+    { gpl_lua_door_tiletrigger, "gpl door tiletrigger" }, // 0x69
+    { gpl_lua_move_boxtrigger, "gpl move boxtrigger" }, // 0x6A
+    { gpl_lua_door_boxtrigger, "gpl door boxtrigger" }, // 0x6B
+    { gpl_lua_pickup_itemtrigger, "gpl pickup itemtrigger" }, // 0x6C
+    { gpl_lua_usetrigger, "gpl usetrigger" }, // 0x6D
+    { gpl_lua_talktotrigger, "gpl talktotrigger" }, // 0x6E
+    { gpl_lua_noorderstrigger, "gpl noorderstrigger" }, // 0x6F
+    { gpl_lua_usewithtrigger, "gpl usewithtrigger" }, // 0x70
+    { NULL, "gpl default" }, // 0x71
+    { NULL, "gpl default" }, // 0x72
+    { NULL, "gpl default" }, // 0x73
+    { NULL, "gpl default" }, // 0x74
+    { NULL, "gpl default" }, // 0x75
+    { NULL, "gpl byte plus equal" }, // 0x76
+    { NULL, "gpl byte minus equal" }, // 0x77
+    { NULL, "gpl byte times equal" }, // 0x78
+    { NULL, "gpl byte divide equal" }, // 0x79
+    { gpl_lua_word_plus_equal, "gpl word plus equal" }, // 0x7A
+    { gpl_lua_word_minus_equal, "gpl word minus equal" }, // 0x7B
+    { gpl_lua_word_times_equal, "gpl word times equal" }, // 0x7C
+    { gpl_lua_word_divide_equal, "gpl word divide equal" }, // 0x7D
+    { gpl_lua_long_plus_equal, "gpl long plus equal" }, // 0x7E
+    { gpl_lua_long_minus_equal, "gpl long minus equal" }, // 0x7F
+    { gpl_lua_get_range, "gpl get range" }, // 0x80
 };
 
-static void do_lua_dsl_command(uint8_t cmd) {
+static void do_lua_gpl_command(uint8_t cmd) {
     //fflush(stdout);
     //debug("[%p:%d]command byte = 0x%x (%s)\n", (void*)get_data_start_ptr(),
-        //(int32_t) (get_data_ptr() - get_data_start_ptr()), cmd, dsl_operations[cmd].name);
-    //exit_dsl = 0;
-    //printf("cmd = 0x%x (do_lua_dsl_command.)\n", cmd);
+        //(int32_t) (get_data_ptr() - get_data_start_ptr()), cmd, gpl_operations[cmd].name);
+    //exit_gpl = 0;
+    //printf("cmd = 0x%x (do_lua_gpl_command.)\n", cmd);
     (*gpl_lua_operations[cmd].func)();
     //print_vars(0);
 }
@@ -415,7 +415,7 @@ static void do_lua_dsl_command(uint8_t cmd) {
  * Warning: This function returns an internal buffer that *does* change
  * with subsequent calls. Make any copies as needed!
  */
-static void gpl_lua_pass(unsigned char *dsl, const size_t len, const int pass_num) {
+static void gpl_lua_pass(unsigned char *gpl, const size_t len, const int pass_num) {
     lua_pos = 0;
     lua_depth = 0; 
     lua_buf[0] = '\0';
@@ -430,13 +430,13 @@ static void gpl_lua_pass(unsigned char *dsl, const size_t len, const int pass_nu
         collect_labels = 0;
     }
 
-    gpl_push_data_ptr(dsl);
-    gpl_set_data_ptr(dsl, dsl);
-    gpl_lua_start_ptr = (size_t)dsl;
+    gpl_push_data_ptr(gpl);
+    gpl_set_data_ptr(gpl, gpl);
+    gpl_lua_start_ptr = (size_t)gpl;
     const size_t start = (size_t)gpl_get_data_ptr();
     size_t diff = (size_t)gpl_get_data_ptr() - start;
     is_master_mas = (script_id == 99 && is_mas);
-    //printf("dsl = %p, len = %ld\n", dsl, len);
+    //printf("gpl = %p, len = %ld\n", gpl, len);
     while (diff < len && print_cmd()) {
         diff = (size_t)gpl_get_data_ptr() - start;
     }
@@ -449,19 +449,19 @@ static void gpl_lua_pass(unsigned char *dsl, const size_t len, const int pass_nu
 
 extern char* gpl_lua_print(const size_t _script_id, const int _is_mas, size_t *script_len) {
     //size_t len;
-    unsigned char *dsl = NULL;
+    unsigned char *gpl = NULL;
     script_id = _script_id;
     is_mas = _is_mas;
 
     gff_chunk_header_t chunk = gff_find_chunk_header(DSLDATA_GFF_INDEX,
         is_mas ? GFF_MAS : GFF_GPL,
         script_id);
-    dsl = malloc(chunk.length);
-    if (!dsl) {
-        error ("Unable to alloc for dsl script!\n");
+    gpl = malloc(chunk.length);
+    if (!gpl) {
+        error ("Unable to alloc for gpl script!\n");
         exit(1);
     }
-    gff_read_chunk(DSLDATA_GFF_INDEX, &chunk, dsl, chunk.length);
+    gff_read_chunk(DSLDATA_GFF_INDEX, &chunk, gpl, chunk.length);
     
 /*
     lua_pos = 0;
@@ -471,13 +471,13 @@ extern char* gpl_lua_print(const size_t _script_id, const int _is_mas, size_t *s
     in_func = 0;
     varnum = 0;
 
-    gpl_push_data_ptr(dsl);
-    set_data_ptr(dsl, dsl);
-    gpl_lua_start_ptr = (size_t)dsl;
+    gpl_push_data_ptr(gpl);
+    set_data_ptr(gpl, gpl);
+    gpl_lua_start_ptr = (size_t)gpl;
     const size_t start = (size_t)gpl_get_data_ptr();
     size_t diff = (size_t)gpl_get_data_ptr() - start;
     is_master_mas = (script_id == 99 && is_mas);
-    //printf("dsl = %p, len = %ld\n", dsl, len);
+    //printf("gpl = %p, len = %ld\n", gpl, len);
     while (diff < len && print_cmd()) {
         diff = (size_t)gpl_get_data_ptr() - start;
     }
@@ -487,13 +487,13 @@ extern char* gpl_lua_print(const size_t _script_id, const int _is_mas, size_t *s
     //printf("tranversed = %ld, len = %ld\n", (size_t)gpl_get_data_ptr() - (size_t)start, len);
     pop_data_ptr();
     */
-    //gpl_lua_pass(dsl, len, 0);
-    //gpl_lua_pass(dsl, len, 1);
-    gpl_lua_pass(dsl, chunk.length, 0);
-    gpl_lua_pass(dsl, chunk.length, 1);
+    //gpl_lua_pass(gpl, len, 0);
+    //gpl_lua_pass(gpl, len, 1);
+    gpl_lua_pass(gpl, chunk.length, 0);
+    gpl_lua_pass(gpl, chunk.length, 1);
     *script_len = lua_pos - 1;
     lua_buf[lua_pos - 1] = '\0';
-    free(dsl);
+    free(gpl);
     return lua_buf;
 }
 
@@ -507,7 +507,7 @@ static int print_cmd() {
             //script_id, ((size_t)gpl_get_data_ptr()) - gpl_lua_start_ptr);
         lua_depth++;
         in_func = 1;
-        //lprintf("dsl.debug(\"func%ld\")\n", cfunc_num);
+        //lprintf("gpl.debug(\"func%ld\")\n", cfunc_num);
     } else {
         print_label();
     }
@@ -528,7 +528,7 @@ static void gpl_lua_string_copy() {
 
     gpl_lua_get_parameters(2);
     lprintf("var%d = \"%s\"\n", varnum++, (char*)lparams.params[1]);
-    if (strncmp("dsl.get_gstr(", lparams.params[0], 13) == 0) {
+    if (strncmp("gpl.get_gstr(", lparams.params[0], 13) == 0) {
         strncpy(buf, lparams.params[0], BUF_SIZE);
         buf[4] = 's';
         buf[strlen(buf) - 1] = '\0';
@@ -547,7 +547,7 @@ extern void gpl_lua_load_accum(void) {
 
 extern void gpl_lua_global_ret(void) {
     in_func = 0;
-    //lprintf("dsl.debug(\"return func%ld\")\n", cfunc_num);
+    //lprintf("gpl.debug(\"return func%ld\")\n", cfunc_num);
     lua_depth--;
     lprintf("end --return\n");
     if (lua_depth < 0) { lua_depth = 0; }
@@ -555,7 +555,7 @@ extern void gpl_lua_global_ret(void) {
 
 extern void gpl_lua_nextto(void) {
     gpl_lua_get_parameters(2);
-    lprintf("accum = dsl.objects_are_adjacent(%s, %s)\n", lparams.params[0], lparams.params[1]);
+    lprintf("accum = gpl.objects_are_adjacent(%s, %s)\n", lparams.params[0], lparams.params[1]);
 }
 
 extern void gpl_lua_inlostrigger(void) {
@@ -579,19 +579,19 @@ extern void gpl_lua_notinlostrigger(void) {
 
 extern void gpl_lua_move_tiletrigger(void) {
     gpl_lua_get_parameters(5);
-    lprintf("dsl.tile_trigger(%s, %s, %s, %s, %s)\n",
+    lprintf("gpl.tile_trigger(%s, %s, %s, %s, %s)\n",
         lparams.params[0], lparams.params[1], lparams.params[3], lparams.params[2], lparams.params[4]);
 }
 
 extern void gpl_lua_continue(void) {
-    lprintf("dsl.narrate_open(NAR_ADD_MENU, \"Press Continue\", 0)\n");
-    lprintf("dsl.narrate_open(NAR_ADD_MENU, \"Continue\", 0)\n");
-    lprintf("dsl.narrate_open(NAR_SHOW_MENU, \"\", 0)\n");
+    lprintf("gpl.narrate_open(NAR_ADD_MENU, \"Press Continue\", 0)\n");
+    lprintf("gpl.narrate_open(NAR_ADD_MENU, \"Continue\", 0)\n");
+    lprintf("gpl.narrate_open(NAR_SHOW_MENU, \"\", 0)\n");
     lprintf("--wait for input from user!\n");
 }
 
 extern void gpl_lua_log(void) {
-    lua_exit("dsl_log not implemented.\n");
+    lua_exit("gpl_log not implemented.\n");
 }
 
 static void do_lua_damage(int is_percent) {
@@ -652,7 +652,7 @@ extern void gpl_lua_drop(void) {
     lua_depth--;
     lprintf("else\n");
     lua_depth++;
-    lprintf("accum = dsl.drop(%s, %s, %s) -- %s needs to drop %s of %s\n",
+    lprintf("accum = gpl.drop(%s, %s, %s) -- %s needs to drop %s of %s\n",
        lparams.params[0], lparams.params[1], lparams.params[2],
        lparams.params[0], lparams.params[1], lparams.params[2]);
     lua_depth--;
@@ -660,7 +660,7 @@ extern void gpl_lua_drop(void) {
 }
 
 extern void gpl_lua_passtime(void) {
-    lua_exit("dsl_passtime not implemented\n");
+    lua_exit("gpl_passtime not implemented\n");
 }
 
 extern void gpl_lua_door_tiletrigger(void) {
@@ -670,7 +670,7 @@ extern void gpl_lua_door_tiletrigger(void) {
 
 extern void gpl_lua_move_boxtrigger(void) {
     gpl_lua_get_parameters(7);
-    lprintf("dsl.box_trigger(%s, %s, %s, %s, %s, %s, %s)\n",
+    lprintf("gpl.box_trigger(%s, %s, %s, %s, %s, %s, %s)\n",
         lparams.params[0], lparams.params[1], lparams.params[2], lparams.params[3], lparams.params[4],
         lparams.params[5], lparams.params[6]);
 }
@@ -678,7 +678,7 @@ extern void gpl_lua_move_boxtrigger(void) {
 extern void gpl_lua_door_boxtrigger(void) {
     lua_exit("Can't parse lua_door_boxtrigger yet.\n");
     lprintf("--unimplmented door box trigger.\n");
-    lprintf("dsl.box_trigger(%s, %s, %s, %s, %s, %s, %s)\n",
+    lprintf("gpl.box_trigger(%s, %s, %s, %s, %s, %s, %s)\n",
         lparams.params[0], lparams.params[1], lparams.params[2], lparams.params[3], lparams.params[4],
         lparams.params[5], lparams.params[6]);
 }
@@ -696,7 +696,7 @@ extern void gpl_lua_talktotrigger(void) {
     char *name = lparams.params[2];
     int is_global = (gpl_current_file == GLOBAL_MAS) && (gpl_current_type == MASFILE);
 
-    lprintf("dsl.talk_to_trigger(%s, %s, %s, %d)\n",
+    lprintf("gpl.talk_to_trigger(%s, %s, %s, %d)\n",
         name, file, addr, is_global);
     //lprintf("When I %s to '%s' (%s) goto file: %s, addr: %s, global = %d\n",
         //"talk to", name, name, file, addr, is_global);
@@ -708,14 +708,14 @@ extern void gpl_lua_talktotrigger(void) {
 
 extern void gpl_lua_noorderstrigger(void) {
     gpl_lua_get_parameters(3);
-    lprintf("dsl.noorders_trigger%s(%s, %s, %s)\n",
+    lprintf("gpl.noorders_trigger%s(%s, %s, %s)\n",
         is_master_mas ? "_global" : "",
         lparams.params[2], lparams.params[1], lparams.params[0]);
 }
 
 extern void gpl_lua_usewithtrigger(void) {
     gpl_lua_get_parameters(4);
-    lprintf("dsl.use_with_trigger%s(%s, %s, %s, %s)\n",
+    lprintf("gpl.use_with_trigger%s(%s, %s, %s, %s)\n",
         is_master_mas ? "_global" : "",
         lparams.params[0], lparams.params[1], lparams.params[3], lparams.params[2]);
 }
@@ -733,7 +733,7 @@ extern void gpl_lua_cmpend(void) {
 extern void gpl_lua_wait(void) {
     char buf[BUF_SIZE];
     gpl_lua_read_number(buf, BUF_SIZE);
-    lprintf("dsl.set_order(%s, WAIT, 0, 0)\n", buf);
+    lprintf("gpl.set_order(%s, WAIT, 0, 0)\n", buf);
 }
 
 extern void gpl_lua_while(void) {
@@ -755,7 +755,7 @@ extern void gpl_lua_attacktrigger(void) {
     gpl_lua_get_parameters(3);
     //global_addr_name(&param);
     //generic_name_trigger(ATTACK_CHECK_INDEX);
-    lprintf("dsl.attack_trigger%s(%s, %s, %s)\n",
+    lprintf("gpl.attack_trigger%s(%s, %s, %s)\n",
         is_master_mas ? "_global" : "",
         lparams.params[2], lparams.params[1], lparams.params[0]);
 }
@@ -764,14 +764,14 @@ extern void gpl_lua_looktrigger(void) {
     gpl_lua_get_parameters(3);
     //global_addr_name(&param);
     //generic_name_trigger(LOOK_CHECK_INDEX);
-    lprintf("dsl.look_trigger%s(%s, %s, %s)\n",
+    lprintf("gpl.look_trigger%s(%s, %s, %s)\n",
         is_master_mas ? "_global" : "",
         lparams.params[2], lparams.params[1], lparams.params[0]);
 }
 
 extern void gpl_lua_usetrigger(void) {
     gpl_lua_get_parameters(3);
-    lprintf("dsl.use_trigger%s(%s, %s, %s) -- When using %s go to file %s address %s\n",
+    lprintf("gpl.use_trigger%s(%s, %s, %s) -- When using %s go to file %s address %s\n",
         is_master_mas ? "_global" : "",
         lparams.params[2], lparams.params[1], lparams.params[0],
         lparams.params[2], lparams.params[1], lparams.params[0]);
@@ -779,7 +779,7 @@ extern void gpl_lua_usetrigger(void) {
 
 extern void gpl_lua_fetch(void) {
     gpl_lua_get_parameters(2);
-    lprintf("dsl.set_orders(%s, FETCH, %s, 0)\n", lparams.params[1], lparams.params[0]);
+    lprintf("gpl.set_orders(%s, FETCH, %s, 0)\n", lparams.params[1], lparams.params[0]);
 }
 
 #define OBJ_QUALIFIER  (0x53)
@@ -852,14 +852,14 @@ extern void gpl_lua_search(void) {
 extern void gpl_lua_getparty(void) {
     char buf[BUF_SIZE];
     gpl_lua_read_number(buf, BUF_SIZE);
-    lprintf("dsl.get_party(%s)\n", buf);
+    lprintf("gpl.get_party(%s)\n", buf);
     //lprintf("gOther = %s\n", buf);
     //lprintf("accum = %s\n", buf);
 }
 
 extern void gpl_lua_fight(void) {
     lprintf("--I need to enter fight mode!\n");
-    //dsl_exit_dsl();
+    //gpl_exit_gpl();
 }
 
 extern void gpl_lua_flee(void) {
@@ -876,14 +876,14 @@ extern void gpl_lua_follow(void) {
 }
 
 extern void gpl_lua_getyn(void) {
-    lprintf("dsl.ask_yes_no()\n");
+    lprintf("gpl.ask_yes_no()\n");
 }
 
 extern void gpl_lua_give(void) {
     gpl_lua_get_parameters(4);
     //lprintf("--need to give and set accumulator!");
     //set_accumulator(give(param.val[0], param.val[1], param.val[2], param.val[3], GPL_NEW_SLOT));
-    lprintf("dsl.give(%s, %s, %s, %s, GPL_NEW_SLOT)\n",
+    lprintf("gpl.give(%s, %s, %s, %s, GPL_NEW_SLOT)\n",
         lparams.params[0], lparams.params[1], lparams.params[2], lparams.params[3]);
 }
 
@@ -907,14 +907,14 @@ extern void gpl_lua_goxy(void) {
 extern void gpl_lua_readorders(void) {
     char buf[BUF_SIZE];
     gpl_lua_read_number(buf, BUF_SIZE);
-    lprintf("accum = dsl.read_order(%s)\n", buf);
+    lprintf("accum = gpl.read_order(%s)\n", buf);
 }
 
 extern void gpl_lua_if(void) {
     // The paramter is ignored, in the original it probably was the address
     // to jump to if the if was not taken.
     gpl_lua_get_parameters(1);
-    lprintf("if dsl.is_true(accum) then \n");
+    lprintf("if gpl.is_true(accum) then \n");
     lua_depth++;
 }
 
@@ -944,7 +944,7 @@ extern void gpl_lua_setrecord(void) {
         return;
     }
     if (tmp == 0) {
-        lua_exit("dsl_setrecord: need to implement party...\n");
+        lua_exit("gpl_setrecord: need to implement party...\n");
         return;
     }
     if (tmp < 0x8000) {
@@ -960,7 +960,7 @@ extern void gpl_lua_setother(void) {
     char buf[BUF_SIZE];
     int32_t header = 0;
     gpl_lua_read_number(buf, BUF_SIZE);
-    lprintf("if (%s >= 0 and head ~= NULL_OBJECT) or (%s == dsl.id_to_header(%s)) ~= NULL_OBJECT then\n", buf, buf, buf);
+    lprintf("if (%s >= 0 and head ~= NULL_OBJECT) or (%s == gpl.id_to_header(%s)) ~= NULL_OBJECT then\n", buf, buf, buf);
     lua_depth++;
     lprintf("other1 = %d\n", header);
     lprintf("accum = 1\n");
@@ -979,17 +979,17 @@ extern void gpl_lua_end_control(void) {
 
 extern void gpl_lua_input_string(void) {
     gpl_lua_get_parameters(1);
-    lprintf("dsl.ask_for_string()\n");
+    lprintf("gpl.ask_for_string()\n");
 }
 
 extern void gpl_lua_input_number(void) {
     gpl_lua_get_parameters(1);
-    lprintf("dsl.ask_for_number()\n");
+    lprintf("gpl.ask_for_number()\n");
 }
 
 extern void gpl_lua_input_money(void) {
     gpl_lua_get_parameters(1);
-    lprintf("dsl.ask_for_money()\n");
+    lprintf("gpl.ask_for_money()\n");
 }
 
 extern void gpl_lua_joinparty(void) {
@@ -1001,7 +1001,7 @@ extern void gpl_lua_leaveparty(void) {
 }
 
 extern void gpl_lua_lockdoor(void) {
-    lprintf("dsl.lockdoor(1)\n");
+    lprintf("gpl.lockdoor(1)\n");
 }
 
 #define MAXMENU   (24)
@@ -1016,9 +1016,9 @@ extern void gpl_lua_menu(void) {
     size_t menu_len;
 
     if (needs_quotes(buf)) {
-        lprintf("dsl.narrate_open(NAR_ADD_MENU, \"%s\", 0)\n", menu);
+        lprintf("gpl.narrate_open(NAR_ADD_MENU, \"%s\", 0)\n", menu);
     } else {
-        lprintf("dsl.narrate_open(NAR_ADD_MENU, %s, 0)\n", menu);
+        lprintf("gpl.narrate_open(NAR_ADD_MENU, %s, 0)\n", menu);
     }
     while ((gpl_peek_one_byte() != 0x4A) && (items <= MAXMENU)) {
         menu_len = gpl_lua_read_number(buf, BUF_SIZE);
@@ -1039,7 +1039,7 @@ extern void gpl_lua_menu(void) {
         //}
         lprintf("if %s == 1 then\n", mbytes);
         lua_depth++;
-        lprintf("dsl.narrate_open(NAR_ADD_MENU, \"%s\", %s) -- choice param1 goes to addr param2\n", menu, mfunction);
+        lprintf("gpl.narrate_open(NAR_ADD_MENU, \"%s\", %s) -- choice param1 goes to addr param2\n", menu, mfunction);
         lua_depth--;
         lprintf("end\n");
     }
@@ -1047,8 +1047,8 @@ extern void gpl_lua_menu(void) {
     //for (int i = 0; i < items; i++) {
         //lprintf("narrate_choice( %d, %d) -- choice param1 goes to addr param2\n", i, menu_functions[i]);
     //}
-    //lprintf("accum = dsl.narrate_show() --narrate_wait for input\n");
-    lprintf("dsl.narrate_show() --narrate_wait for input\n");
+    //lprintf("accum = gpl.narrate_show() --narrate_wait for input\n");
+    lprintf("gpl.narrate_show() --narrate_wait for input\n");
     //printf("Need to implement display_menu()\n");
     //command_implemented = 0;
 }
@@ -1061,31 +1061,31 @@ extern void gpl_lua_setthing(void) {
 extern void gpl_lua_print_string(void) {
     gpl_lua_get_parameters(2);
     char nq = needs_quotes(lparams.params[1]) ? '\"' : ' ';
-    lprintf("dsl.narrate_open(NAR_SHOW_TEXT, %c%s%c, %s)\n",
+    lprintf("gpl.narrate_open(NAR_SHOW_TEXT, %c%s%c, %s)\n",
         nq, lparams.params[1], nq, lparams.params[0]);
 }
 
 extern void gpl_lua_print_number(void) {
     gpl_lua_get_parameters(2);
-    lprintf("dsl.narrate_open(NAR_SHOW_TEXT, \"%s\", %s)\n",
+    lprintf("gpl.narrate_open(NAR_SHOW_TEXT, \"%s\", %s)\n",
         lparams.params[1], lparams.params[0]);
 }
 
 extern void gpl_lua_printnl(void) {
-    lprintf("dsl.narrate_open(NAR_SHOW_TEXT, \"\\n\", 0)\n");
+    lprintf("gpl.narrate_open(NAR_SHOW_TEXT, \"\\n\", 0)\n");
 }
 
 extern void gpl_lua_rand(void) {
     char buf[BUF_SIZE];
     gpl_lua_read_number(buf, BUF_SIZE);
-    lprintf("dsl.rand() %% %d\n", atoi(buf) + 1);
+    lprintf("gpl.rand() %% %d\n", atoi(buf) + 1);
     //set_accumulator((int32_t)rand() % (read_number() + 1));
 }
 
 extern void gpl_lua_showpic(void) {
     char buf[BUF_SIZE];
     gpl_lua_read_number(buf, BUF_SIZE);
-    lprintf("dsl.narrate_open(NAR_PORTRAIT, \"\", %s)\n", buf);
+    lprintf("gpl.narrate_open(NAR_PORTRAIT, \"\", %s)\n", buf);
 }
 
 extern void gpl_lua_skillroll(void) {
@@ -1097,11 +1097,11 @@ extern void gpl_lua_statroll(void) {
     lprintf("accum = 0\n");
     lprintf("if lparams.params[0] == PARTY then\n");
     lua_depth++;
-    lprintf("dsl.dsl_stat_roll(%s)\n", lparams.params[0]);
+    lprintf("gpl.gpl_stat_roll(%s)\n", lparams.params[0]);
     lua_depth--;
     lprintf("else\n");
     lua_depth++;
-    lprintf("dsl.dsl_stat_roll_party()\n");
+    lprintf("gpl.gpl_stat_roll_party()\n");
     lua_depth--;
     lprintf("end\n");
 }
@@ -1143,13 +1143,13 @@ extern void gpl_lua_take(void) {
 extern void gpl_lua_sound(void) {
     char buf[BUF_SIZE];
     gpl_lua_read_number(buf, BUF_SIZE);
-    lprintf("dsl.play_sound(%s) -- parameter is bvoc index\n", buf);
+    lprintf("gpl.play_sound(%s) -- parameter is bvoc index\n", buf);
 }
 
 extern void gpl_lua_music(void) {
     char buf[BUF_SIZE];
     gpl_lua_read_number(buf, BUF_SIZE);
-    lprintf("dsl.play_music(%s) -- parameter is xmi index\n", buf);
+    lprintf("gpl.play_music(%s) -- parameter is xmi index\n", buf);
 }
 
 #define CHOSEN (0x7FFD)
@@ -1164,12 +1164,12 @@ extern void gpl_lua_tport(void) {
     if ((param.val[0] != PARTY) && (param.val[0] != IS_POV)) {
         //warn("I need to teleport everything to region %d at (%d, %d) priority: %d, onwindow %d\n",
             //param.val[1], param.val[2], param.val[3], param.val[4], param.val[5]);
-        lprintf("dsl.tport_everything( %s, %s, %s, %s, %s)\n",
+        lprintf("gpl.tport_everything( %s, %s, %s, %s, %s)\n",
             lparams.params[1], lparams.params[2], lparams.params[3], lparams.params[4], lparams.params[5]);
     } else {
         //warn("I need to teleport party to region %d at (%d, %d) priority: %d, onwindow %d\n",
             //param.val[1], param.val[2], param.val[3], param.val[4], param.val[5]);
-        lprintf("dsl.tport_party( %s, %s, %s, %s, %s)\n",
+        lprintf("gpl.tport_party( %s, %s, %s, %s, %s)\n",
             lparams.params[1], lparams.params[2], lparams.params[3], lparams.params[4], lparams.params[5]);
     }
 }
@@ -1198,18 +1198,18 @@ extern void gpl_lua_award(void) {
     lua_depth--;
     lprintf("elseif %s == %d then\n", lparams.params[0], PARTY);
     lua_depth++;
-    lprintf("dsl.award_party(%s)\n", lparams.params[1]);
+    lprintf("gpl.award_party(%s)\n", lparams.params[1]);
     lua_depth--;
     lprintf("else\n");
     lua_depth++;
-    lprintf("dsl.award_object(%s, %s)\n", lparams.params[0], lparams.params[1]);
+    lprintf("gpl.award_object(%s, %s)\n", lparams.params[0], lparams.params[1]);
     lua_depth--;
     lprintf("end\n");
 }
 
 extern void gpl_lua_request(void) {
     gpl_lua_get_parameters(4);
-    lprintf("accum = dsl.request(%s, %s, %s, %s)\n",
+    lprintf("accum = gpl.request(%s, %s, %s, %s)\n",
         (lparams.params[0]),
         (lparams.params[1]),
         (lparams.params[2]),
@@ -1220,7 +1220,7 @@ extern void gpl_lua_request(void) {
 static void print_change(const char *stmt, const char *op) {
     char buf[128];
     int pos;
-    if (!strncmp(stmt, "dsl.get_", 8)) {
+    if (!strncmp(stmt, "gpl.get_", 8)) {
         strcpy(buf, stmt); // create something to edit
         for (pos = 0; pos < strlen(stmt) && buf[pos] != 'g'; pos++) { ; }
         buf[pos] = 's';
@@ -1275,7 +1275,7 @@ extern void gpl_lua_long_inc(void) {
 extern void gpl_lua_hunt(void) {
     char buf[BUF_SIZE];
     gpl_lua_read_number(buf, BUF_SIZE);
-    lprintf("dsl.hunt(%s)\n", buf);
+    lprintf("gpl.hunt(%s)\n", buf);
 }
 
 extern void gpl_lua_source_trace(void) {
@@ -1285,13 +1285,13 @@ extern void gpl_lua_source_trace(void) {
 extern void gpl_lua_shop(void) {
     char buf[BUF_SIZE];
     gpl_lua_read_number(buf, BUF_SIZE);
-    lprintf("dsl.shop(%s)\n", buf);
+    lprintf("gpl.shop(%s)\n", buf);
 }
 
 extern void gpl_lua_clone(void) {
     gpl_lua_get_parameters(6);
 
-    lprintf("obj = dsl.clone(%s, %s, %s, %s, %s, %s)\n",
+    lprintf("obj = gpl.clone(%s, %s, %s, %s, %s, %s)\n",
         lparams.params[0],
         lparams.params[1],
         lparams.params[2],
@@ -1303,7 +1303,7 @@ extern void gpl_lua_clone(void) {
 extern void gpl_lua_changemoney(void) {
     char buf[BUF_SIZE];
     gpl_lua_read_number(buf, BUF_SIZE);
-    lprintf("dsl.give_money(%s)\n", buf);
+    lprintf("gpl.give_money(%s)\n", buf);
 }
 
 extern void gpl_lua_setvar(void) {
@@ -1317,12 +1317,12 @@ extern void gpl_lua_toggle_accum(void) {
 extern void gpl_lua_getstatus(void) {
     char buf[BUF_SIZE];
     gpl_lua_read_number(buf, BUF_SIZE);
-    lprintf("accum = dsl.get_character_status(%s);\n", buf);
+    lprintf("accum = gpl.get_character_status(%s);\n", buf);
 }
 
 extern void gpl_lua_getlos(void) {
     gpl_lua_get_parameters(3);
-    lprintf("accum = dsl.los(%s, %s, %s) -- los from %s to %s < %s\n",
+    lprintf("accum = gpl.los(%s, %s, %s) -- los from %s to %s < %s\n",
         lparams.params[0], lparams.params[1], lparams.params[2],
         lparams.params[0], lparams.params[1], lparams.params[2]);
 }
@@ -1344,14 +1344,14 @@ extern void gpl_lua_local_sub(void) {
 
 extern void gpl_lua_global_sub(void) {
     gpl_lua_get_parameters(2);
-    lprintf("dsl.call_function(%s, %s) -- Jump to addr %s in file %s (GPL.)\n",
+    lprintf("gpl.call_function(%s, %s) -- Jump to addr %s in file %s (GPL.)\n",
         lparams.params[1], lparams.params[0],
         lparams.params[0], lparams.params[1]);
 }
 
 extern void gpl_lua_local_ret(void) {
     in_func = 0;
-    //lprintf("dsl.debug(\"return func%ld\")\n", cfunc_num);
+    //lprintf("gpl.debug(\"return func%ld\")\n", cfunc_num);
     lua_depth--;
     lprintf("end --return\n");
 }
@@ -1396,54 +1396,54 @@ extern void gpl_lua_pdamage(void) {
 extern void gpl_lua_word_plus_equal(void) {
     gpl_lua_get_parameters(2);
     lprintf("--*((uint16_t *)lparams.params[0]) += lparam.params[1];\n");
-    lprintf("dsl.error()");
+    lprintf("gpl.error()");
     //*((uint16_t *)param.ptr[0]) += param.val[1];
 }
 
 extern void gpl_lua_word_minus_equal(void) {
     gpl_lua_get_parameters(2);
     lprintf("--*((uint16_t *)lparams.params[0]) -= lparam.params[1];\n");
-    lprintf("dsl.error()");
+    lprintf("gpl.error()");
     //*((uint16_t *)param.ptr[0]) -= param.val[1];
 }
 
 extern void gpl_lua_word_times_equal(void) {
     gpl_lua_get_parameters(2);
     lprintf("--*((uint16_t *)lparams.params[0]) *= lparam.params[1];\n");
-    lprintf("dsl.error()");
+    lprintf("gpl.error()");
     //*((uint16_t *)param.ptr[0]) *= param.val[1];
 }
 
 extern void gpl_lua_word_divide_equal(void) {
     gpl_lua_get_parameters(2);
     lprintf("--*((uint16_t *)lparams.params[0]) /= lparam.params[1];\n");
-    lprintf("dsl.error()");
+    lprintf("gpl.error()");
     //*((uint16_t *)param.ptr[0]) /= param.val[1];
 }
 
 extern void gpl_lua_long_plus_equal(void) {
     gpl_lua_get_parameters(2);
     lprintf("--*((uint32_t *)lparams.params[0]) += lparam.params[1];\n");
-    lprintf("dsl.error()");
+    lprintf("gpl.error()");
     //*((uint32_t *)param.ptr[0]) += param.val[1];
 }
 
 extern void gpl_lua_long_minus_equal(void) {
     gpl_lua_get_parameters(2);
     lprintf("--*((uint32_t *)lparams.params[0]) -= lparam.params[1];\n");
-    lprintf("dsl.error()");
+    lprintf("gpl.error()");
     //*((uint32_t *)param.ptr[0]) -= param.val[1];
 }
 
-uint16_t dsl_range(int16_t obj0, int16_t obj1) {
+uint16_t gpl_range(int16_t obj0, int16_t obj1) {
     lprintf("--Must compute range from %d to %d\n", obj0, obj1);
-    lprintf("dsl.error()");
+    lprintf("gpl.error()");
     return 10;//Totally bogus
 }
 
 extern void gpl_lua_get_range(void) {
     gpl_lua_get_parameters(2);
-    lprintf("dsl.range(%s, %s)\n",
+    lprintf("gpl.range(%s, %s)\n",
         lparams.params[0], lparams.params[1]);
 }
 
@@ -1507,7 +1507,7 @@ extern void gpl_lua_ifcompare(void) {
 }
 
 extern void gpl_lua_clearpic(void) {
-    lprintf("dsl.narrate_open(NAR_PORTRAIT, \"\", 0) -- clearpic\n");
+    lprintf("gpl.narrate_open(NAR_PORTRAIT, \"\", 0) -- clearpic\n");
 }
 
 extern void gpl_lua_orelse(void) {
@@ -1516,15 +1516,15 @@ extern void gpl_lua_orelse(void) {
     lprintf("--or else (%s)\n", buf);
     //lua_exit("OR ELSE?");
     //if (compared[comparePtr] == YES) {
-        //move_dsl_ptr(address);
+        //move_gpl_ptr(address);
     //}
 }
 
 extern void gpl_lua_exit(void) {
-    lprintf("dsl.exit()\n");
+    lprintf("gpl.exit()\n");
     if (lua_depth == 1) {
         in_func = 0;
-        //lprintf("dsl.debug(\"return func%ld\")\n", cfunc_num);
+        //lprintf("gpl.debug(\"return func%ld\")\n", cfunc_num);
         lua_depth--;
         lprintf("end\n");
     }
@@ -1562,35 +1562,35 @@ extern void gpl_lua_getxy(void) {
     char buf[BUF_SIZE];
     gpl_lua_read_number(buf, BUF_SIZE);
     lprintf("-- getxyz\n");
-    lprintf("dsl.set_gname(1, dsl.getX(%s))\n", buf);
-    lprintf("dsl.set_gname(2, dsl.getY(%s))\n", buf);
-    lprintf("dsl.set_gname(3, 0)\n");
+    lprintf("gpl.set_gname(1, gpl.getX(%s))\n", buf);
+    lprintf("gpl.set_gname(2, gpl.getY(%s))\n", buf);
+    lprintf("gpl.set_gname(3, 0)\n");
     //get_xyz(read_number());
 }
 
 static void gpl_lua_load_simple_variable(uint16_t type, uint16_t vnum) {
     switch (type) {
         case GPL_GBIGNUM:
-            //dsl_global_bnums[vnum] = (int32_t) val;
-            lprintf("dsl.set_gbn(%d, accum)\n", vnum);
+            //gpl_global_bnums[vnum] = (int32_t) val;
+            lprintf("gpl.set_gbn(%d, accum)\n", vnum);
             break;
         case GPL_LBIGNUM:
-            //dsl_local_bnums[vnum] = (int32_t) val;
-            lprintf("dsl.set_lbn(%d, accum)\n", vnum);
+            //gpl_local_bnums[vnum] = (int32_t) val;
+            lprintf("gpl.set_lbn(%d, accum)\n", vnum);
             break;
         case GPL_GNUM:
-            //dsl_global_nums[vnum] = (int16_t) val;
-            lprintf("dsl.set_gn(%d,  accum)\n", vnum);
+            //gpl_global_nums[vnum] = (int16_t) val;
+            lprintf("gpl.set_gn(%d,  accum)\n", vnum);
             break;
         case GPL_LNUM:
-            //dsl_local_nums[vnum] = (int16_t) val;
-            lprintf("dsl.set_ln(%d, accum)\n", vnum);
+            //gpl_local_nums[vnum] = (int16_t) val;
+            lprintf("gpl.set_ln(%d, accum)\n", vnum);
             break;
         case GPL_GFLAG:
-            lprintf("dsl.set_gf(%d, accum)\n", vnum);
+            lprintf("gpl.set_gf(%d, accum)\n", vnum);
             break;
         case GPL_LFLAG:
-            lprintf("dsl.set_lf(%d, accum)\n", vnum);
+            lprintf("gpl.set_lf(%d, accum)\n", vnum);
             break;
         default:
             lua_exit("ERROR: Unknown simple variable type! 0x%x!\n");
@@ -1660,7 +1660,7 @@ static size_t gpl_lua_read_number(char *buf, const size_t size) {
                     //debug("GPL_RETVAL begin:\n");
                     /*
                     push_params();
-                    do_dsl_command(gpl_get_byte());
+                    do_gpl_command(gpl_get_byte());
                     pop_params();
                     */
                     int tpos = lua_pos;
@@ -1668,7 +1668,7 @@ static size_t gpl_lua_read_number(char *buf, const size_t size) {
 
                     lprintf("((");
                     int cmd = gpl_get_byte();
-                    do_lua_dsl_command(cmd);
+                    do_lua_gpl_command(cmd);
                     lua_pos--;
                     lprintf("))");
                     //printf("------------------------>'%s'\n", tptr);
@@ -1855,7 +1855,7 @@ static uint8_t gpl_lua_access_complex(int16_t *header, uint16_t *depth, uint16_t
                 lprintf("--access_complex: get ACTIVE, valid obj_name(%d), need to set header\n", *obj_name & 0x7FFF);
                 break;
             case 0x27: // PASSIVE
-                lprintf("obj = dsl.get_gname(%d) -- passive\n", GNAME_PASSIVE);
+                lprintf("obj = gpl.get_gname(%d) -- passive\n", GNAME_PASSIVE);
                 lprintf("--access_complex: get PASSIVE, valid obj_name(%d), need to set header\n", *obj_name & 0x7FFF);
                 break;
             case 0x28: // OTHER
@@ -1912,15 +1912,15 @@ static int32_t gpl_lua_read_complex(char *buf, size_t *buf_pos, const size_t siz
         // So if depth == 0 then get type, is the type, 1 is the id (like -319)
         switch (depth) {
             case 0:
-                //lprintf("dsl.get_type(obj)\n"); 
-                *buf_pos += snprintf(buf + *buf_pos, size - *buf_pos, "dsl.get_type(obj)");
+                //lprintf("gpl.get_type(obj)\n"); 
+                *buf_pos += snprintf(buf + *buf_pos, size - *buf_pos, "gpl.get_type(obj)");
                 break;
             case 1:
-                //lprintf("dsl.get_id(obj)\n");
-                *buf_pos += snprintf(buf + *buf_pos, size - *buf_pos, "dsl.get_id(obj)");
+                //lprintf("gpl.get_id(obj)\n");
+                *buf_pos += snprintf(buf + *buf_pos, size - *buf_pos, "gpl.get_id(obj)");
                 break;
             default:
-                *buf_pos += snprintf(buf + *buf_pos, size - *buf_pos, "dsl.read_complex(%d, %d, %d)", obj_name, header, depth);
+                *buf_pos += snprintf(buf + *buf_pos, size - *buf_pos, "gpl.read_complex(%d, %d, %d)", obj_name, header, depth);
                 break;
         }
         lprintf("--read_complex:reading header (%d) at depth (%d)\n", header, depth);
@@ -1944,34 +1944,34 @@ int gpl_lua_read_simple_num_var(char *buf, const size_t buf_size) {
 
     switch(gpl_global_big_num) {
         case GPL_GFLAG: {
-            return snprintf(buf, buf_size, "dsl.get_gf(%d)", temps16);
+            return snprintf(buf, buf_size, "gpl.get_gf(%d)", temps16);
             break;
         }
         case GPL_LFLAG: {
-            return snprintf(buf, buf_size, "dsl.get_lf(%d)", temps16);
+            return snprintf(buf, buf_size, "gpl.get_lf(%d)", temps16);
             break;
         }
         case GPL_GNUM: {
-            return snprintf(buf, buf_size, "dsl.get_gn(%d)", temps16);
+            return snprintf(buf, buf_size, "gpl.get_gn(%d)", temps16);
             break;
         }
         case GPL_LNUM: {
-            return snprintf(buf, buf_size, "dsl.get_ln(%d)", temps16);
+            return snprintf(buf, buf_size, "gpl.get_ln(%d)", temps16);
             break;
         }
         case GPL_GBIGNUM: {
-            return snprintf(buf, buf_size, "dsl.get_gbn(%d)", temps16);
+            return snprintf(buf, buf_size, "gpl.get_gbn(%d)", temps16);
             break;
         }
         case GPL_LBIGNUM: {
-            return snprintf(buf, buf_size, "dsl.get_lbn(%d)", temps16);
+            return snprintf(buf, buf_size, "gpl.get_lbn(%d)", temps16);
             break;
         }
         case GPL_GNAME: {
             if (temps16 >= 0x20 && temps16 < 0x2F) {
                 //return snprintf(buf, buf_size, "global_simple_var[%d]", temps16 - 0x20);
-                //return snprintf(buf, buf_size, "\"dsl.get_gname(%d)\"", temps16 - 0x20);
-                return snprintf(buf, buf_size, "dsl.get_gname(%d)", temps16 - 0x20);
+                //return snprintf(buf, buf_size, "\"gpl.get_gname(%d)\"", temps16 - 0x20);
+                return snprintf(buf, buf_size, "gpl.get_gname(%d)", temps16 - 0x20);
             } else {
                 lua_exit("ERROR: No variable GNAME!!!\n");
             }
@@ -1980,20 +1980,20 @@ int gpl_lua_read_simple_num_var(char *buf, const size_t buf_size) {
             break;
         }
         case GPL_GSTRING: {
-            //gpl_global_big_numptr = (int32_t*) dsl_global_strings[temps16];
+            //gpl_global_big_numptr = (int32_t*) gpl_global_strings[temps16];
             //debug("reading gstring @ %d is equal to '%s'\n", temps16, (char*)gpl_global_big_numptr);
             //lua_exit ("GPL_GString not implemented.\n");
             /*
-            gpl_global_big_numptr = (int32_t*) dsl_global_strings[temps16];
+            gpl_global_big_numptr = (int32_t*) gpl_global_strings[temps16];
             */
-            return snprintf(buf, buf_size, "dsl.get_gstr(%d)", temps16);
+            return snprintf(buf, buf_size, "gpl.get_gstr(%d)", temps16);
             break;
         }
         case GPL_LSTRING: {
-            return snprintf(buf, buf_size, "dsl.get_lstr(%d)", temps16);
+            return snprintf(buf, buf_size, "gpl.get_lstr(%d)", temps16);
             //lua_exit ("GPL_LString not implemented.\n");
             /*
-            gpl_global_big_numptr = (int32_t*) dsl_local_strings[temps16];
+            gpl_global_big_numptr = (int32_t*) gpl_local_strings[temps16];
             debug("reading lstring @ %d is equal to '%s'\n", temps16, (char*)gpl_global_big_numptr);
             */
             break;

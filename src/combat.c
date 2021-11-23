@@ -40,24 +40,24 @@ static combat_entry_t *defeated = NULL;
 
 static int is_combat_over(sol_region_t *reg);
 
-const enum combat_turn_t combat_player_turn() {
+combat_turn_t sol_combat_player_turn() {
     if (!in_combat) { return NO_COMBAT; }
     if (current_player >= 0) { return PLAYER1_TURN + current_player; }
 
     return NONPLAYER_TURN;
 }
 
-entity_t* combat_get_current(combat_region_t *cr) {
+entity_t* sol_combat_get_current(combat_region_t *cr) {
     if (!current_turn) { return NULL; }
     return current_turn->entity;
 }
 
-void combat_init(combat_region_t *cr) {
+void sol_combat_init(combat_region_t *cr) {
     memset(cr, 0x0, sizeof(combat_region_t));
     cr->combatants = entity_list_create();
 }
 
-void combat_free(combat_region_t *cr) {
+void sol_combat_free(combat_region_t *cr) {
     if (cr->combatants) {
         entity_list_free(cr->combatants);
         cr->combatants = NULL;
@@ -157,7 +157,7 @@ static int which_player(combat_entry_t *node) {
     return -1;
 }
 
-void combat_player_action(const entity_action_t action) {
+void sol_combat_player_action(const entity_action_t action) {
     if (!wait_on_player || !current_turn) { return; }
 
     player_action = action.action;
@@ -361,7 +361,7 @@ static void end_turn() {
     player_action = EA_NONE;
 }
 
-extern void combat_is_defeated(sol_region_t *reg, entity_t *dude) {
+extern void sol_combat_is_defeated(sol_region_t *reg, entity_t *dude) {
     combat_entry_t *prev = NULL;
     combat_entry_t *rover = combat_order;
     if (!dude) { return; }
@@ -645,7 +645,7 @@ extern uint32_t combat_add(combat_region_t *rc, entity_t *entity) {
     return 1;
 }
 
-extern int combat_activate_power(power_t *pw, entity_t *source, entity_t *target, const int32_t x, const int32_t y) {
+extern int sol_combat_activate_power(power_t *pw, entity_t *source, entity_t *target, const int32_t x, const int32_t y) {
     //printf("COMBAT ACTIVATE: %p, %p, %p (%d, %d)\n", pw, reg, source, x, y);
     if (!pw || !source) { return 0; }
 
