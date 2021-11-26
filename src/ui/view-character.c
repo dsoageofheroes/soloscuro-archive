@@ -6,7 +6,7 @@
 #include "label.h"
 #include "popup.h"
 #include "add-load-save.h"
-#include "../src/port.h"
+#include "port.h"
 #include "gff.h"
 #include "gff-char.h"
 #include "rules.h"

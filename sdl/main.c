@@ -16,14 +16,14 @@
 #include "add-load-save.h"
 #include "view-character.h"
 #include "game-menu.h"
-#include "../src/combat.h"
+#include "combat.h"
 #include "gpl.h"
 #include "gpl-manager.h"
-#include "../src/replay.h"
-#include "../src/region-manager.h"
+#include "replay.h"
+#include "region-manager.h"
 #include "ds-load-save.h"
 #include "player.h"
-#include "../src/port.h"
+#include "port.h"
 #include "sol-lua-manager.h"
 
 void browse_loop(SDL_Surface*, SDL_Renderer *rend);
@@ -234,7 +234,7 @@ void handle_input() {
     xmappos += xmapdiff;
     ymappos += ymapdiff;
     handle_mouse_motion();
-    if (region_manager_get_current()) {
+    if (sol_region_manager_get_current()) {
         sol_player_update();
         main_combat_update();
     }
@@ -263,8 +263,8 @@ void port_window_render() {
 }
 
 void render() {
-    sol_region_tick(region_manager_get_current());
-    combat_update(region_manager_get_current());
+    sol_region_tick(sol_region_manager_get_current());
+    sol_combat_update(sol_region_manager_get_current());
     sol_window_render(xmappos, ymappos);
 }
 
@@ -358,7 +358,7 @@ extern void port_game_loop() {
 
 extern void port_start() {
     port_init();
-    map_load_region(region_manager_get_current());
+    map_load_region(sol_region_manager_get_current());
 
     port_game_loop();
 

@@ -61,8 +61,6 @@ typedef struct sol_dim_s {
 
 // Narrate functions
 
-extern int port_ask_yes_no();
-extern void port_enter_combat();
 extern void port_exit_combat();
 
 extern void port_add_entity(entity_t *entity, gff_palette_t *pal);

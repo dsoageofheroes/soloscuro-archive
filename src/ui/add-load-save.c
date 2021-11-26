@@ -7,7 +7,7 @@
 #include "ds-load-save.h"
 #include "gff.h"
 #include "gff-char.h"
-#include "../../src/port.h"
+#include "port.h"
 #include "settings.h"
 #include "gpl.h"
 #include "player.h"

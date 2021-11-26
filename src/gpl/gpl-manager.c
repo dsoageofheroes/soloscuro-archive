@@ -12,11 +12,14 @@
 #include "gfftypes.h"
 
 #define BUF_SIZE (1<<12)
+#define MAX_STACK (128)
 
 static char** mas_scripts = NULL;
 static char** gpl_scripts = NULL;
 static size_t mas_max = 0, gpl_max = 0;
 static lua_State *clua = NULL;
+static lua_State *lua_states[MAX_STACK];
+static size_t lua_stack_pos = 0;
 
 static void write_lua(const char *path, const char *lua, const size_t len);
 static void gpl_lua_load_scripts();
@@ -95,8 +98,26 @@ void gpl_lua_load_scripts() {
     free(ids);
 }
 
+static void open_gpl_lua() {
+    clua = lua_states[lua_stack_pos++] = luaL_newstate();
+    luaL_openlibs(clua);
+    gpl_state_register(clua);
+    sol_lua_settings_register(clua);
+}
+
+static void close_gpl_lua() {
+    if (lua_stack_pos <= 0) {
+        error("Trying to close a gpl lua that DNE!");
+        exit(1);
+    }
+
+    lua_close(lua_states[--lua_stack_pos]);
+    lua_states[lua_stack_pos] = NULL;
+
+    clua = lua_stack_pos > 0 ? lua_states[lua_stack_pos] : NULL;
+}
+
 uint8_t gpl_lua_execute_script(size_t file, size_t addr, uint8_t is_mas) {
-    lua_State *l = NULL;
     char **scripts = is_mas ? mas_scripts : gpl_scripts;
     size_t size = is_mas ? mas_max : gpl_max;
     char func[BUF_SIZE];
@@ -113,50 +134,40 @@ uint8_t gpl_lua_execute_script(size_t file, size_t addr, uint8_t is_mas) {
 
     if (scripts[file] == NULL) { return 0; }
 
-    clua = l = luaL_newstate();
-    luaL_openlibs(l);
-    gpl_state_register(l);
-    sol_lua_settings_register(l);
-    if (luaL_dostring(l, scripts[file])) {
+    open_gpl_lua();
+    if (luaL_dostring(clua, scripts[file])) {
         error("Error: unable to load %s script " PRI_SIZET ":" PRI_SIZET "\n",
             is_mas ? "MAS" : "GPL",
             file, addr);
-        error("error: %s\n", lua_tostring(l, -1));
-        lua_close(l);
+        error("error: %s\n", lua_tostring(clua, -1));
+        clua = NULL;
+        lua_close(clua);
         return 0;
     }
-    lua_getglobal(l, func);
-    if (lua_pcall(l, 0, 0, 0)) {
+    lua_getglobal(clua, func);
+    if (lua_pcall(clua, 0, 0, 0)) {
         error("error running function: '%s' in %s file " PRI_SIZET ", addr " PRI_SIZET "\n", func,
             is_mas ? "MAS" : "GPL",
             file, addr);
-        error("error: %s\n", lua_tostring(l, -1));
+        error("error: %s\n", lua_tostring(clua, -1));
         ret = 0;
     }
 
-    clua = NULL;
-    lua_close(l);
     debug("exiting execute_script(" PRI_SIZET ", " PRI_SIZET ", %d)\n", file, addr, is_mas);
+    close_gpl_lua();
 
     return ret;
 }
 
-void gpl_execute_string(const char *str) {
-    if (clua) {
-        if (luaL_dostring(clua, str)) {
-            error("Unable to execute '%s'!\n", str);
-            error("%s\n", lua_tostring(clua, -1));
-        }
-    } else {
-        lua_State *l = luaL_newstate();
-        luaL_openlibs(l);
-        gpl_state_register(l);
-        sol_lua_settings_register(l);
-        if (luaL_dostring(l, str)) {
-            error("Unable to execute '%s'!\n", str);
-            error("%s\n", lua_tostring(clua, -1));
-        }
-        lua_close(l);
+extern void gpl_execute_string(const char *str) {
+    if (!clua) {
+        error("trying to call internal gpl execute string, but no context!\n");
+        exit(1);
+    }
+
+    if (luaL_dostring(clua, str)) {
+        error("Unable to execute '%s'!\n", str);
+        error("%s\n", lua_tostring(clua, -1));
     }
 }
 

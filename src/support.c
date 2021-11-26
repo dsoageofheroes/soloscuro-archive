@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "gpl.h"
-#include "../src/region.h"
+#include "region.h"
 #include "gff.h"
 #include "gff-map.h"
 #include "gff-xmi.h"

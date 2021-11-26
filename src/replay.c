@@ -41,7 +41,7 @@ static int replay_talk_click(lua_State *l) {
     lua_Integer obj = luaL_checkinteger(l, 1);
     //printf("REPLAY: clicking ob obj: %lld\n", obj);
     fflush(stdout);
-    talk_click(obj);
+    sol_trigger_talk_click(obj);
     return 0;
 }
 

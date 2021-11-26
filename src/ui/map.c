@@ -5,15 +5,14 @@
 #include "combat-status.h"
 #include "background.h"
 #include "gpl.h"
-#include "../src/port.h"
-#include "../src/trigger.h"
+#include "port.h"
+#include "trigger.h"
 #include "settings.h"
 #include "gpl-manager.h"
 #include "ssi-object.h"
-#include "../src/region-manager.h"
+#include "region-manager.h"
 #include "ssi-scmd.h"
 #include "player.h"
-#include "../src/port.h"
 #include "settings.h"
 #include "gpl-var.h"
 
@@ -38,9 +37,9 @@ static void sprite_load_animation(entity_t *entity, gff_palette_t *pal);
 void map_render_anims();
 
 void map_load(const uint32_t _x, const uint32_t _y) {
-    if (!cmap && region_manager_get_current()) {
+    if (!cmap && sol_region_manager_get_current()) {
         cmap = create_map();
-        cmap->region = region_manager_get_current();
+        cmap->region = sol_region_manager_get_current();
         map_load_current_region();
     }
 }
@@ -63,7 +62,7 @@ void map_free(map_t *map) {
 }
 
 int cmap_is_block(const int row, const int column) {
-    return region_manager_get_current()->flags[row][column];
+    return sol_region_manager_get_current()->flags[row][column];
 }
 
 static void map_load_current_region() {
@@ -145,7 +144,7 @@ void map_load_map(int id) {
     map_free(cmap);
     if (!cmap) { cmap = create_map(); }
 
-    cmap->region = region_manager_get_region(id);
+    cmap->region = sol_region_manager_get_region(id);
 
     map_load_current_region();
     gpl_change_region(42);
@@ -208,7 +207,7 @@ static void show_debug_info() {
     map_highlight_tile(x, y, 4);
     for (int x = 0; x < 98; x++) {
         for (int y = 0; y < 128; y++) {
-            if (region_is_block(region_manager_get_current(), x, y)) {
+            if (sol_region_is_block(sol_region_manager_get_current(), x, y)) {
                 map_highlight_tile(y, x, 6);
             }
         }
@@ -285,7 +284,7 @@ void port_add_entity(entity_t *entity, gff_palette_t *pal) {
 
 void port_remove_entity(entity_t *entity) {
     if (!entity || entity->sprite.data == NULL) { return; }
-    region_remove_entity(region_manager_get_current(), entity);
+    sol_region_remove_entity(sol_region_manager_get_current(), entity);
     for (int i = 0; i < MAX_ANIMS; i++) {
         if (anim_nodes[i] && anim_nodes[i]->anim && anim_nodes[i]->anim->entity == entity) {
             printf("TODO: do I need to remove animations or this function not called? (port_remove_entity)\n");
@@ -367,7 +366,7 @@ extern void port_free_sprite(sprite_info_t *spr) {
     }
 }
 
-void port_enter_combat() {
+void sol_combat_enter_combat() {
     // Right now we need to migrate player to combat, we will see if that is better.
     //player_remove_animation();
     // Need to disperse players (and setup combat items.)
@@ -379,7 +378,7 @@ void port_enter_combat() {
         if (next_player && next_player != player_get_active() && next_player->name) { // next_player exists.
             next_player->mapx = main_player->mapx;
             next_player->mapy = main_player->mapy;
-            region_move_to_nearest(region_manager_get_current(), next_player);
+            sol_region_move_to_nearest(sol_region_manager_get_current(), next_player);
             port_update_entity(next_player, 0, 0);
             entity_instant_move(next_player);
         }
@@ -511,7 +510,7 @@ int map_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_
 
     if (ms == MOUSE_TALK && cdude) {//(dude = get_entity_at_location(x, y))) {
         sol_mouse_set_state(MOUSE_POINTER);
-        talk_click(cdude->ds_id);
+        sol_trigger_talk_click(cdude->ds_id);
         return 1;
     }
 

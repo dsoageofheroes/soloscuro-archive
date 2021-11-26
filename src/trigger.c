@@ -24,7 +24,7 @@ typedef struct trigger_node_s {
 
 static trigger_node_t *attack_list, *noorders_list, *use_list, *look_list, *talkto_list, *usewith_list, *tile_list, *box_list;
 
-void trigger_init() {
+extern void sol_trigger_init() {
     attack_list = noorders_list = use_list = look_list = talkto_list = usewith_list = tile_list = box_list = NULL;
 }
 
@@ -37,7 +37,7 @@ static void free_list(trigger_node_t *list) {
     }
 }
 
-void trigger_cleanup() {
+extern void sol_trigger_cleanup() {
     free_list(attack_list);
     free_list(noorders_list);
     free_list(use_list);
@@ -46,7 +46,7 @@ void trigger_cleanup() {
     free_list(usewith_list);
     free_list(tile_list);
     free_list(box_list);
-    trigger_init();
+    sol_trigger_init();
 }
 
 static int _add_attack_trigger(uint32_t obj, uint32_t file, uint32_t addr, uint32_t global) {
@@ -60,11 +60,11 @@ static int _add_attack_trigger(uint32_t obj, uint32_t file, uint32_t addr, uint3
     return 1;
 }
 
-int add_attack_trigger_global(uint32_t obj, uint32_t file, uint32_t addr) {
+extern int sol_trigger_add_attack_global(uint32_t obj, uint32_t file, uint32_t addr) {
     return _add_attack_trigger(obj, file, addr, 1);
 }
 
-int add_attack_trigger(uint32_t obj, uint32_t file, uint32_t addr) {
+extern int sol_trigger_add_attack(uint32_t obj, uint32_t file, uint32_t addr) {
     return _add_attack_trigger(obj, file, addr, 0);
 }
 
@@ -79,11 +79,11 @@ static int _add_use_trigger(uint32_t obj, uint32_t file, uint32_t addr, uint32_t
     return 1;
 }
 
-int add_use_trigger(uint32_t obj, uint32_t file, uint32_t addr) {
+extern int sol_trigger_add_use(uint32_t obj, uint32_t file, uint32_t addr) {
     return _add_use_trigger(obj, file, addr, 0);
 }
 
-int add_use_trigger_global(uint32_t obj, uint32_t file, uint32_t addr) {
+extern int sol_trigger_add_use_global(uint32_t obj, uint32_t file, uint32_t addr) {
     return _add_use_trigger(obj, file, addr, 1);
 }
 
@@ -98,15 +98,15 @@ static int _add_look_trigger(uint32_t obj, uint32_t file, uint32_t addr, uint32_
     return 1;
 }
 
-int add_look_trigger(uint32_t obj, uint32_t file, uint32_t addr) {
+extern int sol_trigger_add_look(uint32_t obj, uint32_t file, uint32_t addr) {
     return _add_look_trigger(obj, file, addr, 0);
 }
 
-int add_look_trigger_global(uint32_t obj, uint32_t file, uint32_t addr) {
+extern int sol_trigger_add_look_global(uint32_t obj, uint32_t file, uint32_t addr) {
     return _add_look_trigger(obj, file, addr, 1);
 }
 
-int add_noorders_trigger(uint32_t obj, uint32_t file, uint32_t addr) {
+extern int sol_trigger_add_noorders(uint32_t obj, uint32_t file, uint32_t addr) {
     trigger_node_t *to_add = malloc(sizeof(trigger_node_t));
     to_add->noorders.obj = obj;
     to_add->noorders.file = file;
@@ -121,7 +121,7 @@ int add_noorders_trigger(uint32_t obj, uint32_t file, uint32_t addr) {
     return 1;
 }
 
-int add_talkto_trigger(uint32_t obj, uint32_t file, uint32_t addr) {
+extern int sol_trigger_add_talkto(uint32_t obj, uint32_t file, uint32_t addr) {
     trigger_node_t *to_add = malloc(sizeof(trigger_node_t));
     to_add->talkto.obj = obj;
     to_add->talkto.file = file;
@@ -131,7 +131,7 @@ int add_talkto_trigger(uint32_t obj, uint32_t file, uint32_t addr) {
     return 1;
 }
 
-int add_usewith_trigger(uint32_t obj1, uint32_t obj2, uint32_t file, uint32_t addr) {
+extern int sol_trigger_add_usewith(uint32_t obj1, uint32_t obj2, uint32_t file, uint32_t addr) {
     trigger_node_t *to_add = malloc(sizeof(trigger_node_t));
     to_add->usewith.obj1 = obj1;
     to_add->usewith.obj2 = obj2;
@@ -142,7 +142,7 @@ int add_usewith_trigger(uint32_t obj1, uint32_t obj2, uint32_t file, uint32_t ad
     return 1;
 }
 
-int add_tile_trigger(uint32_t x, uint32_t y, uint32_t file, uint32_t addr, uint32_t trip) {
+extern int sol_trigger_add_tile(uint32_t x, uint32_t y, uint32_t file, uint32_t addr, uint32_t trip) {
     trigger_node_t *to_add = malloc(sizeof(trigger_node_t));
     to_add->tile.x = x;
     to_add->tile.y = y;
@@ -154,7 +154,7 @@ int add_tile_trigger(uint32_t x, uint32_t y, uint32_t file, uint32_t addr, uint3
     return 1;
 }
 
-int add_box_trigger(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t file, uint32_t addr, uint32_t trip) {
+extern int sol_trigger_add_box(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t file, uint32_t addr, uint32_t trip) {
     trigger_node_t *to_add = malloc(sizeof(trigger_node_t));
     to_add->box.x = x;
     to_add->box.y = y;
@@ -168,7 +168,7 @@ int add_box_trigger(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t fil
     return 0;
 }
 
-talkto_trigger_t get_talkto_trigger(uint32_t obj) {
+extern talkto_trigger_t sol_trigger_get_talkto(uint32_t obj) {
     trigger_node_t *rover = talkto_list;
     talkto_trigger_t ret;
     ret.obj = 0;
@@ -183,7 +183,7 @@ talkto_trigger_t get_talkto_trigger(uint32_t obj) {
     return ret;
 }
 
-look_trigger_t get_look_trigger(uint32_t obj) {
+extern look_trigger_t sol_trigger_get_look(uint32_t obj) {
     trigger_node_t *rover = look_list;
     look_trigger_t ret;
     ret.obj = 0;
@@ -226,7 +226,7 @@ static int use_equals(const trigger_node_t *node, const uint32_t obj) { return n
 static int look_equals(const trigger_node_t *node, const uint32_t obj) { return node->look.obj == obj; }
 static int talk_equals(const trigger_node_t *node, const uint32_t obj) { return node->talkto.obj == obj; }
 
-void trigger_object_clear(const uint32_t obj) {
+extern void sol_trigger_object_clear(const uint32_t obj) {
     list_object_clear(attack_list, obj, attack_equals);
     list_object_clear(noorders_list, obj, noorders_equals);
     list_object_clear(use_list, obj, use_equals);
@@ -234,7 +234,7 @@ void trigger_object_clear(const uint32_t obj) {
     list_object_clear(talkto_list, obj, talk_equals);
 }
 
-void trigger_enable_object(const uint32_t obj) {
+extern void sol_trigger_enable_object(const uint32_t obj) {
     for(trigger_node_t *rover = noorders_list; rover; rover = rover->next) {
         if (rover->noorders.obj == obj) {
             rover->noorders.need_to_run = 1;
@@ -242,17 +242,17 @@ void trigger_enable_object(const uint32_t obj) {
     }
 }
 
-void trigger_noorders_enable_all() {
+extern void sol_trigger_noorders_enable_all() {
     for(trigger_node_t *rover = noorders_list; rover; rover = rover->next) {
         rover->noorders.need_to_run = 1;
     }
 }
 
-void trigger_noorders(uint32_t x, uint32_t y) {
+extern void sol_trigger_noorders(uint32_t x, uint32_t y) {
     trigger_node_t *rover = noorders_list;
 
     while (rover) {
-        dude_t *dude = region_find_entity_by_id(region_manager_get_current(), rover->noorders.obj);
+        dude_t *dude = sol_region_find_entity_by_id(sol_region_manager_get_current(), rover->noorders.obj);
         //printf("%d: player (%d, %d) vs (%d, %d) \n", rover->noorders.obj, x, y, robj->mapx, robj->mapy);
         if (dude && rover->noorders.trigger_on_tile && (dude->mapx) == x && (dude->mapy) == y) {
             rover->noorders.trigger_on_tile = 0;
@@ -273,7 +273,7 @@ void trigger_noorders(uint32_t x, uint32_t y) {
     }
 }
 
-int trigger_tile_check(uint32_t x, uint32_t y) {
+extern int sol_trigger_tile_check(uint32_t x, uint32_t y) {
     trigger_node_t *rover = tile_list, *prev = NULL, *hold = NULL;
 
     while (rover) {
@@ -309,7 +309,7 @@ int trigger_tile_check(uint32_t x, uint32_t y) {
     return 0;
 }
 
-void trigger_box_check(uint32_t x, uint32_t y) {
+extern void sol_trigger_box_check(uint32_t x, uint32_t y) {
     trigger_node_t *rover = box_list, *prev = NULL, *hold = NULL;
 
     while (rover) {
@@ -342,9 +342,9 @@ void trigger_box_check(uint32_t x, uint32_t y) {
     }
 }
 
-void talk_click(uint32_t obj) {
-    talkto_trigger_t tt = get_talkto_trigger(obj);
-    look_trigger_t lt = get_look_trigger(obj);
+extern void sol_trigger_talk_click(uint32_t obj) {
+    talkto_trigger_t tt = sol_trigger_get_talkto(obj);
+    look_trigger_t lt = sol_trigger_get_look(obj);
 
     replay_print("rep.talk_click(%d)\n", obj);
     gpl_set_gname(GNAME_PASSIVE, obj);
@@ -390,7 +390,7 @@ static char* write_trigger_list(trigger_node_t *tl, char *buf, size_t *buf_len, 
     return buf;
 }
 
-char* trigger_serialize(size_t *len) {
+extern char* sol_trigger_serialize(size_t *len) {
     size_t buf_len = 128, offset = 0;
     char *buf = malloc(buf_len);
 
@@ -424,8 +424,8 @@ static char* read_trigger_list(trigger_node_t **list, char *buf) {
     return buf;
 }
 
-void trigger_deserialize(char *data) {
-    trigger_cleanup();
+extern void sol_trigger_deserialize(char *data) {
+    sol_trigger_cleanup();
 
     char *buf = read_trigger_list(&attack_list, data);
     buf = read_trigger_list(&noorders_list, buf);

@@ -1,7 +1,7 @@
 #include "background.h"
 #include "main.h"
 #include "gff.h"
-#include "../src/port.h"
+#include "port.h"
 #include "settings.h"
 #include <SDL2/SDL.h>
 
@@ -29,7 +29,7 @@ extern void sol_background_load_region(sol_region_t *_region) {
 
     for (uint32_t i = 0; i < region->num_tiles; i++) {
         //printf("i = %d\n", i);
-        region_get_tile(region, ids[i], &width, &height, &data);
+        sol_region_get_tile(region, ids[i], &width, &height, &data);
 
         if (data && *data) {
             tile = SDL_CreateRGBSurfaceFrom(data, width, height, 32, 4*width, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);

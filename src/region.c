@@ -35,7 +35,7 @@ static int is_region(const int gff_idx) {
     return has_rmap && has_gmap && has_tile && has_etab;
 }
 
-extern sol_region_t* region_create_empty() {
+extern sol_region_t* sol_region_create_empty() {
     sol_region_t *reg = calloc(1, sizeof(sol_region_t));
     reg->entities = entity_list_create();
     //reg->anims = animation_list_create();
@@ -43,11 +43,11 @@ extern sol_region_t* region_create_empty() {
     return reg;
 }
 
-sol_region_t* region_create(const int gff_file) {
+extern sol_region_t* sol_region_create(const int gff_file) {
     if (!is_region(gff_file)) { return NULL; } // guard
 
     uint32_t *tids = NULL;
-    sol_region_t *reg = region_create_empty();
+    sol_region_t *reg = sol_region_create_empty();
 
     reg->gff_file = gff_file;
 
@@ -78,20 +78,20 @@ sol_region_t* region_create(const int gff_file) {
     return reg;
 }
 
-extern void region_remove_entity(sol_region_t *reg, entity_t *entity) {
+extern void sol_region_remove_entity(sol_region_t *reg, entity_t *entity) {
     if (!reg || !entity) { return; }
     entity_list_remove(reg->entities, entity_list_find(reg->entities, entity));
     //animation_list_remove(reg->anims, animation_list_find(reg->anims, &(entity->anim)));
 }
 
-void region_free(sol_region_t *reg) {
+extern void sol_region_free(sol_region_t *reg) {
     if (!reg) { return; }
 
     //if (reg->anims) {
         //animation_list_free(reg->anims);
         //reg->anims = NULL;
     //}
-    region_manager_remove_players();
+    sol_region_manager_remove_players();
 
     if (reg->entities) {
         entity_list_free_all(reg->entities);
@@ -111,7 +111,7 @@ void region_free(sol_region_t *reg) {
     free(reg);
 }
 
-int region_get_tile(const sol_region_t *reg, const uint32_t image_id,
+extern int sol_region_get_tile(const sol_region_t *reg, const uint32_t image_id,
         uint32_t *w, uint32_t *h, unsigned char **data) {
     if (!data) { return 0; }
 
@@ -189,7 +189,7 @@ static void load_passives(sol_region_t *reg, const int gff_idx, const int map_id
     }
 }
 
-entity_t* region_find_entity_by_id(sol_region_t *reg, const int id) {
+extern entity_t* sol_region_find_entity_by_id(sol_region_t *reg, const int id) {
     dude_t *dude = NULL;
 
     entity_list_for_each(reg->entities, dude)  {
@@ -210,26 +210,26 @@ static uint8_t* get_block(sol_region_t *region, const int row, const int column)
     return &(region->flags[row][column]);
 }
 
-extern int region_is_block(sol_region_t *region, int row, int column) {
+extern int sol_region_is_block(sol_region_t *region, int row, int column) {
     uint8_t *block = get_block(region, row, column);
 
     return block ? (*block & MAP_BLOCK) : -1;
 }
 
-extern void region_set_block(sol_region_t *region, int row, int column, int val) {
+extern void sol_region_set_block(sol_region_t *region, int row, int column, int val) {
     uint8_t *block = get_block(region, row, column);
 
     if (block) { *block |= val; }
 }
 
-extern void region_clear_block(sol_region_t *region, int row, int column, int val) {
+extern void sol_region_clear_block(sol_region_t *region, int row, int column, int val) {
     uint8_t *block = get_block(region, row, column);
 
     if (block) { region->flags[row][column] &= ~val; }
 }
 
 
-extern int region_location_blocked(const sol_region_t *reg, const int32_t x, const int32_t y) {
+extern int sol_region_location_blocked(const sol_region_t *reg, const int32_t x, const int32_t y) {
     dude_t *dude = NULL;
     //if (reg->flags[x][y]) { return 1; }
     entity_list_for_each(reg->entities, dude) {
@@ -242,7 +242,7 @@ extern int region_location_blocked(const sol_region_t *reg, const int32_t x, con
     return 0;
 }
 
-extern void region_add_entity(sol_region_t *reg, entity_t *entity) {
+extern void sol_region_add_entity(sol_region_t *reg, entity_t *entity) {
     if (!reg || !entity) { return; }
 
     animation_shift_entity(reg->entities, entity_list_add(reg->entities, entity));
@@ -305,11 +305,11 @@ extern void sol_region_tick(sol_region_t *reg) {
             posx = bad_dude->mapx;
             posy = bad_dude->mapy;
 
-            if (region_location_blocked(reg, posx + xdiff, posy + ydiff)
+            if (sol_region_location_blocked(reg, posx + xdiff, posy + ydiff)
                     ){
-                if (!region_location_blocked(reg, posx, posy + ydiff)) {
+                if (!sol_region_location_blocked(reg, posx, posy + ydiff)) {
                     xdiff = 0;
-                } else if (!region_location_blocked(reg, posx + xdiff, posy)) {
+                } else if (!sol_region_location_blocked(reg, posx + xdiff, posy)) {
                     ydiff = 0;
                 } else {
                     xdiff = ydiff = 0;
@@ -345,41 +345,41 @@ extern void sol_region_tick(sol_region_t *reg) {
     }
 }
 
-extern void region_move_to_nearest(const sol_region_t *reg, entity_t *entity) {
+extern void sol_region_move_to_nearest(const sol_region_t *reg, entity_t *entity) {
     //if (!region_location_blocked(reg, entity->mapx, entity->mapy)) { return; }
     //printf("Tyring to place: %d, %d\n", entity->mapx, entity->mapy);
-    if (!region_location_blocked(reg, entity->mapx, entity->mapy + 1)) {
+    if (!sol_region_location_blocked(reg, entity->mapx, entity->mapy + 1)) {
         entity->mapy = entity->mapy + 1;
         return;
     }
-    if (!region_location_blocked(reg, entity->mapx - 1, entity->mapy + 1)) {
+    if (!sol_region_location_blocked(reg, entity->mapx - 1, entity->mapy + 1)) {
         entity->mapx = entity->mapx - 1;
         entity->mapy = entity->mapy + 1;
         return;
     }
-    if (!region_location_blocked(reg, entity->mapx - 1, entity->mapy)) {
+    if (!sol_region_location_blocked(reg, entity->mapx - 1, entity->mapy)) {
         entity->mapx = entity->mapx - 1;
         return;
     }
-    if (!region_location_blocked(reg, entity->mapx - 1, entity->mapy - 1)) {
+    if (!sol_region_location_blocked(reg, entity->mapx - 1, entity->mapy - 1)) {
         entity->mapx = entity->mapx - 1;
         entity->mapy = entity->mapy - 1;
         return;
     }
-    if (!region_location_blocked(reg, entity->mapx, entity->mapy - 1)) {
+    if (!sol_region_location_blocked(reg, entity->mapx, entity->mapy - 1)) {
         entity->mapy = entity->mapy - 1;
         return;
     }
-    if (!region_location_blocked(reg, entity->mapx + 1, entity->mapy - 1)) {
+    if (!sol_region_location_blocked(reg, entity->mapx + 1, entity->mapy - 1)) {
         entity->mapx = entity->mapx + 1;
         entity->mapy = entity->mapy - 1;
         return;
     }
-    if (!region_location_blocked(reg, entity->mapx + 1, entity->mapy)) {
+    if (!sol_region_location_blocked(reg, entity->mapx + 1, entity->mapy)) {
         entity->mapx = entity->mapx + 1;
         return;
     }
-    if (!region_location_blocked(reg, entity->mapx + 1, entity->mapy + 1)) {
+    if (!sol_region_location_blocked(reg, entity->mapx + 1, entity->mapy + 1)) {
         entity->mapx = entity->mapx + 1;
         entity->mapy = entity->mapy + 1;
         return;

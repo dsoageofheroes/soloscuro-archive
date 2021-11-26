@@ -4,7 +4,7 @@
 #include "gfftypes.h"
 #include "gff.h"
 #include "settings.h"
-#include "../../src/port.h"
+#include "port.h"
 #include <string.h>
 
 #define NUM_ARROWS (3)

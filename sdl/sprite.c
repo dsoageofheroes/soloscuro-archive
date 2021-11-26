@@ -3,7 +3,7 @@
 #include "animation.h"
 #include "entity.h"
 #include "settings.h"
-#include "../src/port.h"
+#include "port.h"
 
 #define MAX_SPRITES (1<<10)
 

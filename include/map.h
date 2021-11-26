@@ -1,7 +1,7 @@
 #ifndef MAP_H
 #define MAP_H
 
-#include "../src/region.h"
+#include "region.h"
 #include "window-manager.h"
 
 typedef struct map_s {

@@ -5,7 +5,7 @@
 #include "popup.h"
 #include "view-character.h"
 #include "mouse.h"
-#include "../src/port.h"
+#include "port.h"
 #include "gff.h"
 #include "gff-char.h"
 #include "rules.h"

@@ -1,11 +1,11 @@
 #include "narrate.h"
-#include "../../src/port.h"
+#include "port.h"
 #include "portrait.h"
 #include "gpl.h"
 #include "entity-animation.h"
 #include "gff.h"
 #include "gfftypes.h"
-#include "../src/replay.h"
+#include "replay.h"
 #include "gpl-manager.h"
 #include "gameloop.h"
 #include "settings.h"
@@ -202,7 +202,6 @@ int narrate_handle_key_down(const enum entity_action_e action) {
     switch (action) {
         case EA_ACTIVATE:
             if (sol_game_loop_is_waiting_for(WAIT_NARRATE_CONTINUE)) {
-                sol_ui_narrate_clear();
                 sol_game_loop_signal(WAIT_NARRATE_CONTINUE, 0);
             }
         default:
@@ -216,15 +215,17 @@ void narrate_free() {
     sol_sprite_free(border);
 }
 
-int port_ask_yes_no() {
+extern int sol_ui_narrate_ask_yes_no() {
     error("MUST ASK YES NO, for now NO\n");
     return 0;
 }
 
 extern int8_t narrate_open(int16_t action, const char *text, int16_t index) {
     if (action == NAR_SHOW_TEXT) {
-        if (strncmp("END", text, 3) == 0) {
+        if (strncmp("END", text, 3) == 0 || index == 0) {
+            if (text_pos == 0) { return 0; }
             sol_game_loop_wait_for_signal(WAIT_NARRATE_CONTINUE);
+            narrate_clear();
             return 0;
         }
         if (strncmp("CLOSE", text, 5) == 0) {

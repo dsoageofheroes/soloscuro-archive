@@ -4,10 +4,9 @@
 #include "narrate.h"
 #include "gfftypes.h"
 #include "gff.h"
-#include "../../src/port.h"
-#include "../../src/region-manager.h"
+#include "port.h"
+#include "region-manager.h"
 #include "settings.h"
-#include "../../src/port.h"
 #include <string.h>
 
 static sol_sprite_t background, combat_attacks;
@@ -111,7 +110,7 @@ void combat_status_init(const uint32_t x, const uint32_t y) {
 }
 
 static void get_status() {
-    entity_t* dude = sol_combat_get_current(&(region_manager_get_current()->cr));
+    entity_t* dude = sol_combat_get_current(&(sol_region_manager_get_current()->cr));
 
     if (dude) {
         strcpy(combat_status.name, dude->name);

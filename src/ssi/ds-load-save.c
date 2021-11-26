@@ -106,7 +106,7 @@ static void add_player_to_save(const int id, const int player) {
 }
 
 static void save_regions(const int id) {
-    sol_region_t *reg = region_manager_get_current();
+    sol_region_t *reg = sol_region_manager_get_current();
     dude_t *dude = player_get_active();
     dude_t *entity = NULL;
     size_t buf_len = 128, offset = 0;
@@ -149,7 +149,7 @@ static void load_regions(const int id) {
     //entity_t *entity = NULL;
     //gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes;
     dude_t *dude = player_get_active();
-    sol_region_t *reg = region_manager_get_region(dude->region);
+    sol_region_t *reg = sol_region_manager_get_region(dude->region);
     char *buf = NULL;
     rdff_header_t *rdff = NULL;
     size_t offset = 0;
@@ -208,7 +208,7 @@ extern void ls_save_to_file(const char *path, char *save_name) {
     save_regions(id);
 
     size_t trigger_len;
-    char* triggers = trigger_serialize(&trigger_len);
+    char* triggers = sol_trigger_serialize(&trigger_len);
     gff_add_chunk(id, GFF_TRIG, 0, triggers, trigger_len);
 
     gff_add_chunk(id, GFF_STXT, 0, save_name, strlen(save_name) + 1);
@@ -290,7 +290,7 @@ extern int ls_load_save_file(const char *path) {
 
     if (id < 0) { return 0; }
 
-    region_manager_cleanup();
+    sol_region_manager_cleanup();
 
     for (int i = 0; i < 4; i++) {
         if (!load_player(id, i, i)) { return 0; }
@@ -319,7 +319,7 @@ extern int ls_load_save_file(const char *path) {
     chunk = gff_find_chunk_header(id, GFF_TRIG, 0);
     triggers = malloc(chunk.length);
     if (gff_read_chunk(id, &chunk, triggers, chunk.length) < 1) { return 0; }
-    trigger_deserialize(triggers);
+    sol_trigger_deserialize(triggers);
     free(triggers);
     triggers = NULL;
 

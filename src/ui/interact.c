@@ -3,7 +3,7 @@
 #include "gfftypes.h"
 #include "entity.h"
 #include "gff.h"
-#include "../../src/port.h"
+#include "port.h"
 #include "settings.h"
 #include <string.h>
 

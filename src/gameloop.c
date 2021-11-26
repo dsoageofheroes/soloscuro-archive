@@ -11,8 +11,8 @@ static uint8_t wait_flags[WAIT_MAX_SIGNALS];
 static int accum = 0;
 
 static void sol_render() {
-    sol_region_tick(region_manager_get_current());
-    combat_update(region_manager_get_current());
+    sol_region_tick(sol_region_manager_get_current());
+    sol_combat_update(sol_region_manager_get_current());
     port_window_render();
 }
 

@@ -1222,7 +1222,7 @@ static void print_change(const char *stmt, const char *op) {
     int pos;
     if (!strncmp(stmt, "gpl.get_", 8)) {
         strcpy(buf, stmt); // create something to edit
-        for (pos = 0; pos < strlen(stmt) && buf[pos] != 'g'; pos++) { ; }
+        for (pos = 1; pos < strlen(stmt) && buf[pos] != 'g'; pos++) { ; }
         buf[pos] = 's';
         buf[strlen(buf) - 1] = '\0'; // chop off the final ')'
         lprintf("%s, %s %s)\n", buf, stmt, op);

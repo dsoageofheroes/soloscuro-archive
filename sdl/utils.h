@@ -2,7 +2,7 @@
 #define SOL_SDL_UTILS_H
 
 #include <SDL2/SDL.h>
-#include "../src/port.h"
+#include "port.h"
 
 SDL_Texture* create_texture(const uint32_t gff_file,
         const uint32_t type, const uint32_t id, const uint32_t frame_id,

@@ -141,7 +141,7 @@ uint16_t sol_player_get_sprite(const int slot) {
 }
 
 extern void player_cleanup() {
-    region_manager_remove_players();
+    sol_region_manager_remove_players();
     for (int i = 0; i < MAX_PCS; i++) {
         player_free(i);
     }
@@ -257,10 +257,10 @@ extern void sol_player_update() {
     enum entity_action_e action;
 
     //if (entity_animation_execute(dude)) { --count; return; }
-    //entity_animation_list_execute(&(dude->actions), region_manager_get_current());
+    //entity_animation_list_execute(&(dude->actions), sol_region_manager_get_current());
     if (--count > 0) { return; }
 
-    //if (entity_animation_list_execute(&(dude->actions), region_manager_get_current())) {
+    //if (entity_animation_list_execute(&(dude->actions), sol_region_manager_get_current())) {
         //count = ticks_per_move;
         //return;
     //}
@@ -273,17 +273,17 @@ extern void sol_player_update() {
     if (direction & PLAYER_LEFT)  { xdiff -= 1; }
     if (direction & PLAYER_RIGHT) { xdiff += 1; }
 
-    if (sol_player_freeze() || region_is_block(region_manager_get_current(),
+    if (sol_player_freeze() || sol_region_is_block(sol_region_manager_get_current(),
                 //dude->mapx + xdiff, dude->mapy + ydiff)) {
                 dude->mapy + ydiff, dude->mapx + xdiff)) {
         xdiff = ydiff = 0;
     }
 
     if (!narrate_is_open()) {
-        trigger_noorders(dude->mapx, dude->mapy);
+        sol_trigger_noorders(dude->mapx, dude->mapy);
     }
-    trigger_box_check(dude->mapx, dude->mapy);
-    trigger_tile_check(dude->mapx, dude->mapy);
+    sol_trigger_box_check(dude->mapx, dude->mapy);
+    sol_trigger_tile_check(dude->mapx, dude->mapy);
 
     // We aren't moving...
     if (xdiff == 0 && ydiff == 0) {
@@ -313,7 +313,7 @@ extern void sol_player_update() {
     dude->mapy += ydiff;
     dude->anim.destx += (xdiff * 32);
     dude->anim.desty += (ydiff * 32);
-    sol_region_t *reg = region_manager_get_current();
+    sol_region_t *reg = sol_region_manager_get_current();
     if (reg) {
         animation_shift_entity(reg->entities, entity_list_find(reg->entities, dude));
     }

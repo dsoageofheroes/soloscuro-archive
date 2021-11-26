@@ -6,7 +6,7 @@
 #include "gfftypes.h"
 #include "player.h"
 #include "gameloop.h"
-#include "../../src/port.h"
+#include "port.h"
 #include "settings.h"
 #include "gff.h"
 

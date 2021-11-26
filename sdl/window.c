@@ -14,7 +14,7 @@
 #include "combat-status.h"
 #include "gpl.h"
 #include "gameloop.h"
-#include "../src/region.h"
+#include "region.h"
 #include "sprite.h"
 
 static SDL_Renderer *renderer = NULL;

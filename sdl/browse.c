@@ -5,14 +5,14 @@
 #include "narrate.h"
 #include "audio.h"
 #include "gpl.h"
-#include "../src/region.h"
+#include "region.h"
 #include "gameloop.h"
 #include "gff.h"
 #include "gff-map.h"
 #include "gff-image.h"
 #include "gff-xmi.h"
 #include "wizard.h"
-#include "../src/region-manager.h"
+#include "region-manager.h"
 
 #define BUF_MAX (1<<12)
 #define RES_MAX (1<<14)
@@ -949,12 +949,12 @@ static void render_entry_rmap() {
             error("cfile is null!\n");
             exit(1);
         }
-        region = region_manager_get_region(res_ids[res_idx]);
+        region = sol_region_manager_get_region(res_ids[res_idx]);
         tiles_len = region->num_tiles + 1;
         tiles = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * (tiles_len));
         memset(tiles, 0x0, sizeof(SDL_Texture*) * tiles_len);
         for (uint32_t i = 0; i < region->num_tiles; i++) {
-            region_get_tile(region, i, &width, &height, &data);
+            sol_region_get_tile(region, i, &width, &height, &data);
 
             tile = SDL_CreateRGBSurfaceFrom(data, width, height, 32, 4*width, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
             //if (region->ids[i] > (tiles_len)) {
@@ -1002,7 +1002,7 @@ static void render_entry_gmap() {
 
     for (int i = mapx; i < MAP_ROWS; i++) {
         for (int j = mapy; j < MAP_COLUMNS; j++) {
-            if (region_is_block(region, i, j)) {
+            if (sol_region_is_block(region, i, j)) {
                 //printf("(%d, %d)\n, ", i, j);
                 SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, SDL_ALPHA_OPAQUE);
             /*} else if (gpl_region_is_actor(region, i, j)) {

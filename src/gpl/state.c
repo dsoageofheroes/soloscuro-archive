@@ -287,7 +287,7 @@ static int is_true(lua_State *l) {
 
 static int gpl_getX(lua_State *l) {
     lua_Integer id = luaL_checkinteger(l, 1);
-    sol_region_t *reg = region_manager_get_current();
+    sol_region_t *reg = sol_region_manager_get_current();
     dude_t *dude = NULL;
 
     entity_list_for_each(reg->entities, dude) {
@@ -303,7 +303,7 @@ static int gpl_getX(lua_State *l) {
 
 static int gpl_getY(lua_State *l) {
     lua_Integer id = luaL_checkinteger(l, 1);
-    sol_region_t *reg = region_manager_get_current();
+    sol_region_t *reg = sol_region_manager_get_current();
     dude_t *dude = NULL;
 
     entity_list_for_each(reg->entities, dude) {
@@ -348,7 +348,7 @@ static int attack_trigger(lua_State *l) {
     lua_Integer file = luaL_checkinteger(l, 2);
     lua_Integer addr = luaL_checkinteger(l, 3);
 
-    add_attack_trigger(obj, file, addr);
+    sol_trigger_add_attack(obj, file, addr);
     return 0;
 }
 
@@ -357,7 +357,7 @@ static int attack_trigger_global(lua_State *l) {
     lua_Integer file = luaL_checkinteger(l, 2);
     lua_Integer addr = luaL_checkinteger(l, 3);
 
-    add_attack_trigger_global(obj, file, addr);
+    sol_trigger_add_attack_global(obj, file, addr);
     return 0;
 }
 
@@ -366,7 +366,7 @@ static int use_trigger(lua_State *l) {
     lua_Integer file = luaL_checkinteger(l, 2);
     lua_Integer addr = luaL_checkinteger(l, 3);
 
-    add_use_trigger(obj, file, addr);
+    sol_trigger_add_use(obj, file, addr);
     return 0;
 }
 
@@ -375,7 +375,7 @@ static int use_trigger_global(lua_State *l) {
     lua_Integer file = luaL_checkinteger(l, 2);
     lua_Integer addr = luaL_checkinteger(l, 3);
 
-    add_use_trigger_global(obj, file, addr);
+    sol_trigger_add_use_global(obj, file, addr);
     return 0;
 }
 
@@ -384,7 +384,7 @@ static int look_trigger(lua_State *l) {
     lua_Integer file = luaL_checkinteger(l, 2);
     lua_Integer addr = luaL_checkinteger(l, 3);
 
-    add_look_trigger(obj, file, addr);
+    sol_trigger_add_look(obj, file, addr);
     return 0;
 }
 
@@ -393,7 +393,7 @@ static int look_trigger_global(lua_State *l) {
     lua_Integer file = luaL_checkinteger(l, 2);
     lua_Integer addr = luaL_checkinteger(l, 3);
 
-    add_look_trigger_global(obj, file, addr);
+    sol_trigger_add_look_global(obj, file, addr);
     return 0;
 }
 
@@ -402,7 +402,7 @@ static int noorders_trigger(lua_State *l) {
     lua_Integer file = luaL_checkinteger(l, 2);
     lua_Integer addr = luaL_checkinteger(l, 3);
 
-    add_noorders_trigger(obj, file, addr);
+    sol_trigger_add_noorders(obj, file, addr);
     return 0;
 }
 
@@ -411,7 +411,7 @@ static int talk_to_trigger(lua_State *l) {
     lua_Integer file = luaL_checkinteger(l, 2);
     lua_Integer addr = luaL_checkinteger(l, 3);
 
-    add_talkto_trigger(obj, file, addr);
+    sol_trigger_add_talkto(obj, file, addr);
     return 0;
 }
 
@@ -421,7 +421,7 @@ static int use_with_trigger(lua_State *l) {
     lua_Integer file = luaL_checkinteger(l, 3);
     lua_Integer addr = luaL_checkinteger(l, 4);
 
-    add_usewith_trigger(obj1, obj2, file, addr);
+    sol_trigger_add_usewith(obj1, obj2, file, addr);
     return 0;
 }
 
@@ -432,7 +432,7 @@ static int tile_trigger(lua_State *l) {
     lua_Integer file = luaL_checkinteger(l, 4);
     lua_Integer trip = luaL_checkinteger(l, 5);
 
-    add_tile_trigger(x, y, file, addr, trip);
+    sol_trigger_add_tile(x, y, file, addr, trip);
     return 0;
 }
 
@@ -445,7 +445,7 @@ static int box_trigger(lua_State *l) {
     lua_Integer file = luaL_checkinteger(l, 6);
     lua_Integer trip = luaL_checkinteger(l, 7);
 
-    add_box_trigger(x, y, w, h, file, addr, trip);
+    sol_trigger_add_box(x, y, w, h, file, addr, trip);
     return 0;
 }
 
@@ -486,8 +486,8 @@ static int gpl_clone(lua_State *l) {
         entry_id = dude->ds_id;
 
         if (dude) {
-            region_move_to_nearest(region_manager_get_current(), dude);
-            region_add_entity(region_manager_get_current(), dude);
+            sol_region_move_to_nearest(sol_region_manager_get_current(), dude);
+            sol_region_add_entity(sol_region_manager_get_current(), dude);
             port_load_sprite(&(dude->anim), pal, OBJEX_GFF_INDEX, GFF_BMP, dude->sprite.bmp_id,
                 (dude->name) ? 2 : 1);
             port_place_entity(dude);
@@ -504,7 +504,7 @@ static int gpl_hunt(lua_State *l) {
     lua_Integer obj = luaL_checkinteger(l, 1);
     dude_t *dude = NULL;
 
-    entity_list_for_each(region_manager_get_current()->entities, dude) {
+    entity_list_for_each(sol_region_manager_get_current()->entities, dude) {
         if (dude->ds_id == (int)obj) {
             dude->abilities.hunt = 1;
         } 
@@ -515,7 +515,7 @@ static int gpl_hunt(lua_State *l) {
 
 static int gpl_ask_yes_no(lua_State *l) {
     debug("Must implement yes no!\n");
-    lua_pushinteger(l, port_ask_yes_no());
+    lua_pushinteger(l, sol_ui_narrate_ask_yes_no());
     return 1;
 }
 

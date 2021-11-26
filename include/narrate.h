@@ -20,6 +20,7 @@ void narrate_free();
 int narrate_is_open();
 extern int8_t narrate_open(int16_t action, const char *text, int16_t index);
 extern int narrate_select_menu(int option);
+extern int    sol_ui_narrate_ask_yes_no();
 extern int8_t sol_ui_narrate_open(int16_t action, const char *text, int16_t index);
 extern void   sol_ui_narrate_clear();
 extern void   sol_ui_narrate_close();

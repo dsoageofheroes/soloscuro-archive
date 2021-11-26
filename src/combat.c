@@ -133,7 +133,7 @@ extern int combat_initiate(sol_region_t *reg, const uint16_t x, const uint16_t y
         add_to_combat(enemy);
     }
 
-    port_enter_combat();
+    sol_combat_enter_combat();
 
     /*
     combat_entry_t *rover = combat_order;
@@ -588,7 +588,7 @@ static void do_player_turn(sol_region_t *reg) {
 
 static entity_action_t clear = { NULL, NULL, 0, EA_NONE };
 
-void combat_update(sol_region_t *reg) {
+extern void sol_combat_update(sol_region_t *reg) {
     if (reg == NULL) { return; }
     combat_region_t *cr = &(reg->cr);
     if (cr == NULL) { return; }
@@ -690,7 +690,5 @@ extern int sol_combat_activate_power(power_t *pw, entity_t *source, entity_t *ta
         default:
             warn("pw->shape %d not implemented\n", pw->shape);
     }
-//static void wizard_magic_missile_apply        (power_instance_t *source, entity_t *entity) {
-
     return 1;
 }

@@ -70,7 +70,7 @@ static int load_player (lua_State *l) {
 
 static int create_region (lua_State *l) {
     lua_newtable(l); // entity table
-    lua_pushlightuserdata(l, region_create_empty());
+    lua_pushlightuserdata(l, sol_region_create_empty());
     lua_setfield(l, -2, "ptr__");
 
     /*push_table_start(l, &(player_get_entity(n)->stats), "stats");
@@ -96,8 +96,8 @@ static int set_region (lua_State *l) {
     luaL_checktype(l, 1, LUA_TTABLE);
 
     sol_region_t *region = get_userdata(l, 1);
-    region_manager_add_region(region);
-    region_manager_set_current(region);
+    sol_region_manager_add_region(region);
+    sol_region_manager_set_current(region);
 
     return 0;
 }

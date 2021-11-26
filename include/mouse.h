@@ -2,7 +2,7 @@
 #define SOL_MOUSE_H
 
 #include "ssi-item.h"
-#include "../src/port.h"
+#include "port.h"
 #include "powers.h"
 
 enum mouse_state {

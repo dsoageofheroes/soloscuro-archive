@@ -16,19 +16,19 @@ static sol_region_t *ssi_regions[MAX_REGIONS];
 static sol_region_t *sol_regions[MAX_REGIONS];
 static int current_region = -1; // will need to eliminate for server code.
 
-void region_manager_init() {
+extern void sol_region_manager_init() {
     memset(ssi_regions, 0x0, sizeof(ssi_regions));
     memset(sol_regions, 0x0, sizeof(sol_regions));
 }
 
-void region_manager_cleanup() {
+extern void sol_region_manager_cleanup() {
     for (int i = 0; i < MAX_REGIONS; i++) {
         if (ssi_regions[i]) {
-            region_free(ssi_regions[i]);
+            sol_region_free(ssi_regions[i]);
             ssi_regions[i] = NULL;
         }
         if (sol_regions[i]) {
-            region_free(sol_regions[i]);
+            sol_region_free(sol_regions[i]);
             ssi_regions[i] = NULL;
         }
     }
@@ -36,7 +36,7 @@ void region_manager_cleanup() {
     memset(sol_regions, 0x0, sizeof(sol_regions));
 }
 
-sol_region_t* region_manager_get_region(const int region_id) {
+extern sol_region_t* sol_region_manager_get_region(const int region_id) {
     char gff_name[32];
     entity_t *dude = NULL;
 
@@ -47,7 +47,7 @@ sol_region_t* region_manager_get_region(const int region_id) {
         int gff_index = gff_find_index(gff_name);
         if (gff_index < 0 ) { return NULL; }
 
-        ssi_regions[region_id] = region_create(gff_index);
+        ssi_regions[region_id] = sol_region_create(gff_index);
         entity_list_load_etab(ssi_regions[region_id]->entities, gff_index, region_id);
         //entity_list_for_each(ssi_regions[region_id]->entities, dude) {
             //animation_list_add(ssi_regions[region_id]->anims, &dude->anim);
@@ -78,7 +78,7 @@ sol_region_t* region_manager_get_region(const int region_id) {
     return ssi_regions[region_id];
 }
 
-sol_region_t* region_manager_get_current() {
+extern sol_region_t* sol_region_manager_get_current() {
     if (current_region < 0) { return NULL; }
     if (current_region < MAX_REGIONS) {
         return ssi_regions[current_region];
@@ -175,7 +175,7 @@ void ds_region_load_region_from_save(const int id, const int region_id) {
     //ds_regions[region_id] = reg;
 }
 
-extern int region_manager_add_region(sol_region_t *region) {
+extern int sol_region_manager_add_region(sol_region_t *region) {
     int pos = 0;
     for (pos = 0; pos < MAX_REGIONS && sol_regions[pos]; pos++) { ; }
 
@@ -188,9 +188,9 @@ extern int region_manager_add_region(sol_region_t *region) {
     return pos;
 }
 
-extern void region_manager_set_current(sol_region_t *region) {
+extern void sol_region_manager_set_current(sol_region_t *region) {
     if (!region) { return; }
-    region_manager_remove_players();
+    sol_region_manager_remove_players();
     for (int i = 0; i < MAX_REGIONS; i++) {
         if (ssi_regions[i] == region) { current_region = i; }
         if (sol_regions[i] == region) { current_region = MAX_REGIONS + i; }
@@ -198,8 +198,8 @@ extern void region_manager_set_current(sol_region_t *region) {
     entity_list_add(region->entities, player_get_active());
 }
 
-extern void region_manager_remove_players() {
-    sol_region_t* reg = region_manager_get_current();
+extern void sol_region_manager_remove_players() {
+    sol_region_t* reg = sol_region_manager_get_current();
     if (!reg) { return; }
 
     for (int i = 0; i < MAX_PCS; i++) {

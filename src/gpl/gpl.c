@@ -47,9 +47,9 @@ extern void gpl_init() {
     gpl_init_vars();
     sol_player_init();
     ssi_item_init();
-    trigger_init();
+    sol_trigger_init();
     gpl_manager_init();
-    region_manager_init();
+    sol_region_manager_init();
     info("Running Master DSL #99.\n");
     gpl_lua_execute_script(99, 0, 1);
 }
@@ -66,6 +66,6 @@ extern void gpl_cleanup() {
     gpl_cleanup_vars();
     gpl_manager_cleanup();
     ssi_item_close();
-    trigger_cleanup();
-    region_manager_cleanup();
+    sol_trigger_cleanup();
+    sol_region_manager_cleanup();
 }

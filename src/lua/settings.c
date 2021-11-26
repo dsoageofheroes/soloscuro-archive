@@ -1,10 +1,10 @@
 #include "sol-lua-manager.h"
 #include "ds-load-save.h"
-#include "../src/port.h"
+#include "port.h"
 #include "gpl.h"
 #include "player.h"
 #include "sol-lua-manager.h"
-#include "../src/region-manager.h"
+#include "region-manager.h"
 #include <string.h>
 
 #define MAX_SOL_FUNCS (1<<10)
@@ -72,9 +72,9 @@ static int load_region(lua_State *l) {
 }
 
 static int change_region(lua_State *l) {
-    sol_region_t* reg = region_manager_get_region(luaL_checkinteger(l, 1));
+    sol_region_t* reg = sol_region_manager_get_region(luaL_checkinteger(l, 1));
     if (!reg) { return lua_return_bool(l, 0); }
-    region_manager_set_current(reg);
+    sol_region_manager_set_current(reg);
     return lua_return_bool(l, 1);
 }
 

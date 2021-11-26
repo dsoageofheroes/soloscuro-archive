@@ -2,7 +2,7 @@
 #include "portrait.h"
 #include "gff.h"
 #include "gpl.h"
-#include "../src/port.h"
+#include "port.h"
 
 #include <stdlib.h>
 #include <string.h>

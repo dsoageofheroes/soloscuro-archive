@@ -184,20 +184,20 @@ extern uint32_t gpl_request_impl(int16_t token, int16_t name,
             if (!gff_read_object(num1, &dobj)) {
                 error("Unable to satisfy REQUEST_SWAP, not obj: %d\n", num1);
             }
-            sol_region_t *reg = region_manager_get_current();
-            dude_t *dude = region_find_entity_by_id(reg, name);
+            sol_region_t *reg = sol_region_manager_get_current();
+            dude_t *dude = sol_region_find_entity_by_id(reg, name);
             dude->sprite.bmp_id = dobj.bmp_id;
-            trigger_object_clear(name);
+            sol_trigger_object_clear(name);
             port_swap_enitity(name, dude);
             break;
         case REQUEST_SET_BLOCK:
             debug("Need to set (BLOCK) the bit flags for %d map position (%d, %d) to %d & commit!\n", name, num1, num2, GB_BLOCK);
-            region_set_block(region_manager_get_current(), num2, num1, MAP_BLOCK);
-            trigger_enable_object(name);
+            sol_region_set_block(sol_region_manager_get_current(), num2, num1, MAP_BLOCK);
+            sol_trigger_enable_object(name);
             break;
         case REQUEST_CLEAR_BLOCK:
             debug("I need to clear (UNBLOCK) the block at (%d, %d) with flags %d\n", num1, num2, GB_BLOCK);
-            region_clear_block(region_manager_get_current(), num2, num1, MAP_BLOCK);
+            sol_region_clear_block(sol_region_manager_get_current(), num2, num1, MAP_BLOCK);
             break;
         case REQUEST_SET_LOS:
             debug("request SET_LOS not implemented\n");
@@ -208,7 +208,7 @@ extern uint32_t gpl_request_impl(int16_t token, int16_t name,
             break;
         case REQUEST_BATTLE_DEMO:
             debug("request REQUEST_BATTLE_DEMO: Need to call lua or something to run the demo!\n");
-            trigger_noorders_enable_all();
+            sol_trigger_noorders_enable_all();
             break;
         case REQUEST_SET_GAME_MOVE:
             debug("I need to set the game back to regular moving around (not combat/look/xfer/target).\n");
@@ -635,7 +635,7 @@ static int16_t request_to_do(int16_t name, int16_t rectype, int (*request_proc)(
 }
 
 static int req_animation(int16_t object, long notused1, long notused2) {
-    dude_t *dude = region_find_entity_by_id(region_manager_get_current(), object);
+    dude_t *dude = sol_region_find_entity_by_id(sol_region_manager_get_current(), object);
     gpl_set_gname(GNAME_PASSIVE, object);
 
     if (dude) {
@@ -656,11 +656,11 @@ static int req_animation(int16_t object, long notused1, long notused2) {
 static int req_set_allegiance(int16_t object, long allegiance, long notused2) {
     dude_t *dude = NULL;
 
-    entity_list_for_each(region_manager_get_current()->entities, dude) {
+    entity_list_for_each(sol_region_manager_get_current()->entities, dude) {
         if (dude->ds_id == object) {
             dude->allegiance = allegiance;
-            //combat_add(&(region_manager_get_current()->cr), dude);
-            //region_add_entity(region_manager_get_current(), dude);
+            //combat_add(&(sol_region_manager_get_current()->cr), dude);
+            //sol_region_add_entity(sol_region_manager_get_current(), dude);
         }
     }
 

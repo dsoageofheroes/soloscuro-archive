@@ -1,7 +1,7 @@
 #include "popup.h"
 #include "narrate.h"
 #include "gff.h"
-#include "../../src/port.h"
+#include "port.h"
 #include "gfftypes.h"
 #include "settings.h"
 #include <string.h>
