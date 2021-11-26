@@ -7,38 +7,27 @@ Goals: To create an engine for Dark Sun 1, 2, and Crimson Sands.
 
 <https://discord.gg/W942xHN72S>
 
-### Latest Downloads:
-<http://dso.paulofthewest.com/downloads.html>
 
 ### Linux dev setup
 1) install pre-reqs:
    ``` $ sudo apt install sndfile-tools libsndfile1-dev libsdl2-* lua5.3 liblua5.3-dev cmake ```
-2) build libADLMIDI
-   ``` $ git clone git@github.com:Wohlstand/libADLMIDI.git
-       $ cd libADLMIDI 
-       $ mkdir build
-       $ cd build
-       $ cmake -DCMAKE_BUILD_TYPE=Release -DlibADLMIDI_SHARED=ON ..
+2) build
+   ``` $ cd <soloscuro>
        $ make
-       $ sudo make install
    ```
-3) setup and build
- 
-   ```
-   $ cd <soloscuro>
-   $ cp <libADLMIDI>/build/libADLMIDI.so* .
-   $ make -f makefile.sdl mdark
-   ```
-4)   put your darksun1 gffs into a directory ds1/ inside your repo.
-5)   Right now the engine does not have a solid entry point. You can run a test:
+   This should pull the libadlmidi library and compile everything.
+3) Put your darksun1 gffs into a directory ds1/ inside your repo. You can make aa symlink as well.
+4) Right now the engine does not have a solid entry point. You can run a test:
 
-   ```$ LD_LIBRARY_PATH=./ ./mdark --lua lua/test/main.lua```
+   ```$ LD_LIBRARY_PATH=lib/ build/mdark --lua lua/test/main.lua```
    Naturally, there are other tests you can view in lua/test/
    
    You may also load up the gff viewer (browser):
-   ```$ LD_LIBRARY_PATH=./ ./mdark --browse```
+   ```$ LD_LIBRARY_PATH=lib/ build/mdark --browse```
 
 ### Windows dev setup with msys2:
+
+Note: The windows build is currently broken. Please install Bash on Ubuntu on Windows and use the Linux install.
 
 1. Install msys2 (http://msys2.org) download the installer and run (must be 64-bit.)
   * default C:\msys64 is fine and assumed for these instructions.
