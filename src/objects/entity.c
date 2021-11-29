@@ -3,6 +3,7 @@
 #include "gpl.h"
 #include "entity.h"
 #include "gff.h"
+#include "rules.h"
 #include "port.h"
 #include "gfftypes.h"
 #include "gff-map.h"
@@ -74,6 +75,27 @@ static void apply_character(dude_t *dude, ds_character_t *ch) {
     dude->size = ch->size;
     dude->sound_fx = ch->sound_fx;
     dude->attack_sound = ch->attack_sound;
+}
+
+extern entity_t* sol_entity_create_default_human() {
+    entity_t *dude = malloc(sizeof(entity_t));
+    memset(dude, 0x0, sizeof(entity_t));
+    dude->stats.hp = 4;
+    dude->stats.high_hp = 4;
+    dude->race = RACE_HUMAN;
+    dude->gender = GENDER_MALE;
+    dude->alignment = TRUE_NEUTRAL;
+    dude->stats.str = dude->stats.dex = dude->stats.con = dude->stats.intel = dude->stats.wis = dude->stats.cha = 10;
+    dude->stats.base_ac = 10;
+    dude->stats.base_move = 12;
+    dude->stats.saves.paralysis = 20;
+    dude->stats.saves.wand = 20;
+    dude->stats.saves.petrify = 20;
+    dude->stats.saves.breath = 20;
+    dude->stats.saves.spell = 20;
+    debug("Need to set default size!\n");
+    dude->size = 0;
+    return dude;
 }
 
 entity_t* entity_create_from_objex(const int id) {

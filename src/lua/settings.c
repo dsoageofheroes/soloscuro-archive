@@ -174,6 +174,7 @@ extern void sol_lua_settings_register(lua_State *l) {
     memset(sol_lib, 0x0, sizeof(sol_lib));
     add_funcs(lua_struct_get_funcs());
     add_funcs(sol_funcs);
+    add_funcs(sol_ds_get_lib());
 
     lua_newtable(l);
     luaL_setfuncs(l, sol_lib, 0);

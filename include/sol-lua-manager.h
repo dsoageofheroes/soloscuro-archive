@@ -15,4 +15,5 @@ extern int sol_lua_load(const char *filename);
 
 extern void lua_struct_register(lua_State *l);
 const struct luaL_Reg* lua_struct_get_funcs();
+extern const struct luaL_Reg* sol_ds_get_lib();
 #endif

@@ -43,29 +43,62 @@ static void push_table(lua_State *l, void *data, const char *name, const char *m
     push_table_end(l, metaname);
 }
 
-static int load_player (lua_State *l) {
-    int n = luaL_checkinteger(l, 1);
+static void dumpstack (lua_State *L) {
+  int top=lua_gettop(L);
+  for (int i=-5; i <= top; i++) {
+    printf("%d\t%s\t", i, luaL_typename(L,i));
+    switch (lua_type(L, i)) {
+      case LUA_TNUMBER:
+        printf("%g\n",lua_tonumber(L,i));
+        break;
+      case LUA_TSTRING:
+        printf("%s\n",lua_tostring(L,i));
+        break;
+      case LUA_TBOOLEAN:
+        printf("%s\n", (lua_toboolean(L, i) ? "true" : "false"));
+        break;
+      case LUA_TNIL:
+        printf("%s\n", "nil");
+        break;
+      default:
+        printf("%p\n",lua_topointer(L,i));
+        break;
+    }
+  }
+}
 
+static int load_entity (lua_State *l, dude_t *dude) {
     lua_newtable(l); // entity table
-    lua_pushlightuserdata(l, player_get(n));
+    lua_pushlightuserdata(l, dude);
     lua_setfield(l, -2, "ptr__");
 
-    push_table_start(l, &(player_get(n)->stats), "stats");
+    push_table_start(l, &(dude->stats), "stats");
 
-    push_table(l, &(player_get(n)->stats.attacks[0]), "attack1", "soloscuro.attack");
-    push_table(l, &(player_get(n)->stats.attacks[1]), "attack2", "soloscuro.attack");
-    push_table(l, &(player_get(n)->stats.attacks[2]), "attack3", "soloscuro.attack");
-    push_table(l, &(player_get(n)->stats.saves), "saves", "soloscuro.saves");
+    push_table(l, &(dude->stats.attacks[0]), "attack1", "soloscuro.attack");
+    push_table(l, &(dude->stats.attacks[1]), "attack2", "soloscuro.attack");
+    push_table(l, &(dude->stats.attacks[2]), "attack3", "soloscuro.attack");
+    push_table(l, &(dude->stats.saves), "saves", "soloscuro.saves");
 
     push_table_end(l, "soloscuro.stats");
 
-    push_table(l, &(player_get(n)->class[0]), "class1", "soloscuro.class");
-    push_table(l, &(player_get(n)->class[1]), "class2", "soloscuro.class");
-    push_table(l, &(player_get(n)->class[2]), "class3", "soloscuro.class");
+    push_table(l, &(dude->class[0]), "class1", "soloscuro.class");
+    push_table(l, &(dude->class[1]), "class2", "soloscuro.class");
+    push_table(l, &(dude->class[2]), "class3", "soloscuro.class");
 
     luaL_setmetatable(l, "soloscuro.entity"); // entity meta
 
     return 1;
+}
+
+static int load_player (lua_State *l) {
+    int n = luaL_checkinteger(l, 1);
+    return load_entity(l, player_get(n));
+}
+
+static int create_player (lua_State *l) {
+    int n = luaL_checkinteger(l, 1);
+    player_set(n, sol_entity_create_default_human());
+    return load_entity(l, player_get(n));
 }
 
 static int create_region (lua_State *l) {
@@ -128,6 +161,7 @@ static const struct luaL_Reg sol_lib [] = {
     //{"new", entity_new},
     {"create_region", create_region},
     {"load_player", load_player},
+    {"create_player", create_player},
     {"set_region", set_region},
     {"open_gff", open_gff},
     {"start_game", start_game},
@@ -424,35 +458,53 @@ static int region_set_tile(lua_State *l) {
 }
 
 static int region_set_tile_id(lua_State *l) {
-    sol_region_t *region = get_userdata(l, 1);
-    const int pos = luaL_checkinteger(l, 2);
-    const int id = luaL_checkinteger(l, 3);
+    printf("region_set_tile_id\n");
+    dumpstack(l);
+    //sol_region_t *region = get_userdata(l, 1);
+    sol_region_t *region = lua_touserdata(l, lua_upvalueindex(1));
+    printf("region = %p\n", region);
+    const int id = luaL_checkinteger(l, 1);
+    printf("id = %d\n", id);
 
-    if (pos < 0 && pos > 255) {
-        return 0;
-    }
+    //if (pos < 0 && pos > 255) {
+        //return 0;
+    //}
 
-    if (!region->tile_ids) {
-        region->num_tiles = 256;
-        region->tile_ids = calloc(1, region->num_tiles * sizeof(uint32_t));
-    }
+    //if (!region->tile_ids) {
+        //region->num_tiles = 256;
+        //region->tile_ids = calloc(1, region->num_tiles * sizeof(uint32_t));
+    //}
 
-    region->tile_ids[pos] = id;
+    //region->tile_ids[pos] = id;
     //printf("%p (%d, %d) to %d!\n", region, x, y, tile);
     return 0;
+}
+
+static int region_test(lua_State *l) {
+    printf("region_test\n");
+    dumpstack (l);
+    lua_pushinteger(l, 342154321);
+    return 1;
+}
+
+static int push_region_function(lua_State *l, sol_region_t *region, int (*func)(lua_State *l)) {
+    lua_pushlightuserdata(l, region);
+    lua_pushcclosure(l, func, 1);
+    return 1;
 }
 
 static int region_get(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
     sol_region_t *region = get_userdata(l, -3);
 
-    //printf("indexing '%s' of saves %p\n", str, attack);
     GET_INTEGER_TABLE(region, map_id);
     GET_INTEGER_TABLE(region, palette_id);
     GET_INTEGER_TABLE(region, gff_file);
     if (!strcmp(str, "set_tile")) { lua_pushcfunction(l, region_set_tile); return 1; }
-    if (!strcmp(str, "set_tile_id")) { lua_pushcfunction(l, region_set_tile_id); return 1; }
-    //if (!strcmp(str, "blah")) { lua_pushcfunction(l, blah); return 1; }
+    if (!strcmp(str, "set_tile_id")) {
+        return push_region_function(l, region, region_set_tile_id);
+    }
+    if (!strcmp(str, "test")) { lua_pushcfunction(l, region_test); return 1; }
 
     lua_pushinteger(l, 0);
     return 1;

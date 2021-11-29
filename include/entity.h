@@ -96,6 +96,7 @@ typedef struct entity_s {
 // For the lolz
 typedef entity_t dude_t;
 
+extern entity_t* sol_entity_create_default_human();
 extern entity_t* entity_create_from_objex(const int id);
 extern entity_t* entity_create_from_etab(gff_map_object_t *entry_table, uint32_t id);
 extern entity_t* entity_create_clone(entity_t *clone);
