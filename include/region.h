@@ -26,6 +26,11 @@ typedef struct sol_region_s {
     // entities are to be in display order.
     struct entity_list_s *entities;
     combat_region_t cr;
+    // Temporary while we figure things out...
+    struct {
+        uint16_t mid;// map to grab a tile from
+        uint16_t tid;// tile id from the map
+    } sol;
 } sol_region_t;
 
 // external functions...

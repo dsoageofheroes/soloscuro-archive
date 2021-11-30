@@ -72,11 +72,15 @@ static void map_load_current_region() {
     sol_background_load_region(map->region);
     if (map->region->map_id < 100 && map->region->map_id > 0) {
         pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + map->region->map_id - 1;
+    } else {
+        pal = open_files[RESOURCE_GFF_INDEX].pals->palettes;
     }
 
     dude_t *dude;
     entity_list_for_each(map->region->entities, dude) {
-        sprite_load_animation(dude, pal);
+        if (dude->anim.spr == SPRITE_ERROR) {
+            sprite_load_animation(dude, pal);
+        }
     }
 
     if (player_get_active()) {
@@ -138,16 +142,6 @@ void map_load_region(sol_region_t *reg) {
     sol_window_push(&map_window, 0, 0);
     sol_window_push(&narrate_window, 0, 0);
     sol_window_push(&combat_status_window, 295, 5);
-}
-
-void map_load_map(int id) {
-    map_free(cmap);
-    if (!cmap) { cmap = create_map(); }
-
-    cmap->region = sol_region_manager_get_region(id);
-
-    map_load_current_region();
-    gpl_change_region(42);
 }
 
 static void clear_animations() {
@@ -243,6 +237,10 @@ void map_render_anims() {
         sol_sprite_set_location(anim->spr,
             anim->x - xoffset, // + scmd_xoffset,
             anim->y - yoffset); // + anim->scmd->yoffset);
+        if (dude->name) {
+            printf("%s: %d @ (%d, %d) frame %d / %d\n", dude->name, dude->anim.spr,
+                sol_sprite_getx(anim->spr), sol_sprite_gety(anim->spr), sol_sprite_get_frame(anim->spr), sol_sprite_num_frames(anim->spr));
+        }
         sol_sprite_render_flip(anim->spr, hflip, vflip);
     }
 }

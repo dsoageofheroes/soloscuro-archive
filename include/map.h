@@ -8,7 +8,6 @@ typedef struct map_s {
     sol_region_t *region;
 } map_t;
 
-void map_load_map(int id);
 void map_load_region(sol_region_t *reg);
 void map_render(void *data);
 int map_handle_mouse(const uint32_t x, const uint32_t y);

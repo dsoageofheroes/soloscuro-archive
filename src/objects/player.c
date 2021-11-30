@@ -64,6 +64,7 @@ static void load_character_sprite(const int slot, const float zoom) {
             players_spr[slot].main = sol_sprite_new(pal, 0, 0,
                 zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2095 : 2099);
             dude->sprite.bmp_id = (dude->gender == GENDER_MALE) ? 2095 : 2099;
+            dude->anim.spr = players_spr[slot].main;
             break;
         case RACE_DWARF:
             players_spr[slot].port = sol_sprite_new(pal, 0, 0,
@@ -290,6 +291,7 @@ extern void sol_player_update() {
         dude->anim.movex = dude->anim.movey = 0.0;
         dude->anim.scmd = entity_animation_face_direction(dude->anim.scmd,
             last_action[player_get_active_slot()]);
+         //printf("%s: %d -> %d\n", dude->name, dude->anim.x, dude->anim.destx);
         entity_animation_list_add(&(dude->actions), EA_NONE, dude, NULL, NULL, 1);
         return;
     }
@@ -317,6 +319,7 @@ extern void sol_player_update() {
     if (reg) {
         animation_shift_entity(reg->entities, entity_list_find(reg->entities, dude));
     }
+    printf("player: (%d, %d)\n", dude->mapx, dude->mapy);
 }
 
 extern void sol_player_move(const uint8_t _direction) {

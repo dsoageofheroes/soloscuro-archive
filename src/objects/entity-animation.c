@@ -516,6 +516,7 @@ void entity_animation_list_add(entity_animation_list_t *list, enum entity_action
 extern void entity_animation_list_add_speed(entity_animation_list_t *list, enum entity_action_e action,
         struct entity_s *source, struct entity_s *target, struct power_s *power, const int32_t amt, const int32_t speed) {
     if (!list) { return; }
+    //printf("add_speed: %s, %d\n", source ? source->name : "?", speed);
     entity_animation_node_t *toadd = malloc(sizeof(entity_animation_node_t));
     entity_animation_node_t *rover = list->head;
 

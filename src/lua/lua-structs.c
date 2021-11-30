@@ -458,13 +458,10 @@ static int region_set_tile(lua_State *l) {
 }
 
 static int region_set_tile_id(lua_State *l) {
-    printf("region_set_tile_id\n");
-    dumpstack(l);
     //sol_region_t *region = get_userdata(l, 1);
     sol_region_t *region = lua_touserdata(l, lua_upvalueindex(1));
-    printf("region = %p\n", region);
-    const int id = luaL_checkinteger(l, 1);
-    printf("id = %d\n", id);
+    region->sol.mid = luaL_checkinteger(l, 1);
+    region->sol.tid = luaL_checkinteger(l, 2);
 
     //if (pos < 0 && pos > 255) {
         //return 0;

@@ -15,6 +15,7 @@
 #include "new-character.h"
 #include "view-character.h"
 #include "window-main.h"
+#include "region-manager.h"
 #include "map.h"
 
 #define MAX_SCREENS (10)
@@ -136,7 +137,7 @@ int port_load_region(const int region) {
 }
 
 extern int sol_window_load_region(const int region) {
-    map_load_map(region);
+    sol_region_manager_set_current(sol_region_manager_get_region(region));
 
     sol_window_push(&map_window, 0, 0);
     sol_window_push(&narrate_window, 0, 0);

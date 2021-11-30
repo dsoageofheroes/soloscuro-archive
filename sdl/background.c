@@ -3,10 +3,37 @@
 #include "gff.h"
 #include "port.h"
 #include "settings.h"
+#include "gff-map.h"
+#include "gfftypes.h"
 #include <SDL2/SDL.h>
+#include <string.h>
 
 static SDL_Texture **tiles = NULL;
 static sol_region_t *region = NULL;;
+
+static void load_sol_background() {
+    unsigned char *data;
+    uint32_t w, h;
+    char buf[32];
+    SDL_Surface* tile = NULL;
+
+    snprintf(buf, 32, "rgn%02x.gff", region->sol.mid);
+    int gff_file = gff_find_index(buf);
+    int pid = gff_get_palette_id(DSLDATA_GFF_INDEX, region->sol.mid - 1);
+    //printf("gff_file = %d, pid = %d\n", gff_file, pid);
+    data = gff_get_frame_rgba_with_palette(gff_file, GFF_TILE, region->sol.tid, 0, pid);
+    if (!data) { return; }
+    w = gff_get_frame_width(gff_file, GFF_TILE, region->sol.tid, 0);
+    h = gff_get_frame_height(gff_file, GFF_TILE, region->sol.tid, 0);
+    tile = SDL_CreateRGBSurfaceFrom(data, w, h, 32, 4*w, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
+
+    printf("HERE!\n");
+    tiles = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * 1);
+    tiles[0] = SDL_CreateTextureFromSurface(main_get_rend(), tile);
+    SDL_FreeSurface(tile);
+
+    free(data);
+}
 
 extern void sol_background_load_region(sol_region_t *_region) {
     SDL_Surface* tile = NULL;
@@ -17,6 +44,11 @@ extern void sol_background_load_region(sol_region_t *_region) {
     //gff_palette_t *pal = NULL;
     int offset = 0;
     region = _region;
+
+    if (region->sol.mid) {
+        load_sol_background();
+        return;
+    }
 
     if (region->map_id < 100 && region->map_id > 0) {
         //pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + region->map_id - 1;
