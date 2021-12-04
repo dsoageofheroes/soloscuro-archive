@@ -31,7 +31,8 @@ extern void      sol_player_center_portrait(const int i, const int x, const int 
 extern uint16_t  sol_player_get_sprite(const int slot);
 extern void      sol_player_render(const int slot);
 extern void      sol_player_render_portrait(const int slot);
-extern void      sol_player_load(const int slot, const float zoom);
+extern void      sol_player_load(const int slot);
+extern void      sol_player_load_zoom(const int slot, const float zoom);
 extern void      sol_player_load_graphics(const int slot);
 extern void      sol_player_close();
 

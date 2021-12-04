@@ -41,7 +41,7 @@ static int sol_load_charsave(lua_State *l) {
         return 1;
     }
 
-    port_player_load(slot);
+    sol_player_load(slot);
     lua_pushboolean(l, 1);
     return 1;
 }
@@ -138,7 +138,6 @@ static int load_window(lua_State *l) {
 }
 
 static int game_loop(lua_State *l) {
-    printf("player[0].anim.x = %d\n", player_get(0)->anim.x);
     port_game_loop();
     return 0;
 }

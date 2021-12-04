@@ -546,7 +546,7 @@ void inventory_window_return_control () {
             if (dnd2e_character_is_valid(pc)) {// && dnd2e_psin_is_valid(pc, psi)) {
                 warn ("TODO: PUT BACK IN CHARACTER ADDING!\n");
                 //gff_char_add_character(pc, psi, spells, psionics, name);
-                sol_player_load(slot_clicked, settings_zoom());
+                sol_player_load_zoom(slot_clicked, settings_zoom());
             } else {
                 sol_window_push(&popup_window, 100, 75);
                 sol_popup_set_message("Character was invalid.");
@@ -563,7 +563,7 @@ void inventory_window_return_control () {
             if (!ds_load_character_charsave(slot_clicked, sel)) {
                 printf("Char loading failed.\n");
             } else {
-                sol_player_load(slot_clicked, settings_zoom());
+                sol_player_load_zoom(slot_clicked, settings_zoom());
                 char_selected = slot_clicked;
             }
         }

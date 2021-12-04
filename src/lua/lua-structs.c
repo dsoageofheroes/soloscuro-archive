@@ -98,6 +98,7 @@ static int load_player (lua_State *l) {
 static int create_player (lua_State *l) {
     int n = luaL_checkinteger(l, 1);
     player_set(n, sol_entity_create_default_human());
+    sol_player_load(n);
     return load_entity(l, player_get(n));
 }
 

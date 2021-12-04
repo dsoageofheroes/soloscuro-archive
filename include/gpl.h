@@ -7,7 +7,7 @@
 #define GPL_H
 
 #ifdef DEBUG
-#define  debug(fmt, ...) dsl_debug(__FILE__, __LINE__, __PRETTY_FUNCTION__, fmt, ##__VA_ARGS__)
+#define  debug(fmt, ...) sol_debug(__FILE__, __LINE__, __PRETTY_FUNCTION__, fmt, ##__VA_ARGS__)
 #else
 #       define debug(...)
 #endif
@@ -17,6 +17,7 @@
 #define error(fmt, ...) fprintf(stderr, ("[%s:%d] %s: " fmt), __FILE__, __LINE__, __PRETTY_FUNCTION__, ##__VA_ARGS__);
 #define fatal(fmt, ...) fprintf(stderr, ("FATAL [%s:%d] %s: " fmt), __FILE__, __LINE__, __PRETTY_FUNCTION__, ##__VA_ARGS__);exit(1);
 
+#include "settings.h"
 #include "gff.h"
 #include "gfftypes.h"
 #include "ssi-scmd.h"

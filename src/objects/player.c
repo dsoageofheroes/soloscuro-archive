@@ -4,6 +4,7 @@
 #include "gfftypes.h"
 #include "gff.h"
 #include "player.h"
+#include "map.h"
 #include "wizard.h"
 #include "rules.h"
 #include "region-manager.h"
@@ -241,7 +242,7 @@ void sol_player_load_graphics(const int slot) {
     load_character_sprite(slot, settings_zoom());
 }
 
-extern void sol_player_load(const int slot, const float zoom) {
+extern void sol_player_load_zoom(const int slot, const float zoom) {
     load_character_sprite(slot, zoom);
 }
 
@@ -319,7 +320,6 @@ extern void sol_player_update() {
     if (reg) {
         animation_shift_entity(reg->entities, entity_list_find(reg->entities, dude));
     }
-    printf("player: (%d, %d)\n", dude->mapx, dude->mapy);
 }
 
 extern void sol_player_move(const uint8_t _direction) {
@@ -339,10 +339,12 @@ extern void sol_player_condense() {
     }
 }
 
-extern void port_player_load(const int slot) {
-    sol_player_load(slot, settings_zoom());
-    sol_player_load_graphics(slot);
-    port_place_entity(player_get(slot));
+extern void sol_player_load(const int slot) {
+    if (slot >= 0 && slot < MAX_PCS && players[slot]->anim.spr == SPRITE_ERROR) {
+        sol_player_load_zoom(slot, settings_zoom());
+        sol_player_load_graphics(slot);
+        sol_map_place_entity(player_get(slot));
+    }
 }
 
 extern void sol_player_set_delay(const int amt) {

@@ -5,6 +5,7 @@
 #include "gpl-state.h"
 #include "gameloop.h"
 #include "port.h"
+#include "map.h"
 #include "ssi-scmd.h"
 #include "replay.h"
 #include "region-manager.h"
@@ -490,7 +491,7 @@ static int gpl_clone(lua_State *l) {
             sol_region_add_entity(sol_region_manager_get_current(), dude);
             port_load_sprite(&(dude->anim), pal, OBJEX_GFF_INDEX, GFF_BMP, dude->sprite.bmp_id,
                 (dude->name) ? 2 : 1);
-            port_place_entity(dude);
+            sol_map_place_entity(dude);
             //TODO: Should reshift the entity?
             dude->anim.scmd = sol_combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
         }

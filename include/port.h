@@ -79,7 +79,6 @@ extern void port_change_region(sol_region_t *reg);
 extern void port_combat_action(entity_action_t *ca);
 extern void port_load_item(item_t *item);
 extern void port_free_item(item_t *item);
-extern void port_player_load(const int slot);
 extern int port_load_region(const int region);
 
 extern void port_start();
@@ -105,7 +104,6 @@ extern void port_toggle_window(const window_t window);
 extern void port_load_window(const window_t window);
 extern void port_set_lua_globals(lua_State *l);
 extern void port_game_loop();
-extern void port_place_entity(entity_t *entity);
 extern void port_entity_update_scmd(entity_t *entity);
 
 extern void port_handle_input();

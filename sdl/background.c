@@ -27,7 +27,6 @@ static void load_sol_background() {
     h = gff_get_frame_height(gff_file, GFF_TILE, region->sol.tid, 0);
     tile = SDL_CreateRGBSurfaceFrom(data, w, h, 32, 4*w, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
 
-    printf("HERE!\n");
     tiles = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * 1);
     tiles[0] = SDL_CreateTextureFromSurface(main_get_rend(), tile);
     SDL_FreeSurface(tile);

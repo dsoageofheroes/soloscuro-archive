@@ -93,6 +93,7 @@ extern entity_t* sol_entity_create_default_human() {
     dude->stats.saves.petrify = 20;
     dude->stats.saves.breath = 20;
     dude->stats.saves.spell = 20;
+    dude->anim.spr = SPRITE_ERROR;
     debug("Need to set default size!\n");
     dude->size = 0;
     return dude;

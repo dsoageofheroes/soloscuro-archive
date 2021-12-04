@@ -1,6 +1,7 @@
 #include "sol-lua-manager.h"
 #include "sol-lua-settings.h"
 #include "gpl.h"
+#include "gpl-state.h"
 
 static lua_State *lua_state = NULL;
 static void sol_lua_run(const char *filename, const char *name);
@@ -13,6 +14,7 @@ extern lua_State* sol_lua_get_state() {
 
     // inject the Lua state with everything.
     sol_lua_settings_register(lua_state);
+    gpl_state_register(lua_state);
 
     return lua_state;
 }

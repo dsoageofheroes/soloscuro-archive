@@ -128,7 +128,7 @@ void port_change_region(sol_region_t *reg) {
     map_load_region(reg);
 
     for (int i = 0; i < MAX_PCS; i++) {
-        sol_player_load(i, settings_zoom());
+        sol_player_load_zoom(i, settings_zoom());
     }
 }
 

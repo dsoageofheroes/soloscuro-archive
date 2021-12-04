@@ -87,7 +87,7 @@ static void map_load_current_region() {
         if (player_get_active()->anim.spr == SPRITE_ERROR) {
             sprite_load_animation(player_get_active(), pal);
         }
-        port_place_entity(player_get_active());
+        sol_map_place_entity(player_get_active());
     }
 
     cmap = map;
@@ -238,8 +238,8 @@ void map_render_anims() {
             anim->x - xoffset, // + scmd_xoffset,
             anim->y - yoffset); // + anim->scmd->yoffset);
         if (dude->name) {
-            printf("%s: %d @ (%d, %d) frame %d / %d\n", dude->name, dude->anim.spr,
-                sol_sprite_getx(anim->spr), sol_sprite_gety(anim->spr), sol_sprite_get_frame(anim->spr), sol_sprite_num_frames(anim->spr));
+            //printf("%s: %d @ (%d, %d) frame %d / %d\n", dude->name, dude->anim.spr,
+                //sol_sprite_getx(anim->spr), sol_sprite_gety(anim->spr), sol_sprite_get_frame(anim->spr), sol_sprite_num_frames(anim->spr));
         }
         sol_sprite_render_flip(anim->spr, hflip, vflip);
     }
@@ -302,7 +302,7 @@ static void entity_instant_move(entity_t *entity) {
     asn->anim->y = asn->anim->desty;
 }
 
-void port_place_entity(entity_t *entity) {
+void sol_map_place_entity(entity_t *entity) {
     animate_sprite_t *as = &(entity->anim);
     const float zoom = settings_zoom();
 

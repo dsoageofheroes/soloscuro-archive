@@ -14,6 +14,7 @@ int map_handle_mouse(const uint32_t x, const uint32_t y);
 int map_handle_mouse_click(const uint32_t button, const uint32_t x, const uint32_t y);
 void map_apply_alpha(const uint8_t alpha);
 extern void map_highlight_tile(const int tilex, const int tiley, const int frame);
+extern void sol_map_place_entity(entity_t *entity);
 
 int cmap_is_block(const int row, const int column);
 int cmap_is_actor(const int row, const int column);

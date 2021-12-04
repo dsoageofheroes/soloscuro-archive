@@ -18,7 +18,6 @@
 #define DSL_LOS_ORDER (1)
 
 uint8_t command_implemented = 0; // Temporary while I figure out each function.
-uint8_t quiet = 0;
 
 /* Globals */
 void get_parameters(int16_t amt);
@@ -52,10 +51,6 @@ extern void gpl_init() {
     sol_region_manager_init();
     info("Running Master DSL #99.\n");
     gpl_lua_execute_script(99, 0, 1);
-}
-
-void gpl_set_quiet(const int val) {
-    quiet = val;
 }
 
 extern void gpl_cleanup() {
