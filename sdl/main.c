@@ -25,6 +25,7 @@
 #include "player.h"
 #include "port.h"
 #include "sol-lua-manager.h"
+#include "sol-lua-settings.h"
 
 void browse_loop(SDL_Surface*, SDL_Renderer *rend);
 void window_debug_init(SDL_Surface *sur, SDL_Renderer *rend, const char *arg);
@@ -464,7 +465,9 @@ int main(int argc, char *argv[]) {
         }
         gff_load_directory(ds1_gffs);
     }
+    powers_init();
     gpl_init();
+    sol_lua_register_globals();
 
     init(argc, argv);
 

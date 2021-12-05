@@ -3,6 +3,8 @@
 #include "region-manager.h"
 #include "gff.h"
 #include "port.h"
+#include "lua-region.h"
+#include "lua-entity.h"
 #include <string.h>
 
 extern char *strdup(const char *s); // Not in standard.
@@ -12,7 +14,7 @@ extern char *strdup(const char *s); // Not in standard.
 #define SET_INTEGER_TABLE(a, field, num) if (!strcmp(str, #field)) { a->field = num; return 0; }
 #define SET_STRING_TABLE(a, field, num) if (!strcmp(str, #field)) { if (a->field) { free(a->field); } a->field = strdup(num); return 0; }
 
-static void* get_userdata(lua_State *l, const int loc) {
+extern void* sol_lua_get_userdata(lua_State *l, const int loc) {
     void *ret = NULL;
     luaL_checktype(l, 1, LUA_TTABLE);
 
@@ -43,7 +45,7 @@ static void push_table(lua_State *l, void *data, const char *name, const char *m
     push_table_end(l, metaname);
 }
 
-static void dumpstack (lua_State *L) {
+extern void sol_lua_dumpstack (lua_State *L) {
   int top=lua_gettop(L);
   for (int i=-5; i <= top; i++) {
     printf("%d\t%s\t", i, luaL_typename(L,i));
@@ -67,7 +69,7 @@ static void dumpstack (lua_State *L) {
   }
 }
 
-static int load_entity (lua_State *l, dude_t *dude) {
+extern int sol_lua_load_entity (lua_State *l, dude_t *dude) {
     lua_newtable(l); // entity table
     lua_pushlightuserdata(l, dude);
     lua_setfield(l, -2, "ptr__");
@@ -92,14 +94,14 @@ static int load_entity (lua_State *l, dude_t *dude) {
 
 static int load_player (lua_State *l) {
     int n = luaL_checkinteger(l, 1);
-    return load_entity(l, player_get(n));
+    return sol_lua_load_entity(l, player_get(n));
 }
 
 static int create_player (lua_State *l) {
     int n = luaL_checkinteger(l, 1);
     player_set(n, sol_entity_create_default_human());
     sol_player_load(n);
-    return load_entity(l, player_get(n));
+    return sol_lua_load_entity(l, player_get(n));
 }
 
 static int create_region (lua_State *l) {
@@ -129,7 +131,7 @@ static int create_region (lua_State *l) {
 static int set_region (lua_State *l) {
     luaL_checktype(l, 1, LUA_TTABLE);
 
-    sol_region_t *region = get_userdata(l, 1);
+    sol_region_t *region = sol_lua_get_userdata(l, 1);
     sol_region_manager_add_region(region);
     sol_region_manager_set_current(region);
 
@@ -175,9 +177,8 @@ extern const struct luaL_Reg* lua_struct_get_funcs() {
 
 static int entity_get(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    entity_t *dude = get_userdata(l, -3);
+    entity_t *dude = (entity_t*)sol_lua_get_userdata(l, -3);
 
-    //printf("indexing '%s' of object %p\n", str, dude);
     if (!dude) {
         lua_pushnil(l);
         return 1;
@@ -197,14 +198,12 @@ static int entity_get(lua_State *l) {
     GET_INTEGER_TABLE(dude, attack_sound);
     GET_INTEGER_TABLE(dude, combat_status);
     //if (!strcmp(str, "blah")) { lua_pushcfunction(l, blah); return 1; }
-
-    lua_pushinteger(l, 0);
-    return 1;
+    return sol_lua_entity_function(dude, str, l);
 }
 
 static int entity_set(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    entity_t *dude = get_userdata(l, -4);
+    entity_t *dude = sol_lua_get_userdata(l, -4);
 
     if (lua_isinteger(l, 3)) {
         const int num = luaL_checkinteger(l, 3);
@@ -237,7 +236,7 @@ static const luaL_Reg entity_methods[] = {
 
 static int stats_get(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    stats_t *stats = get_userdata(l, -3);
+    stats_t *stats = sol_lua_get_userdata(l, -3);
 
     //printf("indexing '%s' of stats %p\n", str, stats);
     GET_INTEGER_TABLE(stats, str);
@@ -264,7 +263,7 @@ static int stats_get(lua_State *l) {
 
 static int stats_set(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    stats_t *stats = get_userdata(l, -4);
+    stats_t *stats = sol_lua_get_userdata(l, -4);
 
     if (lua_isinteger(l, 3)) {
         const int num = luaL_checkinteger(l, 3);
@@ -297,7 +296,7 @@ static const luaL_Reg stats_methods[] = {
 
 static int attack_get(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    innate_attack_t *attack = get_userdata(l, -3);
+    innate_attack_t *attack = sol_lua_get_userdata(l, -3);
 
     //printf("indexing '%s' of attack %p\n", str, attack);
     GET_INTEGER_TABLE(attack, number);
@@ -313,7 +312,7 @@ static int attack_get(lua_State *l) {
 
 static int attack_set(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    innate_attack_t *attack = get_userdata(l, -4);
+    innate_attack_t *attack = sol_lua_get_userdata(l, -4);
 
     if (lua_isinteger(l, 3)) {
         const int num = luaL_checkinteger(l, 3);
@@ -334,7 +333,7 @@ static const luaL_Reg attack_methods[] = {
 
 static int gff_get(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    gff_file_t *file = get_userdata(l, -3);
+    gff_file_t *file = sol_lua_get_userdata(l, -3);
 
     printf("indexing '%s' of file %p\n", str, file);
     //GET_INTEGER_TABLE(file, number);
@@ -350,7 +349,7 @@ static int gff_get(lua_State *l) {
 
 static int gff_set(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    gff_file_t *file = get_userdata(l, -4);
+    gff_file_t *file = sol_lua_get_userdata(l, -4);
 
     if (lua_isinteger(l, 3)) {
         const int num = luaL_checkinteger(l, 3);
@@ -372,7 +371,7 @@ static const luaL_Reg gff_methods[] = {
 
 static int saves_get(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    saving_throws_t *saves = get_userdata(l, -3);
+    saving_throws_t *saves = sol_lua_get_userdata(l, -3);
 
     //printf("indexing '%s' of saves %p\n", str, attack);
     GET_INTEGER_TABLE(saves, paralysis);
@@ -388,7 +387,7 @@ static int saves_get(lua_State *l) {
 
 static int saves_set(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    saving_throws_t *saves = get_userdata(l, -4);
+    saving_throws_t *saves = sol_lua_get_userdata(l, -4);
 
     if (lua_isinteger(l, 3)) {
         const int num = luaL_checkinteger(l, 3);
@@ -409,7 +408,7 @@ static const luaL_Reg saves_methods[] = {
 
 static int class_get(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    class_t *class = get_userdata(l, -3);
+    class_t *class = sol_lua_get_userdata(l, -3);
 
     //printf("indexing '%s' of saves %p\n", str, attack);
     GET_INTEGER_TABLE(class, current_xp);
@@ -425,7 +424,7 @@ static int class_get(lua_State *l) {
 
 static int class_set(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    class_t *class = get_userdata(l, -4);
+    class_t *class = sol_lua_get_userdata(l, -4);
 
     if (lua_isinteger(l, 3)) {
         const int num = luaL_checkinteger(l, 3);
@@ -444,80 +443,26 @@ static const luaL_Reg class_methods[] = {
     {0,0}
 };
 
-static int region_set_tile(lua_State *l) {
-    sol_region_t *region = get_userdata(l, 1);
-    const int x = luaL_checkinteger(l, 2);
-    const int y = luaL_checkinteger(l, 3);
-    const int tile = luaL_checkinteger(l, 4);
-
-    if (x > 0 && x < 99 && y > 0 && y < 128) {
-        region->tiles[x-1][y-1] = tile;
-    }
-    //printf("%p (%d, %d) to %d!\n", region, x, y, tile);
-    //uint8_t tiles[MAP_ROWS][MAP_COLUMNS];
-    return 0;
-}
-
-static int region_set_tile_id(lua_State *l) {
-    //sol_region_t *region = get_userdata(l, 1);
-    sol_region_t *region = lua_touserdata(l, lua_upvalueindex(1));
-    region->sol.mid = luaL_checkinteger(l, 1);
-    region->sol.tid = luaL_checkinteger(l, 2);
-
-    //if (pos < 0 && pos > 255) {
-        //return 0;
-    //}
-
-    //if (!region->tile_ids) {
-        //region->num_tiles = 256;
-        //region->tile_ids = calloc(1, region->num_tiles * sizeof(uint32_t));
-    //}
-
-    //region->tile_ids[pos] = id;
-    //printf("%p (%d, %d) to %d!\n", region, x, y, tile);
-    return 0;
-}
-
-static int region_test(lua_State *l) {
-    printf("region_test\n");
-    dumpstack (l);
-    lua_pushinteger(l, 342154321);
-    return 1;
-}
-
-static int push_region_function(lua_State *l, sol_region_t *region, int (*func)(lua_State *l)) {
-    lua_pushlightuserdata(l, region);
-    lua_pushcclosure(l, func, 1);
-    return 1;
-}
-
 static int region_get(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    sol_region_t *region = get_userdata(l, -3);
+    sol_region_t *region = sol_lua_get_userdata(l, -3);
 
     GET_INTEGER_TABLE(region, map_id);
     GET_INTEGER_TABLE(region, palette_id);
     GET_INTEGER_TABLE(region, gff_file);
-    if (!strcmp(str, "set_tile")) { lua_pushcfunction(l, region_set_tile); return 1; }
-    if (!strcmp(str, "set_tile_id")) {
-        return push_region_function(l, region, region_set_tile_id);
-    }
-    if (!strcmp(str, "test")) { lua_pushcfunction(l, region_test); return 1; }
-
-    lua_pushinteger(l, 0);
-    return 1;
+    return sol_lua_region_function(region, str, l);
 }
 
 static int region_set(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    sol_region_t *region = get_userdata(l, -4);
+    sol_region_t *region = sol_lua_get_userdata(l, -4);
 
     if (lua_isinteger(l, 3)) {
         const int num = luaL_checkinteger(l, 3);
         SET_INTEGER_TABLE(region, map_id, num);
         SET_INTEGER_TABLE(region, palette_id, num);
     } else if (lua_istable(l, 3)) {
-        gff_file_t *file = get_userdata(l, 3);
+        gff_file_t *file = sol_lua_get_userdata(l, 3);
         if (!strcmp("gff_file", str)) {
             region->gff_file = file - open_files;
         }

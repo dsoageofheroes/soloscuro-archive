@@ -102,7 +102,6 @@ static void open_gpl_lua() {
     clua = lua_states[lua_stack_pos++] = luaL_newstate();
     luaL_openlibs(clua);
     gpl_state_register(clua);
-    sol_lua_settings_register(clua);
 }
 
 static void close_gpl_lua() {

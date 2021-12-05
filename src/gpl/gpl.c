@@ -42,7 +42,6 @@ static void initialize_gpl_stack() {
 extern void gpl_init() {
     info("Initalizing DSL.\n");
     initialize_gpl_stack();
-    powers_init();
     gpl_init_vars();
     sol_player_init();
     ssi_item_init();

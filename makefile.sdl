@@ -8,7 +8,7 @@ SRCS := $(shell find $(SRC_DIRS) -name *.c) ext/spng/spng.c
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 LDFLAGS := -Llib/ -lz -lm -llua5.3 -lds -lxmimidi -lSDL2  -lSDL2_ttf -lADLMIDI -lsndfile
-CFLAGS  := -g -fPIC -Wall -Werror
+CFLAGS  := -g -fPIC -Wall -Werror -fsanitize=address -static-libasan -g
 
 INC_DIRS := $(shell find $(SRC_DIRS) -type d) ext/ ext/libadlmidi/include include/
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
@@ -23,7 +23,8 @@ deps:
 	make -j4 -f makefile.xmimidi
 
 $(BUILD_DIR)/$(TARGET_EXEC): lib/libADLMIDI.so $(OBJS)
-	$(CC) $(OBJS) -o $@ $(LDFLAGS)
+	$(CC) $(OBJS) -o $@ $(CFLAGS) $(LDFLAGS)
+	#$(CC) $(OBJS) -o $@ $(LDFLAGS)
 
 lib/libADLMIDI.so:
 	make -j4 -f makefile.adlmidi

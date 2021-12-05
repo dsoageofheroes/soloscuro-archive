@@ -136,6 +136,7 @@ extern void powers_set_hit(power_t *power, const uint32_t id) {
 }
 
 extern void powers_init() {
+    wizard_init();
     wizard_setup_powers();
 }
 

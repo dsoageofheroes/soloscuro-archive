@@ -4,8 +4,10 @@
 #include "gpl.h"
 #include "player.h"
 #include "sol-lua-manager.h"
+#include "sol-lua-settings.h"
 #include "region-manager.h"
 #include <string.h>
+#include <ctype.h>
 
 #define MAX_SOL_FUNCS (1<<10)
 
@@ -168,19 +170,41 @@ static const struct luaL_Reg sol_funcs[] = {
     {NULL, NULL},
 };
 
+// Note make sure to call this after the soloscuro table has been created.
+static void add_wizard_globals(lua_State *l) {
+    char buf[128];
+    power_t *pw = NULL;
+
+    for (int i = 0; i < WIZ_MAX; i++) {
+        pw = wizard_get_spell(i);
+        if (pw) {
+            snprintf(buf, 128, "soloscuro.WIZ_%s=%d", pw->name, i);
+            for (int j = 9; j < 128 && buf[j] != '=' && buf[j] != '\0'; j++) {
+                if (isalpha(buf[j])) { buf[j] = toupper(buf[j]); }
+                if (buf[j] == ' ') { buf[j] = '_'; }
+            }
+            luaL_dostring(l, buf);
+        }
+    }
+}
+
 extern void sol_lua_settings_register(lua_State *l) {
     set_globals(l);
     pos = 0;
     memset(sol_lib, 0x0, sizeof(sol_lib));
+    lua_newtable(l);
     add_funcs(lua_struct_get_funcs());
     add_funcs(sol_funcs);
     add_funcs(sol_ds_get_lib());
 
-    lua_newtable(l);
     luaL_setfuncs(l, sol_lib, 0);
     lua_setglobal(l, "soloscuro");
 
     lua_struct_register(l);
+}
+
+extern void sol_lua_register_globals() {
+    add_wizard_globals(sol_lua_get_state());
 }
 
 static int sol_lua_error(const char *msg) {
@@ -246,6 +270,7 @@ static void load_game() {
 }
 
 extern int sol_lua_load_preload(const char *filename) {
+    powers_init();
     lua_State *sol_lua = sol_lua_get_state();
 
     if (luaL_loadfile(sol_lua, "solconfig.lua")) {

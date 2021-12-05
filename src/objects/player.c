@@ -363,3 +363,8 @@ extern void sol_player_set_move(const int amt) {
     ticks_per_move = amt;
 }
 
+extern inventory_t* sol_player_get_inventory(const int slot) {
+    if (!players[slot]->inv) { players[slot]->inv = sol_inventory_create(); }
+    return (inventory_t*)players[slot]->inv;
+}
+

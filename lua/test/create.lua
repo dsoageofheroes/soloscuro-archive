@@ -14,6 +14,9 @@ function init()
     sol.load_window("narrate")
     sol.load_window("combat")
     gpl.clone(-269, 3, 40, 10, 6, 0)
+    slig = reg.find("Slig")
+    print(slig.name)
+    print(sol.WIZ_MAGIC_MISSILE)
+    p0.cast(slig, sol.WIZ_MAGIC_MISSILE)
     sol.game_loop()
-    --4, 84
 end

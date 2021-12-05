@@ -30,6 +30,7 @@ typedef struct power_actions_s {
 // This should be stored in a general list/array/hashtable for access at any time.
 typedef struct power_s {
     char            *name;
+    const char      *const_name;
     char            *description;
     int32_t         range;
     int32_t         aoe;

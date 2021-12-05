@@ -215,7 +215,7 @@ static void render_character() {
     char buf[BUF_MAX];
     entity_t *player = player_get(char_selected);
     if (!player) { return; }
-    inventory_t *player_items = (inventory_t*)player->inv;
+    inventory_t *player_items = sol_player_get_inventory(char_selected);
     const float zoom = settings_zoom();
 
     if (player->name == NULL) { return; } // no character.

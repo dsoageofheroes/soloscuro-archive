@@ -5,23 +5,38 @@
 #include "gff.h"
 #include "gfftypes.h"
 
-power_list_t* wizard_spells[10] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+static power_list_t* wizard_spells[10] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+static power_t*      wizard_spell_list[WIZ_MAX];
 
 extern power_list_t* wizard_get_spells(const int level) {
     if (level < 1 || level > 10) { return NULL; }
     return wizard_spells[level - 1];
 }
 
-extern void wizard_add_power(const int spell_level, power_t *pw) {
-    int index = spell_level - 1;
+extern power_t* wizard_get_spell(const int idx) {
+    if (idx < 0 || idx >= WIZ_MAX) { return NULL; }
+    //if (idx < 0 || idx >= WIZ_MAX) { return NULL; }
+    //if (!wizard_spell_list) { exit(1); }
+    //return (power_t*) 0x1000;
+    return wizard_spell_list[idx];
+}
+
+extern void wizard_init() {
+    memset(wizard_spell_list, 0x0, sizeof(power_t*) * WIZ_MAX);
+}
+
+extern void wizard_add_power(power_t *pw, const int idx) {
+    int index = pw->level - 1;
     if (index < 0 || index > 9) { return; }
     if (!wizard_spells[index]) { wizard_spells[index] = power_list_create(); }
     if (!pw->description) {
+    printf("ADD POWER!(%s)\n", pw->name);
         power_free(pw);
         return;
     }
     power_list_add(wizard_spells[index], pw);
-    debug("Added %s to wizard level %d\n", pw->name, spell_level);
+    wizard_spell_list[idx] = pw;
+    debug("Added %s to wizard level %d (%p)\n", pw->name, pw->level, pw);
 }
 
 extern void wizard_cleanup() {
