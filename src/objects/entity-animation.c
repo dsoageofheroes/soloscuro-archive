@@ -2,6 +2,8 @@
 #include "combat.h"
 #include "gpl.h"
 #include "port.h"
+#include "arbiter.h"
+#include "combat-status.h"
 #include <stdlib.h>
 
 static entity_animation_node_t *last;
@@ -373,14 +375,145 @@ static void play_damage_sound(entity_t *target) {
     sol_play_sound_effect(67);
 }
 
+static int region_damage_execute(power_t *pw, sol_region_t *reg) {
+    if (!reg || !reg->actions.head) { return 0; }
+    entity_action_t *action = &(reg->actions.head->ca);
+
+    entity_t *source = action->source;
+    entity_t *target = action->target;
+
+    switch(action->action) {
+        case EA_MELEE:
+            error("NEED TO IMPLEMENT MELEE animation!\n");
+            //play_melee_sound(source);
+            //source->anim.scmd = get_entity_scmd(source->anim.scmd, list->head->ca.action);
+            //port_update_entity(source, 0, 0);
+            break;
+        case EA_RED_DAMAGE:
+        case EA_BIG_RED_DAMAGE:
+        case EA_GREEN_DAMAGE:
+        case EA_MAGIC_DAMAGE:
+        case EA_BROWN_DAMAGE:
+            play_damage_sound(target);
+            //source->anim.scmd = get_scmd(source->anim.scmd, 0, 0);
+            //source->anim.scmd = get_scmd(source->anim.scmd, 0, 0);
+            //port_update_entity(source, 0, 0);
+            //port_combat_action(&(list->head->ca));
+            break;
+        case EA_DAMAGE_APPLY:
+            error("NEED TO IMPLEMENT DAMAGE APPLY animation!\n");
+            //target->stats.hp -= list->head->ca.amt;
+            //if (target->stats.hp <= 0) {
+                //target->combat_status = COMBAT_STATUS_DYING;
+                //play_death_sound(target);
+                //sol_combat_is_defeated(reg, target);
+            //}
+            break;
+        default:
+            //error("unknown action %d!\n", list->head->ca.action);
+            error("unknown action %d!\n", action->action);
+            break;
+    }
+
+    //last = list->head;
+    //list->head = list->head->next;
+    //if (last) { free(last); last = NULL; }
+
+    return 1;
+}
+
+// This is called right before the animation is freed.
+// It has already been removed from the region's list.
+static void region_animation_last_check(entity_animation_node_t *todelete) {
+    power_instance_t pi;
+    switch(todelete->ca.action) {
+        case EA_POWER_HIT:
+            if (sol_arbiter_hits(todelete)) {
+                pi.entity = todelete->ca.source;
+                pi.item = NULL;
+                pi.stats = todelete->ca.power;
+                todelete->ca.power->actions.apply(&pi, todelete->ca.target);
+            }
+            break;
+        case EA_DAMAGE_APPLY:
+            sol_combat_clear_damage();
+            printf("Still need to apply damage!\n");
+            break;
+        default:
+            break;
+    }
+}
+
 // sound 63: is PC doing range attack
 extern int entity_animation_region_execute(sol_region_t *reg) {
-    entity_animation_list_t list;
-    list.head = next_animation_head;
-    int ret = entity_animation_list_execute(&list, reg);
-    next_animation_head = list.head;
+    power_t pw;
+    if (!reg || !reg->actions.head) { return 0; }
+    entity_action_t *action = &(reg->actions.head->ca);
+    if (!action->power && !action->damage) {
+        //entity_animation_list_add_effect(&(reg->actions), EA_MAGIC_DAMAGE, source, target, NULL, 0, damage);
+        error("Only handle power actions at the moment!");
+        return 0;
+    }
+    if (action->damage) {
+        action->amt--;
+        region_damage_execute(&pw, reg);
+        if (action->amt <= 0) {
+            entity_animation_node_t *tmp = reg->actions.head;
+            reg->actions.head = reg->actions.head->next;
+            region_animation_last_check(tmp);
+            free (tmp);
+        }
+        return 1;
+    }
+    power_t *power = reg->actions.head->ca.power;
 
-    return ret;
+    for (int i = 0; i < action->speed; i++) {
+        //printf("action->amt = %d (%d), ticks = %d, scmd_pos = %d of %d\n", action->amt, action->start_amt,
+            //action->ticks, action->scmd_pos, entity->anim.scmd[action->scmd_pos].delay);
+        action->amt--;
+        action->ticks++;
+
+        if (power->cast.scmd[action->scmd_pos].delay < action->ticks) {
+            //if (entity->name) { printf("->%s: ticks, amt = %d\n", entity->name, action->amt); }
+            action->scmd_pos = ssi_scmd_next_pos(power->cast.scmd, action->scmd_pos);
+            //sol_sprite_render_flip(cmap->region->actions.head->ca.power->cast.spr, 0, 0);
+            sol_sprite_set_frame(power->cast.spr, power->cast.scmd[action->scmd_pos].bmp_idx);
+            //port_entity_update_scmd(entity);
+            action->ticks = 0;
+        }
+
+        if (action->start_amt >= 0 && action->amt <= 0) {
+            entity_animation_node_t *tmp = reg->actions.head;
+            reg->actions.head = reg->actions.head->next;
+            region_animation_last_check(tmp);
+            free (tmp);
+            return 1;
+        }
+
+/*
+        if (action->start_amt >= 0 && action->amt <= 0) {
+            entity->anim.x = entity->anim.destx;
+            entity->anim.y = entity->anim.desty;
+            entity_animation_node_t *to_delete = entity->actions.head;
+            entity->actions.head = entity->actions.head->next;
+            if (!entity->actions.head) {
+                entity->anim.scmd = entity_animation_face_direction(entity->anim.scmd, to_delete->ca.action);
+                //entity->anim.scmd = combat_stand_left;
+                entity->anim.flags = 0x0;
+                entity->anim.pos = 0;
+                entity->anim.flags = 0;
+                entity->anim.left_over = 0x0;
+                entity->anim.movex = entity->anim.movey = 0;
+            }
+            free (to_delete);
+            return 1;
+        }
+
+        animate_sprite_tick(action, entity);
+        */
+    }
+
+    return 1;
 }
 
 static void set_anim(entity_t *entity) {
@@ -423,6 +556,7 @@ static scmd_t* entity_get_next_scmd(const entity_t *entity, const enum entity_ac
         case EA_WALK_RIGHT: return combat_move_right;
         case EA_WALK_UP: return combat_move_up;
         case EA_WALK_DOWN: return combat_move_down;
+        case EA_POWER_CAST: return sol_combat_get_scmd(COMBAT_POWER_CAST);
         ////case EA_SCMD:
             //printf("EA_SCMD! %p\n", entity->actions.head);
             //entity->actions.head->ca.scmd_pos = 
@@ -449,7 +583,7 @@ extern int entity_animation_execute(entity_t *entity) {
     if (!entity || !entity->actions.head) { return 0; }
     entity_action_t *action = &(entity->actions.head->ca);
 
-    for (int i = 0; i < action->speed; i++) {
+    for (int i = 0; i < action->speed && entity->anim.scmd; i++) {
         //printf("action->amt = %d (%d), ticks = %d, scmd_pos = %d of %d\n", action->amt, action->start_amt,
             //action->ticks, action->scmd_pos, entity->anim.scmd[action->scmd_pos].delay);
         if (action->start_amt != -1 && action->amt == action->start_amt) {
@@ -480,6 +614,8 @@ extern int entity_animation_execute(entity_t *entity) {
                 entity->anim.flags = 0;
                 entity->anim.left_over = 0x0;
                 entity->anim.movex = entity->anim.movey = 0;
+            } else {
+                entity->actions.head->ca.scmd_pos = 0;
             }
             free (to_delete);
             return 1;
@@ -509,12 +645,18 @@ void entity_animation_list_free(entity_animation_list_t *list) {
     }
 }
 
+extern void entity_animation_list_add_effect(entity_animation_list_t *list, enum entity_action_e action,
+        entity_t *source, entity_t *target, power_t *power, const int32_t amt, const int damage) {
+     entity_animation_list_add_speed(list, action, source, target, power, amt, 1, damage);
+}
+
 void entity_animation_list_add(entity_animation_list_t *list, enum entity_action_e action,
         entity_t *source, entity_t *target, power_t *power, const int32_t amt) {
-     entity_animation_list_add_speed(list, action, source, target, power, amt, 1);
+     entity_animation_list_add_speed(list, action, source, target, power, amt, 1, 0);
 }
 extern void entity_animation_list_add_speed(entity_animation_list_t *list, enum entity_action_e action,
-        struct entity_s *source, struct entity_s *target, struct power_s *power, const int32_t amt, const int32_t speed) {
+        struct entity_s *source, struct entity_s *target, struct power_s *power, const int32_t amt, const int32_t speed,
+        const int32_t damage) {
     if (!list) { return; }
     //printf("add_speed: %s, %d\n", source ? source->name : "?", speed);
     entity_animation_node_t *toadd = malloc(sizeof(entity_animation_node_t));
@@ -529,6 +671,7 @@ extern void entity_animation_list_add_speed(entity_animation_list_t *list, enum 
     toadd->ca.ticks = 0;
     toadd->ca.scmd_pos = 0;
     toadd->ca.speed = speed;
+    toadd->ca.damage = damage;
     toadd->next = NULL;
 
     if (!list->head) {
@@ -539,51 +682,47 @@ extern void entity_animation_list_add_speed(entity_animation_list_t *list, enum 
     }
 }
 
-extern int entity_animation_list_execute(entity_animation_list_t *list, sol_region_t *reg) {
-    if (!list || !list->head) { return 0; }
 
-    entity_t *source = list->head->ca.source;
-    entity_t *target = list->head->ca.target;
+extern void sol_animation_render(const entity_action_t *ea) {
+    if (ea == NULL) { return; }
+    sol_sprite_t spr = SPRITE_ERROR;
 
-    switch(list->head->ca.action) {
-        case EA_MELEE:
-            play_melee_sound(source);
-            source->anim.scmd = get_entity_scmd(source->anim.scmd, list->head->ca.action);
-            port_update_entity(source, 0, 0);
+    switch (ea->action) {
+        case EA_POWER_APPLY:
+        case EA_POWER_CAST:
+            spr = ea->power->cast.spr;
+            sol_sprite_center_spr(spr, ea->source->anim.spr);
+            break;
+        case EA_POWER_THROW:
+            spr = ea->power->thrown.spr;
+            float percent_there = (float)(ea->start_amt - ea->amt) / (float)ea->start_amt;
+            int32_t sx = sol_sprite_getx(ea->source->anim.spr);
+            int32_t sy = sol_sprite_gety(ea->source->anim.spr);
+            int32_t tx = sol_sprite_getx(ea->target->anim.spr);
+            int32_t ty = sol_sprite_gety(ea->target->anim.spr);
+            int32_t x = abs(sx - tx);
+            int32_t y = abs(sy - ty);
+
+            x = tx < sx ? sx - (percent_there) * x : sx + (percent_there) * x;
+            y = ty < sy ? sy - (percent_there) * y : sy + (percent_there) * y;
+
+            sol_sprite_set_location(spr, x, y);
+            break;
+        case EA_POWER_HIT:
+            spr = ea->power->hit.spr;
+            sol_sprite_center_spr(spr, ea->target->anim.spr);
             break;
         case EA_RED_DAMAGE:
         case EA_BIG_RED_DAMAGE:
         case EA_GREEN_DAMAGE:
         case EA_MAGIC_DAMAGE:
         case EA_BROWN_DAMAGE:
-            play_damage_sound(target);
-            source->anim.scmd = get_scmd(source->anim.scmd, 0, 0);
-            port_update_entity(source, 0, 0);
-            port_combat_action(&(list->head->ca));
-            break;
-        case EA_DAMAGE_APPLY:
-            target->stats.hp -= list->head->ca.amt;
-            if (target->stats.hp <= 0) {
-                target->combat_status = COMBAT_STATUS_DYING;
-                play_death_sound(target);
-                sol_combat_is_defeated(reg, target);
-            }
-            break;
-        case EA_POWER_CAST:
-        case EA_POWER_THROW:
-        case EA_POWER_HIT:
-            port_combat_action(&(list->head->ca));
-            break;
-        case EA_POWER_APPLY:
+            sol_combat_action(ea);
             break;
         default:
-            error("unknown action %d!\n", list->head->ca.action);
-            break;
+            spr = ea->source->anim.spr;
+        break;
     }
 
-    last = list->head;
-    list->head = list->head->next;
-    if (last) { free(last); last = NULL; }
-
-    return 1;
+    sol_sprite_render_flip(spr, 0, 0);
 }

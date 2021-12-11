@@ -4,6 +4,8 @@
 #include "gff.h"
 #include "gfftypes.h"
 #include "port.h"
+#include "gpl.h"
+#include "settings.h"
 
 extern power_t* power_create() {
     power_t *ret = calloc(1, sizeof(power_t));
@@ -86,22 +88,6 @@ extern void power_list_free_instance(power_list_t *pl, power_instance_t *pi) {
     free(pi);
 }
 
-/*static void set_sprite_from_ojff(sprite_info_t *spr, const uint32_t id) {
-    disk_object_t dobj;
-    gff_chunk_header_t chunk = gff_find_chunk_header(OBJEX_GFF_INDEX, GFF_OJFF, id);
-    if (chunk.length <= 0) { return; }
-
-    gff_read_chunk(OBJEX_GFF_INDEX, &chunk, &dobj, sizeof(dobj));
-
-    spr->bmp_id = dobj.bmp_id;
-    spr->flags = dobj.flags;
-    spr->xoffset = dobj.xoffset;
-    spr->yoffset = dobj.yoffset;
-    //printf("id = %d, length = %d, bmp_id = %d", id, chunk.length, spr->bmp_id);
-    //spr->anim.scmd = ssi_scmd_get(OBJEX_GFF_INDEX, dobj.script_id, 0);
-}
-*/
-
 extern void power_list_free(power_list_t *pl) {
     if (!pl) { return; }
 
@@ -112,9 +98,23 @@ extern void power_list_free(power_list_t *pl) {
     free(pl);
 }
 
+static void get_powers_sprite_info(animate_sprite_t *anim, const uint32_t id) {
+    disk_object_t dobj;
+    gff_chunk_header_t chunk = gff_find_chunk_header(OBJEX_GFF_INDEX, GFF_OJFF, id);
+
+    if (!gff_read_chunk(OBJEX_GFF_INDEX, &chunk, &dobj, sizeof(disk_object_t))) {
+        error("Unable to read disk_obect for OBJEX, OJFF, id = %d!\n", id);
+    }
+
+    anim->bmp_id = dobj.bmp_id;
+    anim->flags = dobj.flags;
+    //anim->xoffset = dobj.xoffset;
+    //anim->yoffset = dobj.yoffset;
+}
+
 extern void powers_set_cast(power_t *power, const uint32_t id) {
     if (!power) { return; }
-    //set_sprite_from_ojff(&(power->cast), id);
+    get_powers_sprite_info(&(power->cast), id);
 }
 
 extern void powers_set_icon(power_t *power, const uint32_t id) {
@@ -127,12 +127,13 @@ extern void powers_set_icon(power_t *power, const uint32_t id) {
 
 extern void powers_set_thrown(power_t *power, const uint32_t id) {
     if (!power) { return; }
-    //set_sprite_from_ojff(&(power->thrown), id);
+    get_powers_sprite_info(&(power->thrown), id);
 }
 
 extern void powers_set_hit(power_t *power, const uint32_t id) {
     if (!power) { return; }
-    //set_sprite_from_ojff(&(power->hit), id);
+
+    get_powers_sprite_info(&(power->hit), id);
 }
 
 extern void powers_init() {
@@ -170,22 +171,26 @@ extern enum target_shape power_get_target_type(power_t *power) {
     return power->shape;
 }
 
-//static void load_power_sprite(sprite_info_t *spr) {
-    //gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
-    //port_load_sprite(spr, pal, OBJEX_GFF_INDEX, GFF_BMP, spr->bmp_id);
-//}
+static void load_power_sprite(animate_sprite_t *spr, combat_scmd_t type) {
+    gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
 
-extern void power_load(power_t *power) {
+    spr->spr = sol_sprite_new(pal, 0, 0, settings_zoom(),
+        OBJEX_GFF_INDEX, GFF_BMP, spr->bmp_id);
+
+    if (spr->spr && spr->spr != SPRITE_ERROR) {
+        spr->scmd = sol_combat_get_scmd(type);
+    }
+}
+
+extern void powers_load(power_t *power) {
     if (!power) { return; }
-    /*
-    if (!power->cast.data) {
-        load_power_sprite(&(power->cast));
+    if (power->cast.spr == 0 || power->cast.spr == SPRITE_ERROR) {
+        load_power_sprite(&(power->cast), COMBAT_POWER_CAST);
     }
-    if (!power->thrown.data) {
-        load_power_sprite(&(power->thrown));
+    if (power->thrown.spr == 0 || power->thrown.spr == SPRITE_ERROR) {
+        load_power_sprite(&(power->thrown), COMBAT_POWER_THROW_STATIC_U);
     }
-    if (!power->hit.data) {
-        load_power_sprite(&(power->hit));
+    if (power->hit.spr == 0 || power->hit.spr == SPRITE_ERROR) {
+        load_power_sprite(&(power->hit), COMBAT_POWER_CAST);
     }
-    */
 }

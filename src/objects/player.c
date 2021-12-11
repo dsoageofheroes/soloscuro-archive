@@ -257,15 +257,11 @@ extern void sol_player_update() {
     int xdiff = 0, ydiff = 0;
     combat_turn_t combat_turn = sol_combat_player_turn();
     enum entity_action_e action;
+    static int moving = 0;
 
-    //if (entity_animation_execute(dude)) { --count; return; }
-    //entity_animation_list_execute(&(dude->actions), sol_region_manager_get_current());
+    if (!sol_started()) { return; }
+
     if (--count > 0) { return; }
-
-    //if (entity_animation_list_execute(&(dude->actions), sol_region_manager_get_current())) {
-        //count = ticks_per_move;
-        //return;
-    //}
 
     // update when we can have the player take a turn.
     if (combat_turn != NO_COMBAT) { return; }
@@ -276,7 +272,6 @@ extern void sol_player_update() {
     if (direction & PLAYER_RIGHT) { xdiff += 1; }
 
     if (sol_player_freeze() || sol_region_is_block(sol_region_manager_get_current(),
-                //dude->mapx + xdiff, dude->mapy + ydiff)) {
                 dude->mapy + ydiff, dude->mapx + xdiff)) {
         xdiff = ydiff = 0;
     }
@@ -292,11 +287,14 @@ extern void sol_player_update() {
         dude->anim.movex = dude->anim.movey = 0.0;
         dude->anim.scmd = entity_animation_face_direction(dude->anim.scmd,
             last_action[player_get_active_slot()]);
-         //printf("%s: %d -> %d\n", dude->name, dude->anim.x, dude->anim.destx);
-        entity_animation_list_add(&(dude->actions), EA_NONE, dude, NULL, NULL, 1);
+        if (moving && dude->actions.head == NULL) {
+            entity_animation_list_add(&(dude->actions), EA_NONE, dude, NULL, NULL, 1);
+            moving = 0;
+        }
         return;
     }
 
+    moving = 1;
     action =
           (xdiff == 1 && ydiff == 1) ? EA_WALK_DOWNRIGHT
         : (xdiff == 1 && ydiff == -1) ? EA_WALK_UPRIGHT
@@ -309,7 +307,7 @@ extern void sol_player_update() {
         : EA_NONE;
     last_action[player_get_active_slot()] = action;
 
-    entity_animation_list_add_speed(&(dude->actions), action, dude, NULL, NULL, ticks_per_move, 2);
+    entity_animation_list_add_speed(&(dude->actions), action, dude, NULL, NULL, ticks_per_move, 2, 0);
     count = ticks_per_move / 2;
 
     dude->mapx += xdiff;

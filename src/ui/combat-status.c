@@ -57,7 +57,7 @@ static void add_node_list(animate_sprite_node_t *an, uint16_t sound, entity_acti
 }
 */
 
-static void clear() {
+extern void sol_combat_clear_damage() {
     //sprite_set_location(combat_attacks, -1000, -1000);
     show_attack = 0;
 }
@@ -130,6 +130,18 @@ void combat_status_render(void *data) {
     char buf[128];
     static int last_action = 0;
 
+    if (show_attack) {
+        sol_sprite_render(combat_attacks);
+        loc.x = sol_sprite_getx(combat_attacks);
+        loc.y = sol_sprite_gety(combat_attacks)
+            + sol_sprite_geth(combat_attacks) / 2
+            - 8 / 2 * settings_zoom(); // last one is font size / 2
+        loc.w = sol_sprite_getw(combat_attacks);
+        snprintf(buf, 128, "%d", damage_amount);
+        sol_font_render_center(FONT_GREYLIGHT, buf, loc.x, loc.y, loc.w);
+    }
+
+
     // Okay this can be confusing.
     // The if decides when to proceed to the next action on the combat list
     // list: List of actions
@@ -155,7 +167,7 @@ void combat_status_render(void *data) {
         };
 
         if (last_action && count == 0) {
-            clear();
+            sol_combat_clear_damage();
             last_action = 0;
         }
 
@@ -188,18 +200,6 @@ void combat_status_render(void *data) {
     loc.y += 6 * zoom;
     snprintf(buf, 127, "Move : %d", combat_status.move);
     sol_font_render_center(FONT_GREYLIGHT, buf, loc.x, loc.y, loc.w);
-
-    if (show_attack) {
-        sol_sprite_render(combat_attacks);
-        loc.x = sol_sprite_getx(combat_attacks);
-        loc.y = sol_sprite_gety(combat_attacks)
-            + sol_sprite_geth(combat_attacks) / 2
-            - 8 / 2 * settings_zoom(); // last one is font size / 2
-        loc.w = sol_sprite_getw(combat_attacks);
-        snprintf(buf, 128, "%d", damage_amount);
-        sol_font_render_center(FONT_GREYLIGHT, buf, loc.x, loc.y, loc.w);
-    }
-
 }
 
 enum {
@@ -267,7 +267,7 @@ int get_direction(entity_t *source, entity_t *target) {
 }
 
 // DO NOT STORE THE POINTER TO CA!!!!!!!!
-void port_combat_action(entity_action_t *ca) {
+extern void sol_combat_action(const entity_action_t *ca) {
     // DO NOT STORE THE POINTER TO CA!!!!!!!!
     float const zoom = settings_zoom();
     animate_sprite_t *as = NULL, *source = NULL, *cast = NULL,
@@ -292,7 +292,7 @@ void port_combat_action(entity_action_t *ca) {
             as = &(ca->target->anim);
             sol_sprite_center_spr(combat_attacks, as->spr);
             show_attack = 1;
-            damage_amount = ca->amt;
+            damage_amount = ca->damage;
             return;
         case EA_POWER_CAST:
             source = &(ca->source->anim);

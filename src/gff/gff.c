@@ -362,7 +362,7 @@ gff_chunk_header_t gff_find_chunk_header(int idx, int type_id, int res_id) {
             chunk_offset += entry->segs.segs[j].num_chunks;
         }
     } else {
-        for (int j = 0; j < entry->chunk_count; j++) {
+        for (uint32_t j = 0; j < entry->chunk_count; j++) {
             if (entry->chunks[j].id == res_id) {
                 ret.id = res_id;
                 ret.location = entry->chunks[j].location;

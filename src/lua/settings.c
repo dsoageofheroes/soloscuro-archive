@@ -239,6 +239,7 @@ static void load_game() {
 
     lua_str = luaL_checkstring(sol_lua, -1);
     
+    gff_init();
     if (!strcmp(lua_str, "ds1")) {
         lua_pop(sol_lua, 1);
         lua_pushstring(sol_lua, "ds1_location");
@@ -270,7 +271,6 @@ static void load_game() {
 }
 
 extern int sol_lua_load_preload(const char *filename) {
-    powers_init();
     lua_State *sol_lua = sol_lua_get_state();
 
     if (luaL_loadfile(sol_lua, "solconfig.lua")) {

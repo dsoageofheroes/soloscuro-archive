@@ -15,6 +15,9 @@ solconfig.lua
 *.sf2
 *.mid
 
+# vi swp files
+*.swp
+
 # generated powers
 src/powers/
 src/powers/powers-generator.c

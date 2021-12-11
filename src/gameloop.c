@@ -6,7 +6,7 @@
 #include "port.h"
 #include "region-manager.h"
 
-static int done = 0;
+static int done = 0, started = 0;
 static uint8_t wait_flags[WAIT_MAX_SIGNALS];
 static int accum = 0;
 
@@ -17,6 +17,7 @@ static void sol_render() {
 }
 
 extern int sol_still_running() { return !done; }
+extern int sol_started() { return started; }
 
 extern int sol_player_freeze() {
     return wait_flags[WAIT_NARRATE_CONTINUE]
@@ -70,17 +71,16 @@ extern void sol_gameloop_init() {
 }
 
 extern void sol_game_loop() {
-    //int rep_times = 0;
-
     while (!done) {
         port_handle_input();
         //Logic here...
         sol_render();
         port_tick();
-        //rep_times++;
+
         //if (in_replay_mode() && rep_times > 10) {
             //replay_next();
             //rep_times = 0;
         //}
+        started = 1;
     }
 }

@@ -87,10 +87,6 @@ extern void sol_region_remove_entity(sol_region_t *reg, entity_t *entity) {
 extern void sol_region_free(sol_region_t *reg) {
     if (!reg) { return; }
 
-    //if (reg->anims) {
-        //animation_list_free(reg->anims);
-        //reg->anims = NULL;
-    //}
     sol_region_manager_remove_players();
 
     if (reg->entities) {
@@ -107,6 +103,8 @@ extern void sol_region_free(sol_region_t *reg) {
         free(reg->tile_ids);
         reg->tile_ids = NULL;
     }
+
+    entity_animation_list_free(&(reg->actions));
     sol_combat_free(&(reg->cr));
     free(reg);
 }
@@ -275,22 +273,11 @@ extern void sol_region_tick(sol_region_t *reg) {
     int xdiff, ydiff;
     int posx, posy;
     enum entity_action_e action;
-    //static int ticks_per_game_round = 30;
-
-/*
-    entity_list_for_each(reg->entities, bad_dude) {
-        if (entity_animation_execute(bad_dude)) {
-            //printf("ACTION! %d, %d\n", bad_dude->mapx, bad_dude->mapy);
-            continue;
-        }
-    }
-    */
-
-    //ticks_per_game_round--;
-    //if (ticks_per_game_round > 0) { return; }
-    //ticks_per_game_round = 30;
 
     if (!reg || sol_combat_player_turn() != NO_COMBAT) { return; }
+    if (reg->actions.head) {
+        entity_animation_region_execute(reg);
+    }
 
     entity_list_for_each(reg->entities, bad_dude) {
         if (entity_animation_execute(bad_dude)) {

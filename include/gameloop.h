@@ -18,5 +18,6 @@ extern int  sol_game_loop_is_waiting_for(int signal);
 extern int  sol_player_freeze();
 extern void sol_game_loop();
 extern int  sol_still_running();
+extern int  sol_started();
 
 #endif

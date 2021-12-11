@@ -25,6 +25,8 @@ typedef struct sol_region_s {
     sol_passive_t passives[MAX_PASSIVES];
     // entities are to be in display order.
     struct entity_list_s *entities;
+    // actions from several entities, right now one at a time.
+    entity_animation_list_t actions;
     combat_region_t cr;
     // Temporary while we figure things out...
     struct {

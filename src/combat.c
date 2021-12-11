@@ -2,6 +2,7 @@
 #include "entity-animation.h"
 #include "player.h"
 #include "region.h"
+#include "region-manager.h"
 #include "gpl.h"
 #include "port.h"
 #include "rules.h"
@@ -611,7 +612,7 @@ extern void sol_combat_update(sol_region_t *reg) {
             check_current_turn();
             return;
         }
-        port_combat_action(&clear);
+        //port_combat_action(&clear);
 
         in_combat = !is_combat_over(reg); // Just to check
         entity_t *combatant = NULL;
@@ -646,29 +647,26 @@ extern uint32_t combat_add(combat_region_t *rc, entity_t *entity) {
 }
 
 extern int sol_combat_activate_power(power_t *pw, entity_t *source, entity_t *target, const int32_t x, const int32_t y) {
-    //printf("COMBAT ACTIVATE: %p, %p, %p (%d, %d)\n", pw, reg, source, x, y);
     if (!pw || !source) { return 0; }
+    sol_region_t *reg = sol_region_manager_get_current();
+    if (!reg) { error ("current region is null!\n"); }
 
-    //entity_animation_list_t* list = entity_animation_list_create();
-    power_load(pw);
-    //pw->cast.bmp_id = 0;
-    //pw->hit.bmp_id = 0;
-    //pw->thrown.bmp_id = 0;
+    powers_load(pw);
 
     if (!target) { // time to make a fake target for the power.
         target = entity_create_fake(x, y);
     }
 
     if (pw->cast.scmd) {
-        entity_animation_list_add(&(source->actions), EA_POWER_CAST, source, target, pw, 0);
+        entity_animation_list_add(&(reg->actions), EA_POWER_CAST, source, target, pw, 30);
     }
 
     if (pw->thrown.scmd) {
-        entity_animation_list_add(&(source->actions), EA_POWER_THROW, source, target, pw, 0);
+        entity_animation_list_add(&(reg->actions), EA_POWER_THROW, source, target, pw, 30);
     }
 
     if (pw->hit.scmd) {
-        entity_animation_list_add(&(source->actions), EA_POWER_HIT, source, target, pw, 0);
+        entity_animation_list_add(&(reg->actions), EA_POWER_HIT, source, target, pw, 30);
     }
 
     switch (pw->shape) {

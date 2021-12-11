@@ -243,6 +243,8 @@ void map_render_anims() {
         }
         sol_sprite_render_flip(anim->spr, hflip, vflip);
     }
+
+    sol_animation_render(&(cmap->region->actions.head->ca));
 }
 
 void port_add_entity(entity_t *entity, gff_palette_t *pal) {

@@ -456,13 +456,14 @@ int main(int argc, char *argv[]) {
     parse_args(argc, argv);
 
     // Order matters.
-    gff_init();
     sol_lua_load_preload("lua/settings.lua");
     if (gff_get_game_type() == DARKSUN_UNKNOWN) {
         if (!ds1_gffs) {
             error("Unable to get the location of the DarkSun 1 GFFs, please pass with '--ds1 <location>'\n");
             exit(1);
         }
+        // gff_init is not handled in sol_lua_load_preload IF the game_type is DARKSUN_UNKNOWN
+        gff_init();
         gff_load_directory(ds1_gffs);
     }
     powers_init();

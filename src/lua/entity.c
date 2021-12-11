@@ -1,13 +1,25 @@
 #include "lua-entity.h"
+#include "powers.h"
+#include "wizard.h"
+#include "gpl.h"
+#include "combat.h"
+#include "entity-animation.h"
 #include <string.h>
 
 static int entity_cast(lua_State *l) {
     //sol_lua_dumpstack (l);
     dude_t *dude = (dude_t*) lua_touserdata(l, lua_upvalueindex(1));
     dude_t *target = (dude_t*) sol_lua_get_userdata(l, -1 - lua_gettop(l));
-    int spell_index = luaL_checkinteger(l, 2);
+    power_t *pw = pw = wizard_get_spell(luaL_checkinteger(l,2));
 
-    printf("casting %d from %s to %s\n", spell_index, dude->name, target->name);
+    if (!pw) {
+        error("Did not find power!\n");
+        return 0;
+    }
+
+    printf("casting %s from %s to %s\n", pw->name, dude->name, target->name);
+    sol_combat_activate_power(pw, dude, target, target->mapx, target->mapy);
+
     return 0;
 }
 

@@ -27,6 +27,15 @@ static void set_zoom(SDL_Rect *loc, const float zoom) {
     loc->h *= zoom;
 }
 
+extern void sol_sprite_print(const sol_sprite_t sprite_id) {
+    sprite_t *sprite = sprites + sprite_id;
+    printf("%d: frame %d of %d @(%d, %d), %dx%x texture: %p, in_use? %d\n",
+        sprite_id, sprite->pos, sprite->len,
+        sprite->loc[sprite->pos].x, sprite->loc[sprite->pos].y,
+        sprite->loc[sprite->pos].w, sprite->loc[sprite->pos].h,
+        sprite->tex[sprite->pos], sprite->in_use);
+}
+
 static SDL_Rect apply_params(const SDL_Rect rect, const uint32_t x, const uint32_t y) {
     SDL_Rect ret = {rect.x + x, rect.y + y, rect.w, rect.h};
     return ret;
@@ -118,22 +127,22 @@ static uint16_t sprite_append_full(uint16_t sprite_id, SDL_Renderer *renderer, S
     if (sprite_id == SPRITE_ERROR) { return sprite_id; }
     sprite_t *sprite = sprites + sprite_id;
 
-    //printf("%d, %d, %d\n", gff_idx, type_id, res_id);
     append_start = sprite->len;
     sprite->len += gff_get_frame_count(gff_idx, type_id, res_id);
-    sprite->loc = realloc(sprite->loc, sizeof(SDL_Rect) * sprite->len);
+
+    if (sprite->len == 0) { sprite->len = 1;}
+
+    sprite->loc = (SDL_Rect*) realloc(sprite->loc, sizeof(SDL_Rect) * sprite->len);
     for (int i = append_start; i < sprite->len; i++) {
         *(sprite->loc + i) = apply_params(*initial, offsetx, offsetx);
     }
-    //printf("frame out: %d\n", sprite->len);
-    if (sprite->len == 0) { sprite->len = 1;}
+
     // TODO: PERFORMANCE, create 1 large texture of multiple frames, which also eliminates a malloc...
     // TODO: alternatively, create a function to manually load the frames at once,
     //       instead of reading each frame from disk one at a time.
-    sprite->tex = realloc(sprite->tex, sizeof(SDL_Texture*) * sprite->len);
+    sprite->tex = (SDL_Texture**)realloc(sprite->tex, sizeof(SDL_Texture*) * sprite->len);
     for (int i = append_start; i < sprite->len; i++) {
         sprite->tex[i] = create_texture(renderer, gff_idx, type_id, res_id, i - append_start, pal, (sprite->loc + i));
-        //printf("->{%d, %d, %d, %d}\n", sprite->loc.x, sprite->loc.y, sprite->loc.w, sprite->loc.h);
     }
 
     for (int i = append_start; i < sprite->len; i++) {

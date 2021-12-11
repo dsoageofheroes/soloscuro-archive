@@ -81,7 +81,7 @@ extern void              powers_set_cast(power_t *powers, const uint32_t id);
 extern void              powers_set_icon(power_t *powers, const uint32_t id);
 extern void              powers_set_thrown(power_t *powers, const uint32_t id);
 extern void              powers_set_hit(power_t *powers, const uint32_t id);
-extern void              power_load(power_t *powers);
+extern void              powers_load(power_t *powers);
 extern void              power_free(power_t *pw);
 extern enum target_shape power_get_target_type(power_t *power);
 extern size_t            power_select_by_game(const size_t ds1, const size_t ds2, const size_t dso);
