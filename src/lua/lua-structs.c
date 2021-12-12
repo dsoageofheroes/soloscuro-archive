@@ -104,9 +104,9 @@ static int create_player (lua_State *l) {
     return sol_lua_load_entity(l, player_get(n));
 }
 
-static int create_region (lua_State *l) {
+static void push_region_lua(lua_State *l, sol_region_t *reg) {
     lua_newtable(l); // entity table
-    lua_pushlightuserdata(l, sol_region_create_empty());
+    lua_pushlightuserdata(l, reg);
     lua_setfield(l, -2, "ptr__");
 
     /*push_table_start(l, &(player_get_entity(n)->stats), "stats");
@@ -124,7 +124,10 @@ static int create_region (lua_State *l) {
     */
 
     luaL_setmetatable(l, "soloscuro.region"); // entity meta
+}
 
+static int create_region (lua_State *l) {
+    push_region_lua(l, sol_region_create_empty());
     return 1;
 }
 
@@ -136,6 +139,12 @@ static int set_region (lua_State *l) {
     sol_region_manager_set_current(region);
 
     return 0;
+}
+
+static int get_region (lua_State *l) {
+    push_region_lua(l, sol_region_manager_get_current());
+
+    return 1;
 }
 
 static int open_gff (lua_State *l) {
@@ -164,8 +173,10 @@ static const struct luaL_Reg sol_lib [] = {
     //{"new", entity_new},
     {"create_region", create_region},
     {"load_player", load_player},
+    {"get_player", load_player},
     {"create_player", create_player},
     {"set_region", set_region},
+    {"get_region", get_region},
     {"open_gff", open_gff},
     {"start_game", start_game},
     {NULL, NULL}

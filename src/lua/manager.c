@@ -30,6 +30,18 @@ static int sol_lua_error(const char *msg) {
     return 0;
 }
 
+extern int sol_lua_run_function(const char *function) {
+
+    lua_getglobal(lua_state, function);
+    if (lua_pcall(lua_state, 0, 0, 0)) {
+        sol_lua_error("Can't call");
+        lua_pop(lua_state, 1);
+        return 1;
+    }
+
+    return 0;
+}
+
 static void sol_lua_run(const char *filename, const char *name) {
     sol_lua_get_state();
 
@@ -38,8 +50,7 @@ static void sol_lua_run(const char *filename, const char *name) {
         return;
     }
 
-    if (lua_pcall(lua_state, 0, 0, 0)) { sol_lua_error("Can't prime"); }
-    lua_getglobal(lua_state, name);
-    if (lua_pcall(lua_state, 0, 1, 0)) { sol_lua_error("Can't call"); }
+    if (lua_pcall(lua_state, 0, 0, 0)) { sol_lua_error("Can't prime");}
+    sol_lua_run_function(name);
 }
 

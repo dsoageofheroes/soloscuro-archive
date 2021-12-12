@@ -362,41 +362,6 @@ static void end_turn() {
     player_action = EA_NONE;
 }
 
-extern void sol_combat_is_defeated(sol_region_t *reg, entity_t *dude) {
-    combat_entry_t *prev = NULL;
-    combat_entry_t *rover = combat_order;
-    if (!dude) { return; }
-
-    while (rover && rover->entity != dude) { // Warning: pointer comparison
-        prev = rover;
-        rover = rover->next;
-    }
-
-    if (!rover) {
-        error ("Unable to remove %s from combat.\n", dude->name);
-        return;
-    }
-
-    // You defeated yourself...
-    if (current_turn && current_turn->entity == dude) {
-        current_turn = prev;
-    }
-
-    if (prev) {
-        prev->next = rover->next;
-    } else {
-        combat_order = combat_order->next;
-    }
-
-    rover->next = defeated;
-    if (defeated) { defeated->next = rover; }
-
-    entity_list_remove(reg->cr.combatants, entity_list_find(reg->cr.combatants, dude));
-
-    port_remove_entity(dude);
-
-}
-
 // DS Engine: Attacks usually based on weapons. If none, then bare hand.
 //            Monster's base weapon are considered plus for
 //            level 0-4: regular

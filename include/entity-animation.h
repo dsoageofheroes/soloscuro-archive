@@ -78,7 +78,6 @@ extern void entity_animation_list_add_speed(entity_animation_list_t *list, enum 
 extern void entity_animation_list_add_effect(entity_animation_list_t *list, enum entity_action_e action,
         struct entity_s *source, struct entity_s *target, struct power_s *power, const int32_t amt, const int damage);
 extern int entity_animation_list_execute(entity_animation_list_t *list, struct sol_region_s *reg);
-extern int entity_animation_list_start_scmd(struct entity_s *entity);
 extern void sol_animation_render(const entity_action_t *ea);
 
 struct entity_s;

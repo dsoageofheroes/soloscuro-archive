@@ -12,6 +12,7 @@ extern int sol_lua_load_preload(const char *filename);
 extern int sol_lua_keyup(const int key_code);
 extern int sol_lua_keydown(const int key_code);
 extern int sol_lua_load(const char *filename);
+extern int sol_lua_run_function(const char *function);
 
 extern void lua_struct_register(lua_State *l);
 const struct luaL_Reg* lua_struct_get_funcs();

@@ -233,6 +233,7 @@ static int get_audio_id() {
 }
 
 extern void sol_play_sound_effect(const uint16_t id) {
+    //printf("sol_player_sound_effect: %d\n", id);
     sol_audio_play_voc(RESOURCE_GFF_INDEX, GFF_BVOC, id, voc_volume);
 }
 

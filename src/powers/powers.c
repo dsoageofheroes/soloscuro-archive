@@ -188,9 +188,9 @@ extern void powers_load(power_t *power) {
         load_power_sprite(&(power->cast), COMBAT_POWER_CAST);
     }
     if (power->thrown.spr == 0 || power->thrown.spr == SPRITE_ERROR) {
-        load_power_sprite(&(power->thrown), COMBAT_POWER_THROW_STATIC_U);
+        load_power_sprite(&(power->thrown), COMBAT_POWER_THROW);
     }
     if (power->hit.spr == 0 || power->hit.spr == SPRITE_ERROR) {
-        load_power_sprite(&(power->hit), COMBAT_POWER_CAST);
+        load_power_sprite(&(power->hit), COMBAT_POWER_HIT);
     }
 }

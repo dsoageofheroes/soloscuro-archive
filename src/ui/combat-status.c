@@ -305,29 +305,8 @@ extern void sol_combat_action(const entity_action_t *ca) {
             cast->scmd = sol_combat_get_scmd(COMBAT_POWER_CAST);
             //add_node_list(cast, ca->power->cast_sound, ca);
             break;
-        case EA_POWER_THROW:
-            dir = get_direction(ca->source, ca->target);
-            throw = &(ca->power->thrown);
-            source = &(ca->source->anim);
-            dest = &(ca->target->anim);
-            if (sol_sprite_num_frames(throw->spr) < 30) {
-                throw->scmd = sol_combat_get_scmd(COMBAT_POWER_THROW_STATIC_U + dir);
-            } else {
-                throw->scmd = sol_combat_get_scmd(COMBAT_POWER_THROW_ANIM_U + dir);
-            }
-            throw->x = sol_sprite_getx(source->spr) + sol_get_camerax();
-            throw->y = sol_sprite_gety(source->spr) + sol_get_cameray();
-            throw->destx = dest
-                ? sol_sprite_getx(dest->spr) + sol_sprite_getw(dest->spr) / 2 + sol_get_camerax()
-                : ca->target->mapx * 16 * zoom;
-            throw->desty = dest
-                ? sol_sprite_gety(dest->spr) + sol_sprite_geth(dest->spr) / 2 + sol_get_cameray()
-                : ca->target->mapy * 16 * zoom;
-            //printf("(%d, %d) -> (%d, %d)\n", throw->anim->x, throw->anim->y,
-                //throw->anim->destx, throw->anim->desty);
-            throw->movex = abs(throw->destx - throw->x) / 30;
-            throw->movey = abs(throw->desty - throw->y) / 30;
-            //add_node_list(throw, ca->power->thrown_sound, ca);
+        case EA_POWER_THROW: // handled in entity-animations
+            break;
         case EA_POWER_HIT:
             dest = &(ca->target->anim);
             hit = &(ca->power->hit);

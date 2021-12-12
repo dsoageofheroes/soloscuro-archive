@@ -5,6 +5,7 @@
 #include "arbiter.h"
 #include "combat-status.h"
 #include <stdlib.h>
+#include <math.h>
 
 static entity_animation_node_t *last;
 static entity_animation_node_t *next_animation_head = NULL;
@@ -221,6 +222,7 @@ static scmd_t *combat_types[] = {
     combat_melee_left,
     cast_scmd,
     throw_scmd + 0,
+    cast_scmd,
     throw_scmd + 1,
     throw_scmd + 2,
     throw_scmd + 3,
@@ -369,6 +371,7 @@ static void play_damage_sound(entity_t *target) {
 
     if (target->attack_sound) {
         sol_play_sound_effect(target->attack_sound + 1);
+        return;
     }
 
     // sound 67: is PC taking damage
@@ -394,23 +397,13 @@ static int region_damage_execute(power_t *pw, sol_region_t *reg) {
         case EA_GREEN_DAMAGE:
         case EA_MAGIC_DAMAGE:
         case EA_BROWN_DAMAGE:
-            play_damage_sound(target);
-            //source->anim.scmd = get_scmd(source->anim.scmd, 0, 0);
-            //source->anim.scmd = get_scmd(source->anim.scmd, 0, 0);
-            //port_update_entity(source, 0, 0);
-            //port_combat_action(&(list->head->ca));
+            if (action->start_amt == action->amt) {
+                play_damage_sound(target);
+            }
             break;
-        case EA_DAMAGE_APPLY:
-            error("NEED TO IMPLEMENT DAMAGE APPLY animation!\n");
-            //target->stats.hp -= list->head->ca.amt;
-            //if (target->stats.hp <= 0) {
-                //target->combat_status = COMBAT_STATUS_DYING;
-                //play_death_sound(target);
-                //sol_combat_is_defeated(reg, target);
-            //}
+        case EA_DAMAGE_APPLY: // handled in region_animation_last_check.
             break;
         default:
-            //error("unknown action %d!\n", list->head->ca.action);
             error("unknown action %d!\n", action->action);
             break;
     }
@@ -424,8 +417,10 @@ static int region_damage_execute(power_t *pw, sol_region_t *reg) {
 
 // This is called right before the animation is freed.
 // It has already been removed from the region's list.
-static void region_animation_last_check(entity_animation_node_t *todelete) {
+static void region_animation_last_check(sol_region_t *reg, entity_animation_node_t *todelete) {
     power_instance_t pi;
+    entity_t *target;
+    entity_action_t *action;
     switch(todelete->ca.action) {
         case EA_POWER_HIT:
             if (sol_arbiter_hits(todelete)) {
@@ -437,11 +432,46 @@ static void region_animation_last_check(entity_animation_node_t *todelete) {
             break;
         case EA_DAMAGE_APPLY:
             sol_combat_clear_damage();
-            printf("Still need to apply damage!\n");
+            target = todelete->ca.target;
+            action = &(todelete->ca);
+            target->stats.hp -= action->damage;
+            if (target->stats.hp <= 0) {
+                target->combat_status = COMBAT_STATUS_DYING;
+                play_death_sound(target);
+                warn("NEED TO IMPLEMENT death animation!\n");
+                if (!entity_list_remove_entity(reg->entities, target)) {
+                    error("Unable to remove entity!\n");
+                }
+            }
             break;
         default:
             break;
     }
+}
+
+static int frame_offset(const entity_t *source, const entity_t *dest) {
+    int diffx = abs(dest->mapx - source->mapx);
+    int diffy = abs(dest->mapy - source->mapy);
+    float angle = atan ((float)diffx / (float)diffy);
+
+    int offset = angle * 4.0 / 1.58; // 1.57 is max
+    if (offset > 3) {offset = 3; }
+
+    //printf("angle = %f, offset = %d\n", angle, offset);
+    if (dest->mapy > source->mapy) { // above
+        if (dest->mapx < source->mapx) { // right
+            return 8 + offset;
+        } else { // left
+            return 8 - offset;
+        }
+    } else { // dest->mapy <= source->mapy // below
+        if (dest->mapx < source->mapx) { // right
+            return 15 - offset;
+        } else { // left
+            return 0 + offset;
+        }
+    }
+    return 1;
 }
 
 // sound 63: is PC doing range attack
@@ -449,18 +479,31 @@ extern int entity_animation_region_execute(sol_region_t *reg) {
     power_t pw;
     if (!reg || !reg->actions.head) { return 0; }
     entity_action_t *action = &(reg->actions.head->ca);
+
     if (!action->power && !action->damage) {
         //entity_animation_list_add_effect(&(reg->actions), EA_MAGIC_DAMAGE, source, target, NULL, 0, damage);
         error("Only handle power actions at the moment!");
         return 0;
     }
+
+    if (action->start_amt == action->amt && action->action == EA_POWER_THROW) {
+        int frame_count = sol_sprite_num_frames(action->power->thrown.spr);
+        if (frame_count != 9) {
+            error("Unknown frame for thrown animation! need to code...\n");
+            exit(1);
+        }
+        sol_play_sound_effect(action->power->thrown_sound);
+        // Need to set correct direction);
+        action->power->thrown.scmd = throw_scmd + frame_offset(action->source, action->target);
+    }
+
     if (action->damage) {
-        action->amt--;
         region_damage_execute(&pw, reg);
+        action->amt--;
         if (action->amt <= 0) {
             entity_animation_node_t *tmp = reg->actions.head;
             reg->actions.head = reg->actions.head->next;
-            region_animation_last_check(tmp);
+            region_animation_last_check(reg, tmp);
             free (tmp);
         }
         return 1;
@@ -473,11 +516,16 @@ extern int entity_animation_region_execute(sol_region_t *reg) {
         action->amt--;
         action->ticks++;
 
-        if (power->cast.scmd[action->scmd_pos].delay < action->ticks) {
-            //if (entity->name) { printf("->%s: ticks, amt = %d\n", entity->name, action->amt); }
-            action->scmd_pos = ssi_scmd_next_pos(power->cast.scmd, action->scmd_pos);
+        animate_sprite_t *as =
+            (action->action == EA_POWER_CAST) ? &(power->cast) :
+            (action->action == EA_POWER_THROW) ? &(power->thrown) :
+            (action->action == EA_POWER_HIT) ? &(power->hit) :
+            &(power->cast);
+        if (as->scmd[action->scmd_pos].delay < action->ticks) {
+            //printf("region_execute: scnd_pos = %d\n", action->scmd_pos);
+            action->scmd_pos = ssi_scmd_next_pos(as->scmd, action->scmd_pos);
             //sol_sprite_render_flip(cmap->region->actions.head->ca.power->cast.spr, 0, 0);
-            sol_sprite_set_frame(power->cast.spr, power->cast.scmd[action->scmd_pos].bmp_idx);
+            sol_sprite_set_frame(as->spr, as->scmd[action->scmd_pos].bmp_idx);
             //port_entity_update_scmd(entity);
             action->ticks = 0;
         }
@@ -485,7 +533,7 @@ extern int entity_animation_region_execute(sol_region_t *reg) {
         if (action->start_amt >= 0 && action->amt <= 0) {
             entity_animation_node_t *tmp = reg->actions.head;
             reg->actions.head = reg->actions.head->next;
-            region_animation_last_check(tmp);
+            region_animation_last_check(reg, tmp);
             free (tmp);
             return 1;
         }
@@ -569,16 +617,6 @@ static scmd_t* entity_get_next_scmd(const entity_t *entity, const enum entity_ac
     return entity->anim.scmd;
 }
 
-extern int entity_animation_list_start_scmd(struct entity_s *entity) {
-    if (!entity || !entity->anim.scmd) { return 0; }
-
-    entity_animation_list_add(&entity->actions, EA_SCMD, NULL, NULL,
-        NULL, ssi_scmd_total_delay(entity->anim.scmd, 0));
-    set_anim(entity);
-
-    return 1;
-}
-
 extern int entity_animation_execute(entity_t *entity) {
     if (!entity || !entity->actions.head) { return 0; }
     entity_action_t *action = &(entity->actions.head->ca);
@@ -614,8 +652,6 @@ extern int entity_animation_execute(entity_t *entity) {
                 entity->anim.flags = 0;
                 entity->anim.left_over = 0x0;
                 entity->anim.movex = entity->anim.movey = 0;
-            } else {
-                entity->actions.head->ca.scmd_pos = 0;
             }
             free (to_delete);
             return 1;
@@ -682,10 +718,10 @@ extern void entity_animation_list_add_speed(entity_animation_list_t *list, enum 
     }
 }
 
-
 extern void sol_animation_render(const entity_action_t *ea) {
     if (ea == NULL) { return; }
     sol_sprite_t spr = SPRITE_ERROR;
+    scmd_t *scmd;
 
     switch (ea->action) {
         case EA_POWER_APPLY:
@@ -695,6 +731,7 @@ extern void sol_animation_render(const entity_action_t *ea) {
             break;
         case EA_POWER_THROW:
             spr = ea->power->thrown.spr;
+            scmd = ea->power->thrown.scmd + ea->scmd_pos;
             float percent_there = (float)(ea->start_amt - ea->amt) / (float)ea->start_amt;
             int32_t sx = sol_sprite_getx(ea->source->anim.spr);
             int32_t sy = sol_sprite_gety(ea->source->anim.spr);
@@ -707,7 +744,8 @@ extern void sol_animation_render(const entity_action_t *ea) {
             y = ty < sy ? sy - (percent_there) * y : sy + (percent_there) * y;
 
             sol_sprite_set_location(spr, x, y);
-            break;
+            sol_sprite_render_flip(spr, scmd->flags & SCMD_XMIRROR, scmd->flags & SCMD_YMIRROR);
+            return;
         case EA_POWER_HIT:
             spr = ea->power->hit.spr;
             sol_sprite_center_spr(spr, ea->target->anim.spr);

@@ -285,8 +285,6 @@ extern void sol_player_update() {
     // We aren't moving...
     if (xdiff == 0 && ydiff == 0) {
         dude->anim.movex = dude->anim.movey = 0.0;
-        dude->anim.scmd = entity_animation_face_direction(dude->anim.scmd,
-            last_action[player_get_active_slot()]);
         if (moving && dude->actions.head == NULL) {
             entity_animation_list_add(&(dude->actions), EA_NONE, dude, NULL, NULL, 1);
             moving = 0;

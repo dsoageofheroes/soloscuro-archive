@@ -1,3 +1,13 @@
+function idle()
+    local sol = soloscuro
+    reg = sol.get_region()
+    slig = reg.find("Slig")
+    if (slig == nil) then
+        return
+    end
+    p0 = sol.get_player(0)
+    p0.cast(slig, sol.WIZ_MAGIC_MISSILE)
+end
 function init()
     local sol = soloscuro
     sol.set_quiet(false);

@@ -17,7 +17,6 @@ static int entity_cast(lua_State *l) {
         return 0;
     }
 
-    printf("casting %s from %s to %s\n", pw->name, dude->name, target->name);
     sol_combat_activate_power(pw, dude, target, target->mapx, target->mapy);
 
     return 0;
