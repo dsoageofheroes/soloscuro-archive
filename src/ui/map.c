@@ -83,11 +83,11 @@ static void map_load_current_region() {
         }
     }
 
-    if (player_get_active()) {
-        if (player_get_active()->anim.spr == SPRITE_ERROR) {
-            sprite_load_animation(player_get_active(), pal);
+    if (sol_player_get_active()) {
+        if (sol_player_get_active()->anim.spr == SPRITE_ERROR) {
+            sprite_load_animation(sol_player_get_active(), pal);
         }
-        sol_map_place_entity(player_get_active());
+        sol_map_place_entity(sol_player_get_active());
     }
 
     cmap = map;
@@ -160,6 +160,7 @@ static void clear_animations() {
 
 void map_apply_alpha(const uint8_t alpha) {
     entity_t *entity = NULL;
+    if (!cmap) { return; }
 
     sol_background_apply_alpha(alpha);
 
@@ -372,10 +373,10 @@ void sol_combat_enter_combat() {
     // Need to disperse players (and setup combat items.)
     // bring up combat status.
     //window_push_window(main_get_rend(), &combat_status_window, 295, 5);
-    dude_t *main_player = player_get_active();
+    dude_t *main_player = sol_player_get_active();
     for (int i = 0; i < 4; i++) {
-        dude_t *next_player = player_get(i);
-        if (next_player && next_player != player_get_active() && next_player->name) { // next_player exists.
+        dude_t *next_player = sol_player_get(i);
+        if (next_player && next_player != sol_player_get_active() && next_player->name) { // next_player exists.
             next_player->mapx = main_player->mapx;
             next_player->mapy = main_player->mapy;
             sol_region_move_to_nearest(sol_region_manager_get_current(), next_player);
@@ -432,14 +433,14 @@ static void update_mouse_icon() {
     if (ms == MOUSE_MELEE || ms == MOUSE_NO_MELEE) {
         int x = (sol_get_camerax() + mousex) / (16 * zoom);
         int y = (sol_get_cameray() + mousey) / (16 * zoom);
-        if (abs(player_get_active()->mapx - x) > 1 || abs(player_get_active()->mapy - y) > 1) {
+        if (abs(sol_player_get_active()->mapx - x) > 1 || abs(sol_player_get_active()->mapy - y) > 1) {
             sol_mouse_set_state(MOUSE_RANGE);
             ms = sol_mouse_get_state();
         }
     } else if (ms == MOUSE_RANGE || ms == MOUSE_NO_RANGE) {
         int x = (sol_get_camerax() + mousex) / (16 * zoom);
         int y = (sol_get_cameray() + mousey) / (16 * zoom);
-        if (abs(player_get_active()->mapx - x) <= 1 && abs(player_get_active()->mapy - y) <= 1) {
+        if (abs(sol_player_get_active()->mapx - x) <= 1 && abs(sol_player_get_active()->mapy - y) <= 1) {
             sol_mouse_set_state(MOUSE_MELEE);
             ms = sol_mouse_get_state();
         }
@@ -515,7 +516,7 @@ int map_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_
     }
 
     if (ms == MOUSE_POWER) {
-        sol_combat_activate_power(sol_mouse_get_power(), player_get_active(),
+        sol_combat_activate_power(sol_mouse_get_power(), sol_player_get_active(),
             get_entity_at_location(x, y), tilex, tiley);
         sol_mouse_set_state(MOUSE_POINTER);
         return 1;

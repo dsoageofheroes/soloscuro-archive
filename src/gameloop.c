@@ -83,7 +83,7 @@ extern void sol_game_loop() {
             //rep_times = 0;
         //}
         started = 1;
-        if (!sol_region_manager_get_current()->actions.head) {
+        if (sol_region_manager_get_current() && !sol_region_manager_get_current()->actions.head) {
             sol_lua_run_function("idle");
         }
     }

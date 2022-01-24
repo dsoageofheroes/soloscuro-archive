@@ -943,67 +943,74 @@ static void generate_apply(power_entry_t pw, char *name, FILE *file) {
     fprintf(file, "    int caster_level = (source->entity) ? entity_get_%s_level(source->entity)\n", type);
     fprintf(file, "            : item_get_%s_level(source->item);\n\n", type);
     
-    fprintf(file, "    num_dice = ");
-    if (pw.info.damage.div > 1) {
-        fprintf(file, "(%d * ((%d + caster_level) / %d) + %d)",
-                pw.info.damage.level, pw.info.damage.dice_plus, pw.info.damage.div, pw.info.damage.dice);
-    } else {
-        if (pw.info.damage.dice_plus) {
-            if (pw.info.damage.div == 1) {
-                fprintf(file, "(%d * caster_level + %d)",
-                        pw.info.damage.dice_plus, pw.info.damage.dice);
-            } else {
-                fprintf(file, "%d", pw.info.damage.dice);
-            }
-        } else {
-            if (pw.info.damage.dice > 0) {
-                fprintf(file, "%d", pw.info.damage.dice);
-            } else {
-                fprintf(file, "0");
-            }
-        }
-    }
-    fprintf(file, ";\n");
-
-    fprintf(file, "    mod = ");
-    if (pw.info.damage.plus) {
-        if (pw.info.damage.div > 1) {
-            fprintf(file, " %d * ((%d + caster_level) / %d)",
-                    pw.info.damage.level, pw.info.damage.plus, pw.info.damage.div);
-        } else {
-            if (pw.info.damage.div == 1) {
-                fprintf(file , "(%d + %d) * caster_level",
-                        pw.info.damage.level, pw.info.damage.plus);
-            } else {
-                fprintf(file, "%d", pw.info.damage.plus);
-            }
-        }
-    } else if (pw.info.damage.div == 1) {
-        if (pw.info.damage.level) {
-            fprintf(file, "(%d + %d) * caster_level",
-                pw.info.damage.level, pw.info.damage.div);
-        } else {
-            fprintf(file, "%d * caster_level", pw.info.damage.div);
-        }
-    } else {
-        fprintf(file, "0");
-    }
-    fprintf(file, ";\n");
-
-    fprintf(file, "    damage = dnd2e_dice_roll(num_dice, %d) + mod;\n", pw.info.damage.sides);
-    fprintf(file, "    effect_type = 0");
-
-    int is_first = 1;
-    for (int i = 0; i < 16; i++) {
-        if (pw.info.effect_type & (1<<i)) {
-            fprintf(file, " | %s", effect_names[i]);
-            is_first = 0;
-        }
-    }
-    fprintf(file, ";\n");
-
+    //if (pw.info.damage.dice > 0) {
     if (pw.info.damage.sides > 0) {
-        fprintf(file, "    sol_effect_apply_damage(source->entity, entity, damage, effect_type);\n");
+        fprintf(file, "    num_dice = ");
+        if (pw.info.damage.div > 1) {
+            fprintf(file, "(%d * ((%d + caster_level) / %d) + %d)",
+                    pw.info.damage.level, pw.info.damage.dice_plus, pw.info.damage.div, pw.info.damage.dice);
+        } else {
+            if (pw.info.damage.dice_plus) {
+                if (pw.info.damage.div == 1) {
+                    fprintf(file, "(%d * caster_level + %d)",
+                            pw.info.damage.dice_plus, pw.info.damage.dice);
+                } else {
+                    fprintf(file, "%d", pw.info.damage.dice);
+                }
+            } else {
+                if (pw.info.damage.dice > 0) {
+                    fprintf(file, "%d", pw.info.damage.dice);
+                } else {
+                    fprintf(file, "0");
+                }
+            }
+        }
+        fprintf(file, ";\n");
+
+        fprintf(file, "    mod = ");
+        if (pw.info.damage.plus) {
+            if (pw.info.damage.div > 1) {
+                fprintf(file, " %d * ((%d + caster_level) / %d)",
+                        pw.info.damage.level, pw.info.damage.plus, pw.info.damage.div);
+            } else {
+                if (pw.info.damage.div == 1) {
+                    fprintf(file , "(%d + %d) * caster_level",
+                            pw.info.damage.level, pw.info.damage.plus);
+                } else {
+                    fprintf(file, "%d", pw.info.damage.plus);
+                }
+            }
+        } else if (pw.info.damage.div == 1) {
+            if (pw.info.damage.level) {
+                fprintf(file, "(%d + %d) * caster_level",
+                    pw.info.damage.level, pw.info.damage.div);
+            } else {
+                fprintf(file, "%d * caster_level", pw.info.damage.div);
+            }
+        } else {
+            fprintf(file, "0");
+        }
+        fprintf(file, ";\n");
+
+        fprintf(file, "    damage = dnd2e_dice_roll(num_dice, %d) + mod;\n", pw.info.damage.sides);
+        fprintf(file, "    effect_type = 0");
+
+        int is_first = 1;
+        for (int i = 0; i < 16; i++) {
+            if (pw.info.effect_type & (1<<i)) {
+                fprintf(file, " | %s", effect_names[i]);
+                is_first = 0;
+            }
+        }
+        fprintf(file, ";\n");
+
+        if (pw.info.damage.sides > 0) {
+            fprintf(file, "    sol_effect_apply_damage(source->entity, entity, damage, effect_type);\n");
+        }
+    }
+
+    if (pw.info.effect) {
+        fprintf(file, "    sol_effect_apply_condition(source->entity, entity, %d);\n", pw.info.effect);
     }
 
     fprintf(file, "}\n");
@@ -1221,6 +1228,7 @@ static void generate_power(power_entry_t pw) {
     fprintf(file, "#ifndef %s_%s_POWER_H\n", type, name);
     fprintf(file, "#define %s_%s_POWER_H\n\n", type, name);
     fprintf(file, "#include <stdlib.h>\n");
+    fprintf(file, "#include <stdint.h>\n");
     fprintf(file, "#include \"effect.h\"\n");
     fprintf(file, "#include \"entity.h\"\n");
     fprintf(file, "#include \"rules.h\"\n");

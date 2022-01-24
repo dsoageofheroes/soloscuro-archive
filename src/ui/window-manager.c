@@ -210,7 +210,6 @@ void sol_window_pop() {
 
     destroy_window(--window_pos);
 
-    printf("window_pos = %d\n", window_pos);
     if (window_pos > 0 && windows[window_pos - 1].return_control) {
         windows[window_pos - 1].return_control();
     }

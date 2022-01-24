@@ -1,6 +1,7 @@
 #include "view-character.h"
 #include "gfftypes.h"
 #include "narrate.h"
+#include "description.h"
 #include "inventory.h"
 #include "new-character.h"
 #include "label.h"
@@ -81,7 +82,7 @@ void view_character_init(const uint32_t _x, const uint32_t _y) {
     uint32_t x = _x / settings_zoom(), y = _y / settings_zoom();
     xoffset = _x;
     yoffset = _y;
-    player_selected = player_get_slot(player_get_active());
+    player_selected = sol_player_get_slot(sol_player_get_active());
 
     memset(description, 0x0, sizeof(description));
     memset(message, 0x0, sizeof(message));
@@ -134,10 +135,10 @@ void view_character_init(const uint32_t _x, const uint32_t _y) {
     set_zoom(&description_loc, zoom);
 
     strcpy(description, "description");
-    if (player_get_active() && player_get_active()->name) {
-        strcpy(description, player_get_active()->name);
+    if (sol_player_get_active() && sol_player_get_active()->name) {
+        strcpy(description, sol_player_get_active()->name);
     }
-    strcpy(message, "message");
+    //strcpy(message, "message");
     sol_label_create_group();
     sol_label_group_set_font(FONT_YELLOW);
     sol_label_set_positions(143 * zoom, 30 * zoom, SCREEN_VIEW_CHARACTER);
@@ -148,16 +149,16 @@ void view_character_init(const uint32_t _x, const uint32_t _y) {
 static void render_character() {
     const float zoom = settings_zoom();
 
-    if (!player_get(player_selected)) { return; }
+    if (!sol_player_get(player_selected)) { return; }
 
-    sol_label_set_group(player_get(player_selected), SCREEN_VIEW_CHARACTER);
+    sol_label_set_group(sol_player_get(player_selected), SCREEN_VIEW_CHARACTER);
     sol_label_set_positions(143 * zoom, 30 * zoom, SCREEN_VIEW_CHARACTER);
     sol_label_render_stats(xoffset, yoffset);
     sol_label_render_gra(xoffset + (64 * zoom), yoffset - (49 * zoom));
     sol_label_render_class_and_combat(xoffset + (64 * zoom), yoffset - (42 * zoom));
 
     sol_sprite_set_frame(slots, 0);
-    item_t *items = player_get(player_selected)->inv;
+    item_t *items = sol_player_get(player_selected)->inv;
     animate_sprite_t *as = NULL;
     sol_sprite_set_location(slots, xoffset + (205 * zoom), yoffset + (41 * zoom));
     sol_sprite_render(slots);
@@ -217,6 +218,7 @@ static void sprite_highlight(const uint32_t x, const uint32_t y) {
     sol_sprite_set_location(power_highlight, sol_sprite_getx(as->spr) - 1 * zoom,
             sol_sprite_gety(as->spr) - 1 * zoom);
     sol_sprite_render(power_highlight);
+    strcpy(message, pw->name);
 }
 
 static void render_powers() {
@@ -248,36 +250,13 @@ static int get_next_len(const char *str, const int max) {
     return ret;
 }
 
-static void render_power_to_display() {
-    const float zoom = settings_zoom();
-    char *msg = power_to_display->description;
-    int next_index = 0, pos = 0, amt = 20;
-    int lines = 0;
-
-    return;
-
-    sol_sprite_set_location(power_background, xoffset + (90 * zoom) , yoffset + (48 * zoom));
-    sol_sprite_render(power_background);
-    animate_sprite_t *as = &(power_to_display->icon);
-    sol_sprite_set_location(as->spr, xoffset + (100) * zoom, yoffset + (58 * zoom));
-    sol_sprite_render(as->spr);
-
-    while ((next_index = get_next_len(msg + pos, amt))) {
-        sol_print_line_len(FONT_BLACK, msg + pos, 
-                (lines == 0) ? xoffset + (120 * zoom) : xoffset + (100 * zoom),
-                yoffset + ((64 + 10 * lines) * zoom), next_index);
-        pos += next_index;
-        lines++;
-        amt = 26;
-    }
-}
-
 #define BUF_MAX (1<<12)
 
 void view_character_render(void *data) {
     char buf[BUF_MAX];
     const float zoom = settings_zoom();
 
+    message[0] = '\0';
     sol_sprite_render(sun);
     sol_sprite_render(panel);
     sol_sprite_render(view_char);
@@ -295,24 +274,20 @@ void view_character_render(void *data) {
 
     for (int i = 0; i < 4; i++) {
         sol_sprite_set_frame(ai[i], 0);
-        if (player_ai(i)) {
+        if (sol_player_ai(i)) {
             sol_sprite_set_frame(ai[i], 1);
         }
         sol_sprite_render(ai[i]);
         sol_sprite_set_frame(leader[i], 0);
-        if (player_exists(i) && player_get(i) == player_get_active()) {
+        if (sol_player_exists(i) && sol_player_get(i) == sol_player_get_active()) {
             sol_sprite_set_frame(leader[i], 1);
         }
         sol_sprite_render(leader[i]);
     }
 
-    sol_print_line_len(FONT_YELLOW, description, description_loc.x, description_loc.y, sizeof(description));
-    //print_line_len(renderer, FONT_GREY, message, message_loc.x, message_loc.y, sizeof(message));
-    sol_font_render_center(FONT_GREY, message, message_loc.x, message_loc.y, message_loc.w);
-
     for (int i = 0; i < 4; i++) {
-        if (player_exists(i)) {
-            entity_t *player = player_get(i);
+        if (sol_player_exists(i)) {
+            entity_t *player = sol_player_get(i);
             int x = 56, y = 64;
             if (i == 1 || i == 3) { y += 60; }
             if (i == 2 || i == 3) { x += 50; }
@@ -348,11 +323,9 @@ void view_character_render(void *data) {
         case 2: render_powers(); break;
         default: break;
     }
-    return;
 
-    if (power_to_display) {
-        render_power_to_display();
-    }
+    sol_print_line_len(FONT_YELLOW, description, description_loc.x, description_loc.y, sizeof(description));
+    sol_font_render_center(FONT_GREY, message, message_loc.x, message_loc.y, message_loc.w);
 }
 
 static int get_sprite_mouse_is_on(const uint32_t x, const uint32_t y) {
@@ -400,16 +373,16 @@ int view_character_handle_mouse_down(const uint32_t button, const uint32_t x, co
     //static int32_t player_selected = 0;
     for (int i = 0; i < 4; i++) {
         if (sol_sprite_in_rect(ports[i], x, y)
-                && player_exists(i)
+                && sol_player_exists(i)
                 ) {
             player_selected = i;
-            strcpy(description, player_get(player_selected)->name);
+            strcpy(description, sol_player_get(player_selected)->name);
         }
         if (sol_sprite_in_rect(leader[i], x, y)) {
-            player_set_active(i);
+            sol_player_set_active(i);
         }
         if (sol_sprite_in_rect(ai[i], x, y)) {
-            player_set_ai(i, !player_ai(i));
+            sol_player_set_ai(i, !sol_player_ai(i));
         }
     }
     return 1; // means I captured the mouse click
@@ -431,15 +404,19 @@ int view_character_handle_mouse_up(const uint32_t button, const uint32_t x, cons
                 sol_popup_set_option(1, "ADD");
                 sol_popup_set_option(2, "CANCEL");
                 last_selection = SELECT_POPUP;
+                return 1;
             }
         }
         if (mode == 2) {
             if ((power_to_display = find_power(x, y))) {
-                strcpy(message, power_to_display->name);
+                sol_description_set_message(power_to_display->description);
+                sol_description_set_icon(power_to_display->icon_id);
+                sol_window_push(&description_window, 0, 0);
+                return 1;
             }
         }
     }
-    if (button == SOL_MOUSE_BUTTON_RIGHT) {
+    if (button == SOL_MOUSE_BUTTON_LEFT) {
         if (mode == 2) {
             power_to_display = find_power(x, y);
             if (power_to_display) {
@@ -519,11 +496,10 @@ void view_character_return_control () {
         psin_t* psi = sol_new_character_get_psin();
         ssi_spell_list_t* spells = sol_new_character_get_spell_list();
         psionic_list_t* psionics = sol_new_character_get_psionic_list();
-        //char *name = new_character_get_name();
         if (pc && psi && spells && psionics) {
             if (dnd2e_character_is_valid(pc)) {// && dnd2e_psin_is_valid(pc, psi)) {
-                warn ("TODO: Add back character creation!\n");
-                //gff_char_add_character(pc, psi, spells, psionics, name);
+                sol_player_set(slot_clicked, pc);
+                warn ("TODO: Add back character creation to added list of chars!\n");
             } else {
                 sol_window_push(&popup_window, 100, 75);
                 sol_popup_set_message("Character was invalid.");

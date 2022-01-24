@@ -68,7 +68,7 @@ extern sol_region_t* sol_region_manager_get_region(const int region_id) {
 
     current_region = region_id;
 	for (int i = 0; i < MAX_PCS; i++) {
-        dude = player_get(i);
+        dude = sol_player_get(i);
         if (dude) {
             dude->region = region_id;
             //player_get_entity(i)->region = region_id;
@@ -195,7 +195,7 @@ extern void sol_region_manager_set_current(sol_region_t *region) {
         if (ssi_regions[i] == region) { current_region = i; }
         if (sol_regions[i] == region) { current_region = MAX_REGIONS + i; }
     }
-    entity_list_add(region->entities, player_get_active());
+    entity_list_add(region->entities, sol_player_get_active());
 }
 
 extern void sol_region_manager_remove_players() {
@@ -203,6 +203,6 @@ extern void sol_region_manager_remove_players() {
     if (!reg) { return; }
 
     for (int i = 0; i < MAX_PCS; i++) {
-        entity_list_remove(reg->entities, entity_list_find(reg->entities, player_get(i)));
+        entity_list_remove(reg->entities, entity_list_find(reg->entities, sol_player_get(i)));
     }
 }

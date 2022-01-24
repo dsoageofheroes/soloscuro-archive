@@ -902,6 +902,7 @@ int new_character_handle_mouse_up(const uint32_t button, const uint32_t x, const
 
     if (last_sprite_mousedowned == done_button && sol_sprite_in_rect(done_button, x, y)) {
         is_valid = 1;
+        pc.name = strdup(sol_new_character_get_name());
         sol_window_pop();
     }
 

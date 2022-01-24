@@ -82,6 +82,7 @@ typedef struct sol_effect_s {
     void    (*end_of_effect_trigger) (entity_t *source);
 } sol_effect_t;
 
-void sol_effect_apply_damage(entity_t *source, entity_t *target, const int32_t damage, enum effect_type type);
+extern void sol_effect_apply_damage(entity_t *source, entity_t *target, const int32_t damage, enum effect_type type);
+extern void sol_effect_apply_condition(entity_t *source, entity_t *target, uint16_t condition);
 
 #endif

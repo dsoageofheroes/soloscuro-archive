@@ -49,7 +49,7 @@ static void add_player_to_save(const int id, const int player) {
     char *buf = malloc(buf_len);
     rdff_header_t rdff;
     int num_items = 0;
-    dude_t *dude = player_get(player);
+    dude_t *dude = sol_player_get(player);
     item_t *item = dude->inv;
 
     for (int i = 0; i < 26; i++) {
@@ -107,7 +107,7 @@ static void add_player_to_save(const int id, const int player) {
 
 static void save_regions(const int id) {
     sol_region_t *reg = sol_region_manager_get_current();
-    dude_t *dude = player_get_active();
+    dude_t *dude = sol_player_get_active();
     dude_t *entity = NULL;
     size_t buf_len = 128, offset = 0;
     uint32_t len;
@@ -148,7 +148,7 @@ static void save_regions(const int id) {
 static void load_regions(const int id) {
     //entity_t *entity = NULL;
     //gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes;
-    dude_t *dude = player_get_active();
+    dude_t *dude = sol_player_get_active();
     sol_region_t *reg = sol_region_manager_get_region(dude->region);
     char *buf = NULL;
     rdff_header_t *rdff = NULL;
@@ -233,11 +233,11 @@ static int load_player(const int id, const int player, const int res_id) {
     gff_chunk_header_t chunk = gff_find_chunk_header(id, GFF_CHAR, res_id);
     if (gff_read_chunk(id, &chunk, &buf, sizeof(buf)) < 34) { return 0; }
 
-    player_free(player);
-    dude = player_get(player);
+    sol_player_free(player);
+    dude = sol_player_get(player);
     if (dude) { entity_free (dude); }
-    player_set(player, entity_create_fake(30, 10));
-    dude = player_get(player);
+    sol_player_set(player, entity_create_fake(30, 10));
+    dude = sol_player_get(player);
     entity_load_from_gff(dude, id, player, res_id);
 
     rdff = (rdff_disk_object_t*) (buf);
@@ -250,8 +250,8 @@ static int load_player(const int id, const int player, const int res_id) {
         offset += sizeof(rdff_disk_object_t);
         offset += rdff->len;
     } else if (rdff->type == PLAYER_OBJECT) {
-        player_free(player);
-        dude = player_get(player);
+        sol_player_free(player);
+        dude = sol_player_get(player);
         entity_load_from_object(dude, buf + offset);
         dude->anim.scmd = sol_combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
         offset += rdff->len;
@@ -307,7 +307,7 @@ extern int ls_load_save_file(const char *path) {
     gpl_deserialize_globals(buf);
     free(buf);
 
-    chunk = gff_find_chunk_header(id, GFF_GDAT, player_get_active()->region);
+    chunk = gff_find_chunk_header(id, GFF_GDAT, sol_player_get_active()->region);
     buf = malloc(chunk.length);
     if (!gff_read_chunk(id, &chunk, buf, chunk.length)) {
         printf("Error loading file.\n");

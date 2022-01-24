@@ -15,17 +15,17 @@ extern void sol_player_condense();
 
 // New Interface
 extern void         sol_player_init();
-extern int          player_exists(const int slot);
-extern entity_t*    player_get(const int slot);
-extern void         player_set(const int slot, entity_t *dude);
-extern void         player_set_active(const int slot);
-extern void         player_cleanup();
-extern entity_t*    player_get_active();
-extern int          player_get_active_slot();
-extern int          player_get_slot(entity_t *entity);
-extern void         player_free(const int slot);
-extern int          player_ai(const int slot);
-extern void         player_set_ai(const int slot, const int ai);
+extern int          sol_player_exists(const int slot);
+extern entity_t*    sol_player_get(const int slot);
+extern void         sol_player_set(const int slot, entity_t *dude);
+extern void         sol_player_set_active(const int slot);
+extern void         sol_player_cleanup();
+extern entity_t*    sol_player_get_active();
+extern int          sol_player_get_active_slot();
+extern int          sol_player_get_slot(entity_t *entity);
+extern void         sol_player_free(const int slot);
+extern int          sol_player_ai(const int slot);
+extern void         sol_player_set_ai(const int slot, const int ai);
 extern void         sol_player_center(const int i, const int x, const int y, const int w, const int h);
 extern void         sol_player_center_portrait(const int i, const int x, const int y, const int w, const int h);
 extern uint16_t     sol_player_get_sprite(const int slot);

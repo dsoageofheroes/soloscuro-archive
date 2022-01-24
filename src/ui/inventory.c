@@ -213,7 +213,7 @@ static int display_attack(entity_t *entity, item_t *item, const int xpos, const 
 
 static void render_character() {
     char buf[BUF_MAX];
-    entity_t *player = player_get(char_selected);
+    entity_t *player = sol_player_get(char_selected);
     if (!player) { return; }
     inventory_t *player_items = sol_player_get_inventory(char_selected);
     const float zoom = settings_zoom();
@@ -287,7 +287,7 @@ void inventory_window_render(void *data) {
     const float zoom = settings_zoom();
 
     description[0] = '\0';
-    entity_t *player = player_get(char_selected);
+    entity_t *player = sol_player_get(char_selected);
     item_t *items = player ? player->inv : NULL;
     animate_sprite_t *as = NULL;
 
@@ -312,12 +312,12 @@ void inventory_window_render(void *data) {
         sol_sprite_render(ai[i]);
         sol_sprite_render(leader[i]);
         //sol_sprite_render(port_background[i]);
-        sol_sprite_set_frame(ports[i], player_exists(i) ? 1 : 2);
+        sol_sprite_set_frame(ports[i], sol_player_exists(i) ? 1 : 2);
         sol_sprite_render(ports[i]);
         if (sol_sprite_in_rect(ports[i], mousex, mousey)) {
             sol_sprite_set_frame(ports[i], 1);
             sol_sprite_render(ports[i]);
-            if (player_exists(i)) {
+            if (sol_player_exists(i)) {
                 snprintf(description, 128, "%s%s",
                         i == char_selected ? "" : "SELECT ",
                         player->name);
@@ -385,7 +385,7 @@ void inventory_window_render(void *data) {
         }
     }
 
-    if (player_exists(char_selected)) {
+    if (sol_player_exists(char_selected)) {
         sol_player_center_portrait(char_selected, xoffset + (75) * zoom, yoffset + (36) * zoom, 90 * zoom, 125 * zoom);
         sol_player_render_portrait(char_selected);
     }
@@ -430,7 +430,7 @@ int inventory_window_handle_mouse_down(const uint32_t button, const uint32_t x, 
 
 static void clicked_slot(const int slot) {
     item_t* mouse_item = sol_mouse_get_item();
-    entity_t *player = player_get(char_selected);
+    entity_t *player = sol_player_get(char_selected);
     item_t *player_item = player->inv + slot;
 
     if (mouse_item) { // mouse has an item

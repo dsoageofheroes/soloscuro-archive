@@ -254,7 +254,7 @@ static int calc_distance_to_player(entity_t *entity) {
 
     //for (int i = 0; i < MAX_PCS; i++) {
         //if (player_exists(i)) {
-            entity_t *dude = player_get_active();
+            entity_t *dude = sol_player_get_active();
             int xdiff = (entity->mapx - dude->mapx);
             int ydiff = (entity->mapy - dude->mapy);
             if (xdiff < 0) { xdiff *= -1;}
@@ -285,8 +285,8 @@ extern void sol_region_tick(sol_region_t *reg) {
             continue;
         }
         if (bad_dude->abilities.hunt) {
-            xdiff = player_get_active()->mapx - bad_dude->mapx;
-            ydiff = player_get_active()->mapy - bad_dude->mapy;
+            xdiff = sol_player_get_active()->mapx - bad_dude->mapx;
+            ydiff = sol_player_get_active()->mapy - bad_dude->mapy;
             xdiff = (xdiff < 0) ? -1 : (xdiff > 0) ? 1 : 0;
             ydiff = (ydiff < 0) ? -1 : (ydiff > 0) ? 1 : 0;
             posx = bad_dude->mapx;

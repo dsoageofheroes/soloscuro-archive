@@ -94,14 +94,14 @@ extern int sol_lua_load_entity (lua_State *l, dude_t *dude) {
 
 static int load_player (lua_State *l) {
     int n = luaL_checkinteger(l, 1);
-    return sol_lua_load_entity(l, player_get(n));
+    return sol_lua_load_entity(l, sol_player_get(n));
 }
 
 static int create_player (lua_State *l) {
     int n = luaL_checkinteger(l, 1);
-    player_set(n, sol_entity_create_default_human());
+    sol_player_set(n, sol_entity_create_default_human());
     sol_player_load(n);
-    return sol_lua_load_entity(l, player_get(n));
+    return sol_lua_load_entity(l, sol_player_get(n));
 }
 
 static void push_region_lua(lua_State *l, sol_region_t *reg) {

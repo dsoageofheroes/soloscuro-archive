@@ -46,7 +46,7 @@ static void free_sprites(const int slot) {
 static void load_character_sprite(const int slot, const float zoom) {
     if (slot < 0 || slot >= MAX_PCS) { return; }
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
-    dude_t *dude = player_get(slot);
+    dude_t *dude = sol_player_get(slot);
     if (!dude) { return; }
 
     free_sprites(slot);
@@ -142,14 +142,14 @@ uint16_t sol_player_get_sprite(const int slot) {
     return players_spr[slot].main;
 }
 
-extern void player_cleanup() {
+extern void sol_player_cleanup() {
     sol_region_manager_remove_players();
     for (int i = 0; i < MAX_PCS; i++) {
-        player_free(i);
+        sol_player_free(i);
     }
 }
 
-extern void player_free(const int slot) {
+extern void sol_player_free(const int slot) {
     if (players[slot]) {
         entity_free(players[slot]);
     }
@@ -160,18 +160,19 @@ extern void sol_player_init() {
     // Setup the slots for reading/writing
     for (int i = 0; i < MAX_PCS; i++) {
         if (!players[i]) {
-            players[i] = player_get(i);
+            players[i] = sol_player_get(i);
         }
     }
 }
 
-extern entity_t* player_get(const int slot) {
+extern entity_t* sol_player_get(const int slot) {
     if (slot < 0 || slot >= MAX_PCS) { return NULL; }
     return players[slot];
 }
 
-extern void player_set(const int slot, entity_t *dude) {
+extern void sol_player_set(const int slot, entity_t *dude) {
     if (slot < 0 || slot >= MAX_PCS || !dude) { return; }
+    printf("add %s to %d\n", dude->name, slot);
     players[slot] = dude;
     if (!players[slot] && active == slot) {
         active = -1;
@@ -180,30 +181,30 @@ extern void player_set(const int slot, entity_t *dude) {
         }
     }
     if (active < 0 && players[slot]) {
-        player_set_active(slot);
+        sol_player_set_active(slot);
     }
 }
 
-extern int player_exists(const int slot) {
+extern int sol_player_exists(const int slot) {
     if (slot < 0 || slot >= MAX_PCS) { return 0; }
-    dude_t *player = player_get(slot);
+    dude_t *player = sol_player_get(slot);
     return player && (player->name != NULL);
 }
 
-extern void player_set_active(const int slot) {
+extern void sol_player_set_active(const int slot) {
     if (slot < 0 || slot >= MAX_PCS) { return; }
     if (players[slot]) { active = slot; }
 }
 
-extern entity_t* player_get_active() {
-    return player_get(active);
+extern entity_t* sol_player_get_active() {
+    return sol_player_get(active);
 }
 
-extern int player_get_active_slot() {
+extern int sol_player_get_active_slot() {
     return active;
 }
 
-extern int player_get_slot(entity_t *entity) {
+extern int sol_player_get_slot(entity_t *entity) {
     for (int i = 0; i < MAX_PCS; i++) {
         if (entity == players[i]) { return i; }
     }
@@ -211,12 +212,12 @@ extern int player_get_slot(entity_t *entity) {
     return -1;
 }
 
-extern int player_ai(const int slot) {
+extern int sol_player_ai(const int slot) {
     if (slot < 0 || slot >= MAX_PCS) { return 0; }
     return ai[slot];
 }
 
-extern void player_set_ai(const int slot, const int _ai) {
+extern void sol_player_set_ai(const int slot, const int _ai) {
     if (slot < 0 || slot >= MAX_PCS) { return; }
     ai[slot] = _ai;
 }
@@ -225,7 +226,7 @@ void sol_player_close() {
     //dude_t *dude;
 
     for (int i = 0; i < MAX_PCS; i++) {
-        //dude = player_get(i);
+        //dude = sol_player_get(i);
         free_sprites(i);
         //port_remove_entity(dude);
         //printf("dude = %p\n", dude);
@@ -233,11 +234,11 @@ void sol_player_close() {
             //sol_sprite_free(((animate_sprite_node_t*)dude->sprite.data)->anim->spr);
         //}
     }
-    player_cleanup();
+    sol_player_cleanup();
 }
 
 void sol_player_load_graphics(const int slot) {
-    dude_t *dude = player_get(slot);
+    dude_t *dude = sol_player_get(slot);
     dude->anim.scmd = sol_combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
     load_character_sprite(slot, settings_zoom());
 }
@@ -253,7 +254,7 @@ static int count = 0;
 static int direction = 0x0;
 
 extern void sol_player_update() {
-    entity_t *dude = player_get_active();
+    entity_t *dude = sol_player_get_active();
     int xdiff = 0, ydiff = 0;
     combat_turn_t combat_turn = sol_combat_player_turn();
     enum entity_action_e action;
@@ -303,7 +304,7 @@ extern void sol_player_update() {
         : (ydiff == 1) ? EA_WALK_DOWN
         : (ydiff == -1) ? EA_WALK_UP
         : EA_NONE;
-    last_action[player_get_active_slot()] = action;
+    last_action[sol_player_get_active_slot()] = action;
 
     entity_animation_list_add_speed(&(dude->actions), action, dude, NULL, NULL, ticks_per_move, 2, 0);
     count = ticks_per_move / 2;
@@ -328,8 +329,8 @@ extern void sol_player_unmove(const uint8_t _direction) {
 
 extern void sol_player_condense() {
     for (int i = 0; i < MAX_PCS; i++) {
-        entity_t *player = player_get(i);
-        if (player != player_get_active() && player->name) {
+        entity_t *player = sol_player_get(i);
+        if (player != sol_player_get_active() && player->name) {
             port_update_entity(player, -999, -999);
         }
     }
@@ -339,7 +340,7 @@ extern void sol_player_load(const int slot) {
     if (slot >= 0 && slot < MAX_PCS && players[slot]->anim.spr == SPRITE_ERROR) {
         sol_player_load_zoom(slot, settings_zoom());
         sol_player_load_graphics(slot);
-        sol_map_place_entity(player_get(slot));
+        sol_map_place_entity(sol_player_get(slot));
     }
 }
 
