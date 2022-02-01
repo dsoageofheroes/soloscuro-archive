@@ -309,6 +309,14 @@ void inventory_window_render(void *data) {
     sol_sprite_render(game_return);
 
     for (int i = 0; i < 4; i++) {
+        sol_sprite_set_frame(ai[i], 0);
+        if (sol_player_ai(i)) {
+            sol_sprite_set_frame(ai[i], 1);
+        }
+        sol_sprite_set_frame(leader[i], 0);
+        if (sol_player_exists(i) && sol_player_get(i) == sol_player_get_active()) {
+            sol_sprite_set_frame(leader[i], 1);
+        }
         sol_sprite_render(ai[i]);
         sol_sprite_render(leader[i]);
         //sol_sprite_render(port_background[i]);
@@ -425,6 +433,20 @@ int inventory_window_handle_mouse_movement(const uint32_t x, const uint32_t y) {
 }
 
 int inventory_window_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
+    for (int i = 0; i < 4; i++) {
+        //if (sol_sprite_in_rect(ports[i], x, y)
+                //&& sol_player_exists(i)
+                //) {
+            //player_selected = i;
+            //strcpy(description, sol_player_get(player_selected)->name);
+        //}
+        if (sol_sprite_in_rect(leader[i], x, y)) {
+            sol_player_set_active(i);
+        }
+        if (sol_sprite_in_rect(ai[i], x, y)) {
+            sol_player_set_ai(i, !sol_player_ai(i));
+        }
+    }
     return 1; // means I captured the mouse click
 }
 
@@ -465,7 +487,9 @@ int inventory_window_handle_mouse_up(const uint32_t button, const uint32_t x, co
                 sol_popup_set_option(2, "CANCEL");
                 last_selection = SELECT_POPUP;
             } else if (button == SOL_MOUSE_BUTTON_LEFT) {
-                char_selected = i;
+                if (sol_player_exists(i)) {
+                    char_selected = i;
+                }
             }
         }
     }

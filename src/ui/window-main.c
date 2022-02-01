@@ -36,7 +36,7 @@ static int click_action() {
     if (count_down_spr == exit_dos) { sol_game_loop_signal(WAIT_FINAL, 0); }
     if (count_down_spr == create_characters) { sol_window_push(&view_character_window, 0, 10); }
     if (count_down_spr == start) {
-        if(sol_player_get_active()->name) {
+        if(sol_player_get_active() && sol_player_get_active()->name) {
             sol_window_pop();
             ret = 1;
             sol_window_load_region(42);

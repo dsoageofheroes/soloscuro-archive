@@ -201,6 +201,9 @@ extern void item_set_starting(dude_t *dude) {
     item_free_inventory(dude->inv);
     if (dude->inv) {
         memset(dude->inv, 0x0, sizeof(inventory_t));
+        for (int i = 0; i < 26; i++) {
+            dude->inv[i].anim.spr = SPRITE_ERROR;
+        }
     } else {
         dude->inv = sol_inventory_create();
     }

@@ -172,14 +172,16 @@ extern entity_t* sol_player_get(const int slot) {
 
 extern void sol_player_set(const int slot, entity_t *dude) {
     if (slot < 0 || slot >= MAX_PCS || !dude) { return; }
-    printf("add %s to %d\n", dude->name, slot);
+
     players[slot] = dude;
+
     if (!players[slot] && active == slot) {
         active = -1;
         for (int i = 0; i < MAX_PCS; i++) {
             if (players[i]) { active = i; return; }
         }
     }
+
     if (active < 0 && players[slot]) {
         sol_player_set_active(slot);
     }
@@ -337,7 +339,14 @@ extern void sol_player_condense() {
 }
 
 extern void sol_player_load(const int slot) {
-    if (slot >= 0 && slot < MAX_PCS && players[slot]->anim.spr == SPRITE_ERROR) {
+    if (slot < 0 || slot >= MAX_PCS) { return; }
+
+    if (players[slot]->anim.scmd == NULL) { // load a new char
+        players[slot]->anim.scmd = sol_combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
+        players[slot]->anim.spr = SPRITE_ERROR;
+    }
+
+    if (players[slot]->anim.spr == SPRITE_ERROR) {
         sol_player_load_zoom(slot, settings_zoom());
         sol_player_load_graphics(slot);
         sol_map_place_entity(sol_player_get(slot));

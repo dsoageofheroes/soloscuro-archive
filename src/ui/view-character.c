@@ -163,9 +163,8 @@ static void render_character() {
     sol_sprite_set_location(slots, xoffset + (205 * zoom), yoffset + (41 * zoom));
     sol_sprite_render(slots);
     if (items) {
-        //as = items[2].sprite.data;
         as = &(items[2].anim);
-        if (as) {
+        if (as && items[2].name[0]) {
             sol_sprite_center_spr(as->spr, slots);
             sol_sprite_render(as->spr);
         }
@@ -174,9 +173,8 @@ static void render_character() {
     sol_sprite_set_location(slots, xoffset + (223 * zoom), yoffset + (41 * zoom));
     sol_sprite_render(slots);
     if (items) {
-        //as = items[3].sprite.data;
         as = &(items[3].anim);
-        if (as) {
+        if (as && items[3].name[0]) {
             sol_sprite_center_spr(as->spr, slots);
             sol_sprite_render(as->spr);
         }
@@ -185,9 +183,8 @@ static void render_character() {
     sol_sprite_set_location(slots, xoffset + (241 * zoom), yoffset + (41 * zoom));
     sol_sprite_render(slots);
     if (items) {
-        //as = items[10].sprite.data;
         as = &(items[10].anim);
-        if (as) {
+        if (as && items[10].name[0]) {
             sol_sprite_center_spr(as->spr, slots);
             sol_sprite_render(as->spr);
         }
@@ -497,8 +494,9 @@ void view_character_return_control () {
         ssi_spell_list_t* spells = sol_new_character_get_spell_list();
         psionic_list_t* psionics = sol_new_character_get_psionic_list();
         if (pc && psi && spells && psionics) {
-            if (dnd2e_character_is_valid(pc)) {// && dnd2e_psin_is_valid(pc, psi)) {
+            if (dnd2e_character_is_valid(pc)) {
                 sol_player_set(slot_clicked, pc);
+                sol_player_load(slot_clicked);
                 warn ("TODO: Add back character creation to added list of chars!\n");
             } else {
                 sol_window_push(&popup_window, 100, 75);
