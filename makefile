@@ -7,10 +7,21 @@ COVFLAGS  = -g ${CFLAGS} -O0 -fprofile-arcs -ftest-coverage
 
 .PHONY: clean test all
 
-all:
-	make -f makefile.sdl
+all: build/libadlmidi/libADLMIDI.so build/Makefile
+	cd build ; make -j4
 
 clean:
-	make -f makefile.sdl clean
+	rm -rf build
 
-#include makefile.in
+build/Makefile:
+	cd build/ ; cmake -DCMAKE_BUILD_TYPE=Debug ..
+
+build/libadlmidi/libADLMIDI.so: ext/libadlmidi/AUTHORS
+	mkdir -p build/libadlmidi
+	mkdir -p lib
+	cd build/libadlmidi ; pwd
+	cd build/libadlmidi ; cmake -DCMAKE_BUILD_TYPE=Release -DlibADLMIDI_SHARED=ON ../../ext/libadlmidi
+	cd build/libadlmidi ; make -j 8
+
+ext/libadlmidi/AUTHORS:
+	git submodule update --init --recursive
