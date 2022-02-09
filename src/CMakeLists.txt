@@ -1,0 +1,68 @@
+set(SOLOSCURO_SRCS
+    ssi/ssi-scmd.c
+    ssi/ds-load-save.c
+    ssi/ssi-item.c
+    region.c
+    combat.c
+    powers/effect.c
+    powers/wizard.c
+    powers/powers.c
+    powers/powers-generator.c
+    settings.c
+    arbiter.c
+    trigger.c
+    gff/gff-image.c
+    gff/gff-xmi.c
+    gff/gff-char.c
+    gff/gff.c
+    gff/gff-map.c
+    objects/passive.c
+    objects/item.c
+    objects/player.c
+    objects/entity-list.c
+    objects/entity.c
+    objects/entity-animation.c
+    strdup.c
+    ui/combat-status.c
+    ui/sol_textbox.c
+    ui/inventory.c
+    ui/add-load-save.c
+    ui/popup.c
+    ui/portrait.c
+    ui/view-character.c
+    ui/animation.c
+    ui/interact.c
+    ui/new-character.c
+    ui/label.c
+    ui/window-manager.c
+    ui/map.c
+    ui/windows.txt
+    ui/window-main.c
+    ui/narrate.c
+    ui/game-menu.c
+    ui/description.c
+    lua/region.c
+    lua/settings.c
+    lua/ds.c
+    lua/manager.c
+    lua/entity.c
+    lua/lua-structs.c
+    rules.c
+    replay.c
+    gpl/gpl-lua.c
+    gpl/gpl-request.c
+    gpl/state.c
+    gpl/gpl-string.c
+    gpl/gpl-manager.c
+    gpl/gpl.c
+    gpl/gpl-var.c
+    support.c
+    gameloop.c
+    region-manager.c
+)
+
+file(GLOB WIZARD_SRCS powers/wizard/*c)
+
+include_directories(../include)
+include_directories(../ext)
+add_library(soloscuro SHARED ${SOLOSCURO_SRCS} ${WIZARD_SRCS})
