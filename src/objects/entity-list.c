@@ -9,15 +9,19 @@ extern entity_list_t* entity_list_create() {
     return (entity_list_t*) calloc(1, sizeof(entity_list_t));
 }
 
-extern void entity_list_free(entity_list_t *list) {
+extern void entity_list_clear(entity_list_t *list) {
     while (list && list->head) {
         entity_list_remove(list, list->head);
     }
+}
+
+extern void entity_list_free(entity_list_t *list) {
+    entity_list_clear(list);
     free(list);
 }
 
 extern void entity_list_free_all(entity_list_t *list) {
-    while (list->head) {
+    while (list && list->head) {
         entity_free(list->head->entity);
         entity_list_remove(list, list->head);
     }

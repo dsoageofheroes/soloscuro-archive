@@ -8,10 +8,10 @@ struct entity_list_s;
 
 // Represents all combatants in the entire region.
 typedef struct combat_region_s {
-    struct entity_list_s *combatants;
-    uint8_t hunt[MAX_COMBAT_OBJS];
-    uint32_t pos;
-    uint8_t in_combat_mode;
+    entity_list_t combatants;
 } combat_region_t;
+
+extern int    sol_combat_check_if_over(combat_region_t *cr);
+extern void   sol_combat_clear(combat_region_t *cr);
 
 #endif

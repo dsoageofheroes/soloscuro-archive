@@ -10,8 +10,6 @@
 #include "gpl-manager.h"
 #include "gpl.h"
 
-#define MAX_REGIONS (0xFF)
-
 static sol_region_t *ssi_regions[MAX_REGIONS];
 static sol_region_t *sol_regions[MAX_REGIONS];
 static int current_region = -1; // will need to eliminate for server code.
@@ -34,6 +32,31 @@ extern void sol_region_manager_cleanup() {
     }
     memset(ssi_regions, 0x0, sizeof(ssi_regions));
     memset(sol_regions, 0x0, sizeof(sol_regions));
+}
+
+// private: we assume entity and reg are valid.
+static int entity_is_in_region(const entity_t *entity, const sol_region_t *reg) {
+    dude_t *dude;
+
+    entity_list_for_each(reg->entities, dude) {
+        if (dude == entity) { return 1; }
+    }
+
+    return 0;
+}
+
+extern sol_region_t* sol_region_manager_get_region_with_entity(const entity_t *entity) {
+    sol_region_t *reg;
+    if (!entity) { return NULL; }
+
+    for (int i = 0; i < MAX_REGIONS; i++) {
+        reg = ssi_regions[i];
+        if (reg && entity_is_in_region(entity, reg)) { return reg; }
+        reg = sol_regions[i];
+        if (reg && entity_is_in_region(entity, reg)) { return reg; }
+    }
+
+    return NULL;
 }
 
 extern sol_region_t* sol_region_manager_get_region(const int region_id) {

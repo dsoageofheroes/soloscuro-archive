@@ -38,7 +38,6 @@ static int is_region(const int gff_idx) {
 extern sol_region_t* sol_region_create_empty() {
     sol_region_t *reg = calloc(1, sizeof(sol_region_t));
     reg->entities = entity_list_create();
-    //reg->anims = animation_list_create();
 
     return reg;
 }
@@ -72,7 +71,7 @@ extern sol_region_t* sol_region_create(const int gff_file) {
     load_tile_ids(reg);
     load_map_flags(reg);
     load_passives(reg, reg->gff_file, reg->map_id);
-    sol_combat_init(&(reg->cr));
+    //sol_combat_init(&(reg->cr));
     //region_list_load_objs(ret->list, ret->gff_file, ret->map_id);
 
     return reg;
@@ -105,7 +104,6 @@ extern void sol_region_free(sol_region_t *reg) {
     }
 
     entity_animation_list_free(&(reg->actions));
-    sol_combat_free(&(reg->cr));
     free(reg);
 }
 
@@ -274,7 +272,7 @@ extern void sol_region_tick(sol_region_t *reg) {
     int posx, posy;
     enum entity_action_e action;
 
-    if (!reg || sol_combat_player_turn() != NO_COMBAT) { return; }
+    if (!reg) { return; }
     if (reg->actions.head) {
         entity_animation_region_execute(reg);
     }

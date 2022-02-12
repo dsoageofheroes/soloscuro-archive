@@ -3,6 +3,7 @@
 #include "region-manager.h"
 #include "gff.h"
 #include "port.h"
+#include "arbiter.h"
 #include <string.h>
 #include <float.h>
 
@@ -51,8 +52,8 @@ static int push_region_function(lua_State *l, sol_region_t *region, int (*func)(
 
 static int get_first_entity(lua_State *l) {
     dude_t *dude = NULL;
-    sol_region_t *region = (sol_region_t*) lua_touserdata(l, lua_upvalueindex(1));
     const char *name = luaL_checkstring(l, 1);
+    sol_region_t *region = (sol_region_t*) lua_touserdata(l, lua_upvalueindex(1));
 
     entity_list_for_each(region->entities, dude) {
         if (!strcmp(name, dude->name)) {
@@ -64,6 +65,18 @@ static int get_first_entity(lua_State *l) {
     return 1;
 }
 
+static int enter_combat (lua_State *l) {
+    luaL_checktype(l, 1, LUA_TTABLE);
+    const int x = luaL_checkinteger(l, 2);
+    const int y = luaL_checkinteger(l, 2);
+
+    sol_region_t *region = (sol_region_t*) lua_touserdata(l, lua_upvalueindex(1));
+    sol_arbiter_enter_combat(region, x, y);
+
+    return 0;
+}
+
+
 extern int sol_lua_region_function(sol_region_t *region, const char *func, lua_State *l) {
     //if (!strcmp(func, "set_tile")) { lua_pushcfunction(l, region_set_tile); return 1; }
     if (!strcmp(func, "set_tile_id")) {
@@ -71,6 +84,9 @@ extern int sol_lua_region_function(sol_region_t *region, const char *func, lua_S
     }
     if (!strcmp(func, "find")) {
         return push_region_function(l, region, get_first_entity);
+    }
+    if (!strcmp(func, "enter_combat")) {
+        return push_region_function(l, region, enter_combat);
     }
     //if (!strcmp(func, "test")) { lua_pushcfunction(l, region_test); return 1; }
     lua_pushinteger(l, 0);

@@ -61,8 +61,6 @@ typedef struct entity_action_list_s {
 
 void          sol_combat_init(combat_region_t *cr);
 void          sol_combat_free(combat_region_t *rc);
-combat_turn_t sol_combat_player_turn();
-extern int    sol_combat_initiate(sol_region_t *reg, const uint16_t x, const uint16_t y);
 scmd_t*       sol_combat_get_scmd(const combat_scmd_t type);
 entity_t*     sol_combat_get_current(combat_region_t *cr);
 extern void   sol_combat_set_hunt(combat_region_t *cr, const uint32_t combat_id);

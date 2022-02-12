@@ -27,7 +27,7 @@ typedef struct sol_region_s {
     struct entity_list_s *entities;
     // actions from several entities, right now one at a time.
     entity_animation_list_t actions;
-    combat_region_t cr;
+    // combat_region_t cr;
     // Temporary while we figure things out...
     struct {
         uint16_t mid;// map to grab a tile from

@@ -12,7 +12,10 @@ typedef struct entity_list_s {
     entity_list_node_t *head;
 } entity_list_t;
 
+#define                    entity_list_init(a) a.head = NULL
+#define                    entity_list_empty(a) (a.head == NULL)
 extern entity_list_t*      entity_list_create();
+extern void                entity_list_clear(entity_list_t *list); // just clear the list (don't free)
 extern void                entity_list_free(entity_list_t *list); // just the list
 extern void                entity_list_free_all(entity_list_t *list); // the list and the entities
 extern entity_list_node_t* entity_list_add(entity_list_t *list, struct entity_s *entity);

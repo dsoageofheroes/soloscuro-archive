@@ -7,6 +7,7 @@
 #include "port.h"
 #include "region-manager.h"
 #include "settings.h"
+#include "arbiter.h"
 #include <string.h>
 
 static sol_sprite_t background, combat_attacks;
@@ -110,6 +111,7 @@ void combat_status_init(const uint32_t x, const uint32_t y) {
 }
 
 static void get_status() {
+    /*
     entity_t* dude = sol_combat_get_current(&(sol_region_manager_get_current()->cr));
 
     if (dude) {
@@ -119,6 +121,7 @@ static void get_status() {
         combat_status.status = 1;// Need to fix.
         combat_status.move = dude->stats.move;
     }
+    */
 }
 
 static int count = 30;
@@ -176,7 +179,7 @@ void combat_status_render(void *data) {
         }
     }
 
-    if (sol_combat_player_turn() == NO_COMBAT) { return; }
+    if (sol_arbiter_is_in_combat(sol_region_manager_get_current()) == NO_COMBAT) { return; }
 
     if (2 == 1) {
         sol_draw_cone(100, 100, 200);

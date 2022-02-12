@@ -258,7 +258,7 @@ static int direction = 0x0;
 extern void sol_player_update() {
     entity_t *dude = sol_player_get_active();
     int xdiff = 0, ydiff = 0;
-    combat_turn_t combat_turn = sol_combat_player_turn();
+    combat_turn_t combat_turn = NO_COMBAT;
     enum entity_action_e action;
     static int moving = 0;
 

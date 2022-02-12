@@ -144,6 +144,17 @@ static int game_loop(lua_State *l) {
     return 0;
 }
 
+static int enter_combat(lua_State *l) {
+    sol_region_t* reg = sol_region_manager_get_region(luaL_checkinteger(l, 2));
+    lua_Integer slot = luaL_checkinteger(l, 1);
+    //lua_Integer x = luaL_checkinteger(l, 2);
+    //lua_Integer y = luaL_checkinteger(l, 3);
+    //printf("reg = %p @ (%lld, %lld)\n", reg, x, y);
+    printf("reg = %p\n", reg);
+    printf("slot = %lld\n", slot);
+    return 0;
+}
+
 static int exit_game(lua_State *l) {
     port_set_config(CONFIG_EXIT, 1);
     return 0;

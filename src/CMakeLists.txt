@@ -4,6 +4,7 @@ set(SOLOSCURO_SRCS
     ssi/ssi-item.c
     region.c
     combat.c
+    combat-region.c
     powers/effect.c
     powers/wizard.c
     powers/powers.c

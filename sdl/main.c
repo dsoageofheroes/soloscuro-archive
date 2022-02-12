@@ -126,6 +126,7 @@ void main_exit_game() {
 static void main_combat_update() {
     entity_action_t player_action;
     player_action.action = EA_NONE;
+    /*
     switch(sol_combat_player_turn()) {
         case PLAYER1_TURN:
         case PLAYER2_TURN:
@@ -143,6 +144,7 @@ static void main_combat_update() {
             break;
         default: break;
     }
+    */
 }
 
 void handle_input() {
@@ -260,12 +262,6 @@ void sol_center_on_player() {
 }
 
 void port_window_render() {
-    sol_window_render(xmappos, ymappos);
-}
-
-void render() {
-    sol_region_tick(sol_region_manager_get_current());
-    sol_combat_update(sol_region_manager_get_current());
     sol_window_render(xmappos, ymappos);
 }
 

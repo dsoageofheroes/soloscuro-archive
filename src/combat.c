@@ -34,19 +34,11 @@ typedef struct action_node_s {
     struct action_node_s *next;
 } action_node_t;
 
-static int in_combat = 0;
 static combat_entry_t *combat_order = NULL;
 static combat_entry_t *current_turn = NULL;
 static combat_entry_t *defeated = NULL;
 
 static int is_combat_over(sol_region_t *reg);
-
-combat_turn_t sol_combat_player_turn() {
-    if (!in_combat) { return NO_COMBAT; }
-    if (current_player >= 0) { return PLAYER1_TURN + current_player; }
-
-    return NONPLAYER_TURN;
-}
 
 entity_t* sol_combat_get_current(combat_region_t *cr) {
     if (!current_turn) { return NULL; }
@@ -55,14 +47,11 @@ entity_t* sol_combat_get_current(combat_region_t *cr) {
 
 void sol_combat_init(combat_region_t *cr) {
     memset(cr, 0x0, sizeof(combat_region_t));
-    cr->combatants = entity_list_create();
+    entity_list_init(cr->combatants);
 }
 
 void sol_combat_free(combat_region_t *cr) {
-    if (cr->combatants) {
-        entity_list_free(cr->combatants);
-        cr->combatants = NULL;
-    }
+    entity_list_free(&(cr->combatants));
 }
 
 static int32_t ticks_per_game_round = 20;// For outside combat.
@@ -97,54 +86,6 @@ static void add_to_combat(entity_t *entity) {
         prev->next->next = node;
         prev = prev->next;
     }
-}
-
-static int get_dist(entity_t *entity, const uint16_t x, const uint16_t y) {
-    int xdiff = abs(entity->mapx - x);
-    int ydiff = abs(entity->mapy - y);
-
-    return (xdiff > ydiff) ? xdiff : ydiff;
-}
-
-extern int combat_initiate(sol_region_t *reg, const uint16_t x, const uint16_t y) {
-    const int dist = 10; // distance of the sphere;
-    dude_t *enemy = NULL;
-
-    entity_list_for_each(reg->entities, enemy) {
-        if (enemy->name && get_dist(enemy, x, y) <= dist) {
-            entity_list_add(reg->cr.combatants, enemy);
-        }
-    }
-
-    // Freeze all combats.
-    entity_list_for_each(reg->cr.combatants, enemy) {
-        enemy->anim.scmd = entity_animation_get_scmd(enemy->anim.scmd, 0, 0, EA_NONE);
-        port_update_entity(enemy, 0, 0);
-    }
-
-    for (int i = 0; i < MAX_PCS; i++) {
-        if (sol_player_exists(i)) {
-            entity_list_add(reg->cr.combatants, sol_player_get(i));
-        }
-    }
-
-    in_combat = 1;
-
-    entity_list_for_each(reg->cr.combatants, enemy) {
-        add_to_combat(enemy);
-    }
-
-    sol_combat_enter_combat();
-
-    /*
-    combat_entry_t *rover = combat_order;
-    while(rover) {
-        printf("%s: %p\n", rover->entity->name, rover->entity->sprite.scmd);
-        rover = rover->next;
-    }
-    */
-
-    return in_combat;
 }
 
 static int which_player(combat_entry_t *node) {
@@ -253,12 +194,14 @@ static entity_t* player_to_attack(sol_region_t *reg, action_node_t *node) {
 static entity_t* entity_at_location(const sol_region_t *reg, entity_t *entity, const int32_t x, const int32_t y) {
     dude_t *dude = NULL;
     //if (reg->flags[x][y]) { return 1; }
+    /*
     entity_list_for_each(reg->cr.combatants, dude) {
         //printf("(%s: %d, %d) ?= (%s: %d, %d)\n", dude->name, dude->mapx, dude->mapy, entity->name, entity->mapx, entity->mapy);
         if (dude != entity && dude->mapx == x && dude->mapy == y) {
             return dude;
         }
     }
+    */
 
     return NULL;
 }
@@ -556,6 +499,7 @@ static entity_action_t clear = { NULL, NULL, 0, EA_NONE };
 
 extern void sol_combat_update(sol_region_t *reg) {
     if (reg == NULL) { return; }
+    /*
     combat_region_t *cr = &(reg->cr);
     if (cr == NULL) { return; }
 
@@ -596,18 +540,14 @@ extern void sol_combat_update(sol_region_t *reg) {
         return;
         // We were in combat but now it is over. Need to clean up.
     }
-}
-
-void combat_set_hunt(combat_region_t *cr, const uint32_t combat_id) {
-    if (!cr || combat_id < 0 || combat_id >= MAX_COMBAT_OBJS) { return; }
-    cr->hunt[combat_id] = 1;
+    */
 }
 
 // This does not force into combat mode, simply add a combat to the current region.
 extern uint32_t combat_add(combat_region_t *rc, entity_t *entity) {
     if (!rc || !entity) { return 0; }
 
-    entity_list_add(rc->combatants, entity);
+    entity_list_add(&(rc->combatants), entity);
     return 1;
 }
 
