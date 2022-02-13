@@ -4,7 +4,7 @@
 #include "gpl-state.h"
 
 static lua_State *lua_state = NULL;
-static void sol_lua_run(const char *filename, const char *name);
+static int sol_lua_run(const char *filename, const char *name);
 
 extern lua_State* sol_lua_get_state() {
     if (lua_state) { return lua_state; }
@@ -20,7 +20,7 @@ extern lua_State* sol_lua_get_state() {
 }
 
 extern int sol_lua_load(const char *filename) {
-    sol_lua_run(filename, "init");
+    if (sol_lua_run(filename, "init")) { return 1; }
     return lua_toboolean(lua_state, -1);
 }
 
@@ -42,15 +42,15 @@ extern int sol_lua_run_function(const char *function) {
     return 0;
 }
 
-static void sol_lua_run(const char *filename, const char *name) {
+static int sol_lua_run(const char *filename, const char *name) {
     sol_lua_get_state();
 
     if (luaL_loadfile(lua_state, filename)) {
         error("unable to open '%s'.\n", filename);
-        return;
+        return 1;
     }
 
-    if (lua_pcall(lua_state, 0, 0, 0)) { sol_lua_error("Can't prime");}
-    sol_lua_run_function(name);
+    if (lua_pcall(lua_state, 0, 0, 0)) { sol_lua_error("Can't prime"); return 1;}
+    return sol_lua_run_function(name);
 }
 

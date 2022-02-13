@@ -1,14 +1,15 @@
 #include "unity.h"
-#include "../src/gff.h"
-#include "../src/entity.h"
-#include "../src/gff-char.h"
-#include "../src/rules.h"
-#include "../src/dsl.h"
-#include "../src/region.h"
-#include "../src/region-manager.h"
-#include "../src/dsl-manager.h"
+#include "gff.h"
+#include "entity.h"
+#include "gff-char.h"
+#include "gpl-manager.h"
+#include "rules.h"
+#include "region.h"
+#include "region-manager.h"
 #include <string.h>
 #include <stdlib.h>
+#include "sol-lua-manager.h"
+#include "settings.h"
 
 void setUp() {
     gff_init();
@@ -16,40 +17,42 @@ void setUp() {
 }
 
 void tearDown() {
-    dsl_cleanup();
     gff_cleanup();
 }
 
 void test_basic(void) {
-    dsl_manager_init();
-    dsl_manager_cleanup();
+    gpl_manager_init();
+    gpl_push_context();
+    gpl_pop_context();
+    gpl_manager_cleanup();
 }
 
 const char basic_test[] = 
-    "soloscuro.load_charsave(0, 15) -- load character from charsave.gff\n"
-    "soloscuro.load_charsave(1, 16) -- load character from charsave.gff\n"
-    "soloscuro.set_ignore_repeat(true) -- set to false if you want repeats\n"
-    "e = soloscuro.load_player(0)\n"
-    "print (e.name)\n"
-    //"e.mapx = 33\n"
-    //"print (e.mapx)\n"
-    //"print (e.mapy)\n"
+    "a = 10\n"
+    "print(a)\n"
     ""
     ;
 
 void test_basic_script(void) {
-    dsl_manager_init();
-    dsl_execute_string(basic_test);
-    dsl_manager_cleanup();
+    gpl_manager_init();
+    gpl_push_context();
+    gpl_execute_string(basic_test);
+    gpl_pop_context();
+    gpl_manager_cleanup();
 }
 
-void test_etab(void) {
+void test_combat_smoke(void) {
+    if (sol_lua_load("test/lua/combat/00-combat-smoke-test.lua")) {
+        TEST_ASSERT_MESSAGE(0, "Unable to load lua\n");
+    }
+    sol_test_info_t sti = sol_get_lua_test();
+    TEST_ASSERT_MESSAGE(!sti.failed, sti.msg);
 }
 
 int main(void) {
     UNITY_BEGIN();
     RUN_TEST(test_basic);
     RUN_TEST(test_basic_script);
-    //RUN_TEST(test_etab);
+    RUN_TEST(test_combat_smoke);
     return UNITY_END();
 }

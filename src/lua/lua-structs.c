@@ -5,6 +5,8 @@
 #include "port.h"
 #include "lua-region.h"
 #include "lua-entity.h"
+#include "gameloop.h"
+#include "settings.h"
 #include <string.h>
 
 extern char *strdup(const char *s); // Not in standard.
@@ -169,6 +171,21 @@ static int start_game (lua_State *l) {
     return 0;
 }
 
+// This is a testing hook!
+static int test_fail (lua_State *l) {
+    sol_game_loop_signal(WAIT_FINAL, 0);
+    const char *str = luaL_checkstring(l, 1);
+    sol_set_lua_test(1, strdup(str));
+    return 0;
+}
+
+// This is a testing hook!
+static int test_pass (lua_State *l) {
+    sol_game_loop_signal(WAIT_FINAL, 0);
+    sol_set_lua_test(0, NULL);
+    return 0;
+}
+
 static const struct luaL_Reg sol_lib [] = {
     //{"new", entity_new},
     {"create_region", create_region},
@@ -179,6 +196,8 @@ static const struct luaL_Reg sol_lib [] = {
     {"get_region", get_region},
     {"open_gff", open_gff},
     {"start_game", start_game},
+    {"fail", test_fail},
+    {"exit", test_pass},
     {NULL, NULL}
 };
 

@@ -1,11 +1,10 @@
 #include "unity.h"
-#include "../src/gff.h"
-#include "../src/entity.h"
-#include "../src/gff-char.h"
-#include "../src/rules.h"
-#include "../src/dsl.h"
-#include "../src/player.h"
-#include "../src/region-manager.h"
+#include "gff.h"
+#include "entity.h"
+#include "gff-char.h"
+#include "rules.h"
+#include "player.h"
+#include "region-manager.h"
 #include <string.h>
 #include <stdlib.h>
 
@@ -15,24 +14,23 @@ void setUp() {
 }
 
 void tearDown() {
-    dsl_cleanup();
     gff_cleanup();
 }
 
 void test_basic(void) {
     sol_player_init();
-    TEST_ASSERT_EQUAL_INT(0, player_exists(0));
-    TEST_ASSERT_EQUAL_INT(0, player_exists(1));
-    TEST_ASSERT_EQUAL_INT(0, player_exists(2));
-    TEST_ASSERT_EQUAL_INT(0, player_exists(3));
-    player_set(1, entity_create_fake(30, 10));
-    TEST_ASSERT_EQUAL_INT(0, player_exists(0));
-    TEST_ASSERT_EQUAL_INT(0, player_exists(1));
-    TEST_ASSERT_EQUAL_INT(0, player_exists(2));
-    TEST_ASSERT_EQUAL_INT(0, player_exists(3));
-    TEST_ASSERT_NOT_NULL(player_get(1));
-    player_get(1)->name = strdup("HELLO!");
-    player_cleanup();
+    TEST_ASSERT_EQUAL_INT(0, sol_player_exists(0));
+    TEST_ASSERT_EQUAL_INT(0, sol_player_exists(1));
+    TEST_ASSERT_EQUAL_INT(0, sol_player_exists(2));
+    TEST_ASSERT_EQUAL_INT(0, sol_player_exists(3));
+    sol_player_set(1, entity_create_fake(30, 10));
+    TEST_ASSERT_EQUAL_INT(0, sol_player_exists(0));
+    TEST_ASSERT_EQUAL_INT(0, sol_player_exists(1));
+    TEST_ASSERT_EQUAL_INT(0, sol_player_exists(2));
+    TEST_ASSERT_EQUAL_INT(0, sol_player_exists(3));
+    TEST_ASSERT_NOT_NULL(sol_player_get(1));
+    sol_player_get(1)->name = strdup("HELLO!");
+    sol_player_cleanup();
 }
 
 int main(void) {

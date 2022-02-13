@@ -1,10 +1,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "unity.h"
-#include "../src/gff.h"
-#include "../src/dsl.h"
-#include "../src/spells.h"
-#include "../src/rules.h"
+#include "gff.h"
+#include "rules.h"
 
 void setUp() {
 }
@@ -13,13 +11,13 @@ void tearDown() {
 }
 
 void test_psi_set(void) {
-    ds_character_t pc;
+    entity_t pc;
     psin_t psi; // psi group
 
     memset(&pc, 0x0, sizeof(ds_character_t));
     pc.race = RACE_HUMAN;
     pc.gender = GENDER_MALE;
-    pc.real_class[0] = pc.real_class[1] = pc.real_class[2] = -1;
+    pc.class[0].class = pc.class[1].class = pc.class[2].class = -1;
     dnd2e_randomize_stats_pc(&pc);
     memset(&psi, 0x0, sizeof(psi));
 
@@ -39,112 +37,112 @@ void test_psi_set(void) {
 }
 
 void test_single_level_exp(void) {
-    ds_character_t pc;
+    entity_t pc;
     psin_t psi; // psi group
 
     memset(&pc, 0x0, sizeof(ds_character_t));
     pc.race = RACE_HUMAN;
     pc.gender = GENDER_MALE;
-    pc.real_class[0] = pc.real_class[1] = pc.real_class[2] = -1;
-    pc.real_class[0] = REAL_CLASS_GLADIATOR;
+    pc.class[0].class = pc.class[1].class = pc.class[2].class = -1;
+    pc.class[0].class = REAL_CLASS_GLADIATOR;
     dnd2e_randomize_stats_pc(&pc);
     memset(&psi, 0x0, sizeof(psi));
 
     spell_set_psin(&psi, PSIONIC_PSYCHOKINETIC, 1);
 
     dnd2e_set_exp(&pc, 4000);
-    TEST_ASSERT_EQUAL_INT(2, pc.level[0]);
-    TEST_ASSERT_EQUAL_INT(0, pc.level[1]);
-    TEST_ASSERT_EQUAL_INT(0, pc.level[2]);
+    TEST_ASSERT_EQUAL_INT(2, pc.class[0].level);
+    TEST_ASSERT_EQUAL_INT(0, pc.class[1].level);
+    TEST_ASSERT_EQUAL_INT(0, pc.class[2].level);
 
     dnd2e_set_exp(&pc, 2000);
-    TEST_ASSERT_EQUAL_INT(1, pc.level[0]);
-    TEST_ASSERT_EQUAL_INT(0, pc.level[1]);
-    TEST_ASSERT_EQUAL_INT(0, pc.level[2]);
+    TEST_ASSERT_EQUAL_INT(1, pc.class[0].level);
+    TEST_ASSERT_EQUAL_INT(0, pc.class[1].level);
+    TEST_ASSERT_EQUAL_INT(0, pc.class[2].level);
 
     dnd2e_set_exp(&pc, 8000);
-    TEST_ASSERT_EQUAL_INT(3, pc.level[0]);
-    TEST_ASSERT_EQUAL_INT(0, pc.level[1]);
-    TEST_ASSERT_EQUAL_INT(0, pc.level[2]);
+    TEST_ASSERT_EQUAL_INT(3, pc.class[0].level);
+    TEST_ASSERT_EQUAL_INT(0, pc.class[1].level);
+    TEST_ASSERT_EQUAL_INT(0, pc.class[2].level);
 }
 
 void test_multi_level_exp(void) {
-    ds_character_t pc;
+    entity_t pc;
     psin_t psi; // psi group
 
     memset(&pc, 0x0, sizeof(ds_character_t));
     pc.race = RACE_HALFELF;
     pc.gender = GENDER_MALE;
-    pc.real_class[0] = pc.real_class[1] = pc.real_class[2] = -1;
-    pc.real_class[0] = REAL_CLASS_FIGHTER;
-    pc.real_class[1] = REAL_CLASS_PRESERVER;
+    pc.class[0].class = pc.class[1].class = pc.class[2].class = -1;
+    pc.class[0].class = REAL_CLASS_FIGHTER;
+    pc.class[1].class = REAL_CLASS_PRESERVER;
     dnd2e_randomize_stats_pc(&pc);
     memset(&psi, 0x0, sizeof(psi));
 
     spell_set_psin(&psi, PSIONIC_PSYCHOKINETIC, 1);
 
     dnd2e_set_exp(&pc, 4000);
-    TEST_ASSERT_EQUAL_INT(2, pc.level[0]);
-    TEST_ASSERT_EQUAL_INT(1, pc.level[1]);
-    TEST_ASSERT_EQUAL_INT(0, pc.level[2]);
+    TEST_ASSERT_EQUAL_INT(2, pc.class[0].level);
+    TEST_ASSERT_EQUAL_INT(1, pc.class[1].level);
+    TEST_ASSERT_EQUAL_INT(0, pc.class[2].level);
 
     dnd2e_set_exp(&pc, 2000);
-    TEST_ASSERT_EQUAL_INT(1, pc.level[0]);
-    TEST_ASSERT_EQUAL_INT(1, pc.level[1]);
-    TEST_ASSERT_EQUAL_INT(0, pc.level[2]);
+    TEST_ASSERT_EQUAL_INT(1, pc.class[0].level);
+    TEST_ASSERT_EQUAL_INT(1, pc.class[1].level);
+    TEST_ASSERT_EQUAL_INT(0, pc.class[2].level);
 
     dnd2e_set_exp(&pc, 8000);
-    TEST_ASSERT_EQUAL_INT(3, pc.level[0]);
-    TEST_ASSERT_EQUAL_INT(2, pc.level[1]);
-    TEST_ASSERT_EQUAL_INT(0, pc.level[2]);
+    TEST_ASSERT_EQUAL_INT(3, pc.class[0].level);
+    TEST_ASSERT_EQUAL_INT(2, pc.class[1].level);
+    TEST_ASSERT_EQUAL_INT(0, pc.class[2].level);
 }
 
 void test_level_up_hp(void) {
-    ds_character_t pc;
+    entity_t pc;
     psin_t psi; // psi group
 
     memset(&pc, 0x0, sizeof(ds_character_t));
     pc.race = RACE_HUMAN;
     pc.gender = GENDER_MALE;
-    pc.real_class[0] = pc.real_class[1] = pc.real_class[2] = -1;
-    pc.real_class[0] = REAL_CLASS_GLADIATOR;
+    pc.class[0].class = pc.class[1].class = pc.class[2].class = -1;
+    pc.class[0].class = REAL_CLASS_GLADIATOR;
     dnd2e_randomize_stats_pc(&pc);
     memset(&psi, 0x0, sizeof(psi));
 
     spell_set_psin(&psi, PSIONIC_PSYCHOKINETIC, 1);
 
     dnd2e_set_exp(&pc, 0);
-    TEST_ASSERT_EQUAL_INT(1, pc.level[0]);
-    TEST_ASSERT_EQUAL_INT(0, pc.level[1]);
-    TEST_ASSERT_EQUAL_INT(0, pc.level[2]);
+    TEST_ASSERT_EQUAL_INT(1, pc.class[0].level);
+    TEST_ASSERT_EQUAL_INT(0, pc.class[1].level);
+    TEST_ASSERT_EQUAL_INT(0, pc.class[2].level);
 
-    int pHP = pc.base_hp;
+    int pHP = pc.stats.hp;
 
     dnd2e_award_exp(&pc, 2500);
-    TEST_ASSERT_EQUAL_INT(2, pc.level[0]);
-    TEST_ASSERT_EQUAL_INT(0, pc.level[1]);
-    TEST_ASSERT_EQUAL_INT(0, pc.level[2]);
-    TEST_ASSERT(pHP < pc.base_hp);
+    TEST_ASSERT_EQUAL_INT(2, pc.class[0].level);
+    TEST_ASSERT_EQUAL_INT(0, pc.class[1].level);
+    TEST_ASSERT_EQUAL_INT(0, pc.class[2].level);
+    TEST_ASSERT(pHP < pc.stats.hp);
 
-    pHP = pc.base_hp;
+    pHP = pc.stats.hp;
     dnd2e_award_exp(&pc, 500);
-    TEST_ASSERT_EQUAL_INT(2, pc.level[0]);
-    TEST_ASSERT_EQUAL_INT(0, pc.level[1]);
-    TEST_ASSERT_EQUAL_INT(0, pc.level[2]);
-    TEST_ASSERT(pHP == pc.base_hp);
+    TEST_ASSERT_EQUAL_INT(2, pc.class[0].level);
+    TEST_ASSERT_EQUAL_INT(0, pc.class[1].level);
+    TEST_ASSERT_EQUAL_INT(0, pc.class[2].level);
+    TEST_ASSERT(pHP == pc.stats.hp);
 
-    pHP = pc.base_hp;
+    pHP = pc.stats.hp;
     dnd2e_award_exp(&pc, 3000);
-    TEST_ASSERT_EQUAL_INT(3, pc.level[0]);
-    TEST_ASSERT_EQUAL_INT(0, pc.level[1]);
-    TEST_ASSERT_EQUAL_INT(0, pc.level[2]);
-    TEST_ASSERT(pHP < pc.base_hp);
+
+    TEST_ASSERT_EQUAL_INT(3, pc.class[0].level);
+    TEST_ASSERT_EQUAL_INT(0, pc.class[1].level);
+    TEST_ASSERT_EQUAL_INT(0, pc.class[2].level);
+    TEST_ASSERT(pHP < pc.stats.hp);
 }
 
 int main(void) {
     gff_init();
     gff_load_directory("/home/pwest/dosbox/DARKSUN");
-    dsl_init();
 
     UNITY_BEGIN();
     RUN_TEST(test_psi_set);
@@ -152,7 +150,6 @@ int main(void) {
     RUN_TEST(test_multi_level_exp);
     RUN_TEST(test_level_up_hp);
 
-    dsl_cleanup();
     gff_cleanup();
     return UNITY_END();
 }

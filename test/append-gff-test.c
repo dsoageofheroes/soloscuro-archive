@@ -1,15 +1,13 @@
 #include "unity.h"
-#include "../src/gff.h"
-#include "../src/dsl.h"
+#include "gff.h"
+#include "gfftypes.h"
 
 void setUp() {
     gff_init();
     gff_load_directory("/home/pwest/dosbox/DARKSUN");
-    dsl_init();
 }
 
 void tearDown() {
-    dsl_cleanup();
     gff_cleanup();
 }
 

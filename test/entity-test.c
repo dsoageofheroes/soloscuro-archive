@@ -1,13 +1,13 @@
 #include "unity.h"
-#include "../src/gff.h"
-#include "../src/entity.h"
-#include "../src/gff-char.h"
-#include "../src/rules.h"
-#include "../src/dsl.h"
-#include "../src/region.h"
-#include "../src/region-manager.h"
+#include "gff.h"
+#include "entity.h"
+#include "gff-char.h"
+#include "rules.h"
+#include "region.h"
+#include "region-manager.h"
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 void setUp() {
     gff_init();
@@ -15,7 +15,6 @@ void setUp() {
 }
 
 void tearDown() {
-    dsl_cleanup();
     gff_cleanup();
 }
 
@@ -49,7 +48,7 @@ void test_fake(void) {
 }
 
 void test_etab(void) {
-    region_t* reg = region_manager_get_region(42);
+    sol_region_t* reg = sol_region_manager_get_region(42);
     entity_t* obj = entity_create_from_etab(reg->entry_table, 3);
     entity_free(obj);
 }

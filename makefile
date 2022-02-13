@@ -5,9 +5,15 @@ LIB_EXT = so
 CFLAGS  = -g -I include/ src/ -I ext/ -L./ -Werror -Wall -O2 -DDEBUG=1 -fPIC
 COVFLAGS  = -g ${CFLAGS} -O0 -fprofile-arcs -ftest-coverage
 
-.PHONY: clean test all
+.PHONY: clean test all builds test
 
-all: build/libadlmidi/libADLMIDI.so build/Makefile
+all: builds
+
+test: builds
+	cd build ; ctest --verbose
+
+
+builds: build/libadlmidi/libADLMIDI.so build/Makefile
 	cd build ; make -j4
 
 clean:

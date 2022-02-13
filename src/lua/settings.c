@@ -140,7 +140,7 @@ static int load_window(lua_State *l) {
 }
 
 static int game_loop(lua_State *l) {
-    port_game_loop();
+    sol_game_loop();
     return 0;
 }
 

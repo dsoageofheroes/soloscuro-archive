@@ -349,15 +349,11 @@ static void cleanup() {
     port_close();
 }
 
-extern void port_game_loop() {
-    sol_game_loop();
-}
-
 extern void port_start() {
     port_init();
     map_load_region(sol_region_manager_get_current());
 
-    port_game_loop();
+    sol_game_loop();
 
     cleanup();
     replay_cleanup();

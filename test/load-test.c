@@ -1,21 +1,19 @@
 #include "unity.h"
-#include "../src/gff.h"
-#include "../src/gff-char.h"
-#include "../src/rules.h"
-#include "../src/dsl.h"
-#include "../src/ds-load-save.h"
-#include "../src/player.h"
+#include "gff.h"
+#include "gff-char.h"
+#include "rules.h"
+#include "ds-load-save.h"
+#include "player.h"
+#include "ssi-item.h"
 #include <string.h>
 #include <stdlib.h>
 
 void setUp() {
     gff_init();
     gff_load_directory("/home/pwest/dosbox/DARKSUN");
-    dsl_init();
 }
 
 void tearDown() {
-    dsl_cleanup();
     gff_cleanup();
 }
 
@@ -24,15 +22,15 @@ void tearDown() {
 void create_players() {
     ds_character_t pc;
     psin_t psi;
-    spell_list_t spells;
+    ssi_spell_list_t spells;
     psionic_list_t psionics;
-    ds_inventory_t inv;
+    inventory_t inv;
 
     memset(&pc, 0x0, sizeof(ds_character_t));
     memset(&psi, 0x0, sizeof(psin_t));
     memset(&spells, 0x0, sizeof(spells));
     memset(&psionics, 0x0, sizeof(psionics));
-    memset(&inv, 0x0, sizeof(ds_inventory_t));
+    memset(&inv, 0x0, sizeof(inventory_t));
     for (int i = 0; i < 26; i++) { ((ds1_item_t*)(&inv))[i].slot = i; };
     pc.current_xp = 1234;
     pc.base_hp = 23;
@@ -61,15 +59,15 @@ void create_players() {
     spell_set_psin(&psi, PSIONIC_TELEPATH, 0);
     // Probably should add some psionics
     // Probably should add some spells
-    ds_item_load(&(inv.hand0), -1252); // long sword.
-    ds_item_load(&(inv.bp[11]), -1252); // long sword.
-    ds_player_replace(0, &pc, &psi, &spells, &psionics, &inv, "Garak");
+    ssi_item_load(&(inv.hand0), -1252); // long sword.
+    ssi_item_load(&(inv.bp[11]), -1252); // long sword.
+    ssi_player_replace(0, &pc, &psi, &spells, &psionics, &inv, "Garak");
 
     memset(&pc, 0x0, sizeof(ds_character_t));
     memset(&psi, 0x0, sizeof(psin_t));
     memset(&spells, 0x0, sizeof(spells));
     memset(&psionics, 0x0, sizeof(psionics));
-    memset(&inv, 0x0, sizeof(ds_inventory_t));
+    memset(&inv, 0x0, sizeof(inventory_t));
     for (int i = 0; i < 26; i++) { ((ds1_item_t*)(&inv))[i].slot = i; };
     pc.current_xp = 4321;
     pc.base_hp = 32;
@@ -104,7 +102,7 @@ void create_players() {
     memset(&psi, 0x0, sizeof(psin_t));
     memset(&spells, 0x0, sizeof(spells));
     memset(&psionics, 0x0, sizeof(psionics));
-    memset(&inv, 0x0, sizeof(ds_inventory_t));
+    memset(&inv, 0x0, sizeof(inventory_t));
     for (int i = 0; i < 26; i++) { ((ds1_item_t*)(&inv))[i].slot = i; };
     pc.current_xp = 10000;
     pc.base_hp = 32;
@@ -145,7 +143,7 @@ void create_players() {
     memset(&psi, 0x0, sizeof(psin_t));
     memset(&spells, 0x0, sizeof(spells));
     memset(&psionics, 0x0, sizeof(psionics));
-    memset(&inv, 0x0, sizeof(ds_inventory_t));
+    memset(&inv, 0x0, sizeof(inventory_t));
     for (int i = 0; i < 26; i++) { ((ds1_item_t*)(&inv))[i].slot = i; };
     pc.current_xp = 10000;
     pc.base_hp = 32;
@@ -192,10 +190,9 @@ void create_players() {
     spell_set_spell(&spells, WIZ_INVISIBILITY);
     ds_player_replace(3, &pc, &psi, &spells, &psionics, &inv, "Edwin");
 
-    ds_player_get_pos(0)->map = 42;
-    ds_player_get_pos(0)->xpos = 25;
-    ds_player_get_pos(0)->ypos = 12;
-    ds_player_get_pos(0)->zpos = 0;
+    sol_player_get(0)->mapx = 25;
+    sol_player_get(0)->mapy = 12;
+    sol_player_get(0)->mapz = 0;
 }
 
 void test_load_save_char(void) {

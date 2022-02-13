@@ -1,13 +1,11 @@
 #include "unity.h"
-#include "../src/gff.h"
-#include "../src/entity.h"
-#include "../src/gff-char.h"
-#include "../src/rules.h"
-#include "../src/dsl.h"
-#include "../src/region.h"
-#include "../src/region-manager.h"
-#include "../src/dsl-manager.h"
-#include "../src/animation.h"
+#include "gff.h"
+#include "entity.h"
+#include "gff-char.h"
+#include "rules.h"
+#include "region.h"
+#include "region-manager.h"
+#include "animation.h"
 #include <string.h>
 #include <stdlib.h>
 
@@ -17,7 +15,6 @@ void setUp() {
 }
 
 void tearDown() {
-    dsl_cleanup();
     gff_cleanup();
 }
 

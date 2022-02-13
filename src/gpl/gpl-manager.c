@@ -98,13 +98,13 @@ void gpl_lua_load_scripts() {
     free(ids);
 }
 
-static void open_gpl_lua() {
+extern void gpl_push_context() {
     clua = lua_states[lua_stack_pos++] = luaL_newstate();
     luaL_openlibs(clua);
     gpl_state_register(clua);
 }
 
-static void close_gpl_lua() {
+extern void gpl_pop_context() {
     if (lua_stack_pos <= 0) {
         error("Trying to close a gpl lua that DNE!");
         exit(1);
@@ -133,7 +133,7 @@ uint8_t gpl_lua_execute_script(size_t file, size_t addr, uint8_t is_mas) {
 
     if (scripts[file] == NULL) { return 0; }
 
-    open_gpl_lua();
+    gpl_push_context();
     if (luaL_dostring(clua, scripts[file])) {
         error("Error: unable to load %s script " PRI_SIZET ":" PRI_SIZET "\n",
             is_mas ? "MAS" : "GPL",
@@ -153,7 +153,7 @@ uint8_t gpl_lua_execute_script(size_t file, size_t addr, uint8_t is_mas) {
     }
 
     debug("exiting execute_script(" PRI_SIZET ", " PRI_SIZET ", %d)\n", file, addr, is_mas);
-    close_gpl_lua();
+    gpl_pop_context();
 
     return ret;
 }

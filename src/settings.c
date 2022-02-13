@@ -36,3 +36,14 @@ extern void sol_debug(const char *file, const int line_num, const char *pretty, 
     printf("[%s:%d] %s: ", file, line_num, pretty);
     vprintf(str, argp);
 }
+
+static sol_test_info_t sol_test_info = {0, NULL};
+
+extern void sol_set_lua_test(char failed, char *msg) {
+    sol_test_info.failed = failed;
+    sol_test_info.msg = msg;
+}
+
+extern sol_test_info_t sol_get_lua_test() {
+    return sol_test_info;
+}

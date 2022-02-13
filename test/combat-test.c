@@ -1,13 +1,11 @@
 #include "unity.h"
-#include "../src/gff.h"
-#include "../src/gff-char.h"
-#include "../src/rules.h"
-#include "../src/dsl.h"
-#include "../src/ds-load-save.h"
-#include "../src/player.h"
-#include "../src/ds-state.h"
-#include "../src/region.h"
-#include "../src/region-manager.h"
+#include "gff.h"
+#include "gff-char.h"
+#include "rules.h"
+#include "ds-load-save.h"
+#include "player.h"
+#include "region.h"
+#include "region-manager.h"
 #include <string.h>
 #include <stdlib.h>
 
@@ -17,11 +15,9 @@
 void setUp() {
     gff_init();
     gff_load_directory("/home/pwest/dosbox/DARKSUN");
-    dsl_init();
 }
 
 void tearDown() {
-    dsl_cleanup();
     gff_cleanup();
 }
 

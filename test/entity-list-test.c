@@ -1,24 +1,18 @@
 #include "unity.h"
-#include "../src/gff.h"
-#include "../src/entity.h"
-#include "../src/gff-char.h"
-#include "../src/rules.h"
-#include "../src/dsl.h"
-#include "../src/entity-list.h"
+#include "gff.h"
+#include "entity.h"
+#include "gff-char.h"
+#include "rules.h"
+#include "entity-list.h"
 #include <string.h>
 #include <stdlib.h>
-
-// A hack, but inclue base for default procedures
-#include "base.c"
 
 void setUp() {
     gff_init();
     gff_load_directory("ds1");
-    dsl_init();
 }
 
 void tearDown() {
-    dsl_cleanup();
     gff_cleanup();
 }
 
@@ -59,10 +53,12 @@ void test_load_etab(void) {
         ysum += dude->mapy;
     }
 
-    TEST_ASSERT_EQUAL_INT(3222, xsum);
-    TEST_ASSERT_EQUAL_INT(2501, ysum);
+    //TEST_ASSERT_EQUAL_INT(3222, xsum);
+    //TEST_ASSERT_EQUAL_INT(2501, ysum);
+    TEST_ASSERT_EQUAL_INT(3131, xsum);
+    TEST_ASSERT_EQUAL_INT(2410, ysum);
 
-    entity_list_free(list);
+    entity_list_free_all(list);
 }
 
 int main(void) {
