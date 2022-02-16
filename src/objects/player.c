@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
+#include "combat-region.h"
 #include "gff-common.h"
 #include "gfftypes.h"
 #include "gff.h"
@@ -13,6 +14,7 @@
 #include "gameloop.h"
 #include "narrate.h"
 #include "trigger.h"
+#include "arbiter.h"
 
 static entity_t *players[MAX_PCS] = {NULL, NULL, NULL, NULL};
 static int ai[MAX_PCS] = {0, 0, 0, 0};
@@ -258,16 +260,12 @@ static int direction = 0x0;
 extern void sol_player_update() {
     entity_t *dude = sol_player_get_active();
     int xdiff = 0, ydiff = 0;
-    combat_turn_t combat_turn = NO_COMBAT;
     enum entity_action_e action;
     static int moving = 0;
 
     if (!sol_started()) { return; }
 
     if (--count > 0) { return; }
-
-    // update when we can have the player take a turn.
-    if (combat_turn != NO_COMBAT) { return; }
 
     if (direction & PLAYER_UP)    { ydiff -= 1; }
     if (direction & PLAYER_DOWN)  { ydiff += 1; }
@@ -292,6 +290,12 @@ extern void sol_player_update() {
             entity_animation_list_add(&(dude->actions), EA_NONE, dude, NULL, NULL, 1);
             moving = 0;
         }
+        return;
+    }
+
+    // update when we can have the player take a turn.
+    combat_region_t *cr = sol_arbiter_combat_region(sol_region_manager_get_current());
+    if (cr && sol_combat_get_current(cr) != dude) {
         return;
     }
 

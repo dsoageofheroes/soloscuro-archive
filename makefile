@@ -10,8 +10,8 @@ COVFLAGS  = -g ${CFLAGS} -O0 -fprofile-arcs -ftest-coverage
 all: builds
 
 test: builds
-	cd build ; ctest --verbose
-
+	#cd build ; ctest --verbose
+	cd build ; ctest
 
 builds: build/libadlmidi/libADLMIDI.so build/Makefile
 	cd build ; make -j4

@@ -1,3 +1,4 @@
+#include "arbiter.h"
 #include "combat.h"
 #include "entity-animation.h"
 #include "player.h"
@@ -39,16 +40,6 @@ static combat_entry_t *current_turn = NULL;
 static combat_entry_t *defeated = NULL;
 
 static int is_combat_over(sol_region_t *reg);
-
-entity_t* sol_combat_get_current(combat_region_t *cr) {
-    if (!current_turn) { return NULL; }
-    return current_turn->entity;
-}
-
-void sol_combat_init(combat_region_t *cr) {
-    memset(cr, 0x0, sizeof(combat_region_t));
-    entity_list_init(cr->combatants);
-}
 
 void sol_combat_free(combat_region_t *cr) {
     entity_list_free(&(cr->combatants));
@@ -206,7 +197,7 @@ static entity_t* entity_at_location(const sol_region_t *reg, entity_t *entity, c
     return NULL;
 }
 
-static void generate_monster_actions(sol_region_t *reg) {
+static void generate_monster_move_attack_closest(sol_region_t *reg, entity_t *monster) {
     // Start of AI, lets just go to the closest PC and attack.
     static uint8_t visit_flags[MAP_ROWS][MAP_COLUMNS];
     entity_t *player;
@@ -217,8 +208,8 @@ static void generate_monster_actions(sol_region_t *reg) {
     action_node_t *queue_head, *queue_tail;
     queue_head = queue_tail = rover;
     rover->num_moves = 0;
-    rover->x = current_turn->entity->mapx;
-    rover->y = current_turn->entity->mapy;
+    rover->x = monster->mapx;
+    rover->y = monster->mapy;
     //printf("player = %d, name = %s\n", current_player, current_turn->combat->name);
 
     // BFS
@@ -226,8 +217,12 @@ static void generate_monster_actions(sol_region_t *reg) {
         rover = queue_head;
         queue_head = queue_head->next;
         if (!queue_head) { queue_tail = NULL; }
+        if (rover->x >= MAP_ROWS || rover->y >= MAP_COLUMNS) {
+            free(rover);
+            continue;
+        }
         if (visit_flags[rover->x][rover->y]) { free(rover); continue; }
-        if (entity_at_location(reg, current_turn->entity, rover->x, rover->y) != NULL) { free(rover); continue; }
+        if (entity_at_location(reg, monster, rover->x, rover->y) != NULL) { free(rover); continue; }
         visit_flags[rover->x][rover->y] = 1;// Mark as visited.
 
         if ((player = player_to_attack(reg, rover)) != NULL) {
@@ -237,6 +232,7 @@ static void generate_monster_actions(sol_region_t *reg) {
             }
             monster_actions[rover->num_moves].action = EA_MELEE;
             monster_actions[rover->num_moves].target = player;
+            monster_actions[rover->num_moves].source = monster;
             rover->num_moves++;
             monster_actions[rover->num_moves].target = NULL;
             monster_actions[rover->num_moves].action = EA_END;
@@ -251,14 +247,16 @@ static void generate_monster_actions(sol_region_t *reg) {
             return;
         }
 
-        queue_add(&queue_head, &queue_tail, rover, EA_WALK_LEFT);
-        queue_add(&queue_head, &queue_tail, rover, EA_WALK_RIGHT);
-        queue_add(&queue_head, &queue_tail, rover, EA_WALK_UP);
-        queue_add(&queue_head, &queue_tail, rover, EA_WALK_DOWN);
-        queue_add(&queue_head, &queue_tail, rover, EA_WALK_UPLEFT);
-        queue_add(&queue_head, &queue_tail, rover, EA_WALK_UPRIGHT);
-        queue_add(&queue_head, &queue_tail, rover, EA_WALK_DOWNLEFT);
-        queue_add(&queue_head, &queue_tail, rover, EA_WALK_DOWNRIGHT);
+        if (rover->num_moves < (MAX_COMBAT_ACTIONS - 1)) {
+            queue_add(&queue_head, &queue_tail, rover, EA_WALK_LEFT);
+            queue_add(&queue_head, &queue_tail, rover, EA_WALK_RIGHT);
+            queue_add(&queue_head, &queue_tail, rover, EA_WALK_UP);
+            queue_add(&queue_head, &queue_tail, rover, EA_WALK_DOWN);
+            queue_add(&queue_head, &queue_tail, rover, EA_WALK_UPLEFT);
+            queue_add(&queue_head, &queue_tail, rover, EA_WALK_UPRIGHT);
+            queue_add(&queue_head, &queue_tail, rover, EA_WALK_DOWNLEFT);
+            queue_add(&queue_head, &queue_tail, rover, EA_WALK_DOWNRIGHT);
+        }
         free(rover);
     }
 
@@ -281,7 +279,7 @@ static void apply_action_animation(const enum entity_action_e action) {
     }
 
     //printf("(%d, %d) applying xdiff = %d, ydiff = %d\n", current_turn->entity->mapx, current_turn->entity->mapy, xdiff, ydiff);
-    current_turn->entity->anim.scmd = entity_animation_get_scmd(current_turn->entity->anim.scmd,
+    current_turn->entity->anim.scmd = entity_animation_get_scmd(current_turn->entity,
             xdiff, ydiff, EA_NONE);
     port_update_entity(current_turn->entity, xdiff, ydiff);
 }
@@ -291,7 +289,7 @@ static void end_turn() {
     monster_step = -1;
 
     if (entity) {
-        entity->anim.scmd = entity_animation_get_scmd(entity->anim.scmd, 0, 0, EA_NONE);
+        entity->anim.scmd = entity_animation_get_scmd(entity, 0, 0, EA_NONE);
     }
     current_turn = current_turn->next;
     /*
@@ -305,39 +303,6 @@ static void end_turn() {
     player_action = EA_NONE;
 }
 
-// DS Engine: Attacks usually based on weapons. If none, then bare hand.
-//            Monster's base weapon are considered plus for
-//            level 0-4: regular
-//            level 5-6: +1
-//            level 6-7: +2
-//            level 8-9: +3
-//            level 10+: +4
-// Monster data should be in the entity.
-// For Now, 1d6, always hits. Need to add thac0 calculation.
-static void perform_enemy_melee_attack() {
-    entity_t *source = current_turn->entity;
-    entity_t *target = monster_actions[monster_step].target;
-
-    int16_t amt = dnd2e_melee_attack(source, target, current_turn->melee_actions++, current_turn->round);
-    entity_animation_add(EA_MELEE, source, NULL, NULL, 0);
-    //printf("amt = %d!\n", amt);
-    if (amt > 0) {
-        entity_animation_add(EA_RED_DAMAGE, source, target, NULL, amt);
-        entity_animation_add(EA_DAMAGE_APPLY, source, target, NULL, amt);
-    }
-}
-
-static void check_and_perform_attack(sol_region_t *reg) {
-    entity_action_t *action = monster_actions + monster_step;
-
-    switch (action->action) {
-        case EA_MELEE:
-            perform_enemy_melee_attack();
-            break;
-        default:
-            break;
-    }
-}
 
 static entity_t* entity_in_way(sol_region_t *reg, entity_t *entity, const enum entity_action_e action) {
     int xdiff = 0, ydiff = 0;
@@ -359,6 +324,7 @@ static entity_t* entity_in_way(sol_region_t *reg, entity_t *entity, const enum e
 }
 
 static void player_melee(sol_region_t *reg, entity_t* entity, entity_t *enemy) {
+/*
     //int amt = 1 + (rand() % 6);
     //int amt = 100; // FTW!
     //combat_animation_add(EA_MELEE, current_turn->entity, NULL, 0);
@@ -372,6 +338,7 @@ static void player_melee(sol_region_t *reg, entity_t* entity, entity_t *enemy) {
     wait_on_player = dnd2e_can_melee_again(entity, current_turn->melee_actions, current_turn->round);
     player_action = EA_NONE;
     //wait_on_player = 0;
+*/
 }
 
 static void move_entity(sol_region_t *reg, entity_t *entity, const enum entity_action_e action) {
@@ -379,7 +346,7 @@ static void move_entity(sol_region_t *reg, entity_t *entity, const enum entity_a
 
     switch(action) {
         case EA_NONE:
-            entity->anim.scmd = entity_animation_get_scmd(entity->anim.scmd, 0, 0, EA_NONE);
+            entity->anim.scmd = entity_animation_get_scmd(entity, 0, 0, EA_NONE);
             port_update_entity(entity, 0, 0);
             ticks_per_game_round = 0;
             break;
@@ -422,6 +389,7 @@ static void next_round() {
     current_turn = combat_order;
 }
 
+/*
 static void do_combat_rounds(sol_region_t *reg) {
     //Need to start combat rounds.
     if (!current_turn) {
@@ -439,7 +407,7 @@ static void do_combat_rounds(sol_region_t *reg) {
 
     // Monster time.
     if (monster_step < 0) {
-        generate_monster_actions(reg);
+        //generate_monster_actions(reg);
         monster_step = 0;
     }
 
@@ -449,7 +417,9 @@ static void do_combat_rounds(sol_region_t *reg) {
     if (monster_step < 0) { return; } // turn ended
     monster->stats.move--;
     monster_step++;
+
 }
+*/
 
 static int is_combat_over(sol_region_t *reg) {
     combat_entry_t *rover = combat_order;
@@ -497,8 +467,94 @@ static void do_player_turn(sol_region_t *reg) {
 
 static entity_action_t clear = { NULL, NULL, 0, EA_NONE };
 
+static void monster_set_animation(entity_t *monster, entity_action_t *action) {
+    int32_t xdiff = 0, ydiff = 0;
+    switch(action->action) {
+        case EA_WALK_UPLEFT:
+            ydiff = -1; xdiff = -1; break;
+        case EA_WALK_UPRIGHT:
+            ydiff = -1; xdiff = 1; break;
+        case EA_WALK_DOWNLEFT:
+            ydiff = 1; xdiff = -1; break;
+        case EA_WALK_DOWNRIGHT:
+            ydiff = 1; xdiff = 1; break;
+        case EA_WALK_LEFT:
+            ydiff = 0; xdiff = -1; break;
+        case EA_WALK_RIGHT:
+            ydiff = 0; xdiff = 1; break;
+        case EA_WALK_UP:
+            ydiff = -1; xdiff = 0; break;
+        case EA_WALK_DOWN:
+            ydiff = 1; xdiff = 0; break;
+    }
+    monster->mapx += xdiff;
+    monster->mapy += ydiff;
+    monster->anim.destx += (xdiff * 32);
+    monster->anim.desty += (ydiff * 32);
+}
+
+static void monster_action(sol_region_t *reg, entity_t *monster) {
+    entity_action_t *action;
+    sol_attack_t attack;
+    combat_region_t *cr = sol_arbiter_combat_region(reg);
+    if (monster_step < 0) {
+        generate_monster_move_attack_closest(reg, monster);
+        monster_step = 0;
+    }
+
+    if (monster_step > 0 && monster_actions[monster_step - 1].action == EA_MELEE) {
+        action = monster_actions + monster_step - 1;
+        entity_animation_list_add(&(monster->actions), EA_NONE, monster, NULL, NULL, 1);
+        if (action->target->stats.hp <= 0) {
+            printf("Need to continue attack.\n");
+            generate_monster_move_attack_closest(reg, monster);
+            return;
+        }
+        attack = sol_arbiter_enemy_melee_attack(action->source, action->target, cr->round.attack_count++, cr->round.num);
+        if (attack.damage > -1) {
+            if (attack.damage > 0) {
+                entity_animation_list_add_effect(&reg->actions, EA_RED_DAMAGE, action->source, action->target, NULL, 30, attack.damage);
+                entity_animation_list_add_effect(&reg->actions, EA_DAMAGE_APPLY, action->source, action->target, NULL, 0, attack.damage);
+            }
+            // ADD melee calculations.
+            return;
+        }
+    }
+    action = monster_actions + monster_step;
+    if (action->action == EA_END) {
+        monster->stats.move = 0;
+        return;
+    }
+
+    entity_animation_list_add_effect(&(monster->actions), action->action,
+        action->source, action->target, action->power, 30, action->damage);
+    monster_set_animation(monster, action);
+    monster_step++;
+    monster->stats.move--;
+}
+
 extern void sol_combat_update(sol_region_t *reg) {
+    entity_t *combatant;
     if (reg == NULL) { return; }
+
+    combatant = sol_combat_get_current(sol_arbiter_combat_region(reg));
+    if (sol_player_get_slot(combatant) >= 0) { // It is an active player's turn
+        return;
+    }
+
+    // still waiting on last animation to complete.
+    if (!entity_animation_list_empty(&combatant->actions)
+        || !entity_animation_list_empty(&reg->actions)
+        ) { return; }
+
+    monster_action(reg, combatant);
+
+    if (combatant->stats.move <= 0) {
+        sol_combat_next_combatant(sol_arbiter_combat_region(reg));
+        return;
+    }
+
+
     /*
     combat_region_t *cr = &(reg->cr);
     if (cr == NULL) { return; }

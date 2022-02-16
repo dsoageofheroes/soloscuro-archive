@@ -1,6 +1,7 @@
 #include "sol-lua-manager.h"
 #include "ds-load-save.h"
 #include "port.h"
+#include "gameloop.h"
 #include "gpl.h"
 #include "player.h"
 #include "sol-lua-manager.h"
@@ -141,17 +142,6 @@ static int load_window(lua_State *l) {
 
 static int game_loop(lua_State *l) {
     sol_game_loop();
-    return 0;
-}
-
-static int enter_combat(lua_State *l) {
-    sol_region_t* reg = sol_region_manager_get_region(luaL_checkinteger(l, 2));
-    lua_Integer slot = luaL_checkinteger(l, 1);
-    //lua_Integer x = luaL_checkinteger(l, 2);
-    //lua_Integer y = luaL_checkinteger(l, 3);
-    //printf("reg = %p @ (%lld, %lld)\n", reg, x, y);
-    printf("reg = %p\n", reg);
-    printf("slot = %lld\n", slot);
     return 0;
 }
 

@@ -1,6 +1,7 @@
 #include "gff.h"
 #include "rules.h"
 #include "gpl.h"
+#include "combat.h"
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -1232,8 +1233,8 @@ int dnd2e_psin_is_valid(ds_character_t *pc, psin_t *psi) {
     return num_psionics == 1;
 }
 
-int16_t dnd2e_get_move_pc(entity_t *pc) {
-    return 12;
+int16_t dnd2e_get_move(entity_t *pc) {
+    return pc->stats.base_move;
 }
 
 // THAC0
@@ -1429,26 +1430,25 @@ extern int16_t dnd2e_can_melee_again(entity_t *source, const int attack_num, con
 }
 
 // returns the amt of damage done. 0 means miss/absorbed, negative means attack is not legit, or out of round.
-extern int16_t dnd2e_melee_attack(entity_t *source, entity_t *target, const int attack_num, const int round) {
-    if (!source || !target || attack_num < 0) { return -1; }
+extern sol_attack_t dnd2e_melee_attack(entity_t *source, entity_t *target, const int attack_num, const int round) {
+    static sol_attack_t invalid_attack = { -1, 0 };
+    sol_attack_t attack = {0, 0};
+    if (!source || !target || attack_num < 0) { return invalid_attack; }
     int16_t thac0 = 20;
 
     int attack_slot = get_next_melee_attack(source, attack_num, round);
 
-    if (attack_slot < 0) { return -1; }
+    if (attack_slot < 0) { return invalid_attack; }
 
     if (source->inv && attack_slot < 2) {
         int slot = attack_slot == 0 ? SLOT_HAND0 : SLOT_HAND1;
         thac0 = dnd2e_get_thac0(source, slot);
         if (droll(20) >= (thac0 - dnd2e_calc_ac(target))) {
-            return roll_damage_weapon(source->inv + slot) + str_mods[source->stats.str][STR_DAM];
+            attack.damage = roll_damage_weapon(source->inv + slot) + str_mods[source->stats.str][STR_DAM];
         }
-        return 0;
+    } else if (droll(20) >= (source->stats.base_thac0 - dnd2e_calc_ac(target))) { // hit
+        attack.damage = roll_damage_innate(source->stats.attacks + attack_slot);
     }
 
-    if (droll(20) >= (source->stats.base_thac0 - dnd2e_calc_ac(target))) { // hit
-        return roll_damage_innate(source->stats.attacks + attack_slot);
-    }
-
-    return 0;
+    return attack;
 }

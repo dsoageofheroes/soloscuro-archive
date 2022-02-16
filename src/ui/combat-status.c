@@ -8,6 +8,7 @@
 #include "region-manager.h"
 #include "settings.h"
 #include "arbiter.h"
+#include "player.h"
 #include <string.h>
 
 static sol_sprite_t background, combat_attacks;
@@ -111,8 +112,7 @@ void combat_status_init(const uint32_t x, const uint32_t y) {
 }
 
 static void get_status() {
-    /*
-    entity_t* dude = sol_combat_get_current(&(sol_region_manager_get_current()->cr));
+    entity_t *dude = sol_combat_get_current(sol_arbiter_combat_region(sol_region_manager_get_current()));
 
     if (dude) {
         strcpy(combat_status.name, dude->name);
@@ -121,7 +121,6 @@ static void get_status() {
         combat_status.status = 1;// Need to fix.
         combat_status.move = dude->stats.move;
     }
-    */
 }
 
 static int count = 30;
@@ -149,6 +148,7 @@ void combat_status_render(void *data) {
     // The if decides when to proceed to the next action on the combat list
     // list: List of actions
     // last_action: a flag so we want a full round before clearing the GUI.
+    /*
     if ((list && list->an) || last_action) {
         count--;
         // Static animation, needs to move to location
@@ -178,8 +178,9 @@ void combat_status_render(void *data) {
             count = 30;
         }
     }
+    */
 
-    if (sol_arbiter_is_in_combat(sol_region_manager_get_current()) == NO_COMBAT) { return; }
+    if (!sol_combat_get_current(sol_arbiter_combat_region(sol_region_manager_get_current()))) { return; }
 
     if (2 == 1) {
         sol_draw_cone(100, 100, 200);

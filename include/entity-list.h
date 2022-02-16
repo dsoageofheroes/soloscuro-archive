@@ -19,6 +19,7 @@ extern void                entity_list_clear(entity_list_t *list); // just clear
 extern void                entity_list_free(entity_list_t *list); // just the list
 extern void                entity_list_free_all(entity_list_t *list); // the list and the entities
 extern entity_list_node_t* entity_list_add(entity_list_t *list, struct entity_s *entity);
+extern entity_list_node_t* entity_list_add_by_init(entity_list_t *list, struct entity_s *entity);
 extern int                 entity_list_remove(entity_list_t *list, entity_list_node_t *node);
 extern int                 entity_list_remove_entity(entity_list_t *list, struct entity_s *entity);
 extern entity_list_node_t* entity_list_find(entity_list_t *list, struct entity_s *entity);

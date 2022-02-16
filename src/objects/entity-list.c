@@ -28,13 +28,48 @@ extern void entity_list_free_all(entity_list_t *list) {
     free(list);
 }
 
-extern entity_list_node_t* entity_list_add(entity_list_t *list, entity_t *entity) {
-    if (!list) { return NULL; }
+static entity_list_node_t* create_node(struct entity_s *entity, entity_list_node_t *next, entity_list_node_t *prev) {
     entity_list_node_t *node = (entity_list_node_t*) malloc(sizeof(entity_list_node_t));
 
     node->entity = entity;
-    node->next = list->head;
-    node->prev = NULL;
+    node->next = next;
+    node->prev = prev;
+
+    return node;
+}
+
+extern entity_list_node_t* entity_list_add_by_init(entity_list_t *list, struct entity_s *entity) {
+    entity_list_node_t *rover;
+    entity_list_node_t *node = create_node(entity, NULL, NULL);
+
+    if (!list->head) {
+        list->head = node;
+        return node;
+    }
+
+    rover = list->head;
+    while (rover->next != NULL 
+        && (rover->next->entity->stats.initiative < node->entity->stats.initiative)) {
+        rover = rover->next;
+    }
+
+    if (rover->next == NULL) {
+        rover->next = node;
+        node->prev = rover;
+        return node;
+    }
+
+    node->prev = rover;
+    node->next = rover->next;
+    rover->next->prev = node;
+    rover->next = node;
+
+    return node;
+}
+
+extern entity_list_node_t* entity_list_add(entity_list_t *list, entity_t *entity) {
+    if (!list) { return NULL; }
+    entity_list_node_t *node = create_node(entity, list->head, NULL);
 
     if (list->head) {
         list->head->prev = node;

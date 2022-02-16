@@ -33,7 +33,7 @@ static int push_entity_function(lua_State *l, entity_t *entity, int (*func)(lua_
 static int in_combat(lua_State *l) {
     dude_t *dude = (dude_t*) lua_touserdata(l, lua_upvalueindex(1));
     sol_region_t *reg = sol_region_manager_get_region_with_entity(dude);
-    lua_pushboolean(l, sol_arbiter_is_in_combat(reg));
+    lua_pushboolean(l, sol_combat_get_current(sol_arbiter_combat_region(reg)) != NULL);
     return 1;
 }
 

@@ -3,8 +3,10 @@
 #include "arbiter.h"
 #include "region-manager.h"
 #include "combat.h"
+#include "combat-region.h"
 #include "entity-list.h"
 #include "gpl.h"
+#include "rules.h"
 #include <stdio.h>
 
 // For now one combat region per region_t, later add more.
@@ -23,9 +25,22 @@ static int get_dist(entity_t *entity, const uint16_t x, const uint16_t y) {
     return (xdiff > ydiff) ? xdiff : ydiff;
 }
 
-extern int sol_arbiter_is_in_combat(sol_region_t *reg) {
-    if (!reg || reg->map_id < 0 || reg->map_id >= MAX_REGIONS) { return 0; }
-    return region_in_combat[reg->map_id];
+extern combat_region_t* sol_arbiter_combat_region(sol_region_t *reg) {
+    if (!reg || reg->map_id < 0 || reg->map_id >= MAX_REGIONS) { return NULL; }
+    if (!region_in_combat[reg->map_id]) { return NULL; }
+
+    return combat_regions + reg->map_id;
+}
+
+static void place_combatants(combat_region_t *cr) {
+    if (!cr) { return; }
+    dude_t *entity = NULL;
+
+    entity_list_for_each((&(cr->combatants)), entity) {
+        entity->stats.initiative = dnd2e_roll_initiative(entity);
+        entity->stats.move = dnd2e_get_move(entity);
+        entity_list_add_by_init((&cr->round.entities), entity);
+    }
 }
 
 extern int sol_arbiter_enter_combat(sol_region_t *reg, const uint16_t x, const uint16_t y) {
@@ -42,7 +57,7 @@ extern int sol_arbiter_enter_combat(sol_region_t *reg, const uint16_t x, const u
     if (region_in_combat[reg->map_id]) { return 0; }
     cr = combat_regions + reg->map_id;
 
-    sol_combat_init(cr);
+    sol_combat_region_init(cr);
     entity_list_for_each(reg->entities, enemy) {
         if (enemy->name && get_dist(enemy, x, y) <= dist) {
             entity_list_add(&(cr->combatants), enemy);
@@ -54,37 +69,31 @@ extern int sol_arbiter_enter_combat(sol_region_t *reg, const uint16_t x, const u
         return region_in_combat[reg->map_id] = 0;
     }
 
-    printf("reg = %p\n", reg);
-    printf("Need to start combat\n");
-    // Freeze all combats.
-    /*
-    entity_list_for_each(reg->cr.combatants, enemy) {
-        enemy->anim.scmd = entity_animation_get_scmd(enemy->anim.scmd, 0, 0, EA_NONE);
-        port_update_entity(enemy, 0, 0);
-    }
+    region_in_combat[reg->map_id] = 1;
 
-    for (int i = 0; i < MAX_PCS; i++) {
-        if (sol_player_exists(i)) {
-            entity_list_add(reg->cr.combatants, sol_player_get(i));
-        }
-    }
-
-    in_combat = 1;
-
-    entity_list_for_each(reg->cr.combatants, enemy) {
-        add_to_combat(enemy);
-    }
-    */
-
-    sol_combat_enter_combat();
-
-    /*
-    combat_entry_t *rover = combat_order;
-    while(rover) {
-        printf("%s: %p\n", rover->entity->name, rover->entity->sprite.scmd);
-        rover = rover->next;
-    }
-    */
+    place_combatants(cr);
 
     return region_in_combat[reg->map_id];
+}
+
+// DS Engine: Attacks usually based on weapons. If none, then bare hand.
+//            Monster's base weapon are considered plus for
+//            level 0-4: regular
+//            level 5-6: +1
+//            level 6-7: +2
+//            level 8-9: +3
+//            level 10+: +4
+// Monster data should be in the entity.
+// For Now, 1d6, always hits. Need to add thac0 calculation.
+extern sol_attack_t sol_arbiter_enemy_melee_attack(entity_t *source, entity_t *target, int attack_num, int round) {
+    return dnd2e_melee_attack(source, target, attack_num, round);
+    /*
+    //int16_t dnd2e_melee_attack(entity_t *source, entity_t *target, const int attack_num, const int round) {
+    entity_animation_add(EA_MELEE, source, NULL, NULL, 0);
+    //printf("amt = %d!\n", amt);
+    if (amt > 0) {
+        entity_animation_add(EA_RED_DAMAGE, source, target, NULL, amt);
+        entity_animation_add(EA_DAMAGE_APPLY, source, target, NULL, amt);
+    }
+    */
 }

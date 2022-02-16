@@ -5,10 +5,16 @@
 #include "wizard.h"
 #include "entity.h"
 #include "region.h"
+#include "effect.h"
 #include "entity-list.h"
 #include "entity-animation.h"
 
 #define COMBAT_ERROR    (9999)
+
+typedef struct sol_attack_s {
+    int16_t damage;
+    effect_type_t effect;
+} sol_attack_t;
 
 typedef enum combat_scmd_e {
     COMBAT_SCMD_STAND_DOWN,

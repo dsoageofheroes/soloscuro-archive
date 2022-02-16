@@ -19,7 +19,7 @@ enum {
     PREVENT_PSIONIC  = 0x0010,
 };
 
-enum effect_type {
+typedef enum effect_type_e {
     EFFECT_POISON     = 0x0001,
     EFFECT_FIRE       = 0x0002,
     EFFECT_COLD       = 0x0004,
@@ -38,7 +38,7 @@ enum effect_type {
     EFFECT_OVER2      = 0x8000, // More than a +2
     EFFECT_MELEE      = 0x10000,
     EFFECT_MISSILE    = 0x20000,
-};
+} effect_type_t;
 
 enum stat {
     STAT_STR,
@@ -82,7 +82,7 @@ typedef struct sol_effect_s {
     void    (*end_of_effect_trigger) (entity_t *source);
 } sol_effect_t;
 
-extern void sol_effect_apply_damage(entity_t *source, entity_t *target, const int32_t damage, enum effect_type type);
+extern void sol_effect_apply_damage(entity_t *source, entity_t *target, const int32_t damage, effect_type_t type);
 extern void sol_effect_apply_condition(entity_t *source, entity_t *target, uint16_t condition);
 
 #endif

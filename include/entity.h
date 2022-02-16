@@ -50,6 +50,7 @@ typedef struct stats_s {
     int8_t move;
     int8_t base_move;
     int8_t base_thac0;
+    int8_t initiative;
     uint8_t magic_resistance;
     uint32_t special_defense;
     innate_attack_t attacks[3];
@@ -74,6 +75,7 @@ typedef struct entity_s {
     uint8_t alignment;
     int8_t allegiance;
     int8_t object_flags;
+    int8_t direction; // Left, Right, Up, Down.
     uint16_t region;
     uint16_t mapx;      // object's x position in the region
     uint16_t mapy;      // object's y position in the region

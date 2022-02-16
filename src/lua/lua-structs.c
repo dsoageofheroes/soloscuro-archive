@@ -7,6 +7,7 @@
 #include "lua-entity.h"
 #include "gameloop.h"
 #include "settings.h"
+#include "arbiter.h"
 #include <string.h>
 
 extern char *strdup(const char *s); // Not in standard.
@@ -186,6 +187,13 @@ static int test_pass (lua_State *l) {
     return 0;
 }
 
+static int in_combat (lua_State *l) {
+    sol_region_manager_get_current();
+    lua_pushboolean(l,
+        sol_combat_get_current(sol_arbiter_combat_region(sol_region_manager_get_current())));
+    return 1;
+}
+
 static const struct luaL_Reg sol_lib [] = {
     //{"new", entity_new},
     {"create_region", create_region},
@@ -198,6 +206,7 @@ static const struct luaL_Reg sol_lib [] = {
     {"start_game", start_game},
     {"fail", test_fail},
     {"exit", test_pass},
+    {"in_combat", in_combat},
     {NULL, NULL}
 };
 

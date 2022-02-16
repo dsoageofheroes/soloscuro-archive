@@ -321,12 +321,16 @@ extern scmd_t* entity_animation_face_direction(scmd_t *current_scmd, const enum 
     }
 }
 
-extern scmd_t* entity_animation_get_scmd(scmd_t *current_scmd, const int xdiff, const int ydiff,
+extern scmd_t* entity_animation_get_scmd(struct entity_s *entity, const int xdiff, const int ydiff,
         const enum entity_action_e action) {
-    current_scmd = get_scmd(current_scmd, xdiff, ydiff);
-    if (action != EA_NONE) { current_scmd = get_entity_scmd(current_scmd, action); }
+    if (action != EA_NONE) { return get_entity_scmd(entity->anim.scmd, action); }
+    switch(entity->direction) {
+        case EA_WALK_RIGHT: return combat_stand_right;
+        case EA_WALK_UP: return combat_stand_up;
+        case EA_WALK_DOWN: return combat_stand_down;
+    }
 
-    return current_scmd;
+    return combat_stand_left;
 }
 
 extern void entity_animation_add(enum entity_action_e action, entity_t *source, entity_t *target,
@@ -439,8 +443,14 @@ static void region_animation_last_check(sol_region_t *reg, entity_animation_node
                 target->combat_status = COMBAT_STATUS_DYING;
                 play_death_sound(target);
                 warn("NEED TO IMPLEMENT death animation!\n");
+                if (!entity_list_remove_entity(&sol_arbiter_combat_region(reg)->combatants, target)) {
+                    error("Unable to remove entity from combat region!\n");
+                }
+                if (!entity_list_remove_entity(&sol_arbiter_combat_region(reg)->round.entities, target)) {
+                    error("Unable to remove entity from combat round!\n");
+                }
                 if (!entity_list_remove_entity(reg->entities, target)) {
-                    error("Unable to remove entity!\n");
+                    error("Unable to remove entity from region!\n");
                 }
             }
             break;
@@ -498,13 +508,15 @@ extern int entity_animation_region_execute(sol_region_t *reg) {
     }
 
     if (action->damage) {
-        region_damage_execute(&pw, reg);
         action->amt--;
-        if (action->amt <= 0) {
-            entity_animation_node_t *tmp = reg->actions.head;
-            reg->actions.head = reg->actions.head->next;
-            region_animation_last_check(reg, tmp);
-            free (tmp);
+        if (action->amt == 0) {
+            entity_animation_list_remove_current(&reg->actions);
+            action = &(reg->actions.head->ca);
+            if (action->action == EA_DAMAGE_APPLY) {
+                region_damage_execute(&pw, reg);
+                region_animation_last_check(reg, reg->actions.head);
+                entity_animation_list_remove_current(&reg->actions);
+            }
         }
         return 1;
     }
@@ -564,6 +576,10 @@ extern int entity_animation_region_execute(sol_region_t *reg) {
     return 1;
 }
 
+extern int entity_animation_list_empty(entity_animation_list_t *list) {
+    return !(list && list->head);
+}
+
 static void set_anim(entity_t *entity) {
     entity_action_t *action = &(entity->actions.head->ca);
     const int distance = 32;
@@ -594,17 +610,35 @@ static void set_anim(entity_t *entity) {
     }
 }
 
-static scmd_t* entity_get_next_scmd(const entity_t *entity, const enum entity_action_e action) {
+static scmd_t* get_melee_scmd(entity_t *dude) {
+    switch(dude->direction) {
+        case EA_WALK_RIGHT: return combat_melee_right;
+        case EA_WALK_UP: return combat_melee_up;
+        case EA_WALK_DOWN: return combat_melee_down;
+    }
+
+    return combat_melee_left;
+}
+
+static scmd_t* entity_get_next_scmd(entity_t *entity, const enum entity_action_e action) {
     switch (action) {
         case EA_WALK_UPLEFT:
         case EA_WALK_DOWNLEFT:
-        case EA_WALK_LEFT: return combat_move_left;
+        case EA_WALK_LEFT: entity->direction = EA_WALK_LEFT; return combat_move_left;
         case EA_WALK_UPRIGHT:
         case EA_WALK_DOWNRIGHT:
-        case EA_WALK_RIGHT: return combat_move_right;
-        case EA_WALK_UP: return combat_move_up;
-        case EA_WALK_DOWN: return combat_move_down;
+        case EA_WALK_RIGHT: entity->direction = EA_WALK_RIGHT; return combat_move_right;
+        case EA_WALK_UP: entity->direction = EA_WALK_UP; return combat_move_up;
+        case EA_WALK_DOWN: entity->direction = EA_WALK_DOWN; return combat_move_down;
         case EA_POWER_CAST: return sol_combat_get_scmd(COMBAT_POWER_CAST);
+        case EA_MELEE: return get_melee_scmd(entity);
+        case EA_NONE:
+            switch(entity->direction) {
+                case EA_WALK_RIGHT: return combat_stand_right;
+                case EA_WALK_UP: return combat_stand_up;
+                case EA_WALK_DOWN: return combat_stand_down;
+            }
+            return combat_stand_left;
         ////case EA_SCMD:
             //printf("EA_SCMD! %p\n", entity->actions.head);
             //entity->actions.head->ca.scmd_pos = 
@@ -622,7 +656,8 @@ extern int entity_animation_execute(entity_t *entity) {
     entity_action_t *action = &(entity->actions.head->ca);
 
     for (int i = 0; i < action->speed && entity->anim.scmd; i++) {
-        //printf("action->amt = %d (%d), ticks = %d, scmd_pos = %d of %d\n", action->amt, action->start_amt,
+        //printf("action->amt = %d (%d), action = %d, ticks = %d, scmd_pos = %d of %d\n",
+            //action->amt, action->start_amt, action->action,
             //action->ticks, action->scmd_pos, entity->anim.scmd[action->scmd_pos].delay);
         if (action->start_amt != -1 && action->amt == action->start_amt) {
             entity->anim.scmd = entity_get_next_scmd(entity, action->action);
@@ -661,6 +696,13 @@ extern int entity_animation_execute(entity_t *entity) {
     }
 
     return 1;
+}
+
+extern int entity_animation_list_remove_current(entity_animation_list_t *list) {
+    if (!list || !list->head) { return 0; }
+    entity_animation_node_t *to_delete = list->head;
+    list->head = list->head->next;
+    free(to_delete);
 }
 
 entity_animation_list_t* entity_animation_list_create() {

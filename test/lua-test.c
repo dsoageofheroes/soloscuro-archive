@@ -49,10 +49,28 @@ void test_combat_smoke(void) {
     TEST_ASSERT_MESSAGE(!sti.failed, sti.msg);
 }
 
+void test_combat_init(void) {
+    if (sol_lua_load("test/lua/combat/01-detect-in-combat.lua")) {
+        TEST_ASSERT_MESSAGE(0, "Unable to load lua\n");
+    }
+    sol_test_info_t sti = sol_get_lua_test();
+    TEST_ASSERT_MESSAGE(!sti.failed, sti.msg);
+}
+
+void test_combat_basic(void) {
+    if (sol_lua_load("test/lua/combat/02-get-attacked.lua")) {
+        TEST_ASSERT_MESSAGE(0, "Unable to load lua\n");
+    }
+    sol_test_info_t sti = sol_get_lua_test();
+    TEST_ASSERT_MESSAGE(!sti.failed, sti.msg);
+}
+
 int main(void) {
     UNITY_BEGIN();
     RUN_TEST(test_basic);
     RUN_TEST(test_basic_script);
     RUN_TEST(test_combat_smoke);
+    RUN_TEST(test_combat_init);
+    RUN_TEST(test_combat_basic);
     return UNITY_END();
 }
