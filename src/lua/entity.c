@@ -37,12 +37,30 @@ static int in_combat(lua_State *l) {
     return 1;
 }
 
+static int move_entity(lua_State *l, const int xdiff, const int ydiff) {
+    dude_t *dude = (dude_t*) lua_touserdata(l, lua_upvalueindex(1));
+    lua_pushboolean(l, entity_attempt_move(dude, xdiff, ydiff, 1));
+    return 1;
+}
+
+static int move_left(lua_State *l) { return move_entity(l, -1, 0); }
+static int move_right(lua_State *l) { return move_entity(l, 1, 0); }
+static int move_up(lua_State *l) { return move_entity(l, 0, -1); }
+static int move_down(lua_State *l) { return move_entity(l, 0, 1); }
+
 extern int sol_lua_entity_function(entity_t *entity, const char *func, lua_State *l) {
     if (!strcmp(func, "cast")) {
         return push_entity_function(l, entity, entity_cast);
-    }
-    if (!strcmp(func, "in_combat")) {
+    } else if (!strcmp(func, "in_combat")) {
         return push_entity_function(l, entity, in_combat);
+    } else if (!strcmp(func, "move_left")) {
+        return push_entity_function(l, entity, move_left);
+    } else if (!strcmp(func, "move_right")) {
+        return push_entity_function(l, entity, move_right);
+    } else if (!strcmp(func, "move_up")) {
+        return push_entity_function(l, entity, move_up);
+    } else if (!strcmp(func, "move_down")) {
+        return push_entity_function(l, entity, move_down);
     }
     lua_pushinteger(l, 0);
     return 1;

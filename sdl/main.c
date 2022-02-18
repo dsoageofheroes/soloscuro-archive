@@ -490,11 +490,12 @@ extern void port_set_config(game_config_t gc, ssize_t val) {
         case CONFIG_XSCROLL: main_set_xscroll(val); break;
         case CONFIG_YSCROLL: main_set_yscroll(val); break;
         case CONFIG_PLAYER_FRAME_DELAY: sol_player_set_delay(val); break;
-        case CONFIG_PLAYER_SET_MOVE: sol_player_set_move(val); break;
+        //case CONFIG_PLAYER_SET_MOVE: sol_player_set_move(val); break;
         case CONFIG_PLAYER_MOVE: sol_player_move(val); break;
         case CONFIG_PLAYER_UNMOVE: sol_player_unmove(val); break;
         case CONFIG_SET_QUIET: sol_set_debug(val); break;
         case CONFIG_EXIT: main_exit_game(); break;
         case CONFIG_RUN_BROWSER: main_set_browser_mode(); break;
+        default: printf("Unknown config %d\n", gc); exit(1); break;
     }
 }

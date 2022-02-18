@@ -497,6 +497,7 @@ static void monster_action(sol_region_t *reg, entity_t *monster) {
     entity_action_t *action;
     sol_attack_t attack;
     combat_region_t *cr = sol_arbiter_combat_region(reg);
+
     if (monster_step < 0) {
         generate_monster_move_attack_closest(reg, monster);
         monster_step = 0;
@@ -535,9 +536,29 @@ static void monster_action(sol_region_t *reg, entity_t *monster) {
 
 extern void sol_combat_update(sol_region_t *reg) {
     entity_t *combatant;
+    combat_region_t *cr;
     if (reg == NULL) { return; }
 
-    combatant = sol_combat_get_current(sol_arbiter_combat_region(reg));
+    cr = sol_arbiter_combat_region(reg);
+    if (cr == NULL) { return; }
+
+    if (sol_combat_check_if_over(cr)) {
+        sol_combat_clear(cr);
+        return;
+    }
+
+    combatant = sol_combat_get_current(cr);
+    if (!combatant) {
+        sol_arbiter_next_round(cr);
+        combatant = sol_combat_get_current(cr);
+    }
+
+    if (combatant->stats.move <= 0) {
+        sol_combat_next_combatant(cr);
+        monster_step = -1;
+        return;
+    }
+
     if (sol_player_get_slot(combatant) >= 0) { // It is an active player's turn
         return;
     }
@@ -548,12 +569,6 @@ extern void sol_combat_update(sol_region_t *reg) {
         ) { return; }
 
     monster_action(reg, combatant);
-
-    if (combatant->stats.move <= 0) {
-        sol_combat_next_combatant(sol_arbiter_combat_region(reg));
-        return;
-    }
-
 
     /*
     combat_region_t *cr = &(reg->cr);

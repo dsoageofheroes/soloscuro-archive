@@ -43,6 +43,12 @@ static void place_combatants(combat_region_t *cr) {
     }
 }
 
+extern void sol_arbiter_next_round(combat_region_t* cr) {
+    if (!cr) { return; }
+    cr->round.num++;
+    place_combatants(cr);
+}
+
 extern int sol_arbiter_enter_combat(sol_region_t *reg, const uint16_t x, const uint16_t y) {
     const int dist = 10; // distance of the sphere;
     dude_t *enemy = NULL;
@@ -71,7 +77,7 @@ extern int sol_arbiter_enter_combat(sol_region_t *reg, const uint16_t x, const u
 
     region_in_combat[reg->map_id] = 1;
 
-    place_combatants(cr);
+    sol_arbiter_next_round(cr);
 
     return region_in_combat[reg->map_id];
 }

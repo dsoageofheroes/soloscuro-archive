@@ -9,7 +9,6 @@ extern void sol_player_unmove(const uint8_t direction);
 extern void sol_player_render_portrait(const int slot);
 extern void sol_player_update();
 extern void sol_player_set_delay(const int amt);
-extern void sol_player_set_move(const int amt);
 extern entity_t* sol_player_get_entity(const int slot);
 extern void sol_player_condense();
 

@@ -37,6 +37,8 @@ extern void sol_debug(const char *file, const int line_num, const char *pretty, 
     vprintf(str, argp);
 }
 
+extern uint16_t settings_ticks_per_move() { return 30; }
+
 static sol_test_info_t sol_test_info = {0, NULL};
 
 extern void sol_set_lua_test(char failed, char *msg) {

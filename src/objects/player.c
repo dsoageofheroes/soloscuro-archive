@@ -251,17 +251,13 @@ extern void sol_player_load_zoom(const int slot, const float zoom) {
     load_character_sprite(slot, zoom);
 }
 
-enum entity_action_e last_action[MAX_PCS] = { EA_WALK_DOWN, EA_WALK_DOWN, EA_WALK_DOWN, EA_WALK_DOWN };
-
-static int ticks_per_move = 30;
 static int count = 0;
 static int direction = 0x0;
 
 extern void sol_player_update() {
     entity_t *dude = sol_player_get_active();
-    int xdiff = 0, ydiff = 0;
-    enum entity_action_e action;
-    static int moving = 0;
+    int       xdiff = 0, ydiff = 0;
+    const int speed = 2;
 
     if (!sol_started()) { return; }
 
@@ -283,46 +279,9 @@ extern void sol_player_update() {
     sol_trigger_box_check(dude->mapx, dude->mapy);
     sol_trigger_tile_check(dude->mapx, dude->mapy);
 
-    // We aren't moving...
-    if (xdiff == 0 && ydiff == 0) {
-        dude->anim.movex = dude->anim.movey = 0.0;
-        if (moving && dude->actions.head == NULL) {
-            entity_animation_list_add(&(dude->actions), EA_NONE, dude, NULL, NULL, 1);
-            moving = 0;
-        }
-        return;
-    }
+    entity_attempt_move(dude, xdiff, ydiff, speed);
 
-    // update when we can have the player take a turn.
-    combat_region_t *cr = sol_arbiter_combat_region(sol_region_manager_get_current());
-    if (cr && sol_combat_get_current(cr) != dude) {
-        return;
-    }
-
-    moving = 1;
-    action =
-          (xdiff == 1 && ydiff == 1) ? EA_WALK_DOWNRIGHT
-        : (xdiff == 1 && ydiff == -1) ? EA_WALK_UPRIGHT
-        : (xdiff == -1 && ydiff == -1) ? EA_WALK_UPLEFT
-        : (xdiff == -1 && ydiff == 1) ? EA_WALK_DOWNLEFT
-        : (xdiff == 1) ? EA_WALK_RIGHT
-        : (xdiff == -1) ? EA_WALK_LEFT
-        : (ydiff == 1) ? EA_WALK_DOWN
-        : (ydiff == -1) ? EA_WALK_UP
-        : EA_NONE;
-    last_action[sol_player_get_active_slot()] = action;
-
-    entity_animation_list_add_speed(&(dude->actions), action, dude, NULL, NULL, ticks_per_move, 2, 0);
-    count = ticks_per_move / 2;
-
-    dude->mapx += xdiff;
-    dude->mapy += ydiff;
-    dude->anim.destx += (xdiff * 32);
-    dude->anim.desty += (ydiff * 32);
-    sol_region_t *reg = sol_region_manager_get_current();
-    if (reg) {
-        animation_shift_entity(reg->entities, entity_list_find(reg->entities, dude));
-    }
+    count = settings_ticks_per_move() / speed;
 }
 
 extern void sol_player_move(const uint8_t _direction) {
@@ -366,11 +325,6 @@ extern void sol_player_set_delay(const int amt) {
         sol_combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_LEFT)[i].delay = amt;
         sol_combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_RIGHT)[i].delay = amt;
     }
-}
-
-extern void sol_player_set_move(const int amt) {
-    if (amt < 0) { return; }
-    ticks_per_move = amt;
 }
 
 extern inventory_t* sol_player_get_inventory(const int slot) {

@@ -1,3 +1,4 @@
+#include "arbiter.h"
 #include "combat.h"
 #include "item.h"
 #include "gpl.h"
@@ -316,6 +317,62 @@ void entity_free(entity_t *dude) {
     }
 
     free(dude); // Dude has got to be free!
+}
+
+extern int entity_attempt_move(dude_t *dude, const int xdiff, const int ydiff, const int speed) {
+    combat_region_t      *cr;
+    enum entity_action_e  action;
+
+    action =
+          (xdiff == 1 && ydiff == 1) ? EA_WALK_DOWNRIGHT
+        : (xdiff == 1 && ydiff == -1) ? EA_WALK_UPRIGHT
+        : (xdiff == -1 && ydiff == -1) ? EA_WALK_UPLEFT
+        : (xdiff == -1 && ydiff == 1) ? EA_WALK_DOWNLEFT
+        : (xdiff == 1) ? EA_WALK_RIGHT
+        : (xdiff == -1) ? EA_WALK_LEFT
+        : (ydiff == 1) ? EA_WALK_DOWN
+        : (ydiff == -1) ? EA_WALK_UP
+        : EA_NONE;
+
+    // We aren't moving...
+    if (action == EA_NONE) {
+        dude->anim.movex = dude->anim.movey = 0.0;
+        if (dude->actions.head == NULL) {
+            entity_animation_list_add(&(dude->actions), EA_NONE, dude, NULL, NULL, 1);
+        }
+        return 1;
+    }
+
+    // If we are in combat and it isn't our turn, do nothing.
+    cr = sol_arbiter_combat_region(sol_region_manager_get_current());
+    if (cr && sol_combat_get_current(cr) != dude) {
+        return 0;
+    }
+
+    if (!entity_animation_list_empty(&(dude->actions))) {
+        // We need to wait for the rest of my actions.
+        return 0;
+    }
+
+    if (cr && !sol_combat_attempt_action(cr, dude)) {
+        // We can't do that in combat for some reason.
+        return 0;
+    }
+
+    entity_animation_list_add_speed(&(dude->actions), action, dude, NULL,
+            NULL, settings_ticks_per_move(), speed, 0);
+
+    dude->mapx += xdiff;
+    dude->mapy += ydiff;
+    dude->anim.destx += (xdiff * 32);
+    dude->anim.desty += (ydiff * 32);
+
+    sol_region_t *reg = sol_region_manager_get_current();
+    if (reg) {
+        animation_shift_entity(reg->entities, entity_list_find(reg->entities, dude));
+    }
+
+    return 1;
 }
 
 // TODO: IMPELMENT!!!!
