@@ -13,12 +13,16 @@ set(TEST_NAMES
     entity-test
     gff-test
     #load-test
-    lua-test
     #new-char-test
     player-test
     region-manager-test
     region-test
     smoke-test
+    lua-test
+    lua-combat-01
+    lua-combat-02
+    lua-combat-03
+    lua-combat-04
 )
 
 foreach(TEST_NAME ${TEST_NAMES})

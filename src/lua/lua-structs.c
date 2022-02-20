@@ -189,7 +189,7 @@ static int test_pass (lua_State *l) {
 
 static int in_combat (lua_State *l) {
     lua_pushboolean(l,
-        sol_combat_get_current(sol_arbiter_combat_region(sol_region_manager_get_current())));
+        sol_combat_get_current(sol_arbiter_combat_region(sol_region_manager_get_current())) != NULL);
     return 1;
 }
 
@@ -232,6 +232,14 @@ static int entity_get(lua_State *l) {
     GET_INTEGER_TABLE(dude, mapx);
     GET_INTEGER_TABLE(dude, mapy);
     GET_INTEGER_TABLE(dude, mapz);
+    GET_INTEGER_TABLE(dude, stats.hp);
+    GET_INTEGER_TABLE(dude, stats.high_hp);
+    GET_INTEGER_TABLE(dude, stats.str);
+    GET_INTEGER_TABLE(dude, stats.dex);
+    GET_INTEGER_TABLE(dude, stats.con);
+    GET_INTEGER_TABLE(dude, stats.intel);
+    GET_INTEGER_TABLE(dude, stats.wis);
+    GET_INTEGER_TABLE(dude, stats.cha);
     GET_INTEGER_TABLE(dude, sound_fx);
     GET_INTEGER_TABLE(dude, attack_sound);
     GET_INTEGER_TABLE(dude, combat_status);
@@ -255,6 +263,14 @@ static int entity_set(lua_State *l) {
         SET_INTEGER_TABLE(dude, mapx, num);
         SET_INTEGER_TABLE(dude, mapy, num);
         SET_INTEGER_TABLE(dude, mapz, num);
+        SET_INTEGER_TABLE(dude, stats.hp, num);
+        SET_INTEGER_TABLE(dude, stats.high_hp, num);
+        SET_INTEGER_TABLE(dude, stats.str, num);
+        SET_INTEGER_TABLE(dude, stats.dex, num);
+        SET_INTEGER_TABLE(dude, stats.con, num);
+        SET_INTEGER_TABLE(dude, stats.intel, num);
+        SET_INTEGER_TABLE(dude, stats.wis, num);
+        SET_INTEGER_TABLE(dude, stats.cha, num);
         SET_INTEGER_TABLE(dude, sound_fx, num);
         SET_INTEGER_TABLE(dude, attack_sound, num);
         SET_INTEGER_TABLE(dude, combat_status, num);
@@ -288,7 +304,7 @@ static int stats_get(lua_State *l) {
     GET_INTEGER_TABLE(stats, psp);
     GET_INTEGER_TABLE(stats, high_psp);
     GET_INTEGER_TABLE(stats, base_ac);
-    GET_INTEGER_TABLE(stats, move);
+    GET_INTEGER_TABLE(stats, combat.move);
     GET_INTEGER_TABLE(stats, base_move);
     GET_INTEGER_TABLE(stats, base_thac0);
     GET_INTEGER_TABLE(stats, magic_resistance);
@@ -316,7 +332,7 @@ static int stats_set(lua_State *l) {
         SET_INTEGER_TABLE(stats, psp, num);
         SET_INTEGER_TABLE(stats, high_psp, num);
         SET_INTEGER_TABLE(stats, base_ac, num);
-        SET_INTEGER_TABLE(stats, move, num);
+        SET_INTEGER_TABLE(stats, combat.move, num);
         SET_INTEGER_TABLE(stats, base_move, num);
         SET_INTEGER_TABLE(stats, base_thac0, num);
         SET_INTEGER_TABLE(stats, magic_resistance, num);

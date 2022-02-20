@@ -1430,15 +1430,17 @@ extern int16_t dnd2e_can_melee_again(entity_t *source, const int attack_num, con
 }
 
 // returns the amt of damage done. 0 means miss/absorbed, negative means attack is not legit, or out of round.
-extern sol_attack_t dnd2e_melee_attack(entity_t *source, entity_t *target, const int attack_num, const int round) {
+extern sol_attack_t dnd2e_melee_attack(entity_t *source, entity_t *target, const int round) {
     static sol_attack_t invalid_attack = { -1, 0 };
     sol_attack_t attack = {0, 0};
-    if (!source || !target || attack_num < 0) { return invalid_attack; }
+    if (!source || !target || source->stats.combat.attack_num < 0) { return invalid_attack; }
     int16_t thac0 = 20;
 
-    int attack_slot = get_next_melee_attack(source, attack_num, round);
+    int attack_slot = get_next_melee_attack(source, source->stats.combat.attack_num, round);
+    attack_slot = source->stats.combat.attack_num++;
 
-    if (attack_slot < 0) { return invalid_attack; }
+    if (attack_slot < 0 || attack_slot > 2) { return invalid_attack; }
+    if (source->stats.attacks[attack_slot].number <= 0 ) { return invalid_attack; }
 
     if (source->inv && attack_slot < 2) {
         int slot = attack_slot == 0 ? SLOT_HAND0 : SLOT_HAND1;

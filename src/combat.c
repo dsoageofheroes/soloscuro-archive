@@ -364,8 +364,8 @@ static void move_entity(sol_region_t *reg, entity_t *entity, const enum entity_a
                 player_melee(reg, entity, enemy);
                 return;
             }
-            if (entity->stats.move) {
-                entity->stats.move--;
+            if (entity->stats.combat.move) {
+                entity->stats.combat.move--;
                 apply_action_animation(action);
             }
             ticks_per_game_round = 30;
@@ -380,7 +380,7 @@ static void next_round() {
     combat_entry_t *rover = combat_order;
 
     while (rover) {
-        rover->entity->stats.move = rover->entity->stats.base_move;
+        rover->entity->stats.combat.move = rover->entity->stats.base_move;
         rover->melee_actions = rover->range_actions = rover->spell_actions = rover->psionic_actions = 0;
         rover->round++;
         rover = rover->next;
@@ -495,7 +495,7 @@ static void monster_set_animation(entity_t *monster, entity_action_t *action) {
 
 static void monster_action(sol_region_t *reg, entity_t *monster) {
     entity_action_t *action;
-    sol_attack_t attack;
+    sol_attack_t     attack;
     combat_region_t *cr = sol_arbiter_combat_region(reg);
 
     if (monster_step < 0) {
@@ -503,27 +503,38 @@ static void monster_action(sol_region_t *reg, entity_t *monster) {
         monster_step = 0;
     }
 
-    if (monster_step > 0 && monster_actions[monster_step - 1].action == EA_MELEE) {
-        action = monster_actions + monster_step - 1;
+    action = monster_actions + monster_step;
+    //if (monster_step > 0 && monster_actions[monster_step - 1].action == EA_MELEE) {
+        //action = monster_actions + monster_step - 1;
+    if (monster_step >= 0 && monster_actions[monster_step].action == EA_MELEE) {
+        attack = sol_arbiter_enemy_melee_attack(action->source, action->target, cr->round.num);
+
+        if (attack.damage <= -1) {
+            monster->stats.combat.move = 0;
+            return;
+        }
+
+        entity_animation_list_add_effect(&(monster->actions), action->action,
+            action->source, action->target, action->power, 30, action->damage);
         entity_animation_list_add(&(monster->actions), EA_NONE, monster, NULL, NULL, 1);
+        entity_animation_list_add(&reg->actions, EA_WAIT_ON_ENTITY, monster, NULL, NULL, 30);
+
         if (action->target->stats.hp <= 0) {
             printf("Need to continue attack.\n");
             generate_monster_move_attack_closest(reg, monster);
             return;
+        } 
+
+        if (attack.damage > 0) {
+            entity_animation_list_add_effect(&reg->actions, EA_RED_DAMAGE, action->source, action->target, NULL, 30, attack.damage);
+            entity_animation_list_add_effect(&reg->actions, EA_DAMAGE_APPLY, action->source, action->target, NULL, 0, attack.damage);
         }
-        attack = sol_arbiter_enemy_melee_attack(action->source, action->target, cr->round.attack_count++, cr->round.num);
-        if (attack.damage > -1) {
-            if (attack.damage > 0) {
-                entity_animation_list_add_effect(&reg->actions, EA_RED_DAMAGE, action->source, action->target, NULL, 30, attack.damage);
-                entity_animation_list_add_effect(&reg->actions, EA_DAMAGE_APPLY, action->source, action->target, NULL, 0, attack.damage);
-            }
-            // ADD melee calculations.
-            return;
-        }
+        // ADD melee calculations.
+        return;
     }
-    action = monster_actions + monster_step;
+
     if (action->action == EA_END) {
-        monster->stats.move = 0;
+        monster->stats.combat.move = 0;
         return;
     }
 
@@ -531,7 +542,7 @@ static void monster_action(sol_region_t *reg, entity_t *monster) {
         action->source, action->target, action->power, 30, action->damage);
     monster_set_animation(monster, action);
     monster_step++;
-    monster->stats.move--;
+    monster->stats.combat.move--;
 }
 
 extern void sol_combat_update(sol_region_t *reg) {
@@ -553,7 +564,7 @@ extern void sol_combat_update(sol_region_t *reg) {
         combatant = sol_combat_get_current(cr);
     }
 
-    if (combatant->stats.move <= 0) {
+    if (combatant->stats.combat.move <= 0) {
         sol_combat_next_combatant(cr);
         monster_step = -1;
         return;
@@ -569,49 +580,6 @@ extern void sol_combat_update(sol_region_t *reg) {
         ) { return; }
 
     monster_action(reg, combatant);
-
-    /*
-    combat_region_t *cr = &(reg->cr);
-    if (cr == NULL) { return; }
-
-    if (wait_on_player) {
-        if (entity_animation_region_execute(reg)) {
-            check_current_turn();
-            return;
-        }
-        do_player_turn(reg);
-        return;
-    }
-
-    ticks_per_game_round--;
-    if (ticks_per_game_round > 0) { return; }
-    ticks_per_game_round = 30;
-
-    if (in_combat) {
-        if (entity_animation_region_execute(reg)) {
-            check_current_turn();
-            return;
-        }
-        //port_combat_action(&clear);
-
-        in_combat = !is_combat_over(reg); // Just to check
-        entity_t *combatant = NULL;
-        if (in_combat) {
-            entity_list_for_each(reg->cr.combatants, combatant) {
-                port_update_entity(combatant, 0, 0);
-            }
-            do_combat_rounds(reg);
-            return;
-        } else {
-            entity_list_for_each(reg->cr.combatants, combatant) {
-                entity_list_remove(reg->cr.combatants, entity_list_find(reg->cr.combatants, combatant));
-            }
-            port_exit_combat();
-        }
-        return;
-        // We were in combat but now it is over. Need to clean up.
-    }
-    */
 }
 
 // This does not force into combat mode, simply add a combat to the current region.

@@ -43,8 +43,8 @@ extern void sol_combat_next_combatant(combat_region_t *cr) {
 extern int sol_combat_attempt_action(combat_region_t *cr, dude_t *dude) {
     if (!cr || cr->round.entities.head->entity != dude || !dude) { return 0; }
 
-    if (dude->stats.move <= 0) { return 0; }
+    if (dude->stats.combat.move <= 0) { return 0; }
 
-    dude->stats.move--;
+    dude->stats.combat.move--;
     return 1;
 }

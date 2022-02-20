@@ -49,7 +49,7 @@ extern entity_list_node_t* entity_list_add_by_init(entity_list_t *list, struct e
 
     rover = list->head;
     while (rover->next != NULL 
-        && (rover->next->entity->stats.initiative < node->entity->stats.initiative)) {
+        && (rover->next->entity->stats.combat.initiative < node->entity->stats.combat.initiative)) {
         rover = rover->next;
     }
 

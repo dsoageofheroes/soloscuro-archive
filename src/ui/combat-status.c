@@ -119,7 +119,7 @@ static void get_status() {
         combat_status.current_hp = dude->stats.hp;
         combat_status.max_hp = dude->stats.high_hp;
         combat_status.status = 1;// Need to fix.
-        combat_status.move = dude->stats.move;
+        combat_status.move = dude->stats.combat.move;
     }
 }
 

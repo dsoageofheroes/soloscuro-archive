@@ -8,6 +8,8 @@
 #include "gpl.h"
 #include "rules.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 // For now one combat region per region_t, later add more.
 static combat_region_t combat_regions[MAX_REGIONS];
@@ -37,8 +39,9 @@ static void place_combatants(combat_region_t *cr) {
     dude_t *entity = NULL;
 
     entity_list_for_each((&(cr->combatants)), entity) {
-        entity->stats.initiative = dnd2e_roll_initiative(entity);
-        entity->stats.move = dnd2e_get_move(entity);
+        memset(&entity->stats.combat, 0x0, sizeof(combat_round_stats_t));
+        entity->stats.combat.initiative = dnd2e_roll_initiative(entity);
+        entity->stats.combat.move = dnd2e_get_move(entity);
         entity_list_add_by_init((&cr->round.entities), entity);
     }
 }
@@ -91,8 +94,8 @@ extern int sol_arbiter_enter_combat(sol_region_t *reg, const uint16_t x, const u
 //            level 10+: +4
 // Monster data should be in the entity.
 // For Now, 1d6, always hits. Need to add thac0 calculation.
-extern sol_attack_t sol_arbiter_enemy_melee_attack(entity_t *source, entity_t *target, int attack_num, int round) {
-    return dnd2e_melee_attack(source, target, attack_num, round);
+extern sol_attack_t sol_arbiter_enemy_melee_attack(entity_t *source, entity_t *target, int round) {
+    return dnd2e_melee_attack(source, target, round);
     /*
     //int16_t dnd2e_melee_attack(entity_t *source, entity_t *target, const int attack_num, const int round) {
     entity_animation_add(EA_MELEE, source, NULL, NULL, 0);

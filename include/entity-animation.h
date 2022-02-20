@@ -34,6 +34,7 @@ enum entity_action_e {
     EA_POWER_APPLY,
     EA_SCMD,
     EA_ACTIVATE,
+    EA_WAIT_ON_ENTITY,
     EA_END,
 };
 

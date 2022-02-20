@@ -8,8 +8,6 @@
 typedef struct combat_round_s {
     entity_list_t entities;
     uint16_t num;
-    uint8_t attack_count;
-    uint8_t cast_count;
 } combat_round_t;
 
 // Represents all combatants in the entire region.

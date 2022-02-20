@@ -490,6 +490,16 @@ extern int entity_animation_region_execute(sol_region_t *reg) {
     if (!reg || !reg->actions.head) { return 0; }
     entity_action_t *action = &(reg->actions.head->ca);
 
+    if (action->action == EA_WAIT_ON_ENTITY) {
+        if (!action->source->actions.head) {
+            entity_animation_node_t *tmp = reg->actions.head;
+            reg->actions.head = reg->actions.head->next;
+            free (tmp);
+            return 1;
+        }
+        return 0;
+    }
+
     if (!action->power && !action->damage) {
         //entity_animation_list_add_effect(&(reg->actions), EA_MAGIC_DAMAGE, source, target, NULL, 0, damage);
         error("Only handle power actions at the moment!");
@@ -799,6 +809,7 @@ extern void sol_animation_render(const entity_action_t *ea) {
         case EA_BROWN_DAMAGE:
             sol_combat_action(ea);
             break;
+        case EA_WAIT_ON_ENTITY: return; // don't render!
         default:
             spr = ea->source->anim.spr;
         break;

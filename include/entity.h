@@ -35,6 +35,13 @@ typedef struct innate_attack_s {
     uint32_t special;
 } innate_attack_t;
 
+typedef struct combat_round_stats_s {
+    int8_t move;
+    int8_t initiative;
+    int8_t attack_num;
+    int8_t has_cast;
+} combat_round_stats_t;
+
 typedef struct stats_s {
     uint8_t str;
     uint8_t dex;
@@ -47,10 +54,9 @@ typedef struct stats_s {
     int16_t psp;
     int16_t high_psp;
     int8_t base_ac; // before applying any modifiers.
-    int8_t move;
     int8_t base_move;
     int8_t base_thac0;
-    int8_t initiative;
+    combat_round_stats_t combat;
     uint8_t magic_resistance;
     uint32_t special_defense;
     innate_attack_t attacks[3];
