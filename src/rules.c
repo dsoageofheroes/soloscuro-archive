@@ -393,6 +393,8 @@ static int16_t roll_damage_weapon(item_t *item) {
         amt += droll(item->attack.sides);
     }
 
+    amt += item->attack.bonus;
+
     // TODO: SPECIALS?
     if (item->effect) {
         warn("weapon special not implemented.\n");
@@ -441,12 +443,13 @@ extern int16_t dnd2e_can_melee_again(entity_t *source, const int attack_num, con
 }
 
 // returns the amt of damage done. 0 means miss/absorbed, negative means attack is not legit, or out of round.
-extern sol_attack_t dnd2e_melee_attack(entity_t *source, entity_t *target, const int round) {
+extern sol_attack_t sol_dnd2e_melee_attack(entity_t *source, entity_t *target, const int round) {
     static sol_attack_t invalid_attack = { -1, 0 };
     sol_attack_t attack = {0, 0};
+    int16_t thac0 = 20;
+    item_t *item;
 
     if (!source || !target || source->stats.combat.attack_num < 0) { return invalid_attack; }
-    int16_t thac0 = 20;
 
     int attack_slot = get_next_melee_attack(source, source->stats.combat.attack_num, round);
     attack_slot = source->stats.combat.attack_num++;
@@ -454,13 +457,19 @@ extern sol_attack_t dnd2e_melee_attack(entity_t *source, entity_t *target, const
     if (attack_slot < 0 || attack_slot > 2) { return invalid_attack; }
     if (source->stats.attacks[attack_slot].number <= 0 ) { return invalid_attack; }
 
-    if (source->inv && attack_slot < 2) {
-        int slot = attack_slot == 0 ? SLOT_HAND0 : SLOT_HAND1;
-        thac0 = dnd2e_get_thac0(source, slot);
-        if (droll(20) >= (thac0 - dnd2e_calc_ac(target))) {
-            attack.damage = roll_damage_weapon(source->inv + slot) + sol_dnd2e_melee_damage_mod(&source->stats);
-        }
-    } else if (droll(20) >= (source->stats.base_thac0 - dnd2e_calc_ac(target))) { // hit
+    int slot = (attack_slot == 0) ? SLOT_HAND0 : SLOT_HAND1;
+    thac0 = dnd2e_get_thac0(source, slot);
+    printf("thac0 = %d (%d)\n", thac0, dnd2e_calc_ac(target));
+    if (droll(20) < thac0 - dnd2e_calc_ac(target)) {
+        return attack;
+    }
+
+    item = sol_item_get((inventory_t*) source->inv, slot);
+    if (item && attack_slot < 2) {
+        printf("ITEM: %s\n", item->name);
+        attack.damage = roll_damage_weapon(item) + sol_dnd2e_melee_damage_mod(&source->stats);
+    } else {
+        printf("innate\n");
         attack.damage = roll_damage_innate(source->stats.attacks + attack_slot);
     }
 

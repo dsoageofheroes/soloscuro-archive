@@ -126,11 +126,13 @@ extern void              item_free_inventory(item_t *item);
 extern animate_sprite_t* item_icon(item_t *item);
 extern int               item_get_wizard_level(item_t *item);
 extern int               item_get_priest_level(item_t *item);
+extern item_t*           sol_item_get(inventory_t *inv, const int8_t slot);
 
 // DS1 specific functions
 extern void item_convert_from_ds1(item_t *item, const ds1_item_t *ds1_item);
 
 struct entity_s;
 extern void item_set_starting(struct entity_s *pc);
+extern void sol_give_ds1_item(struct entity_s *pc, const int slot, const int item_index, const int id);
 
 #endif

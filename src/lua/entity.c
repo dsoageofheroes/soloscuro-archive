@@ -64,12 +64,15 @@ static int award_exp(lua_State *l) {
     dnd2e_award_exp(dude, exp);
 }
 
-static int give_item(lua_State *l) {
+static int give_ds1_item(lua_State *l) {
     dude_t   *dude = (dude_t*) lua_touserdata(l, lua_upvalueindex(1));
     int32_t   slot = luaL_checkinteger(l, 1);
-    int32_t   item_id = luaL_checkinteger(l, 2);
+    int32_t   item_index = luaL_checkinteger(l, 2);
+    int32_t   item_id = luaL_checkinteger(l, 3);
 
+    sol_give_ds1_item(dude, slot, item_index, item_id);
     printf("need to give %d to slot %d of %p\n", slot, item_id, dude);
+    return 0;
 }
 
 extern int sol_lua_entity_function(entity_t *entity, const char *func, lua_State *l) {
@@ -89,8 +92,8 @@ extern int sol_lua_entity_function(entity_t *entity, const char *func, lua_State
         return push_entity_function(l, entity, set_class);
     } else if (!strcmp(func, "award_exp")) {
         return push_entity_function(l, entity, award_exp);
-    } else if (!strcmp(func, "give_item")) {
-        return push_entity_function(l, entity, give_item);
+    } else if (!strcmp(func, "give_ds1_item")) {
+        return push_entity_function(l, entity, give_ds1_item);
     }
     lua_pushinteger(l, 0);
     return 1;

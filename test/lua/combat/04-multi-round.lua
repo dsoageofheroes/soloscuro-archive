@@ -31,7 +31,7 @@ function init()
     p0.name = "Test"
     p0.mapx = 25;
     p0.mapy = 10;
-    p0.stats.hp = 40;
+    p0.stats.hp = 10;
     reg = sol.create_region()
     sol.set_region(reg)
     reg.set_tile_id(4, 83)

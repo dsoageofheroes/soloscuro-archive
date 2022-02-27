@@ -24,6 +24,7 @@ set(TEST_NAMES
     lua-combat-03
     lua-combat-04
     lua-combat-05
+    lua-combat-06
 )
 
 foreach(TEST_NAME ${TEST_NAMES})

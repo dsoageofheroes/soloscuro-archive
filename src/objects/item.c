@@ -170,7 +170,8 @@ extern animate_sprite_t* item_icon(item_t *item) {
     return &(item->anim);
 }
 
-static void add_ds1_starting_item(entity_t *pc, const int slot, const int item_index, const int id) {
+extern void sol_give_ds1_item(entity_t *pc, const int slot, const int item_index, const int id) {
+    if (!pc->inv) { pc->inv = sol_inventory_create(); }
     ds1_item_t ds1_item;
     ds1_item.slot = SLOT_HAND0;
     ds1_item.item_index = item_index;
@@ -209,42 +210,50 @@ extern void item_set_starting(dude_t *dude) {
     }
 
     if (dude->race == RACE_THRIKREEN) {
-        add_ds1_starting_item(dude, SLOT_MISSILE, 48, -1010);
+        sol_give_ds1_item(dude, SLOT_MISSILE, 48, -1010);
         return;
     }
 
     if (has_gladiator || has_fighter || has_ranger || has_thief) {
-        add_ds1_starting_item(dude, SLOT_HAND0, 81, -1012); // bone sword
+        sol_give_ds1_item(dude, SLOT_HAND0, 81, -1012); // bone sword
     } else if (has_druid || has_cleric || has_psionicist) {
-        add_ds1_starting_item(dude, SLOT_HAND0, 18, -1185); // club
+        sol_give_ds1_item(dude, SLOT_HAND0, 18, -1185); // club
     } else if (has_preserver) {
-        add_ds1_starting_item(dude, SLOT_HAND0, 3, -1019); // quaterstaff
+        sol_give_ds1_item(dude, SLOT_HAND0, 3, -1019); // quaterstaff
     } else {
         return; // Dude has no class!
     }
 
     if (has_gladiator) {
-        add_ds1_starting_item(dude, SLOT_HAND1, 18, -1185); // club
+        sol_give_ds1_item(dude, SLOT_HAND1, 18, -1185); // club
     } else if (has_fighter || has_ranger || has_cleric || has_thief) {
-        add_ds1_starting_item(dude, SLOT_HAND1, 4, -1020); // leather shield
+        sol_give_ds1_item(dude, SLOT_HAND1, 4, -1020); // leather shield
     }
 
     if (has_gladiator || has_fighter || has_ranger || has_cleric) {
-        add_ds1_starting_item(dude, SLOT_ARM, 7, -1023); // leather arm armor
+        sol_give_ds1_item(dude, SLOT_ARM, 7, -1023); // leather arm armor
     }
 
     if (has_fighter) {
-        add_ds1_starting_item(dude, SLOT_LEGS, 8, -1026); // leather leg armor
+        sol_give_ds1_item(dude, SLOT_LEGS, 8, -1026); // leather leg armor
     }
 
     if (has_fighter || has_gladiator || has_ranger || has_cleric || has_thief) {
-        add_ds1_starting_item(dude, SLOT_CHEST, 6, -1022); // leather chest armor
+        sol_give_ds1_item(dude, SLOT_CHEST, 6, -1022); // leather chest armor
     }
 
     if (has_ranger || has_psionicist) {
-        add_ds1_starting_item(dude, SLOT_MISSILE, 1, -1017); // Bow
-        add_ds1_starting_item(dude, SLOT_AMMO, 62, -1070); // arrows
+        sol_give_ds1_item(dude, SLOT_MISSILE, 1, -1017); // Bow
+        sol_give_ds1_item(dude, SLOT_AMMO, 62, -1070); // arrows
     } else if (has_druid || has_thief || has_preserver) {
-        add_ds1_starting_item(dude, SLOT_MISSILE, 64, -1015); // sling
+        sol_give_ds1_item(dude, SLOT_MISSILE, 64, -1015); // sling
     }
+}
+
+extern item_t* sol_item_get(inventory_t *inv, const int8_t slot) {
+    item_t *item = (item_t*) inv;
+    if (!inv || slot < 0 || slot >= SLOT_END) { return NULL; }
+    if ((item + slot)->name[0] == 0) { return NULL; }
+
+    return item + slot;
 }

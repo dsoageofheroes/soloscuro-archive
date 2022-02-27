@@ -13,7 +13,8 @@ function idle()
         end
     end
     
-    if (ticks > 1000) then
+    -- With no items it takes awhile...
+    if (ticks > 2000) then
         if (sol.in_combat()) then
             sol.fail("Slig should have defeated player.")
         else
@@ -35,7 +36,6 @@ function init()
     p0.stats.hp = 40;
     p0.set_class(0, 9)
     p0.award_exp(9000)
-    p0.give_item(10, -1018)
     reg = sol.create_region()
     sol.set_region(reg)
     reg.set_tile_id(4, 83)

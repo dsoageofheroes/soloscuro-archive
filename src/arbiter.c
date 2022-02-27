@@ -95,14 +95,6 @@ extern int sol_arbiter_enter_combat(sol_region_t *reg, const uint16_t x, const u
 // Monster data should be in the entity.
 // For Now, 1d6, always hits. Need to add thac0 calculation.
 extern sol_attack_t sol_arbiter_enemy_melee_attack(entity_t *source, entity_t *target, int round) {
-    return dnd2e_melee_attack(source, target, round);
-    /*
-    //int16_t dnd2e_melee_attack(entity_t *source, entity_t *target, const int attack_num, const int round) {
-    entity_animation_add(EA_MELEE, source, NULL, NULL, 0);
-    //printf("amt = %d!\n", amt);
-    if (amt > 0) {
-        entity_animation_add(EA_RED_DAMAGE, source, target, NULL, amt);
-        entity_animation_add(EA_DAMAGE_APPLY, source, target, NULL, amt);
-    }
-    */
+    // For now just use local until MMO is up.
+    return sol_dnd2e_melee_attack(source, target, round);
 }
