@@ -43,9 +43,10 @@ extern sol_region_t*    sol_region_create_empty();
 extern void             sol_region_free(sol_region_t *region);
 extern int              sol_region_get_tile(const sol_region_t *reg, const uint32_t image_id,
         uint32_t *w, uint32_t *h, unsigned char **data);
-extern struct entity_s* sol_region_find_entity_by_id(sol_region_t *reg, const int id);
-extern void             sol_region_move_to_nearest(const sol_region_t *reg, struct entity_s *entity);
-extern int              sol_region_location_blocked(const sol_region_t *reg, const int32_t x, const int32_t y);
+extern struct entity_s* sol_region_find_entity_by_id(const sol_region_t *reg, const int id);
+extern struct entity_s* sol_region_find_entity_by_location(const sol_region_t *reg, const int x, const int y);
+extern void             sol_region_move_to_nearest(sol_region_t *reg, struct entity_s *entity);
+extern int              sol_region_location_blocked(sol_region_t *reg, const int32_t x, const int32_t y);
 extern void             sol_region_remove_entity(sol_region_t *reg, struct entity_s *entity);
 extern void             sol_region_add_entity(sol_region_t *reg, struct entity_s *entity);
 extern void             sol_region_tick(sol_region_t *reg);

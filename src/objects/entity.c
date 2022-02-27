@@ -94,6 +94,12 @@ extern entity_t* sol_entity_create_default_human() {
     dude->stats.saves.petrify = 20;
     dude->stats.saves.breath = 20;
     dude->stats.saves.spell = 20;
+    dude->stats.attacks[0].number = 1;
+    dude->stats.attacks[0].num_dice = 1;
+    dude->stats.attacks[0].sides = 4;
+    dude->stats.attacks[1].number = 1;
+    dude->stats.attacks[1].num_dice = 1;
+    dude->stats.attacks[1].sides = 4;
     dude->anim.spr = SPRITE_ERROR;
     debug("Need to set default size!\n");
     dude->size = 0;
@@ -322,6 +328,8 @@ void entity_free(entity_t *dude) {
 extern int entity_attempt_move(dude_t *dude, const int xdiff, const int ydiff, const int speed) {
     combat_region_t      *cr;
     enum entity_action_e  action;
+    sol_region_t         *region;
+    entity_t             *target;
 
     action =
           (xdiff == 1 && ydiff == 1) ? EA_WALK_DOWNRIGHT
@@ -334,6 +342,29 @@ extern int entity_attempt_move(dude_t *dude, const int xdiff, const int ydiff, c
         : (ydiff == -1) ? EA_WALK_UP
         : EA_NONE;
 
+    // If we are in combat and it isn't our turn, do nothing.
+    cr = sol_arbiter_combat_region(sol_region_manager_get_current());
+    if (cr && sol_combat_get_current(cr) != dude) {
+        return 0;
+    }
+
+    region = sol_region_manager_get_current();
+    if (sol_region_is_block(region, dude->mapy + ydiff, dude->mapx + xdiff)
+        || sol_region_location_blocked(region, dude->mapx + xdiff, dude->mapy + ydiff)) {
+
+        if (cr && (xdiff > 0 || ydiff > 0)) {
+            if (!sol_combat_attempt_action(cr, dude)) { return 0; }
+            target = sol_region_find_entity_by_location(
+                    sol_region_manager_get_current(), dude->mapx + xdiff, dude->mapy + ydiff);
+            if (target) {
+                sol_combat_add_attack_animation(sol_region_manager_get_current(), dude,
+                    target, NULL, EA_MELEE);
+            }
+            return 0;
+        }
+        return 1;
+    }
+
     // We aren't moving...
     if (action == EA_NONE) {
         dude->anim.movex = dude->anim.movey = 0.0;
@@ -343,21 +374,12 @@ extern int entity_attempt_move(dude_t *dude, const int xdiff, const int ydiff, c
         return 1;
     }
 
-    // If we are in combat and it isn't our turn, do nothing.
-    cr = sol_arbiter_combat_region(sol_region_manager_get_current());
-    if (cr && sol_combat_get_current(cr) != dude) {
-        return 0;
-    }
-
     if (!entity_animation_list_empty(&(dude->actions))) {
         // We need to wait for the rest of my actions.
         return 0;
     }
 
-    if (cr && !sol_combat_attempt_action(cr, dude)) {
-        // We can't do that in combat for some reason.
-        return 0;
-    }
+    if (cr && !sol_combat_attempt_action(cr, dude)) { return 0; }
 
     entity_animation_list_add_speed(&(dude->actions), action, dude, NULL,
             NULL, settings_ticks_per_move(), speed, 0);

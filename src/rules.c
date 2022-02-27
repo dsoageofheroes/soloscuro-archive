@@ -1433,6 +1433,7 @@ extern int16_t dnd2e_can_melee_again(entity_t *source, const int attack_num, con
 extern sol_attack_t dnd2e_melee_attack(entity_t *source, entity_t *target, const int round) {
     static sol_attack_t invalid_attack = { -1, 0 };
     sol_attack_t attack = {0, 0};
+
     if (!source || !target || source->stats.combat.attack_num < 0) { return invalid_attack; }
     int16_t thac0 = 20;
 

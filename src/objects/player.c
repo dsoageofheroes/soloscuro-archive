@@ -255,6 +255,7 @@ static int count = 0;
 static int direction = 0x0;
 
 extern void sol_player_update() {
+    entity_t *target = NULL;
     entity_t *dude = sol_player_get_active();
     int       xdiff = 0, ydiff = 0;
     const int speed = 2;
@@ -268,8 +269,7 @@ extern void sol_player_update() {
     if (direction & PLAYER_LEFT)  { xdiff -= 1; }
     if (direction & PLAYER_RIGHT) { xdiff += 1; }
 
-    if (sol_player_freeze() || sol_region_is_block(sol_region_manager_get_current(),
-                dude->mapy + ydiff, dude->mapx + xdiff)) {
+    if (sol_player_freeze()) {
         xdiff = ydiff = 0;
     }
 

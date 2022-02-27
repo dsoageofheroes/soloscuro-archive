@@ -185,7 +185,7 @@ static void load_passives(sol_region_t *reg, const int gff_idx, const int map_id
     }
 }
 
-extern entity_t* sol_region_find_entity_by_id(sol_region_t *reg, const int id) {
+extern entity_t* sol_region_find_entity_by_id(const sol_region_t *reg, const int id) {
     dude_t *dude = NULL;
 
     entity_list_for_each(reg->entities, dude)  {
@@ -224,18 +224,22 @@ extern void sol_region_clear_block(sol_region_t *region, int row, int column, in
     if (block) { region->flags[row][column] &= ~val; }
 }
 
-
-extern int sol_region_location_blocked(const sol_region_t *reg, const int32_t x, const int32_t y) {
+extern entity_t* sol_region_find_entity_by_location(const sol_region_t *reg, const int x, const int y) {
     dude_t *dude = NULL;
-    //if (reg->flags[x][y]) { return 1; }
+
     entity_list_for_each(reg->entities, dude) {
-        //printf("(%d, %d) ?= (%d, %d)\n", obj->mapx, obj->mapy, x, y);
-        if (dude->mapx == x && dude->mapy == y) {
-            return 1;
+        if (dude->mapx == x && dude->mapy == y && dude->stats.hp > 0) {
+            return dude;
         }
     }
 
-    return 0;
+    return NULL;
+}
+
+extern int sol_region_location_blocked(sol_region_t *reg, const int32_t x, const int32_t y) {
+    if (sol_region_is_block(reg, y, x)) { return 1; }
+
+    return sol_region_find_entity_by_location(reg, x, y) ? 1 : 0;
 }
 
 extern void sol_region_add_entity(sol_region_t *reg, entity_t *entity) {
@@ -330,9 +334,7 @@ extern void sol_region_tick(sol_region_t *reg) {
     }
 }
 
-extern void sol_region_move_to_nearest(const sol_region_t *reg, entity_t *entity) {
-    //if (!region_location_blocked(reg, entity->mapx, entity->mapy)) { return; }
-    //printf("Tyring to place: %d, %d\n", entity->mapx, entity->mapy);
+extern void sol_region_move_to_nearest(sol_region_t *reg, entity_t *entity) {
     if (!sol_region_location_blocked(reg, entity->mapx, entity->mapy + 1)) {
         entity->mapy = entity->mapy + 1;
         return;
