@@ -1,3 +1,5 @@
+#include "class.h"
+#include "alignment.h"
 #include "label.h"
 #include "font.h"
 #include "rules.h"
@@ -290,7 +292,7 @@ static void copy_levels_string(entity_t *pc, char* storage) {
 
 static void copy_exp_tnl_string(entity_t *pc, char* storage) {
     if (pc->class[0].class > -1) {
-        snprintf(storage, BUF_MAX, "EXP: %d (%d)", entity_get_total_exp(pc), dnd2e_exp_to_next_level_up(pc));
+        snprintf(storage, BUF_MAX, "EXP: %d (%d)", entity_get_total_exp(pc), sol_dnd2e_class_exp_to_next_level(pc));
     }
     else {
         storage[0] = '\0';

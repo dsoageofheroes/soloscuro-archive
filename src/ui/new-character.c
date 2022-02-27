@@ -1,4 +1,6 @@
 #include "new-character.h"
+#include "alignment.h"
+#include "class.h"
 #include "gfftypes.h"
 #include "narrate.h"
 #include "label.h"
@@ -158,7 +160,7 @@ static void set_class_frames() {
         pc.class[next_class].class = convert_to_actual_class(i);
         if (sol_sprite_get_frame(class_sel[i]) != 1) {
             sol_sprite_set_frame(classes[i], 
-                (next_class < 3 && dnd2e_is_class_allowed(pc.race, pc.class
+                (next_class < 3 && sol_dnd2e_is_class_allowed(pc.race, pc.class
                 ))
                 ? 0 : 2);
         }
@@ -640,7 +642,7 @@ static void fix_alignment(int direction) { // direction: -1 = previous alignment
         pc.alignment = LAWFUL_GOOD;
     }
 
-    if (!dnd2e_is_alignment_allowed(pc.alignment, pc.class, 1))
+    if (!sol_dnd2e_alignment_allowed(pc.alignment, pc.class, 1))
     {
         for (int i = pc.alignment + direction; i != pc.alignment; i += direction) {
             if (i < LAWFUL_GOOD) {
@@ -651,7 +653,7 @@ static void fix_alignment(int direction) { // direction: -1 = previous alignment
                 direction = 1;
             }
 
-            if (dnd2e_is_alignment_allowed(i, pc.class, 1))
+            if (sol_dnd2e_alignment_allowed(i, pc.class, 1))
             {
                 pc.alignment = i;
                 break;

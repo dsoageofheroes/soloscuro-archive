@@ -54,6 +54,7 @@ static int set_class(lua_State *l) {
     uint16_t  which = luaL_checkinteger(l, 1);
     uint16_t  class = luaL_checkinteger(l, 2);
     dude->class[which].class = class;
+    dude->class[which].level = 0;
 }
 
 static int award_exp(lua_State *l) {

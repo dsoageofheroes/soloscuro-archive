@@ -23,6 +23,10 @@ set(SOLOSCURO_SRCS
     objects/entity-list.c
     objects/entity.c
     objects/entity-animation.c
+    systems/class.c
+    systems/stats.c
+    systems/race.c
+    systems/alignment.c
     strdup.c
     ui/combat-status.c
     ui/sol_textbox.c

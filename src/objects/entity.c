@@ -1,5 +1,6 @@
 #include "arbiter.h"
 #include "combat.h"
+#include "alignment.h"
 #include "item.h"
 #include "gpl.h"
 #include "entity.h"
@@ -100,6 +101,9 @@ extern entity_t* sol_entity_create_default_human() {
     dude->stats.attacks[1].number = 1;
     dude->stats.attacks[1].num_dice = 1;
     dude->stats.attacks[1].sides = 4;
+    dude->class[0].level = -1;
+    dude->class[1].level = -1;
+    dude->class[2].level = -1;
     dude->anim.spr = SPRITE_ERROR;
     debug("Need to set default size!\n");
     dude->size = 0;
