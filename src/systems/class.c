@@ -405,60 +405,62 @@ int sol_dnd2e_is_class_allowed(const uint8_t race, const class_t classes[3]) {
     return 0;
 }
 
-static const uint32_t* get_xp_table(const uint8_t class) {
+static const uint32_t* get_xp_table(const uint8_t class, const uint8_t level) {
     switch (class) {
         case REAL_CLASS_AIR_CLERIC:
         case REAL_CLASS_EARTH_CLERIC:
         case REAL_CLASS_FIRE_CLERIC:
         case REAL_CLASS_WATER_CLERIC:
-            return (const uint32_t *)ranger_levels;
+            return (const uint32_t *)ranger_levels[level];
         case REAL_CLASS_AIR_DRUID:
         case REAL_CLASS_EARTH_DRUID:
         case REAL_CLASS_FIRE_DRUID:
         case REAL_CLASS_WATER_DRUID:
-            return (const uint32_t *)ranger_levels;
+            return (const uint32_t *)ranger_levels[level];
         case REAL_CLASS_FIGHTER:
-            return (const uint32_t *)fighter_levels;
+            return (const uint32_t *)fighter_levels[level];
         case REAL_CLASS_GLADIATOR:
-            return (const uint32_t *)ranger_levels;
+            return (const uint32_t *)ranger_levels[level];
         case REAL_CLASS_PRESERVER:
-            return (const uint32_t *)preserver_levels;
+            return (const uint32_t *)preserver_levels[level];
         case REAL_CLASS_PSIONICIST:
-            return (const uint32_t *)fighter_levels;
+            return (const uint32_t *)fighter_levels[level];
         case REAL_CLASS_AIR_RANGER:
         case REAL_CLASS_EARTH_RANGER:
         case REAL_CLASS_FIRE_RANGER:
         case REAL_CLASS_WATER_RANGER:
-            return (const uint32_t *)ranger_levels;
+            return (const uint32_t *)ranger_levels[level];
         case REAL_CLASS_THIEF:
-            return (const uint32_t *)fighter_levels;
+            return (const uint32_t *)fighter_levels[level];
     }
     return NULL;
 }
 
 extern int sol_dnd2e_next_level_exp(const int8_t class, const int8_t clevel) {
-    const uint32_t *xp_table = get_xp_table(class);
+    const uint32_t *xp_table = get_xp_table(class, clevel);
     if (xp_table == NULL) { return -1; }
     if (clevel < 0 || clevel > 19) { return -1; }
 
-    return xp_table[(clevel + 1) * 3];
+    return xp_table[0];
 }
 
 extern int sol_dnd2e_class_total_hit_die(const int8_t class, const int8_t level) {
-    const uint32_t *xp_table = get_xp_table(class);
+    const uint32_t *xp_table = get_xp_table(class, level);
     if (xp_table == NULL) { return -1; }
     if (level < 0 || level > 19) { return -1; }
 
-    return xp_table[3 * (level + 1)];
+    return xp_table[1];
 }
 
 extern int sol_dnd2e_class_level(const uint8_t class, const uint32_t xp) {
-    const uint32_t *xp_table = get_xp_table(class);
+    const uint32_t *xp_table = get_xp_table(class, 0);
     if (!xp_table) { return 0; }
 
     for (int i = 0; i < 19; i++) {
+        xp_table = get_xp_table(class, i);
         //printf("xp_table[%d] = %d, xp = %u\n", 3*i, xp_table[3*i], xp);
-        if (xp_table[3*(i+1)] > xp) { return i; }
+        //if (xp_table[3*(i+1)] > xp) { return i; }
+        if (xp_table[0] > xp) { return i; }
     }
 
     return 20; // Current Max is 20.
@@ -468,9 +470,9 @@ extern int32_t sol_dnd2e_class_exp_to_next_level(entity_t *pc) {
     int next_exp = 999999999;
     for (int i = 0; i < 3; i++) {
         if (pc->class[i].level > -1) {
-            const uint32_t *xp_table = get_xp_table(pc->class[i].class);
+            const uint32_t *xp_table = get_xp_table(pc->class[i].class, pc->class[i].level);
             if (!xp_table) { return next_exp; }
-            int next = xp_table[3 * (pc->class[i].level + 1)];
+            int next = xp_table[0];
             if (next < next_exp) {
                 next_exp = next;
             }
@@ -581,6 +583,6 @@ extern int sol_dnd2e_class_max_hp(int class, int level, int con_mod) {
     return level * (hit_die[class] + con_mod);
 }
 
-extern int sol_dnd2e_class_hp_mod(int class) {
+extern int sol_dnd2e_class_hp_die(int class) {
     return hit_die[class];
 }

@@ -14,6 +14,6 @@ extern int32_t sol_dnd2e_class_thac0(entity_t *pc);
 extern void    sol_dnd2e_class_apply_stats(entity_t *pc, int class);
 extern int16_t sol_dnd2e_class_attack_num(const entity_t *pc, const item_t *item);
 extern int     sol_dnd2e_class_max_hp(int class, int level, int con_mod);
-extern int     sol_dnd2e_class_hp_mod(int class);
+extern int     sol_dnd2e_class_hp_die(int class);
 
 #endif

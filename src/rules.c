@@ -44,19 +44,17 @@ static void do_level_up(entity_t *pc, const uint32_t class_idx, const uint32_t c
     // Roll the next HP:
     int current_hit_die = sol_dnd2e_class_total_hit_die(pc->class[class_idx].class, clevel);
     int next_hit_die = sol_dnd2e_class_total_hit_die(pc->class[class_idx].class, clevel + 1);
-    //printf("chd = %d, nhd = %d\n", current_hit_die, next_hit_die);
+    //printf("%d: lvl = %d, chd = %d, nhd = %d\n", pc->class[class_idx].class, clevel, current_hit_die, next_hit_die);
     int hp = 0;
     if (next_hit_die > current_hit_die) {
-        //printf("Need to increase HP by up to %d\n", sol_dnd2e_class_hp_mod(class_idx));
-        hp = 1 + (rand() % sol_dnd2e_class_hp_mod(pc->class[class_idx].class));
+        //printf("Need to increase HP by up to %d\n", sol_dnd2e_class_hp_die(pc->class[class_idx].class));
+        hp = 1 + (rand() % sol_dnd2e_class_hp_die(pc->class[class_idx].class));
         hp += sol_dnd2e_hp_mod(&pc->stats);
         hp = (hp / num_classes) + (((hp % num_classes) > 0) ? 1 : 0);
         if (hp < 1) { hp = 1; }
     } else {
         hp = 2;
     }
-    //printf("Increasing HP by %d\n", hp);
-    //exit(1);
     pc->stats.hp += hp;
     pc->stats.high_hp += hp;
     pc->class[class_idx].level++;
