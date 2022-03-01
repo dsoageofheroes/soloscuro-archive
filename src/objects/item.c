@@ -253,9 +253,7 @@ extern void item_set_starting(dude_t *dude) {
 extern item_t* sol_item_get(inventory_t *inv, const int8_t slot) {
     item_t *item = (item_t*) inv;
     if (!inv || slot < 0 || slot >= SLOT_END) { return NULL; }
-    printf("HERE1: %s\n", item[slot].name);
     if ((item + slot)->name[0] == 0) { return NULL; }
-    printf("HERE2\n");
 
     return item + slot;
 }

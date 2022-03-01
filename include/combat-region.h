@@ -22,5 +22,6 @@ extern void      sol_combat_clear(combat_region_t *cr);
 extern entity_t* sol_combat_get_current(combat_region_t *cr);
 extern void      sol_combat_next_combatant(combat_region_t *cr);
 extern int       sol_combat_attempt_action(combat_region_t *cr, dude_t *dude);
+extern entity_t* sol_combat_get_closest_enemy(combat_region_t *cr, const int x, const int y);
 
 #endif

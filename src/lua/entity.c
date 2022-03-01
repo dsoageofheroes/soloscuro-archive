@@ -48,6 +48,10 @@ static int move_left(lua_State *l) { return move_entity(l, -1, 0); }
 static int move_right(lua_State *l) { return move_entity(l, 1, 0); }
 static int move_up(lua_State *l) { return move_entity(l, 0, -1); }
 static int move_down(lua_State *l) { return move_entity(l, 0, 1); }
+static int move_up_left(lua_State *l) { return move_entity(l, -1, -1); }
+static int move_up_right(lua_State *l) { return move_entity(l, 1, -1); }
+static int move_down_left(lua_State *l) { return move_entity(l, -1, 1); }
+static int move_down_right(lua_State *l) { return move_entity(l, 1, 1); }
 
 static int set_class(lua_State *l) {
     dude_t   *dude = (dude_t*) lua_touserdata(l, lua_upvalueindex(1));
@@ -71,8 +75,16 @@ static int give_ds1_item(lua_State *l) {
     int32_t   item_id = luaL_checkinteger(l, 3);
 
     sol_give_ds1_item(dude, slot, item_index, item_id);
-    printf("need to give %d to slot %d of %p\n", slot, item_id, dude);
+    //printf("need to give %d to slot %d of %p\n", slot, item_id, dude);
     return 0;
+}
+
+static int get_closest_enemy(lua_State *l) {
+    dude_t   *dude = (dude_t*) lua_touserdata(l, lua_upvalueindex(1));
+    combat_region_t *cr = sol_arbiter_combat_region(sol_region_manager_get_current());
+    entity_t *enemy = sol_combat_get_closest_enemy(cr, dude->mapx, dude->mapy);
+
+    return sol_lua_load_entity (l, enemy);
 }
 
 extern int sol_lua_entity_function(entity_t *entity, const char *func, lua_State *l) {
@@ -88,12 +100,22 @@ extern int sol_lua_entity_function(entity_t *entity, const char *func, lua_State
         return push_entity_function(l, entity, move_up);
     } else if (!strcmp(func, "move_down")) {
         return push_entity_function(l, entity, move_down);
+    } else if (!strcmp(func, "move_up_left")) {
+        return push_entity_function(l, entity, move_up_left);
+    } else if (!strcmp(func, "move_up_right")) {
+        return push_entity_function(l, entity, move_up_right);
+    } else if (!strcmp(func, "move_down_left")) {
+        return push_entity_function(l, entity, move_down_left);
+    } else if (!strcmp(func, "move_down_right")) {
+        return push_entity_function(l, entity, move_down_right);
     } else if (!strcmp(func, "set_class")) {
         return push_entity_function(l, entity, set_class);
     } else if (!strcmp(func, "award_exp")) {
         return push_entity_function(l, entity, award_exp);
     } else if (!strcmp(func, "give_ds1_item")) {
         return push_entity_function(l, entity, give_ds1_item);
+    } else if (!strcmp(func, "get_closest_enemy")) {
+        return push_entity_function(l, entity, get_closest_enemy);
     }
     lua_pushinteger(l, 0);
     return 1;

@@ -184,15 +184,13 @@ static entity_t* player_to_attack(sol_region_t *reg, action_node_t *node) {
 
 static entity_t* entity_at_location(const sol_region_t *reg, entity_t *entity, const int32_t x, const int32_t y) {
     dude_t *dude = NULL;
-    //if (reg->flags[x][y]) { return 1; }
-    /*
-    entity_list_for_each(reg->cr.combatants, dude) {
+
+    entity_list_for_each(reg->entities, dude) {
         //printf("(%s: %d, %d) ?= (%s: %d, %d)\n", dude->name, dude->mapx, dude->mapy, entity->name, entity->mapx, entity->mapy);
         if (dude != entity && dude->mapx == x && dude->mapy == y) {
             return dude;
         }
     }
-    */
 
     return NULL;
 }

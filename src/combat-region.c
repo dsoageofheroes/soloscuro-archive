@@ -1,5 +1,6 @@
 #include "combat-region.h"
 #include "entity-list.h"
+#include <stdio.h>
 #include <string.h>
 
 extern void sol_combat_region_init(combat_region_t *cr) {
@@ -47,4 +48,22 @@ extern int sol_combat_attempt_action(combat_region_t *cr, dude_t *dude) {
 
     dude->stats.combat.move--;
     return 1;
+}
+
+extern entity_t* sol_combat_get_closest_enemy(combat_region_t *cr, const int x, const int y) {
+    entity_t *dude, *ret = NULL;
+    int       max = 9999999;
+
+    entity_list_for_each((&(cr->combatants)), dude) {
+        int dx = abs(dude->mapx - x);
+        int dy = abs(dude->mapy - y);
+        int tmax = dx > dy ? dx : dy;
+        if (tmax == 0) { continue; }
+        if (tmax < max) {
+            max = tmax;
+            ret = dude;
+        }
+    }
+
+    return ret;
 }

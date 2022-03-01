@@ -503,7 +503,7 @@ extern sol_attack_t sol_dnd2e_melee_attack(entity_t *source, entity_t *target, c
     if (!source || !target || source->stats.combat.attack_num < 0) { return invalid_attack; }
 
     int attack_slot = get_next_melee_attack(source, source->stats.combat.attack_num, round);
-    printf("attack_slot = %d\n", attack_slot);
+    //printf("attack_slot = %d\n", attack_slot);
     if (attack_slot == SLOT_END) { return invalid_attack; }
     source->stats.combat.attack_num++;
 
