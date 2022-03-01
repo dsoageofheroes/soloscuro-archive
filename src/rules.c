@@ -403,11 +403,61 @@ static int16_t roll_damage_weapon(item_t *item) {
     return amt;
 }
 
+static void populate_melee_sequence(entity_t *source, uint8_t *seq, const int round) {
+    int      pos         = 0;
+    int      amt         = 0;
+    int16_t  class_extra = 0;
+    item_t  *item        = NULL;
+
+    if (!source->inv) {
+        // Usually monster so we go with innate attacks.
+        amt = source->stats.attacks[0].number / 2;
+        amt += ((round % 2 == 1) && (source->stats.attacks[0].number % 2 == 1)) ? 1 : 0;
+        for (int i = 0; i < amt; i++) { seq[pos++] = SLOT_INNATE0; }
+
+        amt = source->stats.attacks[1].number / 2;
+        amt += ((round % 2 == 1) && (source->stats.attacks[1].number % 2 == 1)) ? 1 : 0;
+        for (int i = 0; i < amt; i++) { seq[pos++] = SLOT_INNATE1; }
+
+        amt = source->stats.attacks[2].number / 2;
+        amt += ((round % 2 == 1) && (source->stats.attacks[2].number % 2 == 1)) ? 1 : 0;
+        for (int i = 0; i < amt; i++) { seq[pos++] = SLOT_INNATE2; }
+
+        seq[pos] = SLOT_END;
+        return;
+    }
+
+    item = source->inv + SLOT_HAND0;
+    if (item->name) {
+        amt = sol_dnd2e_class_attack_num(source, item) / 2;
+        amt += ((round % 2 == 1) && (sol_dnd2e_class_attack_num(source, item) % 2 == 1)) ? 1 : 0;
+        for (int i = 0; i < amt; i++) { seq[pos++] = SLOT_HAND0; }
+    } else {
+        seq[pos++] = SLOT_INNATE0;
+    }
+
+    item = source->inv + SLOT_HAND1;
+    if (!item->name && seq[pos - 1] == SLOT_INNATE0) {
+        seq[pos++] = SLOT_INNATE1;
+    } else if (item->attack.number > 0) {
+        seq[pos++] = SLOT_HAND1;
+    }
+    seq[pos] = SLOT_END;
+}
+
 static int get_next_melee_attack(entity_t *source, const int attack_num, const int round) {
     int current_count = 0;
     int next_max = 0;
     int to_add = 0;
+    static uint8_t attack_sequence[16];
 
+    if (attack_num == 0) {
+        populate_melee_sequence(source, attack_sequence, round);
+    }
+
+    return attack_sequence[attack_num];
+
+/*
     next_max += (source->inv && source->inv[SLOT_HAND0].ds_id)
         ? dnd2e_get_attack_num(source, source->inv + SLOT_HAND0)
         : source->stats.attacks[0].number;
@@ -436,6 +486,7 @@ static int get_next_melee_attack(entity_t *source, const int attack_num, const i
     }
 
     return -1;
+    */
 }
 
 extern int16_t dnd2e_can_melee_again(entity_t *source, const int attack_num, const int round) {
@@ -452,25 +503,24 @@ extern sol_attack_t sol_dnd2e_melee_attack(entity_t *source, entity_t *target, c
     if (!source || !target || source->stats.combat.attack_num < 0) { return invalid_attack; }
 
     int attack_slot = get_next_melee_attack(source, source->stats.combat.attack_num, round);
-    attack_slot = source->stats.combat.attack_num++;
+    printf("attack_slot = %d\n", attack_slot);
+    if (attack_slot == SLOT_END) { return invalid_attack; }
+    source->stats.combat.attack_num++;
 
-    if (attack_slot < 0 || attack_slot > 2) { return invalid_attack; }
-    if (source->stats.attacks[attack_slot].number <= 0 ) { return invalid_attack; }
+    thac0 = dnd2e_get_thac0(source, attack_slot);
+    //printf("thac0 = %d (%d)\n", thac0, dnd2e_calc_ac(target));
 
-    int slot = (attack_slot == 0) ? SLOT_HAND0 : SLOT_HAND1;
-    thac0 = dnd2e_get_thac0(source, slot);
-    printf("thac0 = %d (%d)\n", thac0, dnd2e_calc_ac(target));
     if (droll(20) < thac0 - dnd2e_calc_ac(target)) {
-        return attack;
+        return attack; // miss!
     }
 
-    item = sol_item_get((inventory_t*) source->inv, slot);
-    if (item && attack_slot < 2) {
-        printf("ITEM: %s\n", item->name);
+    item = sol_item_get((inventory_t*) source->inv, attack_slot);
+    if (item) {
+        //printf("ITEM: %s\n", item->name);
+        //printf("damage mod = %d\n", sol_dnd2e_melee_damage_mod(&source->stats));
         attack.damage = roll_damage_weapon(item) + sol_dnd2e_melee_damage_mod(&source->stats);
     } else {
-        printf("innate\n");
-        attack.damage = roll_damage_innate(source->stats.attacks + attack_slot);
+        attack.damage = roll_damage_innate(source->stats.attacks + (attack_slot - SLOT_INNATE0));
     }
 
     return attack;

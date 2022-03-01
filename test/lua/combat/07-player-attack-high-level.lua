@@ -13,9 +13,9 @@ function idle()
         end
     end
     
-    if (ticks > 1300) then
+    if (ticks > 800) then
         if (sol.in_combat()) then
-            sol.fail("Slig should have defeated player.")
+            sol.fail("Player should have defeated slig.")
         else
             sol.exit()
         end
@@ -34,7 +34,7 @@ function init()
     p0.mapy = 10;
     p0.stats.hp = 40;
     p0.set_class(0, 9)
-    p0.award_exp(1000)
+    p0.award_exp(900000)
     p0.give_ds1_item(3, 47, -30001)
     p0.give_ds1_item(10, 47, -30001)
     reg = sol.create_region()

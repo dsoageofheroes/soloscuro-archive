@@ -540,24 +540,9 @@ extern void sol_dnd2e_class_apply_stats(entity_t *pc, int class) {
     if (pc->stats.cha   < class_mininum[class][5]) { pc->stats.cha   = class_mininum[class][5]; }
 }
 
+// return half attacks
 extern int16_t sol_dnd2e_class_attack_num(const entity_t *pc, const item_t *item) {
-    if (item->type == ITEM_MELEE) { // MELEE
-        for (int i = 0; i < 3; i++) {
-            switch (pc->class[i].class) {
-                case REAL_CLASS_FIGHTER:
-                case REAL_CLASS_GLADIATOR:
-                case REAL_CLASS_AIR_RANGER:
-                case REAL_CLASS_WATER_RANGER:
-                case REAL_CLASS_FIRE_RANGER:
-                case REAL_CLASS_EARTH_RANGER:
-                    if (pc->class[i].level < 7) { return 1; }
-                    if (pc->class[i].level < 13) { return 2; }
-                    return 3;
-                default:
-                    return 1;
-            }
-        }
-    } else if (item->type == ITEM_MISSILE_THROWN || item->type == ITEM_MISSILE_USE_AMMO) { // MISSILE
+    if (!item || item->type == ITEM_MELEE) { // MELEE
         for (int i = 0; i < 3; i++) {
             switch (pc->class[i].class) {
                 case REAL_CLASS_FIGHTER:
@@ -567,12 +552,26 @@ extern int16_t sol_dnd2e_class_attack_num(const entity_t *pc, const item_t *item
                 case REAL_CLASS_FIRE_RANGER:
                 case REAL_CLASS_EARTH_RANGER:
                     if (pc->class[i].level < 7) { return 2; }
-                    if (pc->class[i].level < 13) { return 4; }
-                    return 6;
-                default:
-                    return 1;
+                    if (pc->class[i].level < 13) { return 3; }
+                    return 4;
             }
         }
+        return 2;
+    } else if (item->type == ITEM_MISSILE_THROWN || item->type == ITEM_MISSILE_USE_AMMO) { // MISSILE
+        for (int i = 0; i < 3; i++) {
+            switch (pc->class[i].class) {
+                case REAL_CLASS_FIGHTER:
+                case REAL_CLASS_GLADIATOR:
+                case REAL_CLASS_AIR_RANGER:
+                case REAL_CLASS_WATER_RANGER:
+                case REAL_CLASS_FIRE_RANGER:
+                case REAL_CLASS_EARTH_RANGER:
+                    if (pc->class[i].level < 7) { return 4; }
+                    if (pc->class[i].level < 13) { return 6; }
+                    return 8;
+            }
+        }
+        return 2;
     }
     return 0;
 }

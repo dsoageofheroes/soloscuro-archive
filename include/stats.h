@@ -8,6 +8,8 @@ typedef struct combat_round_stats_s {
     int8_t initiative;
     int8_t attack_num;
     int8_t has_cast;
+    int8_t has_melee;
+    int8_t has_ranged;
 } combat_round_stats_t;
 
 typedef struct innate_attack_s {
