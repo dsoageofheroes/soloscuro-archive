@@ -443,3 +443,12 @@ extern entity_t* entity_create_fake(const int mapx, const int mapy) {
 extern int entity_is_fake(entity_t *entity) {
     return (entity->ds_id == 0);
 }
+
+extern int16_t entity_distance(const entity_t *source, const entity_t *dest) {
+    if (!source || !dest) { return -1; }
+
+    int dx = abs(source->mapx - dest->mapx);
+    int dy = abs(source->mapy - dest->mapy);
+
+    return dx > dy ? dx : dy;
+}

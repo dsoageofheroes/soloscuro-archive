@@ -30,5 +30,6 @@ int     dnd2e_roll_sub_roll();
 //Combat:
 extern int16_t      dnd2e_can_melee_again(entity_t *source, const int attack_num, const int round);
 extern sol_attack_t sol_dnd2e_melee_attack(entity_t *source, entity_t *target, const int round);
+extern sol_attack_t sol_dnd2e_range_attack(entity_t *source, entity_t *target, const int round);
 extern int16_t      dnd2e_dice_roll(const uint16_t num, const uint16_t sides);
 #endif

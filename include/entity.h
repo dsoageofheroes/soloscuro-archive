@@ -81,5 +81,6 @@ extern int       entity_take_wizard_slot(entity_t *entity, const int slot);
 extern int       entity_take_priest_slot(entity_t *entity, const int slot);
 extern int       entity_get_wizard_level(entity_t *entity);
 extern int       entity_get_priest_level(entity_t *entity);
+extern int16_t   entity_distance(const entity_t *source, const entity_t *dest);
 
 #endif

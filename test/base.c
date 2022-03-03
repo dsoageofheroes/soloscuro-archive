@@ -1,5 +1,8 @@
 #include <stdint.h>
 #include "region.h"
+#include "gpl.h"
+#include "gpl-manager.h"
+#include "sol-lua-manager.h"
 #include "port.h"
 #include "mouse.h"
 #include "sol_textbox.h"
@@ -97,6 +100,9 @@ extern void port_load_window(const window_t window) {
 }
 
 extern void port_init() {
+}
+
+extern void port_close() {
 }
 
 extern uint32_t port_sprite_geth(const uint16_t id) {

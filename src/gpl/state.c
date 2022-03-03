@@ -48,7 +48,6 @@ void gpl_state_cleanup() {
 
 static int set_while_callback(lua_State *l) {
     const char *val = luaL_checkstring(l, 2);
-    printf("------------------>%s\n", val);
     //lua_Integer state = luaL_checkinteger(l, 1);
     return 0;
 }

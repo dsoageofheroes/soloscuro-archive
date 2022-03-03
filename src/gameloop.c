@@ -87,4 +87,5 @@ extern void sol_game_loop() {
             sol_lua_run_function("idle");
         }
     }
+    port_close();
 }

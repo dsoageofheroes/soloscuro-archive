@@ -346,7 +346,7 @@ void port_close() {
 }
 
 static void cleanup() {
-    port_close();
+    //port_close();
 }
 
 extern void port_start() {
@@ -355,7 +355,6 @@ extern void port_start() {
 
     sol_game_loop();
 
-    cleanup();
     replay_cleanup();
 }
 
@@ -365,7 +364,6 @@ static void init(int args, char *argv[]) {
     for (int i = 0; i < args; i++) {
         if (!strcmp(argv[i], "--lua") && i < (args - 1)) {
             sol_lua_load(argv[i + 1]);
-            cleanup();
             replay_cleanup();
             exit(0);
         }
@@ -470,7 +468,6 @@ int main(int argc, char *argv[]) {
 
     sol_game_loop();
 
-    cleanup();
     replay_cleanup();
 
     return 0;

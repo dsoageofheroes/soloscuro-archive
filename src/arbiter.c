@@ -94,7 +94,21 @@ extern int sol_arbiter_enter_combat(sol_region_t *reg, const uint16_t x, const u
 //            level 10+: +4
 // Monster data should be in the entity.
 // For Now, 1d6, always hits. Need to add thac0 calculation.
-extern sol_attack_t sol_arbiter_enemy_melee_attack(entity_t *source, entity_t *target, int round) {
+extern sol_attack_t sol_arbiter_entity_attack(entity_t *source, entity_t *target, int round, enum entity_action_e action) {
+    static sol_attack_t error = { -2, 0 };
+    combat_region_t *cr = sol_arbiter_combat_region(sol_region_manager_get_current());
+     
     // For now just use local until MMO is up.
-    return sol_dnd2e_melee_attack(source, target, round);
+    if (sol_combat_get_current(cr) != source) {
+        return error;//-2 means not your turn.
+    }
+
+    switch (action) {
+        case EA_MELEE:   return sol_dnd2e_melee_attack(source, target, round);
+        case EA_MISSILE: return sol_dnd2e_range_attack(source, target, round);
+        default:
+            warn("unknown action %d\n", action);
+            error.damage = -2;
+            return error;
+    }
 }

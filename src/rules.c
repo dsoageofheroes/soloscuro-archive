@@ -445,64 +445,60 @@ static void populate_melee_sequence(entity_t *source, uint8_t *seq, const int ro
     seq[pos] = SLOT_END;
 }
 
-static int get_next_melee_attack(entity_t *source, const int attack_num, const int round) {
-    int current_count = 0;
-    int next_max = 0;
-    int to_add = 0;
-    static uint8_t attack_sequence[16];
+static void populate_missile_sequence(entity_t *source, uint8_t *seq, const int round) {
+    int      pos         = 0;
+    int      amt         = 0;
+    int16_t  class_extra = 0;
+    item_t *launcher = source->inv ? source->inv + SLOT_MISSILE : NULL;
+    item_t *ammo = source->inv ? source->inv + SLOT_AMMO : NULL;
+
+    if (!launcher || !launcher->name || !launcher->name[0]) { goto missile_seq_end; }
+    amt = sol_dnd2e_class_attack_num(source, launcher) / 2;
+    amt += ((round % 2 == 1) && (sol_dnd2e_class_attack_num(source, launcher) % 2 == 1)) ? 1 : 0;
+    for (int i = 0; i < amt; i++) { seq[pos++] = SLOT_MISSILE; }
+
+missile_seq_end:
+    seq[pos] = SLOT_END;
+}
+
+static int get_next_attack(entity_t *source, const int attack_num, const int round, const uint16_t type) {
+    int             current_count = 0;
+    int             next_max = 0;
+    int             to_add = 0;
+    static uint8_t  attack_sequence[16];
+    static uint16_t attack_type;
 
     if (attack_num == 0) {
-        populate_melee_sequence(source, attack_sequence, round);
+        switch (type) {
+            case EA_MELEE:
+                populate_melee_sequence(source, attack_sequence, round); 
+                attack_type = type;
+                break;
+            case EA_MISSILE:
+                populate_missile_sequence(source, attack_sequence, round); 
+                attack_type = type;
+                break;
+        }
     }
+
+    if (attack_type != type) { return -1; }
 
     return attack_sequence[attack_num];
-
-/*
-    next_max += (source->inv && source->inv[SLOT_HAND0].ds_id)
-        ? dnd2e_get_attack_num(source, source->inv + SLOT_HAND0)
-        : source->stats.attacks[0].number;
-    if ((round % 2) == 0) { next_max += 1; }
-    next_max /= 2;
-    if (attack_num >= current_count && attack_num < next_max) {
-        return 0;
-    }
-
-    current_count = next_max;
-    to_add += (source->inv && source->inv[SLOT_HAND1].ds_id)
-        ? dnd2e_get_attack_num(source, source->inv + SLOT_HAND1)
-        : source->stats.attacks[1].number;
-    if ((round % 2) == 0) { to_add += 1; }
-    next_max += to_add / 2;
-    if (attack_num >= current_count && attack_num < next_max) {
-        return 1;
-    }
-
-    current_count = next_max;
-    to_add += source->stats.attacks[2].number;
-    if ((round % 2) == 0) { to_add += 1; }
-    next_max += to_add / 2;
-    if (attack_num >= current_count && attack_num < next_max) {
-        return 2;
-    }
-
-    return -1;
-    */
 }
 
 extern int16_t dnd2e_can_melee_again(entity_t *source, const int attack_num, const int round) {
-    return get_next_melee_attack(source, attack_num, round) != -1;
+    return get_next_attack(source, attack_num, round, EA_MELEE) != -1;
 }
 
-// returns the amt of damage done. 0 means miss/absorbed, negative means attack is not legit, or out of round.
-extern sol_attack_t sol_dnd2e_melee_attack(entity_t *source, entity_t *target, const int round) {
+static sol_attack_t sol_dnd2e_attack(entity_t *source, entity_t *target, const int round, const int type) {
     static sol_attack_t invalid_attack = { -1, 0 };
     sol_attack_t attack = {0, 0};
-    int16_t thac0 = 20;
+    int16_t thac0 = 20, attack_slot, damage_source_slot;
     item_t *item;
 
     if (!source || !target || source->stats.combat.attack_num < 0) { return invalid_attack; }
 
-    int attack_slot = get_next_melee_attack(source, source->stats.combat.attack_num, round);
+    attack_slot = get_next_attack(source, source->stats.combat.attack_num, round, type);
     //printf("attack_slot = %d\n", attack_slot);
     if (attack_slot == SLOT_END) { return invalid_attack; }
     source->stats.combat.attack_num++;
@@ -514,14 +510,36 @@ extern sol_attack_t sol_dnd2e_melee_attack(entity_t *source, entity_t *target, c
         return attack; // miss!
     }
 
-    item = sol_item_get((inventory_t*) source->inv, attack_slot);
+    damage_source_slot = (attack_slot == SLOT_MISSILE) ? SLOT_AMMO : attack_slot;
+    item = sol_item_get((inventory_t*) source->inv, damage_source_slot);
     if (item) {
         //printf("ITEM: %s\n", item->name);
         //printf("damage mod = %d\n", sol_dnd2e_melee_damage_mod(&source->stats));
-        attack.damage = roll_damage_weapon(item) + sol_dnd2e_melee_damage_mod(&source->stats);
+        attack.damage = roll_damage_weapon(item);
+        attack.damage += (attack_slot == SLOT_MISSILE)
+                ? sol_dnd2e_range_damage_mod(&source->stats)
+                : sol_dnd2e_melee_damage_mod(&source->stats);
     } else {
         attack.damage = roll_damage_innate(source->stats.attacks + (attack_slot - SLOT_INNATE0));
     }
 
     return attack;
+}
+
+extern sol_attack_t sol_dnd2e_range_attack(entity_t *source, entity_t *target, const int round) {
+    static sol_attack_t error = { -2, 0 };
+    item_t *launcher = source->inv ? source->inv + SLOT_MISSILE : NULL;
+    item_t *ammo = source->inv ? source->inv + SLOT_AMMO : NULL;
+
+    if (!launcher || !ammo || !launcher->name || !ammo->name) { return error; }
+    if (!launcher->name[0] || !ammo->name[0]) { return error;}
+    if (launcher->attack.range <= 1) { return error; }
+    if (launcher->attack.range < entity_distance(source, target)) { return error; }
+
+    return sol_dnd2e_attack(source, target, round, EA_MISSILE);
+}
+
+// returns the amt of damage done. 0 means miss/absorbed, negative means attack is not legit, or out of round.
+extern sol_attack_t sol_dnd2e_melee_attack(entity_t *source, entity_t *target, const int round) {
+    return sol_dnd2e_attack(source, target, round, EA_MELEE);
 }

@@ -107,12 +107,6 @@ int item_allowed_in_slot(item_t *item, const int slot) {
     return 0;
 }
 
-extern void item_load_from(item_t *item, const char *data) {
-    memcpy(item, data, sizeof(item_t));
-    item->sprite.data = NULL;
-    port_load_item(item);
-}
-
 extern item_t* item_dup(item_t *item) {
     item_t *ret = malloc(sizeof(item_t));
     memcpy(ret, item, sizeof(item_t));

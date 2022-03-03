@@ -418,7 +418,9 @@ extern void sol_combat_add_attack_animation(sol_region_t *reg, dude_t *dude, ent
     sol_attack_t     attack;
     combat_region_t *cr = sol_arbiter_combat_region(reg);
 
-    attack = sol_arbiter_enemy_melee_attack(dude, target, cr->round.num);
+    attack = sol_arbiter_entity_attack(dude, target, cr->round.num, action);
+
+    if (attack.damage == -2) { return; } // not your move!
 
     if (attack.damage <= -1) {
         dude->stats.combat.move = 0;
