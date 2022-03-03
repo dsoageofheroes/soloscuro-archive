@@ -452,6 +452,8 @@ static void region_animation_last_check(sol_region_t *reg, entity_animation_node
                 if (!entity_list_remove_entity(reg->entities, target)) {
                     error("Unable to remove entity from region!\n");
                 }
+                entity_free(target);
+                target = NULL;
             }
             break;
         default:
