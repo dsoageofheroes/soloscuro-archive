@@ -299,12 +299,6 @@ void port_remove_entity(entity_t *entity) {
     }
 }
 
-static void entity_instant_move(entity_t *entity) {
-    animate_sprite_node_t *asn = (animate_sprite_node_t*) entity->sprite.data;
-    asn->anim->x = asn->anim->destx;
-    asn->anim->y = asn->anim->desty;
-}
-
 void sol_map_place_entity(entity_t *entity) {
     animate_sprite_t *as = &(entity->anim);
     const float zoom = settings_zoom();
@@ -364,25 +358,6 @@ extern void port_free_sprite(sprite_info_t *spr) {
     if (spr->data) {
         //animate_sprite_node_free(spr->data);
         spr->data = NULL;
-    }
-}
-
-void sol_combat_enter_combat() {
-    // Right now we need to migrate player to combat, we will see if that is better.
-    //player_remove_animation();
-    // Need to disperse players (and setup combat items.)
-    // bring up combat status.
-    //window_push_window(main_get_rend(), &combat_status_window, 295, 5);
-    dude_t *main_player = sol_player_get_active();
-    for (int i = 0; i < 4; i++) {
-        dude_t *next_player = sol_player_get(i);
-        if (next_player && next_player != sol_player_get_active() && next_player->name) { // next_player exists.
-            next_player->mapx = main_player->mapx;
-            next_player->mapy = main_player->mapy;
-            sol_region_move_to_nearest(sol_region_manager_get_current(), next_player);
-            port_update_entity(next_player, 0, 0);
-            entity_instant_move(next_player);
-        }
     }
 }
 

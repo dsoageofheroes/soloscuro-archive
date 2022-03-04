@@ -442,6 +442,7 @@ static void populate_melee_sequence(entity_t *source, uint8_t *seq, const int ro
     } else if (item->attack.number > 0) {
         seq[pos++] = SLOT_HAND1;
     }
+
     seq[pos] = SLOT_END;
 }
 

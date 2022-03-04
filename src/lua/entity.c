@@ -38,6 +38,14 @@ static int in_combat(lua_State *l) {
     return 1;
 }
 
+static int is_combat_turn(lua_State *l) {
+    dude_t *dude = (dude_t*) lua_touserdata(l, lua_upvalueindex(1));
+    sol_region_t *reg = sol_region_manager_get_region_with_entity(dude);
+
+    lua_pushboolean(l, sol_combat_get_current(sol_arbiter_combat_region(reg)) == dude);
+    return 1;
+}
+
 static int move_entity(lua_State *l, const int xdiff, const int ydiff) {
     dude_t *dude = (dude_t*) lua_touserdata(l, lua_upvalueindex(1));
     lua_pushboolean(l, entity_attempt_move(dude, xdiff, ydiff, 1));
@@ -100,6 +108,8 @@ extern int sol_lua_entity_function(entity_t *entity, const char *func, lua_State
         return push_entity_function(l, entity, entity_cast);
     } else if (!strcmp(func, "in_combat")) {
         return push_entity_function(l, entity, in_combat);
+    } else if (!strcmp(func, "is_combat_turn")) {
+        return push_entity_function(l, entity, is_combat_turn);
     } else if (!strcmp(func, "move_left")) {
         return push_entity_function(l, entity, move_left);
     } else if (!strcmp(func, "move_right")) {

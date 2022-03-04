@@ -1,11 +1,14 @@
 // The arbiter decides what hits and moves.
 // The idea is the network version will query the server, while the local version does the calucaltions.
 #include "arbiter.h"
+#include "port.h"
+#include "map.h"
 #include "region-manager.h"
 #include "combat.h"
 #include "combat-region.h"
 #include "entity-list.h"
 #include "gpl.h"
+#include "player.h"
 #include "rules.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -54,7 +57,7 @@ extern void sol_arbiter_next_round(combat_region_t* cr) {
 
 extern int sol_arbiter_enter_combat(sol_region_t *reg, const uint16_t x, const uint16_t y) {
     const int dist = 10; // distance of the sphere;
-    dude_t *enemy = NULL;
+    dude_t *enemy = NULL, *main_player;
     combat_region_t *cr;
 
     // validate args and confirm we can enter combat.
@@ -67,6 +70,20 @@ extern int sol_arbiter_enter_combat(sol_region_t *reg, const uint16_t x, const u
     cr = combat_regions + reg->map_id;
 
     sol_combat_region_init(cr);
+    main_player = sol_player_get_active();
+
+    for (int i = 0; i < 4; i++) {
+        dude_t *next_player = sol_player_get(i);
+        if (next_player && next_player != sol_player_get_active() && next_player->name) { // next_player exists.
+            //printf("Adding %s (%d, %d)\n", next_player->name, next_player->mapx, next_player->mapy);
+            // force a load of player's sprites.
+            sol_player_get_sprite(i);
+            sol_region_move_to_nearest(sol_region_manager_get_current(), next_player);
+            sol_region_add_entity(sol_region_manager_get_current(), next_player);
+            sol_map_place_entity(next_player);
+        }
+    }
+
     entity_list_for_each(reg->entities, enemy) {
         if (enemy->name && get_dist(enemy, x, y) <= dist) {
             entity_list_add(&(cr->combatants), enemy);

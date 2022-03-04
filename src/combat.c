@@ -39,8 +39,6 @@ static combat_entry_t *combat_order = NULL;
 static combat_entry_t *current_turn = NULL;
 static combat_entry_t *defeated = NULL;
 
-static int is_combat_over(sol_region_t *reg);
-
 void sol_combat_free(combat_region_t *cr) {
     entity_list_free(&(cr->combatants));
 }
@@ -261,6 +259,27 @@ static void generate_monster_move_attack_closest(sol_region_t *reg, entity_t *mo
     printf("NEED TO move and guard!\n");
 }
 
+extern void sol_combat_enter_combat() {
+    // Right now we need to migrate player to combat, we will see if that is better.
+    // Need to disperse players (and setup combat items.)
+    /*
+    dude_t *main_player = sol_player_get_active();
+    for (int i = 0; i < 4; i++) {
+        dude_t *next_player = sol_player_get(i);
+        if (next_player && next_player != sol_player_get_active() && next_player->name) { // next_player exists.
+            next_player->mapx = main_player->mapx;
+            next_player->mapy = main_player->mapy;
+            sol_region_move_to_nearest(sol_region_manager_get_current(), next_player);
+            printf("Adding %s\n", next_player->name);
+            sol_region_add_entity(sol_region_manager_get_current(), next_player);
+            entity_instant_move(next_player);
+            port_update_entity(next_player, 0, 0);
+        }
+    }
+    */
+}
+
+
 static void apply_action_animation(const enum entity_action_e action) {
     int16_t xdiff = 0, ydiff = 0;
 
@@ -350,39 +369,6 @@ static void next_round() {
     }
 
     current_turn = combat_order;
-}
-
-static int is_combat_over(sol_region_t *reg) {
-    combat_entry_t *rover = combat_order;
-    uint8_t forces[10]; // represent each opposing force.
-    uint8_t num_types = 0;
-    memset(forces, 0x0, sizeof(forces));
-
-    while (rover) {
-        //printf("%s: alliegiance %d, hp: %d\n", rover->entity->name, rover->entity->allegiance, rover->entity->stats.hp);
-        if (rover->entity->allegiance < 10
-                && rover->entity->combat_status != COMBAT_STATUS_DYING) {
-            forces[rover->entity->allegiance]++;
-        }
-        rover = rover->next;
-    }
-
-    for (int i = 0; i < 10; i++) {
-        num_types += (forces[i] > 0) ? 1 : 0;
-    }
-
-    return num_types < 2;
-}
-
-// decide if the current turn is over and ready next.
-static void check_current_turn() {
-    if (!entity_animation_has_more()) {
-        if (!dnd2e_can_melee_again(current_turn->entity, current_turn->melee_actions, current_turn->round)) {
-            end_turn();
-            return;
-        }
-        monster_step = -1;
-    }
 }
 
 static entity_action_t clear = { NULL, NULL, 0, EA_NONE };
@@ -488,6 +474,7 @@ extern void sol_combat_update(sol_region_t *reg) {
         sol_arbiter_next_round(cr);
         combatant = sol_combat_get_current(cr);
     }
+    //printf("combatant = %s: %d\n", combatant->name, combatant->stats.num_attacks);
 
     if (combatant->stats.combat.move <= 0) {
         sol_combat_next_combatant(cr);
