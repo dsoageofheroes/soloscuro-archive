@@ -111,6 +111,21 @@ const char *saves[] = {
     "NONE", "Poison", "Wands", "Petrification", "Breath", "Spells", "Paralyze", "Death", "Magic"
 };
 
+static int find_level(int32_t power[MAX_LEVELS][MAX_POWERS], const int id) {
+    for (int i = 0; i < MAX_LEVELS; i++) {
+        for (int j = 0; j < MAX_POWERS; j++) {
+            printf("power[%d][%d] = %d, looking for %d\n", i, j, power[i][j], id);
+            if (power[i][j] == id) { return i; }
+        }
+    }
+    exit(1);
+    return -1;
+}
+
+static int find_wizard_level(const int id) { return find_level(wizard_powers, id); }
+static int find_priest_level(const int id) { return find_level(priest_powers, id); }
+static int find_psionic_level(const int id) { return find_level(psionic_powers, id); }
+
 static char save_buf[256];
 static char* get_save() {
     if (ds1pw.damage.savable != ds2pw.info.damage.savable || ds2pw.info.damage.savable != dsopw.info.damage.savable
@@ -882,9 +897,11 @@ static void generate_activate(power_entry_t pw, char *name, FILE *file) {
     
     if (psi >= 0) {
     } else if (wiz >= 0) {
-        fprintf(file, "    return entity_has_wizard_slot(source->entity, power_level);\n");
+        fprintf(file, "    (void) power_level; // avoid unused error.\n");
+        fprintf(file, "    return entity_has_wizard_slot(source->entity, %d);\n", get_level());
     } else if (pri >= 0) {
-        fprintf(file, "    return entity_has_priest_slot(source->entity, power_level);\n");
+        fprintf(file, "    (void) power_level; // avoid unused error.\n");
+        fprintf(file, "    return entity_has_priest_slot(source->entity, %d);\n", get_level());
     } else if (psi >= 0) {
         fprintf(file, "    NEED TO DO PSI CALC!\n");
     } else if (innate >= 0) {
@@ -902,9 +919,11 @@ static void generate_pay(power_entry_t pw, char *name, FILE *file) {
     
     if (psi >= 0) {
     } else if (wiz >= 0) {
-        fprintf(file, "    return entity_take_wizard_slot(source->entity, power_level);\n");
+        fprintf(file, "    (void) power_level; // avoid unused error.\n");
+        fprintf(file, "    return entity_take_wizard_slot(source->entity, %d);\n", get_level());
     } else if (pri >= 0) {
-        fprintf(file, "    return entity_take_priest_slot(source->entity, power_level);\n");
+        fprintf(file, "    (void) power_level; // avoid unused error.\n");
+        fprintf(file, "    return entity_take_priest_slot(source->entity, %d);\n", get_level());
     } else if (psi >= 0) {
         fprintf(file, "    NEED TO DO PSI CALC!\n");
     } else if (innate >= 0) {

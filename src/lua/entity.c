@@ -20,9 +20,8 @@ static int entity_cast(lua_State *l) {
         return 0;
     }
 
-    sol_combat_activate_power(pw, dude, target, target->mapx, target->mapy);
-
-    return 0;
+    lua_pushboolean(l, sol_combat_activate_power(pw, dude, target, target->mapx, target->mapy));
+    return 1;
 }
 
 static int push_entity_function(lua_State *l, entity_t *entity, int (*func)(lua_State *l)) {

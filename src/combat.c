@@ -505,9 +505,15 @@ extern uint32_t combat_add(combat_region_t *rc, entity_t *entity) {
 extern int sol_combat_activate_power(power_t *pw, entity_t *source, entity_t *target, const int32_t x, const int32_t y) {
     if (!pw || !source) { return 0; }
     sol_region_t *reg = sol_region_manager_get_current();
+    power_instance_t pi;
     if (!reg) { error ("current region is null!\n"); }
 
     powers_load(pw);
+
+    memset(&pi, 0x0, sizeof(power_instance_t));
+    pi.entity = source;
+    if (!pw->actions.pay(&pi, pw->level)) { return 0; }
+    // We are now committed to make this work.
 
     if (!target) { // time to make a fake target for the power.
         target = entity_create_fake(x, y);

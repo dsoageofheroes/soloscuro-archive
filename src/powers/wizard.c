@@ -30,7 +30,6 @@ extern void wizard_add_power(power_t *pw, const int idx) {
     if (index < 0 || index > 9) { return; }
     if (!wizard_spells[index]) { wizard_spells[index] = power_list_create(); }
     if (!pw->description) {
-    printf("ADD POWER!(%s)\n", pw->name);
         power_free(pw);
         return;
     }

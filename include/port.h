@@ -2,6 +2,9 @@
  * These are the functions needed to be implmeneted for porting to different systems.
  * This include both OS specific call and callbacks.
  */
+
+// TODO FIXME PLEASE SUPER PLEASE
+// O man does this need to be cleaned up, so much dead code and stale systems.
 #ifndef PORT_H
 #define PORT_H
 

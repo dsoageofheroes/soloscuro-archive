@@ -58,6 +58,12 @@ static void do_level_up(entity_t *pc, const uint32_t class_idx, const uint32_t c
     pc->stats.hp += hp;
     pc->stats.high_hp += hp;
     pc->class[class_idx].level++;
+
+    //TODO: add level up spell slots correctly
+    if (pc->class[class_idx].class == REAL_CLASS_PRESERVER) {
+        pc->stats.wizard[1].amt++;
+        pc->stats.wizard[1].max++;
+    }
     set_psp(pc);
 }
 

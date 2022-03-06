@@ -28,6 +28,10 @@ typedef struct saving_throws_s {
     uint8_t spell;
 } saving_throws_t;
 
+typedef struct sol_slots_s {
+    uint16_t amt, max;
+} sol_slots_t;
+
 typedef struct stats_s {
     uint8_t str;
     uint8_t dex;
@@ -42,6 +46,8 @@ typedef struct stats_s {
     int8_t base_ac; // before applying any modifiers.
     int8_t base_move;
     int8_t base_thac0;
+    sol_slots_t wizard[10];
+    sol_slots_t priest[10];
     combat_round_stats_t combat;
     uint8_t magic_resistance;
     uint32_t special_defense;

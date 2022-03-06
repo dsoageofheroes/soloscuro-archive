@@ -401,27 +401,31 @@ extern int entity_attempt_move(dude_t *dude, const int xdiff, const int ydiff, c
     return 1;
 }
 
+extern int entity_has_wizard_slot(entity_t *entity, const int level) {
+    if (!entity || level < 0 || level > 10) { return 0; }
+    return entity->stats.wizard[level].amt;
+}
+
+extern int entity_has_priest_slot(entity_t *entity, const int level) {
+    if (!entity || level < 0 || level > 10) { return 0; }
+    return entity->stats.priest[level].amt;
+}
+
+extern int entity_take_wizard_slot(entity_t *entity, const int level) {
+    if (!entity || level < 0 || level > 10) { return 0; }
+    if (entity->stats.wizard[level].amt < 1) { return 0; }
+    entity->stats.wizard[level].amt--;
+    return 1;
+}
+
+extern int entity_take_priest_slot(entity_t *entity, const int level) {
+    if (!entity || level < 0 || level > 10) { return 0; }
+    if (entity->stats.priest[level].amt < 1) { return 0; }
+    entity->stats.wizard[level].amt--;
+    return 1;
+}
+
 // TODO: IMPELMENT!!!!
-extern int entity_has_wizard_slot(entity_t *entity, const int slot) {
-    if (!entity) { return 0; }
-    return 0;
-}
-
-extern int entity_has_priest_slot(entity_t *entity, const int slot) {
-    if (!entity) { return 0; }
-    return 0;
-}
-
-extern int entity_take_wizard_slot(entity_t *entity, const int slot) {
-    if (!entity) { return 0; }
-    return 0;
-}
-
-extern int entity_take_priest_slot(entity_t *entity, const int slot) {
-    if (!entity) { return 0; }
-    return 0;
-}
-
 extern int entity_get_wizard_level(entity_t *entity) {
     if (!entity) { return 0; }
     return 1;

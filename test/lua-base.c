@@ -11,6 +11,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "sol-lua-manager.h"
+#include "sol-lua-settings.h"
 #include "settings.h"
 
 #define script(a) const char *lua_script = "test/lua/combat/"#a".lua";
@@ -20,7 +21,9 @@ void setUp() {
     //gff_init();
     //gff_load_directory("ds1");
     sol_lua_load_preload("lua/settings.lua");
-    ssi_item_init();
+    powers_init();
+    gpl_init();
+    sol_lua_register_globals();
 }
 
 void tearDown() {
