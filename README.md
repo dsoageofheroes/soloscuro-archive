@@ -16,7 +16,11 @@ Goals: To create an engine for Dark Sun 1, 2, and Crimson Sands.
        $ make
    ```
    This should pull the libadlmidi library and compile everything.
-3) Put your darksun1 gffs into a directory ds1/ inside your repo. You can make aa symlink as well.
+3) Put your darksun1 gffs into a directory ds1/ inside your repo. You can make a symlink as well.
+4) You can run test:
+   ```
+       $ make test
+   ```
 4) Right now the engine does not have a solid entry point. You can run a test:
 
    ```$ LD_LIBRARY_PATH=lib/ build/mdark --lua lua/test/main.lua```

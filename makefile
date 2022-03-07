@@ -7,13 +7,13 @@ COVFLAGS  = -g ${CFLAGS} -O0 -fprofile-arcs -ftest-coverage
 
 .PHONY: clean test all builds test generate
 
-all: builds generate
+all: builds
 
-test: builds generate
+test: builds
 	#cd build ; ctest --verbose
 	cd build ; ctest
 
-builds: build/libadlmidi/libADLMIDI.so build/Makefile
+builds: build/libadlmidi/libADLMIDI.so generate build/Makefile
 	cd build ; make -j4
 
 generate: src/powers/wizard
