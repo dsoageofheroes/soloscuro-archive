@@ -1169,7 +1169,9 @@ static void generate_setup(power_entry_t pw, char *name, FILE *file) {
 
 static void generate_tables() {
     char buf[128];
-    FILE *file = fopen ("powers-generator.c", "wb");
+    snprintf(buf, 127, "%s../powers-generator.c", wiz_path);
+    //FILE *file = fopen ("powers-generator.c", "wb");
+    FILE *file = fopen (buf, "wb");
     if (!file) { return; }
 
     fprintf(file, "// This file is generated.\n");

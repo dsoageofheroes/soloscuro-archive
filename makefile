@@ -5,16 +5,26 @@ LIB_EXT = so
 CFLAGS  = -g -I include/ src/ -I ext/ -L./ -Werror -Wall -O2 -DDEBUG=1 -fPIC
 COVFLAGS  = -g ${CFLAGS} -O0 -fprofile-arcs -ftest-coverage
 
-.PHONY: clean test all builds test
+.PHONY: clean test all builds test generate
 
-all: builds
+all: builds generate
 
-test: builds
+test: builds generate
 	#cd build ; ctest --verbose
 	cd build ; ctest
 
 builds: build/libadlmidi/libADLMIDI.so build/Makefile
 	cd build ; make -j4
+
+generate: src/powers/wizard
+
+src/powers/wizard:
+	cd code-generation/powers; gcc -o extract extract.c
+	mkdir -p src/powers/wizard
+	mkdir -p src/powers/priest
+	mkdir -p src/powers/psionic
+	mkdir -p src/powers/innate
+	cd code-generation/powers; ./extract ../../src/powers/wizard/ ../../src/powers/priest/ ../../src/powers/psionic/ ../../src/powers/innate/
 
 clean:
 	rm -rf build
