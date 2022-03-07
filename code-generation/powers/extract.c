@@ -12,7 +12,10 @@ static int32_t psionic_powers[MAX_LEVELS][MAX_POWERS];
 static int32_t innate_powers[MAX_POWERS];
 
 static char power_names[1024][64];
-static const char *base_path = "powers";
+static const char *wiz_path = "powers";
+static const char *psi_path = "powers";
+static const char *pri_path = "powers";
+static const char *innate_path = "powers";
 static int debug = 0;
 
 /* DS1 Notes:
@@ -692,7 +695,7 @@ int main(int argc, char *argv[]) {
     memset(innate_powers, -1, sizeof(int32_t) * MAX_POWERS);
 
     if (!ds1_file) {
-        fprintf(stderr, "Unable to open dsun2.dat, please provide.\n");
+        fprintf(stderr, "Unable to open dsun1.dat, please provide.\n");
         return 0;
     }
 
@@ -711,11 +714,14 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    if (argc > 1) {
-        base_path = argv[1];
+    if (argc > 4) {
+        wiz_path = argv[1];
+        pri_path = argv[2];
+        psi_path = argv[3];
+        innate_path = argv[4];
     }
     debug = (argc > 2);
-    printf("usage: %s <path to output> <print csv to screen>\n", argv[0]);
+    printf("usage: %s <wizard dir> <priest dir> <psionic dir> <innate dir>\n", argv[0]);
 
     //power_info_t *ds1powers;
     fseek(ds1_file, 0L, SEEK_END);
@@ -739,7 +745,7 @@ int main(int argc, char *argv[]) {
             }
             fread(&ds2pw, 1, sizeof(power_entry_t), ds2_file);
             ds1_pos = ds1_has_power(dsopw.name);
-            if (ds1_pos) {
+            if (ds1_pos && ds1_pos < ds1_file_size / sizeof(power_info_t)) {
                 ds1pw = ds1powers[ds1_pos - 1];
             } else {
                 ds1pw = dsopw.info;
@@ -752,6 +758,8 @@ int main(int argc, char *argv[]) {
             ds1pw = dsopw.info;
             ds1_pos = 9999;
         }
+        //TODO FIXME: What is wrong with 327?
+        if (dso_pos == 327) { continue; }
         generate_power_csv();
         generate_power(dsopw);
         add_power();
@@ -1232,7 +1240,19 @@ static void generate_power(power_entry_t pw) {
     name[pos] = '\0';
 
     //snprintf(path, 127, "powers/%s-%s.c", type, filename);
-    snprintf(path, 127, "%s/%s-%s.c", base_path, type, filename);
+    if (psi >= 0) {
+        snprintf(path, 127, "%s/%s.c", psi_path, filename);
+    } else if (wiz >= 0) {
+        snprintf(path, 127, "%s/%s.c", wiz_path, filename);
+    } else if (pri >= 0) {
+        snprintf(path, 127, "%s/%s.c", pri_path, filename);
+    } else if (innate >= 0) {
+        snprintf(path, 127, "%s/%s.c", innate_path, filename);
+    } else {
+        fprintf(stderr, "unkown type!\n");
+        exit(1);
+    }
+    //snprintf(path, 127, "%s/%s-%s.c", base_path, type, filename);
     file = fopen(path, "wb+");
 
     if (!file) {

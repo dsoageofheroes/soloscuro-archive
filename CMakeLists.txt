@@ -9,6 +9,7 @@ add_subdirectory(ext/)
 set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
 set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
 
+add_subdirectory(code-generation/powers/)
 add_subdirectory(src/)
 add_subdirectory(sdl/)
 add_subdirectory(unity/)
