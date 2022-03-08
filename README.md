@@ -31,6 +31,10 @@ Goals: To create an engine for Dark Sun 1, 2, and Crimson Sands.
 
 ### Windows dev setup with msys2:
 
+You should be able to follow the instructions for gcc with vscode: https://code.visualstudio.com/docs/cpp/config-mingw
+
+Below are the old instructions...
+
 Note: The windows build is currently broken. Please install Bash on Ubuntu on Windows and use the Linux install.
 
 1. Install msys2 (http://msys2.org) download the installer and run (must be 64-bit.)
