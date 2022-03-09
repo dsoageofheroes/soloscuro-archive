@@ -34,7 +34,7 @@ void tearDown() {
 
 void the_test(void) {
     printf("Running '%s'\n", lua_script);
-    if (!sol_lua_load(lua_script)) { // lua_script is defined in the test
+    if (sol_lua_load(lua_script)) { // lua_script is defined in the test
         TEST_ASSERT_MESSAGE(0, "Unable to load lua\n");
     }
     sol_test_info_t sti = sol_get_lua_test();

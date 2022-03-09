@@ -21,7 +21,7 @@ extern lua_State* sol_lua_get_state() {
 
 extern int sol_lua_load(const char *filename) {
     if (sol_lua_run(filename, "init")) { return 1; }
-    return lua_toboolean(lua_state, -1);
+    return 0;
 }
 
 // TODO: Refactor?

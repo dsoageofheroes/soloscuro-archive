@@ -75,6 +75,7 @@ extern void      entity_load_from_object(entity_t *entity, const char *data);
 extern uint32_t  entity_get_total_exp(entity_t *entity);
 extern int       entity_attempt_move(dude_t *dude, const int xdiff, const int ydiff, const int speed);
 extern int       entity_has_class(const entity_t *entity, const uint16_t class);
+extern int       entity_get_level(entity_t *entity, const int class);
 extern int       entity_has_wizard_slot(entity_t *entity, const int slot);
 extern int       entity_has_priest_slot(entity_t *entity, const int slot);
 extern int       entity_take_wizard_slot(entity_t *entity, const int slot);

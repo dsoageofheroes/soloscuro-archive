@@ -425,15 +425,41 @@ extern int entity_take_priest_slot(entity_t *entity, const int level) {
     return 1;
 }
 
-// TODO: IMPELMENT!!!!
+extern int entity_get_level(entity_t *entity, const int class) {
+    if (!entity || class < 0 || class > 20) { return 0; }
+    if (entity->class[0].class == class) { return entity->class[0].level; }
+    if (entity->class[1].class == class) { return entity->class[1].level; }
+    if (entity->class[2].class == class) { return entity->class[2].level; }
+    return 0;
+}
+
 extern int entity_get_wizard_level(entity_t *entity) {
-    if (!entity) { return 0; }
-    return 1;
+    int max = 0, lvl;
+    lvl = entity_get_level(entity, REAL_CLASS_PRESERVER); max = lvl > max ? lvl : max;
+    lvl = entity_get_level(entity, REAL_CLASS_DEFILER); max = lvl > max ? lvl : max;
+    return max;
 }
 
 extern int entity_get_priest_level(entity_t *entity) {
-    if (!entity) { return 0; }
-    return 1;
+    int max = 0, lvl;
+    lvl = entity_has_class(entity, REAL_CLASS_AIR_DRUID); max = lvl > max ? lvl : max;
+    lvl = entity_has_class(entity, REAL_CLASS_EARTH_DRUID); max = lvl > max ? lvl : max;
+    lvl = entity_has_class(entity, REAL_CLASS_FIRE_DRUID); max = lvl > max ? lvl : max;
+    lvl = entity_has_class(entity, REAL_CLASS_WATER_DRUID); max = lvl > max ? lvl : max;
+    lvl = entity_has_class(entity, REAL_CLASS_AIR_CLERIC); max = lvl > max ? lvl : max;
+    lvl = entity_has_class(entity, REAL_CLASS_EARTH_CLERIC); max = lvl > max ? lvl : max;
+    lvl = entity_has_class(entity, REAL_CLASS_FIRE_CLERIC); max = lvl > max ? lvl : max;
+    lvl = entity_has_class(entity, REAL_CLASS_WATER_CLERIC); max = lvl > max ? lvl : max;
+    return max;
+}
+
+extern int entity_get_ranger_level(entity_t *entity) {
+    int max = 0, lvl;
+    lvl = entity_has_class(entity, REAL_CLASS_AIR_RANGER); max = lvl > max ? lvl : max;
+    lvl = entity_has_class(entity, REAL_CLASS_EARTH_RANGER); max = lvl > max ? lvl : max;
+    lvl = entity_has_class(entity, REAL_CLASS_FIRE_RANGER); max = lvl > max ? lvl : max;
+    lvl = entity_has_class(entity, REAL_CLASS_WATER_RANGER); max = lvl > max ? lvl : max;
+    return max;
 }
 
 extern entity_t* entity_create_fake(const int mapx, const int mapy) {

@@ -2,6 +2,7 @@ ticks = 0
 move = 0
 p0 = {}
 go_left = 0
+num_cast = 0
 
 function move_towards(me, enemy)
     dx = me.mapx - enemy.mapx;
@@ -44,22 +45,19 @@ function idle()
             go_left = 1
         else
             go_left = 0
-            p0.cast(enemy, sol.WIZ_MAGIC_MISSILE)
+            if p0.cast(enemy, sol.WIZ_MAGIC_MISSILE) then
+                num_cast = num_cast + 1
+            else
+                sol.exit()
+            end
+            if num_cast > 2 then
+                sol.fail("Player shouldn't have cast more than 2.")
+            end
         end
     end
 
-    if (ticks > 1200) then
-        print(sol.in_combat())
-        --print(p0.stats.hp)
-        --print(p0.mapx)
-        --enemy = p0.get_closest_enemy()
-        --print(enemy.stats.hp)
-        --print(enemy.mapx)
-        if (sol.in_combat()) then
-            sol.fail("Player should have defeated slig.")
-        else
-            sol.exit()
-        end
+    if (ticks > 500) then
+        sol.fail("Player should have run out spells.")
     end
 
     ticks = ticks + 1
@@ -77,7 +75,7 @@ function init()
     p0.mapy = 10;
     p0.stats.hp = 140;
     p0.set_class(0, 11) -- preserver
-    p0.award_exp(90000)
+    p0.award_exp(6000)
     p0.give_ds1_item(3, 47, -30001)
     p0.give_ds1_item(10, 47, -30001)
     p0.give_ds1_item(2, 1, -1017) -- BOW
