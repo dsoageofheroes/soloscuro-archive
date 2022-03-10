@@ -44,6 +44,7 @@ typedef enum window_e {
     WINDOW_MAP,
     WINDOW_NARRATE,
     WINDOW_COMBAT,
+    WINDOW_DESCRIPTION,
 } window_t;
 
 typedef enum sol_font_e {

@@ -3,6 +3,7 @@
 
 #include "window-manager.h"
 #include "gpl.h"
+#include "description.h"
 #include "player.h"
 #include "region.h"
 #include "settings.h"
@@ -70,6 +71,7 @@ extern void port_load_window(const window_t window) {
         case WINDOW_MAP: sol_window_toggle(&map_window, 0, 0); break;
         case WINDOW_NARRATE: sol_window_toggle(&narrate_window, 0, 0); break;
         case WINDOW_COMBAT: sol_window_toggle(&combat_status_window, 0, 0); break;
+        case WINDOW_DESCRIPTION: sol_window_toggle(&description_window, 0, 0); break;
     }
 }
 

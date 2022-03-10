@@ -2,6 +2,7 @@
 #include "ds-load-save.h"
 #include "port.h"
 #include "gameloop.h"
+#include "description.h"
 #include "gpl.h"
 #include "player.h"
 #include "sol-lua-manager.h"
@@ -112,6 +113,33 @@ static int load_directory(lua_State *l) {
     return 0;
 }
 
+static int debug_set_desc(lua_State *l) {
+    const int type       = luaL_checkinteger(l, 1);
+    const int level      = luaL_checkinteger(l, 2);
+    const int idx        = luaL_checkinteger(l, 3);
+    power_list_t *powers = NULL;
+    power_instance_t *pi = NULL;
+
+    //printf("debug_set_desc(%d, %d, %d)\n", type, level, idx);
+    if (type == 0) {
+        powers = wizard_get_spells(level);
+    }
+
+    if (!powers) { return 0; }
+    pi = powers->head;
+
+    for (int i = 0; pi && i < idx; i++) {
+        pi = pi->next;
+    }
+
+    if (!pi) { return 0; }
+
+    sol_description_set_message(pi->stats->description);
+    sol_description_set_icon(pi->stats->icon_id);
+
+    return 0;
+}
+
 static int load_window(lua_State *l) {
     const char *str = luaL_checkstring(l, 1);
     static char has_been_initialized = 0;
@@ -135,6 +163,8 @@ static int load_window(lua_State *l) {
         port_load_window(WINDOW_NARRATE);
     } else if (!strcmp(str, "combat")) {
         port_load_window(WINDOW_COMBAT);
+    } else if (!strcmp(str, "description")) {
+        port_load_window(WINDOW_DESCRIPTION);
     }
 
     return 0;
@@ -165,6 +195,7 @@ static const struct luaL_Reg sol_funcs[] = {
     {"set_quiet", set_quiet},
     {"load_directory", load_directory},
     {"load_window", load_window},
+    {"debug_set_desc", debug_set_desc},
     {"game_loop", game_loop},
     //{"run_browser", sol_run_browser},
     {"exit_game", exit_game},
