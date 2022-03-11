@@ -1,4 +1,5 @@
 #include "animation.h"
+#include "arbiter.h"
 #include "combat.h"
 #include "entity-animation.h"
 #include "gpl.h"
@@ -273,20 +274,21 @@ static int calc_distance_to_player(entity_t *entity) {
 extern void sol_region_tick(sol_region_t *reg) {
     dude_t *bad_dude = NULL;
     int xdiff, ydiff;
-    int posx, posy;
+    int posx, posy, in_combat = 0;
     enum entity_action_e action;
 
     if (!reg) { return; }
     if (reg->actions.head) {
         entity_animation_region_execute(reg);
     }
+    in_combat = sol_combat_get_current(sol_arbiter_combat_region(reg)) != NULL;
 
     entity_list_for_each(reg->entities, bad_dude) {
         if (entity_animation_execute(bad_dude)) {
             //printf("ACTION! %s %d, %d\n", bad_dude->name, bad_dude->mapx, bad_dude->mapy);
             continue;
         }
-        if (bad_dude->abilities.hunt) {
+        if (bad_dude->abilities.hunt && !in_combat) {
             xdiff = sol_player_get_active()->mapx - bad_dude->mapx;
             ydiff = sol_player_get_active()->mapy - bad_dude->mapy;
             xdiff = (xdiff < 0) ? -1 : (xdiff > 0) ? 1 : 0;
@@ -322,6 +324,7 @@ extern void sol_region_tick(sol_region_t *reg) {
             //animation_shift_entity(reg->entities, __el_rover);
             //bad_dude->anim.scmd = entity_animation_get_scmd(bad_dude->anim.scmd, xdiff, ydiff, EA_NONE);
             if (calc_distance_to_player(bad_dude) < 5) {
+                sol_arbiter_enter_combat(reg, bad_dude->mapx, bad_dude->mapy);
                 //combat_initiate(reg, bad_dude->mapx, bad_dude->mapy);
                 //return;
             }

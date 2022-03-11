@@ -102,6 +102,14 @@ static int attack_range(lua_State *l) {
     return 0;
 }
 
+static int hunt(lua_State *l) {
+    dude_t *dude = (dude_t*) lua_touserdata(l, lua_upvalueindex(1));
+    //dude_t *target = (dude_t*) sol_lua_get_userdata(l, -1 - lua_gettop(l));
+
+    dude->abilities.hunt = 1;
+    return 0;
+}
+
 extern int sol_lua_entity_function(entity_t *entity, const char *func, lua_State *l) {
     if (!strcmp(func, "cast")) {
         return push_entity_function(l, entity, entity_cast);
@@ -135,6 +143,8 @@ extern int sol_lua_entity_function(entity_t *entity, const char *func, lua_State
         return push_entity_function(l, entity, get_closest_enemy);
     } else if (!strcmp(func, "attack_range")) {
         return push_entity_function(l, entity, attack_range);
+    } else if (!strcmp(func, "hunt")) {
+        return push_entity_function(l, entity, hunt);
     }
     lua_pushinteger(l, 0);
     return 1;

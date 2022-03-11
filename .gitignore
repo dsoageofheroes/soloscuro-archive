@@ -7,6 +7,7 @@ obj/
 *.so
 *.so.0
 *.dll
+build
 
 # Config
 solconfig.lua
@@ -21,3 +22,11 @@ solconfig.lua
 # generated powers
 src/powers/
 src/powers/powers-generator.c
+
+# game files
+*gff
+dso/
+ds1/
+ds2/
+gpl/
+items/
