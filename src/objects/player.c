@@ -254,12 +254,24 @@ extern void sol_player_load_zoom(const int slot, const float zoom) {
 static int count = 0;
 static int direction = 0x0;
 
+static int game_over() {
+    entity_t *dude;
+
+    for (int i = 0; i < MAX_PCS; i++) {
+        dude = sol_player_get(i);
+        if (dude && dude->stats.hp > 0) { return 0; }
+    }
+
+    return 1;
+}
+
 extern void sol_player_update() {
     entity_t *target = NULL;
     entity_t *dude = sol_player_get_active();
     int       xdiff = 0, ydiff = 0;
     const int speed = 2;
 
+    if (game_over()) { sol_map_game_over(); return; }
     if (!sol_started()) { return; }
 
     if (--count > 0) { return; }

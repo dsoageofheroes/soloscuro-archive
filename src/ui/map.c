@@ -13,8 +13,8 @@
 #include "region-manager.h"
 #include "ssi-scmd.h"
 #include "player.h"
-#include "settings.h"
 #include "gpl-var.h"
+#include "window-main.h"
 
 #include <string.h>
 
@@ -25,7 +25,7 @@ static animate_sprite_t anims[MAX_ANIMS];
 static animate_sprite_node_t *anim_nodes[MAX_ANIMS];
 static int anim_pos = 0;
 static int mousex = 0, mousey = 0;
-static uint16_t tile_highlight = SPRITE_ERROR;
+static uint16_t tile_highlight = SPRITE_ERROR, game_over = SPRITE_ERROR;
 
 static void clear_animations();
 void map_free(map_t *map);
@@ -214,6 +214,10 @@ void map_render(void *data) {
 
     map_render_anims();
 
+    if (game_over != SPRITE_ERROR) {
+        sol_sprite_render(game_over);
+    }
+
     if (settings_in_debug()) { show_debug_info(); }
 }
 
@@ -361,15 +365,6 @@ extern void port_free_sprite(sprite_info_t *spr) {
     }
 }
 
-void port_exit_combat() {
-    // condense players.
-    printf("NEED TO CONDENSE PLAYERS!\n");
-    //player_condense();
-    // remove combat status.
-    //window_pop();
-    // assign experience.
-}
-
 void port_swap_enitity(int obj_id, entity_t *dude) {
     gff_palette_t *pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + cmap->region->map_id - 1;
     const int zoom = 2.0;
@@ -483,6 +478,11 @@ int map_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_
     int tiley = (yoffset + mousey) / (16 * zoom);
 
     if (!cmap) { return 0; }
+    if (game_over != SPRITE_ERROR) {
+        sol_window_clear();
+        sol_window_push(&main_window, 10, 10);
+        return 1;
+    }
 
     if (ms == MOUSE_TALK && cdude) {//(dude = get_entity_at_location(x, y))) {
         sol_mouse_set_state(MOUSE_POINTER);
@@ -525,6 +525,18 @@ extern void port_free_item(item_t *item) {
     if (item->anim.spr != SPRITE_ERROR) {
         sol_sprite_free(item->anim.spr);
         item->anim.spr = SPRITE_ERROR;
+    }
+}
+
+extern void sol_map_game_over() {
+    gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes;
+    const float zoom = settings_zoom();
+
+    if (game_over == SPRITE_ERROR) {
+        game_over = sol_sprite_new(pal, 0, 0, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 10004);
+        sol_sprite_set_location(game_over, 
+            settings_screen_width() / 2 - sol_sprite_getw(game_over) / 2,
+            settings_screen_height() / 2 - sol_sprite_geth(game_over) / 2);
     }
 }
 
