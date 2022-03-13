@@ -118,6 +118,7 @@ static void sprite_load_animation(entity_t *entity, gff_palette_t *pal) {
     }
     entity->anim.movey = entity->anim.movex = entity->anim.left_over = 0.0;
     entity->anim.entity = entity;
+    //reg->passives[i].scmd = gff_map_get_object_scmd(gff_idx, map_id, i, 0);
     //printf("%d: %d %d %d (%d, %d)\n", obj->combat_id, obj->mapx, obj->mapy, obj->mapz, anims[anim_pos].x, anims[anim_pos].y);
     //printf("             (%d, %d)\n", anims[anim_pos].destx, anims[anim_pos].desty);
     //printf("%s: @ %p\n", entity->name, entity->sprite.data);
@@ -215,7 +216,7 @@ void map_render_anims() {
         hflip = vflip = 0;
         if (dude->anim.spr == SPRITE_ERROR) { continue; }
         anim = &(dude->anim);
-        if (!anim->scmd) { anim->scmd = ssi_scmd_empty(); }
+        if (!anim->scmd) { continue; }
         if (anim->scmd[anim->pos].flags & SCMD_XMIRROR
             || (anim->entity && anim->entity->sprite.flags & 0x80)) {
             hflip = 1;

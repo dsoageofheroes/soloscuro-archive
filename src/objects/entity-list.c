@@ -137,7 +137,8 @@ extern void entity_list_load_etab(entity_list_t *list, const int gff_idx, const 
         dude->anim.scmd = gff_map_get_object_scmd(gff_idx, map_id, i, 0);
         animation_shift_entity(list, entity_list_add(list, dude));
         if (dude->anim.scmd != NULL && !(dude->anim.scmd->flags & SCMD_LAST)) {
-            warn("Need to setup animations!\n");
+            entity_animation_list_add(&dude->actions, EA_SCMD, dude, NULL, NULL, 30);
+            // Animations are continued in the entity action list
         }
     }
 }

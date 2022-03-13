@@ -19,38 +19,14 @@ int8_t port_narrate_open(int16_t action, const char *text, int16_t index) {
     return 0;
 }
 
-void port_narrate_clear() {
-}
-
-void port_narrate_close() {
-}
-
-void port_add_entity(entity_t *entity, gff_palette_t *pal) {
-}
-
 extern void port_remove_entity(entity_t *entity) {
-}
-
-void port_animate_entity(entity_t *obj) {
 }
 
 void port_swap_enitity(int obj_id, entity_t *dude) {
 }
 
-void port_update_entity(entity_t *entity, const uint16_t xdiff, const uint16_t ydiff) {
-    if (!entity) { return; }
-    entity->mapx += xdiff;
-    entity->mapy += ydiff;
-}
-
 int port_ask_yes_no() {
     return 1;
-}
-
-void port_enter_combat() {
-}
-
-void port_exit_combat() {
 }
 
 void port_change_region(sol_region_t *reg) {
@@ -83,20 +59,11 @@ extern void port_set_config(game_config_t gc, ssize_t val) {
 extern void port_player_load(const int slot) {
 }
 
-extern void port_toggle_screen(const window_t window) {
-}
-
 extern int port_load_region(const int region) {
     return 1;
 }
 
 extern void port_set_lua_globals(lua_State *l) {
-}
-
-extern void port_toggle_window(const window_t window) {
-}
-
-extern void port_load_window(const window_t window) {
 }
 
 extern void port_init() {

@@ -706,11 +706,15 @@ extern int entity_animation_execute(entity_t *entity) {
         if (entity->anim.scmd[action->scmd_pos].delay < action->ticks) {
             //if (entity->name) { printf("->%s: ticks, amt = %d\n", entity->name, action->amt); }
             entity->anim.pos = action->scmd_pos = ssi_scmd_next_pos(entity->anim.scmd, action->scmd_pos);
+            //printf("HERE: %d\n", entity->anim.pos);
             port_entity_update_scmd(entity);
+            //sprite_set_frame(entity->anim.spr, entity->anim.scmd[entity->anim.pos].bmp_idx);
             action->ticks = 0;
         }
 
         if (action->start_amt >= 0 && action->amt <= 0) {
+            // SCMD are a special action that we assume is a loop.
+            if (action->action == EA_SCMD) { action->amt = action->start_amt; continue;}
             entity->anim.x = entity->anim.destx;
             entity->anim.y = entity->anim.desty;
             entity_animation_node_t *to_delete = entity->actions.head;

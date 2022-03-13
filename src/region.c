@@ -71,7 +71,7 @@ extern sol_region_t* sol_region_create(const int gff_file) {
     //TODO Finish region_create!
     load_tile_ids(reg);
     load_map_flags(reg);
-    load_passives(reg, reg->gff_file, reg->map_id);
+    //load_passives(reg, reg->gff_file, reg->map_id);
     //sol_combat_init(&(reg->cr));
     //region_list_load_objs(ret->list, ret->gff_file, ret->map_id);
 
@@ -284,6 +284,8 @@ extern void sol_region_tick(sol_region_t *reg) {
     in_combat = sol_combat_get_current(sol_arbiter_combat_region(reg)) != NULL;
 
     entity_list_for_each(reg->entities, bad_dude) {
+        //if (bad_dude->anim.scmd != 
+        //printf("thing! %s %p %d, %d\n", bad_dude->name, bad_dude->anim.scmd, bad_dude->mapx, bad_dude->mapy);
         if (entity_animation_execute(bad_dude)) {
             //printf("ACTION! %s %d, %d\n", bad_dude->name, bad_dude->mapx, bad_dude->mapy);
             continue;
@@ -329,10 +331,13 @@ extern void sol_region_tick(sol_region_t *reg) {
                 //return;
             }
             //port_update_entity(bad_dude, xdiff, ydiff);
-        } else {
-            //if (bad_dude->name) {
-                //port_update_entity(bad_dude, 0, 0);
-            //}
+            continue;
+        }
+
+        // Not in animation, not in hunt mode. Lets check scmd.
+        if (bad_dude->anim.scmd != ssi_scmd_empty()) {
+            //entity_animation_list_add(&bad_dude->actions, EA_SCMD, NULL, NULL, NULL, 30);
+            //printf("Need to animate...\n");
         }
     }
 }

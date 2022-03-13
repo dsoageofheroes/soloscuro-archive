@@ -1,3 +1,12 @@
+function keydown(num)
+end
+
+function keyup(num)
+end
+
+function idle()
+end
+
 function init()
     local sol = soloscuro
     sol.load_charsave(0, 17) -- load character from charsave.gff
