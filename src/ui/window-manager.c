@@ -62,19 +62,6 @@ extern void sol_window_load(int layer, sol_wops_t *window, const uint32_t x, con
     }
 }
 
-extern void port_load_window(const window_t window) {
-    switch (window) {
-        case WINDOW_VIEW: sol_window_toggle(&view_character_window, 0, 0); break;
-        case WINDOW_INVENTORY: sol_window_toggle(&inventory_window, 0, 0); break;
-        case WINDOW_MAIN: sol_window_toggle(&main_window, 0, 0); break;
-        case WINDOW_CHARACTER_CREATION: sol_window_toggle(&new_character_window, 0, 0); break;
-        case WINDOW_MAP: sol_window_toggle(&map_window, 0, 0); break;
-        case WINDOW_NARRATE: sol_window_toggle(&narrate_window, 0, 0); break;
-        case WINDOW_COMBAT: sol_window_toggle(&combat_status_window, 0, 0); break;
-        case WINDOW_DESCRIPTION: sol_window_toggle(&description_window, 0, 0); break;
-    }
-}
-
 extern void sol_window_toggle(sol_wops_t *the_window, const uint32_t x, const uint32_t y) {
     uint32_t pos;
     sol_wops_t tmp;
@@ -97,18 +84,6 @@ extern void sol_window_toggle(sol_wops_t *the_window, const uint32_t x, const ui
     windows[window_pos - 1] = tmp;
 
     sol_window_pop();
-}
-
-extern void port_toggle_window(const window_t window) {
-    switch (window) {
-        case WINDOW_VIEW: sol_window_toggle(&view_character_window, 0, 0); break;
-        case WINDOW_INVENTORY: sol_window_toggle(&inventory_window, 0, 0); break;
-        case WINDOW_MAIN: sol_window_toggle(&main_window, 0, 0); break;
-        case WINDOW_CHARACTER_CREATION: sol_window_toggle(&new_character_window, 0, 0); break;
-        case WINDOW_MAP: sol_window_toggle(&map_window, 0, 0); break;
-        case WINDOW_NARRATE: sol_window_toggle(&narrate_window, 0, 0); break;
-        case WINDOW_COMBAT: sol_window_toggle(&combat_status_window, 0, 0); break;
-    }
 }
 
 extern void sol_window_push(sol_wops_t *window, const uint32_t x, const uint32_t y) {

@@ -593,6 +593,25 @@ extern int entity_animation_region_execute(sol_region_t *reg) {
     return 1;
 }
 
+void entity_animation_update(entity_t *entity, const uint16_t xdiff, const uint16_t ydiff) {
+    animate_sprite_t *as = &(entity->anim);
+    const float zoom = settings_zoom();
+    //printf("cur:%d %d\n", as->x, as->y);
+    //printf("dest: %d, %d\n", as->destx, as->desty);
+    as->x = as->destx;
+    as->y = as->desty;
+    entity->mapx += xdiff;
+    entity->mapy += ydiff;
+    as->destx = entity->mapx * 16 * settings_zoom();
+    as->desty = entity->mapy * 16 * settings_zoom();
+    if (as->w > 16 * zoom) {
+        //printf("width = %d\n", as->w);
+        as->destx -= (as->w - 16 * zoom) / 2;
+    }
+    as->desty -= as->h - (16 * zoom);
+}
+
+
 extern int entity_animation_list_empty(entity_animation_list_t *list) {
     return !(list && list->head);
 }

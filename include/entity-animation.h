@@ -80,6 +80,7 @@ extern int               entity_animation_list_execute(entity_animation_list_t *
 extern int               entity_animation_list_empty(entity_animation_list_t *list);
 extern int               entity_animation_list_remove_current(entity_animation_list_t *list);
 extern void              sol_animation_render(const entity_action_t *ea);
+extern void              entity_animation_update(struct entity_s *entity, const uint16_t xdiff, const uint16_t ydiff);
 
 struct entity_s;
 extern int entity_animation_execute(struct entity_s *entity);

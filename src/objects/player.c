@@ -308,7 +308,7 @@ extern void sol_player_condense() {
     for (int i = 0; i < MAX_PCS; i++) {
         entity_t *player = sol_player_get(i);
         if (player != sol_player_get_active() && player->name) {
-            port_update_entity(player, -999, -999);
+            entity_animation_update(player, -999, -999);
         }
     }
 }

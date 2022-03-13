@@ -36,17 +36,6 @@
 
 #define sol_sprite_t uint32_t
 
-typedef enum window_e {
-    WINDOW_VIEW,
-    WINDOW_INVENTORY,
-    WINDOW_MAIN,
-    WINDOW_CHARACTER_CREATION,
-    WINDOW_MAP,
-    WINDOW_NARRATE,
-    WINDOW_COMBAT,
-    WINDOW_DESCRIPTION,
-} window_t;
-
 typedef enum sol_font_e {
     FONT_YELLOW,
     FONT_GREY,
@@ -65,13 +54,8 @@ typedef struct sol_dim_s {
 
 // Narrate functions
 
-extern void port_exit_combat();
-
-extern void port_add_entity(entity_t *entity, gff_palette_t *pal);
-extern void port_remove_entity(entity_t *entity);
-extern void port_animate_entity(entity_t *obj);
+extern void port_remove_entity(entity_t *entity); // We need to remove this...
 extern void port_swap_enitity(int obj_id, entity_t *dude);
-extern void port_update_entity(entity_t *entity, const uint16_t xdiff, const uint16_t ydiff);
 extern void port_load_sprite(animate_sprite_t *anim, gff_palette_t *pal, const int gff_index,
                 const int type, const uint32_t id, const int num_load);
 extern void port_free_sprite(sprite_info_t *spr);
@@ -103,8 +87,6 @@ typedef enum game_config_e {
 
 extern void port_set_config(game_config_t gc, ssize_t val);
 
-extern void port_toggle_window(const window_t window);
-extern void port_load_window(const window_t window);
 extern void port_set_lua_globals(lua_State *l);
 extern void port_entity_update_scmd(entity_t *entity);
 

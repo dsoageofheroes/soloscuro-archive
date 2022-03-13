@@ -259,27 +259,6 @@ static void generate_monster_move_attack_closest(sol_region_t *reg, entity_t *mo
     printf("NEED TO move and guard!\n");
 }
 
-extern void sol_combat_enter_combat() {
-    // Right now we need to migrate player to combat, we will see if that is better.
-    // Need to disperse players (and setup combat items.)
-    /*
-    dude_t *main_player = sol_player_get_active();
-    for (int i = 0; i < 4; i++) {
-        dude_t *next_player = sol_player_get(i);
-        if (next_player && next_player != sol_player_get_active() && next_player->name) { // next_player exists.
-            next_player->mapx = main_player->mapx;
-            next_player->mapy = main_player->mapy;
-            sol_region_move_to_nearest(sol_region_manager_get_current(), next_player);
-            printf("Adding %s\n", next_player->name);
-            sol_region_add_entity(sol_region_manager_get_current(), next_player);
-            entity_instant_move(next_player);
-            port_update_entity(next_player, 0, 0);
-        }
-    }
-    */
-}
-
-
 static void apply_action_animation(const enum entity_action_e action) {
     int16_t xdiff = 0, ydiff = 0;
 
@@ -298,7 +277,7 @@ static void apply_action_animation(const enum entity_action_e action) {
     //printf("(%d, %d) applying xdiff = %d, ydiff = %d\n", current_turn->entity->mapx, current_turn->entity->mapy, xdiff, ydiff);
     current_turn->entity->anim.scmd = entity_animation_get_scmd(current_turn->entity,
             xdiff, ydiff, EA_NONE);
-    port_update_entity(current_turn->entity, xdiff, ydiff);
+    entity_animation_update(current_turn->entity, xdiff, ydiff);
 }
 
 static void end_turn() {

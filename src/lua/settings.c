@@ -5,6 +5,13 @@
 #include "description.h"
 #include "gpl.h"
 #include "player.h"
+#include "inventory.h"
+#include "map.h"
+#include "narrate.h"
+#include "combat-status.h"
+#include "window-main.h"
+#include "view-character.h"
+#include "new-character.h"
 #include "sol-lua-manager.h"
 #include "sol-lua-settings.h"
 #include "region-manager.h"
@@ -66,7 +73,7 @@ static int set_yscroll(lua_State *l) {
 }
 
 static int toggle_inventory(lua_State *l) {
-    port_toggle_window(WINDOW_INVENTORY);
+    sol_window_toggle(&inventory_window, 0, 0);
     return 0;
 }
 
@@ -150,21 +157,21 @@ static int load_window(lua_State *l) {
     }
 
     if (!strcmp(str, "view")) {
-        port_load_window(WINDOW_VIEW);
+        sol_window_toggle(&view_character_window, 0, 0);
     } else if (!strcmp(str, "inventory")) {
-        port_load_window(WINDOW_INVENTORY);
+        sol_window_toggle(&inventory_window, 0, 0);
     } else if (!strcmp(str, "main")) {
-        port_load_window(WINDOW_MAIN);
+        sol_window_toggle(&main_window, 0, 0);
     } else if (!strcmp(str, "character-creation")) {
-        port_load_window(WINDOW_CHARACTER_CREATION);
+        sol_window_toggle(&new_character_window, 0, 0);
     } else if (!strcmp(str, "map")) {
-        port_load_window(WINDOW_MAP);
+        sol_window_toggle(&map_window, 0, 0);
     } else if (!strcmp(str, "narrate")) {
-        port_load_window(WINDOW_NARRATE);
+        sol_window_toggle(&narrate_window, 0, 0);
     } else if (!strcmp(str, "combat")) {
-        port_load_window(WINDOW_COMBAT);
+        sol_window_toggle(&combat_status_window, 0, 0);
     } else if (!strcmp(str, "description")) {
-        port_load_window(WINDOW_DESCRIPTION);
+        sol_window_toggle(&description_window, 0, 0);
     }
 
     return 0;
