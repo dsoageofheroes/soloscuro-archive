@@ -388,10 +388,10 @@ extern int entity_attempt_move(dude_t *dude, const int xdiff, const int ydiff, c
     entity_animation_list_add_speed(&(dude->actions), action, dude, NULL,
             NULL, settings_ticks_per_move(), speed, 0);
 
-    dude->mapx += xdiff;
-    dude->mapy += ydiff;
-    dude->anim.destx += (xdiff * 32);
-    dude->anim.desty += (ydiff * 32);
+    //dude->mapx += xdiff;
+    //dude->mapy += ydiff;
+    //dude->anim.destx += (xdiff * 32);
+    //dude->anim.desty += (ydiff * 32);
 
     sol_region_t *reg = sol_region_manager_get_current();
     if (reg) {

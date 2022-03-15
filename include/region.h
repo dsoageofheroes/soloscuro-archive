@@ -6,7 +6,6 @@
 #include <stdint.h>
 #include "gff-map.h"
 #include "ssi-object.h"
-#include "passive.h"
 #include "entity.h"
 #include "entity-list.h"
 #include "combat-region.h"
@@ -22,7 +21,6 @@ typedef struct sol_region_s {
     uint32_t palette_id;
     uint32_t gff_file;
     uint32_t map_id;
-    sol_passive_t passives[MAX_PASSIVES];
     // entities are to be in display order.
     struct entity_list_s *entities;
     // actions from several entities, right now one at a time.
@@ -45,6 +43,7 @@ extern int              sol_region_get_tile(const sol_region_t *reg, const uint3
         uint32_t *w, uint32_t *h, unsigned char **data);
 extern struct entity_s* sol_region_find_entity_by_id(const sol_region_t *reg, const int id);
 extern struct entity_s* sol_region_find_entity_by_location(const sol_region_t *reg, const int x, const int y);
+extern void             sol_region_generate_move(sol_region_t *reg, entity_t *monster, const int x, const int y, const int speed);
 extern void             sol_region_move_to_nearest(sol_region_t *reg, struct entity_s *entity);
 extern int              sol_region_location_blocked(sol_region_t *reg, const int32_t x, const int32_t y);
 extern void             sol_region_remove_entity(sol_region_t *reg, struct entity_s *entity);

@@ -123,30 +123,6 @@ void main_exit_game() {
     sol_game_loop_signal(WAIT_FINAL, 0);
 }
 
-static void main_combat_update() {
-    entity_action_t player_action;
-    player_action.action = EA_NONE;
-    /*
-    switch(sol_combat_player_turn()) {
-        case PLAYER1_TURN:
-        case PLAYER2_TURN:
-        case PLAYER3_TURN:
-        case PLAYER4_TURN:
-            if (player_directions[1]) { player_action.action = EA_WALK_DOWNLEFT; }
-            if (player_directions[2]) { player_action.action = EA_WALK_DOWN; }
-            if (player_directions[3]) { player_action.action = EA_WALK_DOWNRIGHT; }
-            if (player_directions[4]) { player_action.action = EA_WALK_LEFT; }
-            if (player_directions[6]) { player_action.action = EA_WALK_RIGHT; }
-            if (player_directions[7]) { player_action.action = EA_WALK_UPLEFT; }
-            if (player_directions[8]) { player_action.action = EA_WALK_UP; }
-            if (player_directions[9]) { player_action.action = EA_WALK_UPRIGHT; }
-            sol_combat_player_action(player_action);
-            break;
-        default: break;
-    }
-    */
-}
-
 void handle_input() {
     SDL_Event event;
     while (SDL_PollEvent(&event) != 0) {
@@ -158,14 +134,14 @@ void handle_input() {
                 if (ignore_repeat && event.key.repeat != 0) { break; }
                 if (textbox_handle_keyup(textbox, event.key.keysym)) { return; }
                 if (sol_lua_keyup(event.key.keysym.sym)) { break; }
-                if (event.key.keysym.sym == SDLK_s) { sol_player_unmove(PLAYER_LEFT); }
-                if (event.key.keysym.sym == SDLK_e) { sol_player_unmove(PLAYER_UP); }
-                if (event.key.keysym.sym == SDLK_f) { sol_player_unmove(PLAYER_RIGHT); }
-                if (event.key.keysym.sym == SDLK_d) { sol_player_unmove(PLAYER_DOWN); }
-                if (event.key.keysym.sym == SDLK_UP) { ymapdiff = 0;}
-                if (event.key.keysym.sym == SDLK_DOWN) { ymapdiff = 0;}
-                if (event.key.keysym.sym == SDLK_LEFT) { xmapdiff = 0;}
-                if (event.key.keysym.sym == SDLK_RIGHT) { xmapdiff = 0;}
+                if (event.key.keysym.sym == SDLK_LEFT) { sol_player_unmove(PLAYER_LEFT); }
+                if (event.key.keysym.sym == SDLK_UP) { sol_player_unmove(PLAYER_UP); }
+                if (event.key.keysym.sym == SDLK_RIGHT) { sol_player_unmove(PLAYER_RIGHT); }
+                if (event.key.keysym.sym == SDLK_DOWN) { sol_player_unmove(PLAYER_DOWN); }
+                if (event.key.keysym.sym == SDLK_e) { ymapdiff = 0;}
+                if (event.key.keysym.sym == SDLK_d) { ymapdiff = 0;}
+                if (event.key.keysym.sym == SDLK_s) { xmapdiff = 0;}
+                if (event.key.keysym.sym == SDLK_f) { xmapdiff = 0;}
                 if (event.key.keysym.sym == SDLK_KP_1) { player_directions[1] = 0; }
                 if (event.key.keysym.sym == SDLK_KP_2) { player_directions[2] = 0; }
                 if (event.key.keysym.sym == SDLK_KP_3) { player_directions[3] = 0; }
@@ -200,14 +176,14 @@ void handle_input() {
                 if (event.key.keysym.sym == SDLK_c) {
                     sol_window_toggle(&view_character_window, 0, 0);
                 }
-                if (event.key.keysym.sym == SDLK_s) { sol_player_move(PLAYER_LEFT); }
-                if (event.key.keysym.sym == SDLK_e) { sol_player_move(PLAYER_UP); }
-                if (event.key.keysym.sym == SDLK_f) { sol_player_move(PLAYER_RIGHT); }
-                if (event.key.keysym.sym == SDLK_d) { sol_player_move(PLAYER_DOWN); }
-                if (event.key.keysym.sym == SDLK_UP) { ymapdiff = -2;}
-                if (event.key.keysym.sym == SDLK_DOWN) { ymapdiff = 2;}
-                if (event.key.keysym.sym == SDLK_LEFT) { xmapdiff = -2;}
-                if (event.key.keysym.sym == SDLK_RIGHT) { xmapdiff = 2;}
+                if (event.key.keysym.sym == SDLK_LEFT) { sol_player_move(PLAYER_LEFT); }
+                if (event.key.keysym.sym == SDLK_UP) { sol_player_move(PLAYER_UP); }
+                if (event.key.keysym.sym == SDLK_RIGHT) { sol_player_move(PLAYER_RIGHT); }
+                if (event.key.keysym.sym == SDLK_DOWN) { sol_player_move(PLAYER_DOWN); }
+                if (event.key.keysym.sym == SDLK_e) { ymapdiff = -2;}
+                if (event.key.keysym.sym == SDLK_d) { ymapdiff = 2;}
+                if (event.key.keysym.sym == SDLK_s) { xmapdiff = -2;}
+                if (event.key.keysym.sym == SDLK_f) { xmapdiff = 2;}
                 if (event.key.keysym.sym == SDLK_KP_1) { player_directions[1] = 1; }
                 if (event.key.keysym.sym == SDLK_KP_2) { player_directions[2] = 1; }
                 if (event.key.keysym.sym == SDLK_KP_3) { player_directions[3] = 1; }
@@ -239,7 +215,6 @@ void handle_input() {
     handle_mouse_motion();
     if (sol_region_manager_get_current()) {
         sol_player_update();
-        main_combat_update();
     }
 }
 
@@ -281,9 +256,6 @@ void tick() {
 }
 
 void port_tick() { tick(); }
-
-void port_cleanup() {
-}
 
 static int sdl_init(const int what) {
     return SDL_Init(what);
@@ -343,10 +315,6 @@ void port_close() {
 
     //Quit SDL subsystems
     SDL_Quit();
-}
-
-static void cleanup() {
-    //port_close();
 }
 
 extern void port_start() {

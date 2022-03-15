@@ -110,6 +110,16 @@ static int hunt(lua_State *l) {
     return 0;
 }
 
+static int move(lua_State *l) {
+    dude_t *dude  = (dude_t*) lua_touserdata(l, lua_upvalueindex(1));
+    int32_t x     = luaL_checkinteger(l, 1);
+    int32_t y     = luaL_checkinteger(l, 2);
+    int32_t speed = luaL_checkinteger(l, 2);
+
+    sol_region_generate_move(sol_region_manager_get_current(), dude, x, y, speed);
+    return 0;
+}
+
 extern int sol_lua_entity_function(entity_t *entity, const char *func, lua_State *l) {
     if (!strcmp(func, "cast")) {
         return push_entity_function(l, entity, entity_cast);
@@ -145,6 +155,8 @@ extern int sol_lua_entity_function(entity_t *entity, const char *func, lua_State
         return push_entity_function(l, entity, attack_range);
     } else if (!strcmp(func, "hunt")) {
         return push_entity_function(l, entity, hunt);
+    } else if (!strcmp(func, "move")) {
+        return push_entity_function(l, entity, move);
     }
     lua_pushinteger(l, 0);
     return 1;

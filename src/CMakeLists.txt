@@ -17,7 +17,6 @@ set(SOLOSCURO_SRCS
     gff/gff-char.c
     gff/gff.c
     gff/gff-map.c
-    objects/passive.c
     objects/item.c
     objects/player.c
     objects/entity-list.c

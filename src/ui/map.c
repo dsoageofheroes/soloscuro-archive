@@ -118,7 +118,6 @@ static void sprite_load_animation(entity_t *entity, gff_palette_t *pal) {
     }
     entity->anim.movey = entity->anim.movex = entity->anim.left_over = 0.0;
     entity->anim.entity = entity;
-    //reg->passives[i].scmd = gff_map_get_object_scmd(gff_idx, map_id, i, 0);
     //printf("%d: %d %d %d (%d, %d)\n", obj->combat_id, obj->mapx, obj->mapy, obj->mapz, anims[anim_pos].x, anims[anim_pos].y);
     //printf("             (%d, %d)\n", anims[anim_pos].destx, anims[anim_pos].desty);
     //printf("%s: @ %p\n", entity->name, entity->sprite.data);
@@ -421,6 +420,9 @@ int map_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_
     if (button == SOL_MOUSE_BUTTON_RIGHT) {
         mouse_cycle();
     }
+
+    //printf("-> %d, %d\n", tilex, tiley);
+    sol_region_generate_move(sol_region_manager_get_current(), sol_player_get_active(), tilex, tiley, 2);
     //printf("No dude there bruh.\n");
 
     return 1; // map always intercepts the mouse...

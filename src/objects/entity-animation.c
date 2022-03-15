@@ -3,6 +3,7 @@
 #include "gpl.h"
 #include "port.h"
 #include "arbiter.h"
+#include "region-manager.h"
 #include "player.h"
 #include "combat-status.h"
 #include <stdlib.h>
@@ -566,34 +567,21 @@ extern int entity_animation_region_execute(sol_region_t *reg) {
             free (tmp);
             return 1;
         }
-
-/*
-        if (action->start_amt >= 0 && action->amt <= 0) {
-            entity->anim.x = entity->anim.destx;
-            entity->anim.y = entity->anim.desty;
-            entity_animation_node_t *to_delete = entity->actions.head;
-            entity->actions.head = entity->actions.head->next;
-            if (!entity->actions.head) {
-                entity->anim.scmd = entity_animation_face_direction(entity->anim.scmd, to_delete->ca.action);
-                //entity->anim.scmd = combat_stand_left;
-                entity->anim.flags = 0x0;
-                entity->anim.pos = 0;
-                entity->anim.flags = 0;
-                entity->anim.left_over = 0x0;
-                entity->anim.movex = entity->anim.movey = 0;
-            }
-            free (to_delete);
-            return 1;
-        }
-
-        animate_sprite_tick(action, entity);
-        */
     }
 
     return 1;
 }
 
-void entity_animation_update(entity_t *entity, const uint16_t xdiff, const uint16_t ydiff) {
+static int entity_animation_check_update(entity_t *entity, const int16_t xdiff, const int16_t ydiff) {
+    if (sol_region_location_blocked(sol_region_manager_get_current(), entity->mapx + xdiff, entity->mapy + ydiff)) {
+        return 0;
+    }
+
+    entity_animation_update(entity, xdiff, ydiff);
+    return 1;
+}
+
+extern void entity_animation_update(entity_t *entity, const int16_t xdiff, const int16_t ydiff) {
     animate_sprite_t *as = &(entity->anim);
     const float zoom = settings_zoom();
     //printf("cur:%d %d\n", as->x, as->y);
@@ -687,9 +675,37 @@ static scmd_t* entity_get_next_scmd(entity_t *entity, const enum entity_action_e
     return entity->anim.scmd;
 }
 
+static int apply_action(entity_t *entity, entity_action_t *action) {
+    animate_sprite_t *anim = &entity->anim;
+    int ret = 1;
+
+    switch (action->action) {
+        case EA_WALK_LEFT:      ret = entity_animation_check_update(entity, -1, 0); break;
+        case EA_WALK_RIGHT:     ret = entity_animation_check_update(entity, 1, 0); break;
+        case EA_WALK_UP:        ret = entity_animation_check_update(entity, 0, -1); break;
+        case EA_WALK_DOWN:      ret = entity_animation_check_update(entity, 0, 1); break;
+        case EA_WALK_UPLEFT:    ret = entity_animation_check_update(entity, -1, -1); break;
+        case EA_WALK_UPRIGHT:   ret = entity_animation_check_update(entity, 1, -1); break;
+        case EA_WALK_DOWNLEFT:  ret = entity_animation_check_update(entity, -1, 1); break;
+        case EA_WALK_DOWNRIGHT: ret = entity_animation_check_update(entity, 1, 1); break;
+    }
+
+    //printf("(%d, %d)\n", entity->mapx, entity->mapy);
+    //printf("(%d, %d) -> (%d, %d)\n", anim->x, anim->y, anim->destx, anim->desty);
+    return ret;
+}
+
 extern int entity_animation_execute(entity_t *entity) {
     if (!entity || !entity->actions.head) { return 0; }
     entity_action_t *action = &(entity->actions.head->ca);
+
+    if (action->ticks == 0 && action->amt == action->start_amt) {
+        if (!apply_action(entity, action)) {
+            printf("NEED TO CLEAR!\n");
+            entity_animation_list_free(&entity->actions);
+            return 0;
+        }
+    }
 
     for (int i = 0; i < action->speed && entity->anim.scmd; i++) {
         //printf("action->amt = %d (%d), action = %d, ticks = %d, scmd_pos = %d of %d\n",
@@ -715,13 +731,11 @@ extern int entity_animation_execute(entity_t *entity) {
         if (action->start_amt >= 0 && action->amt <= 0) {
             // SCMD are a special action that we assume is a loop.
             if (action->action == EA_SCMD) { action->amt = action->start_amt; continue;}
-            entity->anim.x = entity->anim.destx;
-            entity->anim.y = entity->anim.desty;
+
             entity_animation_node_t *to_delete = entity->actions.head;
             entity->actions.head = entity->actions.head->next;
             if (!entity->actions.head) {
                 entity->anim.scmd = entity_animation_face_direction(entity->anim.scmd, to_delete->ca.action);
-                //entity->anim.scmd = combat_stand_left;
                 entity->anim.flags = 0x0;
                 entity->anim.pos = 0;
                 entity->anim.flags = 0;

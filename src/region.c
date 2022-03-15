@@ -9,6 +9,7 @@
 #include "gff.h"
 #include "gfftypes.h"
 #include "port.h"
+#include "entity.h"
 #include "region-manager.h"
 
 #include <stdlib.h>
@@ -16,7 +17,6 @@
 
 static void load_tile_ids(sol_region_t *reg);
 static void load_map_flags(sol_region_t *reg);
-static void load_passives(sol_region_t *reg, const int gff_idx, const int map_id);
 
 #define GMAP_MAX (MAP_ROWS * MAP_COLUMNS)
 
@@ -71,7 +71,6 @@ extern sol_region_t* sol_region_create(const int gff_file) {
     //TODO Finish region_create!
     load_tile_ids(reg);
     load_map_flags(reg);
-    //load_passives(reg, reg->gff_file, reg->map_id);
     //sol_combat_init(&(reg->cr));
     //region_list_load_objs(ret->list, ret->gff_file, ret->map_id);
 
@@ -167,25 +166,6 @@ out:
     free(gmap_ids);
 }
 
-static void load_passives(sol_region_t *reg, const int gff_idx, const int map_id) {
-    if (!open_files[gff_idx].entry_table) {
-        gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_ETAB, map_id);
-        open_files[gff_idx].entry_table = malloc(chunk.length);
-        if (!open_files[gff_idx].entry_table) {
-            error ("unable to malloc for entry table!\n");
-            exit(1);
-        }
-        gff_read_chunk(gff_idx, &chunk, open_files[gff_idx].entry_table, chunk.length);
-    }
-
-    int len = gff_map_get_num_objects(gff_idx, map_id);
-
-    for (int i = 0; i < len; i++) {
-        sol_passive_load_from_etab(reg->passives + i, reg->entry_table, i);
-        reg->passives[i].scmd = gff_map_get_object_scmd(gff_idx, map_id, i, 0);
-    }
-}
-
 extern entity_t* sol_region_find_entity_by_id(const sol_region_t *reg, const int id) {
     dude_t *dude = NULL;
 
@@ -225,6 +205,7 @@ extern void sol_region_clear_block(sol_region_t *region, int row, int column, in
     if (block) { region->flags[row][column] &= ~val; }
 }
 
+// Should be a quad tree if too slow.
 extern entity_t* sol_region_find_entity_by_location(const sol_region_t *reg, const int x, const int y) {
     dude_t *dude = NULL;
 
@@ -319,10 +300,10 @@ extern void sol_region_tick(sol_region_t *reg) {
                 : (ydiff == -1) ? EA_WALK_UP
                 : EA_NONE;
             entity_animation_list_add(&(bad_dude->actions), action, bad_dude, NULL, NULL, 30);
-            bad_dude->mapx += xdiff;
-            bad_dude->mapy += ydiff;
-            bad_dude->anim.destx += (xdiff * 32);
-            bad_dude->anim.desty += (ydiff * 32);
+            //bad_dude->mapx += xdiff;
+            //bad_dude->mapy += ydiff;
+            //bad_dude->anim.destx += (xdiff * 32);
+            //bad_dude->anim.desty += (ydiff * 32);
             //animation_shift_entity(reg->entities, __el_rover);
             //bad_dude->anim.scmd = entity_animation_get_scmd(bad_dude->anim.scmd, xdiff, ydiff, EA_NONE);
             if (calc_distance_to_player(bad_dude) < 5) {
@@ -382,4 +363,103 @@ extern void sol_region_move_to_nearest(sol_region_t *reg, entity_t *entity) {
 
     error("Unable to place object, please update region_move_to_nearest!\n");
     exit(1);
+}
+
+typedef struct action_node_s {
+    uint16_t x, y, pos;
+    enum entity_action_e actions[MAX_COMBAT_ACTIONS];
+    struct action_node_s *next;
+} action_node_t;
+
+static void queue_add(action_node_t **head, action_node_t **tail, action_node_t *current, const enum entity_action_e action) {
+    action_node_t *next = (action_node_t*)malloc(sizeof(action_node_t));
+    memcpy(next, current, sizeof(action_node_t));
+    next->actions[next->pos] = action;
+    next->pos++;
+    next->next = NULL;
+
+    switch (action) {
+        case EA_WALK_LEFT:      next->x -= 1; break;
+        case EA_WALK_RIGHT:     next->x += 1; break;
+        case EA_WALK_UP:        next->y -= 1; break;
+        case EA_WALK_DOWN:      next->y += 1; break;
+        case EA_WALK_UPLEFT:    next->x -= 1; next->y -= 1; break;
+        case EA_WALK_UPRIGHT:   next->x += 1; next->y -= 1; break;
+        case EA_WALK_DOWNLEFT:  next->x -= 1; next->y += 1; break;
+        case EA_WALK_DOWNRIGHT: next->x += 1; next->y += 1; break;
+        default: 
+            break; // Do nothing right now...
+    }
+
+    if (!*tail) {
+        *head = *tail = next;
+    } else {
+        (*tail)->next = next;
+        *tail = next;
+    }
+}
+
+// Just goes to the position.
+extern void sol_region_generate_move(sol_region_t *reg, entity_t *dude, const int x, const int y, const int speed) {
+    static uint8_t visit_flags[MAP_ROWS][MAP_COLUMNS];
+    action_node_t *queue = NULL, *tail = NULL;
+    memset(visit_flags, 0x0, sizeof(uint8_t) * MAP_ROWS * MAP_COLUMNS);
+    action_node_t *rover = (action_node_t*) malloc(sizeof(action_node_t));
+    memset(rover, 0x0, sizeof(action_node_t));
+    rover->x = dude->mapx;
+    rover->y = dude->mapy;
+
+    queue_add(&queue, &tail, rover, EA_WALK_LEFT);
+    queue_add(&queue, &tail, rover, EA_WALK_RIGHT);
+    queue_add(&queue, &tail, rover, EA_WALK_UP);
+    queue_add(&queue, &tail, rover, EA_WALK_DOWN);
+    queue_add(&queue, &tail, rover, EA_WALK_UPLEFT);
+    queue_add(&queue, &tail, rover, EA_WALK_UPRIGHT);
+    queue_add(&queue, &tail, rover, EA_WALK_DOWNLEFT);
+    queue_add(&queue, &tail, rover, EA_WALK_DOWNRIGHT);
+    free(rover);
+
+    // BFS
+    while (queue) {
+        rover = queue;
+        //printf("HERE: (%d, %d)\n", rover->x, rover->y);
+        queue = queue->next;
+        if (!queue) { tail = NULL; }
+        if (rover->x >= MAP_ROWS || rover->y >= MAP_COLUMNS) {
+            free(rover);
+            continue;
+        }
+        if (visit_flags[rover->x][rover->y]) { free(rover); continue; }
+        if (sol_region_location_blocked(reg, rover->x, rover->y)) { free(rover); continue; }
+        visit_flags[rover->x][rover->y] = 1;// Mark as visited.
+
+        if (rover->x == x && rover->y == y) {
+            goto found;
+        }
+
+        queue_add(&queue, &tail, rover, EA_WALK_LEFT);
+        queue_add(&queue, &tail, rover, EA_WALK_RIGHT);
+        queue_add(&queue, &tail, rover, EA_WALK_UP);
+        queue_add(&queue, &tail, rover, EA_WALK_DOWN);
+        queue_add(&queue, &tail, rover, EA_WALK_UPLEFT);
+        queue_add(&queue, &tail, rover, EA_WALK_UPRIGHT);
+        queue_add(&queue, &tail, rover, EA_WALK_DOWNLEFT);
+        queue_add(&queue, &tail, rover, EA_WALK_DOWNRIGHT);
+
+        free(rover);
+    }
+    // Did not find...
+    return;
+
+found:
+    for (int i = 0; i < rover->pos; i++) {
+        entity_animation_list_add_speed(&dude->actions, rover->actions[i], dude, NULL, NULL, 30, speed, 0);
+    }
+    free(rover);
+    rover = queue;
+    while (rover) {
+        queue = rover;
+        rover = rover->next;
+        free(queue);
+    }
 }

@@ -102,13 +102,13 @@ static void queue_add(action_node_t **head, action_node_t **tail, action_node_t 
     new->num_moves++;
 
     switch (action) {
-        case EA_WALK_LEFT: new->x -= 1; break;
-        case EA_WALK_RIGHT: new->x += 1; break;
-        case EA_WALK_UP: new->y -= 1; break;
-        case EA_WALK_DOWN: new->y += 1; break;
-        case EA_WALK_UPLEFT: new->x -= 1; new->y -= 1; break;
-        case EA_WALK_UPRIGHT: new->x += 1; new->y -= 1; break;
-        case EA_WALK_DOWNLEFT: new->x -= 1; new->y += 1; break;
+        case EA_WALK_LEFT:      new->x -= 1; break;
+        case EA_WALK_RIGHT:     new->x += 1; break;
+        case EA_WALK_UP:        new->y -= 1; break;
+        case EA_WALK_DOWN:      new->y += 1; break;
+        case EA_WALK_UPLEFT:    new->x -= 1; new->y -= 1; break;
+        case EA_WALK_UPRIGHT:   new->x += 1; new->y -= 1; break;
+        case EA_WALK_DOWNLEFT:  new->x -= 1; new->y += 1; break;
         case EA_WALK_DOWNRIGHT: new->x += 1; new->y += 1; break;
         default: 
             break; // Do nothing right now...
@@ -259,84 +259,6 @@ static void generate_monster_move_attack_closest(sol_region_t *reg, entity_t *mo
     printf("NEED TO move and guard!\n");
 }
 
-static void apply_action_animation(const enum entity_action_e action) {
-    int16_t xdiff = 0, ydiff = 0;
-
-    switch (action) {
-        case EA_WALK_LEFT: xdiff = -1; ydiff = 0; break;
-        case EA_WALK_RIGHT: xdiff = 1; ydiff = 0; break;
-        case EA_WALK_UP: xdiff = 0; ydiff = -1; break;
-        case EA_WALK_DOWN: xdiff = 0; ydiff = 1; break;
-        case EA_WALK_UPLEFT: xdiff = -1; ydiff = -1; break;
-        case EA_WALK_UPRIGHT: xdiff = 1; ydiff = -1; break;
-        case EA_WALK_DOWNLEFT: xdiff = -1; ydiff = 1; break;
-        case EA_WALK_DOWNRIGHT: xdiff = 1; ydiff = 1; break;
-        default: break;
-    }
-
-    //printf("(%d, %d) applying xdiff = %d, ydiff = %d\n", current_turn->entity->mapx, current_turn->entity->mapy, xdiff, ydiff);
-    current_turn->entity->anim.scmd = entity_animation_get_scmd(current_turn->entity,
-            xdiff, ydiff, EA_NONE);
-    entity_animation_update(current_turn->entity, xdiff, ydiff);
-}
-
-static void end_turn() {
-    entity_t *entity = (current_turn) ? current_turn->entity : NULL;
-    monster_step = -1;
-
-    if (entity) {
-        entity->anim.scmd = entity_animation_get_scmd(entity, 0, 0, EA_NONE);
-    }
-    current_turn = current_turn->next;
-    /*
-    combat_entry_t *rover = current_turn;
-    printf("Current Order:\n");
-    while (rover) {
-        printf("%s\n", rover->entity->name);
-        rover = rover->next;
-    }
-    */
-    player_action = EA_NONE;
-}
-
-
-static entity_t* entity_in_way(sol_region_t *reg, entity_t *entity, const enum entity_action_e action) {
-    int xdiff = 0, ydiff = 0;
-
-    switch(action) {
-        case EA_WALK_DOWNLEFT:  xdiff = -1; ydiff = 1; break;
-        case EA_WALK_DOWN:      xdiff = 0; ydiff = 1; break;
-        case EA_WALK_DOWNRIGHT: xdiff = 1; ydiff = 1; break;
-        case EA_WALK_UPLEFT:    xdiff = -1; ydiff = -1; break;
-        case EA_WALK_UP:        xdiff = 0; ydiff = -1; break;
-        case EA_WALK_UPRIGHT:   xdiff = 1; ydiff = -1; break;
-        case EA_WALK_LEFT:      xdiff = -1; ydiff = 0; break;
-        case EA_WALK_RIGHT:     xdiff = 1; ydiff = 0; break;
-        default:
-            return NULL;
-    }
-
-    return entity_at_location(reg, entity, entity->mapx + xdiff, entity->mapy + ydiff);
-}
-
-static void player_melee(sol_region_t *reg, entity_t* entity, entity_t *enemy) {
-/*
-    //int amt = 1 + (rand() % 6);
-    //int amt = 100; // FTW!
-    //combat_animation_add(EA_MELEE, current_turn->entity, NULL, 0);
-    //combat_animation_add(EA_RED_DAMAGE, current_turn->entity, enemy, amt);
-    int16_t amt = dnd2e_melee_attack(entity, enemy, current_turn->melee_actions++, current_turn->round);
-    entity_animation_add(EA_MELEE, entity, NULL, NULL, 0);
-    //printf("amt = %d!\n", amt);
-    if (amt > 0) {
-        entity_animation_add(EA_RED_DAMAGE, entity, enemy, NULL, amt);
-    }
-    wait_on_player = dnd2e_can_melee_again(entity, current_turn->melee_actions, current_turn->round);
-    player_action = EA_NONE;
-    //wait_on_player = 0;
-*/
-}
-
 static void next_round() {
     combat_entry_t *rover = combat_order;
 
@@ -372,10 +294,10 @@ static void monster_set_animation(entity_t *monster, entity_action_t *action) {
         case EA_WALK_DOWN:
             ydiff = 1; xdiff = 0; break;
     }
-    monster->mapx += xdiff;
-    monster->mapy += ydiff;
-    monster->anim.destx += (xdiff * 32);
-    monster->anim.desty += (ydiff * 32);
+    //monster->mapx += xdiff;
+    //monster->mapy += ydiff;
+    //monster->anim.destx += (xdiff * 32);
+    //monster->anim.desty += (ydiff * 32);
 }
 
 extern void sol_combat_add_attack_animation(sol_region_t *reg, dude_t *dude, entity_t *target,
