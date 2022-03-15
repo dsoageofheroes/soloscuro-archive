@@ -41,6 +41,13 @@ static SDL_Renderer *renderer = NULL;
 //static float zoom = 2.0;
 static uint8_t ignore_repeat = 1, browser_mode = 0;
 static int show_debug = 0;
+static int8_t run_lua = 1;
+static const char *windowed = NULL, *extract_images = NULL, *extract_xmis = NULL,
+                  *extract_items = NULL, *extract_gpl = NULL, *lua_script = "lua/main.lua";
+static char *ds1_gffs = NULL;
+static char *replay = NULL;
+
+
 
 static uint32_t xmappos, ymappos;
 static int32_t xmapdiff, ymapdiff;
@@ -72,14 +79,6 @@ extern void port_commit_display_frame() {
 
 static enum entity_action_e sdl_to_ea(const SDL_Keysym key) {
     return EA_ACTIVATE;
-}
-
-uint32_t main_get_width() {
-    return 800;
-}
-
-uint32_t main_get_height() {
-    return 600;
 }
 
 void main_set_browser_mode() {
@@ -327,16 +326,12 @@ extern void port_start() {
 }
 
 static void init(int args, char *argv[]) {
-    int run_lua = 1;
-
-    for (int i = 0; i < args; i++) {
-        if (!strcmp(argv[i], "--lua") && i < (args - 1)) {
-            sol_lua_load(argv[i + 1]);
-            replay_cleanup();
-            exit(0);
-        }
+    if (run_lua) {
+        sol_lua_load(lua_script);
+        return;
     }
 
+    // rest requires special open.
     gui_init();
 
     font_init(renderer);
@@ -348,54 +343,20 @@ static void init(int args, char *argv[]) {
 
     if (browser_mode) {
         browse_loop(window, renderer);
-        exit(1);
     }
-
-    for (int i = 0; i < args; i++) {
-        if (!strcmp(argv[i], "--browse") && i < (args)) {
-            printf("Entering browsing mode!\n");
-            browse_loop(window, renderer);
-            exit(1);
-        }
-        if (!strcmp(argv[i], "--window") && i < (args - 1)) {
-            printf("Entering window mode!\n");
-            window_debug_init(window, renderer, argv[i + 1]);
-            return;
-        }
-        if (!strcmp(argv[i], "--extract-images") && i < (args - 1)) {
-            export_all_images(argv[i + 1]);
-            exit(0);
-        }
-        if (!strcmp(argv[i], "--extract-xmis") && i < (args - 1)) {
-            export_all_xmis(argv[i + 1]);
-            exit(0);
-        }
-        if (!strcmp(argv[i], "--extract-items") && i < (args - 1)) {
-            export_all_items(argv[i + 1]);
-            exit(0);
-        }
-        if (!strcmp(argv[i], "--extract-lua") && i < (args - 1)) {
-            gpl_lua_load_all_scripts();
-            exit(0);
-        }
-        if (!strcmp(argv[i], "--ignore-lua")) {
-            run_lua = 0;
-        }
+    if (extract_images) {
+        export_all_images(extract_images);
     }
-
-    if (run_lua && sol_lua_load("lua/main.lua") ) {
-        printf("Init being handled by lua.\n");
-        return;
+    if (extract_xmis) {
+        export_all_xmis(extract_images);
     }
-
-    ls_load_save_file("save00.sav");
-    sol_center_on_player();
-    // Start the main game.
-    //window_push(renderer, &main_window, 0, 0);
+    if (extract_items) {
+        export_all_items(extract_images);
+    }
+    if (extract_gpl) {
+        gpl_lua_load_all_scripts();
+    }
 }
-
-static char *ds1_gffs = NULL;
-static char *replay = NULL;
 
 void parse_args(int argc, char *argv[]) {
     for (int i = 0; i < argc; i++) {
@@ -404,6 +365,30 @@ void parse_args(int argc, char *argv[]) {
         }
         if (!strcmp(argv[i], "--replay") && i < (argc-1)) {
             replay = argv[++i];
+        }
+        if (!strcmp(argv[i], "--browse") && i < (argc)) {
+            browser_mode = 1; run_lua = 0;
+        }
+        if (!strcmp(argv[i], "--window") && i < (argc - 1)) {
+            windowed = argv[i + 1];
+        }
+        if (!strcmp(argv[i], "--extract-images") && i < (argc - 1)) {
+            extract_images = argv[i + 1]; run_lua = 0;
+        }
+        if (!strcmp(argv[i], "--extract-xmis") && i < (argc - 1)) {
+            extract_xmis = argv[i + 1]; run_lua = 0;
+        }
+        if (!strcmp(argv[i], "--extract-items") && i < (argc - 1)) {
+            extract_items = argv[i + 1]; run_lua = 0;
+        }
+        if (!strcmp(argv[i], "--extract-lua") && i < (argc - 1)) {
+            extract_gpl = argv[i + 1]; run_lua = 0;
+        }
+        if (!strcmp(argv[i], "--ignore-lua")) {
+            run_lua = 0;
+        }
+        if (!strcmp(argv[i], "--lua") && i < (argc - 1)) {
+            lua_script = argv[i + 1];
         }
     }
 
@@ -429,6 +414,8 @@ int main(int argc, char *argv[]) {
     sol_lua_register_globals();
 
     init(argc, argv);
+
+    if (!run_lua) { return 0; }
 
     if (replay) {
         replay_game(replay);

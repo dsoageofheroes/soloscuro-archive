@@ -143,44 +143,7 @@ void combat_status_render(void *data) {
         sol_font_render_center(FONT_GREYLIGHT, buf, loc.x, loc.y, loc.w);
     }
 
-
-    // Okay this can be confusing.
-    // The if decides when to proceed to the next action on the combat list
-    // list: List of actions
-    // last_action: a flag so we want a full round before clearing the GUI.
-    /*
-    if ((list && list->an) || last_action) {
-        count--;
-        // Static animation, needs to move to location
-        if (list && list->an && list->is_moving) {
-            if (abs(list->an->anim->x - list->an->anim->destx) < delta
-                    && abs(list->an->anim->y == list->an->anim->desty) < delta) {
-                pop_list();
-            }
-        // animation, we want until animation complete (after SCMD_JUMP)
-        } else if (list && list->an && list->an->anim->scmd[list->an->anim->pos].flags & SCMD_JUMP) {
-            list->cycles++;
-        } else if (list && list->cycles) {
-            pop_list();
-        }
-
-        if (last_action == 0 && (!list || !list->an)) {
-            last_action = 1;
-            count = 30;
-        };
-
-        if (last_action && count == 0) {
-            sol_combat_clear_damage();
-            last_action = 0;
-        }
-
-        if (count <= 0) {
-            count = 30;
-        }
-    }
-    */
-
-    if (!sol_combat_get_current(sol_arbiter_combat_region(sol_region_manager_get_current()))) { return; }
+    if (!sol_combat_active(sol_arbiter_combat_region(sol_region_manager_get_current()))) { return; }
 
     if (2 == 1) {
         sol_draw_cone(100, 100, 200);

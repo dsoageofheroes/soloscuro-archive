@@ -27,5 +27,4 @@ function init()
     sol.load_window("narrate")
     sol.load_window("combat")
     reg.enter_combat(reg, 20, 10)
-    sol.game_loop()
 end

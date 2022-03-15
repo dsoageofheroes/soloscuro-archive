@@ -110,8 +110,7 @@ extern sol_region_t* sol_region_manager_get_current() {
     return sol_regions[current_region - MAX_REGIONS];
 }
 
-// Deprecated API:
-
+// Deprecated API: Does not work!
 void ds_region_load_region_from_save(const int id, const int region_id) {
     char gff_name[32];
     char *buf = NULL;
@@ -131,39 +130,6 @@ void ds_region_load_region_from_save(const int id, const int region_id) {
         //printf("ERROR READING!\n");
         //return ;
     //}
-
-    // TODO: clean this up.
-    /*
-    for (int i = 0; i < MAX_REGION_OBJS; i++) {
-        //printf("reg->list->objs[i].entry_id = %d, %d\n", reg->list->objs[i].entry_id, reg->list->objs[i].combat_id);
-        region_object_t *robj = reg->list->objs + i;
-        if (robj->combat_id == 9999) {
-            robj->scmd = gff_map_get_object_scmd(gff_index, id,
-                robj->entry_id, 0);
-            if (robj->scmd == 0) {
-                robj->scmd = ds_scmd_empty();
-            }
-        } else {
-            if (robj->entry_id > 0) {
-                robj->scmd = combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
-                gff_chunk_header_t chunk = gff_find_chunk_header(OBJEX_GFF_INDEX, GFF_RDFF, robj->entry_id);
-                buf = malloc(chunk.length);
-                if (!gff_read_chunk(OBJEX_GFF_INDEX, &chunk, buf, chunk.length)) {
-                    printf("ERROR can't read %d\n", robj->entry_id);
-                    exit(1);
-                }
-                robj->combat_id = combat_add(&(reg->cr), robj,
-                (ds1_combat_t *) (buf + sizeof(rdff_disk_object_t)));
-                //robj->mapy -= 16;//sprite_geth(anims[0].spr) - (8);
-                robj->bmpx = robj->mapx;
-                robj->bmpy = robj->mapy;
-                port_add_obj(reg->list->objs + i, pal);
-                free(buf);
-            }
-        }
-        robj->data = NULL;
-    }
-    */
 
     chunk = gff_find_chunk_header(id, GFF_RDAT, region_id);
     buf = malloc(chunk.length);

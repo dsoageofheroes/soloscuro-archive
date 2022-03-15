@@ -17,16 +17,6 @@ static entity_action_t monster_actions[MAX_COMBAT_ACTIONS]; // list of actions f
 static int monster_step = -1; // keep track of what step of the action the monster is on.
 static enum entity_action_e player_action;
 
-typedef struct combat_entry_s {
-    int initiative;
-    int sub_roll; // used to break ties.
-    int round; // which round we are in.
-    int melee_actions, range_actions, spell_actions, psionic_actions;
-    entity_action_t current_action;
-    entity_t *entity;
-    struct combat_entry_s *next;
-} combat_entry_t;
-
 // For BFS
 typedef struct action_node_s {
     int num_moves;
@@ -34,65 +24,6 @@ typedef struct action_node_s {
     entity_action_t actions[MAX_COMBAT_ACTIONS];
     struct action_node_s *next;
 } action_node_t;
-
-static combat_entry_t *combat_order = NULL;
-static combat_entry_t *current_turn = NULL;
-static combat_entry_t *defeated = NULL;
-
-void sol_combat_free(combat_region_t *cr) {
-    entity_list_free(&(cr->combatants));
-}
-
-static int32_t ticks_per_game_round = 20;// For outside combat.
-
-static int initiative_is_less(combat_entry_t *n0, combat_entry_t *n1) {
-    if (n0->initiative != n1->initiative) { return n0->initiative < n1->initiative; }
-    return n0->sub_roll < n1->sub_roll;
-}
-
-// Add to the actual combat list.
-static void add_to_combat(entity_t *entity) {
-    combat_entry_t *node = calloc(1, sizeof(combat_entry_t));
-    node->entity = entity;
-    node->next = combat_order; // start up front.
-    node->initiative = dnd2e_roll_initiative(entity);
-    node->sub_roll = dnd2e_roll_sub_roll();
-    node->current_action.action = EA_NONE;// Means they need to take their turn.
-
-    // if the node is first.
-    if (combat_order == NULL || initiative_is_less(node, combat_order)) {
-        combat_order = node;
-        return;
-    }
-
-    // Not the first, so shift now.
-    combat_entry_t *prev = combat_order;
-    node->next = prev->next;
-    prev->next = node;
-    while(node->next && !initiative_is_less(node, node->next)) {
-        prev->next = node->next;
-        node->next = node->next->next;
-        prev->next->next = node;
-        prev = prev->next;
-    }
-}
-
-static int which_player(combat_entry_t *node) {
-    for (int i = 0; i < MAX_PCS; i++) {
-        entity_t *player = sol_player_get(i);
-        if (player == node->entity) { // Warning: pointer test, be teh same, not just a clone.
-            return i;
-        }
-    }
-
-    return -1;
-}
-
-void sol_combat_player_action(const entity_action_t action) {
-    if (!wait_on_player || !current_turn) { return; }
-
-    player_action = action.action;
-}
 
 static void queue_add(action_node_t **head, action_node_t **tail, action_node_t *current, const enum entity_action_e action) {
     action_node_t *new = malloc(sizeof(action_node_t));
@@ -259,19 +190,6 @@ static void generate_monster_move_attack_closest(sol_region_t *reg, entity_t *mo
     printf("NEED TO move and guard!\n");
 }
 
-static void next_round() {
-    combat_entry_t *rover = combat_order;
-
-    while (rover) {
-        rover->entity->stats.combat.move = rover->entity->stats.base_move;
-        rover->melee_actions = rover->range_actions = rover->spell_actions = rover->psionic_actions = 0;
-        rover->round++;
-        rover = rover->next;
-    }
-
-    current_turn = combat_order;
-}
-
 static entity_action_t clear = { NULL, NULL, 0, EA_NONE };
 
 static void monster_set_animation(entity_t *monster, entity_action_t *action) {
@@ -294,10 +212,6 @@ static void monster_set_animation(entity_t *monster, entity_action_t *action) {
         case EA_WALK_DOWN:
             ydiff = 1; xdiff = 0; break;
     }
-    //monster->mapx += xdiff;
-    //monster->mapy += ydiff;
-    //monster->anim.destx += (xdiff * 32);
-    //monster->anim.desty += (ydiff * 32);
 }
 
 extern void sol_combat_add_attack_animation(sol_region_t *reg, dude_t *dude, entity_t *target,
@@ -395,14 +309,6 @@ extern void sol_combat_update(sol_region_t *reg) {
     monster_action(reg, combatant);
 }
 
-// This does not force into combat mode, simply add a combat to the current region.
-extern uint32_t combat_add(combat_region_t *rc, entity_t *entity) {
-    if (!rc || !entity) { return 0; }
-
-    entity_list_add(&(rc->combatants), entity);
-    return 1;
-}
-
 extern int sol_combat_activate_power(power_t *pw, entity_t *source, entity_t *target, const int32_t x, const int32_t y) {
     if (!pw || !source) { return 0; }
     sol_region_t *reg = sol_region_manager_get_current();
@@ -452,4 +358,9 @@ extern int sol_combat_activate_power(power_t *pw, entity_t *source, entity_t *ta
             warn("pw->shape %d not implemented\n", pw->shape);
     }
     return 1;
+}
+
+extern int sol_combat_active(combat_region_t *cr) {
+    if (!cr) { return 0; }
+    return cr->combatants.head != 0;
 }

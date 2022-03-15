@@ -565,6 +565,7 @@ static void render_entry_rdat() {
 }
 */
 
+#define NAME_MAX 512
 static void render_entry_name() {
     static char buf[BUF_MAX];
     static char names[NAME_MAX];

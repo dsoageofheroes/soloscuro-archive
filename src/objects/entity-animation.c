@@ -701,7 +701,6 @@ extern int entity_animation_execute(entity_t *entity) {
 
     if (action->ticks == 0 && action->amt == action->start_amt) {
         if (!apply_action(entity, action)) {
-            printf("NEED TO CLEAR!\n");
             entity_animation_list_free(&entity->actions);
             return 0;
         }

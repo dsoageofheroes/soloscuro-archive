@@ -46,5 +46,4 @@ function init()
     gpl.clone(-269, 1, 30, 10, 6, 0)
     slig = reg.find("Slig")
     reg.enter_combat(reg, 20, 10)
-    sol.game_loop()
 end
