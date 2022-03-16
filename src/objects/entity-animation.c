@@ -703,14 +703,14 @@ static void update_camera(entity_t *entity, entity_action_t *action) {
     if (x < buf) {
         sol_camera_scrollx(x - buf);
     }
-    if (x > (main_get_width() - buf)) {
-        sol_camera_scrollx(x - (main_get_width() - buf));
+    if (x > (settings_screen_width() - buf)) {
+        sol_camera_scrollx(x - (settings_screen_width() - buf));
     }
     if (y < buf) {
         sol_camera_scrolly(y - buf);
     }
-    if (y > (main_get_height() - buf)) {
-        sol_camera_scrolly(y - (main_get_height() - buf));
+    if (y > (settings_screen_height() - buf)) {
+        sol_camera_scrolly(y - (settings_screen_height() - buf));
     }
 }
 

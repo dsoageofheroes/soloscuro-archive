@@ -8,6 +8,7 @@
 #include "region.h"
 #include "gameloop.h"
 #include "gff.h"
+#include "item.h"
 #include "gff-map.h"
 #include "gff-image.h"
 #include "gff-xmi.h"
@@ -565,15 +566,14 @@ static void render_entry_rdat() {
 }
 */
 
-#define NAME_MAX 512
 static void render_entry_name() {
-    static char buf[BUF_MAX];
-    static char names[NAME_MAX];
+    static char buf[ITEM_NAME_MAX];
+    static char names[ITEM_NAME_MAX];
 
     if (res_max < 2) {
         gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_NAME, 1);
         res_max = chunk.length / 25;
-        gff_read_chunk(gff_idx, &chunk, names, NAME_MAX);
+        gff_read_chunk(gff_idx, &chunk, names, ITEM_NAME_MAX);
     }
 
     snprintf(buf, BUF_MAX, "RESOURCE %d of %d \n", res_idx, res_max - 1);
@@ -742,10 +742,10 @@ static void print_combat(ds1_combat_t combat, int pos) {
 
 static void print_item(ds1_item_t item, int pos) {
     char buf[BUF_MAX];
-    static char names[NAME_MAX];
+    static char names[ITEM_NAME_MAX];
 
     gff_chunk_header_t chunk = gff_find_chunk_header(DSLDATA_GFF_INDEX, GFF_NAME, 1);
-    gff_read_chunk(DSLDATA_GFF_INDEX, &chunk, names, NAME_MAX);
+    gff_read_chunk(DSLDATA_GFF_INDEX, &chunk, names, ITEM_NAME_MAX);
 
     FILE *f = fopen("out.dat", "wb+");
     fwrite(names, 1, chunk.length, f);
@@ -774,7 +774,7 @@ static void print_item(ds1_item_t item, int pos) {
     snprintf(buf, BUF_MAX, "slot: %d\n", item.slot);
     sol_print_line_len(0, buf, 320, pos, 128); pos += 20;
 
-    if ((item.name_idx * 25) < NAME_MAX) {
+    if ((item.name_idx * 25) < ITEM_NAME_MAX) {
         snprintf(buf, BUF_MAX, "name_index: %d ( %s)\n", item.name_idx, names + 25 * item.name_idx);
     } else {
         snprintf(buf, BUF_MAX, "name_index: %d\n", item.name_idx);

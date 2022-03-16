@@ -272,7 +272,7 @@ static void gui_init() {
         exit(1);
     }
     win = SDL_CreateWindow( "Dark Sun: Shattered Lands", SDL_WINDOWPOS_UNDEFINED,
-        SDL_WINDOWPOS_UNDEFINED, main_get_width(), main_get_height(), SDL_WINDOW_SHOWN );
+        SDL_WINDOWPOS_UNDEFINED, settings_screen_width(), settings_screen_height(), SDL_WINDOW_SHOWN );
     if( win == NULL ) {
         error( "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
         exit(1);

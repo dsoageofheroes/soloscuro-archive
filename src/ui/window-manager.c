@@ -30,8 +30,6 @@ extern void sol_window_init() {
 
 static uint32_t default_get_width() { return 320 * settings_zoom(); }
 static uint32_t default_get_height() { return 200 * settings_zoom(); }
-uint32_t main_get_width()  { return 800; }
-uint32_t main_get_height() { return 600; }
 
 extern void sol_window_load(int layer, sol_wops_t *window, const uint32_t x, const uint32_t y) {
     int grey_out_map = 0;
@@ -49,8 +47,8 @@ extern void sol_window_load(int layer, sol_wops_t *window, const uint32_t x, con
 
     if (windows[layer].init) {
         windows[layer].init(
-            ((main_get_width() - windows[layer].get_width()) / 2),
-            ((main_get_height() - windows[layer].get_height()) / 2));
+            ((settings_screen_width() - windows[layer].get_width()) / 2),
+            ((settings_screen_height() - windows[layer].get_height()) / 2));
     }
 
     for (uint32_t i = 0; i < window_pos && !grey_out_map; i++) {
