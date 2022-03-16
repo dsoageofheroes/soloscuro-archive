@@ -695,6 +695,25 @@ static int apply_action(entity_t *entity, entity_action_t *action) {
     return ret;
 }
 
+static void update_camera(entity_t *entity, entity_action_t *action) {
+    int x = sol_sprite_getx(entity->anim.spr);
+    int y = sol_sprite_gety(entity->anim.spr);
+    const int buf = 16 * 6 * settings_zoom();
+
+    if (x < buf) {
+        sol_camera_scrollx(x - buf);
+    }
+    if (x > (main_get_width() - buf)) {
+        sol_camera_scrollx(x - (main_get_width() - buf));
+    }
+    if (y < buf) {
+        sol_camera_scrolly(y - buf);
+    }
+    if (y > (main_get_height() - buf)) {
+        sol_camera_scrolly(y - (main_get_height() - buf));
+    }
+}
+
 extern int entity_animation_execute(entity_t *entity) {
     if (!entity || !entity->actions.head) { return 0; }
     entity_action_t *action = &(entity->actions.head->ca);
@@ -704,6 +723,10 @@ extern int entity_animation_execute(entity_t *entity) {
             entity_animation_list_free(&entity->actions);
             return 0;
         }
+    }
+
+    if (entity == sol_player_get_active()) {
+        update_camera(entity, action);
     }
 
     for (int i = 0; i < action->speed && entity->anim.scmd; i++) {

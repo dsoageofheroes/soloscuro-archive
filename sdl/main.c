@@ -47,8 +47,6 @@ static const char *windowed = NULL, *extract_images = NULL, *extract_xmis = NULL
 static char *ds1_gffs = NULL;
 static char *replay = NULL;
 
-
-
 static uint32_t xmappos, ymappos;
 static int32_t xmapdiff, ymapdiff;
 
@@ -209,8 +207,9 @@ void handle_input() {
         }
     }
 
-    xmappos += xmapdiff;
-    ymappos += ymapdiff;
+    //xmappos += xmapdiff;
+    sol_camera_scrollx(xmapdiff);
+    sol_camera_scrolly(ymapdiff);
     handle_mouse_motion();
     if (sol_region_manager_get_current()) {
         sol_player_update();
@@ -224,6 +223,9 @@ void port_handle_input() {
 void main_set_xscroll(int amt) { xmapdiff = amt; }
 void main_set_yscroll(int amt) { ymapdiff = amt; }
 void main_set_ignore_repeat(int repeat) { ignore_repeat = repeat; }
+
+extern void sol_camera_scrollx(const int amt) { xmappos += amt; }
+extern void sol_camera_scrolly(const int amt) { ymappos += amt; }
 
 void sol_center_on_player() {
     int w, h;

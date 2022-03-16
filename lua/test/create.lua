@@ -28,5 +28,4 @@ function init()
     print(slig.name)
     print(sol.WIZ_MAGIC_MISSILE)
     p0.cast(slig, sol.WIZ_MAGIC_MISSILE)
-    sol.game_loop()
 end

@@ -151,3 +151,5 @@ void sol_play_sound_effect(const uint16_t id) {}
 void       sol_textbox_render(textbox_t *tb) {}
 int port_valid_sprite(sprite_info_t *spr) { return 0; }
 void port_entity_update_scmd(entity_t *entity) {}
+extern void sol_camera_scrollx(const int amt) {}
+extern void sol_camera_scrolly(const int amt) {}

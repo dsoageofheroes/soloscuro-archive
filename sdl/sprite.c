@@ -15,7 +15,7 @@ static uint16_t sprite_append_full(uint16_t sprite_id, SDL_Renderer *renderer, S
         const int offsetx, const int offsety, const float zoom,
         const int gff_idx, const int type_id, const int res_id);
 
-void sprite_init() {
+extern void sol_sprite_init() {
     memset(sprites, 0x0, sizeof(sprite_t) * MAX_SPRITES);
     sprite_pos = 0;
 }
@@ -386,4 +386,3 @@ extern void sol_sprite_render_box(const uint16_t sprite_id, const uint16_t x,
     const uint16_t y, const uint16_t w, const uint16_t h) { sprite_render_box(main_get_rend(), sprite_id, x, y, w, h); }
 extern void sol_sprite_center(const int id, const int x, const int y, const int w, const int h) { sprite_center(id, x, y, w, h); }
 extern uint32_t sol_sprite_num_frames(const uint16_t id) { return sprite_num_frames(id); }
-extern void sol_sprite_init() { sprite_init(); }

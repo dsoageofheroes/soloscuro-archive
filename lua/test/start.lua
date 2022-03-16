@@ -16,5 +16,4 @@ function init()
     sol.load_window("map")
     sol.load_window("narrate")
     sol.load_window("combat")
-    sol.game_loop()
 end

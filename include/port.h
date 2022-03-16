@@ -98,23 +98,23 @@ extern void port_commit_display_frame();
 
 #define SPRITE_ERROR (0xFFFF)
 
-extern void sol_sprite_init();
+extern void         sol_sprite_init();
 extern sol_sprite_t sol_sprite_new(gff_palette_t *pal,
         const int offsetx, const int offsety, const float zoom,
         const int gff_idx, const int type_id, const int res_id);
-extern uint16_t sol_sprite_append(uint16_t sprite_id, gff_palette_t *pal,
+extern uint16_t     sol_sprite_append(uint16_t sprite_id, gff_palette_t *pal,
         const int offsetx, const int offsety, const float zoom,
         const int gff_idx, const int type_id, const int res_id);
 extern sol_sprite_t sol_sprite_create_from_data(unsigned char *data, const uint32_t w, const uint32_t h);
-extern void sol_sprite_set_location(const sol_sprite_t id, const uint32_t x, const uint32_t y);
-extern void sol_sprite_render(const sol_sprite_t id);
-extern uint32_t sol_sprite_getx(const sol_sprite_t id);
-extern uint32_t sol_sprite_gety(const sol_sprite_t id);
-extern uint32_t sol_sprite_getw(const sol_sprite_t id);
-extern uint32_t sol_sprite_geth(const sol_sprite_t id);
-extern void sol_sprite_set_alpha(const sol_sprite_t id, const uint8_t alpha);
-extern void sol_sprite_free(const sol_sprite_t id);
-extern void sol_sprite_set_frame(const uint16_t id, const uint16_t frame);
+extern void         sol_sprite_set_location(const sol_sprite_t id, const uint32_t x, const uint32_t y);
+extern void         sol_sprite_render(const sol_sprite_t id);
+extern uint32_t     sol_sprite_getx(const sol_sprite_t id);
+extern uint32_t     sol_sprite_gety(const sol_sprite_t id);
+extern uint32_t     sol_sprite_getw(const sol_sprite_t id);
+extern uint32_t     sol_sprite_geth(const sol_sprite_t id);
+extern void         sol_sprite_set_alpha(const sol_sprite_t id, const uint8_t alpha);
+extern void         sol_sprite_free(const sol_sprite_t id);
+extern void         sol_sprite_set_frame(const uint16_t id, const uint16_t frame);
 extern uint16_t sol_sprite_get_frame(const uint16_t id);
 extern int sol_sprite_in_rect(const uint16_t id, const uint32_t x, const uint32_t y);
 extern void sol_print_line_len(const sol_font_t font, const char *text, size_t x, size_t y, const uint32_t len);
@@ -133,5 +133,7 @@ extern uint32_t sol_get_camerax();
 extern uint32_t sol_get_cameray();
 
 extern void sol_center_on_player();
+extern void sol_camera_scrollx(const int amt);
+extern void sol_camera_scrolly(const int amt);
 
 #endif

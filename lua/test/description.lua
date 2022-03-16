@@ -32,5 +32,4 @@ function init()
     --e = soloscuro.load_player(0)
     --print (e.name)
     soloscuro.load_window("description")
-    soloscuro.game_loop()
 end
