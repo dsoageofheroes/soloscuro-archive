@@ -658,9 +658,8 @@ static int req_set_allegiance(int16_t object, long allegiance, long notused2) {
 
     entity_list_for_each(sol_region_manager_get_current()->entities, dude) {
         if (dude->ds_id == object) {
+            //printf("set_allegiance: %d to %d\n", object, allegiance);
             dude->allegiance = allegiance;
-            //combat_add(&(sol_region_manager_get_current()->cr), dude);
-            //sol_region_add_entity(sol_region_manager_get_current(), dude);
         }
     }
 

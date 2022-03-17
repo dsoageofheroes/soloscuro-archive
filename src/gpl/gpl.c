@@ -21,9 +21,24 @@ uint8_t command_implemented = 0; // Temporary while I figure out each function.
 
 /* Globals */
 void get_parameters(int16_t amt);
+static entity_t *other = NULL;
 
 gpl_param_t param;
 /* End Globals */
+
+extern entity_t* gpl_get_global(gpl_global_e what) {
+    switch(what) {
+        case GPL_OTHER: return other; break;
+        default: warn("unknown type: %d\n", what); break;
+    }
+}
+
+extern void gpl_set_global(gpl_global_e what, entity_t *entity) {
+    switch(what) {
+        case GPL_OTHER: other = entity; break;
+        default: warn("unknown type: %d\n", what); break;
+    }
+}
 
 void gpl_change_region(const int region_id) {
     //gpl_execute_subroutine(region_id, 0, 1);

@@ -226,7 +226,9 @@ static void lua_exit(const char *msg) {
 }
 
 static int needs_quotes(const char *str) {
-    return !(strncmp("gpl.get_gstr(", str, 12) == 0);
+    if (strncmp("gpl.get_gstr(", str, 12) == 0) { return 0; }
+    if (strncmp("gpl.get_element(", str, 15) == 0) { return 0; }
+    return 1;
 }
 
 static void validate_number(const char *num, const char *message) {
@@ -1466,7 +1468,11 @@ static void gpl_lua_write_complex_var() {
     memset(element, 0x0, sizeof(uint16_t) * MAX_SEARCH_STACK);
     if (gpl_lua_access_complex(&header, &depth, element, &obj_name) == 1) {
         lprintf("--complex_write: I need to write 'accum' to header (%d) at depth (%d)\n", header, depth);
+        //lprintf("print (\"writing complex: header=\", %d, \"depth = \", %d, \"obj_name = \", %d)", header, depth, obj_name);
         //smart_write_data(header, depth, element, data);
+        lprintf("gpl.set_element(%d, %d, %d, %d, accum)", obj_name, header, depth, *element);
+    } else {
+        lprintf("print (\"write complex failed\")\n");
     }
 }
 
@@ -1848,18 +1854,20 @@ static uint8_t gpl_lua_access_complex(int16_t *header, uint16_t *depth, uint16_t
     } else {
         lprintf("--access_complex: I need to set the *head to the correct view\n");
         switch (*obj_name & 0x7FFF) {
-            case 0x25: // POV
+            case 0x25: // POV, which is active character.
+                //lprintf("obj = gpl.get_pov(%d) -- %d \n", *obj_name & 0x7FFF, *obj_name);
                 lprintf("--access_complex: get POV, valid obj_name(%d), need to set header\n", *obj_name & 0x7FFF);
                 break;
             case 0x26: // ACTIVE
                 lprintf("--access_complex: get ACTIVE, valid obj_name(%d), need to set header\n", *obj_name & 0x7FFF);
                 break;
             case 0x27: // PASSIVE
-                lprintf("obj = gpl.get_gname(%d) -- passive\n", GNAME_PASSIVE);
+                //lprintf("obj = gpl.get_gname(%d) -- passive\n", GNAME_PASSIVE);
                 lprintf("--access_complex: get PASSIVE, valid obj_name(%d), need to set header\n", *obj_name & 0x7FFF);
                 break;
             case 0x28: // OTHER
                 lprintf("--access_complex: get OTHER, valid obj_name(%d), need to set header\n", *obj_name & 0x7FFF);
+                //lprintf("other = obj \n");
                 break;
             case 0x2C: // OTHER1
                 lprintf("--access_complex: get OTHER1, valid obj_name(%d), need to set header\n", *obj_name & 0x7FFF);
@@ -1868,6 +1876,7 @@ static uint8_t gpl_lua_access_complex(int16_t *header, uint16_t *depth, uint16_t
                 lprintf("--access_complex: get THING, valid obj_name(%d), need to set header\n", *obj_name & 0x7FFF);
                 break;
             default:
+                lprintf("--access_complex: unknown arg: %d", *obj_name & 0x7FFF);
                 return 0;
         }
     }
@@ -1917,13 +1926,17 @@ static int32_t gpl_lua_read_complex(char *buf, size_t *buf_pos, const size_t siz
                 break;
             case 1:
                 //lprintf("gpl.get_id(obj)\n");
-                *buf_pos += snprintf(buf + *buf_pos, size - *buf_pos, "gpl.get_id(obj)");
+                //printf("read_complex: %d %d %d\n", obj_name, header, depth);
+                //*buf_pos += snprintf(buf + *buf_pos, size - *buf_pos, "gpl.get_id(obj, %d)", obj_name);
+                *buf_pos += snprintf(buf + *buf_pos, size - *buf_pos,
+                     "gpl.get_element(%d, %d, %d, %d)", obj_name, header, depth, *element);
                 break;
             default:
                 *buf_pos += snprintf(buf + *buf_pos, size - *buf_pos, "gpl.read_complex(%d, %d, %d)", obj_name, header, depth);
                 break;
         }
         lprintf("--read_complex:reading header (%d) at depth (%d)\n", header, depth);
+        lprintf("--gpl.get_element(%d, %d, %d, %d)\n", obj_name, header, depth, *element);
         ret = gpl_lua_get_complex_data(header, depth, element);
         return ret;
     } else {

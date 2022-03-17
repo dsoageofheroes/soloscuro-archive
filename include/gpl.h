@@ -20,6 +20,7 @@
 #include "settings.h"
 #include "gff.h"
 #include "gfftypes.h"
+#include "entity.h"
 #include "ssi-scmd.h"
 
 #define gpl_check_index_t uint16_t
@@ -31,20 +32,27 @@ typedef struct gpl_param_s {
     int32_t *ptr[MAX_PARAMETERS];
 } gpl_param_t;
 
+typedef enum gpl_global_e {
+    GPL_POV,
+    GPL_OTHER
+} gpl_global_e;
+
 extern gpl_param_t param;
 
-extern void     gpl_init();
-extern void     gpl_execute_function(const int gff_idx, const int res_id, const int file_id);
-extern void     gpl_change_region(const int region_id);
+extern void      gpl_init();
+extern void      gpl_execute_function(const int gff_idx, const int res_id, const int file_id);
+extern void      gpl_change_region(const int region_id);
 //int do_dsl_command(uint8_t cmd);
-extern uint32_t gpl_request_impl(int16_t token, int16_t name,
+extern uint32_t  gpl_request_impl(int16_t token, int16_t name,
         int32_t num1, int32_t num2);
-extern void     gpl_cleanup();
-extern void     gpl_set_quiet(const int val);
+extern void      gpl_cleanup();
+extern void      gpl_set_quiet(const int val);
+extern entity_t* gpl_get_global(gpl_global_e what);
+extern void      gpl_set_global(gpl_global_e what, entity_t *entity);
 
 /* Begin Parsing functions */ 
-extern uint8_t  gpl_peek_one_byte();
-extern uint8_t  gpl_get_byte();
+extern uint8_t   gpl_peek_one_byte();
+extern uint8_t   gpl_get_byte();
 /* End Parsing functions */ 
 
 extern uint8_t command_implemented; // Temporary while I figure out each function.

@@ -10,6 +10,7 @@
 #include "replay.h"
 #include "region-manager.h"
 #include "trigger.h"
+#include "player.h"
 #include "narrate.h"
 #include <string.h>
 #include <stdlib.h>
@@ -222,6 +223,18 @@ static int get_gname(lua_State *l) {
     return 1;
 }
 
+static int get_pov(lua_State *l) {
+    lua_Integer id = luaL_checkinteger(l, 1);
+    if (id < 0) {
+        printf("ERROR: " PRI_LI " is out of range for local big nums!\n", id);
+        exit(1);
+    }
+    //printf("GNAME----------------------------------------------------->[" PRI_LI "] = %d\n", id, gpl_gnames[id]);
+    warn("get_pov (%d): not implemented!\n", id);
+    lua_pushnumber(l, 0);
+    return 1;
+}
+
 static int set_gname(lua_State *l) {
     lua_Integer id = luaL_checkinteger(l, 1);
     lua_Integer val = luaL_checkinteger(l, 2);
@@ -248,12 +261,61 @@ static int get_type(lua_State *l) {
 
 static int get_id(lua_State *l) {
     lua_Integer obj = luaL_checkinteger(l, 1);
+    lua_Integer obj_name = luaL_checkinteger(l, 2);
     //printf("!!!!!!!!!!gpl.get_name: not implemented returning -1!\n");
     //printf("-------->returning " PRI_LI "\n", obj);
     //error("error: gpl.get_id not implement, just returning obj (" PRI_LI " ).\n", obj);
+    printf("get_id(%lld, %lld) -- %lld\n", obj, obj_name, obj_name & 0x7FFF);
     lua_pushnumber(l, obj);
     //lua_pushnumber(l, -1);
     return 1;
+}
+
+static int get_element_entity(lua_State *l, dude_t *dude, const int depth, const int element) {
+    if (!dude) {
+        warn("passed a null entity! (depth = %d, element = %d)\n", depth, element);
+        lua_pushnumber(l, -1);
+        return 1;
+    }
+
+    if (depth == 1 && element == 19) { // Name
+        lua_pushstring(l, dude->name);
+        return 1;
+    }
+
+    // right now just return the id!
+    printf("get_element_entity: need to get %d, %d\n", depth, element);
+    lua_pushnumber(l, dude->ds_id);
+    return 1;
+}
+
+static int get_element(lua_State *l) {
+    lua_Integer obj_name = luaL_checkinteger(l, 1);
+    lua_Integer header   = luaL_checkinteger(l, 2);
+    lua_Integer depth    = luaL_checkinteger(l, 3);
+    lua_Integer element  = luaL_checkinteger(l, 4);
+    //printf("get_element(%lld, %lld, %lld, %lld) -- %lld\n", obj_name, header, depth, element, obj_name & 0x7FFF);
+    switch(obj_name & 0x7FFF) {
+        case 0x25: // POV -- active char?
+            return get_element_entity(l, sol_player_get_active(), depth, element);
+        case 0x28: // OTHER
+            return get_element_entity(l, gpl_get_global(GPL_OTHER), depth, element);
+    }
+    //lua_pushnumber(l, obj);
+    warn("get_element(%lld, %lld, %lld, %lld) -- %lld, failed to find\n", obj_name, header, depth, element, obj_name & 0x7FFF);
+    lua_pushnumber(l, -1);
+    return 1;
+}
+
+static int set_element(lua_State *l) {
+    lua_Integer obj_name = luaL_checkinteger(l, 1);
+    lua_Integer header   = luaL_checkinteger(l, 2);
+    lua_Integer depth    = luaL_checkinteger(l, 3);
+    lua_Integer element  = luaL_checkinteger(l, 4);
+    lua_Integer accum    = luaL_checkinteger(l, 4);
+
+    warn("set_element(%lld, %lld, %lld, %lld) -- %lld <- %lld is unimplemented.\n", obj_name, header, depth, element, obj_name & 0x7FFF, accum);
+    return 0;
 }
 
 static int get_party(lua_State *l) {
@@ -484,6 +546,7 @@ static int gpl_clone(lua_State *l) {
         dude->sprite.xoffset = 0;
         dude->sprite.yoffset = 0;
         entry_id = dude->ds_id;
+        gpl_set_global(GPL_OTHER, dude);
 
         if (dude) {
             sol_region_move_to_nearest(sol_region_manager_get_current(), dude);
@@ -586,8 +649,11 @@ static const struct luaL_Reg gpl_state_lib[] = {
     {"get_gstr", get_gstr},
     {"get_gname", get_gname},
     {"set_gname", set_gname},
+    {"get_pov", get_pov},
     {"get_type", get_type},
     {"get_id", get_id},
+    {"get_element", get_element},
+    {"set_element", set_element},
     {"get_party", get_party},
     {"is_true", is_true},
     {"getX", gpl_getX},

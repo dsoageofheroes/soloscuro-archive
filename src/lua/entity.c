@@ -104,7 +104,6 @@ static int attack_range(lua_State *l) {
 
 static int hunt(lua_State *l) {
     dude_t *dude = (dude_t*) lua_touserdata(l, lua_upvalueindex(1));
-    //dude_t *target = (dude_t*) sol_lua_get_userdata(l, -1 - lua_gettop(l));
 
     dude->abilities.hunt = 1;
     return 0;

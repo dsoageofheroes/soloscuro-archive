@@ -198,7 +198,7 @@ int narrate_handle_mouse_down(const uint32_t button, const uint32_t x, const uin
 int narrate_handle_key_down(const enum entity_action_e action) {
     if (!display) { return 0; }
 
-    printf("narrate action: %d\n", action);
+    //printf("narrate action: %d\n", action);
     switch (action) {
         case EA_ACTIVATE:
             if (sol_game_loop_is_waiting_for(WAIT_NARRATE_CONTINUE)) {
