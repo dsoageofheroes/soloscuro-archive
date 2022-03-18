@@ -180,6 +180,7 @@ x86_64-w64-mingw32-gcc -O2 -fPIC -I ../ext/spng/ -I ../include/ -I ../sdl/ -I ..
     ../src/gpl/gpl-var.c \
     ../src/support.c \
     ../src/gameloop.c \
+    ../src/input.c \
     ../src/region-manager.c \
     ../sdl/main.c \
     ../sdl/browse.c \

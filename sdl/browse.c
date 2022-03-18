@@ -1006,8 +1006,8 @@ static void render_entry_gmap() {
             if (sol_region_is_block(region, i, j)) {
                 //printf("(%d, %d)\n, ", i, j);
                 SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, SDL_ALPHA_OPAQUE);
-            /*} else if (gpl_region_is_actor(region, i, j)) {
-                SDL_SetRenderDrawColor(renderer, 0x00, 0xFF, 0x00, SDL_ALPHA_OPAQUE);*/
+            //} else if (gpl_region_is_actor(region, i, j)) {
+                //SDL_SetRenderDrawColor(renderer, 0x00, 0xFF, 0x00, SDL_ALPHA_OPAQUE);
             } else { continue; }
             points[0].x = 320 + (j - mapy) * 16 * zoom;
             points[0].y = 40  + (i - mapx) * 16 * zoom;

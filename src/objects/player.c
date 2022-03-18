@@ -196,8 +196,10 @@ extern int sol_player_exists(const int slot) {
 }
 
 extern void sol_player_set_active(const int slot) {
+    int prev = active;
     if (slot < 0 || slot >= MAX_PCS) { return; }
     if (players[slot]) { active = slot; }
+    sol_map_update_active_player(prev);
 }
 
 extern entity_t* sol_player_get_active() {

@@ -179,12 +179,14 @@ extern int sol_region_manager_add_region(sol_region_t *region) {
 
 extern void sol_region_manager_set_current(sol_region_t *region) {
     if (!region) { return; }
+    entity_t *player = sol_player_get_active();
     sol_region_manager_remove_players();
     for (int i = 0; i < MAX_REGIONS; i++) {
         if (ssi_regions[i] == region) { current_region = i; }
         if (sol_regions[i] == region) { current_region = MAX_REGIONS + i; }
     }
-    entity_list_add(region->entities, sol_player_get_active());
+    entity_list_add(region->entities, player);
+    if (!player->anim.scmd) { player->anim.scmd = ssi_scmd_empty(); }
 }
 
 extern void sol_region_manager_remove_players() {

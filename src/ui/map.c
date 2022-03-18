@@ -213,6 +213,9 @@ void map_render_anims() {
 
     entity_list_for_each(cmap->region->entities, dude) {
         hflip = vflip = 0;
+        //if (dude->name) {
+            //printf("dude->name = %s, %d, %p\n", dude->name, dude->anim.spr, dude->anim.scmd);
+        //}
         if (dude->anim.spr == SPRITE_ERROR) { continue; }
         anim = &(dude->anim);
         if (!anim->scmd) { continue; }
@@ -239,6 +242,20 @@ void map_render_anims() {
 void port_remove_entity(entity_t *entity) {
     if (!entity || entity->sprite.data == NULL) { return; }
     sol_region_remove_entity(sol_region_manager_get_current(), entity);
+}
+
+extern void sol_map_update_active_player(const int prev) {
+    if (!cmap) { return; }
+    entity_t *pr = sol_player_get(prev);
+    entity_t *player = sol_player_get_active();
+    if (!pr || !player) { return; }
+    player->mapx = pr->mapx;
+    player->mapy = pr->mapy;
+    sol_region_remove_entity(sol_region_manager_get_current(), pr);
+    sol_region_add_entity(sol_region_manager_get_current(), player);
+    player->anim.scmd = pr->anim.scmd;
+    port_entity_update_scmd(player);
+    sol_map_place_entity(player);
 }
 
 void sol_map_place_entity(entity_t *entity) {
@@ -422,7 +439,9 @@ int map_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_
     }
 
     //printf("-> %d, %d\n", tilex, tiley);
-    sol_region_generate_move(sol_region_manager_get_current(), sol_player_get_active(), tilex, tiley, 2);
+    if (ms == MOUSE_POINTER && button == SOL_MOUSE_BUTTON_LEFT) {
+        sol_region_generate_move(sol_region_manager_get_current(), sol_player_get_active(), tilex, tiley, 2);
+    }
     //printf("No dude there bruh.\n");
 
     return 1; // map always intercepts the mouse...

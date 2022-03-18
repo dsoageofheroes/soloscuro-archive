@@ -71,8 +71,6 @@ extern sol_region_t* sol_region_create(const int gff_file) {
     //TODO Finish region_create!
     load_tile_ids(reg);
     load_map_flags(reg);
-    //sol_combat_init(&(reg->cr));
-    //region_list_load_objs(ret->list, ret->gff_file, ret->map_id);
 
     return reg;
 }

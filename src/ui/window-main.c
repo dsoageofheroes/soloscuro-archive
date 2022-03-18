@@ -2,6 +2,10 @@
 #include "view-character.h"
 #include "add-load-save.h"
 #include "narrate.h"
+#include "map.h"
+#include "combat.h"
+#include "combat-status.h"
+#include "region-manager.h"
 #include "popup.h"
 #include "gfftypes.h"
 #include "player.h"
@@ -38,8 +42,16 @@ static int click_action() {
     if (count_down_spr == start) {
         if(sol_player_get_active() && sol_player_get_active()->name) {
             sol_window_pop();
-            ret = 1;
-            sol_window_load_region(42);
+            // Note: We are deallocated here, so be careful.
+            sol_region_t *reg = sol_region_manager_get_region(42);
+            sol_region_manager_set_current(reg);
+            //sol_window_load_region(42);
+            sol_player_get_active()->mapx = 30;
+            sol_player_get_active()->mapy = 13;
+            sol_window_push(&map_window, 0, 0);
+            sol_window_push(&narrate_window, 0, 0);
+            sol_window_push(&combat_status_window, 295, 5);
+            return 1;
         } else {
             sol_window_push(&popup_window, 100, 75);
             sol_popup_set_message("CREATE CHARACTER");

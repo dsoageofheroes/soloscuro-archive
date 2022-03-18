@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "map.h"
 #include "audio.h"
+#include "input.h"
 #include "font.h"
 #include "utils.h"
 #include "lua-inc.h"
@@ -190,6 +191,7 @@ void handle_input() {
                 if (event.key.keysym.sym == SDLK_KP_8) { player_directions[8] = 1; }
                 if (event.key.keysym.sym == SDLK_KP_9) { player_directions[9] = 1; }
                 if (event.key.keysym.sym == SDLK_SPACE) { main_toggle_debug(); }
+                if (event.key.keysym.sym == SDLK_g) { sol_key_down(SOLK_g); }
                 break;
             case SDL_MOUSEMOTION:
                 handle_mouse_motion();
