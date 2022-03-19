@@ -31,6 +31,12 @@ extern void sol_combat_clear(combat_region_t *cr) {
     entity_list_clear((&(cr->round.entities)));
 }
 
+extern int sol_combat_guard_check(combat_region_t *cr, entity_action_t *action) {
+    entity_t *dude = sol_combat_get_current(cr);
+    if (!dude || !action) { return 0; }
+    return 0;
+}
+
 extern entity_t* sol_combat_get_current(combat_region_t *cr) {
     if (!cr || !cr->round.entities.head) { return NULL; }
     return cr->round.entities.head->entity;

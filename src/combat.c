@@ -7,6 +7,7 @@
 #include "gpl.h"
 #include "port.h"
 #include "rules.h"
+#include "popup.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -323,6 +324,7 @@ extern int sol_combat_activate_power(power_t *pw, entity_t *source, entity_t *ta
     // We are now committed to make this work.
 
     if (!target) { // time to make a fake target for the power.
+        warn("Creating fake entity...\n");
         target = entity_create_fake(x, y);
     }
 
@@ -357,6 +359,26 @@ extern int sol_combat_activate_power(power_t *pw, entity_t *source, entity_t *ta
         default:
             warn("pw->shape %d not implemented\n", pw->shape);
     }
+    return 1;
+}
+
+#define BUF_LEN (128)
+// entity == NULL, means for any player.
+extern int sol_combat_guard(entity_t *entity) {
+    char buf[BUF_LEN];
+    combat_region_t *cr = sol_arbiter_combat_region(sol_region_manager_get_current());
+    entity_t *dude = sol_combat_get_current(cr);
+    int pos;
+
+    if (sol_player_get_slot(dude) < 0 && !entity) { return 0; }
+    if (entity && dude != entity) { return 0; }
+
+    pos = snprintf(buf, BUF_LEN - 1, "%s guards", dude->name);
+    buf[pos] = '\0';
+    dude->combat_status = EA_GUARD;
+    sol_combat_next_combatant(cr);
+    sol_popup_quick_message(buf);
+    sol_window_push(&popup_window, 0, 0);
     return 1;
 }
 

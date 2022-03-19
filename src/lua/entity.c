@@ -60,6 +60,12 @@ static int move_up_right(lua_State *l) { return move_entity(l, 1, -1); }
 static int move_down_left(lua_State *l) { return move_entity(l, -1, 1); }
 static int move_down_right(lua_State *l) { return move_entity(l, 1, 1); }
 
+static int guard(lua_State *l) {
+    dude_t *dude = (dude_t*) lua_touserdata(l, lua_upvalueindex(1));
+    lua_pushboolean(l, sol_combat_guard(dude));
+    return 1;
+}
+
 static int set_class(lua_State *l) {
     dude_t   *dude = (dude_t*) lua_touserdata(l, lua_upvalueindex(1));
     uint16_t  which = luaL_checkinteger(l, 1);
@@ -156,6 +162,8 @@ extern int sol_lua_entity_function(entity_t *entity, const char *func, lua_State
         return push_entity_function(l, entity, hunt);
     } else if (!strcmp(func, "move")) {
         return push_entity_function(l, entity, move);
+    } else if (!strcmp(func, "guard")) {
+        return push_entity_function(l, entity, guard);
     }
     lua_pushinteger(l, 0);
     return 1;

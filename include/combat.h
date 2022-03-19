@@ -60,6 +60,7 @@ extern void   sol_combat_player_action(const entity_action_t action);
 extern int    sol_combat_activate_power(power_t *pw, entity_t *source, entity_t *target, const int32_t x, const int32_t y);
 extern void   sol_combat_add_attack_animation(sol_region_t *reg, dude_t *dude, entity_t *target,
                                               power_t *power, enum entity_action_e action);
+extern int    sol_combat_guard(entity_t *entity);
 
 // pre-processor ordering.
 extern void   sol_combat_is_defeated(sol_region_t *reg, entity_t *dude);

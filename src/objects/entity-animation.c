@@ -719,6 +719,9 @@ extern int entity_animation_execute(entity_t *entity) {
     entity_action_t *action = &(entity->actions.head->ca);
 
     if (action->ticks == 0 && action->amt == action->start_amt) {
+        if (sol_combat_guard_check(sol_arbiter_combat_region(sol_region_manager_get_current()), action)) {
+            return entity_animation_execute(entity);
+        }
         if (!apply_action(entity, action)) {
             entity_animation_list_free(&entity->actions);
             return 0;

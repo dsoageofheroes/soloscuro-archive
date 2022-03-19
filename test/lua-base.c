@@ -8,6 +8,7 @@
 #include "region.h"
 #include "region-manager.h"
 #include "ssi-item.h"
+#include "gameloop.h"
 #include <string.h>
 #include <stdlib.h>
 #include "sol-lua-manager.h"
@@ -37,6 +38,7 @@ void the_test(void) {
     if (sol_lua_load(lua_script)) { // lua_script is defined in the test
         TEST_ASSERT_MESSAGE(0, "Unable to load lua\n");
     }
+    sol_game_loop();
     sol_test_info_t sti = sol_get_lua_test();
     TEST_ASSERT_MESSAGE(!sti.failed, sti.msg);
 }

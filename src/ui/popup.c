@@ -2,14 +2,17 @@
 #include "narrate.h"
 #include "gff.h"
 #include "port.h"
+#include "font.h"
 #include "gfftypes.h"
 #include "settings.h"
 #include <string.h>
 
-static sol_sprite_t background, popup_return, option[3];
+static sol_sprite_t background, popup_return, option[3], background_popup;
 static char main_text[32], option_text[3][32];
+static int16_t popup_count;
 static uint8_t selection = POPUP_NOTHING;
 static sol_font_t option_font[3];
+static char *popup_text = NULL;
 
 sol_dim_t main_loc, option_loc[3];
 
@@ -35,6 +38,7 @@ static void popup_init(const uint32_t x, const uint32_t y) {
     const float zoom = settings_zoom();
 
     background = sol_sprite_new(pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 14000);
+    background_popup = sol_sprite_new(pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 10001);
     popup_return = sol_sprite_new(pal, 103 + x, 36 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 5012);
     option[0] = sol_sprite_new(pal, 8 + x, 17 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 14101);
     option[1] = sol_sprite_new(pal, 8 + x, 29 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 14102);
@@ -57,7 +61,7 @@ static void popup_init(const uint32_t x, const uint32_t y) {
     selection = POPUP_NOTHING;
 }
 
-static void popup_render(void *data) {
+static void render_option() {
     sol_sprite_render(background);
     sol_sprite_render(popup_return);
     sol_sprite_render(option[0]);
@@ -68,6 +72,29 @@ static void popup_render(void *data) {
     sol_print_line_len(option_font[0], option_text[0], option_loc[0].x, option_loc[0].y, sizeof(option_text[0]));
     sol_print_line_len(option_font[1], option_text[1], option_loc[1].x, option_loc[1].y, sizeof(option_text[1]));
     sol_print_line_len(option_font[2], option_text[2], option_loc[2].x, option_loc[2].y, sizeof(option_text[2]));
+}
+
+static void render_popup() {
+    const float zoom = settings_zoom();
+    const int len = strlen(popup_text);
+    uint32_t pixel_len = sol_font_pixel_width(FONT_GREY, popup_text, len);
+    int x = sol_sprite_getx(background_popup) + zoom * 90 - pixel_len / 2;
+    int y = sol_sprite_gety(background_popup) + zoom * 5;
+
+    sol_sprite_render(background_popup);
+    sol_print_line_len(FONT_GREY, popup_text, x, y, len);
+
+    popup_count--;
+    if (popup_count <= 0) {
+        free(popup_text);
+        popup_text = NULL;
+    }
+}
+
+static void popup_render(void *data) {
+    (void)data;
+    if (main_text[0]) { render_option(); }
+    if (popup_text)   { render_popup(); }
 }
 
 static int get_sprite_mouse_is_on(const uint32_t x, const uint32_t y) {
@@ -107,7 +134,6 @@ static int popup_handle_mouse_down(const uint32_t button, const uint32_t x, cons
     if (sol_sprite_in_rect(option[2], x, y)) { return option[2]; }
 
     return 1; // means I captured the mouse click
-    //return 0; // zero means I did not handle the mouse click, so another window may.
 }
 
 static int popup_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
@@ -121,7 +147,6 @@ static int popup_handle_mouse_up(const uint32_t button, const uint32_t x, const 
     }
 
     return 1; // means I captured the mouse click
-    //return 0; // zero means I did not handle the mouse click, so another window may.
 }
 
 static void popup_free() {
@@ -130,10 +155,18 @@ static void popup_free() {
     sol_sprite_free(option[0]);
     sol_sprite_free(option[1]);
     sol_sprite_free(option[2]);
+    sol_sprite_free(background_popup);
+    if (popup_text) { free(popup_text); }
 }
 
 uint8_t sol_popup_get_selection() { return selection; }
 void sol_popup_clear_selection() { selection = POPUP_NOTHING; }
+
+extern void sol_popup_quick_message(const char *msg) {
+    if (popup_text) { free(popup_text); }
+    popup_text = strdup(msg);
+    popup_count = 60;
+}
 
 sol_wops_t popup_window = {
     .init = popup_init,

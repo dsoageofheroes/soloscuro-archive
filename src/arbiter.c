@@ -45,6 +45,7 @@ static void place_combatants(combat_region_t *cr) {
         memset(&entity->stats.combat, 0x0, sizeof(combat_round_stats_t));
         entity->stats.combat.initiative = dnd2e_roll_initiative(entity);
         entity->stats.combat.move = dnd2e_get_move(entity);
+        entity->combat_status = EA_NONE;
         entity_list_add_by_init((&cr->round.entities), entity);
     }
 }

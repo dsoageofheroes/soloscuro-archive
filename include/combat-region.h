@@ -19,6 +19,7 @@ typedef struct combat_region_s {
 extern void      sol_combat_region_init(combat_region_t *cr);
 extern int       sol_combat_check_if_over(combat_region_t *cr);
 extern void      sol_combat_clear(combat_region_t *cr);
+extern int       sol_combat_guard_check(combat_region_t *cr, entity_action_t *action);
 extern entity_t* sol_combat_get_current(combat_region_t *cr);
 extern void      sol_combat_next_combatant(combat_region_t *cr);
 extern int       sol_combat_attempt_action(combat_region_t *cr, dude_t *dude);

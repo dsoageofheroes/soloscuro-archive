@@ -185,8 +185,11 @@ extern void sol_region_manager_set_current(sol_region_t *region) {
         if (ssi_regions[i] == region) { current_region = i; }
         if (sol_regions[i] == region) { current_region = MAX_REGIONS + i; }
     }
-    entity_list_add(region->entities, player);
-    if (!player->anim.scmd) { player->anim.scmd = ssi_scmd_empty(); }
+
+    if (player) {
+        entity_list_add(region->entities, player);
+        if (!player->anim.scmd) { player->anim.scmd = ssi_scmd_empty(); }
+    }
 }
 
 extern void sol_region_manager_remove_players() {
