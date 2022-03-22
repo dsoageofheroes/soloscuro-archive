@@ -257,10 +257,13 @@ extern void sol_region_tick(sol_region_t *reg) {
     enum entity_action_e action;
 
     if (!reg) { return; }
-    if (reg->actions.head) {
-        entity_animation_region_execute(reg);
-    }
     in_combat = sol_combat_active(sol_arbiter_combat_region(reg));
+
+    if (reg->actions.head) {
+        if (entity_animation_region_execute(reg)) {
+            return;
+        }
+    }
 
     entity_list_for_each(reg->entities, bad_dude) {
         //printf("thing! %s %p %d, %d\n", bad_dude->name, bad_dude->anim.scmd, bad_dude->mapx, bad_dude->mapy);

@@ -215,18 +215,18 @@ static void monster_set_animation(entity_t *monster, entity_action_t *action) {
     }
 }
 
-extern void sol_combat_add_attack_animation(sol_region_t *reg, dude_t *dude, entity_t *target,
+extern int sol_combat_add_attack_animation(sol_region_t *reg, dude_t *dude, entity_t *target,
                                         power_t *power, enum entity_action_e action) {
     sol_attack_t     attack;
     combat_region_t *cr = sol_arbiter_combat_region(reg);
 
     attack = sol_arbiter_entity_attack(dude, target, cr->round.num, action);
 
-    if (attack.damage == -2) { return; } // not your move!
+    if (attack.damage == -2) { return -2; } // not your move!
 
     if (attack.damage <= -1) {
         dude->stats.combat.move = 0;
-        return;
+        return -1;
     }
 
     entity_animation_list_add_effect(&(dude->actions), action, dude, target, power, 30, 30);
@@ -237,6 +237,8 @@ extern void sol_combat_add_attack_animation(sol_region_t *reg, dude_t *dude, ent
         entity_animation_list_add_effect(&reg->actions, EA_RED_DAMAGE, dude, target, NULL, 30, attack.damage);
         entity_animation_list_add_effect(&reg->actions, EA_DAMAGE_APPLY, dude, target, NULL, 0, attack.damage);
     }
+
+    return 0;
 }
 
 static void monster_action(sol_region_t *reg, entity_t *monster) {
@@ -247,6 +249,7 @@ static void monster_action(sol_region_t *reg, entity_t *monster) {
         monster_step = 0;
     }
 
+    //printf("Monster step %d\n", monster_step);
     action = monster_actions + monster_step;
     if (monster_step >= 0 && monster_actions[monster_step].action == EA_MELEE) {
         sol_combat_add_attack_animation(reg, monster, action->target, action->power, action->action);
@@ -307,6 +310,8 @@ extern void sol_combat_update(sol_region_t *reg) {
         || !entity_animation_list_empty(&reg->actions)
         ) { return; }
 
+    // Now check for guard: TODO: also check if we just moved and multi-guard
+    sol_combat_guard_check(cr);
     monster_action(reg, combatant);
 }
 

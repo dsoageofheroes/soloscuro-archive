@@ -313,10 +313,14 @@ extern int entity_has_class(const entity_t *dude, const uint16_t class) {
 
 void entity_free(entity_t *dude) {
     if (!dude) { return; }
+    sol_region_t *reg = sol_region_manager_get_current();
 
     entity_animation_list_free(&(dude->actions));
     item_free_inventory(dude->inv);
     port_remove_entity(dude);
+    if (reg) {
+        entity_animation_list_remove_references(&reg->actions, dude);
+    }
     if (dude->name) {
         free(dude->name);
         dude->name = NULL;

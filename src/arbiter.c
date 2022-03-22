@@ -45,7 +45,6 @@ static void place_combatants(combat_region_t *cr) {
         memset(&entity->stats.combat, 0x0, sizeof(combat_round_stats_t));
         entity->stats.combat.initiative = dnd2e_roll_initiative(entity);
         entity->stats.combat.move = dnd2e_get_move(entity);
-        entity->combat_status = EA_NONE;
         entity_list_add_by_init((&cr->round.entities), entity);
     }
 }
@@ -117,11 +116,12 @@ extern sol_attack_t sol_arbiter_entity_attack(entity_t *source, entity_t *target
     combat_region_t *cr = sol_arbiter_combat_region(sol_region_manager_get_current());
      
     // For now just use local until MMO is up.
-    if (sol_combat_get_current(cr) != source) {
+    if (sol_combat_get_current(cr) != source && source->combat_status != EA_GUARD) {
         return error;//-2 means not your turn.
     }
 
     switch (action) {
+        case EA_GUARD:
         case EA_MELEE:   return sol_dnd2e_melee_attack(source, target, round);
         case EA_MISSILE: return sol_dnd2e_range_attack(source, target, round);
         default:

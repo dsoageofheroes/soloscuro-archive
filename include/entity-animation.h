@@ -79,6 +79,7 @@ extern void              entity_animation_list_add_effect(entity_animation_list_
 extern int               entity_animation_list_execute(entity_animation_list_t *list, struct sol_region_s *reg);
 extern int               entity_animation_list_empty(entity_animation_list_t *list);
 extern int               entity_animation_list_remove_current(entity_animation_list_t *list);
+extern void              entity_animation_list_remove_references(entity_animation_list_t *list, struct entity_s *dead);
 extern void              sol_animation_render(const entity_action_t *ea);
 extern void              entity_animation_update(struct entity_s *entity, const int16_t xdiff, const int16_t ydiff);
 

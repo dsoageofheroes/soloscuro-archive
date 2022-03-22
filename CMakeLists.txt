@@ -6,8 +6,8 @@ enable_testing()
 set(libADLMIDI_SHARED ON)
 add_subdirectory(ext/)
 
-set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
-set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
+set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fsanitize=address -g -fno-omit-frame-pointer")
+set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fsanitize=address -g -fno-omit-frame-pointer")
 
 add_subdirectory(code-generation/powers/)
 add_subdirectory(src/)

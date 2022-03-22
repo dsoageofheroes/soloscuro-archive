@@ -1,5 +1,7 @@
+#include "combat.h"
 #include "combat-region.h"
 #include "entity-list.h"
+#include "region-manager.h"
 #include "player.h"
 #include <stdio.h>
 #include <string.h>
@@ -31,12 +33,6 @@ extern void sol_combat_clear(combat_region_t *cr) {
     entity_list_clear((&(cr->round.entities)));
 }
 
-extern int sol_combat_guard_check(combat_region_t *cr, entity_action_t *action) {
-    entity_t *dude = sol_combat_get_current(cr);
-    if (!dude || !action) { return 0; }
-    return 0;
-}
-
 extern entity_t* sol_combat_get_current(combat_region_t *cr) {
     if (!cr || !cr->round.entities.head) { return NULL; }
     return cr->round.entities.head->entity;
@@ -46,6 +42,9 @@ extern void sol_combat_next_combatant(combat_region_t *cr) {
     if (!cr) { return; }
 
     entity_list_remove_entity(&cr->round.entities, cr->round.entities.head->entity);
+    if (cr->round.entities.head) {
+        cr->round.entities.head->entity->combat_status = EA_NONE;
+    }
 }
 
 extern int sol_combat_attempt_action(combat_region_t *cr, dude_t *dude) {
@@ -55,6 +54,30 @@ extern int sol_combat_attempt_action(combat_region_t *cr, dude_t *dude) {
 
     dude->stats.combat.move--;
     return 1;
+}
+
+// This is called right at the end of an animation.
+extern int sol_combat_guard_check(combat_region_t *cr) {
+    entity_t *dude = sol_combat_get_current(cr), *enemy = NULL;
+    if (!dude) { return 0; }
+      
+    entity_list_for_each((&(cr->combatants)), enemy) {
+        //printf("(%d, %d) vs (%d, %d)\n", dude->mapx, dude->mapy, enemy->mapx, enemy->mapy);
+        if (enemy == dude) { continue; }
+        if (abs(enemy->mapx - dude->mapx) <= 1 && abs(enemy->mapy - dude->mapy) <= 1) {
+            if (enemy->combat_status == EA_GUARD) {
+                //printf("%s should attack %s!\n", enemy->name, dude->name);
+                if (sol_combat_add_attack_animation(sol_region_manager_get_current(),
+                              enemy, dude, NULL, EA_GUARD) == -2) {
+                    enemy->combat_status = EA_NONE;
+                }
+                enemy->combat_status = EA_NONE;
+                return 1;
+            }
+        }
+    }
+  
+    return 0;
 }
 
 extern entity_t* sol_combat_get_closest_enemy(combat_region_t *cr, const int x, const int y) {

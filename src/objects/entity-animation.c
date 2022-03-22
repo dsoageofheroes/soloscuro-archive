@@ -498,13 +498,17 @@ extern int entity_animation_region_execute(sol_region_t *reg) {
     entity_action_t *action = &(reg->actions.head->ca);
 
     if (action->action == EA_WAIT_ON_ENTITY) {
-        if (!action->source->actions.head) {
+        // If the source died or is done with the animation.
+        if (!action->source || !action->source->actions.head) {
             entity_animation_node_t *tmp = reg->actions.head;
             reg->actions.head = reg->actions.head->next;
             free (tmp);
             return 1;
         }
-        return 0;
+        // Execute that entity's animation and get out.
+        //printf("source = %s\n", action->source->name);
+        entity_animation_execute(action->source);
+        return 1;
     }
 
     if (!action->power && !action->damage) {
@@ -719,9 +723,6 @@ extern int entity_animation_execute(entity_t *entity) {
     entity_action_t *action = &(entity->actions.head->ca);
 
     if (action->ticks == 0 && action->amt == action->start_amt) {
-        if (sol_combat_guard_check(sol_arbiter_combat_region(sol_region_manager_get_current()), action)) {
-            return entity_animation_execute(entity);
-        }
         if (!apply_action(entity, action)) {
             entity_animation_list_free(&entity->actions);
             return 0;
@@ -782,6 +783,15 @@ extern int entity_animation_list_remove_current(entity_animation_list_t *list) {
     entity_animation_node_t *to_delete = list->head;
     list->head = list->head->next;
     free(to_delete);
+}
+
+extern void entity_animation_list_remove_references(entity_animation_list_t *list, struct entity_s *dead) {
+    if (!list || !dead) { return; }
+
+    for (entity_animation_node_t *rover = list->head; rover ; rover = rover->next) {
+        if (rover->ca.source == dead) { rover->ca.source = NULL; }
+        if (rover->ca.target == dead) { rover->ca.target = NULL; }
+    }
 }
 
 entity_animation_list_t* entity_animation_list_create() {
