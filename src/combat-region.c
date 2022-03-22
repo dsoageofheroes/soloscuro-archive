@@ -70,8 +70,9 @@ extern int sol_combat_guard_check(combat_region_t *cr) {
                 if (sol_combat_add_attack_animation(sol_region_manager_get_current(),
                               enemy, dude, NULL, EA_GUARD) == -2) {
                     enemy->combat_status = EA_NONE;
+                    //printf("out of attacks.\n");
                 }
-                enemy->combat_status = EA_NONE;
+
                 return 1;
             }
         }

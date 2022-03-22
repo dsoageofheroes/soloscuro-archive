@@ -121,7 +121,7 @@ extern sol_attack_t sol_arbiter_entity_attack(entity_t *source, entity_t *target
     }
 
     switch (action) {
-        case EA_GUARD:
+        case EA_GUARD:   if (!dnd2e_can_melee_again(source, source->stats.combat.attack_num ,round)) { return error; }
         case EA_MELEE:   return sol_dnd2e_melee_attack(source, target, round);
         case EA_MISSILE: return sol_dnd2e_range_attack(source, target, round);
         default:

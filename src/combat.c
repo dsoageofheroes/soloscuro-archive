@@ -311,7 +311,7 @@ extern void sol_combat_update(sol_region_t *reg) {
         ) { return; }
 
     // Now check for guard: TODO: also check if we just moved and multi-guard
-    sol_combat_guard_check(cr);
+    if (sol_combat_guard_check(cr)) { return; }
     monster_action(reg, combatant);
 }
 

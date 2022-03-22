@@ -452,11 +452,10 @@ static void populate_melee_sequence(entity_t *source, uint8_t *seq, const int ro
 static void populate_missile_sequence(entity_t *source, uint8_t *seq, const int round) {
     int      pos         = 0;
     int      amt         = 0;
-    int16_t  class_extra = 0;
     item_t *launcher = source->inv ? source->inv + SLOT_MISSILE : NULL;
-    item_t *ammo = source->inv ? source->inv + SLOT_AMMO : NULL;
+    //item_t *ammo = source->inv ? source->inv + SLOT_AMMO : NULL;
 
-    if (!launcher || !launcher->name || !launcher->name[0]) { goto missile_seq_end; }
+    if (!launcher || !launcher->name[0]) { goto missile_seq_end; }
     amt = sol_dnd2e_class_attack_num(source, launcher) / 2;
     amt += ((round % 2 == 1) && (sol_dnd2e_class_attack_num(source, launcher) % 2 == 1)) ? 1 : 0;
     for (int i = 0; i < amt; i++) { seq[pos++] = SLOT_MISSILE; }
@@ -466,32 +465,26 @@ missile_seq_end:
 }
 
 static int get_next_attack(entity_t *source, const int attack_num, const int round, const uint16_t type) {
-    int             current_count = 0;
-    int             next_max = 0;
-    int             to_add = 0;
     static uint8_t  attack_sequence[16];
-    static uint16_t attack_type;
 
     if (attack_num == 0) {
         switch (type) {
             case EA_MELEE:
                 populate_melee_sequence(source, attack_sequence, round); 
-                attack_type = type;
                 break;
             case EA_MISSILE:
                 populate_missile_sequence(source, attack_sequence, round); 
-                attack_type = type;
                 break;
+            default: return -1;
         }
     }
-
-    if (attack_type != type) { return -1; }
 
     return attack_sequence[attack_num];
 }
 
 extern int16_t dnd2e_can_melee_again(entity_t *source, const int attack_num, const int round) {
-    return get_next_attack(source, attack_num, round, EA_MELEE) != -1;
+    int next_attack = get_next_attack(source, attack_num, round, EA_MELEE);
+    return next_attack != -1 && next_attack != SLOT_END;
 }
 
 static sol_attack_t sol_dnd2e_attack(entity_t *source, entity_t *target, const int round, const int type) {

@@ -16,7 +16,7 @@ function idle()
         end
     end
     
-    if (ticks > 700) then
+    if (ticks > 300) then
         if (sol.in_combat()) then
             sol.fail("Player should have defeated slig.")
         else
