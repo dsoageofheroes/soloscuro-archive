@@ -13,7 +13,7 @@ test: builds
 	#cd build ; ctest --verbose
 	cd build ; ctest
 
-builds: build/libadlmidi/libADLMIDI.so generate build/Makefile
+builds: generate build/Makefile
 	cd build ; make -j4
 
 generate: src/powers/wizard
@@ -30,14 +30,5 @@ clean:
 	rm -rf build
 
 build/Makefile:
+	mkdir -p build
 	cd build/ ; cmake -DCMAKE_BUILD_TYPE=Debug ..
-
-build/libadlmidi/libADLMIDI.so: ext/libadlmidi/AUTHORS
-	mkdir -p build/libadlmidi
-	mkdir -p lib
-	cd build/libadlmidi ; pwd
-	cd build/libadlmidi ; cmake -DCMAKE_BUILD_TYPE=Release -DlibADLMIDI_SHARED=ON ../../ext/libadlmidi
-	cd build/libadlmidi ; make -j 8
-
-ext/libadlmidi/AUTHORS:
-	git submodule update --init --recursive

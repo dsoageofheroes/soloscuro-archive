@@ -21,10 +21,7 @@ set(SOLOSCURO_SDL_SRCS
 include_directories(sdl)
 include_directories(../include)
 include_directories(../ext)
-include_directories(../ext/libadlmidi/include)
-
-add_library(adl_lib SHARED IMPORTED )
-set_target_properties(adl_lib PROPERTIES IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/libadlmidi/libADLMIDI.so )
+include_directories(${ADL_INC})
 
 add_executable(soloscuro_bin ${SOLOSCURO_SDL_SRCS})
 
