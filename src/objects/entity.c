@@ -138,6 +138,7 @@ entity_t* entity_create_from_objex(const int id) {
 
     dude->object_flags = dobj.flags;
     dude->sprite.bmp_id = dobj.bmp_id;
+    dude->anim.bmp_id = dobj.bmp_id;
     dude->sprite.xoffset = dobj.xoffset;
     dude->sprite.yoffset = dobj.yoffset;
     dude->mapx = dobj.xpos;
@@ -264,6 +265,7 @@ entity_t* entity_create_from_etab(gff_map_object_t *entry_table, uint32_t id) {
     gff_read_object(gm->index, &disk_object);
     dude->object_flags = disk_object.flags;
     dude->sprite.bmp_id = disk_object.bmp_id;
+    dude->anim.bmp_id = disk_object.bmp_id;
     dude->anim.spr = SPRITE_ERROR;
     dude->ds_id = gm->index;
 

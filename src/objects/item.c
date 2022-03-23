@@ -68,6 +68,7 @@ void item_convert_from_ds1(item_t *item, const ds1_item_t *ds1_item) {
     item->attack.range = ds1_item1r->range;
     item->attack.damage_type = ds1_item1r->damage_type;
     item->sprite.bmp_id = get_bmp_id(item);
+    item->anim.bmp_id = get_bmp_id(item);
 
     port_load_item(item);
 }
@@ -163,8 +164,8 @@ extern animate_sprite_t* item_icon(item_t *item) {
     if (!item) { return NULL; }
 
     if (!port_valid_sprite(&item->sprite)) {
-        if (!item->sprite.bmp_id) { return NULL; }
-        port_load_sprite(&item->anim, pal, OBJEX_GFF_INDEX, GFF_BMP, item->sprite.bmp_id, 1);
+        if (!item->anim.bmp_id) { return NULL; }
+        port_load_sprite(&item->anim, pal, OBJEX_GFF_INDEX, GFF_BMP, item->anim.bmp_id, 1);
     }
 
     return &(item->anim);

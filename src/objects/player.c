@@ -60,6 +60,7 @@ static void load_character_sprite(const int slot, const float zoom) {
             players_spr[slot].main = sol_sprite_new(pal, 0, 0,
                 zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2095 : 2099);
             dude->sprite.bmp_id = (dude->gender == GENDER_MALE) ? 2095 : 2099;
+            dude->anim.bmp_id = (dude->gender == GENDER_MALE) ? 2095 : 2099;
             break;
         case RACE_HUMAN:
             players_spr[slot].port = sol_sprite_new(pal, 0, 0,
@@ -67,6 +68,7 @@ static void load_character_sprite(const int slot, const float zoom) {
             players_spr[slot].main = sol_sprite_new(pal, 0, 0,
                 zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2095 : 2099);
             dude->sprite.bmp_id = (dude->gender == GENDER_MALE) ? 2095 : 2099;
+            dude->anim.bmp_id = (dude->gender == GENDER_MALE) ? 2095 : 2099;
             dude->anim.spr = players_spr[slot].main;
             break;
         case RACE_DWARF:
@@ -75,6 +77,7 @@ static void load_character_sprite(const int slot, const float zoom) {
             players_spr[slot].main = sol_sprite_new(pal, 0, 0,
                 zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2055 : 2053);
             dude->sprite.bmp_id = (dude->gender == GENDER_MALE) ? 2055 : 2053;
+            dude->anim.bmp_id = (dude->gender == GENDER_MALE) ? 2055 : 2053;
             break;
         case RACE_ELF:
             players_spr[slot].port = sol_sprite_new(pal, 0, 0,
@@ -82,6 +85,7 @@ static void load_character_sprite(const int slot, const float zoom) {
             players_spr[slot].main = sol_sprite_new(pal, 0, 0,
                 zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2061 : 2059);
             dude->sprite.bmp_id = (dude->gender == GENDER_MALE) ? 2061 : 2059;
+            dude->anim.bmp_id = (dude->gender == GENDER_MALE) ? 2061 : 2059;
             break;
         case RACE_HALFGIANT:
             players_spr[slot].port = sol_sprite_new(pal, 0, 0,
@@ -89,6 +93,7 @@ static void load_character_sprite(const int slot, const float zoom) {
             players_spr[slot].main = sol_sprite_new(pal, 0, 0,
                 zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2072 : 2074);
             dude->sprite.bmp_id = (dude->gender == GENDER_MALE) ? 2072 : 2074;
+            dude->anim.bmp_id = (dude->gender == GENDER_MALE) ? 2072 : 2074;
             break;
         case RACE_HALFLING:
             players_spr[slot].port = sol_sprite_new(pal, 0, 0,
@@ -96,6 +101,7 @@ static void load_character_sprite(const int slot, const float zoom) {
             players_spr[slot].main = sol_sprite_new(pal, 0, 0,
                 zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2068 : 2070);
             dude->sprite.bmp_id = (dude->gender == GENDER_MALE) ? 2068 : 2070;
+            dude->anim.bmp_id = (dude->gender == GENDER_MALE) ? 2068 : 2070;
             break;
         case RACE_MUL:
             players_spr[slot].port = sol_sprite_new(pal, 0, 0,
@@ -103,6 +109,7 @@ static void load_character_sprite(const int slot, const float zoom) {
             players_spr[slot].main = sol_sprite_new(pal, 0, 0,
                 zoom, OBJEX_GFF_INDEX, GFF_BMP, 2093);
             dude->sprite.bmp_id = 2093;
+            dude->anim.bmp_id = 2093;
             break;
         case RACE_THRIKREEN:
             players_spr[slot].port = sol_sprite_new(pal, 0, 0,
@@ -110,6 +117,7 @@ static void load_character_sprite(const int slot, const float zoom) {
             players_spr[slot].main = sol_sprite_new(pal, 0, 0,
                 zoom, OBJEX_GFF_INDEX, GFF_BMP, 2097);
             dude->sprite.bmp_id = 2097;
+            dude->anim.bmp_id = 2097;
             break;
     }
 }

@@ -187,6 +187,7 @@ extern uint32_t gpl_request_impl(int16_t token, int16_t name,
             sol_region_t *reg = sol_region_manager_get_current();
             dude_t *dude = sol_region_find_entity_by_id(reg, name);
             dude->sprite.bmp_id = dobj.bmp_id;
+            dude->anim.bmp_id = dobj.bmp_id;
             sol_trigger_object_clear(name);
             port_swap_enitity(name, dude);
             break;

@@ -98,10 +98,10 @@ static void map_load_current_region() {
 static void sprite_load_animation(entity_t *entity, gff_palette_t *pal) {
     const float zoom = settings_zoom();
     entity->anim.spr =
-        sol_sprite_new(pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP, entity->sprite.bmp_id);
+        sol_sprite_new(pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP, entity->anim.bmp_id);
     if (entity->name) { // If it is a combat entity, then we need to add the combat sprites
         sol_sprite_append(entity->anim.spr, pal, 0, 0, zoom,
-            OBJEX_GFF_INDEX, GFF_BMP, entity->sprite.bmp_id + 1);
+            OBJEX_GFF_INDEX, GFF_BMP, entity->anim.bmp_id + 1);
     }
     entity->anim.delay = 0;
     entity->anim.pos = 0;
@@ -300,7 +300,7 @@ void port_swap_enitity(int obj_id, entity_t *dude) {
 
     sol_sprite_free(dude->anim.spr);
     dude->anim.spr =
-        sol_sprite_new(pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP, dude->sprite.bmp_id);
+        sol_sprite_new(pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP, dude->anim.bmp_id);
 }
 
 #define CLICKABLE (0x10)
@@ -442,14 +442,10 @@ int map_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_
 extern void port_load_item(item_t *item) {
     //warn("Need to load item %d.\n", item->ds_id);
     if (!item) { return; }
-    //animate_sprite_t *as = calloc(1, sizeof(animate_sprite_t));
-    //item->sprite.data = (void*)as;
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
-    //as->spr = sprite_new(main_get_rend(), pal, 0, 0, settings_zoom(),
-            //OBJEX_GFF_INDEX, GFF_BMP, item->sprite.bmp_id);
-    //as->entity = NULL;
+
     item->anim.spr = sol_sprite_new(pal, 0, 0, settings_zoom(),
-            OBJEX_GFF_INDEX, GFF_BMP, item->sprite.bmp_id);
+            OBJEX_GFF_INDEX, GFF_BMP, item->anim.bmp_id);
     item->anim.entity = NULL;
 }
 

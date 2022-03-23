@@ -551,7 +551,7 @@ static int gpl_clone(lua_State *l) {
         if (dude) {
             sol_region_move_to_nearest(sol_region_manager_get_current(), dude);
             sol_region_add_entity(sol_region_manager_get_current(), dude);
-            port_load_sprite(&(dude->anim), pal, OBJEX_GFF_INDEX, GFF_BMP, dude->sprite.bmp_id,
+            port_load_sprite(&(dude->anim), pal, OBJEX_GFF_INDEX, GFF_BMP, dude->anim.bmp_id,
                 (dude->name) ? 2 : 1);
             sol_map_place_entity(dude);
             //TODO: Should reshift the entity?
