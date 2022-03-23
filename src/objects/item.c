@@ -119,9 +119,18 @@ void item_free_except_graphics(item_t *item) {
     }
 }
 
+static void free_item(item_t *item) {
+    if (!item) { return; }
+
+    if (item->anim.spr != SPRITE_ERROR) {
+        sol_sprite_free(item->anim.spr);
+        item->anim.spr = SPRITE_ERROR;
+    }
+}
+
 void item_free(item_t *item) {
     if (item) {
-        port_free_item(item);
+        free_item(item);
         free(item);
     }
 }
@@ -131,10 +140,7 @@ extern void item_free_inventory(item_t *inv) {
     item_t *items = (item_t*)inv;
 
     for (int i = 0; i < 26; i++) {
-        //if (items[i].ds_id) {
-        if (items[i].sprite.data) {
-            port_free_item(items + i);
-        }
+        free_item(items + i);
     }
 
     //TODO: Free up the effects!

@@ -148,11 +148,8 @@ void map_apply_alpha(const uint8_t alpha) {
     sol_background_apply_alpha(alpha);
 
     entity_list_for_each(cmap->region->entities, entity) {
-        if (entity->sprite.data) {
-            animate_sprite_node_t *asn = (animate_sprite_node_t*) entity->sprite.data;
-            if (asn) {
-                sol_sprite_set_alpha(asn->anim->spr, alpha);
-            }
+        if (entity->anim.spr != SPRITE_ERROR) {
+            sol_sprite_set_alpha(entity->anim.spr, alpha);
         }
     }
 }
@@ -237,11 +234,6 @@ void map_render_anims() {
     }
 
     sol_animation_render(&(cmap->region->actions.head->ca));
-}
-
-void port_remove_entity(entity_t *entity) {
-    if (!entity || entity->sprite.data == NULL) { return; }
-    sol_region_remove_entity(sol_region_manager_get_current(), entity);
 }
 
 extern void sol_map_update_active_player(const int prev) {
@@ -459,15 +451,6 @@ extern void port_load_item(item_t *item) {
     item->anim.spr = sol_sprite_new(pal, 0, 0, settings_zoom(),
             OBJEX_GFF_INDEX, GFF_BMP, item->sprite.bmp_id);
     item->anim.entity = NULL;
-}
-
-extern void port_free_item(item_t *item) {
-    if (!item) { return; }
-
-    if (item->anim.spr != SPRITE_ERROR) {
-        sol_sprite_free(item->anim.spr);
-        item->anim.spr = SPRITE_ERROR;
-    }
 }
 
 extern void sol_map_game_over() {

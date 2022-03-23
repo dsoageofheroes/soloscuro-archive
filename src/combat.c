@@ -375,6 +375,7 @@ extern int sol_combat_guard(entity_t *entity) {
     entity_t *dude = sol_combat_get_current(cr);
     int pos;
 
+    if (!dude) { return 0; }
     if (sol_player_get_slot(dude) < 0 && !entity) { return 0; }
     if (entity && dude != entity) { return 0; }
 

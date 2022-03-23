@@ -1,6 +1,5 @@
 #include "sprite.h"
 #include "main.h"
-#include "animation.h"
 #include "entity.h"
 #include "settings.h"
 #include "port.h"

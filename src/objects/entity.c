@@ -210,7 +210,6 @@ extern void entity_load_from_object(entity_t *entity, const char *data) {
     if (!entity->inv) {
         entity->inv = sol_inventory_create();
     }
-    entity->sprite.data = NULL;
 }
 
 #define BUF_MAX (1<<14)
@@ -317,7 +316,7 @@ void entity_free(entity_t *dude) {
 
     entity_animation_list_free(&(dude->actions));
     item_free_inventory(dude->inv);
-    port_remove_entity(dude);
+
     if (reg) {
         entity_animation_list_remove_references(&reg->actions, dude);
     }

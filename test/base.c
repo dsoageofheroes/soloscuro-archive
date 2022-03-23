@@ -19,9 +19,6 @@ int8_t port_narrate_open(int16_t action, const char *text, int16_t index) {
     return 0;
 }
 
-extern void port_remove_entity(entity_t *entity) {
-}
-
 void port_swap_enitity(int obj_id, entity_t *dude) {
 }
 
@@ -33,9 +30,6 @@ void port_change_region(sol_region_t *reg) {
 }
 
 extern void port_load_item(item_t *item) {
-}
-
-extern void port_free_item(item_t *item) {
 }
 
 //extern void port_load_sprite(sprite_info_t *spr, gff_palette_t *pal, const int gff_index, const int type, const uint32_t id) {

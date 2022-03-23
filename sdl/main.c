@@ -51,8 +51,6 @@ static char *replay = NULL;
 static uint32_t xmappos, ymappos;
 static int32_t xmapdiff, ymapdiff;
 
-static uint8_t player_directions[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-
 static textbox_t *textbox = NULL;
 
 extern void sol_textbox_set_current(textbox_t *tb) {
@@ -140,14 +138,6 @@ void handle_input() {
                 if (event.key.keysym.sym == SDLK_d) { ymapdiff = 0;}
                 if (event.key.keysym.sym == SDLK_s) { xmapdiff = 0;}
                 if (event.key.keysym.sym == SDLK_f) { xmapdiff = 0;}
-                if (event.key.keysym.sym == SDLK_KP_1) { player_directions[1] = 0; }
-                if (event.key.keysym.sym == SDLK_KP_2) { player_directions[2] = 0; }
-                if (event.key.keysym.sym == SDLK_KP_3) { player_directions[3] = 0; }
-                if (event.key.keysym.sym == SDLK_KP_4) { player_directions[4] = 0; }
-                if (event.key.keysym.sym == SDLK_KP_6) { player_directions[6] = 0; }
-                if (event.key.keysym.sym == SDLK_KP_7) { player_directions[7] = 0; }
-                if (event.key.keysym.sym == SDLK_KP_8) { player_directions[8] = 0; }
-                if (event.key.keysym.sym == SDLK_KP_9) { player_directions[9] = 0; }
                 if (event.key.keysym.sym == SDLK_F11) {
                     sol_add_load_save_set_mode(ACTION_SAVE);
                     sol_window_push(&als_window, 0, 0);
@@ -182,14 +172,6 @@ void handle_input() {
                 if (event.key.keysym.sym == SDLK_d) { ymapdiff = 2;}
                 if (event.key.keysym.sym == SDLK_s) { xmapdiff = -2;}
                 if (event.key.keysym.sym == SDLK_f) { xmapdiff = 2;}
-                if (event.key.keysym.sym == SDLK_KP_1) { player_directions[1] = 1; }
-                if (event.key.keysym.sym == SDLK_KP_2) { player_directions[2] = 1; }
-                if (event.key.keysym.sym == SDLK_KP_3) { player_directions[3] = 1; }
-                if (event.key.keysym.sym == SDLK_KP_4) { player_directions[4] = 1; }
-                if (event.key.keysym.sym == SDLK_KP_6) { player_directions[6] = 1; }
-                if (event.key.keysym.sym == SDLK_KP_7) { player_directions[7] = 1; }
-                if (event.key.keysym.sym == SDLK_KP_8) { player_directions[8] = 1; }
-                if (event.key.keysym.sym == SDLK_KP_9) { player_directions[9] = 1; }
                 if (event.key.keysym.sym == SDLK_SPACE) { main_toggle_debug(); }
                 if (event.key.keysym.sym == SDLK_g) { sol_key_down(SOLK_g); }
                 break;

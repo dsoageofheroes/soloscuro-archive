@@ -54,7 +54,6 @@ typedef struct sol_dim_s {
 
 // Narrate functions
 
-extern void port_remove_entity(entity_t *entity); // We need to remove this...
 extern void port_swap_enitity(int obj_id, entity_t *dude);
 extern void port_load_sprite(animate_sprite_t *anim, gff_palette_t *pal, const int gff_index,
                 const int type, const uint32_t id, const int num_load);
@@ -65,7 +64,6 @@ extern void sol_play_sound_effect(const uint16_t id);
 
 extern void port_change_region(sol_region_t *reg);
 extern void port_load_item(item_t *item);
-extern void port_free_item(item_t *item);
 extern int port_load_region(const int region);
 
 extern void port_start();

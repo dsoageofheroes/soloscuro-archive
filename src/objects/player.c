@@ -229,17 +229,10 @@ extern void sol_player_set_ai(const int slot, const int _ai) {
 }
 
 void sol_player_close() {
-    //dude_t *dude;
-
     for (int i = 0; i < MAX_PCS; i++) {
-        //dude = sol_player_get(i);
         free_sprites(i);
-        //port_remove_entity(dude);
-        //printf("dude = %p\n", dude);
-        //if (dude && dude->sprite.data) {
-            //sol_sprite_free(((animate_sprite_node_t*)dude->sprite.data)->anim->spr);
-        //}
     }
+
     sol_player_cleanup();
 }
 

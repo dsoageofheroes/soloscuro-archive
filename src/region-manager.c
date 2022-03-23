@@ -72,21 +72,6 @@ extern sol_region_t* sol_region_manager_get_region(const int region_id) {
 
         ssi_regions[region_id] = sol_region_create(gff_index);
         entity_list_load_etab(ssi_regions[region_id]->entities, gff_index, region_id);
-        //entity_list_for_each(ssi_regions[region_id]->entities, dude) {
-            //animation_list_add(ssi_regions[region_id]->anims, &dude->anim);
-        //}
-
-/*
-        entity_list_for_each(ssi_regions[region_id]->entities, dude) {
-            animation_list_add(ssi_regions[region_id]->anims, dude->sprite.anim);
-        }
-        dude = player_get_active();
-        if (dude) {
-            dude->region = region_id;
-            animation_list_add(ssi_regions[region_id]->anims, dude->sprite.anim);
-        }
-        printf("->%p\n", ssi_regions[region_id]->anims->head);
-        */
     }
 
     current_region = region_id;
@@ -94,7 +79,6 @@ extern sol_region_t* sol_region_manager_get_region(const int region_id) {
         dude = sol_player_get(i);
         if (dude) {
             dude->region = region_id;
-            //player_get_entity(i)->region = region_id;
         }
     }
 

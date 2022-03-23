@@ -284,7 +284,7 @@ static int get_element_entity(lua_State *l, dude_t *dude, const int depth, const
     }
 
     // right now just return the id!
-    printf("get_element_entity: need to get %d, %d\n", depth, element);
+    //printf("get_element_entity: need to get %d, %d\n", depth, element);
     lua_pushnumber(l, dude->ds_id);
     return 1;
 }

@@ -1,4 +1,3 @@
-#include "animation.h"
 #include "arbiter.h"
 #include "combat.h"
 #include "entity-animation.h"
