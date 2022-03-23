@@ -59,7 +59,6 @@ static void load_character_sprite(const int slot, const float zoom) {
                 zoom, RESOURCE_GFF_INDEX, GFF_BMP, dude->gender == GENDER_MALE ? 20006 : 20007);
             players_spr[slot].main = sol_sprite_new(pal, 0, 0,
                 zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2095 : 2099);
-            dude->sprite.bmp_id = (dude->gender == GENDER_MALE) ? 2095 : 2099;
             dude->anim.bmp_id = (dude->gender == GENDER_MALE) ? 2095 : 2099;
             break;
         case RACE_HUMAN:
@@ -67,7 +66,6 @@ static void load_character_sprite(const int slot, const float zoom) {
                 zoom, RESOURCE_GFF_INDEX, GFF_BMP, dude->gender == GENDER_MALE ? 20000 : 20001);
             players_spr[slot].main = sol_sprite_new(pal, 0, 0,
                 zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2095 : 2099);
-            dude->sprite.bmp_id = (dude->gender == GENDER_MALE) ? 2095 : 2099;
             dude->anim.bmp_id = (dude->gender == GENDER_MALE) ? 2095 : 2099;
             dude->anim.spr = players_spr[slot].main;
             break;
@@ -76,7 +74,6 @@ static void load_character_sprite(const int slot, const float zoom) {
                 zoom, RESOURCE_GFF_INDEX, GFF_BMP, dude->gender == GENDER_MALE ? 20002 : 20003);
             players_spr[slot].main = sol_sprite_new(pal, 0, 0,
                 zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2055 : 2053);
-            dude->sprite.bmp_id = (dude->gender == GENDER_MALE) ? 2055 : 2053;
             dude->anim.bmp_id = (dude->gender == GENDER_MALE) ? 2055 : 2053;
             break;
         case RACE_ELF:
@@ -84,7 +81,6 @@ static void load_character_sprite(const int slot, const float zoom) {
                 zoom, RESOURCE_GFF_INDEX, GFF_BMP, dude->gender == GENDER_MALE ? 20004 : 20005);
             players_spr[slot].main = sol_sprite_new(pal, 0, 0,
                 zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2061 : 2059);
-            dude->sprite.bmp_id = (dude->gender == GENDER_MALE) ? 2061 : 2059;
             dude->anim.bmp_id = (dude->gender == GENDER_MALE) ? 2061 : 2059;
             break;
         case RACE_HALFGIANT:
@@ -92,7 +88,6 @@ static void load_character_sprite(const int slot, const float zoom) {
                 zoom, RESOURCE_GFF_INDEX, GFF_BMP, dude->gender == GENDER_MALE ? 20008 : 20009);
             players_spr[slot].main = sol_sprite_new(pal, 0, 0,
                 zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2072 : 2074);
-            dude->sprite.bmp_id = (dude->gender == GENDER_MALE) ? 2072 : 2074;
             dude->anim.bmp_id = (dude->gender == GENDER_MALE) ? 2072 : 2074;
             break;
         case RACE_HALFLING:
@@ -100,7 +95,6 @@ static void load_character_sprite(const int slot, const float zoom) {
                 zoom, RESOURCE_GFF_INDEX, GFF_BMP, dude->gender == GENDER_MALE ? 20010 : 20011);
             players_spr[slot].main = sol_sprite_new(pal, 0, 0,
                 zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2068 : 2070);
-            dude->sprite.bmp_id = (dude->gender == GENDER_MALE) ? 2068 : 2070;
             dude->anim.bmp_id = (dude->gender == GENDER_MALE) ? 2068 : 2070;
             break;
         case RACE_MUL:
@@ -108,7 +102,6 @@ static void load_character_sprite(const int slot, const float zoom) {
                 zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20012);
             players_spr[slot].main = sol_sprite_new(pal, 0, 0,
                 zoom, OBJEX_GFF_INDEX, GFF_BMP, 2093);
-            dude->sprite.bmp_id = 2093;
             dude->anim.bmp_id = 2093;
             break;
         case RACE_THRIKREEN:
@@ -116,7 +109,6 @@ static void load_character_sprite(const int slot, const float zoom) {
                 zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20013);
             players_spr[slot].main = sol_sprite_new(pal, 0, 0,
                 zoom, OBJEX_GFF_INDEX, GFF_BMP, 2097);
-            dude->sprite.bmp_id = 2097;
             dude->anim.bmp_id = 2097;
             break;
     }

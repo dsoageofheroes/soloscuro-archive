@@ -354,7 +354,7 @@ static int gpl_getX(lua_State *l) {
 
     entity_list_for_each(reg->entities, dude) {
         if (dude->ds_id == id) {
-            lua_pushnumber(l, dude->mapx - (dude->sprite.xoffset + 15) / 16); // the +15 forces a round up.
+            lua_pushnumber(l, dude->mapx - (dude->anim.xoffset + 15) / 16); // the +15 forces a round up.
             return 1;
         }
     }
@@ -370,7 +370,7 @@ static int gpl_getY(lua_State *l) {
 
     entity_list_for_each(reg->entities, dude) {
         if (dude->ds_id == id) {
-            lua_pushnumber(l, dude->mapy - (dude->sprite.yoffset + 15) / 16); // the +15 forces a round up.
+            lua_pushnumber(l, dude->mapy - (dude->anim.yoffset + 15) / 16); // the +15 forces a round up.
             return 1;
         }
     }
@@ -543,8 +543,8 @@ static int gpl_clone(lua_State *l) {
         dude_t *dude = entity_create_from_objex(obj);
         dude->mapx = x;
         dude->mapy = y;
-        dude->sprite.xoffset = 0;
-        dude->sprite.yoffset = 0;
+        dude->anim.xoffset = 0;
+        dude->anim.yoffset = 0;
         entry_id = dude->ds_id;
         gpl_set_global(GPL_OTHER, dude);
 

@@ -137,10 +137,9 @@ entity_t* entity_create_from_objex(const int id) {
     }
 
     dude->object_flags = dobj.flags;
-    dude->sprite.bmp_id = dobj.bmp_id;
     dude->anim.bmp_id = dobj.bmp_id;
-    dude->sprite.xoffset = dobj.xoffset;
-    dude->sprite.yoffset = dobj.yoffset;
+    dude->anim.xoffset = dobj.xoffset;
+    dude->anim.yoffset = dobj.yoffset;
     dude->mapx = dobj.xpos;
     dude->mapy = dobj.ypos;
     dude->mapz = dobj.zpos;
@@ -264,19 +263,15 @@ entity_t* entity_create_from_etab(gff_map_object_t *entry_table, uint32_t id) {
 
     gff_read_object(gm->index, &disk_object);
     dude->object_flags = disk_object.flags;
-    dude->sprite.bmp_id = disk_object.bmp_id;
     dude->anim.bmp_id = disk_object.bmp_id;
     dude->anim.spr = SPRITE_ERROR;
     dude->ds_id = gm->index;
 
     dude->mapx = (gm->xpos) / 16;
     dude->mapy = (gm->ypos) / 16;
-    dude->sprite.xoffset = -disk_object.xoffset +
-        ((gm->xpos) % 16);
-    dude->sprite.yoffset = -disk_object.yoffset  - disk_object.zpos +
-        ((gm->ypos)) % 16;
+    dude->anim.xoffset = -disk_object.xoffset + ((gm->xpos) % 16);
+    dude->anim.yoffset = -disk_object.yoffset  - disk_object.zpos + ((gm->ypos)) % 16;
     dude->mapz = gm->zpos;
-    dude->sprite.flags = gm->flags;
 
     return dude;
 }

@@ -107,8 +107,8 @@ static void sprite_load_animation(entity_t *entity, gff_palette_t *pal) {
     entity->anim.pos = 0;
     entity->anim.w = sol_sprite_getw(entity->anim.spr);
     entity->anim.h = sol_sprite_geth(entity->anim.spr);
-    entity->anim.x = (entity->mapx * 16 + entity->sprite.xoffset) * zoom;
-    entity->anim.y = (entity->mapy * 16 + entity->sprite.yoffset + entity->mapz) * zoom;
+    entity->anim.x = (entity->mapx * 16 + entity->anim.xoffset) * zoom;
+    entity->anim.y = (entity->mapy * 16 + entity->anim.yoffset + entity->mapz) * zoom;
     entity->anim.destx = entity->anim.x;
     entity->anim.destx -= sol_sprite_getw(entity->anim.spr) / 2;
     entity->anim.desty = entity->anim.y;

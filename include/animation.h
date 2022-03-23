@@ -17,6 +17,7 @@ typedef struct animate_sprite_s {
     uint16_t destx, desty;
     uint32_t bmp_id;
     float movex, movey, left_over; // see animate_tick for left_over
+    int16_t xoffset, yoffset;      // offset for (x, y)
     struct entity_s *entity;
     struct scmd_s *scmd;
 } animate_sprite_t;
