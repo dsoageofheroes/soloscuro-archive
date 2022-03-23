@@ -217,7 +217,8 @@ void map_render_anims() {
         anim = &(dude->anim);
         if (!anim->scmd) { continue; }
         if (anim->scmd[anim->pos].flags & SCMD_XMIRROR
-            || (anim->entity && anim->entity->sprite.flags & 0x80)) {
+            //|| (anim->entity && anim->entity->anim.flags & 0x80)) {
+            || (anim->flags & 0x80)) {
             hflip = 1;
         }
         if (anim->scmd[anim->pos].flags & SCMD_YMIRROR) {

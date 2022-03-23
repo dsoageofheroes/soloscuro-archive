@@ -48,7 +48,6 @@ typedef struct entity_s {
     uint16_t combat_status;
     stats_t stats;
     class_t class[3];
-    sprite_info_t sprite; // deprecated...
     animate_sprite_t anim;
     ability_set_t abilities;
     struct entity_animation_list_s actions;
