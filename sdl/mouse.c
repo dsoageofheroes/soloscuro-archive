@@ -144,7 +144,7 @@ extern void sol_mouse_set_as_item(item_t *item) {
     // Unfortunately, in SDL you are suppose to use a surface for the cursor.
     // So, we will store the texture for later and load the mouse as a surface.
     if (item_cursor) { SDL_FreeCursor(item_cursor); }
-    item_cursor = create_cursor(OBJEX_GFF_INDEX, GFF_BMP, item->sprite.bmp_id);
+    item_cursor = create_cursor(OBJEX_GFF_INDEX, GFF_BMP, item->anim.bmp_id);
     sol_mouse_set_state(MOUSE_ITEM);
 }
 

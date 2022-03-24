@@ -18,7 +18,6 @@ static int show_attack = 0;
 static int damage_amount = 0;
 
 typedef struct animate_sprite_node_list_s {
-    animate_sprite_node_t *an;
     power_t *power;
     entity_t *source;
     entity_t *target;
@@ -32,41 +31,17 @@ typedef struct animate_sprite_node_list_s {
 animate_sprite_node_list_t *list = NULL;
 
 static void start_node() {
-    if (!list || !list->an) { return; }
-    //animate_list_node_add(list->an, 100);
+    if (!list) { return; }
     sol_audio_play_voc(RESOURCE_GFF_INDEX, GFF_BVOC, list->sound, 1.0);
 }
 
-/*
-static void add_node_list(animate_sprite_node_t *an, uint16_t sound, entity_action_t *ca) {
-    // DO NOT STORE CA!!!!!!!!!!!!
-    animate_sprite_node_list_t *rover = list;
-    animate_sprite_node_list_t *toadd = calloc(1, sizeof(animate_sprite_node_list_t));
-    toadd->an = an;
-    toadd->sound = sound;
-    toadd->target = ca->target;
-    toadd->source = ca->source;
-    toadd->power = ca->power;
-    toadd->action = ca->action;
-    toadd->is_moving = (an->anim->x != an->anim->destx) || (an->anim->y != an->anim->desty);
-    if (!list) {
-        list = toadd;
-        start_node();
-        return;
-    }
-    while(rover->next) { rover = rover->next; }
-    rover->next = toadd;
-}
-*/
-
 extern void sol_combat_clear_damage() {
-    //sprite_set_location(combat_attacks, -1000, -1000);
     show_attack = 0;
 }
 
 static void pop_list() {
     if (!list) { return; }
-    //animate_list_remove(list->an, 100);
+
     animate_sprite_node_list_t *delme = list;
     list = list->next;
 

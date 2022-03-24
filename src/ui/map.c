@@ -286,15 +286,6 @@ extern void port_load_sprite(animate_sprite_t *anim, gff_palette_t *pal, const i
     //printf("valid = %d\n", sprite_valid(asn->anim->spr));
 }
 
-extern void port_free_sprite(sprite_info_t *spr) {
-    if (!spr) { return; }
-
-    if (spr->data) {
-        //animate_sprite_node_free(spr->data);
-        spr->data = NULL;
-    }
-}
-
 void port_swap_enitity(int obj_id, entity_t *dude) {
     gff_palette_t *pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + cmap->region->map_id - 1;
     const int zoom = 2.0;

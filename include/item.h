@@ -91,7 +91,6 @@ typedef struct item_s {
     uint8_t           material;
     int8_t            ac;
     item_attack_t     attack;
-    sprite_info_t     sprite;
     animate_sprite_t  anim;
     effect_node_t     *effect;
 } item_t;

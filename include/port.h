@@ -57,8 +57,6 @@ typedef struct sol_dim_s {
 extern void port_swap_enitity(int obj_id, entity_t *dude);
 extern void port_load_sprite(animate_sprite_t *anim, gff_palette_t *pal, const int gff_index,
                 const int type, const uint32_t id, const int num_load);
-extern void port_free_sprite(sprite_info_t *spr);
-extern int port_valid_sprite(sprite_info_t *spr);
 
 extern void sol_play_sound_effect(const uint16_t id);
 

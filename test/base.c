@@ -35,9 +35,6 @@ extern void port_load_item(item_t *item) {
 //extern void port_load_sprite(sprite_info_t *spr, gff_palette_t *pal, const int gff_index, const int type, const uint32_t id) {
 //}
 
-extern void port_free_sprite(sprite_info_t *spr) {
-}
-
 extern void port_combat_action(entity_action_t *ca) {
 }
 
@@ -143,7 +140,6 @@ void       sol_textbox_set_current(textbox_t *tb) {}
 void sol_font_free() {}
 void sol_play_sound_effect(const uint16_t id) {}
 void       sol_textbox_render(textbox_t *tb) {}
-int port_valid_sprite(sprite_info_t *spr) { return 0; }
 void port_entity_update_scmd(entity_t *entity) {}
 extern void sol_camera_scrollx(const int amt) {}
 extern void sol_camera_scrolly(const int amt) {}

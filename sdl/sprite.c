@@ -155,11 +155,6 @@ static int valid_id(const uint16_t id) {
     return (id < MAX_SPRITES && sprites[id].in_use);
 }
 
-extern int port_valid_sprite(sprite_info_t *spr) {
-    if (!spr || !spr->data || !spr->data->anim) { return 0; }
-    return valid_id (spr->data->anim->spr);
-}
-
 uint32_t sprite_valid(const uint16_t id) { return valid_id(id); }
 
 uint16_t sprite_get_frame(const uint16_t id) {
