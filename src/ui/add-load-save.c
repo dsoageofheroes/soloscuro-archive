@@ -6,6 +6,7 @@
 #include "mouse.h"
 #include "ds-load-save.h"
 #include "gff.h"
+#include "save-load.h"
 #include "gff-char.h"
 #include "port.h"
 #include "settings.h"
@@ -315,7 +316,8 @@ int add_load_save_handle_mouse_up(const sol_mouse_button_t button, const uint32_
             }
             if (selection < 0) { return 0; }
             snprintf(filename, 31, SAVE_FORMAT, selection);
-            ls_save_to_file(filename, sol_textbox_get_text(name_tb));
+            //ls_save_to_file(filename, sol_textbox_get_text(name_tb));
+            sol_save_to_file(filename);
         }
         sol_sprite_set_frame(action_btn, 0);
         if (selection != -1) {

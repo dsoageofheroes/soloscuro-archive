@@ -107,6 +107,7 @@ extern entity_t* sol_entity_create_default_human() {
     dude->anim.spr = SPRITE_ERROR;
     debug("Need to set default size!\n");
     dude->size = 0;
+    dude->inv = sol_inventory_create();
     return dude;
 }
 

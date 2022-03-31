@@ -47,6 +47,43 @@ void gpl_state_init() {
 void gpl_state_cleanup() {
 }
 
+// TODO: this will need to be attached to a region.
+extern void gpl_write_local_state(FILE *file) {
+    for (int i = 0; i < MAX_LFLAGS; i++) {
+        fprintf(file, "gpl.set_lf(%d, %d)\n", i, gpl_local_flags[i]);
+    }
+
+    for (int i = 0; i < MAX_LNUMS; i++) {
+        fprintf(file, "gpl.set_ln(%d, %d)\n", i, gpl_local_nums[i]);
+    }
+
+    for (int i = 0; i < MAX_LBIGNUMS; i++) {
+        fprintf(file, "gpl.set_lbn(%d, %d)\n", i, gpl_local_bnums[i]);
+    }
+}
+
+extern void gpl_write_global_state(FILE *file) {
+    for (int i = 0; i < MAX_GFLAGS; i++) {
+        fprintf(file, "gpl.set_gf(%d, %d)\n", i, gpl_global_flags[i]);
+    }
+
+    for (int i = 0; i < MAX_GNUMS; i++) {
+        fprintf(file, "gpl.set_gn(%d, %d)\n", i, gpl_global_nums[i]);
+    }
+
+    for (int i = 0; i < MAX_GBIGNUMS; i++) {
+        fprintf(file, "gpl.set_gbn(%d, %d)\n", i, gpl_global_bnums[i]);
+    }
+
+    for (int i = 0; i < MAX_GNAMES; i++) {
+        fprintf(file, "gpl.set_gname(%d, %d)\n", i, gpl_gnames[i]);
+    }
+
+    for (int i = 0; i < MAX_GSTRS; i++) {
+        fprintf(file, "gpl.set_gstr(%d, \"%s\")\n", i, gpl_global_strs[i]);
+    }
+}
+
 static int set_while_callback(lua_State *l) {
     const char *val = luaL_checkstring(l, 2);
     //lua_Integer state = luaL_checkinteger(l, 1);

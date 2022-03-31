@@ -42,7 +42,9 @@ extern gpl_param_t param;
 extern void      gpl_init();
 extern void      gpl_execute_function(const int gff_idx, const int res_id, const int file_id);
 extern void      gpl_change_region(const int region_id);
-//int do_dsl_command(uint8_t cmd);
+extern void      gpl_write_local_state(FILE *file);
+extern void      gpl_write_global_state(FILE *file);
+
 extern uint32_t  gpl_request_impl(int16_t token, int16_t name,
         int32_t num1, int32_t num2);
 extern void      gpl_cleanup();

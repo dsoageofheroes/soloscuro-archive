@@ -2,7 +2,7 @@
 #define SOL_INPUT_H
 
 typedef enum sol_key_e {
-    SOLK_RETURN = 0,
+    SOLK_RETURN = 1,
     SOLK_ESCAPE, SOLK_BACKSPACE, SOLK_TAB, SOLK_SPACE, SOLK_EXCLAIM, SOLK_QUOTEDBL,
     SOLK_HASH, SOLK_PERCENT, SOLK_DOLLAR, SOLK_AMPERSAND, SOLK_QUOTE, SOLK_LEFTPAREN,
     SOLK_RIGHTPAREN, SOLK_ASTERISK, SOLK_PLUS, SOLK_COMMA, SOLK_MINUS, SOLK_PERIOD, SOLK_SLASH,
@@ -21,5 +21,7 @@ typedef enum sol_key_e {
 } sol_key_e;
 
 extern void sol_key_down(const sol_key_e key);
+extern void sol_key_up(const sol_key_e key);
+extern void sol_input_tick();
 
 #endif

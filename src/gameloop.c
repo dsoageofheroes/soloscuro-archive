@@ -3,6 +3,7 @@
 
 #include "gpl.h"
 #include "gameloop.h"
+#include "input.h"
 #include "port.h"
 #include "region-manager.h"
 #include "sol-lua-manager.h"
@@ -76,6 +77,7 @@ extern void sol_game_loop() {
         port_handle_input();
         //Logic here...
         sol_render();
+        sol_input_tick();
         port_tick();
 
         //if (in_replay_mode() && rep_times > 10) {

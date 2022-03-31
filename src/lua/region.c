@@ -6,6 +6,7 @@
 #include "arbiter.h"
 #include <string.h>
 #include <float.h>
+#include <ctype.h>
 
 extern char *strdup(const char *s); // Not in standard.
 
@@ -22,6 +23,38 @@ static int region_set_tile(lua_State *l) {
     //printf("%p (%d, %d) to %d!\n", region, x, y, tile);
     //uint8_t tiles[MAP_ROWS][MAP_COLUMNS];
     return 0;
+}
+
+// this is just annoying lua...
+static int region_set_flag_ids(lua_State *l) {
+    sol_region_t *region = (sol_region_t*) lua_touserdata(l, lua_upvalueindex(1));
+    size_t size, pos = 0, bpos = 0, i = 0;
+    const int index = luaL_checkinteger(l, 1);
+    const char *flags = luaL_checklstring (l, 2, &size);
+    char buf[128];
+
+    if (index < 0 || index >= MAP_ROWS) { return 0; }
+    while (pos < size && pos < MAP_COLUMNS) {
+        while (pos < size && isspace(*flags)) { flags++; pos++; }
+        bpos = 0;
+        while (bpos < 127 && pos < size && !isspace(*flags)) { buf[bpos++] = *flags; flags++; pos++; }
+        buf[bpos] = '\0';
+        region->flags[index][i++] = atol(buf);
+        printf("set[%d][%d] = %d\n", index, (int)i - 1, region->flags[index][i-1]);
+    }
+
+    return 0;
+}
+
+static int region_get_flag_id(lua_State *l) {
+    sol_region_t *region = (sol_region_t*) lua_touserdata(l, lua_upvalueindex(1));
+    const int x = luaL_checkinteger(l, 1);
+    const int y = luaL_checkinteger(l, 2);
+
+    if (x < 0 || x >= MAP_ROWS || y < 0 || y >= MAP_COLUMNS) { return 0; }
+    lua_pushinteger(l, region->flags[x][y]);
+
+    return 1;
 }
 
 static int region_set_tile_id(lua_State *l) {
@@ -78,9 +111,14 @@ static int enter_combat (lua_State *l) {
 
 
 extern int sol_lua_region_function(sol_region_t *region, const char *func, lua_State *l) {
-    //if (!strcmp(func, "set_tile")) { lua_pushcfunction(l, region_set_tile); return 1; }
     if (!strcmp(func, "set_tile_id")) {
         return push_region_function(l, region, region_set_tile_id);
+    }
+    if (!strcmp(func, "set_flag_ids")) {
+        return push_region_function(l, region, region_set_flag_ids);
+    }
+    if (!strcmp(func, "get_flag_id")) {
+        return push_region_function(l, region, region_get_flag_id);
     }
     if (!strcmp(func, "find")) {
         return push_region_function(l, region, get_first_entity);
@@ -88,7 +126,6 @@ extern int sol_lua_region_function(sol_region_t *region, const char *func, lua_S
     if (!strcmp(func, "enter_combat")) {
         return push_region_function(l, region, enter_combat);
     }
-    //if (!strcmp(func, "test")) { lua_pushcfunction(l, region_test); return 1; }
     lua_pushinteger(l, 0);
     return 1;
 }

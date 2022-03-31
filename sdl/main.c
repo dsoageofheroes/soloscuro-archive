@@ -33,6 +33,7 @@ void window_debug_init(SDL_Surface *sur, SDL_Renderer *rend, const char *arg);
 void export_all_images(const char *filename);
 void export_all_items(const char *base_path);
 void export_all_xmis(const char *base_path);
+static void set_keys();
 
 static uint32_t last_tick = 0;
 static const uint32_t TICK_AMT = 1000 / TICKS_PER_SEC;// Not fully correct...
@@ -41,8 +42,7 @@ static SDL_Surface *window = NULL;
 static SDL_Renderer *renderer = NULL;
 //static float zoom = 2.0;
 static uint8_t ignore_repeat = 1, browser_mode = 0;
-static int show_debug = 0;
-static int8_t run_lua = 1;
+static int8_t run_lua = 1, quick_load = 0;
 static const char *windowed = NULL, *extract_images = NULL, *extract_xmis = NULL,
                   *extract_items = NULL, *extract_gpl = NULL, *lua_script = "lua/main.lua";
 static char *ds1_gffs = NULL;
@@ -57,14 +57,14 @@ extern void sol_textbox_set_current(textbox_t *tb) {
     textbox = tb;
 }
 
+#define NUM_KEYS (256)
+static sol_key_e keys[NUM_KEYS];
+
 SDL_Renderer *main_get_rend() { return renderer; }
 SDL_Surface *main_get_window() { return window; }
 
 extern uint32_t sol_get_camerax() { return xmappos; }
 extern uint32_t sol_get_cameray() { return ymappos; }
-extern int main_get_debug() { return show_debug; }
-
-static void main_toggle_debug() { show_debug = !show_debug; }
 
 extern void port_start_display_frame() {
     SDL_RenderClear(main_get_rend());
@@ -130,50 +130,14 @@ void handle_input() {
                 if (ignore_repeat && event.key.repeat != 0) { break; }
                 if (textbox_handle_keyup(textbox, event.key.keysym)) { return; }
                 if (sol_lua_keyup(event.key.keysym.sym)) { break; }
-                if (event.key.keysym.sym == SDLK_LEFT) { sol_player_unmove(PLAYER_LEFT); }
-                if (event.key.keysym.sym == SDLK_UP) { sol_player_unmove(PLAYER_UP); }
-                if (event.key.keysym.sym == SDLK_RIGHT) { sol_player_unmove(PLAYER_RIGHT); }
-                if (event.key.keysym.sym == SDLK_DOWN) { sol_player_unmove(PLAYER_DOWN); }
-                if (event.key.keysym.sym == SDLK_e) { ymapdiff = 0;}
-                if (event.key.keysym.sym == SDLK_d) { ymapdiff = 0;}
-                if (event.key.keysym.sym == SDLK_s) { xmapdiff = 0;}
-                if (event.key.keysym.sym == SDLK_f) { xmapdiff = 0;}
-                if (event.key.keysym.sym == SDLK_F11) {
-                    sol_add_load_save_set_mode(ACTION_SAVE);
-                    sol_window_push(&als_window, 0, 0);
-                }
-                if (event.key.keysym.sym == SDLK_F12) {
-                    sol_add_load_save_set_mode(ACTION_LOAD);
-                    sol_window_push(&als_window, 0, 0);
-                }
+                sol_key_up(keys[event.key.keysym.sym & 0xFF]);
                 break;
             case SDL_KEYDOWN:
                 if (sol_window_handle_key_down(sdl_to_ea(event.key.keysym))) { break; }
                 if (ignore_repeat && event.key.repeat != 0) { break; }
                 if (textbox_handle_keydown(textbox, event.key.keysym)) { return; }
                 if (sol_lua_keydown(event.key.keysym.sym)) { break; }
-                if (event.key.keysym.sym == SDLK_ESCAPE) {
-                    sol_game_loop_signal(WAIT_FINAL, 0);
-                }
-                if (event.key.keysym.sym == SDLK_TAB) {
-                    sol_window_toggle(&game_menu_window, 0, 0);
-                }
-                if (event.key.keysym.sym == SDLK_i) {
-                    sol_window_toggle(&inventory_window, 0, 0);
-                }
-                if (event.key.keysym.sym == SDLK_c) {
-                    sol_window_toggle(&view_character_window, 0, 0);
-                }
-                if (event.key.keysym.sym == SDLK_LEFT) { sol_player_move(PLAYER_LEFT); }
-                if (event.key.keysym.sym == SDLK_UP) { sol_player_move(PLAYER_UP); }
-                if (event.key.keysym.sym == SDLK_RIGHT) { sol_player_move(PLAYER_RIGHT); }
-                if (event.key.keysym.sym == SDLK_DOWN) { sol_player_move(PLAYER_DOWN); }
-                if (event.key.keysym.sym == SDLK_e) { ymapdiff = -2;}
-                if (event.key.keysym.sym == SDLK_d) { ymapdiff = 2;}
-                if (event.key.keysym.sym == SDLK_s) { xmapdiff = -2;}
-                if (event.key.keysym.sym == SDLK_f) { xmapdiff = 2;}
-                if (event.key.keysym.sym == SDLK_SPACE) { main_toggle_debug(); }
-                if (event.key.keysym.sym == SDLK_g) { sol_key_down(SOLK_g); }
+                sol_key_down(keys[event.key.keysym.sym & 0xFF]);
                 break;
             case SDL_MOUSEMOTION:
                 handle_mouse_motion();
@@ -191,9 +155,6 @@ void handle_input() {
         }
     }
 
-    //xmappos += xmapdiff;
-    sol_camera_scrollx(xmapdiff);
-    sol_camera_scrolly(ymapdiff);
     handle_mouse_motion();
     if (sol_region_manager_get_current()) {
         sol_player_update();
@@ -204,8 +165,6 @@ void port_handle_input() {
     handle_input();
 }
 
-void main_set_xscroll(int amt) { xmapdiff = amt; }
-void main_set_yscroll(int amt) { ymapdiff = amt; }
 void main_set_ignore_repeat(int repeat) { ignore_repeat = repeat; }
 
 extern void sol_camera_scrollx(const int amt) { xmappos += amt; }
@@ -251,6 +210,7 @@ static void gui_init() {
     ymappos = 50;
     xmapdiff = ymapdiff = 0;
 
+    set_keys();
     if (sdl_init( SDL_INIT_VIDEO) ) {
         error( "Unable to init video!\n");
         exit(1);
@@ -311,7 +271,13 @@ extern void port_start() {
     replay_cleanup();
 }
 
-static void init(int args, char *argv[]) {
+static void init() {
+    if (quick_load) {
+        printf("HERE!\n");
+        sol_lua_load("quick.sav");
+        return;
+    }
+
     if (run_lua) {
         sol_lua_load(lua_script);
         return;
@@ -376,6 +342,9 @@ void parse_args(int argc, char *argv[]) {
         if (!strcmp(argv[i], "--lua") && i < (argc - 1)) {
             lua_script = argv[i + 1];
         }
+        if (!strcmp(argv[i], "--quick-load")) {
+            quick_load = 1;
+        }
     }
 
     replay_init("replay.lua");
@@ -399,7 +368,7 @@ int main(int argc, char *argv[]) {
     gpl_init();
     sol_lua_register_globals();
 
-    init(argc, argv);
+    init();
 
     if (!run_lua) { return 0; }
 
@@ -425,8 +394,8 @@ void main_exit_system() {
 extern void port_set_config(game_config_t gc, ssize_t val) {
     switch(gc) {
         case CONFIG_REPEAT: main_set_ignore_repeat(val); break;
-        case CONFIG_XSCROLL: main_set_xscroll(val); break;
-        case CONFIG_YSCROLL: main_set_yscroll(val); break;
+        //case CONFIG_XSCROLL: main_set_xscroll(val); break;
+        //case CONFIG_YSCROLL: main_set_yscroll(val); break;
         case CONFIG_PLAYER_FRAME_DELAY: sol_player_set_delay(val); break;
         //case CONFIG_PLAYER_SET_MOVE: sol_player_set_move(val); break;
         case CONFIG_PLAYER_MOVE: sol_player_move(val); break;
@@ -436,4 +405,120 @@ extern void port_set_config(game_config_t gc, ssize_t val) {
         case CONFIG_RUN_BROWSER: main_set_browser_mode(); break;
         default: printf("Unknown config %d\n", gc); exit(1); break;
     }
+}
+
+static void set_keys() {
+    memset(keys, 0x0, NUM_KEYS * sizeof(sol_key_e));
+    keys[SDLK_RETURN] = SOLK_RETURN;
+    keys[SDLK_ESCAPE] = SOLK_ESCAPE;
+    keys[SDLK_BACKSPACE] = SOLK_BACKSPACE;
+    keys[SDLK_TAB] = SOLK_TAB;
+    keys[SDLK_SPACE] = SOLK_SPACE;
+    keys[SDLK_EXCLAIM] = SOLK_EXCLAIM;
+    keys[SDLK_QUOTEDBL] = SOLK_QUOTEDBL;
+    keys[SDLK_HASH] = SOLK_HASH;
+    keys[SDLK_PERCENT] = SOLK_PERCENT;
+    keys[SDLK_DOLLAR] = SOLK_DOLLAR;
+    keys[SDLK_AMPERSAND] = SOLK_AMPERSAND;
+    keys[SDLK_QUOTE] = SOLK_QUOTE;
+    keys[SDLK_LEFTPAREN] = SOLK_LEFTPAREN;
+    keys[SDLK_RIGHTPAREN] = SOLK_RIGHTPAREN;
+    keys[SDLK_ASTERISK] = SOLK_ASTERISK;
+    keys[SDLK_PLUS] = SOLK_PLUS;
+    keys[SDLK_COMMA] = SOLK_COMMA;
+    keys[SDLK_MINUS] = SOLK_MINUS;
+    keys[SDLK_PERIOD] = SOLK_PERIOD;
+    keys[SDLK_SLASH] = SOLK_SLASH;
+    keys[SDLK_0] = SOLK_0;
+    keys[SDLK_1] = SOLK_1;
+    keys[SDLK_2] = SOLK_2;
+    keys[SDLK_3] = SOLK_3;
+    keys[SDLK_4] = SOLK_4;
+    keys[SDLK_5] = SOLK_5;
+    keys[SDLK_6] = SOLK_6;
+    keys[SDLK_7] = SOLK_7;
+    keys[SDLK_8] = SOLK_8;
+    keys[SDLK_9] = SOLK_9;
+    keys[SDLK_COLON] = SOLK_COLON;
+    keys[SDLK_SEMICOLON] = SOLK_SEMICOLON;
+    keys[SDLK_LESS] = SOLK_LESS;
+    keys[SDLK_EQUALS] = SOLK_EQUALS;
+    keys[SDLK_GREATER] = SOLK_GREATER;
+    keys[SDLK_QUESTION] = SOLK_QUESTION;
+    keys[SDLK_AT] = SOLK_AT;
+    keys[SDLK_LEFTBRACKET] = SOLK_LEFTBRACKET;
+    keys[SDLK_BACKSLASH] = SOLK_BACKSLASH;
+    keys[SDLK_RIGHTBRACKET] = SOLK_RIGHTBRACKET;
+    keys[SDLK_CARET] = SOLK_CARET;
+    keys[SDLK_UNDERSCORE] = SOLK_UNDERSCORE;
+    keys[SDLK_BACKQUOTE] = SOLK_BACKQUOTE;
+    keys[SDLK_a] = SOLK_a;
+    keys[SDLK_b] = SOLK_b;
+    keys[SDLK_c] = SOLK_c;
+    keys[SDLK_d] = SOLK_d;
+    keys[SDLK_e] = SOLK_e;
+    keys[SDLK_f] = SOLK_f;
+    keys[SDLK_g] = SOLK_g;
+    keys[SDLK_h] = SOLK_h;
+    keys[SDLK_i] = SOLK_i;
+    keys[SDLK_j] = SOLK_j;
+    keys[SDLK_k] = SOLK_k;
+    keys[SDLK_l] = SOLK_l;
+    keys[SDLK_m] = SOLK_m;
+    keys[SDLK_n] = SOLK_n;
+    keys[SDLK_o] = SOLK_o;
+    keys[SDLK_p] = SOLK_p;
+    keys[SDLK_q] = SOLK_q;
+    keys[SDLK_r] = SOLK_r;
+    keys[SDLK_s] = SOLK_s;
+    keys[SDLK_t] = SOLK_t;
+    keys[SDLK_u] = SOLK_u;
+    keys[SDLK_v] = SOLK_v;
+    keys[SDLK_w] = SOLK_w;
+    keys[SDLK_x] = SOLK_x;
+    keys[SDLK_y] = SOLK_y;
+    keys[SDLK_z] = SOLK_z;
+    //keys[SDLK_CAPSLOCK] = SOLK_CAPSLOCK;
+    keys[SDLK_F1 & 0xFF] = SOLK_F1;
+    keys[SDLK_F2 & 0xFF] = SOLK_F2;
+    keys[SDLK_F3 & 0xFF] = SOLK_F3;
+    keys[SDLK_F4 & 0xFF] = SOLK_F4;
+    keys[SDLK_F5 & 0xFF] = SOLK_F5;
+    keys[SDLK_F6 & 0xFF] = SOLK_F6;
+    keys[SDLK_F7 & 0xFF] = SOLK_F7;
+    keys[SDLK_F8 & 0xFF] = SOLK_F8;
+    keys[SDLK_F9 & 0xFF] = SOLK_F9;
+    keys[SDLK_F10 & 0xFF] = SOLK_F10;
+    keys[SDLK_F11 & 0xFF] = SOLK_F11;
+    keys[SDLK_F12 & 0xFF] = SOLK_F12;
+    //keys[SDLK_PRINTSCREEN] = SOLK_PRINTSCREEN;
+    //keys[SDLK_SCROLLLOCK] = SOLK_SCROLLLOCK;
+    //keys[SDLK_PAUSE] = SOLK_PAUSE;
+    //keys[SDLK_INSERT] = SOLK_INSERT;
+    //keys[SDLK_HOME] = SOLK_HOME;
+    //keys[SDLK_PAGEUP] = SOLK_PAGEUP;
+    keys[SDLK_DELETE] = SOLK_DELETE;
+    //keys[SDLK_END] = SOLK_END;
+    //keys[SDLK_PAGEDOWN] = SOLK_PAGEDOWN;
+    keys[SDLK_RIGHT & 0xFF] = SOLK_RIGHT;
+    keys[SDLK_LEFT & 0xFF] = SOLK_LEFT;
+    keys[SDLK_DOWN & 0xFF] = SOLK_DOWN;
+    keys[SDLK_UP & 0xFF] = SOLK_UP;
+    keys[SDLK_NUMLOCKCLEAR & 0xFF] = SOLK_NUMLOCKCLEAR;
+    keys[SDLK_KP_DIVIDE & 0xFF] = SOLK_KP_DIVIDE;
+    keys[SDLK_KP_MULTIPLY & 0xFF] = SOLK_KP_MULTIPLY;
+    keys[SDLK_KP_MINUS & 0xFF] = SOLK_KP_MINUS;
+    keys[SDLK_KP_PLUS & 0xFF] = SOLK_KP_PLUS;
+    keys[SDLK_KP_ENTER & 0xFF] = SOLK_KP_ENTER;
+    //keys[SDLK_KP_1] = SOLK_KP_1;
+    //keys[SDLK_KP_2] = SOLK_KP_2;
+    //keys[SDLK_KP_3] = SOLK_KP_3;
+    //keys[SDLK_KP_4] = SOLK_KP_4;
+    //keys[SDLK_KP_5] = SOLK_KP_5;
+    //keys[SDLK_KP_6] = SOLK_KP_6;
+    //keys[SDLK_KP_7] = SOLK_KP_7;
+    //keys[SDLK_KP_8] = SOLK_KP_8;
+    //keys[SDLK_KP_9] = SOLK_KP_9;
+    //keys[SDLK_KP_0] = SOLK_KP_0;
+    //keys[SDLK_KP_PERIOD] = SOLK_KP_PERIOD;
 }

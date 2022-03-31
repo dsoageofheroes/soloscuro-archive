@@ -77,11 +77,6 @@ static int toggle_inventory(lua_State *l) {
     return 0;
 }
 
-static int load_region(lua_State *l) {
-    return lua_return_bool(l,
-        port_load_region(lua_tointeger(l, 1)));
-}
-
 static int change_region(lua_State *l) {
     sol_region_t* reg = sol_region_manager_get_region(luaL_checkinteger(l, 1));
     if (!reg) { return lua_return_bool(l, 0); }
@@ -189,7 +184,6 @@ static int exit_game(lua_State *l) {
 
 static const struct luaL_Reg sol_funcs[] = {
     {"load_charsave", sol_load_charsave},
-    {"load_region", load_region},
     {"change_region", change_region},
     {"set_player_frame_delay", set_player_frame_delay},
     {"set_player_move", set_player_move},

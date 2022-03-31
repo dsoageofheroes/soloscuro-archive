@@ -54,6 +54,7 @@ set(SOLOSCURO_SRCS
     lua/lua-structs.c
     rules.c
     replay.c
+    save-load.c
     gpl/gpl-lua.c
     gpl/gpl-request.c
     gpl/state.c

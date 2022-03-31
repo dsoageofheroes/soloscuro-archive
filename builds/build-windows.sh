@@ -187,6 +187,7 @@ x86_64-w64-mingw32-gcc -O2 -fPIC -I ../ext/spng/ -I ../include/ -I ../sdl/ -I ..
     ../sdl/textbox.c \
     ../sdl/utils.c \
     ../sdl/mouse.c \
+    ../sdl/save-load.c \
     ../sdl/background.c \
     ../sdl/sprite.c \
     ../sdl/lua-generate-globals.c \
