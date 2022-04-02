@@ -19,13 +19,34 @@ extern void sol_region_manager_init() {
     memset(sol_regions, 0x0, sizeof(sol_regions));
 }
 
-extern void sol_region_manager_cleanup() {
+static void free_entities(sol_region_t *reg) {
+    dude_t *dude;
+
+    // Don't free the players, so we will get rid of them first.
+    for (int i = 0; i < MAX_PCS; i++) {
+        entity_list_remove(reg->entities, entity_list_find(reg->entities, sol_player_get(i)));
+    }
+
+    while (reg->entities->head) {
+        dude = reg->entities->head->entity;
+        entity_list_remove_entity(reg->entities, dude);
+        entity_free(dude);
+    }
+}
+
+extern void sol_region_manager_cleanup(int _free_entities) {
     for (int i = 0; i < MAX_REGIONS; i++) {
         if (ssi_regions[i]) {
+            if (_free_entities) {
+                free_entities(ssi_regions[i]);
+            }
             sol_region_free(ssi_regions[i]);
             ssi_regions[i] = NULL;
         }
         if (sol_regions[i]) {
+            if (_free_entities) {
+                free_entities(sol_regions[i]);
+            }
             sol_region_free(sol_regions[i]);
             ssi_regions[i] = NULL;
         }

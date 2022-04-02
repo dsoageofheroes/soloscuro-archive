@@ -36,7 +36,7 @@ function init()
     p0.name = "Test"
     p0.mapx = 25;
     p0.mapy = 10;
-    p0.stats.hp = 40;
+    p0.stats.hp = 140;
     p0.set_class(0, 9)
     p0.award_exp(90000)
     p0.give_ds1_item(3, 47, -30001)

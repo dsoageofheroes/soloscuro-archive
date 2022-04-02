@@ -92,7 +92,10 @@ static void map_load_current_region() {
     //TODO: Find out what maps to which areas.
     sol_audio_play_xmi(RESOURCE_GFF_INDEX, GFF_GSEQ, 2);
 
-    gpl_lua_execute_script(cmap->region->map_id, 0, 1);
+    if (!map->region->mas_loaded) {
+        gpl_lua_execute_script(cmap->region->map_id, 0, 1);
+        map->region->mas_loaded = 1;
+    }
 }
 
 static void sprite_load_animation(entity_t *entity, gff_palette_t *pal) {
@@ -210,9 +213,6 @@ void map_render_anims() {
 
     entity_list_for_each(cmap->region->entities, dude) {
         hflip = vflip = 0;
-        //if (dude->name) {
-            //printf("dude->name = %s, %d, %p\n", dude->name, dude->anim.spr, dude->anim.scmd);
-        //}
         if (dude->anim.spr == SPRITE_ERROR) { continue; }
         anim = &(dude->anim);
         if (!anim->scmd) { continue; }

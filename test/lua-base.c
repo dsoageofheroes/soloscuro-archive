@@ -28,7 +28,7 @@ void setUp() {
 }
 
 void tearDown() {
-    sol_region_manager_cleanup();
+    sol_region_manager_cleanup(1);
     gff_cleanup();
     gpl_cleanup();
 }

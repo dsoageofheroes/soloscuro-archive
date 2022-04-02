@@ -290,7 +290,7 @@ extern int ls_load_save_file(const char *path) {
 
     if (id < 0) { return 0; }
 
-    sol_region_manager_cleanup();
+    sol_region_manager_cleanup(0);
 
     for (int i = 0; i < 4; i++) {
         if (!load_player(id, i, i)) { return 0; }

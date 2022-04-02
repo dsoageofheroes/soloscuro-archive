@@ -273,7 +273,6 @@ extern void port_start() {
 
 static void init() {
     if (quick_load) {
-        printf("HERE!\n");
         sol_lua_load("quick.sav");
         return;
     }

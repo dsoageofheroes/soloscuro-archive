@@ -76,5 +76,4 @@ extern void gpl_cleanup() {
     gpl_manager_cleanup();
     ssi_item_close();
     sol_trigger_cleanup();
-    sol_region_manager_cleanup();
 }

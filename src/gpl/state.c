@@ -500,8 +500,10 @@ static int noorders_trigger(lua_State *l) {
     lua_Integer obj = luaL_checkinteger(l, 1);
     lua_Integer file = luaL_checkinteger(l, 2);
     lua_Integer addr = luaL_checkinteger(l, 3);
+    lua_Integer trigger = (lua_gettop(l) >= 4) ? luaL_checkinteger(l, 4) : 1;
+    lua_Integer run =     (lua_gettop(l) >= 5) ? luaL_checkinteger(l, 5) : 1;
 
-    sol_trigger_add_noorders(obj, file, addr);
+    sol_trigger_add_noorders(obj, file, addr, trigger, run);
     return 0;
 }
 

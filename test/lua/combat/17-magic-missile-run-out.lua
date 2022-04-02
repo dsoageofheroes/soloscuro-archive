@@ -80,10 +80,14 @@ function init()
     p0.give_ds1_item(10, 47, -30001)
     p0.give_ds1_item(2, 1, -1017) -- BOW
     p0.give_ds1_item(1, 62, -1070) -- arrows
+    p0.stats.wizard1.amt = 5
 
     reg = sol.create_region()
     sol.set_region(reg)
+    --print(reg.flags[0])
     reg.set_tile_id(4, 83)
+    --reg.set_flag_ids(0, "0 192 0 192")
+    --reg.set_flag_ids(1, "192 0 192 0")
     sol.load_window("map")
     sol.load_window("narrate")
     sol.load_window("combat")

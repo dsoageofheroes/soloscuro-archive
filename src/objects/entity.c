@@ -317,6 +317,7 @@ void entity_free(entity_t *dude) {
 
     if (reg) {
         entity_animation_list_remove_references(&reg->actions, dude);
+        entity_list_remove(reg->entities, entity_list_find(reg->entities, dude));
     }
     if (dude->name) {
         free(dude->name);

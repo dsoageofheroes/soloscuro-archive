@@ -40,7 +40,7 @@ static int region_set_flag_ids(lua_State *l) {
         while (bpos < 127 && pos < size && !isspace(*flags)) { buf[bpos++] = *flags; flags++; pos++; }
         buf[bpos] = '\0';
         region->flags[index][i++] = atol(buf);
-        printf("set[%d][%d] = %d\n", index, (int)i - 1, region->flags[index][i-1]);
+        //printf("set[%d][%d] = %d\n", index, (int)i - 1, region->flags[index][i-1]);
     }
 
     return 0;

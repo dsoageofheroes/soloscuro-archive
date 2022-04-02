@@ -25,6 +25,7 @@ typedef struct sol_region_s {
     struct entity_list_s *entities;
     // actions from several entities, right now one at a time.
     entity_animation_list_t actions;
+    uint8_t mas_loaded; // flag to set if MAS should be loaded: 0 means load.
     // combat_region_t cr;
     // Temporary while we figure things out...
     struct {

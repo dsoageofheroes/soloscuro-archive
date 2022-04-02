@@ -2,6 +2,8 @@
 #define TRIGGER_H
 
 #include <stdint.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 typedef struct attack_trigger_s {
     uint32_t obj, file, addr, global;
@@ -46,7 +48,7 @@ extern int              sol_trigger_add_use(uint32_t obj, uint32_t file, uint32_
 extern int              sol_trigger_add_use_global(uint32_t obj, uint32_t file, uint32_t addr);
 extern int              sol_trigger_add_look(uint32_t obj, uint32_t file, uint32_t addr);
 extern int              sol_trigger_add_look_global(uint32_t obj, uint32_t file, uint32_t addr);
-extern int              sol_trigger_add_noorders(uint32_t obj, uint32_t file, uint32_t addr);
+extern int              sol_trigger_add_noorders(uint32_t obj, uint32_t file, uint32_t addr, int trigger, int run);
 extern int              sol_trigger_add_talkto(uint32_t obj, uint32_t file, uint32_t addr);
 extern int              sol_trigger_add_usewith(uint32_t obj1, uint32_t obj2, uint32_t file, uint32_t addr);
 extern int              sol_trigger_add_tile(uint32_t x, uint32_t y, uint32_t file, uint32_t addr, uint32_t trip);
@@ -66,5 +68,7 @@ extern char*            sol_trigger_serialize(size_t *len);
 extern void             sol_trigger_deserialize(char *data);
 
 extern void             sol_trigger_talk_click(uint32_t obj);
+
+extern void             sol_write_triggers(FILE *file);
 
 #endif

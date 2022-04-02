@@ -21,7 +21,7 @@ void test_simple(void) {
 
     TEST_ASSERT_NOT_NULL(reg);
 
-    sol_region_manager_cleanup();
+    sol_region_manager_cleanup(1);
 }
 
 void test_set_get(void) {
@@ -37,7 +37,7 @@ void test_set_get(void) {
     sol_region_manager_set_current(reg);
     TEST_ASSERT(empty != sol_region_manager_get_current());
 
-    sol_region_manager_cleanup();
+    sol_region_manager_cleanup(1);
 }
 
 int main(void) {

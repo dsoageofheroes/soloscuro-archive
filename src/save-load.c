@@ -1,10 +1,14 @@
 #include "arbiter.h"
 #include "save-load.h"
 #include "player.h"
+#include "sol-lua-manager.h"
 #include "gpl.h"
+#include "map.h"
+#include "gameloop.h"
 #include "narrate.h"
 #include "combat-region.h"
 #include "region-manager.h"
+#include "trigger.h"
 #include <stdio.h>
 
 static int save_item(FILE *file, item_t *item, const char *name) {
@@ -102,9 +106,8 @@ static int write_players(FILE *file) {
 }
 
 static int write_region(FILE *file, sol_region_t *reg) {
-    //reg = sol.get_region()
-    //print (sol.change_region(42))
     fprintf(file, "reg = sol.load_region(%d)\n", reg->map_id);
+    fprintf(file, "reg.mas_loaded = 1 -- don't reload MAS\n");
     for (int i = 0; i < MAP_ROWS; i++) {
         fprintf(file, "reg.set_flag_ids(%d, \"", i);
         for (int j = 0; j < MAP_COLUMNS; j++) {
@@ -119,6 +122,7 @@ static int write_regions(FILE *file) {
     write_region(file, sol_region_manager_get_current());
     gpl_write_local_state(file);
     gpl_write_global_state(file);
+    sol_write_triggers(file);
     return 1;
 }
 
@@ -132,6 +136,7 @@ extern int sol_save_to_file(const char *filepath) {
     file = fopen("quick.sav", "wb");
     if (!file) { return 0; }
 
+    fprintf(file, "function init()\n");
     fprintf(file, "local sol = soloscuro\n");
     write_players(file);
     write_regions(file);
@@ -139,12 +144,21 @@ extern int sol_save_to_file(const char *filepath) {
     fprintf(file, "sol.load_window(\"map\")\n");
     fprintf(file, "sol.load_window(\"narrate\")\n");
     fprintf(file, "sol.load_window(\"combat\")\n");
+    fprintf(file, "end\n");
 
     fclose(file);
     return 1;
 }
 
 extern int sol_load_from_file(const char *filepath) {
-    (void) filepath;
+    sol_window_clear();
+    sol_region_manager_cleanup(1);
+    gpl_cleanup();
+    sol_player_close();
+    sol_trigger_cleanup();
+    gpl_init();
+    sol_gameloop_init();
+    sol_lua_load(filepath);
+    sol_center_on_player();
     return 0;
 }
