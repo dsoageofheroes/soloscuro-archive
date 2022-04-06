@@ -312,7 +312,7 @@ extern void sol_player_load(const int slot) {
     if (slot < 0 || slot >= MAX_PCS) { return; }
 
     if (players[slot]->anim.scmd == NULL) { // load a new char
-        players[slot]->anim.scmd = sol_combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
+        sol_combat_set_scmd(players[slot], COMBAT_SCMD_STAND_DOWN);
         players[slot]->anim.spr = SPRITE_ERROR;
     }
 

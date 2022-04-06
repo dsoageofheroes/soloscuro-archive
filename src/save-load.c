@@ -110,6 +110,9 @@ static int write_entity(FILE *file, entity_t *entity, const char *name) {
     fprintf(file, "%s.anim.bmp_id = %d\n", name, entity->anim.bmp_id);
 
     if (entity->anim.scmd_info.gff_idx) {
+        if (entity->anim.scmd_info.gff_idx < 0) {
+            sol_combat_update_scmd_info(entity);
+        }
         fprintf(file, "%s.load_scmd( %d, %d, %d)\n", name, entity->anim.scmd_info.gff_idx,
                   entity->anim.scmd_info.res_id, entity->anim.scmd_info.index);
     }

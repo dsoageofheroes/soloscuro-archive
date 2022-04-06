@@ -594,7 +594,7 @@ static int gpl_clone(lua_State *l) {
                 (dude->name) ? 2 : 1);
             sol_map_place_entity(dude);
             //TODO: Should reshift the entity?
-            dude->anim.scmd = sol_combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
+            sol_combat_set_scmd(dude, COMBAT_SCMD_STAND_DOWN);
         }
     }
 

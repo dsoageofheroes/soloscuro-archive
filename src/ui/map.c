@@ -107,7 +107,6 @@ static void sprite_load_animation(entity_t *entity, gff_palette_t *pal) {
             OBJEX_GFF_INDEX, GFF_BMP, entity->anim.bmp_id + 1);
     }
     entity->anim.delay = 0;
-    entity->anim.pos = 0;
     entity->anim.w = sol_sprite_getw(entity->anim.spr);
     entity->anim.h = sol_sprite_geth(entity->anim.spr);
     entity->anim.x = (entity->mapx * 16 + entity->anim.xoffset) * zoom;
@@ -214,6 +213,7 @@ void map_render_anims() {
     entity_list_for_each(cmap->region->entities, dude) {
         amt++;
         hflip = vflip = 0;
+        //if (dude->name) { printf("-> %s, %d, %d, %d\n", dude->name, dude->mapx, dude->mapy, dude->anim.spr); }
         if (dude->anim.spr == SPRITE_ERROR) { continue; }
         anim = &(dude->anim);
         if (!anim->scmd) { continue; }

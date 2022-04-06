@@ -111,7 +111,7 @@ extern int sol_lua_load_entity (lua_State *l, dude_t *dude) {
     push_table(l, &(dude->class[1]), "class1", "soloscuro.class");
     push_table(l, &(dude->class[2]), "class2", "soloscuro.class");
 
-    push_table(l, &(dude->class[2]), "ability", "soloscuro.ability");
+    push_table(l, &dude->abilities, "ability", "soloscuro.ability");
     push_table(l, &dude->anim, "anim", "soloscuro.animate");
 
     if (dude->inv) {

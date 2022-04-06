@@ -392,3 +392,10 @@ extern int sol_combat_active(combat_region_t *cr) {
     if (!cr) { return 0; }
     return cr->combatants.head != 0;
 }
+
+extern void sol_combat_set_scmd(entity_t *dude, const combat_scmd_t scmd) {
+    dude->anim.scmd = sol_combat_get_scmd(scmd);
+    dude->anim.scmd_info.gff_idx = -1;
+    dude->anim.scmd_info.res_id = scmd;
+}
+

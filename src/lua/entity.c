@@ -73,6 +73,12 @@ static int load_scmd(lua_State *l) {
     dude->anim.scmd_info.res_id = luaL_checkinteger(l, 2);
     dude->anim.scmd_info.index = luaL_checkinteger(l, 3);
 
+    if (dude->anim.scmd_info.gff_idx < 0) {
+        sol_combat_set_scmd(dude, dude->anim.scmd_info.res_id);
+        return 1;
+    } 
+
+    // map based scmd need to load and start the animation
     if (!gff_map_load_scmd(dude)) { return 0; }
     if (dude->anim.scmd != NULL && !(dude->anim.scmd->flags & SCMD_LAST)) {
         entity_animation_list_add(&dude->actions, EA_SCMD, dude, NULL, NULL, 30);

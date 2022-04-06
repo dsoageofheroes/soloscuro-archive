@@ -896,3 +896,12 @@ extern void sol_animation_render(const entity_action_t *ea) {
 
     sol_sprite_render_flip(spr, 0, 0);
 }
+
+extern void sol_combat_update_scmd_info(entity_t *dude) {
+    if (!dude || dude->anim.scmd_info.gff_idx >= 0) { return; }
+    for (int i = 0; i < 20; i++) {
+        if (dude->anim.scmd == combat_types[i]) {
+            dude->anim.scmd_info.res_id = i;
+        }
+    }
+}
