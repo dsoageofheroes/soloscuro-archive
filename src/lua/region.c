@@ -101,10 +101,21 @@ static int get_first_entity(lua_State *l) {
 static int enter_combat (lua_State *l) {
     luaL_checktype(l, 1, LUA_TTABLE);
     const int x = luaL_checkinteger(l, 2);
-    const int y = luaL_checkinteger(l, 2);
+    const int y = luaL_checkinteger(l, 3);
 
     sol_region_t *region = (sol_region_t*) lua_touserdata(l, lua_upvalueindex(1));
     sol_arbiter_enter_combat(region, x, y);
+
+    return 0;
+}
+
+static int add_entity (lua_State *l) {
+    luaL_checktype(l, 1, LUA_TTABLE);
+
+    sol_region_t *region = (sol_region_t*) lua_touserdata(l, lua_upvalueindex(1));
+    entity_t *entity = (entity_t*) sol_lua_get_userdata(l, 1);
+
+    animation_shift_entity(region->entities, entity_list_add(region->entities, entity));
 
     return 0;
 }
@@ -125,6 +136,9 @@ extern int sol_lua_region_function(sol_region_t *region, const char *func, lua_S
     }
     if (!strcmp(func, "enter_combat")) {
         return push_region_function(l, region, enter_combat);
+    }
+    if (!strcmp(func, "add_entity")) {
+        return push_region_function(l, region, add_entity);
     }
     lua_pushinteger(l, 0);
     return 1;

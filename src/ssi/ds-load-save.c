@@ -149,7 +149,7 @@ static void load_regions(const int id) {
     //entity_t *entity = NULL;
     //gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes;
     dude_t *dude = sol_player_get_active();
-    sol_region_t *reg = sol_region_manager_get_region(dude->region);
+    sol_region_t *reg = sol_region_manager_get_region(dude->region, 0);
     char *buf = NULL;
     rdff_header_t *rdff = NULL;
     size_t offset = 0;

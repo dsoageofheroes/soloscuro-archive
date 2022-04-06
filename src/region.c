@@ -65,7 +65,6 @@ extern sol_region_t* sol_region_create(const int gff_file) {
     gff_read_chunk(reg->gff_file, &chunk, reg->entry_table, chunk.length);
     open_files[reg->gff_file].num_objects = chunk.length / sizeof(gff_map_object_t);
     reg->palette_id = gff_get_palette_id(DSLDATA_GFF_INDEX, reg->map_id - 1);
-    //reg->ids = gff_get_id_list(reg->gff_file, GFF_TILE);
 
     //TODO Finish region_create!
     load_tile_ids(reg);

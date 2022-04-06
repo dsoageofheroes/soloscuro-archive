@@ -92,9 +92,9 @@ static void map_load_current_region() {
     //TODO: Find out what maps to which areas.
     sol_audio_play_xmi(RESOURCE_GFF_INDEX, GFF_GSEQ, 2);
 
-    if (!map->region->mas_loaded) {
+    if (!map->region->assume_loaded) {
         gpl_lua_execute_script(cmap->region->map_id, 0, 1);
-        map->region->mas_loaded = 1;
+        map->region->assume_loaded = 1;
     }
 }
 
@@ -120,7 +120,6 @@ static void sprite_load_animation(entity_t *entity, gff_palette_t *pal) {
         entity->anim.desty -= sol_sprite_geth(entity->anim.spr) - (8 * settings_zoom());
     }
     entity->anim.movey = entity->anim.movex = entity->anim.left_over = 0.0;
-    entity->anim.entity = entity;
     //printf("%d: %d %d %d (%d, %d)\n", obj->combat_id, obj->mapx, obj->mapy, obj->mapz, anims[anim_pos].x, anims[anim_pos].y);
     //printf("             (%d, %d)\n", anims[anim_pos].destx, anims[anim_pos].desty);
     //printf("%s: @ %p\n", entity->name, entity->sprite.data);
@@ -210,8 +209,10 @@ void map_render_anims() {
     entity_t *dude;
     animate_sprite_t *anim;
     int hflip = 0, vflip = 0;
+    int amt = 0;
 
     entity_list_for_each(cmap->region->entities, dude) {
+        amt++;
         hflip = vflip = 0;
         if (dude->anim.spr == SPRITE_ERROR) { continue; }
         anim = &(dude->anim);
@@ -224,15 +225,21 @@ void map_render_anims() {
         if (anim->scmd[anim->pos].flags & SCMD_YMIRROR) {
             vflip = 1;
         }
+        if (dude->anim.scmd && !(dude->anim.scmd[0].flags & SCMD_LAST)) {
+            //printf("1]dude->anim.spr = %d, %p, %d, %d (%d, %d)\n", dude->anim.spr, dude->anim.scmd, anim->x, anim->y, anim->w, anim->h);
+            //printf("1]dude->anim.scmd_info = %d %d %d\n", dude->anim.scmd_info.gff_idx, dude->anim.scmd_info.res_id, dude->anim.scmd_info.index);
+        }
         sol_sprite_set_location(anim->spr,
             anim->x - xoffset, // + scmd_xoffset,
             anim->y - yoffset); // + anim->scmd->yoffset);
         if (dude->name) {
+            //printf("->%s\n", dude->name);
             //printf("%s: %d @ (%d, %d) frame %d / %d\n", dude->name, dude->anim.spr,
                 //sol_sprite_getx(anim->spr), sol_sprite_gety(anim->spr), sol_sprite_get_frame(anim->spr), sol_sprite_num_frames(anim->spr));
         }
         sol_sprite_render_flip(anim->spr, hflip, vflip);
     }
+    //printf("amt = %d\n", amt);
 
     sol_animation_render(&(cmap->region->actions.head->ca));
 }
@@ -438,7 +445,6 @@ extern void port_load_item(item_t *item) {
 
     item->anim.spr = sol_sprite_new(pal, 0, 0, settings_zoom(),
             OBJEX_GFF_INDEX, GFF_BMP, item->anim.bmp_id);
-    item->anim.entity = NULL;
 }
 
 extern void sol_map_game_over() {

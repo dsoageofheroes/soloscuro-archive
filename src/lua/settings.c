@@ -78,7 +78,7 @@ static int toggle_inventory(lua_State *l) {
 }
 
 static int change_region(lua_State *l) {
-    sol_region_t* reg = sol_region_manager_get_region(luaL_checkinteger(l, 1));
+    sol_region_t* reg = sol_region_manager_get_region(luaL_checkinteger(l, 1), 0);
     if (!reg) { return lua_return_bool(l, 0); }
     sol_region_manager_set_current(reg);
     return lua_return_bool(l, 1);

@@ -6,7 +6,6 @@
 
 #define SPRITE_ERROR (0xFFFF)
 
-struct entity_s; // forward declaration
 typedef struct animate_sprite_s {
     uint16_t spr;
     uint16_t flags;
@@ -17,8 +16,10 @@ typedef struct animate_sprite_s {
     uint32_t bmp_id;
     int16_t xoffset, yoffset;      // offset for (x, y)
     float movex, movey, left_over; // see animate_tick for left_over
-    struct entity_s *entity;
     scmd_t *scmd;
+    struct {
+        int gff_idx, res_id, index;
+    } scmd_info;
 } animate_sprite_t;
 
 struct entity_s;

@@ -134,7 +134,9 @@ extern void entity_list_load_etab(entity_list_t *list, const int gff_idx, const 
 
     for (int i = 0; i < num_objs; i++) {
         dude_t *dude = entity_create_from_etab(open_files[gff_idx].entry_table, i);
-        dude->anim.scmd = gff_map_get_object_scmd(gff_idx, map_id, i, 0);
+        //dude->anim.scmd = gff_map_get_object_scmd(gff_idx, map_id, i, 0);
+        gff_map_fill_scmd_info(dude, gff_idx, map_id, i, 0);
+        gff_map_load_scmd(dude);
         animation_shift_entity(list, entity_list_add(list, dude));
         if (dude->anim.scmd != NULL && !(dude->anim.scmd->flags & SCMD_LAST)) {
             entity_animation_list_add(&dude->actions, EA_SCMD, dude, NULL, NULL, 30);

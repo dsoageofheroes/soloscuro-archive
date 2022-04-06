@@ -112,7 +112,7 @@ int port_load_region(const int region) {
 }
 
 extern int sol_window_load_region(const int region) {
-    sol_region_manager_set_current(sol_region_manager_get_region(region));
+    sol_region_manager_set_current(sol_region_manager_get_region(region, 0));
 
     sol_window_push(&map_window, 0, 0);
     sol_window_push(&narrate_window, 0, 0);

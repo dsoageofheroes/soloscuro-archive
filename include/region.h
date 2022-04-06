@@ -25,8 +25,8 @@ typedef struct sol_region_s {
     struct entity_list_s *entities;
     // actions from several entities, right now one at a time.
     entity_animation_list_t actions;
-    uint8_t mas_loaded; // flag to set if MAS should be loaded: 0 means load.
-    // combat_region_t cr;
+    uint8_t assume_loaded; // flag to set we assume the region is loaded.
+                           // This happens after the region is loaded, or if we are loading.
     // Temporary while we figure things out...
     struct {
         uint16_t mid;// map to grab a tile from

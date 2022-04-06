@@ -114,10 +114,12 @@ typedef struct _so_object_t {
 } so_object_t;
 
 #define NULL_OBJECT (9999) // why 9999?  I dunno!
+struct entity_s;
 
 extern int            gff_map_get_num_objects(int gff_index, int res_id);
 extern int            gff_map_get_object_frame_count(int gff_index, int res_id, int obj_id);
-extern scmd_t*        gff_map_get_object_scmd(int gff_index, int res_id, int obj_id, int scmd_index);
+extern int            gff_map_fill_scmd_info(struct entity_s *dude, int gff_index, int res_id, int obj_id, int scmd_index);
+extern int            gff_map_load_scmd(struct entity_s *dude);
 extern unsigned char* gff_map_get_object_bmp(int gff_index, int res_id, int obj_id, int *w, int *h, int frame_id);
 extern unsigned char* gff_map_get_object_bmp_pal(int gff_index, int res_id, int obj_id, int *w, int *h, int frame_id,
         int palette_id);

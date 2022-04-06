@@ -67,6 +67,7 @@ static SDL_Texture* create_texture(SDL_Renderer *renderer, const uint32_t gff_id
     SDL_Texture *ret = NULL;
     loc->w = gff_get_frame_width(gff_idx, type_id, res_id, frame_id);
     loc->h = gff_get_frame_height(gff_idx, type_id, res_id, frame_id);
+    //printf("loc.w/h = (%d, %d), from %d, %d, %d, %d\n", loc->w, loc->h, gff_idx, type_id, res_id, frame_id);
     //data = get_frame_rgba_with_palette(gff_file, type, id, frame_id, palette_id);
     data = gff_get_frame_rgba_palette(gff_idx, type_id, res_id, frame_id, pal);
     surface = SDL_CreateRGBSurfaceFrom(data, loc->w, loc->h, 32, 4*loc->w,

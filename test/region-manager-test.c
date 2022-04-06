@@ -17,7 +17,7 @@ int func() { return 40; }
 
 void test_simple(void) {
     sol_region_manager_init();
-    sol_region_t* reg = sol_region_manager_get_region(42);
+    sol_region_t* reg = sol_region_manager_get_region(42, 0);
 
     TEST_ASSERT_NOT_NULL(reg);
 
@@ -26,7 +26,7 @@ void test_simple(void) {
 
 void test_set_get(void) {
     sol_region_manager_init();
-    sol_region_t* reg = sol_region_manager_get_region(42);
+    sol_region_t* reg = sol_region_manager_get_region(42, 0);
     sol_region_t* empty = sol_region_create_empty();
 
     TEST_ASSERT_NOT_NULL(reg);

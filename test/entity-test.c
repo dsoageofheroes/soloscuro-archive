@@ -48,7 +48,7 @@ void test_fake(void) {
 }
 
 void test_etab(void) {
-    sol_region_t* reg = sol_region_manager_get_region(42);
+    sol_region_t* reg = sol_region_manager_get_region(42, 0);
     entity_t* obj = entity_create_from_etab(reg->entry_table, 3);
     entity_free(obj);
 }

@@ -43,7 +43,7 @@ static int click_action() {
         if(sol_player_get_active() && sol_player_get_active()->name) {
             sol_window_pop();
             // Note: We are deallocated here, so be careful.
-            sol_region_t *reg = sol_region_manager_get_region(42);
+            sol_region_t *reg = sol_region_manager_get_region(42, 0);
             sol_region_manager_set_current(reg);
             //sol_window_load_region(42);
             sol_player_get_active()->mapx = 30;

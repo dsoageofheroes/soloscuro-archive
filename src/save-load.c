@@ -19,7 +19,9 @@ static int save_item(FILE *file, item_t *item, const char *name) {
 
 static int write_entity(FILE *file, entity_t *entity, const char *name) {
     char buf[128];
-    fprintf(file, "%s.name = \"%s\"\n", name, entity->name);
+    if (entity->name) {
+        fprintf(file, "%s.name = \"%s\"\n", name, entity->name);
+    }
     fprintf(file, "%s.size = %d\n", name, entity->size);
     fprintf(file, "%s.race = %d\n", name, entity->race);
     fprintf(file, "%s.gender = %d\n", name, entity->gender);
@@ -34,6 +36,7 @@ static int write_entity(FILE *file, entity_t *entity, const char *name) {
     fprintf(file, "%s.sound_fx = %d\n", name, entity->sound_fx);
     fprintf(file, "%s.attack_sound = %d\n", name, entity->attack_sound);
     fprintf(file, "%s.combat_status = %d\n", name, entity->combat_status);
+    fprintf(file, "%s.ds_id = %d\n", name, entity->ds_id);
     fprintf(file, "%s.stats.str = %d\n", name, entity->stats.str);
     fprintf(file, "%s.stats.dex = %d\n", name, entity->stats.dex);
     fprintf(file, "%s.stats.con = %d\n", name, entity->stats.con);
@@ -48,10 +51,14 @@ static int write_entity(FILE *file, entity_t *entity, const char *name) {
     fprintf(file, "%s.stats.base_move = %d\n", name, entity->stats.base_move);
     fprintf(file, "%s.stats.base_thac0 = %d\n", name, entity->stats.base_thac0);
     for (int i = 0; i < 10; i++) {
-        fprintf(file, "%s.stats.wizard%d.amt = %d\n", name, i+1, entity->stats.wizard[i].amt);
-        fprintf(file, "%s.stats.wizard%d.max = %d\n", name, i+1, entity->stats.wizard[i].max);
-        fprintf(file, "%s.stats.priest%d.amt = %d\n", name, i+1, entity->stats.priest[i].amt);
-        fprintf(file, "%s.stats.priest%d.max = %d\n", name, i+1, entity->stats.priest[i].max);
+        if (entity->stats.wizard[i].max) {
+            fprintf(file, "%s.stats.wizard%d.amt = %d\n", name, i+1, entity->stats.wizard[i].amt);
+            fprintf(file, "%s.stats.wizard%d.max = %d\n", name, i+1, entity->stats.wizard[i].max);
+        }
+        if (entity->stats.priest[i].max) {
+            fprintf(file, "%s.stats.priest%d.amt = %d\n", name, i+1, entity->stats.priest[i].amt);
+            fprintf(file, "%s.stats.priest%d.max = %d\n", name, i+1, entity->stats.priest[i].max);
+        }
     }
     fprintf(file, "%s.stats.saves.paralysis = %d\n", name, entity->stats.saves.paralysis);
     fprintf(file, "%s.stats.saves.wand = %d\n", name, entity->stats.saves.wand);
@@ -60,11 +67,13 @@ static int write_entity(FILE *file, entity_t *entity, const char *name) {
     fprintf(file, "%s.stats.saves.spell = %d\n", name, entity->stats.saves.spell);
 
     for (int i = 0; i < 3; i++) {
-        fprintf(file, "%s.class%d.current_xp = %d\n", name, i, entity->class[i].current_xp);
-        fprintf(file, "%s.class%d.high_xp = %d\n", name, i, entity->class[i].high_xp);
-        fprintf(file, "%s.class%d.class = %d\n", name, i, entity->class[i].class);
-        fprintf(file, "%s.class%d.level = %d\n", name, i, entity->class[i].level);
-        fprintf(file, "%s.class%d.high_level = %d\n", name, i, entity->class[i].high_level);
+        if (entity->class[i].current_xp) {
+            fprintf(file, "%s.class%d.current_xp = %d\n", name, i, entity->class[i].current_xp);
+            fprintf(file, "%s.class%d.high_xp = %d\n", name, i, entity->class[i].high_xp);
+            fprintf(file, "%s.class%d.class = %d\n", name, i, entity->class[i].class);
+            fprintf(file, "%s.class%d.level = %d\n", name, i, entity->class[i].level);
+            fprintf(file, "%s.class%d.high_level = %d\n", name, i, entity->class[i].high_level);
+        }
         // TODO: Need to add psionic here....
     }
     fprintf(file, "%s.ability.hunt = %d\n", name, entity->abilities.hunt);
@@ -89,6 +98,22 @@ static int write_entity(FILE *file, entity_t *entity, const char *name) {
         }
     }
 
+    fprintf(file, "%s.anim.flags = %d\n", name, entity->anim.flags);
+    fprintf(file, "%s.anim.pos = %d\n", name, entity->anim.pos);
+    if (entity->anim.pos > 0) {
+        printf("------------>entity->anim.pos = %d\n", entity->anim.pos);
+    }
+    fprintf(file, "%s.anim.x = %d\n", name, entity->anim.x);
+    fprintf(file, "%s.anim.y = %d\n", name, entity->anim.y);
+    fprintf(file, "%s.anim.xoffset = %d\n", name, entity->anim.xoffset);
+    fprintf(file, "%s.anim.yoffset = %d\n", name, entity->anim.yoffset);
+    fprintf(file, "%s.anim.bmp_id = %d\n", name, entity->anim.bmp_id);
+
+    if (entity->anim.scmd_info.gff_idx) {
+        fprintf(file, "%s.load_scmd( %d, %d, %d)\n", name, entity->anim.scmd_info.gff_idx,
+                  entity->anim.scmd_info.res_id, entity->anim.scmd_info.index);
+    }
+
     return 1;
 }
 
@@ -106,8 +131,8 @@ static int write_players(FILE *file) {
 }
 
 static int write_region(FILE *file, sol_region_t *reg) {
-    fprintf(file, "reg = sol.load_region(%d)\n", reg->map_id);
-    fprintf(file, "reg.mas_loaded = 1 -- don't reload MAS\n");
+    fprintf(file, "reg = sol.load_region(%d, 1)\n", reg->map_id);
+    fprintf(file, "reg.assume_loaded = 1 -- don't load region, we got this.\n");
     for (int i = 0; i < MAP_ROWS; i++) {
         fprintf(file, "reg.set_flag_ids(%d, \"", i);
         for (int j = 0; j < MAP_COLUMNS; j++) {
@@ -119,10 +144,22 @@ static int write_region(FILE *file, sol_region_t *reg) {
 }
 
 static int write_regions(FILE *file) {
-    write_region(file, sol_region_manager_get_current());
+    dude_t *entity = NULL;
+    sol_region_t *reg = sol_region_manager_get_current();
+
+    write_region(file, reg);
     gpl_write_local_state(file);
     gpl_write_global_state(file);
     sol_write_triggers(file);
+
+    entity_list_for_each(reg->entities, entity) {
+        if (sol_player_get_slot(entity) < 0) {
+            fprintf(file, "e = sol.create_entity(%d)\n", entity->inv ? 1 : 0);
+            write_entity(file, entity, "e");
+            fprintf(file, "reg.add_entity(e)\n");
+        }
+    }
+
     return 1;
 }
 
@@ -151,6 +188,7 @@ extern int sol_save_to_file(const char *filepath) {
 }
 
 extern int sol_load_from_file(const char *filepath) {
+    dude_t *dude;
     sol_window_clear();
     sol_region_manager_cleanup(1);
     gpl_cleanup();
@@ -159,6 +197,9 @@ extern int sol_load_from_file(const char *filepath) {
     gpl_init();
     sol_gameloop_init();
     sol_lua_load(filepath);
+    entity_list_for_each(sol_region_manager_get_current()->entities, dude) {
+        port_entity_update_scmd(dude);
+    }
     sol_center_on_player();
     return 0;
 }

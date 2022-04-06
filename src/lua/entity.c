@@ -66,6 +66,22 @@ static int guard(lua_State *l) {
     return 1;
 }
 
+static int load_scmd(lua_State *l) {
+    dude_t *dude = (dude_t*) lua_touserdata(l, lua_upvalueindex(1));
+
+    dude->anim.scmd_info.gff_idx = luaL_checkinteger(l, 1);
+    dude->anim.scmd_info.res_id = luaL_checkinteger(l, 2);
+    dude->anim.scmd_info.index = luaL_checkinteger(l, 3);
+
+    if (!gff_map_load_scmd(dude)) { return 0; }
+    if (dude->anim.scmd != NULL && !(dude->anim.scmd->flags & SCMD_LAST)) {
+        entity_animation_list_add(&dude->actions, EA_SCMD, dude, NULL, NULL, 30);
+        // Animations are continued in the entity action list
+    }
+
+    return 1;
+}
+
 static int set_class(lua_State *l) {
     dude_t   *dude = (dude_t*) lua_touserdata(l, lua_upvalueindex(1));
     uint16_t  which = luaL_checkinteger(l, 1);
@@ -164,6 +180,8 @@ extern int sol_lua_entity_function(entity_t *entity, const char *func, lua_State
         return push_entity_function(l, entity, move);
     } else if (!strcmp(func, "guard")) {
         return push_entity_function(l, entity, guard);
+    } else if (!strcmp(func, "load_scmd")) {
+        return push_entity_function(l, entity, load_scmd);
     }
     lua_pushinteger(l, 0);
     return 1;

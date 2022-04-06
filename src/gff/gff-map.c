@@ -53,18 +53,31 @@ int gff_map_get_object_frame_count(int gff_index, int res_id, int obj_id) {
     return gff_get_frame_count(OBJEX_GFF_INDEX, GFF_BMP, disk_object.bmp_id);
 }
 
-scmd_t* gff_map_get_object_scmd(int gff_index, int res_id, int obj_id, int scmd_index) {
+int gff_map_fill_scmd_info(dude_t *dude, int gff_index, int res_id, int obj_id, int scmd_index) {
     int num_objects = gff_map_get_num_objects(gff_index, res_id);
     disk_object_t disk_object;
 
-    if (gff_index < 0 || gff_index >= NUM_FILES || obj_id < 0 || obj_id >= num_objects) {
-        return NULL;
+    if (!dude || gff_index < 0 || gff_index >= NUM_FILES || obj_id < 0 || obj_id >= num_objects) {
+        return 0;
     }
 
     gff_map_object_t *entry_table = open_files[gff_index].entry_table;
-    if (entry_table == NULL) { return NULL; }
+    if (entry_table == NULL) { return 0; }
     gff_read_object(entry_table[obj_id].index, &disk_object);
-    return ssi_scmd_get(OBJEX_GFF_INDEX, disk_object.script_id, scmd_index);
+
+    dude->anim.scmd_info.gff_idx = OBJEX_GFF_INDEX;
+    dude->anim.scmd_info.res_id = disk_object.script_id;
+    dude->anim.scmd_info.index = scmd_index;
+
+    return 1;
+}
+
+extern int gff_map_load_scmd(struct entity_s *dude) {
+    if (!dude) { return 0; }
+
+    //printf("scmd loading: %d, %d, %d\n", dude->anim.scmd_info.gff_idx, dude->anim.scmd_info.res_id, dude->anim.scmd_info.index);
+    return (dude->anim.scmd = ssi_scmd_get(dude->anim.scmd_info.gff_idx,
+            dude->anim.scmd_info.res_id, dude->anim.scmd_info.index)) != NULL;
 }
 
 unsigned char* gff_map_get_object_bmp_pal(int gff_index, int res_id, int obj_id, int *w, int *h, int frame_id,

@@ -80,7 +80,8 @@ extern sol_region_t* sol_region_manager_get_region_with_entity(const entity_t *e
     return NULL;
 }
 
-extern sol_region_t* sol_region_manager_get_region(const int region_id) {
+// NOTE: only set assume_loaded on creation!
+extern sol_region_t* sol_region_manager_get_region(const int region_id, const int assume_loaded) {
     char gff_name[32];
     entity_t *dude = NULL;
 
@@ -92,7 +93,10 @@ extern sol_region_t* sol_region_manager_get_region(const int region_id) {
         if (gff_index < 0 ) { return NULL; }
 
         ssi_regions[region_id] = sol_region_create(gff_index);
-        entity_list_load_etab(ssi_regions[region_id]->entities, gff_index, region_id);
+        ssi_regions[region_id]->assume_loaded = assume_loaded;
+        if (!assume_loaded) {
+            entity_list_load_etab(ssi_regions[region_id]->entities, gff_index, region_id);
+        }
     }
 
     current_region = region_id;

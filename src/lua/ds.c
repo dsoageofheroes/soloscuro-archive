@@ -404,6 +404,7 @@ int lua_map_get_object_frame_count(lua_State *L) {
     return 1;
 }
 
+/*
 int lua_map_get_object_scmd(lua_State *L) {
     lua_Integer gff_index = luaL_checkinteger (L, 1);
     lua_Integer res_id = luaL_checkinteger (L, 2);
@@ -417,6 +418,7 @@ int lua_map_get_object_scmd(lua_State *L) {
 
     return 1;
 }
+*/
 
 int lua_map_get_object_bmp(lua_State *L) {
     lua_Integer gff_index = luaL_checkinteger (L, 1);
@@ -680,7 +682,7 @@ static const struct luaL_Reg lslib [] = {
       {"map_get_object_frame_count", lua_map_get_object_frame_count},
       {"map_get_object_bmp", lua_map_get_object_bmp},
       {"map_get_object_location", lua_map_get_object_location},
-      {"map_get_object_scmd", lua_map_get_object_scmd},
+      //{"map_get_object_scmd", lua_map_get_object_scmd},
 
       // Font functions
       {"font_count", lua_font_count},

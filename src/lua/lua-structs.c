@@ -112,6 +112,7 @@ extern int sol_lua_load_entity (lua_State *l, dude_t *dude) {
     push_table(l, &(dude->class[2]), "class2", "soloscuro.class");
 
     push_table(l, &(dude->class[2]), "ability", "soloscuro.ability");
+    push_table(l, &dude->anim, "anim", "soloscuro.animate");
 
     if (dude->inv) {
         push_table_start(l, &(dude->stats), "inventory");
@@ -151,6 +152,11 @@ static int create_player (lua_State *l) {
     sol_player_set(n, sol_entity_create_default_human());
     sol_player_load(n);
     return sol_lua_load_entity(l, sol_player_get(n));
+}
+
+static int create_entity (lua_State *l) {
+    int has_inventory = luaL_checkinteger(l, 1);
+    return sol_lua_load_entity(l, sol_entity_create(has_inventory));
 }
 
 static void push_region_lua(lua_State *l, sol_region_t *reg) {
@@ -240,7 +246,8 @@ static int in_combat (lua_State *l) {
 }
 
 static int load_region(lua_State *l) {
-    push_region_lua(l, sol_region_manager_get_region(lua_tointeger(l, 1)));
+    const int num = lua_gettop(l) >= 2 ? luaL_checkinteger(l, 2) : 0;
+    push_region_lua(l, sol_region_manager_get_region(lua_tointeger(l, 1), num));
     return 1;
 }
 
@@ -251,6 +258,7 @@ static const struct luaL_Reg sol_lib [] = {
     {"load_region", load_region},
     {"get_player", load_player},
     {"create_player", create_player},
+    {"create_entity", create_entity},
     {"set_region", set_region},
     {"get_region", get_region},
     {"open_gff", open_gff},
@@ -304,6 +312,7 @@ static int entity_get(lua_State *l) {
     GET_INTEGER_TABLE(dude, sound_fx);
     GET_INTEGER_TABLE(dude, attack_sound);
     GET_INTEGER_TABLE(dude, combat_status);
+    GET_INTEGER_TABLE(dude, ds_id);
     //if (!strcmp(str, "blah")) { lua_pushcfunction(l, blah); return 1; }
     return sol_lua_entity_function(dude, str, l);
 }
@@ -335,6 +344,7 @@ static int entity_set(lua_State *l) {
         SET_INTEGER_TABLE(dude, sound_fx, num);
         SET_INTEGER_TABLE(dude, attack_sound, num);
         SET_INTEGER_TABLE(dude, combat_status, num);
+        SET_INTEGER_TABLE(dude, ds_id, num);
     } else if (lua_isstring(l, 3)) {
         const char *name = luaL_checkstring(l, 3);
         SET_STRING_TABLE(dude, name, name);
@@ -416,6 +426,57 @@ static int stats_set(lua_State *l) {
 static const luaL_Reg stats_methods[] = {
     {"__index",      stats_get},
     {"__newindex",   stats_set},
+    {0,0}
+};
+
+static int animate_get(lua_State *l) {
+    const char *str = luaL_checkstring(l, 2);
+    animate_sprite_t *as = sol_lua_get_userdata(l, -3);
+
+    //printf("indexing '%s' of attack %p\n", str, attack);
+    GET_INTEGER_TABLE(as, flags);
+    GET_INTEGER_TABLE(as, delay);
+    GET_INTEGER_TABLE(as, pos);
+    GET_INTEGER_TABLE(as, x);
+    GET_INTEGER_TABLE(as, y);
+    GET_INTEGER_TABLE(as, w);
+    GET_INTEGER_TABLE(as, h);
+    GET_INTEGER_TABLE(as, destx);
+    GET_INTEGER_TABLE(as, desty);
+    GET_INTEGER_TABLE(as, xoffset);
+    GET_INTEGER_TABLE(as, bmp_id);
+    GET_INTEGER_TABLE(as, yoffset);
+    //if (!strcmp(str, "blah")) { lua_pushcfunction(l, blah); return 1; }
+
+    lua_pushinteger(l, 0);
+    return 1;
+}
+
+static int animate_set(lua_State *l) {
+    const char *str = luaL_checkstring(l, 2);
+    animate_sprite_t *as = sol_lua_get_userdata(l, -4);
+
+    if (lua_isinteger(l, 3)) {
+        const int num = luaL_checkinteger(l, 3);
+        SET_INTEGER_TABLE(as, flags, num);
+        SET_INTEGER_TABLE(as, delay, num);
+        SET_INTEGER_TABLE(as, pos, num);
+        SET_INTEGER_TABLE(as, x, num);
+        SET_INTEGER_TABLE(as, y, num);
+        SET_INTEGER_TABLE(as, w, num);
+        SET_INTEGER_TABLE(as, h, num);
+        SET_INTEGER_TABLE(as, destx, num);
+        SET_INTEGER_TABLE(as, desty, num);
+        SET_INTEGER_TABLE(as, xoffset, num);
+        SET_INTEGER_TABLE(as, bmp_id, num);
+        SET_INTEGER_TABLE(as, yoffset, num);
+    }
+
+    return 0;
+}
+static const luaL_Reg animate_methods[] = {
+    {"__index",    animate_get},
+    {"__newindex", animate_set},
     {0,0}
 };
 
@@ -664,7 +725,7 @@ static int region_get(lua_State *l) {
     GET_INTEGER_TABLE(region, map_id);
     GET_INTEGER_TABLE(region, palette_id);
     GET_INTEGER_TABLE(region, gff_file);
-    GET_INTEGER_TABLE(region, mas_loaded);
+    GET_INTEGER_TABLE(region, assume_loaded);
     if (strcmp(str, "flags") == 0) {
         //int index = luaL_checkinteger(l, 3);
         //printf("index = %d\n", index);
@@ -682,7 +743,7 @@ static int region_set(lua_State *l) {
         const int num = luaL_checkinteger(l, 3);
         SET_INTEGER_TABLE(region, map_id, num);
         SET_INTEGER_TABLE(region, palette_id, num);
-        SET_INTEGER_TABLE(region, mas_loaded, num);
+        SET_INTEGER_TABLE(region, assume_loaded, num);
     } else if (lua_istable(l, 3)) {
         gff_file_t *file = sol_lua_get_userdata(l, 3);
         if (!strcmp("gff_file", str)) {
@@ -711,6 +772,7 @@ extern void lua_struct_register(lua_State *l) {
     setup_metatable(l, "soloscuro.attack", attack_methods, "attack__");
     setup_metatable(l, "soloscuro.saves", saves_methods, "saves__");
     setup_metatable(l, "soloscuro.class", class_methods, "class__");
+    setup_metatable(l, "soloscuro.animate", animate_methods, "animate__");
     setup_metatable(l, "soloscuro.item", item_methods, "item__");
     setup_metatable(l, "soloscuro.region", region_methods, "region__");
     setup_metatable(l, "soloscuro.ability", ability_methods, "ability__");

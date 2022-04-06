@@ -111,6 +111,24 @@ extern entity_t* sol_entity_create_default_human() {
     return dude;
 }
 
+extern entity_t* sol_entity_create(const int add_inventory) {
+    entity_t *dude = malloc(sizeof(entity_t));
+    memset(dude, 0x0, sizeof(entity_t));
+    dude->stats.str = dude->stats.dex = dude->stats.con = dude->stats.intel = dude->stats.wis = dude->stats.cha = 10;
+    dude->stats.base_ac = 10;
+    dude->stats.base_move = 12;
+    dude->stats.saves.paralysis = 20;
+    dude->stats.saves.wand = 20;
+    dude->stats.saves.petrify = 20;
+    dude->stats.saves.breath = 20;
+    dude->stats.saves.spell = 20;
+    dude->anim.spr = SPRITE_ERROR;
+    if (add_inventory) {
+        dude->inv = sol_inventory_create();
+    }
+    return dude;
+}
+
 entity_t* entity_create_from_objex(const int id) {
     dude_t *dude = malloc(sizeof(dude_t));
     char *buf = NULL;
@@ -146,17 +164,9 @@ entity_t* entity_create_from_objex(const int id) {
     dude->mapz = dobj.zpos;
     dude->ds_id = id;
 
-    // This should be done in the region, right now we are just manufacturing an entity.
-    // Notes for later:
-    //place_region_object(reg, robj, robj->mapx, robj->mapy);
-    //dude->scmd = dobj.scmd_id;
-    //robj->bmpx = robj->mapx * 16;
-    //robj->bmpy = robj->mapy * 16;
-
     rdff = (rdff_disk_object_t*) (buf + rdff_pos);
 
     while (rdff->load_action != RDFF_END) {
-
         switch(rdff->type) {
             case ITEM_OBJECT:
                 warn("Item loading from rdff not implemented.\n");
