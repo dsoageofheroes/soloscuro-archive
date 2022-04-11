@@ -2,8 +2,10 @@
 #include <string.h>
 
 #include "gpl.h"
+#include "arbiter.h"
 #include "gameloop.h"
 #include "input.h"
+#include "gpl-state.h"
 #include "port.h"
 #include "region-manager.h"
 #include "sol-lua-manager.h"
@@ -72,7 +74,9 @@ extern void sol_gameloop_init() {
     wait_flags[WAIT_FINAL] = 1;
 }
 
+#define TICKS_PER_ROUND (300)
 extern void sol_game_loop() {
+    int ticks_to_increment_time = TICKS_PER_ROUND;
     while (!done) {
         port_handle_input();
         //Logic here...
@@ -80,6 +84,13 @@ extern void sol_game_loop() {
         sol_input_tick();
         port_tick();
 
+        if (!sol_combat_active(sol_arbiter_combat_region(sol_region_manager_get_current()))) {
+            ticks_to_increment_time--;
+        }
+        if (ticks_to_increment_time <= 0) {
+            ticks_to_increment_time = TICKS_PER_ROUND;
+            gpl_set_gname(GNAME_TIME, gpl_get_gname(GNAME_TIME) + 1);
+        }
         //if (in_replay_mode() && rep_times > 10) {
             //replay_next();
             //rep_times = 0;

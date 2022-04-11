@@ -261,7 +261,6 @@ static int game_over() {
 }
 
 extern void sol_player_update() {
-    entity_t *target = NULL;
     entity_t *dude = sol_player_get_active();
     int       xdiff = 0, ydiff = 0;
     const int speed = 2;

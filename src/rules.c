@@ -409,7 +409,6 @@ static int16_t roll_damage_weapon(item_t *item) {
 static void populate_melee_sequence(entity_t *source, uint8_t *seq, const int round) {
     int      pos         = 0;
     int      amt         = 0;
-    int16_t  class_extra = 0;
     item_t  *item        = NULL;
 
     if (!source->inv) {
@@ -431,7 +430,7 @@ static void populate_melee_sequence(entity_t *source, uint8_t *seq, const int ro
     }
 
     item = source->inv + SLOT_HAND0;
-    if (item->name) {
+    if (item->name[0]) {
         amt = sol_dnd2e_class_attack_num(source, item) / 2;
         amt += ((round % 2 == 1) && (sol_dnd2e_class_attack_num(source, item) % 2 == 1)) ? 1 : 0;
         for (int i = 0; i < amt; i++) { seq[pos++] = SLOT_HAND0; }
@@ -440,7 +439,7 @@ static void populate_melee_sequence(entity_t *source, uint8_t *seq, const int ro
     }
 
     item = source->inv + SLOT_HAND1;
-    if (!item->name && seq[pos - 1] == SLOT_INNATE0) {
+    if (!item->name[0] && seq[pos - 1] == SLOT_INNATE0) {
         seq[pos++] = SLOT_INNATE1;
     } else if (item->attack.number > 0) {
         seq[pos++] = SLOT_HAND1;
@@ -496,7 +495,6 @@ static sol_attack_t sol_dnd2e_attack(entity_t *source, entity_t *target, const i
     if (!source || !target || source->stats.combat.attack_num < 0) { return invalid_attack; }
 
     attack_slot = get_next_attack(source, source->stats.combat.attack_num, round, type);
-    //printf("attack_slot = %d\n", attack_slot);
     if (attack_slot == SLOT_END) { return invalid_attack; }
     source->stats.combat.attack_num++;
 

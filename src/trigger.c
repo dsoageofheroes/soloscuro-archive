@@ -466,3 +466,15 @@ extern void sol_write_triggers(FILE *file) {
                 rover->noorders.addr, rover->noorders.trigger_on_tile, rover->noorders.need_to_run);
     }
 }
+
+extern void sol_trigger_end_combat() {
+    printf("combat, call noorders on %d\n", gpl_get_gname(GNAME_PASSIVE));
+    //sol_trigger_noorders(gpl_get_gname(GNAME_PASSIVE));
+    for(trigger_node_t *rover = noorders_list; rover; rover = rover->next) {
+        printf("checking noorders %d \n", rover->noorders.obj);
+        if (rover->noorders.obj == (uint32_t) gpl_get_gname(GNAME_PASSIVE)) {
+            printf("executing %d, %d\n", rover->noorders.file, rover->noorders.addr);
+            gpl_lua_execute_script(rover->noorders.file, rover->noorders.addr, 0);
+        }
+    }
+}

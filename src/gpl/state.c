@@ -91,7 +91,7 @@ static int set_while_callback(lua_State *l) {
 }
 
 // Public to C library
-void gpl_set_gname(const int index, const int32_t obj) {
+extern void gpl_set_gname(const gpl_gnum_t index, const int32_t obj) {
     if (index < 0 || index > MAX_GNAMES) { return; }
     //printf("GNAME----------------------------------------------------->[%d] = %d\n", index, obj);
     gpl_gnames[index] = obj;
@@ -279,12 +279,12 @@ static int set_gname(lua_State *l) {
         error("" PRI_LI " is out of range for local big nums!\n", id);
         exit(1);
     }
-    if (id != 1 && id != 2 && id != 3) {
+    if (id < 0 || id >= GNAME_NUM) {
         error("illegal set_gname? id = " PRI_LI "\n", id);
     } else {
         gpl_gnames[id] = val;
     }
-    //printf("GNAME----------------------------------------------------->[" PRI_LI "] = %d\n", id, gpl_gnames[id]);
+    printf("GNAME----------------------------------------------------->[" PRI_LI "] = %d\n", id, gpl_gnames[id]);
     return 0;
 }
 
@@ -812,4 +812,9 @@ char* gpl_serialize_locals(uint32_t *len) {
     buf += sizeof(gpl_local_bnums);
 
     return ret;
+}
+
+extern int16_t gpl_get_gname(gpl_gnum_t pos) {
+    printf("pos = %d\n", pos);
+    return gpl_gnames[pos];
 }

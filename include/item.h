@@ -86,6 +86,7 @@ typedef struct item_s {
     uint16_t          value;
     uint16_t          charges;
     uint16_t          legal_class;
+    int16_t           item_index;
     uint8_t           placement; // where on the user
     uint8_t           weight;
     uint8_t           material;

@@ -17,8 +17,20 @@ static int save_item(FILE *file, item_t *item, const char *name) {
     return 1;
 }
 
+static int save_inventory(FILE *file, entity_t *entity, const char *name) {
+    if (!entity->inv) { return 0; }
+
+    for (int i = 0; i < SLOT_END; i++) {
+        if (entity->inv[i].ds_id < 0) {
+            fprintf(file, "%s.give_ds1_item(%d, %d, %d)\n", name, i,
+                          entity->inv[i].item_index, entity->inv[i].ds_id);
+        }
+    }
+
+    return 1;
+}
+
 static int write_entity(FILE *file, entity_t *entity, const char *name) {
-    char buf[128];
     if (entity->name) {
         fprintf(file, "%s.name = \"%s\"\n", name, entity->name);
     }
@@ -67,6 +79,14 @@ static int write_entity(FILE *file, entity_t *entity, const char *name) {
     fprintf(file, "%s.stats.saves.spell = %d\n", name, entity->stats.saves.spell);
 
     for (int i = 0; i < 3; i++) {
+        fprintf(file, "%s.stats.attack%d.number = %d\n", name, i, entity->stats.attacks[i].number);
+        fprintf(file, "%s.stats.attack%d.num_dice = %d\n", name, i, entity->stats.attacks[i].num_dice);
+        fprintf(file, "%s.stats.attack%d.sides = %d\n", name, i, entity->stats.attacks[i].sides);
+        fprintf(file, "%s.stats.attack%d.bonus = %d\n", name, i, entity->stats.attacks[i].bonus);
+        fprintf(file, "%s.stats.attack%d.special = %d\n", name, i, entity->stats.attacks[i].special);
+    }
+
+    for (int i = 0; i < 3; i++) {
         if (entity->class[i].current_xp) {
             fprintf(file, "%s.class%d.current_xp = %d\n", name, i, entity->class[i].current_xp);
             fprintf(file, "%s.class%d.high_xp = %d\n", name, i, entity->class[i].high_xp);
@@ -78,25 +98,7 @@ static int write_entity(FILE *file, entity_t *entity, const char *name) {
     }
     fprintf(file, "%s.ability.hunt = %d\n", name, entity->abilities.hunt);
 
-    if (entity->inv) {
-        sprintf(buf, "%s.inventory.arm", name); save_item(file, entity->inv + 0, buf);
-        sprintf(buf, "%s.inventory.ammo", name); save_item(file, entity->inv + 1, buf);
-        sprintf(buf, "%s.inventory.missile", name); save_item(file, entity->inv + 2, buf);
-        sprintf(buf, "%s.inventory.hand0", name); save_item(file, entity->inv + 3, buf);
-        sprintf(buf, "%s.inventory.finger0", name); save_item(file, entity->inv + 4, buf);
-        sprintf(buf, "%s.inventory.waist", name); save_item(file, entity->inv + 5, buf);
-        sprintf(buf, "%s.inventory.legs", name); save_item(file, entity->inv + 6, buf);
-        sprintf(buf, "%s.inventory.head", name); save_item(file, entity->inv + 7, buf);
-        sprintf(buf, "%s.inventory.neck", name); save_item(file, entity->inv + 8, buf);
-        sprintf(buf, "%s.inventory.chest", name); save_item(file, entity->inv + 9, buf);
-        sprintf(buf, "%s.inventory.hand1", name); save_item(file, entity->inv + 10, buf);
-        sprintf(buf, "%s.inventory.finger1", name); save_item(file, entity->inv + 11, buf);
-        sprintf(buf, "%s.inventory.cloak", name); save_item(file, entity->inv + 12, buf);
-        sprintf(buf, "%s.inventory.foot", name); save_item(file, entity->inv + 13, buf);
-        for (int i = 0; i < 12; i++) {
-            sprintf(buf, "%s.inventory.bp%d", name, i); save_item(file, entity->inv + 14 + i, buf);
-        }
-    }
+    save_inventory(file, entity, name);
 
     fprintf(file, "%s.anim.flags = %d\n", name, entity->anim.flags);
     fprintf(file, "%s.anim.pos = %d\n", name, entity->anim.pos);

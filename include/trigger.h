@@ -63,6 +63,7 @@ extern void             sol_trigger_noorders(uint32_t x, uint32_t y);
 extern void             sol_trigger_noorders_enable_all();
 extern void             sol_trigger_box_check(uint32_t x, uint32_t y);
 extern int              sol_trigger_tile_check(uint32_t x, uint32_t y);
+extern void             sol_trigger_end_combat();
 
 extern char*            sol_trigger_serialize(size_t *len);
 extern void             sol_trigger_deserialize(char *data);

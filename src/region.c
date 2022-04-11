@@ -266,7 +266,9 @@ extern void sol_region_tick(sol_region_t *reg) {
     entity_list_for_each(reg->entities, bad_dude) {
         //printf("thing! %s %p %d, %d\n", bad_dude->name, bad_dude->anim.scmd, bad_dude->mapx, bad_dude->mapy);
         if (entity_animation_execute(bad_dude)) {
-            //printf("ACTION! %s %d, %d\n", bad_dude->name, bad_dude->mapx, bad_dude->mapy);
+            if (bad_dude->name) {
+                //printf("ACTION! %s %d, %d\n", bad_dude->name, bad_dude->mapx, bad_dude->mapy);
+            }
             continue;
         }
         if (bad_dude->abilities.hunt && !in_combat) {

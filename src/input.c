@@ -22,7 +22,6 @@ extern void sol_input_tick() {
 
 extern void sol_key_down(const sol_key_e key) {
     float zoom = settings_zoom();
-    //printf("keydown = %d\n", key);
     switch(key) {
         case SOLK_g:       sol_combat_guard(NULL); break;
         case SOLK_LEFT:    sol_player_move(PLAYER_LEFT); break;

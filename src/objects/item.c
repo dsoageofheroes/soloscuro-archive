@@ -68,6 +68,7 @@ void item_convert_from_ds1(item_t *item, const ds1_item_t *ds1_item) {
     item->attack.range = ds1_item1r->range;
     item->attack.damage_type = ds1_item1r->damage_type;
     item->anim.bmp_id = get_bmp_id(item);
+    item->item_index = ds1_item->item_index;
 
     port_load_item(item);
 }

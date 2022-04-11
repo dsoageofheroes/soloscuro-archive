@@ -285,6 +285,7 @@ extern void sol_combat_update(sol_region_t *reg) {
 
     if (sol_combat_check_if_over(cr)) {
         sol_combat_clear(cr);
+        sol_arbiter_combat_check(reg);
         return;
     }
 
