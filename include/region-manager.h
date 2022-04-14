@@ -3,7 +3,7 @@
 
 #include "region.h"
 
-#define MAX_REGIONS (0xFF)
+#define MAX_REGIONS (0x100)
 
 extern void          sol_region_manager_init();
 extern void          sol_region_manager_cleanup(int free_entities);

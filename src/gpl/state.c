@@ -372,9 +372,10 @@ static int get_party(lua_State *l) {
 
 static int is_true(lua_State *l) {
     if (lua_isboolean(l, 1)) {
-        //printf("------------>boolean = %d\n", lua_toboolean(l, 1));
+        //printf("------------>boolean = %d, => %d\n", lua_toboolean(l, 1), lua_toboolean(l, 1) == 1);
         lua_pushboolean(l, lua_toboolean(l, 1) == 1);
     } else if (lua_isinteger(l, 1)) {
+        //printf("------------>integer = %lld\n", lua_tointeger(l, 1));
         lua_pushboolean(l, lua_tointeger(l, 1) != 0);
     } else {
         error("ERROR: did not received a boolean or int for accum testing!\n");
@@ -616,9 +617,33 @@ static int gpl_hunt(lua_State *l) {
 }
 
 static int gpl_ask_yes_no(lua_State *l) {
-    debug("Must implement yes no!\n");
     lua_pushinteger(l, sol_ui_narrate_ask_yes_no());
     return 1;
+}
+
+static int gpl_tport_party(lua_State *l) {
+    lua_Integer map_id = luaL_checkinteger(l, 1);
+    lua_Integer mapx = luaL_checkinteger(l, 2);
+    lua_Integer mapy = luaL_checkinteger(l, 3);
+
+    error("TPORT PARTY NOT IMPLEMENTED, need to transport to map %lld @ (%lld, %lld).\n", map_id, mapx, mapy);
+    sol_window_clear();
+    entity_t *player = sol_player_get_active();
+    player->mapx = mapx;
+    player->mapy = mapy;
+    sol_window_load_region(map_id);
+    //port_entity_update_scmd(player);
+    sol_center_on_player();
+    //port_entity_update_scmd(player);
+    //sol_center_on_player();
+
+    return 0;
+}
+
+static int gpl_tport_everything(lua_State *l) {
+    (void)l;
+    error("TPORT everything NOT IMPLEMENTED.\n")
+    return 0;
 }
 
 static int call_function(lua_State *l) {
@@ -634,9 +659,10 @@ static int call_function(lua_State *l) {
 
 static int gpl_exit(lua_State *l) {
     if (luaL_dostring(l, "return")) {
-        error("ERORR MUST IMPLEMENT: NEED TO EXIT.\n");
+        error("ERROR MUST IMPLEMENT: NEED TO EXIT.\n");
         exit(1);
     }
+    printf("gpl_exit\n");
 
     return 0;
 }
@@ -662,6 +688,28 @@ static int lua_play_sound(lua_State *l) {
     debug("I need to play bvoc: " PRI_LI "\n", bvoc_index);
     sol_play_sound_effect(bvoc_index);
     return 0;
+}
+
+static int gpl_set_other_check(lua_State *l) {
+    error ("set_other_check not iplemented");
+    //lua_Integer ds_id = luaL_checkinteger(l, 1);
+    // I believe this checks if other can be set to ds_id (IE: does ds_id exist in region?)
+    // If yes, then set other = ds_id and return 1
+    // Otherwise return 0;
+    /*
+    lprintf("if (%s >= 0 and head ~= NULL_OBJECT) or (%s == gpl.id_to_header(%s)) ~= NULL_OBJECT then\n", buf, buf, buf);
+    lua_depth++;
+    lprintf("other1 = %d\n", header);
+    lprintf("accum = 1\n");
+    lua_depth--;
+    lprintf("else\n");
+    lua_depth++;
+    lprintf("accum = 0\n");
+    lua_depth--;
+    lprintf("end\n");
+    */
+    lua_pushboolean(l, 0);
+    return 1;
 }
 
 static int lua_debug(lua_State *l) {
@@ -716,7 +764,10 @@ static const struct luaL_Reg gpl_state_lib[] = {
     {"clone", gpl_clone},
     {"hunt", gpl_hunt},
     {"ask_yes_no", gpl_ask_yes_no},
+    {"tport_party", gpl_tport_party},
+    {"tport_everything", gpl_tport_everything},
     {"exit", gpl_exit},
+    {"set_other_check", gpl_set_other_check},
     {"narrate_open", lua_narrate_open},
     {"narrate_show", lua_narrate_show},
     {"play_sound", lua_play_sound},
@@ -815,6 +866,6 @@ char* gpl_serialize_locals(uint32_t *len) {
 }
 
 extern int16_t gpl_get_gname(gpl_gnum_t pos) {
-    printf("pos = %d\n", pos);
+    //printf("gpl_get_gname[%d] = %d\n", pos, gpl_gnames[pos]);
     return gpl_gnames[pos];
 }

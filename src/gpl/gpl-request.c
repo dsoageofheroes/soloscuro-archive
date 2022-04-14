@@ -193,7 +193,10 @@ extern uint32_t gpl_request_impl(int16_t token, int16_t name,
         case REQUEST_SET_BLOCK:
             debug("Need to set (BLOCK) the bit flags for %d map position (%d, %d) to %d & commit!\n", name, num1, num2, GB_BLOCK);
             sol_region_set_block(sol_region_manager_get_current(), num2, num1, MAP_BLOCK);
-            sol_trigger_enable_object(name);
+            printf("Note to self: do I enable noorders here with the block?\n");
+            // LUA-GPL: accum = gpl.request(10, gpl.get_gname(7), 30, 21)
+            sol_trigger_noorders_enable();
+            //sol_trigger_enable_object(name);
             break;
         case REQUEST_CLEAR_BLOCK:
             debug("I need to clear (UNBLOCK) the block at (%d, %d) with flags %d\n", num1, num2, GB_BLOCK);
@@ -208,7 +211,9 @@ extern uint32_t gpl_request_impl(int16_t token, int16_t name,
             break;
         case REQUEST_BATTLE_DEMO:
             debug("request REQUEST_BATTLE_DEMO: Need to call lua or something to run the demo!\n");
-            sol_trigger_noorders_enable_all();
+            //sol_trigger_noorders_enable_all();
+            // Right now we skip combat as assume it is over.
+            sol_trigger_noorders_enable();
             break;
         case REQUEST_SET_GAME_MOVE:
             debug("I need to set the game back to regular moving around (not combat/look/xfer/target).\n");
@@ -645,6 +650,7 @@ static int req_animation(int16_t object, long notused1, long notused2) {
         }
 
         if (dude->anim.pos == SCMD_MAX_SIZE) { dude->anim.pos = 0; }
+        //sol_trigger_noorders_enable();
         port_entity_update_scmd(dude);
     } else {
         error("Unable to find object %d\n", object);

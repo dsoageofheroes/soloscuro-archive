@@ -38,6 +38,7 @@
 
 typedef enum sol_font_e {
     FONT_YELLOW,
+    FONT_YELLOW_BRIGHT,
     FONT_GREY,
     FONT_GREYLIGHT,
     FONT_BLACK,

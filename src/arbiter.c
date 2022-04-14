@@ -55,7 +55,7 @@ extern void sol_arbiter_next_round(combat_region_t* cr) {
     if (!cr) { return; }
     cr->round.num++;
     // Increment GPL's game time.
-    gpl_set_gname(GNAME_TIME, gpl_get_gname(GNAME_TIME) + 1);
+    gpl_set_gname(GNAME_TIME, gpl_get_gname(GNAME_TIME) + 60);
     place_combatants(cr);
 }
 
@@ -111,7 +111,7 @@ extern void sol_arbiter_combat_check(sol_region_t* reg) {
 
     if (sol_combat_check_if_over(combat_regions + reg->map_id)) {
         region_in_combat[reg->map_id] = 0;
-        sol_trigger_end_combat();
+        sol_trigger_noorders_event();
     }
 }
 

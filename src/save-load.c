@@ -193,7 +193,6 @@ extern int sol_save_to_file(const char *filepath) {
 }
 
 extern int sol_load_from_file(const char *filepath) {
-    dude_t *dude;
     sol_window_clear();
     sol_region_manager_cleanup(1);
     gpl_cleanup();
@@ -202,9 +201,6 @@ extern int sol_load_from_file(const char *filepath) {
     gpl_init();
     sol_gameloop_init();
     sol_lua_load(filepath);
-    entity_list_for_each(sol_region_manager_get_current()->entities, dude) {
-        port_entity_update_scmd(dude);
-    }
     sol_center_on_player();
     return 0;
 }

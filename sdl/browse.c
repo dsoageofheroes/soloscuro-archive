@@ -950,6 +950,7 @@ static void render_entry_rmap() {
             error("cfile is null!\n");
             exit(1);
         }
+        //printf("res_ids[%d] = %d\n", res_idx, res_ids[res_idx]);
         region = sol_region_manager_get_region(res_ids[res_idx], 0);
         tiles_len = region->num_tiles + 1;
         tiles = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * (tiles_len));

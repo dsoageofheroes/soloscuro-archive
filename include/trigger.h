@@ -60,10 +60,11 @@ extern look_trigger_t   sol_trigger_get_look(uint32_t obj);
 extern void             sol_trigger_object_clear(const uint32_t obj);
 extern void             sol_trigger_enable_object(const uint32_t obj);
 extern void             sol_trigger_noorders(uint32_t x, uint32_t y);
-extern void             sol_trigger_noorders_enable_all();
+extern void             sol_trigger_noorders_enable();
+extern void             sol_trigger_noorders_disable();
 extern void             sol_trigger_box_check(uint32_t x, uint32_t y);
 extern int              sol_trigger_tile_check(uint32_t x, uint32_t y);
-extern void             sol_trigger_end_combat();
+extern void             sol_trigger_noorders_event();
 
 extern char*            sol_trigger_serialize(size_t *len);
 extern void             sol_trigger_deserialize(char *data);

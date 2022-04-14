@@ -127,6 +127,7 @@ extern void font_init(SDL_Renderer *renderer) {
     memset(font_table, 0x0, NUM_FONTS * sizeof(SDL_Texture*) * MAX_CHARS);
     memset(font_loc, 0x0, NUM_FONTS * sizeof(SDL_Rect) * MAX_CHARS);
     create_font(renderer, FONT_YELLOW, 0xFFFF18FF, 0x101038FF);
+    create_font(renderer, FONT_YELLOW_BRIGHT, 0xFFFF28FF, 0xFFFFFFFF);
     create_font(renderer, FONT_GREY, 0x8A8AA2FF, 0x101038FF);
     create_font(renderer, FONT_GREYLIGHT, 0xD9D9E5FF, 0x11112BFF); // Really 0xD7D7E3FF and 0x202038FF
     create_font(renderer, FONT_BLACK, 0x101038FF, 0xA6A6BEFF);

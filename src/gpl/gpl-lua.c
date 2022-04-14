@@ -24,6 +24,7 @@ static int32_t gpl_lua_read_complex(char *buf, size_t *buf_pos, const size_t siz
 static uint16_t gpl_lua_get_word();
 static void validate_number(const char *num, const char *message);
 static void print_label();
+static int control_test(const char *str);
 
 extern void gpl_lua_byte_dec(void);
 extern void gpl_lua_word_dec(void);
@@ -174,7 +175,9 @@ typedef struct params_s {
 static params_t lparams;
 //static char master_mas[LUA_MAX_SIZE];
 //static char master_gpl[LUA_MAX_SIZE];
-static char lua_buf[LUA_MAX_SIZE];
+static char lua_buf_base[LUA_MAX_SIZE];
+//static char lua_buf[LUA_MAX_SIZE];
+static char *lua_buf = lua_buf_base;
 static size_t lua_pos = 0;
 static int32_t lua_depth = 0; 
 static size_t gpl_lua_start_ptr = 0;
@@ -960,18 +963,8 @@ extern void gpl_lua_setrecord(void) {
 
 extern void gpl_lua_setother(void) {
     char buf[BUF_SIZE];
-    int32_t header = 0;
     gpl_lua_read_number(buf, BUF_SIZE);
-    lprintf("if (%s >= 0 and head ~= NULL_OBJECT) or (%s == gpl.id_to_header(%s)) ~= NULL_OBJECT then\n", buf, buf, buf);
-    lua_depth++;
-    lprintf("other1 = %d\n", header);
-    lprintf("accum = 1\n");
-    lua_depth--;
-    lprintf("else\n");
-    lua_depth++;
-    lprintf("accum = 0\n");
-    lua_depth--;
-    lprintf("end\n");
+    lprintf("gpl.set_other_check(%s)", buf);
 }
 
 extern void gpl_lua_end_control(void) {
@@ -1341,7 +1334,7 @@ extern void gpl_lua_jump(void) {
 extern void gpl_lua_local_sub(void) {
     char buf[BUF_SIZE];
     gpl_lua_read_number(buf, BUF_SIZE);
-    lprintf("func%s()\n", buf);
+    lprintf("if func%s() then return end\n", buf);
 }
 
 extern void gpl_lua_global_sub(void) {
@@ -1527,7 +1520,7 @@ extern void gpl_lua_orelse(void) {
 }
 
 extern void gpl_lua_exit(void) {
-    lprintf("gpl.exit()\n");
+    lprintf("return true -- gpl.exit()\n");
     if (lua_depth == 1) {
         in_func = 0;
         //lprintf("gpl.debug(\"return func%ld\")\n", cfunc_num);
@@ -1609,6 +1602,7 @@ static size_t gpl_lua_read_number(char *buf, const size_t size) {
     int8_t do_next;
     int16_t opstack[MAX_PARENS];
     int32_t accums[MAX_PARENS];
+    char    tmp[1024];
     //char taccum[BUF_SIZE];
     int16_t cop, next_op; // current operation
     int32_t cval = 0; // current value, temporary value
@@ -1663,27 +1657,19 @@ static size_t gpl_lua_read_number(char *buf, const size_t size) {
                     break;
                 }
                 case GPL_RETVAL|0x80: {
-                    //debug("GPL_RETVAL begin:\n");
-                    /*
-                    push_params();
-                    do_gpl_command(gpl_get_byte());
-                    pop_params();
-                    */
                     int tpos = lua_pos;
                     char *tptr = lua_buf + lua_pos;
 
+                    // TODO: should this be a function call?
                     lprintf("((");
                     int cmd = gpl_get_byte();
                     do_lua_gpl_command(cmd);
-                    lua_pos--;
                     lprintf("))");
-                    //printf("------------------------>'%s'\n", tptr);
+
                     buf_pos += strlen(strncpy(buf + buf_pos, tptr, size - buf_pos));
-                    //strncpy(taccum, BUF_SIZE, tptr);
                     lua_pos = tpos;
                     lua_buf[lua_pos] = '\0';
-                    //debug("GPL_RETVAL end, cval = %d\n", cval);
-                    //printf("updating buf_pos = %d\n", buf_pos);
+
                     break;
                 }
                 case GPL_IMMED_BIGNUM|0x80: {
@@ -1723,6 +1709,7 @@ static size_t gpl_lua_read_number(char *buf, const size_t size) {
                     //debug("GPL_IMMED_STRING, cval = %d, '%s'\n", cval, (char*) gpl_global_big_numptr);
                     //TODO FIXME: This should just copy directly in!
                     char *tmp = gpl_read_text();
+                    //printf("tmp = %s\n", tmp);
                     buf_pos += strlen(strncpy(buf + buf_pos, tmp, size - buf_pos));
                     //printf("updating buf_pos = %d\n", buf_pos);
                     break;
@@ -2015,5 +2002,17 @@ int gpl_lua_read_simple_num_var(char *buf, const size_t buf_size) {
             lua_exit("ERROR: Unknown type in read_simple_num_var.\n");
             break;
     }
+    return 0;
+}
+
+static int control_test(const char *str) {
+    if (!str) { return 0; }
+
+    printf("----------->'%s'\n", str);
+
+    while (isspace(*str++)) { ; }
+
+    if (*str == 'i' && *(str+1) == 'f') { return 1; }
+
     return 0;
 }

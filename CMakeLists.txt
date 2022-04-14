@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.10)
 
 project(soloscuro VERSION 0.2 LANGUAGES C)
 
+add_definitions(-DDEBUG)
+
 add_subdirectory(ext/)
 
 # I wish I know how to make this part of a subdir correctly, but I don't...

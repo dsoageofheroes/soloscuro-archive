@@ -112,12 +112,16 @@ int port_load_region(const int region) {
 }
 
 extern int sol_window_load_region(const int region) {
+    entity_t *dude;
     sol_region_manager_set_current(sol_region_manager_get_region(region, 0));
 
     sol_window_push(&map_window, 0, 0);
     sol_window_push(&narrate_window, 0, 0);
     sol_window_push(&combat_status_window, 295, 5);
 
+    entity_list_for_each(sol_region_manager_get_current()->entities, dude) {
+        port_entity_update_scmd(dude);
+    }
     return 1;
 }
 
@@ -133,7 +137,14 @@ extern void sol_window_render(const uint32_t xmappos, const uint32_t ymappos) {
     port_commit_display_frame();
 }
 
+static uint32_t mousex, mousey;
+
+extern uint32_t sol_mouse_getx() { return mousex; }
+extern uint32_t sol_mouse_gety() { return mousey; }
+
 extern void sol_window_handle_mouse(const uint32_t x, const uint32_t y) {
+    mousex = x;
+    mousey = y;
     for (int i = MAX_SCREENS-1; i >= 0; i--) {
         if (windows[i].mouse_movement && windows[i].mouse_movement(x, y)) {
             i = 0; // exit loop, mouse has been handled!

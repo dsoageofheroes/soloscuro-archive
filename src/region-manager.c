@@ -4,6 +4,7 @@
 #include "player.h"
 #include "gpl-state.h"
 #include "port.h"
+#include "trigger.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -199,6 +200,7 @@ extern void sol_region_manager_set_current(sol_region_t *region) {
         entity_list_add(region->entities, player);
         if (!player->anim.scmd) { player->anim.scmd = ssi_scmd_empty(); }
     }
+    //sol_trigger_noorders_enable();
 }
 
 extern void sol_region_manager_remove_players() {

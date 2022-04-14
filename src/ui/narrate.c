@@ -19,7 +19,7 @@
 #define MAX_MENUS (16)
 #define MAX_LINE (128)
 
-static size_t menu_pos = 0;
+static size_t menu_pos = 0, last_option = 0, menu_highlight = -1;
 static uint32_t menu_addrs[MAX_MENUS];
 static char menu_text[MAX_MENUS][MAX_LINE];
 static sol_sprite_t background;
@@ -85,15 +85,31 @@ void print_text() {
 }
 
 void print_menu() {
-    size_t x = 140, y = 490;
+    const float zoom = settings_zoom();
+    size_t x = 140, y = settings_screen_height() - sol_sprite_geth(background) / zoom / zoom;
     uint32_t sx = sol_sprite_getx(background);
     uint32_t sy = sol_sprite_gety(background);
+
+    //printf("%d %d\n", settings_screen_height(), sol_sprite_geth(background));
 
     sol_sprite_set_location(background, sx, y - 5);
     sol_sprite_render(background);
 
+    if (sol_sprite_gety(background) < sol_mouse_gety()
+        && sol_sprite_getx(background) < sol_mouse_getx()
+        && sol_sprite_getx(background) + sol_sprite_getw(background) > sol_mouse_getx()
+        ) {
+        menu_highlight = (sol_mouse_gety() - sol_sprite_gety(background)) / (10 * zoom);
+    } else {
+        menu_highlight = -1;
+    }
+
     for (int i = 0; i < MAX_OPTIONS; i++) {
-        sol_print_line_len(0, menu_options[i], x, y, 0x7FFFFFFF);
+        if (i == (int)menu_highlight) {
+            sol_print_line_len(FONT_YELLOW_BRIGHT, menu_options[i], x, y, 0x7FFFFFFF);
+        } else {
+            sol_print_line_len(FONT_YELLOW, menu_options[i], x, y, 0x7FFFFFFF);
+        }
         y += 20;
     }
 
@@ -170,25 +186,23 @@ int8_t sol_ui_narrate_open(int16_t action, const char *text, int16_t index) {
 }
 
 int narrate_handle_mouse_movement(const uint32_t x, const uint32_t y) {
+    (void)x;(void)y;
     return display; // zero means I did not handle the mouse, so another window may.
 }
 
 int narrate_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
-    int const height = 18;
-    int y_test = 516;
+    (void)button;(void)x;(void)y;
+    return display;
+}
+
+int narrate_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
+    (void)button;(void)x;(void)y;
     int option;
-    if (display_menu) {
-        if (x >= 150 && x <= 600) {
-            for (int i = 1; i < 8; i++) {
-                if (y >= y_test  && y < y_test + height) {
-                    option = narrate_select_menu(i);
-                    if (option >= 0) {
-                        sol_game_loop_signal(WAIT_NARRATE_SELECT, option);
-                    }
-                    return 1;
-                }
-                y_test += height;
-            }
+
+    if (display_menu && menu_highlight >= 0) {
+        option = narrate_select_menu(menu_highlight);
+        if (option >= 0) {
+            sol_game_loop_signal(WAIT_NARRATE_SELECT, option);
         }
     }
 
@@ -216,8 +230,13 @@ void narrate_free() {
 }
 
 extern int sol_ui_narrate_ask_yes_no() {
-    error("MUST ASK YES NO, for now NO\n");
-    return 0;
+    narrate_open(NAR_ADD_MENU, "Yes", 0);
+    narrate_open(NAR_ADD_MENU, "No", 1);
+    sol_game_loop_wait_for_signal(WAIT_NARRATE_SELECT);
+
+    sol_ui_narrate_close();
+    printf("option = %zu\n", last_option);
+    return last_option ? 0 : 1;
 }
 
 extern int8_t narrate_open(int16_t action, const char *text, int16_t index) {
@@ -273,7 +292,7 @@ extern int narrate_select_menu(int option) {
     int accum = !option_is_exit(option);
     char buf[1024];
 
-    replay_print("rep.select_menu(%d)\n", option);
+    last_option = option;
     if (option >= menu_pos || option < 0) {
         error("select_menu: Menu option %d selected, but only (0 - " PRI_SIZET ") available!\n", option, menu_pos - 1);
         return -1;
@@ -293,7 +312,7 @@ sol_wops_t narrate_window = {
     .mouse_movement = narrate_handle_mouse_movement,
     .mouse_down = narrate_handle_mouse_down,
     .key_down = narrate_handle_key_down,
-    .mouse_up = NULL,
+    .mouse_up = narrate_handle_mouse_up,
     .grey_out_map = 0,
     .data = NULL
 };

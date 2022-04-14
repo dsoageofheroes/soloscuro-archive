@@ -34,5 +34,7 @@ extern item_t*          sol_mouse_get_item();
 extern void             sol_mouse_free();
 extern enum mouse_state sol_mouse_get_state();
 extern void             sol_mouse_set_state(const enum mouse_state state);
+extern uint32_t         sol_mouse_getx();
+extern uint32_t         sol_mouse_gety();
 
 #endif
