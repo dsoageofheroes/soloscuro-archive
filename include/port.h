@@ -61,7 +61,6 @@ extern void port_load_sprite(animate_sprite_t *anim, gff_palette_t *pal, const i
 
 extern void sol_play_sound_effect(const uint16_t id);
 
-extern void port_change_region(sol_region_t *reg);
 extern void port_load_item(item_t *item);
 extern int port_load_region(const int region);
 

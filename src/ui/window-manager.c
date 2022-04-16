@@ -18,6 +18,7 @@
 #include "window-main.h"
 #include "region-manager.h"
 #include "map.h"
+#include "gpl-manager.h"
 
 #define MAX_SCREENS (10)
 
@@ -99,20 +100,13 @@ extern void sol_window_push(sol_wops_t *window, const uint32_t x, const uint32_t
     sol_window_load(window_pos++, window, x, y);
 }
 
-void port_change_region(sol_region_t *reg) {
-    map_load_region(reg);
-
-    for (int i = 0; i < MAX_PCS; i++) {
-        sol_player_load_zoom(i, settings_zoom());
-    }
-}
-
 int port_load_region(const int region) {
     return sol_window_load_region(region);
 }
 
 extern int sol_window_load_region(const int region) {
     entity_t *dude;
+    sol_window_clear();
     sol_region_manager_set_current(sol_region_manager_get_region(region, 0));
 
     sol_window_push(&map_window, 0, 0);
@@ -122,6 +116,11 @@ extern int sol_window_load_region(const int region) {
     entity_list_for_each(sol_region_manager_get_current()->entities, dude) {
         port_entity_update_scmd(dude);
     }
+
+    sol_center_on_player();
+
+    // Now that we are loaded, execute the script!
+    gpl_lua_execute_script(sol_region_manager_get_current()->map_id, 0, 1);
     return 1;
 }
 

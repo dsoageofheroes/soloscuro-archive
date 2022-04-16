@@ -5,6 +5,7 @@
 #include "region-manager.h"
 #include "replay.h"
 #include "trigger.h"
+#include "player.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -20,14 +21,16 @@ typedef struct trigger_node_s {
         usewith_trigger_t usewith;
         tile_trigger_t tile;
         box_trigger_t box;
+        los_trigger_t los;
     };
     struct trigger_node_s *next;
 } trigger_node_t;
 
 static trigger_node_t *attack_list, *noorders_list, *use_list, *look_list, *talkto_list, *usewith_list, *tile_list, *box_list;
+static trigger_node_t *los_list;
 
 extern void sol_trigger_init() {
-    attack_list = noorders_list = use_list = look_list = talkto_list = usewith_list = tile_list = box_list = NULL;
+    attack_list = noorders_list = use_list = look_list = talkto_list = usewith_list = tile_list = box_list = los_list = NULL;
     sol_trigger_noorders_disable();
     lposx = lposy = -9999;
 }
@@ -50,6 +53,7 @@ extern void sol_trigger_cleanup() {
     free_list(usewith_list);
     free_list(tile_list);
     free_list(box_list);
+    free_list(los_list);
     sol_trigger_init();
 }
 
@@ -222,6 +226,22 @@ static void list_object_clear (trigger_node_t *list, const uint32_t obj, int (*c
             rover = rover->next;
         }
     }
+}
+
+static int _add_los_trigger(uint32_t obj, uint32_t file, uint32_t addr, uint32_t param) {
+    trigger_node_t *to_add = malloc(sizeof(trigger_node_t));
+    to_add->los.obj = obj;
+    to_add->los.file = file;
+    to_add->los.addr = addr;
+    to_add->los.param = param;
+    to_add->next = los_list;
+    los_list = to_add;
+    printf("adding LOS trigger!\n");
+    return 1;
+}
+
+extern int sol_trigger_add_los(uint32_t obj, uint32_t file, uint32_t addr, uint32_t param) {
+    return _add_los_trigger(obj, file, addr, param);
 }
 
 static int attack_equals(const trigger_node_t *node, const uint32_t obj) { return node->attack.obj == obj; }
@@ -510,12 +530,85 @@ extern void sol_write_triggers(FILE *file) {
 }
 
 extern void sol_trigger_noorders_event() {
-    //printf("noorders event: call noorders on %d\n", gpl_get_gname(GNAME_PASSIVE));
     for(trigger_node_t *rover = noorders_list; rover; rover = rover->next) {
         //printf("checking noorders %d \n", rover->noorders.obj);
         if (rover->noorders.obj == (uint32_t) gpl_get_gname(GNAME_PASSIVE)) {
             //printf("executing %d, %d\n", rover->noorders.file, rover->noorders.addr);
             gpl_lua_execute_script(rover->noorders.file, rover->noorders.addr, 0);
         }
+    }
+}
+
+static int in_los(const uint32_t obj, dude_t *entity) {
+    entity_t     *los_obj;
+    sol_region_t *reg = sol_region_manager_get_current();
+
+    if (!entity || !reg) { return 0; }
+    los_obj = sol_region_find_entity_by_id(reg, obj);
+    if (!los_obj) { return 0; }
+
+    int dx = entity->mapx - los_obj->mapx;
+    int dy = entity->mapy - los_obj->mapy;
+    int x = los_obj->mapx;
+    int y = los_obj->mapy;
+// (2,2) -> (9, 5)
+//  dx = 7, dy = 3
+//  ratio is 9 / 3
+// -7 * 3 = -21 / 7 = -3
+    //printf("(%d, %d) -> (%d, %d)\n", los_obj->mapx, los_obj->mapy, entity->mapx, entity->mapy);
+    // TODO: This needs testing badly...
+    while (x != entity->mapx || y != entity->mapy) {
+        //printf("(%d, %d)\n", x, y);
+        if (sol_region_is_block(reg, y, x)) { return 0; }
+        if (x != entity->mapx) {
+            int py = (x - los_obj->mapx) * dy / dx;
+            x += (los_obj->mapx > entity->mapx) ? -1 : 1;
+            int cy = (x - los_obj->mapx) * dy / dx;
+            if (sol_region_is_block(reg, y, x)) { return 0; }
+            // Need to see if y is in the wrong plane.
+            //printf("(%d) py = %d, cy = %d\n", y, py, cy);
+            while (py != cy) {
+                y += (py < cy) ? 1 : -1;
+                py += (py < cy) ? 1 : -1;
+                if (sol_region_is_block(reg, y, x)) { return 0; }
+            }
+            //dx / dy
+        } else {
+            int px = (y - los_obj->mapy) * dx / dy;
+            y += (los_obj->mapy > entity->mapy) ? -1 : 1;
+            int cx = (y - los_obj->mapy) * dx / dy;
+            if (sol_region_is_block(reg, y, x)) { return 0; }
+            // Need to see if y is in the wrong plane.
+            //printf("(%d) py = %d, cy = %d\n", y, py, cy);
+            while (px != cx) {
+                x += (px < cx) ? 1 : -1;
+                px += (px < cx) ? 1 : -1;
+                if (sol_region_is_block(reg, y, x)) { return 0; }
+            }
+        }
+    }
+    
+    return 1;
+}
+
+/*
+extern void sol_trigger_los_check() {
+    dude_t *player = sol_player_get_active();
+    if (!player) { return; }
+
+    for(trigger_node_t *rover = los_list; rover; rover = rover->next) {
+        printf("los_check: %d!\n", rover->los.obj);
+        if (in_los(rover->los.obj, player)) {
+            printf("Need to trigger los (%d, %p)\n", rover->los.obj, player);
+        }
+    }
+}
+*/
+
+extern void sol_trigger_los_check(uint32_t obj, uint32_t file, uint32_t addr, uint32_t param) {
+    //printf("los CHECK: %d\n", in_los(obj, sol_player_get_active()));
+    if (in_los(obj, sol_player_get_active())) {
+        debug("%d is in los, calling %d:%d param= %d\n", obj, file, addr, param);
+        gpl_lua_execute_script(file, addr, 0);
     }
 }

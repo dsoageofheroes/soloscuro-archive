@@ -21,8 +21,6 @@
 #define MAX_ANIMS (256)
 
 static map_t *cmap = NULL;
-static animate_sprite_t anims[MAX_ANIMS];
-static int anim_pos = 0;
 static int mousex = 0, mousey = 0;
 static uint16_t tile_highlight = SPRITE_ERROR, game_over = SPRITE_ERROR;
 
@@ -91,11 +89,6 @@ static void map_load_current_region() {
 
     //TODO: Find out what maps to which areas.
     sol_audio_play_xmi(RESOURCE_GFF_INDEX, GFF_GSEQ, 2);
-
-    if (!map->region->assume_loaded) {
-        gpl_lua_execute_script(cmap->region->map_id, 0, 1);
-        map->region->assume_loaded = 1;
-    }
 }
 
 static void sprite_load_animation(entity_t *entity, gff_palette_t *pal) {

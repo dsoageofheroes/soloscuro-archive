@@ -39,6 +39,10 @@ typedef struct box_trigger_s {
     uint32_t x, y, w, h, file, addr, trip;
 } box_trigger_t;
 
+typedef struct los_trigger_s {
+    uint32_t obj, file, addr, param;
+} los_trigger_t;
+
 extern void             sol_trigger_init();
 extern void             sol_trigger_cleanup();
 
@@ -54,6 +58,7 @@ extern int              sol_trigger_add_usewith(uint32_t obj1, uint32_t obj2, ui
 extern int              sol_trigger_add_tile(uint32_t x, uint32_t y, uint32_t file, uint32_t addr, uint32_t trip);
 extern int              sol_trigger_add_box(uint32_t x, uint32_t y, uint32_t w, uint32_t h,
                                 uint32_t file, uint32_t addr, uint32_t trip);
+extern int              sol_trigger_add_los(uint32_t obj, uint32_t file, uint32_t addr, uint32_t param);
 
 extern talkto_trigger_t sol_trigger_get_talkto(uint32_t obj);
 extern look_trigger_t   sol_trigger_get_look(uint32_t obj);
@@ -65,6 +70,8 @@ extern void             sol_trigger_noorders_disable();
 extern void             sol_trigger_box_check(uint32_t x, uint32_t y);
 extern int              sol_trigger_tile_check(uint32_t x, uint32_t y);
 extern void             sol_trigger_noorders_event();
+extern void             sol_trigger_noorders_check();
+extern void             sol_trigger_los_check(uint32_t obj, uint32_t file, uint32_t addr, uint32_t param);
 
 extern char*            sol_trigger_serialize(size_t *len);
 extern void             sol_trigger_deserialize(char *data);

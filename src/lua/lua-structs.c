@@ -725,7 +725,7 @@ static int region_get(lua_State *l) {
     GET_INTEGER_TABLE(region, map_id);
     GET_INTEGER_TABLE(region, palette_id);
     GET_INTEGER_TABLE(region, gff_file);
-    GET_INTEGER_TABLE(region, assume_loaded);
+    //GET_INTEGER_TABLE(region, assume_loaded);
     if (strcmp(str, "flags") == 0) {
         //int index = luaL_checkinteger(l, 3);
         //printf("index = %d\n", index);
@@ -743,7 +743,7 @@ static int region_set(lua_State *l) {
         const int num = luaL_checkinteger(l, 3);
         SET_INTEGER_TABLE(region, map_id, num);
         SET_INTEGER_TABLE(region, palette_id, num);
-        SET_INTEGER_TABLE(region, assume_loaded, num);
+        //SET_INTEGER_TABLE(region, assume_loaded, num);
     } else if (lua_istable(l, 3)) {
         gff_file_t *file = sol_lua_get_userdata(l, 3);
         if (!strcmp("gff_file", str)) {

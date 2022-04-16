@@ -25,8 +25,6 @@ typedef struct sol_region_s {
     struct entity_list_s *entities;
     // actions from several entities, right now one at a time.
     entity_animation_list_t actions;
-    uint8_t assume_loaded; // flag to set we assume the region is loaded.
-                           // This happens after the region is loaded, or if we are loading.
     // Temporary while we figure things out...
     struct {
         uint16_t mid;// map to grab a tile from
@@ -40,8 +38,10 @@ extern void             sol_combat_update(sol_region_t *reg);
 extern sol_region_t*    sol_region_create(const int gff_file);
 extern sol_region_t*    sol_region_create_empty();
 extern void             sol_region_free(sol_region_t *region);
+extern void             sol_region_gui_free(sol_region_t *reg);
 extern int              sol_region_get_tile(const sol_region_t *reg, const uint32_t image_id,
         uint32_t *w, uint32_t *h, unsigned char **data);
+extern uint32_t*        sol_region_get_tile_ids(sol_region_t *reg);
 extern struct entity_s* sol_region_find_entity_by_id(const sol_region_t *reg, const int id);
 extern struct entity_s* sol_region_find_entity_by_location(const sol_region_t *reg, const int x, const int y);
 extern void             sol_region_generate_move(sol_region_t *reg, entity_t *monster, const int x, const int y, const int speed);

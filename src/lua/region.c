@@ -4,6 +4,7 @@
 #include "gff.h"
 #include "port.h"
 #include "arbiter.h"
+#include "gpl-manager.h"
 #include <string.h>
 #include <float.h>
 #include <ctype.h>
@@ -139,6 +140,9 @@ extern int sol_lua_region_function(sol_region_t *region, const char *func, lua_S
     }
     if (!strcmp(func, "add_entity")) {
         return push_region_function(l, region, add_entity);
+    }
+    if (!strcmp(func, "run_mas")) {
+        gpl_lua_execute_script(region->map_id, 0, 1);
     }
     lua_pushinteger(l, 0);
     return 1;

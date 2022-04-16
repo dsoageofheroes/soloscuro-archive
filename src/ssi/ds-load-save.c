@@ -145,6 +145,7 @@ static void save_regions(const int id) {
 }
 
 //TODO: Will need to save off ALL regions when we get to multiple regions
+/*
 static void load_regions(const int id) {
     //entity_t *entity = NULL;
     //gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes;
@@ -183,6 +184,7 @@ static void load_regions(const int id) {
 
     port_change_region(reg);
 }
+*/
 
 extern void ls_save_to_file(const char *path, char *save_name) {
     int id = gff_create(path);
@@ -282,6 +284,7 @@ extern int ds_load_character_charsave(const int slot, const int res_id) {
     return load_player(CHARSAVE_GFF_INDEX, slot, res_id);
 }
 
+/*
 extern int ls_load_save_file(const char *path) {
     int id = gff_open(path);
     char *triggers = NULL;
@@ -327,3 +330,4 @@ extern int ls_load_save_file(const char *path) {
 
     return 1;
 }
+*/

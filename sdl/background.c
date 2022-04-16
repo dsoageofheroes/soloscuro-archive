@@ -17,6 +17,7 @@ static void load_sol_background() {
     char buf[32];
     SDL_Surface* tile = NULL;
 
+    sol_background_free();
     snprintf(buf, 32, "rgn%02x.gff", region->sol.mid);
     int gff_file = gff_find_index(buf);
     int pid = gff_get_palette_id(DSLDATA_GFF_INDEX, region->sol.mid - 1);
@@ -53,13 +54,13 @@ extern void sol_background_load_region(sol_region_t *_region) {
         //pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + region->map_id - 1;
         offset = 1;
     }
-    ids = region->tile_ids;
+    ids = sol_region_get_tile_ids(region);
     max_id = 256;
     tiles = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * max_id);
     memset(tiles, 0x0, sizeof(SDL_Texture*) * max_id);
 
     for (uint32_t i = 0; i < region->num_tiles; i++) {
-        //printf("i = %d\n", i);
+        //printf("i = %d, region = %p, ids = %p\n", i, region, ids);
         sol_region_get_tile(region, ids[i], &width, &height, &data);
 
         if (data && *data) {

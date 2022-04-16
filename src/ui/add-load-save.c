@@ -279,6 +279,7 @@ int add_load_save_handle_mouse_down(const sol_mouse_button_t button, const uint3
     return 1; // means I captured the mouse click
 }
 
+/*
 static void load_game() {
     char buf[128];
     snprintf(buf, 128, SAVE_FORMAT, selection);
@@ -287,6 +288,7 @@ static void load_game() {
     ls_load_save_file(buf);
     sol_center_on_player();
 }
+*/
 
 int16_t find_next_save_file() {
     char buf[32];
@@ -306,7 +308,7 @@ int add_load_save_handle_mouse_up(const sol_mouse_button_t button, const uint32_
 
     if (sol_sprite_in_rect(action_btn, x, y)) {
         if (mode == ACTION_LOAD) {
-            load_game();
+            //load_game();
             return 1;
         }
         if (mode == ACTION_SAVE) {

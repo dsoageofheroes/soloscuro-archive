@@ -94,7 +94,7 @@ extern sol_region_t* sol_region_manager_get_region(const int region_id, const in
         if (gff_index < 0 ) { return NULL; }
 
         ssi_regions[region_id] = sol_region_create(gff_index);
-        ssi_regions[region_id]->assume_loaded = assume_loaded;
+        //ssi_regions[region_id]->assume_loaded = assume_loaded;
         if (!assume_loaded) {
             entity_list_load_etab(ssi_regions[region_id]->entities, gff_index, region_id);
         }
@@ -189,18 +189,25 @@ extern int sol_region_manager_add_region(sol_region_t *region) {
 
 extern void sol_region_manager_set_current(sol_region_t *region) {
     if (!region) { return; }
+
     entity_t *player = sol_player_get_active();
     sol_region_manager_remove_players();
+
     for (int i = 0; i < MAX_REGIONS; i++) {
         if (ssi_regions[i] == region) { current_region = i; }
         if (sol_regions[i] == region) { current_region = MAX_REGIONS + i; }
+    }
+
+    // Clear them all!
+    for (int i = 0; i < MAX_REGIONS; i++) {
+        sol_region_gui_free(ssi_regions[i]);
     }
 
     if (player) {
         entity_list_add(region->entities, player);
         if (!player->anim.scmd) { player->anim.scmd = ssi_scmd_empty(); }
     }
-    //sol_trigger_noorders_enable();
+
 }
 
 extern void sol_region_manager_remove_players() {

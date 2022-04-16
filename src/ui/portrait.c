@@ -35,10 +35,11 @@ void sol_portrait_load() {
     }
 
     if (ids) { free(ids); }
+
+    loaded = 1;
 }
 
 void sol_portrait_display(const uint32_t id, const uint32_t x, const uint32_t y) {
     sol_sprite_set_location(portraits[id], x, y);
     sol_sprite_render(portraits[id]);
 }
-

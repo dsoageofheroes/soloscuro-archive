@@ -137,7 +137,7 @@ static int write_players(FILE *file) {
 
 static int write_region(FILE *file, sol_region_t *reg) {
     fprintf(file, "reg = sol.load_region(%d, 1)\n", reg->map_id);
-    fprintf(file, "reg.assume_loaded = 1 -- don't load region, we got this.\n");
+    //fprintf(file, "reg.assume_loaded = 1 -- don't load region, we got this.\n");
     for (int i = 0; i < MAP_ROWS; i++) {
         fprintf(file, "reg.set_flag_ids(%d, \"", i);
         for (int j = 0; j < MAP_COLUMNS; j++) {

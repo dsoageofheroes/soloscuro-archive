@@ -633,7 +633,6 @@ static int gpl_tport_party(lua_State *l) {
     player->mapy = mapy;
     sol_window_load_region(map_id);
     //port_entity_update_scmd(player);
-    sol_center_on_player();
     //port_entity_update_scmd(player);
     //sol_center_on_player();
 
@@ -643,6 +642,26 @@ static int gpl_tport_party(lua_State *l) {
 static int gpl_tport_everything(lua_State *l) {
     (void)l;
     error("TPORT everything NOT IMPLEMENTED.\n")
+    return 0;
+}
+
+static int gpl_los_trigger(lua_State *l) {
+    lua_Integer obj = luaL_checkinteger(l, 1);
+    lua_Integer file = luaL_checkinteger(l, 2);
+    lua_Integer addr = luaL_checkinteger(l, 3);
+    lua_Integer param = luaL_checkinteger(l, 4);
+
+    sol_trigger_add_los(obj, file, addr, param);
+    return 0;
+}
+
+static int gpl_los_trigger_check(lua_State *l) {
+    lua_Integer obj = luaL_checkinteger(l, 1);
+    lua_Integer file = luaL_checkinteger(l, 2);
+    lua_Integer addr = luaL_checkinteger(l, 3);
+    lua_Integer param = luaL_checkinteger(l, 4);
+
+    sol_trigger_los_check(obj, file, addr, param);
     return 0;
 }
 
@@ -766,6 +785,8 @@ static const struct luaL_Reg gpl_state_lib[] = {
     {"ask_yes_no", gpl_ask_yes_no},
     {"tport_party", gpl_tport_party},
     {"tport_everything", gpl_tport_everything},
+    {"los_trigger", gpl_los_trigger},
+    {"los_trigger_check", gpl_los_trigger_check},
     {"exit", gpl_exit},
     {"set_other_check", gpl_set_other_check},
     {"narrate_open", lua_narrate_open},

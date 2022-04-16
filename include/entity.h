@@ -68,6 +68,7 @@ extern entity_t* entity_create_clone(entity_t *clone);
 extern entity_t* entity_create_fake(const int mapx, const int mapy);
 extern int       entity_is_fake(entity_t *entity);
 extern void      entity_free(entity_t *entity);
+extern void      sol_entity_gui_free(entity_t *entity);
 extern void      entity_load_from_gff(entity_t *entity, const int gff_idx, const int player, const int res_id);
 extern void      entity_copy_item(entity_t *entity, item_t *item, const size_t slot);
 extern void      entity_clear_item(entity_t *entity, const size_t slot);

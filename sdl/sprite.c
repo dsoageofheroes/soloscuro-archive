@@ -56,6 +56,7 @@ static uint16_t get_next_sprite_id() {
         }
     }
 
+
     return SPRITE_ERROR;
 }
 
@@ -87,8 +88,8 @@ uint16_t sprite_create(SDL_Renderer *renderer, SDL_Rect *initial,
     if (!renderer) { return SPRITE_ERROR; }
 
     int sprite_id = get_next_sprite_id();
-    sprite = sprites + sprite_id;
     if (sprite_id == SPRITE_ERROR) { return sprite_id; }
+    sprite = sprites + sprite_id;
     memset(sprite, 0x0, sizeof(sprite_t));
 
     sprite_append_full(sprite_id, renderer, initial, pal,
@@ -307,7 +308,7 @@ uint32_t sprite_get_xdiff_from_start(const uint16_t id) {
 // Free a sprite at an ID (do not use it again!)
 void sprite_free(const uint16_t id) {
     if (!valid_id(id)) { return; }
-    //printf("sprite_free (%d): %d, %d\n", id, sprites[id].in_use, sprites[id].len);
+
     if (sprites[id].in_use) {
         for (int i = 0; i < sprites[id].len; i++) {
             SDL_DestroyTexture(sprites[id].tex[i]);
@@ -342,6 +343,7 @@ extern sol_sprite_t sol_sprite_create_from_data(unsigned char *data, const uint3
     sprite->tex = (SDL_Texture**)realloc(sprite->tex, sizeof(SDL_Texture*) * sprite->len);
 
     sprite->tex[0] = SDL_CreateTextureFromSurface(main_get_rend(), surface);
+    sprite->in_use = 1;
     SDL_FreeSurface(surface);
 
     return sprite_id;

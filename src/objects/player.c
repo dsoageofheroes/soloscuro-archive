@@ -281,6 +281,7 @@ extern void sol_player_update() {
 
     if (!narrate_is_open()) {
         sol_trigger_noorders(dude->mapx, dude->mapy);
+        //sol_trigger_los_check();
     }
     if (xdiff != 0 || ydiff != 0) {
         sol_trigger_box_check(dude->mapx, dude->mapy);

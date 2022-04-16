@@ -20,7 +20,7 @@
 static sol_sprite_t ai[4], leader[4], ports[4];
 static sol_sprite_t flag_spear, parchment, frame_message, panel, slots;
 static sol_sprite_t character, inv, magic, status;
-static sol_sprite_t game_menu, game_return;
+static sol_sprite_t game_menu, game_return = SPRITE_ERROR;
 enum {SELECT_NONE, SELECT_POPUP, SELECT_NEW, SELECT_ALS};
 static int8_t last_selection = SELECT_NONE;
 static uint8_t slot_clicked;

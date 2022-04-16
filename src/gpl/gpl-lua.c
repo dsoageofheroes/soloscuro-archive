@@ -568,11 +568,11 @@ extern void gpl_lua_inlostrigger(void) {
     uint32_t addr = atoi(lparams.params[0]);
     uint32_t file = atoi(lparams.params[1]);
     uint32_t name = atoi(lparams.params[2]);
-    //uint32_t global = in_mas ? 1 : 0;
-    //global_addr_name(&param);
-    //set_los_order(GPL_IN_LOS, param.val[3]);
+    uint32_t param = atoi(lparams.params[3]);
     //lprintf("-- need to set line of sight order on %d\n", param.val[3]);
-    lprintf("-- If in line of sight of %d goto file %d:%d (?: %s)\n", name, file, addr, lparams.params[3]);
+    //lprintf("-- If in line of sight of %d goto file %d:%d (?: %s)\n", name, file, addr, lparams.params[3]);
+    //lprintf("gpl.los_trigger(%d, %d, %d, %d)\n", name, addr, file, param);
+    lprintf("gpl.los_trigger_check(%d, %d, %d, %d)\n", name, file, addr, param);
 }
 
 extern void gpl_lua_notinlostrigger(void) {

@@ -9,6 +9,7 @@
 #include "gfftypes.h"
 #include "port.h"
 #include "entity.h"
+#include "background.h"
 #include "region-manager.h"
 
 #include <stdlib.h>
@@ -79,14 +80,22 @@ extern void sol_region_remove_entity(sol_region_t *reg, entity_t *entity) {
     //animation_list_remove(reg->anims, animation_list_find(reg->anims, &(entity->anim)));
 }
 
-extern void sol_region_free(sol_region_t *reg) {
+extern uint32_t* sol_region_get_tile_ids(sol_region_t *reg) {
+    if (!reg) { return NULL; }
+    if (!reg->tile_ids) {
+        load_tile_ids(reg);
+    }
+
+    return reg->tile_ids;
+}
+
+extern void sol_region_gui_free(sol_region_t *reg) {
     if (!reg) { return; }
-
     sol_region_manager_remove_players();
+    dude_t *dude = NULL;
 
-    if (reg->entities) {
-        entity_list_free_all(reg->entities);
-        reg->entities = NULL;
+    entity_list_for_each(reg->entities, dude)  {
+        sol_entity_gui_free(dude);
     }
 
     if (reg->entry_table) {
@@ -100,6 +109,20 @@ extern void sol_region_free(sol_region_t *reg) {
     }
 
     entity_animation_list_free(&(reg->actions));
+
+    sol_background_free();
+}
+
+extern void sol_region_free(sol_region_t *reg) {
+    if (!reg) { return; }
+
+    sol_region_gui_free(reg);
+
+    if (reg->entities) {
+        entity_list_free_all(reg->entities);
+        reg->entities = NULL;
+    }
+
     free(reg);
 }
 

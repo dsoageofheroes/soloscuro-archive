@@ -29,4 +29,6 @@ function init()
     sol.load_window("map")
     sol.load_window("narrate")
     sol.load_window("combat")
+    reg = sol.get_region()
+    reg.run_mas()
 end

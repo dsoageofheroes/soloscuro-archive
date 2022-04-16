@@ -318,6 +318,13 @@ extern int entity_has_class(const entity_t *dude, const uint16_t class) {
           );
 }
 
+extern void sol_entity_gui_free(entity_t *entity) {
+    if (!entity) { return; }
+
+    sol_sprite_free(entity->anim.spr);
+    entity->anim.spr = SPRITE_ERROR;
+}
+
 void entity_free(entity_t *dude) {
     if (!dude) { return; }
     sol_region_t *reg = sol_region_manager_get_current();
@@ -329,6 +336,9 @@ void entity_free(entity_t *dude) {
         entity_animation_list_remove_references(&reg->actions, dude);
         entity_list_remove(reg->entities, entity_list_find(reg->entities, dude));
     }
+
+    sol_entity_gui_free(dude);
+
     if (dude->name) {
         free(dude->name);
         dude->name = NULL;
