@@ -11,6 +11,7 @@
 #include "entity.h"
 #include "narrate.h"
 #include "background.h"
+#include "trigger.h"
 #include "region-manager.h"
 
 #include <stdlib.h>
@@ -334,6 +335,12 @@ extern void sol_region_tick(sol_region_t *reg) {
         }
         if (bad_dude->abilities.must_go && !in_combat && !narrate_is_open()) {
             move_entity(bad_dude, bad_dude->abilities.args.pos.x, bad_dude->abilities.args.pos.y);
+            if (bad_dude->mapx == bad_dude->abilities.args.pos.x
+                && bad_dude->mapy == bad_dude->abilities.args.pos.y) {
+                bad_dude->abilities.must_go = 0;
+                printf("Made it.\n");
+                sol_trigger_noorders_entity_check(bad_dude);
+            }
         }
         if (bad_dude->abilities.hunt && !in_combat) {
             move_entity(bad_dude, sol_player_get_active()->mapx, sol_player_get_active()->mapy);

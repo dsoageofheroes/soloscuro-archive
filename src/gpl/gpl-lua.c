@@ -738,7 +738,7 @@ extern void gpl_lua_cmpend(void) {
 extern void gpl_lua_wait(void) {
     char buf[BUF_SIZE];
     gpl_lua_read_number(buf, BUF_SIZE);
-    lprintf("gpl.set_order(%s, WAIT, 0, 0)\n", buf);
+    lprintf("gpl.wait_on(%s)\n", buf);
 }
 
 extern void gpl_lua_while(void) {

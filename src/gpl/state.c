@@ -284,7 +284,7 @@ static int set_gname(lua_State *l) {
     } else {
         gpl_gnames[id] = val;
     }
-    printf("GNAME----------------------------------------------------->[" PRI_LI "] = %d\n", id, gpl_gnames[id]);
+    //printf("GNAME----------------------------------------------------->[" PRI_LI "] = %d\n", id, gpl_gnames[id]);
     return 0;
 }
 
@@ -661,6 +661,12 @@ static int gpl_clear_los(lua_State *l) {
     return 0;
 }
 
+static int gpl_wait_on(lua_State *l) {
+    lua_Integer obj = luaL_checkinteger(l, 1);
+    error("WAIT ON (%lld) NOT IMPLEMENTED\n", obj);
+    return 0;
+}
+
 static int gpl_goxy1(lua_State *l) {
     (void)l;
     lua_Integer x = luaL_checkinteger(l, 1);
@@ -807,6 +813,7 @@ static const struct luaL_Reg gpl_state_lib[] = {
     {"los_trigger", gpl_los_trigger},
     {"los_trigger_check", gpl_los_trigger_check},
     {"clear_los", gpl_clear_los},
+    {"wait_on", gpl_wait_on},
     {"goxy1", gpl_goxy1},
     {"exit", gpl_exit},
     {"set_other_check", gpl_set_other_check},

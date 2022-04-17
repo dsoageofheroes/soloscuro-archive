@@ -539,6 +539,17 @@ extern void sol_trigger_noorders_event() {
     }
 }
 
+extern void sol_trigger_noorders_entity_check(entity_t *entity) {
+    if (!entity) { return; }
+    for(trigger_node_t *rover = noorders_list; rover; rover = rover->next) {
+        //printf("checking noorders %d \n", rover->noorders.obj);
+        if (rover->noorders.obj == (uint32_t)entity->ds_id) {
+            printf("noorder_entity_check: executing %d, %d\n", rover->noorders.file, rover->noorders.addr);
+            gpl_lua_execute_script(rover->noorders.file, rover->noorders.addr, 0);
+        }
+    }
+}
+
 static int in_los(const uint32_t obj, dude_t *entity) {
     entity_t     *los_obj;
     sol_region_t *reg = sol_region_manager_get_current();

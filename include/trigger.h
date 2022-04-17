@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "entity.h"
+
 typedef struct attack_trigger_s {
     uint32_t obj, file, addr, global;
 } attack_trigger_t;
@@ -71,6 +73,7 @@ extern void             sol_trigger_box_check(uint32_t x, uint32_t y);
 extern int              sol_trigger_tile_check(uint32_t x, uint32_t y);
 extern void             sol_trigger_noorders_event();
 extern void             sol_trigger_noorders_check();
+extern void             sol_trigger_noorders_entity_check(entity_t *entity);
 extern void             sol_trigger_los_check(uint32_t obj, uint32_t file, uint32_t addr, uint32_t param);
 
 extern char*            sol_trigger_serialize(size_t *len);
