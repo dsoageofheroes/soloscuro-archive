@@ -655,6 +655,25 @@ static int gpl_los_trigger(lua_State *l) {
     return 0;
 }
 
+static int gpl_clear_los(lua_State *l) {
+    (void)l;
+    error("CLEAR LOS NOT IMPLEMENTED\n");
+    return 0;
+}
+
+static int gpl_goxy1(lua_State *l) {
+    (void)l;
+    lua_Integer x = luaL_checkinteger(l, 1);
+    lua_Integer y = luaL_checkinteger(l, 2);
+    lua_Integer obj = luaL_checkinteger(l, 3);
+
+    //printf("%lld needs to go to (%lld, %lld)\n", obj, x, y);
+    entity_t *dude = sol_region_find_entity_by_id(sol_region_manager_get_current(), obj);
+    lua_pushboolean(l, sol_entity_go(dude, x, y));
+
+    return 1;
+}
+
 static int gpl_los_trigger_check(lua_State *l) {
     lua_Integer obj = luaL_checkinteger(l, 1);
     lua_Integer file = luaL_checkinteger(l, 2);
@@ -787,6 +806,8 @@ static const struct luaL_Reg gpl_state_lib[] = {
     {"tport_everything", gpl_tport_everything},
     {"los_trigger", gpl_los_trigger},
     {"los_trigger_check", gpl_los_trigger_check},
+    {"clear_los", gpl_clear_los},
+    {"goxy1", gpl_goxy1},
     {"exit", gpl_exit},
     {"set_other_check", gpl_set_other_check},
     {"narrate_open", lua_narrate_open},

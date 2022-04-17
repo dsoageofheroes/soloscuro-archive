@@ -504,3 +504,14 @@ extern int16_t entity_distance(const entity_t *source, const entity_t *dest) {
 
     return dx > dy ? dx : dy;
 }
+
+extern int sol_entity_go(entity_t *dude, const uint16_t x, uint16_t y) {
+    if (!dude) { return 0; }
+
+    dude->abilities.must_go = 1;
+    dude->abilities.args.pos.x = x;
+    dude->abilities.args.pos.y = y;
+    debug("%s given go order to (%d, %d)\n", dude->name, x, y);
+
+    return 1;
+}

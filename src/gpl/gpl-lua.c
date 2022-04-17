@@ -895,8 +895,7 @@ extern void gpl_lua_give(void) {
 extern void gpl_lua_go(void) {
     gpl_lua_get_parameters(2);
     lprintf("--need to give GO order!\n");
-    lprintf("print (\"GO ORDER\")\n");
-    //set_orders(param.val[1], GO_OBJECT, param.val[0], 0);
+    lprintf("gpl.go(%s, %s)\n", lparams.params[0], lparams.params[1]);
 }
 
 extern void gpl_lua_input_bignum(void) {
@@ -905,7 +904,7 @@ extern void gpl_lua_input_bignum(void) {
 
 extern void gpl_lua_goxy(void) {
     gpl_lua_get_parameters(3);
-    lprintf("--I need to goxy1\n");
+    lprintf("gpl.goxy1(%s, %s, %s)\n", lparams.params[0], lparams.params[1], lparams.params[2]);
     //set_orders(param.val[2], GOXY, param.val[0], param.val[1]);
 }
 
@@ -1533,6 +1532,7 @@ extern void gpl_lua_clear_los(void) {
     char buf[BUF_SIZE];
     gpl_lua_read_number(buf, BUF_SIZE);
     lprintf("--clear_los_order: need to clear #%s\n", buf);
+    lprintf("gpl.clear_los(%s)\n", buf);
 }
 
 extern void gpl_lua_nametonum(void) {
@@ -1614,12 +1614,11 @@ static size_t gpl_lua_read_number(char *buf, const size_t size) {
     do {
      //   taccum[0] = '\0';
         do_next = 0;
-        //printf("buf_pos = %d\n", buf_pos);
+        //printf("buf_pos = %zu\n", buf_pos);
         cop = gpl_get_byte(); // current operation
         //printf("current operation = 0x%x\n", cop);
         if (cop < 0x80) {
             cval = cop * 0x100 + gpl_get_byte();
-            //debug("immediate = %d\n", cval);
             buf_pos += snprintf(buf + buf_pos, size - buf_pos, "%d", cval);
         } else {
             if (cop < OPERATOR_OFFSET) {
@@ -1941,6 +1940,7 @@ int gpl_lua_read_simple_num_var(char *buf, const size_t buf_size) {
         temps16 += gpl_get_byte();
         gpl_global_big_num &= 0x3F;
     }
+    //if (debug) { printf("temps16 = %d\n", temps16); }
 
     switch(gpl_global_big_num) {
         case GPL_GFLAG: {

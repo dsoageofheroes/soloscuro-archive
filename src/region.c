@@ -9,6 +9,7 @@
 #include "gfftypes.h"
 #include "port.h"
 #include "entity.h"
+#include "narrate.h"
 #include "background.h"
 #include "region-manager.h"
 
@@ -270,6 +271,43 @@ static int calc_distance_to_player(entity_t *entity) {
     return min;
 }
 
+static int move_entity(entity_t *entity, const int x, const int y) {
+    int xdiff = x - entity->mapx;
+    int ydiff = y - entity->mapy;
+    int posx = entity->mapx;
+    int posy = entity->mapy;
+    sol_region_t *reg = sol_region_manager_get_current();
+    xdiff = (xdiff < 0) ? -1 : (xdiff > 0) ? 1 : 0;
+    ydiff = (ydiff < 0) ? -1 : (ydiff > 0) ? 1 : 0;
+
+    if (sol_region_location_blocked(reg, posx + xdiff, posy + ydiff)
+        ){
+        if (!sol_region_location_blocked(reg, posx, posy + ydiff)) {
+            xdiff = 0;
+        } else if (!sol_region_location_blocked(reg, posx + xdiff, posy)) {
+            ydiff = 0;
+        } else {
+            xdiff = ydiff = 0;
+        }
+    }
+
+    if ((xdiff == 0) && (ydiff == 0)) { return 0; }
+
+    int action =
+      (xdiff == 1 && ydiff == 1) ? EA_WALK_DOWNRIGHT
+    : (xdiff == 1 && ydiff == -1) ? EA_WALK_UPRIGHT
+    : (xdiff == -1 && ydiff == -1) ? EA_WALK_UPLEFT
+    : (xdiff == -1 && ydiff == 1) ? EA_WALK_DOWNLEFT
+    : (xdiff == 1) ? EA_WALK_RIGHT
+    : (xdiff == -1) ? EA_WALK_LEFT
+    : (ydiff == 1) ? EA_WALK_DOWN
+    : (ydiff == -1) ? EA_WALK_UP
+    : EA_NONE;
+
+    entity_animation_list_add(&(entity->actions), action, entity, NULL, NULL, 30);
+
+    return 1;
+}
 
 extern void sol_region_tick(sol_region_t *reg) {
     dude_t *bad_dude = NULL;
@@ -294,47 +332,18 @@ extern void sol_region_tick(sol_region_t *reg) {
             }
             continue;
         }
+        if (bad_dude->abilities.must_go && !in_combat && !narrate_is_open()) {
+            move_entity(bad_dude, bad_dude->abilities.args.pos.x, bad_dude->abilities.args.pos.y);
+        }
         if (bad_dude->abilities.hunt && !in_combat) {
-            xdiff = sol_player_get_active()->mapx - bad_dude->mapx;
-            ydiff = sol_player_get_active()->mapy - bad_dude->mapy;
-            xdiff = (xdiff < 0) ? -1 : (xdiff > 0) ? 1 : 0;
-            ydiff = (ydiff < 0) ? -1 : (ydiff > 0) ? 1 : 0;
-            posx = bad_dude->mapx;
-            posy = bad_dude->mapy;
+            move_entity(bad_dude, sol_player_get_active()->mapx, sol_player_get_active()->mapy);
 
-            if (sol_region_location_blocked(reg, posx + xdiff, posy + ydiff)
-                    ){
-                if (!sol_region_location_blocked(reg, posx, posy + ydiff)) {
-                    xdiff = 0;
-                } else if (!sol_region_location_blocked(reg, posx + xdiff, posy)) {
-                    ydiff = 0;
-                } else {
-                    xdiff = ydiff = 0;
-                }
-            }
-            action =
-                  (xdiff == 1 && ydiff == 1) ? EA_WALK_DOWNRIGHT
-                : (xdiff == 1 && ydiff == -1) ? EA_WALK_UPRIGHT
-                : (xdiff == -1 && ydiff == -1) ? EA_WALK_UPLEFT
-                : (xdiff == -1 && ydiff == 1) ? EA_WALK_DOWNLEFT
-                : (xdiff == 1) ? EA_WALK_RIGHT
-                : (xdiff == -1) ? EA_WALK_LEFT
-                : (ydiff == 1) ? EA_WALK_DOWN
-                : (ydiff == -1) ? EA_WALK_UP
-                : EA_NONE;
-            entity_animation_list_add(&(bad_dude->actions), action, bad_dude, NULL, NULL, 30);
-            //bad_dude->mapx += xdiff;
-            //bad_dude->mapy += ydiff;
-            //bad_dude->anim.destx += (xdiff * 32);
-            //bad_dude->anim.desty += (ydiff * 32);
-            //animation_shift_entity(reg->entities, __el_rover);
-            //bad_dude->anim.scmd = entity_animation_get_scmd(bad_dude->anim.scmd, xdiff, ydiff, EA_NONE);
             if (calc_distance_to_player(bad_dude) < 5) {
                 sol_arbiter_enter_combat(reg, bad_dude->mapx, bad_dude->mapy);
                 //combat_initiate(reg, bad_dude->mapx, bad_dude->mapy);
                 //return;
             }
-            //port_update_entity(bad_dude, xdiff, ydiff);
+
             continue;
         }
 

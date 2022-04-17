@@ -15,9 +15,15 @@ typedef struct ability_set_s {
     unsigned int hunt             : 1;
     unsigned int attackable       : 1;
     unsigned int talkable         : 1;
+    unsigned int must_go          : 1; // given order to go to x,y
     psi_abilities_t psi;
     //struct spell_abilities_s spells; // NOT shown
     //struct class_abilities_s class;  // Not shown
+    union {
+        struct {
+            uint16_t x, y;
+        } pos;
+    } args;
 } ability_set_t;
 
 typedef struct class_s {
@@ -85,5 +91,6 @@ extern int       entity_get_wizard_level(entity_t *entity);
 extern int       entity_get_priest_level(entity_t *entity);
 extern int       entity_get_ranger_level(entity_t *entity);
 extern int16_t   entity_distance(const entity_t *source, const entity_t *dest);
+extern int       sol_entity_go(entity_t *dude, const uint16_t x, uint16_t y);
 
 #endif
