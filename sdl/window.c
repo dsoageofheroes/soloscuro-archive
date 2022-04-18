@@ -61,13 +61,3 @@ void load_window(const char *arg) {
         sol_window_push(&combat_status_window, 295, 5);
     }
 }
-
-void window_debug_init(SDL_Surface *sur, SDL_Renderer *rend, const char *arg) {
-    surface = sur;
-    renderer = rend;
-
-    sol_sprite_init();
-    sol_window_init();
-
-    load_window(arg);
-}

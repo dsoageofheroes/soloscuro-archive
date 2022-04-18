@@ -658,7 +658,9 @@ static int ability_get(lua_State *l) {
 
     //printf("indexing '%s' of saves %p\n", str, attack);
     GET_INTEGER_TABLE(ability, hunt);
-    //if (!strcmp(str, "blah")) { lua_pushcfunction(l, blah); return 1; }
+    GET_INTEGER_TABLE(ability, must_go);
+    if (!strcmp(str, "xpos")) { lua_pushinteger(l, ability->args.pos.x); return 1; }
+    if (!strcmp(str, "ypos")) { lua_pushinteger(l, ability->args.pos.y); return 1; }
 
     lua_pushinteger(l, 0);
     return 1;
@@ -671,6 +673,9 @@ static int ability_set(lua_State *l) {
     if (lua_isinteger(l, 3)) {
         const int num = luaL_checkinteger(l, 3);
         SET_INTEGER_TABLE(ability, hunt, num);
+        SET_INTEGER_TABLE(ability, must_go, num);
+        if (!strcmp(str, "xpos")) { ability->args.pos.x = num; return 0; }
+        if (!strcmp(str, "ypos")) { ability->args.pos.y = num; return 0; }
     }
 
     return 0;

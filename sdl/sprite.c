@@ -7,7 +7,7 @@
 #define MAX_SPRITES (1<<10)
 
 static sprite_t sprites[MAX_SPRITES];
-static uint16_t sprite_pos = 0;
+static int16_t sprite_pos = -1;
 
 static uint16_t sprite_append_full(uint16_t sprite_id, SDL_Renderer *renderer, SDL_Rect *initial,
         gff_palette_t *pal,
@@ -15,8 +15,12 @@ static uint16_t sprite_append_full(uint16_t sprite_id, SDL_Renderer *renderer, S
         const int gff_idx, const int type_id, const int res_id);
 
 extern void sol_sprite_init() {
-    memset(sprites, 0x0, sizeof(sprite_t) * MAX_SPRITES);
-    sprite_pos = 0;
+    // init is called on load, only init once.
+    printf("sol_sprite_init\n");
+    if (sprite_pos < 0) {
+        memset(sprites, 0x0, sizeof(sprite_t) * MAX_SPRITES);
+        sprite_pos = 0;
+    }
 }
 
 static void set_zoom(SDL_Rect *loc, const float zoom) {
@@ -236,6 +240,7 @@ void sprite_render_flip(SDL_Renderer *renderer, const uint16_t sprite_id, SDL_Re
 void sprite_set_location(const uint16_t sprite_id, const uint32_t x, const uint32_t y) {
     if (sprite_id == (uint16_t)SPRITE_ERROR) { return; }
     int pos = sprites[sprite_id].pos;
+    //printf("->%d\n", sprites[sprite_id].in_use);
     sprites[sprite_id].loc[pos].x = x;
     sprites[sprite_id].loc[pos].y = y;
 }

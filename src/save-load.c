@@ -97,6 +97,11 @@ static int write_entity(FILE *file, entity_t *entity, const char *name) {
         // TODO: Need to add psionic here....
     }
     fprintf(file, "%s.ability.hunt = %d\n", name, entity->abilities.hunt);
+    fprintf(file, "%s.ability.must_go = %d\n", name, entity->abilities.must_go);
+    if (entity->abilities.must_go) {
+        fprintf(file, "%s.ability.xpos = %d\n", name, entity->abilities.args.pos.x);
+        fprintf(file, "%s.ability.ypos = %d\n", name, entity->abilities.args.pos.y);
+    }
 
     save_inventory(file, entity, name);
 
@@ -182,7 +187,7 @@ extern int sol_save_to_file(const char *filepath) {
     fprintf(file, "local sol = soloscuro\n");
     write_players(file);
     write_regions(file);
-    fprintf(file, "sol.change_region(%d)\n", 42);
+    fprintf(file, "sol.change_region(%d)\n", reg->map_id);
     fprintf(file, "sol.load_window(\"map\")\n");
     fprintf(file, "sol.load_window(\"narrate\")\n");
     fprintf(file, "sol.load_window(\"combat\")\n");
