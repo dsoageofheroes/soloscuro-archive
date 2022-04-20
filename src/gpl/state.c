@@ -465,8 +465,9 @@ static int use_trigger(lua_State *l) {
     lua_Integer obj = luaL_checkinteger(l, 1);
     lua_Integer file = luaL_checkinteger(l, 2);
     lua_Integer addr = luaL_checkinteger(l, 3);
+    lua_Integer is_door = (lua_gettop(l) > 3) ? luaL_checkinteger(l, 4) : 0;
 
-    sol_trigger_add_use(obj, file, addr);
+    sol_trigger_add_use(obj, file, addr, is_door);
     return 0;
 }
 
@@ -680,6 +681,17 @@ static int gpl_goxy1(lua_State *l) {
     return 1;
 }
 
+static int gpl_setthing(lua_State *l) {
+    lua_Integer x = luaL_checkinteger(l, 1);
+    lua_Integer y = luaL_checkinteger(l, 2);
+    (void)x;
+    (void)y;
+    error("setthing not implemented!\n");
+
+    lua_pushboolean(l, 0);
+    return 1;
+}
+
 static int gpl_los_trigger_check(lua_State *l) {
     lua_Integer obj = luaL_checkinteger(l, 1);
     lua_Integer file = luaL_checkinteger(l, 2);
@@ -815,6 +827,7 @@ static const struct luaL_Reg gpl_state_lib[] = {
     {"clear_los", gpl_clear_los},
     {"wait_on", gpl_wait_on},
     {"goxy1", gpl_goxy1},
+    {"setthing", gpl_setthing},
     {"exit", gpl_exit},
     {"set_other_check", gpl_set_other_check},
     {"narrate_open", lua_narrate_open},

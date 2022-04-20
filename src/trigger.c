@@ -6,6 +6,7 @@
 #include "replay.h"
 #include "trigger.h"
 #include "player.h"
+#include "port.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -76,23 +77,24 @@ extern int sol_trigger_add_attack(uint32_t obj, uint32_t file, uint32_t addr) {
     return _add_attack_trigger(obj, file, addr, 0);
 }
 
-static int _add_use_trigger(uint32_t obj, uint32_t file, uint32_t addr, uint32_t global) {
+static int _add_use_trigger(uint32_t obj, uint32_t file, uint32_t addr, const uint8_t is_door, uint32_t global) {
     trigger_node_t *to_add = malloc(sizeof(trigger_node_t));
     to_add->use.obj = obj;
     to_add->use.file = file;
     to_add->use.addr = addr;
     to_add->use.global = global;
+    to_add->use.is_door = is_door;
     to_add->next = use_list;
     use_list = to_add;
     return 1;
 }
 
-extern int sol_trigger_add_use(uint32_t obj, uint32_t file, uint32_t addr) {
-    return _add_use_trigger(obj, file, addr, 0);
+extern int sol_trigger_add_use(uint32_t obj, uint32_t file, uint32_t addr, const uint8_t is_door) {
+    return _add_use_trigger(obj, file, addr, is_door, 0);
 }
 
 extern int sol_trigger_add_use_global(uint32_t obj, uint32_t file, uint32_t addr) {
-    return _add_use_trigger(obj, file, addr, 1);
+    return _add_use_trigger(obj, file, addr, 0, 1);
 }
 
 static int _add_look_trigger(uint32_t obj, uint32_t file, uint32_t addr, uint32_t global) {
@@ -277,19 +279,48 @@ static int on_object(dude_t *dude, const uint32_t x, const uint32_t y) {
 }
 
 extern void sol_trigger_noorders(uint32_t x, uint32_t y) {
+    static trigger_node_t *last_door_trigger = NULL;
+    static int32_t last_door_y = -1;
+    uint8_t found_door = 0;
     //trigger_node_t *rover = noorders_list;
     if (trigger_noorders) {
         trigger_noorders = 0;
         sol_trigger_noorders_event();
         //printf("trigger_noorders = %d\n", trigger_noorders);
     }
-    //printf("%d %d\n", x, y);
+    for(trigger_node_t *rover = use_list; rover; rover = rover->next) {
+        if (rover->use.is_door) {
+            entity_t *door = sol_region_find_entity_by_id(sol_region_manager_get_current(), rover->use.obj);
+            if (!door) { continue; }
+            uint32_t width = sol_sprite_getw(door->anim.spr) / settings_zoom();
+            width += 15;
+            width /= 16;
+            for (uint32_t i = 0; i < width; i++) {
+                if ((door->mapx + i) == x && door->mapy == y) {
+                    found_door = 1;
+                    last_door_trigger = rover;
+                    //printf("ON DOOR\n");
+                }
+            }
+            //printf("->door: %d %d, width = %d\n", door->mapx, door->mapy, width);
+        }
+    }
+
+    if (!found_door && last_door_trigger) {
+        if (last_door_y != (int32_t)y) {
+            debug("trigger door %d\n", last_door_trigger->use.obj);
+            gpl_lua_execute_script(last_door_trigger->use.file, last_door_trigger->use.addr, 0);
+        }
+        last_door_trigger = NULL;
+    }
+
+    if (!found_door) { last_door_y = y; }
     //dude_t *dude = sol_region_find_entity_by_id(sol_region_manager_get_current(), rover->noorders.obj);
     dude_t *dude = sol_region_find_entity_by_id(sol_region_manager_get_current(), gpl_get_gname(GNAME_PASSIVE));
     if (!dude) { return; }
 
     if (on_object(dude, lposx, lposy) && !on_object(dude, x, y)) {
-        //printf("NEED TO TRIGGER!\n");
+        printf("NEED TO TRIGGER!\n");
         sol_trigger_noorders_event();
     }
 
@@ -303,11 +334,6 @@ extern void sol_trigger_noorders(uint32_t x, uint32_t y) {
         //printf("trigger\n");
     }
     */
-    //for(trigger_node_t *rover = noorders_list; rover; rover = rover->next) {
-        //if (rover->noorders.obj == (uint32_t) gpl_get_gname(GNAME_PASSIVE)) {
-            //rover->noorders
-        //}
-    //}
     lposx = x;
     lposy = y;
 
@@ -503,7 +529,7 @@ extern void sol_write_triggers(FILE *file) {
         fprintf(file, "gpl.attack_trigger(%d, %d, %d)\n", rover->attack.obj, rover->attack.file, rover->attack.addr);
     }
     for (trigger_node_t *rover = use_list; rover; rover = rover->next) {
-        fprintf(file, "gpl.use_trigger(%d, %d, %d)\n", rover->use.obj, rover->use.file, rover->use.addr);
+        fprintf(file, "gpl.use_trigger(%d, %d, %d, %d)\n", rover->use.obj, rover->use.file, rover->use.addr, rover->use.is_door);
     }
     for (trigger_node_t *rover = look_list; rover; rover = rover->next) {
         fprintf(file, "gpl.look_trigger(%d, %d, %d)\n", rover->look.obj, rover->look.file, rover->look.addr);
@@ -602,19 +628,15 @@ static int in_los(const uint32_t obj, dude_t *entity) {
     return 1;
 }
 
-/*
-extern void sol_trigger_los_check() {
-    dude_t *player = sol_player_get_active();
-    if (!player) { return; }
-
-    for(trigger_node_t *rover = los_list; rover; rover = rover->next) {
-        printf("los_check: %d!\n", rover->los.obj);
-        if (in_los(rover->los.obj, player)) {
-            printf("Need to trigger los (%d, %p)\n", rover->los.obj, player);
+extern void sol_trigger_set_door(const uint32_t id, const uint8_t is_door) {
+    for(trigger_node_t *rover = use_list; rover; rover = rover->next) {
+        //printf("%d %d\n", rover->use.obj, id);
+        if (rover->use.obj == id) {
+            debug ("Setting obj %d to door status of %d\n", id, is_door);
+            rover->use.is_door = is_door;
         }
     }
 }
-*/
 
 extern void sol_trigger_los_check(uint32_t obj, uint32_t file, uint32_t addr, uint32_t param) {
     //printf("los CHECK: %d\n", in_los(obj, sol_player_get_active()));

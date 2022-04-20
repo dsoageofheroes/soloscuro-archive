@@ -206,6 +206,5 @@ extern int sol_load_from_file(const char *filepath) {
     gpl_init();
     sol_gameloop_init();
     sol_lua_load(filepath);
-    sol_center_on_player();
     return 0;
 }

@@ -776,7 +776,7 @@ extern void gpl_lua_looktrigger(void) {
 
 extern void gpl_lua_usetrigger(void) {
     gpl_lua_get_parameters(3);
-    lprintf("gpl.use_trigger%s(%s, %s, %s) -- When using %s go to file %s address %s\n",
+    lprintf("gpl.use_trigger%s(%s, %s, %s, 0) -- When using %s go to file %s address %s\n",
         is_master_mas ? "_global" : "",
         lparams.params[2], lparams.params[1], lparams.params[0],
         lparams.params[2], lparams.params[1], lparams.params[0]);
@@ -1049,7 +1049,8 @@ extern void gpl_lua_menu(void) {
 
 extern void gpl_lua_setthing(void) {
     gpl_lua_get_parameters(2);
-    lprintf("--move character's %s's itme of type %s\n", lparams.params[0], lparams.params[1]);
+    //lprintf("--move character's %s's itme of type %s\n", lparams.params[0], lparams.params[1]);
+    lprintf("gpl.setthing(%s, %s)", lparams.params[0], lparams.params[1]);
 }
 
 extern void gpl_lua_print_string(void) {
@@ -1163,7 +1164,7 @@ extern void gpl_lua_tport(void) {
     } else {
         //warn("I need to teleport party to region %d at (%d, %d) priority: %d, onwindow %d\n",
             //param.val[1], param.val[2], param.val[3], param.val[4], param.val[5]);
-        lprintf("gpl.tport_party( %s, %s, %s, %s, %s)\n",
+        lprintf("gpl.tport_party( %s, %s, %s, %s) -- param 5: '%s')\n",
             lparams.params[1], lparams.params[2], lparams.params[3], lparams.params[4], lparams.params[5]);
     }
 }
@@ -1203,12 +1204,13 @@ extern void gpl_lua_award(void) {
 
 extern void gpl_lua_request(void) {
     gpl_lua_get_parameters(4);
-    lprintf("accum = gpl.request(%s, %s, %s, %s)\n",
+    //lprintf("accum = gpl.request(%s, %s, %s, %s)\n",
+    lprintf("gpl.request(%s, %s, %s, %s)\n",
         (lparams.params[0]),
         (lparams.params[1]),
         (lparams.params[2]),
         (lparams.params[3]));
-    lprintf("obj = accum\n");
+    //lprintf("obj = accum\n");
 }
 
 static void print_change(const char *stmt, const char *op) {

@@ -37,6 +37,7 @@ void map_load(const uint32_t _x, const uint32_t _y) {
         cmap = create_map();
         cmap->region = sol_region_manager_get_current();
         map_load_current_region();
+        sol_center_on_player();
     }
 }
 

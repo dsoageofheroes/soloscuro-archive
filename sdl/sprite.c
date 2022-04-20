@@ -16,7 +16,6 @@ static uint16_t sprite_append_full(uint16_t sprite_id, SDL_Renderer *renderer, S
 
 extern void sol_sprite_init() {
     // init is called on load, only init once.
-    printf("sol_sprite_init\n");
     if (sprite_pos < 0) {
         memset(sprites, 0x0, sizeof(sprite_t) * MAX_SPRITES);
         sprite_pos = 0;

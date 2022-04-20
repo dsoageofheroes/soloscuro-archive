@@ -139,8 +139,8 @@ uint8_t gpl_lua_execute_script(size_t file, size_t addr, uint8_t is_mas) {
             is_mas ? "MAS" : "GPL",
             file, addr);
         error("error: %s\n", lua_tostring(clua, -1));
-        clua = NULL;
         lua_close(clua);
+        clua = NULL;
         return 0;
     }
     lua_getglobal(clua, func);

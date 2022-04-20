@@ -148,6 +148,8 @@ static void camp(int16_t instr, int16_t hours, int16_t who) {
     }
 }
 
+static void request_door(const int16_t name, const int32_t op);
+
 extern uint32_t gpl_request_impl(int16_t token, int16_t name,
         int32_t num1, int32_t num2) {
     int answer = 0;
@@ -159,7 +161,7 @@ extern uint32_t gpl_request_impl(int16_t token, int16_t name,
             camp(CAMP_RESURRECT, num1, num2);
             break;
         case REQUEST_DOOR:
-            debug("I need to do operation %d on door %d\n", num2, num1);
+            request_door(name, num1);
             break;
         case REQUEST_THIEFSKILL:
             debug("I need to run a thief skill on %d, skill %d, bonus %d\n", name, num1, num2);
@@ -670,4 +672,14 @@ static int req_set_allegiance(int16_t object, long allegiance, long notused2) {
     }
 
     return object;
+}
+
+static void request_door(const int16_t name, const int32_t op) {
+    sol_region_t *reg = sol_region_manager_get_current();
+    entity_t *door = sol_region_find_entity_by_id(reg, name);
+    debug("Performing operation '%s' on door %d\n", op == 0 ? "open" : "close", name);
+    //printf("door = %d\n", sol_sprite_get_frame(door->anim.spr));
+    sol_sprite_set_frame(door->anim.spr, op == 0 ? 1 : 0);
+    sol_region_set_block(reg, door->mapx, door->mapy, op);
+    sol_trigger_set_door(name, 1);
 }
