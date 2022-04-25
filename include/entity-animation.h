@@ -35,6 +35,8 @@ enum entity_action_e {
     EA_SCMD,
     EA_ACTIVATE,
     EA_WAIT_ON_ENTITY,
+    EA_DOOR_OPEN,
+    EA_DOOR_CLOSE,
     EA_END,
 };
 

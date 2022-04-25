@@ -148,7 +148,7 @@ static void camp(int16_t instr, int16_t hours, int16_t who) {
     }
 }
 
-static void request_door(const int16_t name, const int32_t op);
+static void request_door(const int16_t name, const int32_t op, const int32_t range);
 
 extern uint32_t gpl_request_impl(int16_t token, int16_t name,
         int32_t num1, int32_t num2) {
@@ -161,7 +161,7 @@ extern uint32_t gpl_request_impl(int16_t token, int16_t name,
             camp(CAMP_RESURRECT, num1, num2);
             break;
         case REQUEST_DOOR:
-            request_door(name, num1);
+            request_door(name, num1, num2);
             break;
         case REQUEST_THIEFSKILL:
             debug("I need to run a thief skill on %d, skill %d, bonus %d\n", name, num1, num2);
@@ -674,12 +674,18 @@ static int req_set_allegiance(int16_t object, long allegiance, long notused2) {
     return object;
 }
 
-static void request_door(const int16_t name, const int32_t op) {
+static void request_door(const int16_t name, const int32_t op, const int32_t range) {
     sol_region_t *reg = sol_region_manager_get_current();
-    entity_t *door = sol_region_find_entity_by_id(reg, name);
-    debug("Performing operation '%s' on door %d\n", op == 0 ? "open" : "close", name);
-    //printf("door = %d\n", sol_sprite_get_frame(door->anim.spr));
-    sol_sprite_set_frame(door->anim.spr, op == 0 ? 1 : 0);
-    sol_region_set_block(reg, door->mapx, door->mapy, op);
-    sol_trigger_set_door(name, 1);
+    dude_t *door = NULL;
+
+    entity_list_for_each(reg->entities, door)  {
+        //find the door
+        if (door->ds_id == name || door->ds_id == (name - range)) {
+            debug("Performing operation '%s' on door %d\n", op == 0 ? "open" : "close", door->ds_id);
+            door->anim.scmd = entity_animation_get_scmd(door, 0, 0, EA_DOOR_OPEN);
+            entity_animation_list_add(&(door->actions), EA_SCMD, door, door, NULL, 30);
+            sol_region_set_block(reg, door->mapx, door->mapy, op);
+            sol_trigger_set_door(name, 1);
+        }
+    }
 }

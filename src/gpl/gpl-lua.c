@@ -603,14 +603,18 @@ static void do_lua_damage(int is_percent) {
     gpl_lua_get_parameters(2);
     lprintf("if %s == %d then\n", lparams.params[0], ALL);
     lua_depth++;
-    lprintf("--illegal parameter ALL to do_damage\n");
+    //lprintf("--illegal parameter ALL to do_damage\n");
+    lprintf("gpl.damage_all(%s)\n", lparams.params[1]);
     lua_depth--;
     lprintf("elseif %s == %d then\n", lparams.params[0], PARTY);
     lua_depth++;
     if (is_percent) {
-        lprintf("--need to do %s%% to all party members\n", lparams.params[1]);
+        //lprintf("--need to do %s%% to all party members\n", lparams.params[1]);
+        lprintf("gpl.damage_party_percent(%s)\n", lparams.params[1]);
     } else {
-        lprintf("--need to do %s amt of damage to all party members\n", lparams.params[1]);
+        lprintf("--set amount of damage to all part members\n");
+        lprintf("gpl.damage_amt(%s, %s)\n", lparams.params[1], lparams.params[0]);
+        //lprintf("--need to do %s amt of damage to all party members\n", lparams.params[1]);
     }
     lua_depth--;
     lprintf("else\n");
@@ -618,17 +622,21 @@ static void do_lua_damage(int is_percent) {
     lprintf("if %s >= 0 then\n", lparams.params[0]);
     lua_depth++;
     if (is_percent) {
-        lprintf("--need to do %s%% to (party members) %s\n", lparams.params[1], lparams.params[0]);
+        lprintf("gpl.damage_party_percent(%s, %s)\n", lparams.params[1], lparams.params[0]);
+        //lprintf("--need to do %s%% to (party members) %s\n", lparams.params[1], lparams.params[0]);
     } else {
-        lprintf("--need to do %s amt of damage to (party members) %s\n", lparams.params[1], lparams.params[0]);
+        lprintf("gpl.damage_party_amt(%s, %s)\n", lparams.params[1], lparams.params[0]);
+        //lprintf("--need to do %s amt of damage to (party members) %s\n", lparams.params[1], lparams.params[0]);
     }
     lua_depth--;
     lprintf("else\n");
     lua_depth++;
     if (is_percent) {
-        lprintf("--need to do %s%% to (object id) %s\n", lparams.params[1], lparams.params[0]);
+        //lprintf("--need to do %s%% to (object id) %s\n", lparams.params[1], lparams.params[0]);
+        lprintf("gpl.damage_obj_percent(%s, %s)\n", lparams.params[1], lparams.params[0]);
     } else {
-        lprintf("--need to do %s amt of damage to (object id) %s\n", lparams.params[1], lparams.params[0]);
+        lprintf("gpl.damage_obj_amt(%s, %s)\n", lparams.params[1], lparams.params[0]);
+        //lprintf("--need to do %s amt of damage to (object id) %s\n", lparams.params[1], lparams.params[0]);
     }
     lua_depth--;
     lprintf("end\n");
@@ -820,6 +828,7 @@ extern void gpl_lua_search(void) {
         if (type >= EQU_SEARCH && type <= GT_SEARCH) {
             gpl_lua_read_number(buf, BUF_SIZE - 128);
             validate_number(buf, "gpl_lua_search");
+            lprintf("gpl.find_item_on_party(%s)\n", buf);
             //temp_for = read_number();
             temp_for = atoi(buf);
             if (field_level > 0) {
@@ -842,6 +851,7 @@ extern void gpl_lua_search(void) {
         }
     } while ( (object == PARTY) && (i != NULL_OBJECT));
     */
+    /*
     lprintf("--I need to find object %s, i = %s, low_field = %d, high_field = %d\n",
         object, i, low_field, high_field);
     lprintf("--Field parameters:");
@@ -852,6 +862,7 @@ extern void gpl_lua_search(void) {
 
     lprintf("--search command to be implemented later...\n");
     lprintf("accum = answer\n");
+    */
 }
 
 extern void gpl_lua_getparty(void) {
@@ -863,8 +874,8 @@ extern void gpl_lua_getparty(void) {
 }
 
 extern void gpl_lua_fight(void) {
-    lprintf("--I need to enter fight mode!\n");
-    //gpl_exit_gpl();
+    lprintf("gpl.fight()\n");
+    gpl_lua_exit(); // fight triggers the end of a function.
 }
 
 extern void gpl_lua_flee(void) {
@@ -911,7 +922,7 @@ extern void gpl_lua_goxy(void) {
 extern void gpl_lua_readorders(void) {
     char buf[BUF_SIZE];
     gpl_lua_read_number(buf, BUF_SIZE);
-    lprintf("accum = gpl.read_order(%s)\n", buf);
+    lprintf("gpl.read_order(%s)\n", buf);
 }
 
 extern void gpl_lua_if(void) {
@@ -963,7 +974,7 @@ extern void gpl_lua_setrecord(void) {
 extern void gpl_lua_setother(void) {
     char buf[BUF_SIZE];
     gpl_lua_read_number(buf, BUF_SIZE);
-    lprintf("gpl.set_other_check(%s)", buf);
+    lprintf("gpl.set_other_check(%s)\n", buf);
 }
 
 extern void gpl_lua_end_control(void) {
@@ -1318,7 +1329,7 @@ extern void gpl_lua_getstatus(void) {
 
 extern void gpl_lua_getlos(void) {
     gpl_lua_get_parameters(3);
-    lprintf("accum = gpl.los(%s, %s, %s) -- los from %s to %s < %s\n",
+    lprintf("gpl.los(%s, %s, %s) -- los from %s to %s < %s\n",
         lparams.params[0], lparams.params[1], lparams.params[2],
         lparams.params[0], lparams.params[1], lparams.params[2]);
 }

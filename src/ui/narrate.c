@@ -141,8 +141,8 @@ void narrate_clear() {
     text_pos = 0;
 }
 
-static void add_text(const char *to_add) {
-    if (!to_add) { return; }
+static int add_text(const char *to_add) {
+    if (!to_add) { return 0; }
 
     int len = strlen(to_add);
 
@@ -153,10 +153,12 @@ static void add_text(const char *to_add) {
 
     strcpy(narrate_text+text_pos, to_add);
     text_pos += len;
+
+    return len;
 }
 
 int8_t sol_ui_narrate_open(int16_t action, const char *text, int16_t index) {
-    display = 1; // start off as off
+    display = 1; // by default we turn on display
     switch(action) {
         case NAR_ADD_MENU:
             display_menu = 1;
@@ -166,7 +168,8 @@ int8_t sol_ui_narrate_open(int16_t action, const char *text, int16_t index) {
             break;
         case NAR_PORTRAIT:
             portrait_index = index;
-            add_text(text);
+            // Empty text or 0 index on portrait is a clear dialog (no display.)
+            display = (!add_text(text) || !index) ? 0 : 1;
             break;
         case NAR_SHOW_TEXT:
             add_text(text);

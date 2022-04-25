@@ -37,6 +37,7 @@ static void swap_with_next(entity_list_node_t *en) {
 // WARNING: This may change the head of the animation list!
 void animate_sprite_tick(entity_action_t *action, entity_t *entity ) {
     if (!entity || !action) { return; }
+    if (action->action == EA_SCMD) { return; }
     animate_sprite_t *anim = &entity->anim;
 
     anim->left_over += fmod(anim->movex ? anim->movex : anim->movey, 1.0);

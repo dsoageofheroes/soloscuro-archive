@@ -205,6 +205,20 @@ static scmd_t throw_anim_scmd[] = {
     {.bmp_idx = 0, .delay = 5, .flags = SCMD_XMIRROR | SCMD_LAST, .xoffset = -1, .yoffset = 0, 0, 0, 0},
 };
 
+static scmd_t door_open[] = {
+    {.bmp_idx = 0, .delay = 7, .flags = 0x0, .xoffset = 10, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 1, .delay = 8, .flags = 0x0, .xoffset = 10, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 2, .delay = 8, .flags = 0x0, .xoffset = 10, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 3, .delay = 7, .flags = SCMD_LAST, .xoffset = 10, .yoffset = 0, 0, 0, 0},
+};
+
+static scmd_t door_close[] = {
+    {.bmp_idx = 3, .delay = 7, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 2, .delay = 8, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 1, .delay = 8, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 0, .delay = 7, .flags = SCMD_LAST, .xoffset = 0, .yoffset = 0, 0, 0, 0},
+};
+
 static scmd_t *combat_types[] = {
     combat_stand_down,
     combat_stand_up,
@@ -300,6 +314,12 @@ static scmd_t* get_entity_scmd(scmd_t *current_scmd, enum entity_action_e action
             return sol_combat_get_scmd(COMBAT_SCMD_MELEE_DOWN);
         }
     } 
+    switch(action) {
+        case EA_DOOR_OPEN: return door_open;
+        case EA_DOOR_CLOSE: return door_close;
+        default:
+            break;
+    }
 
     return current_scmd;
 }
@@ -719,6 +739,9 @@ static void update_camera(entity_t *entity, entity_action_t *action) {
 }
 
 extern int entity_animation_execute(entity_t *entity) {
+    if (entity->ds_id == -2145) {
+        printf("door: %p\n", entity->actions.head);
+    }
     if (!entity || !entity->actions.head) { return 0; }
     entity_action_t *action = &(entity->actions.head->ca);
 
