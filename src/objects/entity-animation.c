@@ -739,9 +739,6 @@ static void update_camera(entity_t *entity, entity_action_t *action) {
 }
 
 extern int entity_animation_execute(entity_t *entity) {
-    if (entity->ds_id == -2145) {
-        printf("door: %p\n", entity->actions.head);
-    }
     if (!entity || !entity->actions.head) { return 0; }
     entity_action_t *action = &(entity->actions.head->ca);
 

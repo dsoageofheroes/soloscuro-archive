@@ -207,7 +207,7 @@ extern void sol_region_manager_set_current(sol_region_t *region) {
         entity_list_add(region->entities, player);
         if (!player->anim.scmd) { player->anim.scmd = ssi_scmd_empty(); }
     }
-
+    gpl_set_gname(GNAME_REGION, region->map_id);
 }
 
 extern void sol_region_manager_remove_players() {

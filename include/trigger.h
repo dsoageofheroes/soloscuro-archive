@@ -82,6 +82,7 @@ extern char*            sol_trigger_serialize(size_t *len);
 extern void             sol_trigger_deserialize(char *data);
 
 extern void             sol_trigger_talk_click(uint32_t obj);
+extern void             sol_trigger_tick();
 
 extern void             sol_write_triggers(FILE *file);
 

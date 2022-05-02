@@ -9,6 +9,7 @@
 #include "port.h"
 #include "region-manager.h"
 #include "sol-lua-manager.h"
+#include "trigger.h"
 
 static int done = 0, started = 0;
 static uint8_t wait_flags[WAIT_MAX_SIGNALS];
@@ -91,6 +92,7 @@ extern void sol_game_loop() {
             ticks_to_increment_time = TICKS_PER_ROUND;
             gpl_set_gname(GNAME_TIME, gpl_get_gname(GNAME_TIME) + 1);
         }
+        sol_trigger_tick();
         //if (in_replay_mode() && rep_times > 10) {
             //replay_next();
             //rep_times = 0;

@@ -1,6 +1,7 @@
 #include "combat.h"
 #include "combat-region.h"
 #include "entity-list.h"
+#include "gpl-state.h"
 #include "region-manager.h"
 #include "player.h"
 #include <stdio.h>
@@ -24,6 +25,8 @@ extern int sol_combat_check_if_over(combat_region_t *cr) {
         }
     }
 
+    // clear FIGHT
+    gpl_set_gname(GNAME_FIGHT, 0);
     return 1;
 }
 
@@ -44,6 +47,9 @@ extern void sol_combat_next_combatant(combat_region_t *cr) {
     entity_list_remove_entity(&cr->round.entities, cr->round.entities.head->entity);
     if (cr->round.entities.head) {
         cr->round.entities.head->entity->combat_status = EA_NONE;
+        gpl_set_gname(GNAME_FIGHT, cr->round.entities.head->entity->ds_id);
+    } else {
+        gpl_set_gname(GNAME_FIGHT, 0);
     }
 }
 

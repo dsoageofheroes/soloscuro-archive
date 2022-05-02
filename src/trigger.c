@@ -10,6 +10,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+// It looks like noorders should be triggered:
+// 1) On entry of area (unconfirmed)
+// 2) When the object attached to it is moved (animated.) (Unconfirmed.)
+// 3) When character moves off of it and it is passive.  (Unconfirmed.)
+
 static int trigger_noorders = 0, lposx, lposy;
 
 typedef struct trigger_node_s {
@@ -643,5 +648,14 @@ extern void sol_trigger_los_check(uint32_t obj, uint32_t file, uint32_t addr, ui
     if (in_los(obj, sol_player_get_active())) {
         debug("%d is in los, calling %d:%d param= %d\n", obj, file, addr, param);
         gpl_lua_execute_script(file, addr, 0);
+    }
+}
+
+extern void sol_trigger_tick() {
+    for(trigger_node_t *rover = noorders_list; rover; rover = rover->next) {
+        //printf("sol_trigger_tick: %d,  %d\n", rover->noorders.obj, rover->noorders.trigger_on_tile);
+        //if (rover->noorders.obj == obj) {
+            //rover->noorders.need_to_run = 1;
+        //}
     }
 }
