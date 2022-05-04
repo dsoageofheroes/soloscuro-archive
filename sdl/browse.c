@@ -12,6 +12,7 @@
 #include "gff-map.h"
 #include "gff-image.h"
 #include "gff-xmi.h"
+#include "ssi-gui.h"
 #include "wizard.h"
 #include "region-manager.h"
 
@@ -26,6 +27,7 @@ static SDL_Surface *surface = NULL;
 static int gff_idx = 0, row_selected = 0, row_max = 0, entry_idx = 0, entry_max, res_idx = 0, res_max = 0;
 static uint32_t res_ids[RES_MAX];
 static gff_image_entry_t *cimg = NULL;
+static sol_window_t *sol_wind = NULL;
 static int cframe = 0;
 static double zoom = 1.0;
 static int mapx = 0, mapy = 0;
@@ -181,6 +183,10 @@ static void clear_state() {
     if (cimg) {
         free(cimg);
         cimg = NULL;
+    }
+    if (sol_wind) {
+        sol_window_free_base(sol_wind);
+        sol_wind = NULL;
     }
     mapx = mapy = 0;
     cframe = 0;
@@ -406,6 +412,7 @@ static void render_entry_pseq();
 static void render_entry_bvoc();
 static void render_entry_wind();
 static void render_entry_apfm();
+static void render_entry_butn();
 
 static void render_entry() {
     switch(gff_get_type_id(gff_idx, entry_idx)) {
@@ -440,6 +447,8 @@ static void render_entry() {
         case GFF_BVOC: render_entry_bvoc(); break;
         case GFF_WIND: render_entry_wind(); break;
         case GFF_APFM: render_entry_apfm(); break;
+        case GFF_BUTN: render_entry_butn(); break;
+        case GFF_EBOX: render_entry_ebox(); break;
         default:
             render_entry_header();
             sol_print_line_len(0, "Need to implement", 320, 40, 128);
@@ -488,7 +497,8 @@ static void render_entry_as_image(const int gff_idx, const int type_id, const in
 
     if (!cimg) {
         gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, type_id, res_id);
-        cimg = (gff_image_entry_t*) malloc(sizeof(gff_image_entry_t*) * chunk.length);
+        if (chunk.length <= 0) { return; }
+        cimg = (gff_image_entry_t*) malloc(sizeof(gff_image_entry_t*) + chunk.length);
         gff_read_chunk(gff_idx, &chunk, &(cimg->data), chunk.length);
         cimg->data_len = chunk.length;
         cimg->frame_num = *(uint16_t*)(cimg->data + 4);
@@ -1603,11 +1613,11 @@ typedef struct gui_frame_s {
     uint16_t width;
     uint16_t height;
     uint32_t border_bmp;
-    int8_t data[4];
+    int8_t data[4]; // This may be two bytes.
     uint32_t background_bmp;
-    int8_t data1[4];
+    int8_t data1[4]; // This may be two bytes.
     char title[24];
-} __attribute__ ((__packed__)) gui_frame_t;
+} __attribute__ ((__packed__)) ssi_gui_frame_t;
 
 typedef struct gui_window_s {
     resource_header_t rh;
@@ -1617,7 +1627,7 @@ typedef struct gui_window_s {
     int8_t data[4];
     uint16_t flags;
     short data1;
-    gui_frame_t  frame;
+    ssi_gui_frame_t  frame;
     int16_t offsetx;
     int16_t offsety;
     int8_t data2[4];
@@ -1639,6 +1649,7 @@ void render_entry_wind() {
     render_entry_header();
     char buf[4096];
     gui_window_t *wind = NULL;
+    int ypos = 40;
 
     gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_WIND, res_ids[res_idx]);
     if (!gff_read_chunk(gff_idx, &chunk, buf, 4096)) {
@@ -1647,23 +1658,38 @@ void render_entry_wind() {
     }
 
     wind = (gui_window_t*) buf;
-    printf("->(%d, %d, %d)\n", wind->rh.id, wind->rh.len, wind->rh.type);
-    printf("->(%d, %d)\n", wind->x, wind->y);
-    printf("->%d:%d\n", wind->frame.width, wind->frame.height);
-    printf("-> %d\n", wind->itemCount);
-    printf("-> border: %d, background: %d\n", wind->frame.border_bmp, wind->frame.background_bmp);
-    printf("-> len: %d\n", wind->titleLen);
-    printf("----%ld----\n", sizeof(gui_window_t) + wind->titleLen);
-    for (int i = 0; i < wind->itemCount; i++) {
-        gui_item_t *item = (gui_item_t*) (buf + (sizeof(gui_window_t) + 12) + i * sizeof(gui_item_t));
-        printf("item: %d, %d\n", item->type, item->id);
+    if (!sol_wind) {
+        sol_wind = sol_window_from_gff(res_ids[res_idx]);
     }
-    //printf("num items = %d\n", wind->itemCount);
+    sprintf(buf, "id: %d, len: %d, type: '%c%c%c%c'", wind->rh.id, wind->rh.len,
+        (wind->rh.type >> 0) & 0x00FF,
+        (wind->rh.type >> 8) & 0x00FF,
+        (wind->rh.type >> 16) & 0x00FF,
+        (wind->rh.type >> 24) & 0x00FF);
+    sol_print_line_len(0, buf, 320, ypos, BUF_MAX); ypos += 12;
+    sprintf(buf, "loc: (%d, %d), dim: (%d, %d)", sol_wind->startx, sol_wind->starty, sol_wind->base_width, sol_wind->base_height);
+    sol_print_line_len(0, buf, 320, ypos, BUF_MAX); ypos += 12;
+    sprintf(buf, "items: %d, border: %d, background: %d\n", wind->itemCount, wind->frame.border_bmp, wind->frame.background_bmp);
+    sol_print_line_len(0, buf, 320, ypos, BUF_MAX); ypos += 12;
+    for (int i = 0; i < wind->itemCount; i++) {
+        gui_item_t *item = (gui_item_t*)(buf + sizeof(gui_window_t) + 12 + i *(sizeof(gui_item_t)));
+        sprintf(buf, "id: %d, type: '%c%c%c%c'", item->id, 
+            (item->type >> 0) & 0x00FF,
+            (item->type >> 8) & 0x00FF,
+            (item->type >> 16) & 0x00FF,
+            (item->type >> 24) & 0x00FF);
+        sol_print_line_len(0, buf, 320, ypos, BUF_MAX); ypos += 12;
+    }
+
+    sol_window_set_pos(sol_wind, 320, 150);
+    sol_window_render_base(sol_wind);
+
+    //sol_window_free_base(sol_wind);
 }
 
 typedef struct gui_app_frame_s {
     resource_header_t rh;
-    gui_frame_t frame;
+    ssi_gui_frame_t frame;
     uint8_t data[4];
     int16_t event_filter;
     uint8_t data1[4];
@@ -1681,6 +1707,7 @@ void render_entry_apfm() {
     render_entry_header();
     char buf[4096];
     gui_app_frame_t *frame = NULL;
+    int ypos = 40;
 
     gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_APFM, res_ids[res_idx]);
     if (!gff_read_chunk(gff_idx, &chunk, buf, 4096)) {
@@ -1689,7 +1716,66 @@ void render_entry_apfm() {
     }
     frame = (gui_app_frame_t*) buf;
 
-    printf("-> %d, %d, %d\n", frame->rh.id, frame->rh.len, frame->rh.type);
-    printf("-> %d: %d\n", frame->frame.width, frame->frame.height);
-    printf("background: %d, border: %d\n", frame->frame.background_bmp, frame->frame.border_bmp);
+    sprintf(buf, "id: %d, len: %d, type: '%c%c%c%c'", frame->rh.id, frame->rh.len,
+        (frame->rh.type >> 0) & 0x00FF,
+        (frame->rh.type >> 8) & 0x00FF,
+        (frame->rh.type >> 16) & 0x00FF,
+        (frame->rh.type >> 24) & 0x00FF);
+    sol_print_line_len(0, buf, 320, ypos, BUF_MAX); ypos += 12;
+    sprintf(buf, "dim: (%d, %d)", frame->frame.width, frame->frame.height);
+    sol_print_line_len(0, buf, 320, ypos, BUF_MAX); ypos += 12;
+    sprintf(buf, "border: %d, background: %d\n", frame->frame.border_bmp, frame->frame.background_bmp);
+    sol_print_line_len(0, buf, 320, ypos, BUF_MAX); ypos += 12;
+}
+
+void render_entry_butn() {
+    render_entry_header();
+    char buf[4096];
+    ssi_button_t *button = NULL;
+    int ypos = 40;
+
+    gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_BUTN, res_ids[res_idx]);
+    if (!gff_read_chunk(gff_idx, &chunk, buf, 4096)) {
+        printf("ERROR.\n");
+        return;
+    }
+    button = (ssi_button_t*)buf;
+    sprintf(buf, "id: %d, len: %d, type: '%c%c%c%c'", button->rh.id, button->rh.len,
+        (button->rh.type >> 0) & 0x00FF,
+        (button->rh.type >> 8) & 0x00FF,
+        (button->rh.type >> 16) & 0x00FF,
+        (button->rh.type >> 24) & 0x00FF);
+    sol_print_line_len(0, buf, 320, ypos, BUF_MAX); ypos += 12;
+    sprintf(buf, "dim: (%d, %d)", button->frame.width, button->frame.height);
+    sol_print_line_len(0, buf, 320, ypos, BUF_MAX); ypos += 12;
+    sprintf(buf, "border: %d, background: %d\n", button->frame.border_bmp, button->frame.background_bmp);
+    sol_print_line_len(0, buf, 320, ypos, BUF_MAX); ypos += 12;
+    sprintf(buf, "texlen: %d, icon: %d, attempting to display:", button->textlen, button->icon_id);
+    sol_print_line_len(0, buf, 320, ypos, BUF_MAX); ypos += 12;
+    int pal_idx = gff_get_game_type() == DARKSUN_ONLINE
+        ? RESFLOP_GFF_INDEX
+        : RESOURCE_GFF_INDEX;
+    render_entry_as_image(gff_idx, GFF_ICON, button->icon_id, open_files[pal_idx].pals->palettes, 320, 92);
+}
+
+void render_entry_ebox() {
+    render_entry_header();
+    char buf[4096];
+    ssi_ebox_t *ebox = NULL;
+    int ypos = 40;
+
+    gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_EBOX, res_ids[res_idx]);
+    if (!gff_read_chunk(gff_idx, &chunk, buf, 4096)) {
+        printf("ERROR.\n");
+        return;
+    }
+    ebox = (ssi_ebox_t*)buf;
+    sprintf(buf, "id: %d, len: %d, type: '%c%c%c%c'", ebox->rh.id, ebox->rh.len,
+        (ebox->rh.type >> 0) & 0x00FF,
+        (ebox->rh.type >> 8) & 0x00FF,
+        (ebox->rh.type >> 16) & 0x00FF,
+        (ebox->rh.type >> 24) & 0x00FF);
+    sol_print_line_len(0, buf, 320, ypos, BUF_MAX); ypos += 12;
+    //printf("(%d %d %d %d %d)\n", ebox->maxlines, ebox->styles, ebox->runs, ebox->bufsize, ebox->user_id);
+    //printf("(%d %d)\n", ebox->frame.border_bmp, ebox->frame.background_bmp);
 }

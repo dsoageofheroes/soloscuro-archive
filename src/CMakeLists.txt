@@ -41,7 +41,7 @@ set(SOLOSCURO_SRCS
     ui/label.c
     ui/window-manager.c
     ui/map.c
-    ui/windows.txt
+    ui/window.c
     ui/window-main.c
     ui/narrate.c
     ui/game-menu.c
