@@ -38,20 +38,21 @@ extern int sol_game_loop_is_waiting_for(int signal) {
     return wait_flags[signal];
 }
 
-extern void sol_game_loop_signal(int signal, int _accum) {
+extern int sol_game_loop_signal(int signal, int _accum) {
     if (signal < 0 || signal >= WAIT_MAX_SIGNALS) {
         error("Received signal %d!\n", signal);
-        return;
+        return 0;
     }
     //replay_print("rep.signal(%d, %d)\n", signal, _accum);
     if (wait_flags[signal]) {
         wait_flags[signal]--;
         accum = _accum;
         done = 1;
-    } else {
-        warn("signal %d received, but not waiting on it...\n", signal);
-        done = 1;
-    }
+        return 1; // someone was waiting
+    } 
+    warn("signal %d received, but not waiting on it...\n", signal);
+    done = 1;
+    return 0;
 }
 
 extern int sol_game_loop_wait_for_signal(int signal) {

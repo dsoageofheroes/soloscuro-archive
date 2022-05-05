@@ -714,12 +714,8 @@ static int call_function(lua_State *l) {
 }
 
 static int gpl_exit(lua_State *l) {
-    if (luaL_dostring(l, "return")) {
-        error("ERROR MUST IMPLEMENT: NEED TO EXIT.\n");
-        exit(1);
-    }
-    printf("gpl_exit\n");
-
+    (void) l;
+    gpl_set_exit();
     return 0;
 }
 
@@ -735,7 +731,12 @@ static int lua_narrate_open(lua_State *l) {
 }
 
 static int lua_narrate_show(lua_State *l) {
-    lua_pushboolean(l, sol_game_loop_wait_for_signal(WAIT_NARRATE_SELECT));
+    //lua_pushboolean(l, sol_game_loop_wait_for_signal(WAIT_NARRATE_SELECT));
+    sol_game_loop_wait_for_signal(WAIT_NARRATE_SELECT);
+
+    // In exit after a show means we need to exit lua.
+    lua_pushboolean(l, gpl_in_exit());
+
     return 1;
 }
 

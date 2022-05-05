@@ -158,6 +158,10 @@ static int add_text(const char *to_add) {
 }
 
 int8_t sol_ui_narrate_open(int16_t action, const char *text, int16_t index) {
+    printf("narrate_open: %d: '%s', %d, exit = %d\n", action, text, index, gpl_in_exit());
+    if (!strcmp(text, "CLOSE")) {
+        printf("****************************NEED TO CLOSE!\n");
+    }
     display = 1; // by default we turn on display
     switch(action) {
         case NAR_ADD_MENU:
@@ -204,7 +208,7 @@ int narrate_handle_mouse_up(const uint32_t button, const uint32_t x, const uint3
 
     if (display_menu && menu_highlight >= 0) {
         option = narrate_select_menu(menu_highlight);
-        if (option >= 0) {
+        if (gpl_in_exit() || option >= 0) {
             sol_game_loop_signal(WAIT_NARRATE_SELECT, option);
         }
     }
@@ -238,7 +242,6 @@ extern int sol_ui_narrate_ask_yes_no() {
     sol_game_loop_wait_for_signal(WAIT_NARRATE_SELECT);
 
     sol_ui_narrate_close();
-    printf("option = %zu\n", last_option);
     return last_option ? 0 : 1;
 }
 
@@ -303,8 +306,11 @@ extern int narrate_select_menu(int option) {
     menu_pos = 0;
     sol_ui_narrate_clear();
     snprintf(buf, 1024, "func%d()\n", menu_addrs[option]);
-    gpl_execute_string(buf);
     //game_loop_signal(WAIT_NARRATE_SELECT, accum);
+    if (!gpl_in_exit()) {
+        sol_game_loop_signal(WAIT_NARRATE_SELECT, option);
+        gpl_execute_string(buf);
+    }
     return accum;
 }
 

@@ -19,10 +19,25 @@ static char** gpl_scripts = NULL;
 static size_t mas_max = 0, gpl_max = 0;
 static lua_State *clua = NULL;
 static lua_State *lua_states[MAX_STACK];
+static int        in_exit[MAX_STACK];
 static size_t lua_stack_pos = 0;
 
 static void write_lua(const char *path, const char *lua, const size_t len);
 static void gpl_lua_load_scripts();
+
+extern void gpl_set_exit() {
+    for (size_t i = 0; i < lua_stack_pos; i++) {
+        in_exit[i] = 1;
+    }
+    //in_exit[lua_stack_pos - 1] = 1;
+    //printf("set_exit: lua_stack_pos = %zu\n", lua_stack_pos);
+}
+
+extern int  gpl_in_exit()  {
+    if (lua_stack_pos < 1) { return 0; }
+    //printf("in_exit: lua_space_pos = %zu, exit: %d\n", lua_stack_pos, in_exit[lua_stack_pos - 1]);
+    return in_exit[lua_stack_pos - 1];
+}
 
 void gpl_manager_init() {
     gpl_state_init();
@@ -112,6 +127,7 @@ extern void gpl_pop_context() {
 
     lua_close(lua_states[--lua_stack_pos]);
     lua_states[lua_stack_pos] = NULL;
+    in_exit[lua_stack_pos] = 0;
 
     clua = lua_stack_pos > 0 ? lua_states[lua_stack_pos] : NULL;
 }

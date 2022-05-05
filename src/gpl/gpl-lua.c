@@ -1049,13 +1049,9 @@ extern void gpl_lua_menu(void) {
         lprintf("end\n");
     }
     gpl_get_byte();  // get rid of the mend...
-    //for (int i = 0; i < items; i++) {
-        //lprintf("narrate_choice( %d, %d) -- choice param1 goes to addr param2\n", i, menu_functions[i]);
-    //}
-    //lprintf("accum = gpl.narrate_show() --narrate_wait for input\n");
-    lprintf("gpl.narrate_show() --narrate_wait for input\n");
-    //printf("Need to implement display_menu()\n");
-    //command_implemented = 0;
+
+    lprintf("if gpl.narrate_show() then return true end --narrate_wait for input\n");
+    //lprintf("gpl.narrate_show() --narrate_wait for input\n");
 }
 
 extern void gpl_lua_setthing(void) {
@@ -1346,7 +1342,7 @@ extern void gpl_lua_jump(void) {
 extern void gpl_lua_local_sub(void) {
     char buf[BUF_SIZE];
     gpl_lua_read_number(buf, BUF_SIZE);
-    lprintf("if func%s() then return end\n", buf);
+    lprintf("if func%s() then return true end\n", buf);
 }
 
 extern void gpl_lua_global_sub(void) {
@@ -1532,6 +1528,7 @@ extern void gpl_lua_orelse(void) {
 }
 
 extern void gpl_lua_exit(void) {
+    lprintf("gpl.exit() -- still have to execute next statement...\n");
     lprintf("return true -- gpl.exit()\n");
     if (lua_depth == 1) {
         in_func = 0;

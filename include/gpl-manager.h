@@ -11,5 +11,7 @@ extern void    gpl_execute_string(const char *str);
 extern void    gpl_lua_load_all_scripts();
 extern void    gpl_push_context();
 extern void    gpl_pop_context();
+extern void    gpl_set_exit();
+extern int     gpl_in_exit();
 
 #endif
