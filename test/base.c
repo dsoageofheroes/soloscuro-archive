@@ -94,6 +94,7 @@ uint32_t sol_sprite_geth(const sol_sprite_t id) {return 0;}
 void sol_sprite_set_alpha(const sol_sprite_t id, const uint8_t alpha) {}
 void sol_sprite_free(const sol_sprite_t id) {}
 void sol_sprite_set_frame(const uint16_t id, const uint16_t frame) {}
+void sol_sprite_set_frame_keep_loc(const uint16_t id, const uint16_t frame) {}
 uint16_t sol_sprite_get_frame(const uint16_t id) {return 0;}
 int sol_sprite_in_rect(const uint16_t id, const uint32_t x, const uint32_t y) {return 0;}
 void sol_print_line_len(const sol_font_t font, const char *text, size_t x, size_t y, const uint32_t len) {}

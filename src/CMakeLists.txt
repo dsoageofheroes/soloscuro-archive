@@ -32,6 +32,7 @@ set(SOLOSCURO_SRCS
     ui/sol_textbox.c
     ui/inventory.c
     ui/add-load-save.c
+    ui/examine.c
     ui/popup.c
     ui/portrait.c
     ui/view-character.c

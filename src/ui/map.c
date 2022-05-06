@@ -13,6 +13,7 @@
 #include "region-manager.h"
 #include "ssi-scmd.h"
 #include "player.h"
+#include "examine.h"
 #include "gpl-var.h"
 #include "window-main.h"
 
@@ -408,7 +409,13 @@ int map_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_
 
     if (ms == MOUSE_TALK && cdude) {//(dude = get_entity_at_location(x, y))) {
         sol_mouse_set_state(MOUSE_POINTER);
-        sol_trigger_talk_click(cdude->ds_id);
+        if (sol_examine_entity(cdude)) {
+            sol_window_push(&examine_window, 0, 0);
+        } else {
+            // Do an animation.
+            gpl_request_impl(5, cdude->ds_id, -1, -1);
+        }
+        //sol_trigger_talk_click(cdude->ds_id);
         return 1;
     }
 

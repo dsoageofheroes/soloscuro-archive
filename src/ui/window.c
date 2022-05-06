@@ -1,5 +1,6 @@
 #include "gff.h"
 #include "gfftypes.h"
+#include "settings.h"
 #include "ssi-gui.h"
 
 #include <stdlib.h>
@@ -17,6 +18,7 @@ static int load_button_from_gff(const int res_id, sol_button_t *button) {
     if (!button) { return 0; }
 
     memset(button, 0x0, sizeof(sol_button_t));
+    button->spr = SPRITE_ERROR;
     gff_chunk_header_t chunk = gff_find_chunk_header(RESOURCE_GFF_INDEX, GFF_BUTN, res_id);
     if (!gff_read_chunk(RESOURCE_GFF_INDEX, &chunk, buf, 4096)) {
         return 0;
@@ -29,7 +31,7 @@ static int load_button_from_gff(const int res_id, sol_button_t *button) {
     button->base_height = ssi_button->frame.height;
 
     //render_entry_as_image(gff_idx, GFF_ICON, button->icon_id, open_files[pal_idx].pals->palettes, 320, 92);
-    button->spr = sol_sprite_new(open_files[pal_idx].pals->palettes, 0, 0, 1.0, RESOURCE_GFF_INDEX, GFF_ICON, button->icon_id);
+    button->spr = sol_sprite_new(open_files[pal_idx].pals->palettes, 0, 0, settings_zoom(), RESOURCE_GFF_INDEX, GFF_ICON, button->icon_id);
 
     return 1;
 }
@@ -41,6 +43,7 @@ static int load_frame_from_gff(const int res_id, sol_frame_t *frame) {
     if (!frame) { return 0; }
 
     memset(frame, 0x0, sizeof(sol_frame_t));
+    frame->spr = SPRITE_ERROR;
     gff_chunk_header_t chunk = gff_find_chunk_header(RESOURCE_GFF_INDEX, GFF_APFM, res_id);
     if (!gff_read_chunk(RESOURCE_GFF_INDEX, &chunk, buf, 4096)) {
         return 0;
@@ -70,6 +73,7 @@ static int load_box_from_gff(const int res_id, sol_box_t *box) {
     if (!box) { return 0; }
 
     memset(box, 0x0, sizeof(sol_box_t));
+    box->spr = SPRITE_ERROR;
     gff_chunk_header_t chunk = gff_find_chunk_header(RESOURCE_GFF_INDEX, GFF_EBOX, res_id);
     if (!gff_read_chunk(RESOURCE_GFF_INDEX, &chunk, buf, 4096)) {
         return 0;
@@ -83,7 +87,7 @@ static int load_box_from_gff(const int res_id, sol_box_t *box) {
     box->base_width = ssi_box->frame.width;
     box->base_height = ssi_box->frame.height;
 
-    box->spr = sol_sprite_new(open_files[pal_idx].pals->palettes, 0, 0, 1.0, RESOURCE_GFF_INDEX, GFF_BMP, box->bmp_id);
+    box->spr = sol_sprite_new(open_files[pal_idx].pals->palettes, 0, 0, settings_zoom(), RESOURCE_GFF_INDEX, GFF_BMP, box->bmp_id);
 
     return 1;
 }
@@ -151,6 +155,7 @@ extern void sol_window_free_base(sol_window_t *win) {
     if (win->buttons) {
         for (int i = 0; i < win->num_buttons; i++) {
             sol_sprite_free(win->buttons[i].spr);
+            if (win->buttons[i].text) { free(win->buttons[i].text); }
         }
         free(win->buttons);
         win->buttons = NULL;
@@ -187,17 +192,34 @@ extern void sol_window_free_base(sol_window_t *win) {
     free(win);
 }
 
-extern void sol_window_set_pos(sol_window_t *win, const int x, const int y) {
-    if (!win) { return; }
+extern size_t sol_window_get_button(sol_window_t *win, const int x, const int y) {
+    if (!win) { return -1; }
 
     for (int i = 0; i < win->num_buttons; i++) {
-        sol_sprite_set_location(win->buttons[i].spr, win->buttons[i].offsetx + x, win->buttons[i].offsety + y);
+        sol_button_t *button = win->buttons + i;
+        //printf("x = %d, button[%d]->offsetx = %d\n", x, i, button->offsetx);
+        if (button->offsetx <= x && (button->offsetx + button->base_width) >= x
+            && button->offsety <= y && (button->offsety + button->base_height) >= y
+                ) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+extern void sol_window_set_pos(sol_window_t *win, const int x, const int y) {
+    if (!win) { return; }
+    const float zoom = settings_zoom();
+
+    for (int i = 0; i < win->num_buttons; i++) {
+        sol_sprite_set_location(win->buttons[i].spr, win->buttons[i].offsetx * zoom + x, win->buttons[i].offsety * zoom + y);
     }
     for (int i = 0; i < win->num_boxes; i++) {
-        sol_sprite_set_location(win->boxes[i].spr, win->boxes[i].offsetx + x, win->boxes[i].offsety + y);
+        sol_sprite_set_location(win->boxes[i].spr, win->boxes[i].offsetx * zoom + x, win->boxes[i].offsety * zoom + y);
     }
     for (int i = 0; i < win->num_underlays; i++) {
-        sol_sprite_set_location(win->underlays[i].spr, win->underlays[i].offsetx + x, win->underlays[i].offsety + y);
+        sol_sprite_set_location(win->underlays[i].spr, win->underlays[i].offsetx * zoom + x, win->underlays[i].offsety * zoom + y);
     }
 }
 
@@ -214,7 +236,19 @@ extern void sol_window_render_base(sol_window_t *win) {
 
     for (int i = 0; i < win->num_buttons; i++) {
         sol_sprite_render(win->buttons[i].spr);
+        if (win->buttons[i].text) {
+            sol_print_line_len(FONT_GREY, win->buttons[i].text,
+                sol_sprite_getx(win->buttons[i].spr) + 2 * settings_zoom(),
+                sol_sprite_gety(win->buttons[i].spr) + 2 * settings_zoom(),
+                32);
+        }
     }
+}
+
+extern void sol_button_set_text(sol_button_t *button, const char *text) {
+    if (!button) { return; }
+    if (button->text) { free(button->text); }
+    button->text = strdup(text);
 }
 
 static void load_frame_bmp(sol_frame_t *frame, int res_id) {
@@ -225,8 +259,9 @@ static void load_frame_bmp(sol_frame_t *frame, int res_id) {
     if (!frame) { return; }
 
     memset(frame, 0x0, sizeof(sol_frame_t));
+    frame->spr = SPRITE_ERROR;
     frame->bmp_id = res_id;
-    frame->spr = sol_sprite_new(open_files[pal_idx].pals->palettes, 0, 0, 1.0, RESOURCE_GFF_INDEX, GFF_BMP, frame->bmp_id);
+    frame->spr = sol_sprite_new(open_files[pal_idx].pals->palettes, 0, 0, settings_zoom(), RESOURCE_GFF_INDEX, GFF_BMP, frame->bmp_id);
     frame->base_width = sol_sprite_getw(frame->spr);
     frame->base_height = sol_sprite_geth(frame->spr);
 }
@@ -271,6 +306,10 @@ static void psi_gen_setup(sol_window_t *win) {
 
 static void sphere_gen_setup(sol_window_t *win) {
     add_underlay(win, 20087, 0, 0);
+}
+
+static void examine0_gen_setup(sol_window_t *win) {
+    add_underlay(win, 3020, 0, 0);
 }
 
 static void examine1_gen_setup(sol_window_t *win) {
@@ -358,7 +397,7 @@ static void apply_overlay(sol_window_t *win) {
         case 3009: save_menu_setup(win); break;
         case 3012: psi_gen_setup(win); break;
         case 3013: sphere_gen_setup(win); break;
-        case 3020: examine1_gen_setup(win); break;
+        case 3020: examine0_gen_setup(win); break;
         case 3024: save_delete_menu_setup(win); break;
         case 3500: /* IDK */ break;
         case 10500: game_menu_setup(win); break;

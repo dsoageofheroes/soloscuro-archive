@@ -112,6 +112,7 @@ static int set_gf(lua_State *l) {
 
 static int get_gf(lua_State *l) {
     lua_Integer id = luaL_checkinteger(l, 1);
+    //printf("get_gf(%lld) = %d\n", id, gpl_global_flags[id]);
     if (id < 0 || id >= MAX_GFLAGS) {
         printf("ERROR: " PRI_LI " is out of range for global flags!\n", id);
         exit(1);
@@ -161,6 +162,7 @@ static int get_gn(lua_State *l) {
         printf("ERROR: " PRI_LI " is out of range for global nums!\n", id);
         exit(1);
     }
+    debug("get gpl_globals_nums[" PRI_LI "] : " PRI_LI "\n", id, gpl_global_nums[id]);
     lua_pushinteger(l, gpl_global_nums[id]);
     return 1;
 }
@@ -256,7 +258,7 @@ static int get_gname(lua_State *l) {
         exit(1);
     }
     //printf("GNAME----------------------------------------------------->[" PRI_LI "] = %d\n", id, gpl_gnames[id]);
-    lua_pushnumber(l, gpl_gnames[id]);
+    lua_pushnumber(l, gpl_get_gname(id));
     return 1;
 }
 

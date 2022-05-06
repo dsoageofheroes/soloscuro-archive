@@ -120,60 +120,6 @@ extern sol_region_t* sol_region_manager_get_current() {
     return sol_regions[current_region - MAX_REGIONS];
 }
 
-// Deprecated API: Does not work!
-void ds_region_load_region_from_save(const int id, const int region_id) {
-    char gff_name[32];
-    char *buf = NULL;
-    //gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes;
-
-    snprintf(gff_name, 32, "rgn%x.gff", id);
-    int gff_index = gff_find_index(gff_name);
-    if (gff_index < 0 ) { return; }
-
-    //dsl_sol_region_t *reg = NULL;
-    //entity_t *player = player_get_active();
-
-    gff_chunk_header_t chunk = gff_find_chunk_header(id, GFF_ROBJ, region_id);
-    //reg = dsl_load_region(gff_index);
-
-    //if (gff_read_chunk(id, &chunk, reg->list, chunk.length) < chunk.length) {
-        //printf("ERROR READING!\n");
-        //return ;
-    //}
-
-    chunk = gff_find_chunk_header(id, GFF_RDAT, region_id);
-    buf = malloc(chunk.length);
-    if (!gff_read_chunk(id, &chunk, buf, chunk.length)) {
-        printf("Error loading file.\n");
-        exit(1);
-    }
-    //memcpy(reg->flags, buf, sizeof(reg->flags));
-    //buf += sizeof(reg->flags);
-    //memcpy(&(reg->cr.hunt), &(((combat_sol_region_t*)buf)->hunt), sizeof(reg->cr.hunt));
-    //buf -= sizeof(reg->flags);
-    free(buf);
-
-    chunk = gff_find_chunk_header(id, GFF_GDAT, 99);
-    buf = malloc(chunk.length);
-    if (!gff_read_chunk(id, &chunk, buf, chunk.length)) {
-        printf("Error loading file.\n");
-        exit(1);
-    }
-    gpl_deserialize_globals(buf);
-    free(buf);
-
-    chunk = gff_find_chunk_header(id, GFF_GDAT, region_id);
-    buf = malloc(chunk.length);
-    if (!gff_read_chunk(id, &chunk, buf, chunk.length)) {
-        printf("Error loading file.\n");
-        exit(1);
-    }
-    gpl_deserialize_locals(buf);
-    free(buf);
-
-    //ds_regions[region_id] = reg;
-}
-
 extern int sol_region_manager_add_region(sol_region_t *region) {
     int pos = 0;
     for (pos = 0; pos < MAX_REGIONS && sol_regions[pos]; pos++) { ; }

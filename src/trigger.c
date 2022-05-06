@@ -13,9 +13,9 @@
 // It looks like noorders should be triggered:
 // 1) On entry of area (unconfirmed)
 // 2) When the object attached to it is moved (animated.) (Unconfirmed.)
-// 3) When character moves off of it and it is passive.  (Unconfirmed.)
+// 3) When character moves off of it via y-axis.  (Unconfirmed.)
 
-static int trigger_noorders = 0, lposx, lposy;
+static int trigger_noorders = 0;
 
 typedef struct trigger_node_s {
     union {
@@ -38,7 +38,6 @@ static trigger_node_t *los_list;
 extern void sol_trigger_init() {
     attack_list = noorders_list = use_list = look_list = talkto_list = usewith_list = tile_list = box_list = los_list = NULL;
     sol_trigger_noorders_disable();
-    lposx = lposy = -9999;
 }
 
 static void free_list(trigger_node_t *list) {
@@ -213,6 +212,21 @@ extern look_trigger_t sol_trigger_get_look(uint32_t obj) {
     return ret;
 }
 
+extern use_trigger_t sol_trigger_get_use(uint32_t obj) {
+    trigger_node_t *rover = use_list;
+    use_trigger_t ret;
+    ret.obj = 0;
+
+    while (rover) {
+        if (rover->use.obj == obj) {
+            return rover->use;
+        }
+        rover = rover->next;
+    }
+
+    return ret;
+}
+
 static void list_object_clear (trigger_node_t *list, const uint32_t obj, int (*cmp)(const trigger_node_t *, 
         const uint32_t)) {
     trigger_node_t *rover = list;
@@ -320,15 +334,6 @@ extern void sol_trigger_noorders(uint32_t x, uint32_t y) {
     }
 
     if (!found_door) { last_door_y = y; }
-    //dude_t *dude = sol_region_find_entity_by_id(sol_region_manager_get_current(), rover->noorders.obj);
-    dude_t *dude = sol_region_find_entity_by_id(sol_region_manager_get_current(), gpl_get_gname(GNAME_PASSIVE));
-    if (!dude) { return; }
-
-    if (on_object(dude, lposx, lposy) && !on_object(dude, x, y)) {
-        printf("NEED TO TRIGGER!\n");
-        sol_trigger_noorders_event();
-    }
-
     // This will have to be updated a lot... bleh...
     //printf("%d, %d\n", dude->mapx, dude->mapy);
     /*
@@ -337,31 +342,6 @@ extern void sol_trigger_noorders(uint32_t x, uint32_t y) {
         trigger_noorders = 0;
         sol_trigger_noorders_event();
         //printf("trigger\n");
-    }
-    */
-    lposx = x;
-    lposy = y;
-
-/*
-    while (rover) {
-        dude_t *dude = sol_region_find_entity_by_id(sol_region_manager_get_current(), rover->noorders.obj);
-        //printf("%d: player (%d, %d) vs (%d, %d) \n", rover->noorders.obj, x, y, robj->mapx, robj->mapy);
-        if (dude && rover->noorders.trigger_on_tile && (dude->mapx) == x && (dude->mapy) == y) {
-            rover->noorders.trigger_on_tile = 0;
-            rover->noorders.need_to_run = 1;
-        }
-        if (!rover->noorders.need_to_run) {
-            rover = rover->next;
-            continue;
-        }
-
-        rover->noorders.need_to_run = 0; // We are going to execute, so disable bit running again.
-
-        // Now execute.
-        debug("Noorders executing %d:%d\n", rover->noorders.file, rover->noorders.addr);
-        gpl_lua_execute_script(rover->noorders.file, rover->noorders.addr, 0);
-
-        rover = rover->next;
     }
     */
 }
@@ -563,19 +543,18 @@ extern void sol_write_triggers(FILE *file) {
 extern void sol_trigger_noorders_event() {
     for(trigger_node_t *rover = noorders_list; rover; rover = rover->next) {
         //printf("checking noorders %d \n", rover->noorders.obj);
-        if (rover->noorders.obj == (uint32_t) gpl_get_gname(GNAME_PASSIVE)) {
+        //if (rover->noorders.obj == (uint32_t) gpl_get_gname(GNAME_PASSIVE)) {
             //printf("executing %d, %d\n", rover->noorders.file, rover->noorders.addr);
             gpl_lua_execute_script(rover->noorders.file, rover->noorders.addr, 0);
-        }
+        //}
     }
 }
 
 extern void sol_trigger_noorders_entity_check(entity_t *entity) {
     if (!entity) { return; }
     for(trigger_node_t *rover = noorders_list; rover; rover = rover->next) {
-        //printf("checking noorders %d \n", rover->noorders.obj);
         if (rover->noorders.obj == (uint32_t)entity->ds_id) {
-            printf("noorder_entity_check: executing %d, %d\n", rover->noorders.file, rover->noorders.addr);
+            //printf("noorder_entity_check: executing %d, %d\n", rover->noorders.file, rover->noorders.addr);
             gpl_lua_execute_script(rover->noorders.file, rover->noorders.addr, 0);
         }
     }
@@ -652,10 +631,17 @@ extern void sol_trigger_los_check(uint32_t obj, uint32_t file, uint32_t addr, ui
 }
 
 extern void sol_trigger_tick() {
+    dude_t *player = sol_player_get_active();
+    static int32_t lposx = 9999, lposy = 9999;
     for(trigger_node_t *rover = noorders_list; rover; rover = rover->next) {
         //printf("sol_trigger_tick: %d,  %d\n", rover->noorders.obj, rover->noorders.trigger_on_tile);
-        //if (rover->noorders.obj == obj) {
-            //rover->noorders.need_to_run = 1;
-        //}
+        dude_t *dude = sol_region_find_entity_by_id(sol_region_manager_get_current(), rover->noorders.obj);
+        //if (on_object(dude, lposx, lposy) && !on_object(dude, player->mapx, player->mapy)) {
+        if (player && dude && dude->mapy == lposy && dude->mapy != player->mapy) {
+            printf("need to trigger: %d\n", rover->noorders.obj);
+            gpl_lua_execute_script(rover->noorders.file, rover->noorders.addr, 0);
+        }
     }
+    lposx = player->mapx;
+    lposy = player->mapy;
 }

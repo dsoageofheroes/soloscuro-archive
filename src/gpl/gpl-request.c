@@ -642,6 +642,8 @@ static int16_t request_to_do(int16_t name, int16_t rectype, int (*request_proc)(
 }
 
 static int req_animation(int16_t object, long notused1, long notused2) {
+    (void)notused1;
+    (void)notused2;
     dude_t *dude = sol_region_find_entity_by_id(sol_region_manager_get_current(), object);
     gpl_set_gname(GNAME_PASSIVE, object);
 
