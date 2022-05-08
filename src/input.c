@@ -66,6 +66,9 @@ extern void sol_key_up(const sol_key_e key) {
         case SOLK_d:      yscroll = 0; break;
         case SOLK_s:      xscroll = 0; break;
         case SOLK_f:      xscroll = 0; break;
+        case SOLK_o:
+            sol_trigger_talk_click(-89);
+            break;
         default: break;
     }
 }

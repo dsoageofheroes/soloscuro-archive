@@ -72,19 +72,17 @@ const char *button_texts[] = {
 
 static int examine_handle_mouse_movement(const uint32_t x, const uint32_t y) {
     static size_t last_button = -1;
-    int           mx = (x - winx) / settings_zoom();
-    int           my = (y - winy) / settings_zoom();
-    size_t        button = sol_window_get_button(win, mx, my);
+    size_t        button = sol_window_get_button(win, x, y);
 
     if (button != last_button) {
         //printf("button = %zu, last_button = %zu\n", button, last_button);
         if (last_button < win->num_buttons && sol_sprite_get_frame(win->buttons[last_button].spr) != 2) {
             sol_sprite_set_frame_keep_loc(win->buttons[last_button].spr, 0);
-            sol_button_set_text(win->buttons + 3, "");
+            sol_button_set_text(win->buttons + 3, "", FONT_GREY);
         }
         if (button < win->num_buttons && sol_sprite_get_frame(win->buttons[button].spr) != 2) {
             sol_sprite_set_frame_keep_loc(win->buttons[button].spr, 1);
-            sol_button_set_text(win->buttons + 3, button_texts[button]);
+            sol_button_set_text(win->buttons + 3, button_texts[button], FONT_GREY);
         }
     }
 
@@ -101,9 +99,7 @@ static int examine_handle_mouse_down(const uint32_t button, const uint32_t x, co
 
 static int examine_handle_mouse_up(const uint32_t _button, const uint32_t x, const uint32_t y) {
     (void)        _button;
-    int           mx = (x - winx) / settings_zoom();
-    int           my = (y - winy) / settings_zoom();
-    size_t        button = sol_window_get_button(win, mx, my);
+    size_t        button = sol_window_get_button(win, x, y);
     int           id = entity_to_examine->ds_id;
 
     switch (button) {
@@ -129,6 +125,7 @@ static int examine_handle_mouse_up(const uint32_t _button, const uint32_t x, con
 static void examine_free() {
     sol_window_free_base(win);
     sol_sprite_free(bar);
+    entity_to_examine = NULL;
     bar = SPRITE_ERROR;
 }
 

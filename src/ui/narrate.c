@@ -9,6 +9,7 @@
 #include "gpl-manager.h"
 #include "gameloop.h"
 #include "settings.h"
+#include "ssi-gui.h"
 #include <string.h>
 #include <ctype.h>
 
@@ -19,44 +20,62 @@
 #define MAX_MENUS (16)
 #define MAX_LINE (128)
 
-static size_t menu_pos = 0, last_option = 0, menu_highlight = -1;
+static size_t menu_pos = 0, last_option = 0, menu_start_pos = 0;
 static uint32_t menu_addrs[MAX_MENUS];
-static char menu_text[MAX_MENUS][MAX_LINE];
 static sol_sprite_t background;
-static uint32_t xoffset, yoffset;
 static uint16_t border;
 
 static int display = 0;
 static int display_menu = 0;
-static int end_received = 0, close_received = 0;
 static uint32_t portrait_index = 0;
 static char narrate_text[MAX_TEXT];
 static size_t text_pos = 0;
 static char menu_options[MAX_OPTIONS][MAX_LINE];
+static sol_window_t *menu = NULL;
+static uint32_t      winx = 0, winy = 0;
 
 static void clear() {
-    int i;
-    display = 0;
-    display_menu = 0;
-    text_pos = 0;
-    end_received = 0;
-    close_received = 0;
-    menu_pos = 0;
-    for (i = 0; i < MAX_OPTIONS; i++) {
+    display = display_menu = 0;
+    text_pos = menu_start_pos = menu_pos = 0;
+
+    for (int i = 0; i < MAX_OPTIONS; i++) {
         menu_options[i][0] = '\0';
     }
+    for (int i = 1; i < 7; i++) {
+        sol_button_set_text(menu->buttons + i, menu_options[i], FONT_YELLOW);
+    }
+}
+
+static void update_menu(int force) {
+    if (!force && (!display_menu || !sol_button_is_empty(menu->buttons + 1))) { return; }
+
+    for (size_t i = 1; i < 6; i++) {
+        sol_button_set_text(menu->buttons + i, menu_options[menu_start_pos + i], FONT_YELLOW);
+    }
+    
+    sol_button_set_enabled(menu->buttons + 6, menu_start_pos != 0);
+    sol_button_set_enabled(menu->buttons + 0, (menu_start_pos + 6) < menu_pos);
+}
+
+static void scroll_menu(int diff) {
+    if ((diff + (ssize_t) menu_start_pos) < 0
+        || (menu_start_pos + 5 + diff) >= menu_pos) {
+        return;
+    }
+
+    menu_start_pos += diff;
+    update_menu(1); // force the update
 }
 
 int narrate_is_open() { return display; }
 
 void narrate_init(const uint32_t x, const uint32_t y) {
     const float zoom = settings_zoom();
-    xoffset = 0;//x / zoom;
-    yoffset = 0;//y / zoom;
+    winx = x; winy = y;
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
 
     sol_portrait_load();
-    background = sol_sprite_new(pal, 0 + xoffset, 0 + yoffset, zoom,
+    background = sol_sprite_new(pal, 0, 0, zoom,
             RESOURCE_GFF_INDEX, GFF_BMP, 3007);
     sol_sprite_set_location(background,
         sol_sprite_getx(background) + (settings_screen_width() - sol_sprite_getw(background)) / 2,
@@ -67,6 +86,8 @@ void narrate_init(const uint32_t x, const uint32_t y) {
             sol_sprite_gety(background) + 5 * zoom);
     sol_sprite_set_alpha(background, 192);
     display = 0; // start off as off
+    menu = sol_window_from_gff(3008);
+    sol_window_set_pos(menu, winx, settings_screen_height() - (57 * zoom));
 }
 
 void print_text() {
@@ -84,38 +105,6 @@ void print_text() {
     }
 }
 
-void print_menu() {
-    const float zoom = settings_zoom();
-    size_t x = 140, y = settings_screen_height() - sol_sprite_geth(background) / zoom / zoom;
-    uint32_t sx = sol_sprite_getx(background);
-    uint32_t sy = sol_sprite_gety(background);
-
-    //printf("%d %d\n", settings_screen_height(), sol_sprite_geth(background));
-
-    sol_sprite_set_location(background, sx, y - 5);
-    sol_sprite_render(background);
-
-    if (sol_sprite_gety(background) < sol_mouse_gety()
-        && sol_sprite_getx(background) < sol_mouse_getx()
-        && sol_sprite_getx(background) + sol_sprite_getw(background) > sol_mouse_getx()
-        ) {
-        menu_highlight = (sol_mouse_gety() - sol_sprite_gety(background)) / (10 * zoom);
-    } else {
-        menu_highlight = -1;
-    }
-
-    for (int i = 0; i < MAX_OPTIONS; i++) {
-        if (i == (int)menu_highlight) {
-            sol_print_line_len(FONT_YELLOW_BRIGHT, menu_options[i], x, y, 0x7FFFFFFF);
-        } else {
-            sol_print_line_len(FONT_YELLOW, menu_options[i], x, y, 0x7FFFFFFF);
-        }
-        y += 20;
-    }
-
-    sol_sprite_set_location(background, sx, sy);
-}
-
 void sol_ui_narrate_clear() {
     clear();
 }
@@ -126,14 +115,19 @@ void sol_ui_narrate_close() {
 }
 
 void narrate_render(void *data) {
+    (void) data;
+    update_menu(0);
+    if (display_menu) {
+        sol_window_render_base(menu);
+        sol_print_line_len(FONT_YELLOW, menu_options[0], winx + 3 * settings_zoom(), 
+            sol_sprite_gety(menu->underlays[0].spr) + 3 * settings_zoom(), 0x7FFFFFFF);
+    }
+
     if (display) {
         sol_sprite_render(background);
         sol_sprite_render(border);
         sol_portrait_display(portrait_index, sol_sprite_getx(border) + 8 * settings_zoom(), 12 * settings_zoom());
         print_text();
-        if (display_menu) {
-            print_menu();
-        }
     }
 }
 
@@ -158,7 +152,7 @@ static int add_text(const char *to_add) {
 }
 
 int8_t sol_ui_narrate_open(int16_t action, const char *text, int16_t index) {
-    printf("narrate_open: %d: '%s', %d, exit = %d\n", action, text, index, gpl_in_exit());
+    //printf("narrate_open: %d: '%s', %d, exit = %d\n", action, text, index, gpl_in_exit());
     if (!strcmp(text, "CLOSE")) {
         printf("****************************NEED TO CLOSE!\n");
     }
@@ -193,7 +187,18 @@ int8_t sol_ui_narrate_open(int16_t action, const char *text, int16_t index) {
 }
 
 int narrate_handle_mouse_movement(const uint32_t x, const uint32_t y) {
-    (void)x;(void)y;
+    size_t button = sol_window_get_button(menu, x, y);
+    static size_t last_button = 9999;
+
+    if (last_button <= 5 && last_button != button) {
+        sol_button_set_font(menu->buttons + last_button, FONT_YELLOW);
+    }
+
+    if (button >= 1 && button <= 5) {
+        sol_button_set_font(menu->buttons + button, FONT_YELLOW_BRIGHT);
+        last_button = button;
+    }
+
     return display; // zero means I did not handle the mouse, so another window may.
 }
 
@@ -202,15 +207,21 @@ int narrate_handle_mouse_down(const uint32_t button, const uint32_t x, const uin
     return display;
 }
 
-int narrate_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
-    (void)button;(void)x;(void)y;
+int narrate_handle_mouse_up(const uint32_t _button, const uint32_t x, const uint32_t y) {
+    (void)_button;
     int option;
+    size_t button = sol_window_get_button(menu, x, y);
 
-    if (display_menu && menu_highlight >= 0) {
-        option = narrate_select_menu(menu_highlight);
-        if (gpl_in_exit() || option >= 0) {
-            sol_game_loop_signal(WAIT_NARRATE_SELECT, option);
-        }
+    if (display_menu && button >= 1 && button <= 5) {
+        option = narrate_select_menu(button);
+    }
+
+    if (button == 0) { // UP
+        scroll_menu(1);
+    }
+
+    if (button == 6) { // DOWN
+        scroll_menu(-1);
     }
 
     return display; // zero means I did not handle the mouse click, so another window may.
@@ -219,7 +230,6 @@ int narrate_handle_mouse_up(const uint32_t button, const uint32_t x, const uint3
 int narrate_handle_key_down(const enum entity_action_e action) {
     if (!display) { return 0; }
 
-    //printf("narrate action: %d\n", action);
     switch (action) {
         case EA_ACTIVATE:
             if (sol_game_loop_is_waiting_for(WAIT_NARRATE_CONTINUE)) {
@@ -234,15 +244,17 @@ int narrate_handle_key_down(const enum entity_action_e action) {
 void narrate_free() {
     sol_sprite_free(background);
     sol_sprite_free(border);
+    sol_window_free_base(menu);
 }
 
 extern int sol_ui_narrate_ask_yes_no() {
-    narrate_open(NAR_ADD_MENU, "Yes", 0);
-    narrate_open(NAR_ADD_MENU, "No", 1);
+    narrate_open(NAR_ADD_MENU, "", 0);
+    narrate_open(NAR_ADD_MENU, "  Yes", 1);
+    narrate_open(NAR_ADD_MENU, "  No", 2);
     sol_game_loop_wait_for_signal(WAIT_NARRATE_SELECT);
 
     sol_ui_narrate_close();
-    return last_option ? 0 : 1;
+    return (last_option == 2) ? 0 : 1;
 }
 
 extern int8_t narrate_open(int16_t action, const char *text, int16_t index) {
@@ -261,7 +273,7 @@ extern int8_t narrate_open(int16_t action, const char *text, int16_t index) {
     sol_ui_narrate_open(action, text, index);
     switch(action) {
         case NAR_ADD_MENU:
-            strncpy(menu_text[menu_pos], text, MAX_LINE);
+            strncpy(menu_options[menu_pos], text, MAX_LINE);
             menu_addrs[menu_pos++] = index;
             //warn("I need to add_menu with index %d, text = '%s'\n", index, text);
             break;
@@ -286,18 +298,21 @@ extern int8_t narrate_open(int16_t action, const char *text, int16_t index) {
     return 0;
 }
 
-static int option_is_exit(const int option) {
+static int option_is_exit(const uint32_t option) {
     if (option >= menu_pos || option < 0) { return 0; }
-    if (strncmp("Goodbye.", menu_text[option], 8) == 0) { return 1; }
-    if (strncmp("END", menu_text[option], 3) == 0) { return 1; }
-    if (strncmp("CLOSE", menu_text[option], 5) == 0) { return 1; }
+    if (strncmp("Goodbye.", menu_options[option], 8) == 0) { return 1; }
+    if (strncmp("END", menu_options[option], 3) == 0) { return 1; }
+    if (strncmp("CLOSE", menu_options[option], 5) == 0) { return 1; }
     return 0;
 }
 
-extern int narrate_select_menu(int option) {
+extern int narrate_select_menu(uint32_t option) {
+    option += menu_start_pos;
+
     int accum = !option_is_exit(option);
     char buf[1024];
 
+    printf("menu_select: %d\n", option);
     last_option = option;
     if (option >= menu_pos || option < 0) {
         error("select_menu: Menu option %d selected, but only (0 - " PRI_SIZET ") available!\n", option, menu_pos - 1);
@@ -311,7 +326,25 @@ extern int narrate_select_menu(int option) {
         sol_game_loop_signal(WAIT_NARRATE_SELECT, option);
         gpl_execute_string(buf);
     }
+    if (gpl_in_exit() || option >= 0) {
+        sol_game_loop_signal(WAIT_NARRATE_SELECT, option);
+    }
     return accum;
+}
+
+static int narrate_key_press (const sol_key_e e) {
+    if (!display_menu) { return 0; }
+
+    switch(e) {
+        case SOLK_1: narrate_select_menu(1); break;
+        case SOLK_2: narrate_select_menu(2); break;
+        case SOLK_3: narrate_select_menu(3); break;
+        case SOLK_4: narrate_select_menu(4); break;
+        case SOLK_5: narrate_select_menu(5); break;
+        default: break;
+    }
+
+    return 1;
 }
 
 sol_wops_t narrate_window = {
@@ -321,6 +354,7 @@ sol_wops_t narrate_window = {
     .mouse_movement = narrate_handle_mouse_movement,
     .mouse_down = narrate_handle_mouse_down,
     .key_down = narrate_handle_key_down,
+    .key_press = narrate_key_press,
     .mouse_up = narrate_handle_mouse_up,
     .grey_out_map = 0,
     .data = NULL

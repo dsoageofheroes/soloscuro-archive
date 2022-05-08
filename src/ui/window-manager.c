@@ -168,6 +168,15 @@ extern int sol_window_handle_key_down(const enum entity_action_e action) {
     return 0;
 }
 
+extern int sol_window_handle_key_press(const enum sol_key_e e) {
+    for (int i = MAX_SCREENS-1; i >= 0; i--) {
+        if (windows[i].key_press && windows[i].key_press(e)) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 extern void sol_window_handle_mouse_up(const sol_mouse_button_t button, const uint32_t x, const uint32_t y) {
     for (int i = MAX_SCREENS-1; i >= 0; i--) {
         if (windows[i].mouse_up && windows[i].mouse_up(button, x, y)) {

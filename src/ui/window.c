@@ -192,15 +192,16 @@ extern void sol_window_free_base(sol_window_t *win) {
     free(win);
 }
 
-extern size_t sol_window_get_button(sol_window_t *win, const int x, const int y) {
+extern size_t sol_window_get_button(sol_window_t *win, const uint32_t x, const uint32_t y) {
     if (!win) { return -1; }
 
     for (int i = 0; i < win->num_buttons; i++) {
-        sol_button_t *button = win->buttons + i;
-        //printf("x = %d, button[%d]->offsetx = %d\n", x, i, button->offsetx);
-        if (button->offsetx <= x && (button->offsetx + button->base_width) >= x
-            && button->offsety <= y && (button->offsety + button->base_height) >= y
-                ) {
+        uint32_t sx = sol_sprite_getx(win->buttons[i].spr);
+        uint32_t sy = sol_sprite_gety(win->buttons[i].spr);
+        uint32_t sw = sol_sprite_getw(win->buttons[i].spr);
+        uint32_t sh = sol_sprite_geth(win->buttons[i].spr);
+        //printf("x = %d, @(%d, %d) (%d x %d)\n", x, sx, sy, sw, sh);
+        if (sx <= x && (sx + sw) >= x && sy <= y && (sy + sh) >= y) {
             return i;
         }
     }
@@ -235,9 +236,15 @@ extern void sol_window_render_base(sol_window_t *win) {
     }
 
     for (int i = 0; i < win->num_buttons; i++) {
+        if (win->buttons[i].disabled) { continue; }
         sol_sprite_render(win->buttons[i].spr);
         if (win->buttons[i].text) {
-            sol_print_line_len(FONT_GREY, win->buttons[i].text,
+            if (i == 0) { printf("%d:'%s' (%d x %d) %d\n", i, win->buttons[i].text,
+                sol_sprite_getx(win->buttons[i].spr),
+                sol_sprite_gety(win->buttons[i].spr),
+                win->buttons[i].offsetx
+                ); }
+            sol_print_line_len(win->buttons[i].font, win->buttons[i].text,
                 sol_sprite_getx(win->buttons[i].spr) + 2 * settings_zoom(),
                 sol_sprite_gety(win->buttons[i].spr) + 2 * settings_zoom(),
                 32);
@@ -245,10 +252,25 @@ extern void sol_window_render_base(sol_window_t *win) {
     }
 }
 
-extern void sol_button_set_text(sol_button_t *button, const char *text) {
+extern void sol_button_set_font(sol_button_t *button, const sol_font_t font) {
+    if (!button) { return; }
+    button->font = font;
+}
+
+extern void sol_button_set_text(sol_button_t *button, const char *text, const sol_font_t font) {
     if (!button) { return; }
     if (button->text) { free(button->text); }
     button->text = strdup(text);
+    sol_button_set_font(button, font);
+}
+
+extern int sol_button_is_empty(sol_button_t *button) {
+    return (!button || !button->text || !button->text[0]) ? 1 : 0;
+}
+
+extern void sol_button_set_enabled(sol_button_t *button, const int val) {
+    if (!button) { return; }
+    button->disabled = !val;
 }
 
 static void load_frame_bmp(sol_frame_t *frame, int res_id) {
@@ -285,6 +307,8 @@ static void narrate_top_setup(sol_window_t *win) {
 }
 
 static void narrate_bottom_setup(sol_window_t *win) {
+    add_underlay(win, 3007, 0, 0);
+    sol_sprite_set_alpha(win->underlays[0].spr, 128);
     sol_sprite_set_alpha(win->buttons[1].spr, 128);
     sol_sprite_set_alpha(win->buttons[2].spr, 128);
     sol_sprite_set_alpha(win->buttons[3].spr, 128);

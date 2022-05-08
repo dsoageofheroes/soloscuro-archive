@@ -105,6 +105,8 @@ typedef struct sol_button_s {
     uint16_t     base_width, base_height;
     uint16_t     offsetx, offsety;
     char        *text;
+    sol_font_t   font;
+    int          disabled;
     sol_sprite_t spr;
 } sol_button_t;
 
@@ -144,8 +146,11 @@ extern void          sol_window_free_base(sol_window_t *win);
 
 extern void          sol_window_set_pos(sol_window_t *win, const int x, const int y);
 extern void          sol_window_render_base(sol_window_t *win);
-extern size_t        sol_window_get_button(sol_window_t *win, const int x, const int y);
+extern size_t        sol_window_get_button(sol_window_t *win, const uint32_t x, const uint32_t y);
 
-extern void          sol_button_set_text(sol_button_t *button, const char *text);
+extern void          sol_button_set_text(sol_button_t *button, const char *text, const sol_font_t font);
+extern void          sol_button_set_font(sol_button_t *button, const sol_font_t font);
+extern int           sol_button_is_empty(sol_button_t *button);
+extern void          sol_button_set_enabled(sol_button_t *button, const int val);
 
 #endif

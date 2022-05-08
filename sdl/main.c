@@ -130,6 +130,7 @@ void handle_input() {
                 if (ignore_repeat && event.key.repeat != 0) { break; }
                 if (textbox_handle_keyup(textbox, event.key.keysym)) { return; }
                 if (sol_lua_keyup(event.key.keysym.sym)) { break; }
+                if (sol_window_handle_key_press(keys[event.key.keysym.sym & 0xFF])) { return; }
                 sol_key_up(keys[event.key.keysym.sym & 0xFF]);
                 break;
             case SDL_KEYDOWN:
