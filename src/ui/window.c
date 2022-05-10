@@ -303,17 +303,19 @@ static void main_menu_setup(sol_window_t *win) {
 }
 
 static void narrate_top_setup(sol_window_t *win) {
-    sol_sprite_set_alpha(win->boxes[0].spr, 128);
+    add_underlay(win, 3007, 0, 0);
+    sol_sprite_set_alpha(win->underlays[0].spr, 128);
+    sol_sprite_set_alpha(win->boxes[0].spr, 0);
 }
 
 static void narrate_bottom_setup(sol_window_t *win) {
     add_underlay(win, 3007, 0, 0);
     sol_sprite_set_alpha(win->underlays[0].spr, 128);
-    sol_sprite_set_alpha(win->buttons[1].spr, 128);
-    sol_sprite_set_alpha(win->buttons[2].spr, 128);
-    sol_sprite_set_alpha(win->buttons[3].spr, 128);
-    sol_sprite_set_alpha(win->buttons[4].spr, 128);
-    sol_sprite_set_alpha(win->buttons[5].spr, 128);
+    sol_sprite_set_alpha(win->buttons[1].spr, 0);
+    sol_sprite_set_alpha(win->buttons[2].spr, 0);
+    sol_sprite_set_alpha(win->buttons[3].spr, 0);
+    sol_sprite_set_alpha(win->buttons[4].spr, 0);
+    sol_sprite_set_alpha(win->buttons[5].spr, 0);
 }
 
 static void save_menu_setup(sol_window_t *win) {

@@ -22,8 +22,6 @@
 
 static size_t menu_pos = 0, last_option = 0, menu_start_pos = 0;
 static uint32_t menu_addrs[MAX_MENUS];
-static sol_sprite_t background;
-static uint16_t border;
 
 static int display = 0;
 static int display_menu = 0;
@@ -31,7 +29,7 @@ static uint32_t portrait_index = 0;
 static char narrate_text[MAX_TEXT];
 static size_t text_pos = 0;
 static char menu_options[MAX_OPTIONS][MAX_LINE];
-static sol_window_t *menu = NULL;
+static sol_window_t *menu = NULL, *narrate = NULL;
 static uint32_t      winx = 0, winy = 0;
 
 static void clear() {
@@ -72,20 +70,14 @@ int narrate_is_open() { return display; }
 void narrate_init(const uint32_t x, const uint32_t y) {
     const float zoom = settings_zoom();
     winx = x; winy = y;
-    gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
 
     sol_portrait_load();
-    background = sol_sprite_new(pal, 0, 0, zoom,
-            RESOURCE_GFF_INDEX, GFF_BMP, 3007);
-    sol_sprite_set_location(background,
-        sol_sprite_getx(background) + (settings_screen_width() - sol_sprite_getw(background)) / 2,
-        sol_sprite_gety(background));
-    border = sol_sprite_new(pal, 0, 0, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 12000);
-    sol_sprite_set_location(border,
-            sol_sprite_getx(background) + 5 * zoom,
-            sol_sprite_gety(background) + 5 * zoom);
-    sol_sprite_set_alpha(background, 192);
     display = 0; // start off as off
+    narrate = sol_window_from_gff(3007);
+    sol_window_set_pos(narrate, winx, 0);
+    sol_button_set_enabled(narrate->buttons + 2, 0);
+    sol_button_set_enabled(narrate->buttons + 1, 0);
+
     menu = sol_window_from_gff(3008);
     sol_window_set_pos(menu, winx, settings_screen_height() - (57 * zoom));
 }
@@ -124,9 +116,10 @@ void narrate_render(void *data) {
     }
 
     if (display) {
-        sol_sprite_render(background);
-        sol_sprite_render(border);
-        sol_portrait_display(portrait_index, sol_sprite_getx(border) + 8 * settings_zoom(), 12 * settings_zoom());
+        sol_window_render_base(narrate);
+        sol_portrait_display(portrait_index,
+            sol_sprite_getx(narrate->buttons[3].spr) + 8 * settings_zoom(),
+            sol_sprite_gety(narrate->buttons[3].spr) + 7 * settings_zoom());
         print_text();
     }
 }
@@ -152,10 +145,6 @@ static int add_text(const char *to_add) {
 }
 
 int8_t sol_ui_narrate_open(int16_t action, const char *text, int16_t index) {
-    //printf("narrate_open: %d: '%s', %d, exit = %d\n", action, text, index, gpl_in_exit());
-    if (!strcmp(text, "CLOSE")) {
-        printf("****************************NEED TO CLOSE!\n");
-    }
     display = 1; // by default we turn on display
     switch(action) {
         case NAR_ADD_MENU:
@@ -242,8 +231,6 @@ int narrate_handle_key_down(const enum entity_action_e action) {
 }
 
 void narrate_free() {
-    sol_sprite_free(background);
-    sol_sprite_free(border);
     sol_window_free_base(menu);
 }
 
