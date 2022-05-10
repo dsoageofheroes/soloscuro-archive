@@ -530,6 +530,7 @@ static int print_cmd() {
 
 static void gpl_lua_string_copy() {
     char buf[BUF_SIZE];
+    size_t pos = 0;
 
     gpl_lua_get_parameters(2);
     lprintf("var%d = \"%s\"\n", varnum++, (char*)lparams.params[1]);
@@ -539,7 +540,13 @@ static void gpl_lua_string_copy() {
         buf[strlen(buf) - 1] = '\0';
         lprintf("%s, var%d)\n", buf, varnum - 1);
     } else {
-        lprintf("--string_copy, unknown parameter '%s'\n", lparams.params[0]);
+        for (size_t i = 0; i < strlen(lparams.params[0]); i++) {
+            if (isdigit(lparams.params[0][i])) {
+                pos = i;
+                break;
+            }
+        }
+        lprintf("gpl.set_gstr(%d, \"%s\")\n", atoi(lparams.params[0] + pos), lparams.params[1]);
     }
 }
 
@@ -1996,7 +2003,8 @@ int gpl_lua_read_simple_num_var(char *buf, const size_t buf_size) {
             /*
             gpl_global_big_numptr = (int32_t*) gpl_global_strings[temps16];
             */
-            return snprintf(buf, buf_size, "gpl.get_gstr(%d)", temps16);
+            return snprintf(buf, buf_size, "\" .. gpl.get_gstr(%d) .. \"", temps16);
+            //return snprintf(buf, buf_size, "gpl.get_gstr(%d)", temps16);
             break;
         }
         case GPL_LSTRING: {

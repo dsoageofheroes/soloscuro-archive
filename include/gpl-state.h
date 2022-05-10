@@ -10,7 +10,7 @@ typedef enum gpl_gnum_e {
     GNAME_UNKNOWN2, // Y
     GNAME_UNKNOWN3, // Z
     GNAME_REGION,
-    GNAME_UNKNOWN5,
+    GNAME_UNKNOWN5, // Current player?
     GNAME_ACTIVE,
     GNAME_PASSIVE,
     GNAME_UNKNOWN8,

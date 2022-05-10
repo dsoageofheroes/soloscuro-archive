@@ -79,6 +79,6 @@ static char* read_compressed() {
 
 static char tempstr[1024];
 static char* introduce() {
-    sprintf(tempstr, "I'm %s\n", "<character name here.>");
+    sprintf(tempstr, "I'm \" .. gpl.get_active_name() .. \"");
     return tempstr;
 }

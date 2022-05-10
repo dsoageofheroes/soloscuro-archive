@@ -749,6 +749,16 @@ static int lua_play_sound(lua_State *l) {
     return 0;
 }
 
+static int lua_get_active_name(lua_State *l) {
+    entity_t *dude = sol_player_get_active();
+
+    lua_pushstring(l, (!dude || !dude->name)
+        ? "?"
+        : dude->name);
+
+    return 1;
+}
+
 static int gpl_set_other_check(lua_State *l) {
     error ("set_other_check not iplemented");
     //lua_Integer ds_id = luaL_checkinteger(l, 1);
@@ -836,6 +846,7 @@ static const struct luaL_Reg gpl_state_lib[] = {
     {"narrate_open", lua_narrate_open},
     {"narrate_show", lua_narrate_show},
     {"play_sound", lua_play_sound},
+    {"get_active_name", lua_get_active_name},
     {"debug", lua_debug},
     {NULL, NULL}
 } ;
