@@ -676,8 +676,8 @@ static int gpl_goxy1(lua_State *l) {
     lua_Integer y = luaL_checkinteger(l, 2);
     lua_Integer obj = luaL_checkinteger(l, 3);
 
-    //printf("%lld needs to go to (%lld, %lld)\n", obj, x, y);
     entity_t *dude = sol_region_find_entity_by_id(sol_region_manager_get_current(), obj);
+    printf("%lld needs to go to (%lld, %lld), currently (%d, %d)\n", obj, x, y, dude->mapx, dude->mapy);
     lua_pushboolean(l, sol_entity_go(dude, x, y));
 
     return 1;

@@ -1076,7 +1076,7 @@ extern void gpl_lua_print_string(void) {
 
 extern void gpl_lua_print_number(void) {
     gpl_lua_get_parameters(2);
-    lprintf("gpl.narrate_open(NAR_SHOW_TEXT, \"%s\", %s)\n",
+    lprintf("gpl.narrate_open(NAR_SHOW_TEXT, %s, %s)\n",
         lparams.params[1], lparams.params[0]);
 }
 
@@ -1527,11 +1527,9 @@ extern void gpl_lua_clearpic(void) {
 extern void gpl_lua_orelse(void) {
     char buf[BUF_SIZE];
     gpl_lua_read_number(buf, BUF_SIZE);
-    lprintf("--or else (%s)\n", buf);
-    //lua_exit("OR ELSE?");
-    //if (compared[comparePtr] == YES) {
-        //move_gpl_ptr(address);
-    //}
+    lua_depth--;
+    lprintf("else\n");
+    lua_depth++;
 }
 
 extern void gpl_lua_exit(void) {

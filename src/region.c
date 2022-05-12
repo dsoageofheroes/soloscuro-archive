@@ -281,14 +281,21 @@ static int move_entity(entity_t *entity, const int x, const int y) {
     xdiff = (xdiff < 0) ? -1 : (xdiff > 0) ? 1 : 0;
     ydiff = (ydiff < 0) ? -1 : (ydiff > 0) ? 1 : 0;
 
+    //printf("need to go to %d, %d @ (%d, %d)\n", x, y, entity->mapx, entity->mapy);
     if (sol_region_location_blocked(reg, posx + xdiff, posy + ydiff)
         ){
         if (!sol_region_location_blocked(reg, posx, posy + ydiff)) {
             xdiff = 0;
         } else if (!sol_region_location_blocked(reg, posx + xdiff, posy)) {
-            ydiff = 0;
+            // TODO: Hack, fix RMAP and then add BFS for go.
+            if (!sol_region_location_blocked(reg, posx + 1, posy + ydiff)) {
+                xdiff = 1;
+            } else {
+                ydiff = 0;
+            }
         } else {
             xdiff = ydiff = 0;
+            xdiff = 1;
         }
     }
 
