@@ -207,8 +207,8 @@ static int sdl_init(const int what) {
 }
 
 static void gui_init() {
-    xmappos = 560;
-    ymappos = 50;
+    xmappos = 0;
+    ymappos = 0;
     xmapdiff = ymapdiff = 0;
 
     set_keys();

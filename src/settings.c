@@ -10,6 +10,7 @@ static int      debug = 0;
 extern float settings_zoom() { return zoom; }
 extern uint16_t settings_screen_width() { return width; }
 extern uint16_t settings_screen_height() { return height; }
+extern void sol_settings_set_zoom(float val) { zoom = val; }
 
 extern float settings_set_zoom(const float _zoom) {
     if (zoom <= 0) { return zoom; }

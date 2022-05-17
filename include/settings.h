@@ -19,5 +19,6 @@ extern void            sol_debug(const char *file, const int line_num, const cha
 extern void            sol_set_debug(const int val);
 extern void            sol_set_lua_test(char passed, char *msg);
 extern sol_test_info_t sol_get_lua_test();
+extern void            sol_settings_set_zoom(float val);
 
 #endif

@@ -94,7 +94,7 @@ extern void sol_background_apply_alpha(const uint8_t alpha) {
     }
 }
 
-extern void sol_background_render() {
+extern void sol_background_render_box(const int32_t startx, const int32_t starty) {
     if (!tiles) { return; }
     const int stretch = settings_zoom();
     const uint32_t xoffset = sol_get_camerax();
@@ -103,18 +103,23 @@ extern void sol_background_render() {
     uint32_t tile_id = 0;
     SDL_Renderer *renderer = main_get_rend();
 
-    SDL_SetRenderDrawColor( renderer, 0x00, 0x00, 0x00, 0xFF );
-    SDL_RenderClear(renderer);
-
+    //printf("offset = (%d, %d)\n", xoffset, yoffset);
     for (int x = 0; x < 98; x++) {
         for (int y = 0; y < 128; y++) {
             tile_id = region->tiles[x][y];
-            if (tile_id >= 0) {
-               SDL_RenderCopy(renderer, tiles[tile_id], NULL, &tile_loc);
-               tile_loc.x += stretch * 16;
+            //printf("tile_loc.x = %d\n", tile_loc.x);
+            //if (tile_id >= 0) {
+            //if (tile_id >= 0 && tile_loc.x >= startx) {
+            if (tile_id >= 0 && tile_loc.x >= startx && tile_loc.y >= starty) {
+                SDL_RenderCopy(renderer, tiles[tile_id], NULL, &tile_loc);
             }
+            tile_loc.x += stretch * 16;
         }
         tile_loc.x = -xoffset;
         tile_loc.y += stretch * 16;
     }
+}
+
+extern void sol_background_render() {
+    sol_background_render_box(-16 * settings_zoom(), -16 * settings_zoom());
 }

@@ -1,5 +1,6 @@
 #include <SDL2/SDL.h>
 #include <stdio.h>
+#include "background.h"
 #include "map.h"
 #include "font.h"
 #include "narrate.h"
@@ -30,7 +31,7 @@ static gff_image_entry_t *cimg = NULL;
 static sol_window_t *sol_wind = NULL;
 static int cframe = 0;
 static double zoom = 1.0;
-static int mapx = 0, mapy = 0;
+static int mapx = 0, mapy = 0, change_region = 1;
 static int cobj = 0, max_objs = 0;
 
 static void browse_tick();
@@ -191,6 +192,7 @@ static void clear_state() {
     mapx = mapy = 0;
     cframe = 0;
     cobj = max_objs = 0;
+    change_region = 1;
 }
 
 static void move_frame_cursor(int amt) {
@@ -415,6 +417,7 @@ static void render_entry_apfm();
 static void render_entry_butn();
 
 static void render_entry() {
+    sol_settings_set_zoom(1.0);
     switch(gff_get_type_id(gff_idx, entry_idx)) {
         case GFF_TEXT: render_entry_text(); break;
         case GFF_MONR: render_entry_monr(); break;
@@ -929,83 +932,21 @@ static void render_entry_font() {
 static struct sol_region_s *region = NULL;;
 static void render_entry_rmap() {
     render_entry_header();
-    static char *cfile = NULL;
-    static int tiles_len;
-    static SDL_Texture **tiles = NULL;
-    uint32_t width, height;
-    unsigned char *data;
-    SDL_Surface* tile = NULL;
-    SDL_Rect loc;
 
-    if (cfile && cfile != open_files[gff_idx].filename) {
-        printf("Need to clean gpl_region_t!\n");
-        //SDL_DestroyTexture(tiles[0]);
-        for (int i = 0; i < tiles_len; i++) {
-            if (tiles[i]) {
-                SDL_DestroyTexture(tiles[i]);
-            }
-            tiles[i] = NULL;
-        }
-        tiles_len = 0;
-        if (tiles) {
-            free(tiles);
-            tiles = NULL;
-        }
-        cfile = NULL;
+    if (!sol_region_manager_get_current() || change_region) {
+        printf("-> %d\n", res_ids[res_idx]);
+        region = sol_region_manager_get_region(res_ids[res_idx], 1);
+        sol_region_manager_set_current(region);
+        sol_background_load_region(region);
+        change_region = 0;
     }
-
-    if (!cfile) {
-        cfile = open_files[gff_idx].filename;
-        if (!cfile) {
-            error("cfile is null!\n");
-            exit(1);
-        }
-        //printf("res_ids[%d] = %d\n", res_idx, res_ids[res_idx]);
-        region = sol_region_manager_get_region(res_ids[res_idx], 0);
-        tiles_len = region->num_tiles + 1;
-        tiles = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * (tiles_len));
-        memset(tiles, 0x0, sizeof(SDL_Texture*) * tiles_len);
-        for (uint32_t i = 0; i < region->num_tiles; i++) {
-            sol_region_get_tile(region, i, &width, &height, &data);
-
-            tile = SDL_CreateRGBSurfaceFrom(data, width, height, 32, 4*width, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
-            //if (region->ids[i] > (tiles_len)) {
-                //error ("region->ids[%d] is out of bounds!\n", i);
-                //exit(1);
-            //}
-            //tiles[region->ids[i]] = SDL_CreateTextureFromSurface(renderer, tile);
-            tiles[region->tile_ids[i]] = SDL_CreateTextureFromSurface(renderer, tile);
-            SDL_FreeSurface(tile);
-
-            free(data);
-        }
-        unsigned int *gmap_ids = gff_get_id_list(region->gff_file, GFF_GMAP);
-        gff_chunk_header_t chunk = gff_find_chunk_header(region->gff_file, GFF_GMAP, gmap_ids[0]);
-        if (!gff_read_chunk(region->gff_file, &chunk, region->flags, chunk.length)) {
-            error ("Unable to read GFF_GMAP chunk!\n");
-            exit(1);
-        }
-
-        free(gmap_ids);
-    }
-
-    loc.x = 320;
-    loc.y = 40;
-    loc.w = 16 * zoom;
-    loc.h = 16 * zoom;
-    if (mapx < 0) { mapx = 0; }
-    if (mapy < 0) { mapy = 0; }
-    if (mapx >= MAP_ROWS) { mapx = MAP_ROWS; }
-    if (mapy >= MAP_COLUMNS) { mapy = MAP_COLUMNS; }
-    for (int i = mapx; i < MAP_ROWS; i++) {
-        for (int j = mapy; j < MAP_COLUMNS; j++) {
-            size_t tile_id = region->tiles[i][j];
-            SDL_RenderCopy(renderer, tiles[tile_id], NULL, &loc);
-            loc.x += loc.w;
-        }
-        loc.y += loc.h;
-        loc.x = 320;
-    }
+    int xdiff = -sol_get_camerax();
+    xdiff -= 320 - (16 * mapy);
+    sol_camera_scrollx(xdiff);
+    int ydiff = -sol_get_cameray();
+    ydiff -= 48 - (16 * mapx);
+    sol_camera_scrolly(ydiff);
+    sol_background_render_box(320, 32);
 }
 
 static void render_entry_gmap() {
@@ -1021,15 +962,15 @@ static void render_entry_gmap() {
                 //SDL_SetRenderDrawColor(renderer, 0x00, 0xFF, 0x00, SDL_ALPHA_OPAQUE);
             } else { continue; }
             points[0].x = 320 + (j - mapy) * 16 * zoom;
-            points[0].y = 40  + (i - mapx) * 16 * zoom;
+            points[0].y = 48  + (i - mapx) * 16 * zoom;
             points[1].x = 320 + (j - mapy + 1) * 16 * zoom;
-            points[1].y = 40  + (i - mapx) * 16 * zoom;
+            points[1].y = 48  + (i - mapx) * 16 * zoom;
             points[2].x = 320 + (j - mapy + 1) * 16 * zoom;
-            points[2].y = 40  + (i - mapx + 1) * 16 * zoom;
+            points[2].y = 48  + (i - mapx + 1) * 16 * zoom;
             points[3].x = 320 + (j - mapy) * 16 * zoom;
-            points[3].y = 40  + (i - mapx + 1) * 16 * zoom;
+            points[3].y = 48  + (i - mapx + 1) * 16 * zoom;
             points[4].x = 320 + (j - mapy) * 16 * zoom;
-            points[4].y = 40  + (i - mapx) * 16 * zoom;
+            points[4].y = 48  + (i - mapx) * 16 * zoom;
             SDL_RenderDrawLines(renderer, points, 5);
         }
     }
