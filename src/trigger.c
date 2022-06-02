@@ -2,6 +2,7 @@
 #include "gpl-manager.h"
 #include "gpl-state.h"
 #include "region.h"
+#include "annotations.h"
 #include "region-manager.h"
 #include "replay.h"
 #include "trigger.h"
@@ -411,6 +412,14 @@ extern void sol_trigger_box_check(uint32_t x, uint32_t y) {
         }
         prev = rover;
         rover = rover->next;
+    }
+}
+
+extern void sol_trigger_use(uint32_t obj) {
+    use_trigger_t ut = sol_trigger_get_use(obj);
+    if (!gpl_lua_execute_script(ut.file, ut.addr, 0)) {
+        // couldn't execute, lets try annotations.
+        sol_annotations_call_func(ut.file, ut.addr, obj);
     }
 }
 

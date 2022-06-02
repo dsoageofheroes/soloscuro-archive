@@ -284,12 +284,6 @@ entity_t* entity_create_from_etab(gff_map_object_t *entry_table, uint32_t id) {
     dude->anim.yoffset = -disk_object.yoffset  - disk_object.zpos + ((gm->ypos)) % 16;
     dude->mapz = gm->zpos;
 
-    printf("ETAB: %u\n", id);
-    if (id == 89) {
-        printf("offset = (%d, %d)\n", disk_object.xoffset, disk_object.yoffset);
-        exit(1);
-    }
-
     return dude;
 }
 

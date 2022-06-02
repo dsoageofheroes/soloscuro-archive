@@ -1,4 +1,5 @@
 set(SOLOSCURO_SRCS
+    annotations/annotations.c
     ssi/ssi-scmd.c
     ssi/ds-load-save.c
     ssi/ssi-item.c

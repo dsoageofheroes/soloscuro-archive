@@ -25,7 +25,7 @@ static void update_ui() {
 
         if (entity_to_examine->name == NULL) {
             entity_t* t = entity_create_from_objex(entity_to_examine->ds_id);
-            entity_to_examine->name = strdup(t->name);
+            entity_to_examine->name = strdup(t->name ? t->name : "");
             entity_to_examine->class[0].level = t->class[0].level;
             t->ds_id = 9999;
             entity_free(t);
@@ -41,11 +41,13 @@ static void update_ui() {
 
 // returns if examine window should pop up
 extern int sol_examine_entity(entity_t *dude) {
-    if (!(sol_trigger_get_talkto(dude->ds_id).obj
-        || sol_trigger_get_look(dude->ds_id).obj
-        || sol_trigger_get_use(dude->ds_id).obj)) {
-        return 0;
-    }
+    int amt = 0;
+
+    amt += sol_trigger_get_talkto(dude->ds_id).obj ? 1 : 0;
+    amt += sol_trigger_get_look(dude->ds_id).obj ? 1 : 0;
+    amt += sol_trigger_get_use(dude->ds_id).obj ? 1 : 0;
+
+    if (amt < 1) { return 0; }
 
     entity_to_examine = dude;
     update_ui();
@@ -111,7 +113,7 @@ static int examine_handle_mouse_up(const uint32_t _button, const uint32_t x, con
         case 1: // USE
             if (sol_sprite_get_frame(win->buttons[button].spr) == 2) { break; }
             sol_window_pop();
-            //sol_trigger_use_click(id);
+            sol_trigger_use(id);
             break;
         case 2: // TALK
             if (sol_sprite_get_frame(win->buttons[button].spr) == 2) { break; }

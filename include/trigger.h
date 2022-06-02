@@ -66,6 +66,7 @@ extern int              sol_trigger_add_los(uint32_t obj, uint32_t file, uint32_
 extern talkto_trigger_t sol_trigger_get_talkto(uint32_t obj);
 extern look_trigger_t   sol_trigger_get_look(uint32_t obj);
 extern use_trigger_t    sol_trigger_get_use(uint32_t obj);
+extern void             sol_trigger_use(uint32_t obj);
 extern void             sol_trigger_object_clear(const uint32_t obj);
 extern void             sol_trigger_enable_object(const uint32_t obj);
 extern void             sol_trigger_noorders(uint32_t x, uint32_t y);

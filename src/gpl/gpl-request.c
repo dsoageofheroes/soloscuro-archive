@@ -654,6 +654,7 @@ static int req_animation(int16_t object, long notused1, long notused2) {
         }
 
         if (dude->anim.pos == SCMD_MAX_SIZE) { dude->anim.pos = 0; }
+        //printf("->%d\n", dude->anim.pos);
         //sol_trigger_noorders_enable();
         port_entity_update_scmd(dude);
     } else {
