@@ -18,7 +18,9 @@ jobs:
     - name: build linux
       run: make
     - name: create release
-      run: make install
+      run: |
+        make install
+        chmod +x release/linux/soloscuro
     - name: Linux Archive
       uses: actions/upload-artifact@v3
       with:
