@@ -20,9 +20,11 @@ jobs:
     - name: create release
       run: |
         make install
+    - name: Linux Tar Archive
+      run: tar -cvf soloscuro.tar release/linux/*
     - name: Linux Archive
       uses: actions/upload-artifact@v3
       with:
         name: linux-debug-build
-        path: release/linux/*
+        path: soloscuro.tar
     

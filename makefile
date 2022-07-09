@@ -36,4 +36,3 @@ build/Makefile:
 install:
 	cd build ; cmake -DCMAKE_INSTALL_PREFIX=`pwd`/../release/linux .
 	cd build ; make install
-	chmod +x release/linux/soloscuro
