@@ -37,3 +37,6 @@ target_link_libraries(soloscuro_bin ${LIBSNDFILE_LIBRARIES})
 target_link_libraries(soloscuro_bin ${SDL2TTF_LIBRARY})
 
 set_target_properties(soloscuro_bin PROPERTIES OUTPUT_NAME soloscuro)
+install(TARGETS soloscuro_bin DESTINATION bin)
+install(TARGETS xmi2mid DESTINATION lib)
+install(TARGETS spng DESTINATION lib)

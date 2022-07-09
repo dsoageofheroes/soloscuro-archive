@@ -7,6 +7,10 @@ Goals: To create an engine for Dark Sun 1, 2, and Crimson Sands.
 
 <https://discord.gg/W942xHN72S>
 
+### How to run
+
+Sol Oscuro requires the .gff files from DarkSun 1 Shattered lands to run. Create a directory/folder 'ds1' and put the .GFF files there (you can put the entire game in there if you wish.)
+
 
 ### Linux dev setup
 1) install pre-reqs:

@@ -74,3 +74,5 @@ file(GLOB WIZARD_SRCS powers/wizard/*c)
 include_directories(../include)
 include_directories(../ext)
 add_library(soloscuro SHARED ${SOLOSCURO_SRCS} ${WIZARD_SRCS})
+
+install(TARGETS soloscuro DESTINATION lib)

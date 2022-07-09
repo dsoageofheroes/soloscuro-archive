@@ -347,7 +347,7 @@ void parse_args(int argc, char *argv[]) {
         }
     }
 
-    replay_init("replay.lua");
+    //replay_init("replay.lua");
 }
 
 int main(int argc, char *argv[]) {

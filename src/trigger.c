@@ -651,6 +651,6 @@ extern void sol_trigger_tick() {
             gpl_lua_execute_script(rover->noorders.file, rover->noorders.addr, 0);
         }
     }
-    lposx = player->mapx;
-    lposy = player->mapy;
+    lposx = player ? player->mapx : 9999;
+    lposy = player ? player->mapy : 9999;
 }
