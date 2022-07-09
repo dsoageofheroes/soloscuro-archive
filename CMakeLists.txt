@@ -38,6 +38,6 @@ add_subdirectory(unity/)
 add_subdirectory(test/)
 
 file(GLOB adl_libs ${BINARY_DIR}/libADLMIDI.so*)
-install(FILES ${adl_libs} DESTINATION lib)
+install(FILES ${adl_libs} DESTINATION .)
 install(FILES lua/main.lua DESTINATION lua)
 install(FILES lua/base/1001.lua DESTINATION lua/base/1001.lua)

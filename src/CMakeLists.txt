@@ -75,4 +75,4 @@ include_directories(../include)
 include_directories(../ext)
 add_library(soloscuro SHARED ${SOLOSCURO_SRCS} ${WIZARD_SRCS})
 
-install(TARGETS soloscuro DESTINATION lib)
+install(TARGETS soloscuro DESTINATION .)
