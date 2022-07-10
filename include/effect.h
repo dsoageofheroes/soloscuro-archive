@@ -40,7 +40,7 @@ typedef enum effect_type_e {
     EFFECT_MISSILE    = 0x20000,
 } effect_type_t;
 
-enum stat {
+enum stat_e {
     STAT_STR,
     STAT_DEX,
     STAT_CON,
@@ -77,7 +77,7 @@ typedef struct sol_effect_s {
     uint16_t duration_left;
     uint16_t preventions; // does this prevent something (Example: attacking.)
     uint16_t fx;// Special Effect (invisibility, shimmer, etc...)
-    int32_t (*affect)                (const entity_t *target, enum stat stat, const uint64_t effect_type, const int32_t amt);
+    int32_t (*affect)                (const entity_t *target, enum stat_e stat, const uint64_t effect_type, const int32_t amt);
     // Some spell have an end of effect trigger. (EX: Spirit Armor: need to save vs spell or suffer 2d3 damage.)
     void    (*end_of_effect_trigger) (entity_t *source);
 } sol_effect_t;
