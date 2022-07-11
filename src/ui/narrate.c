@@ -145,7 +145,6 @@ static int add_text(const char *to_add) {
 }
 
 int8_t sol_ui_narrate_open(int16_t action, const char *text, int16_t index) {
-    printf("receive test: '%s'\n", text);
     display = 1; // by default we turn on display
     switch(action) {
         case NAR_ADD_MENU:

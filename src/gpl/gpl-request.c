@@ -648,6 +648,10 @@ static int req_animation(int16_t object, long notused1, long notused2) {
     gpl_set_gname(GNAME_PASSIVE, object);
 
     if (dude) {
+        if (!dude->anim.scmd || dude->anim.scmd == ssi_scmd_empty()) {
+            error("animation requested for %d, but it doesn't have an animation!\n", object);
+            return 0;
+        }
         dude->anim.pos++;
         while (! (dude->anim.scmd[dude->anim.pos].flags & SCMD_LAST) && dude->anim.pos < SCMD_MAX_SIZE) {
             dude->anim.pos++;

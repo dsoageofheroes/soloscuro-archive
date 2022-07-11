@@ -28,5 +28,5 @@ src/powers/powers-generator.c
 dso/
 ds1/
 ds2/
-gpl/
+gpl/*
 items/

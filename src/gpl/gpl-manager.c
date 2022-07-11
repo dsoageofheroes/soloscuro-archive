@@ -1,5 +1,9 @@
 #include <string.h>
 #include <stdlib.h>
+
+#include <sys/stat.h>
+#include <sys/types.h>
+
 #include "lua-inc.h"
 #include "gpl.h"
 #include "port.h"
@@ -49,6 +53,12 @@ void gpl_manager_init() {
 
 static void write_lua(const char *path, const char *lua, const size_t len) {
     FILE *file = fopen(path, "w+");
+
+    if (!file) {
+        mkdir("gpl", 0777);
+        file = fopen(path, "w+");
+    }
+
     if (file) {
         fwrite(lua, 1, len, file);
         fclose(file);
@@ -155,8 +165,7 @@ uint8_t gpl_lua_execute_script(size_t file, size_t addr, uint8_t is_mas) {
             is_mas ? "MAS" : "GPL",
             file, addr);
         error("error: %s\n", lua_tostring(clua, -1));
-        lua_close(clua);
-        clua = NULL;
+        gpl_pop_context();
         return 0;
     }
     lua_getglobal(clua, func);

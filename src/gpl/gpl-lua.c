@@ -13,7 +13,7 @@ static int print_cmd();
 static int varnum = 0;
 static int funcnum = 0;
 static int in_func = 0;
-static int in_compare = 0;
+static int in_compare = 0; // This if for GPL cmp, not necessarily if.
 static size_t cfunc_num = 0;
 static char is_master_mas = 0;
 static void gpl_lua_load_variable();
@@ -512,6 +512,7 @@ static int print_cmd() {
             //script_id, ((size_t)gpl_get_data_ptr()) - gpl_lua_start_ptr);
         lua_depth++;
         in_func = 1;
+        in_compare = 0;
         //lprintf("gpl.debug(\"func%ld\")\n", cfunc_num);
     } else {
         print_label();
@@ -741,13 +742,9 @@ extern void gpl_lua_usewithtrigger(void) {
 }
 
 extern void gpl_lua_cmpend(void) {
-    if (in_compare) {
-        lua_depth--;
-        lprintf("end\n");
-        in_compare = 0;
-    } else {
-        lprintf("-- warning: encountered cmpend, but not in cmpend!\n");
-    }
+    lua_depth--;
+    if (in_compare) { in_compare--; }
+    lprintf("end -- cmpend\n");
 }
 
 extern void gpl_lua_wait(void) {
@@ -1512,12 +1509,12 @@ extern void gpl_lua_ifcompare(void) {
     gpl_lua_get_parameters(2);
     if (!in_compare) { lprintf("--cmp start\n"); }
     if (in_compare) { lua_depth--;}
+    lprintf("-- in_compare = %d\n", in_compare);
     lprintf("%sif compare == %s then\n", 
         in_compare ? "else" : "",
         lparams.params[0]);
-    in_compare = 1;
+    if (!in_compare) { in_compare++; }
     lua_depth++;
-    //lprintf("--go to %s (lparams.params[1])\n", lparams.params[1]);
 }
 
 extern void gpl_lua_clearpic(void) {
@@ -1529,6 +1526,7 @@ extern void gpl_lua_orelse(void) {
     gpl_lua_read_number(buf, BUF_SIZE);
     lua_depth--;
     lprintf("else\n");
+    if (in_compare) { --in_compare; }
     lua_depth++;
 }
 
@@ -1539,7 +1537,7 @@ extern void gpl_lua_exit(void) {
         in_func = 0;
         //lprintf("gpl.debug(\"return func%ld\")\n", cfunc_num);
         lua_depth--;
-        lprintf("end\n");
+        lprintf("end -- exit!\n");
     }
 }
 
