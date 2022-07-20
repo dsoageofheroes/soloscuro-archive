@@ -664,6 +664,12 @@ static int gpl_clear_los(lua_State *l) {
     return 0;
 }
 
+static int gpl_fight(lua_State *l) {
+    (void)l;
+    error("FIGHT NOT IMPLEMENTED\n");
+    return 0;
+}
+
 static int gpl_wait_on(lua_State *l) {
     lua_Integer obj = luaL_checkinteger(l, 1);
     error("WAIT ON (%lld) NOT IMPLEMENTED\n", obj);
@@ -838,6 +844,7 @@ static const struct luaL_Reg gpl_state_lib[] = {
     {"los_trigger", gpl_los_trigger},
     {"los_trigger_check", gpl_los_trigger_check},
     {"clear_los", gpl_clear_los},
+    {"fight", gpl_fight},
     {"wait_on", gpl_wait_on},
     {"goxy1", gpl_goxy1},
     {"setthing", gpl_setthing},

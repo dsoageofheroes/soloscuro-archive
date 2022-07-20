@@ -445,6 +445,7 @@ static int animate_get(lua_State *l) {
     GET_INTEGER_TABLE(as, desty);
     GET_INTEGER_TABLE(as, xoffset);
     GET_INTEGER_TABLE(as, bmp_id);
+    GET_INTEGER_TABLE(as, load_frame);
     GET_INTEGER_TABLE(as, yoffset);
     //if (!strcmp(str, "blah")) { lua_pushcfunction(l, blah); return 1; }
 
@@ -469,6 +470,7 @@ static int animate_set(lua_State *l) {
         SET_INTEGER_TABLE(as, desty, num);
         SET_INTEGER_TABLE(as, xoffset, num);
         SET_INTEGER_TABLE(as, bmp_id, num);
+        SET_INTEGER_TABLE(as, load_frame, num);
         SET_INTEGER_TABLE(as, yoffset, num);
     }
 

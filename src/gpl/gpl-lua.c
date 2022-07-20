@@ -13,9 +13,10 @@ static int print_cmd();
 static int varnum = 0;
 static int funcnum = 0;
 static int in_func = 0;
-static int in_compare = 0; // This if for GPL cmp, not necessarily if.
 static size_t cfunc_num = 0;
 static char is_master_mas = 0;
+static int compare_level = 0;
+static int compare_start = 1;
 static void gpl_lua_load_variable();
 static void gpl_lua_load_simple_variable(uint16_t type, uint16_t vnum);
 static int gpl_lua_read_simple_num_var(char *buf, const size_t buf_size);
@@ -512,7 +513,8 @@ static int print_cmd() {
             //script_id, ((size_t)gpl_get_data_ptr()) - gpl_lua_start_ptr);
         lua_depth++;
         in_func = 1;
-        in_compare = 0;
+        compare_level = 0;
+        compare_start = 1;
         //lprintf("gpl.debug(\"func%ld\")\n", cfunc_num);
     } else {
         print_label();
@@ -743,7 +745,7 @@ extern void gpl_lua_usewithtrigger(void) {
 
 extern void gpl_lua_cmpend(void) {
     lua_depth--;
-    if (in_compare) { in_compare--; }
+    compare_level--;
     lprintf("end -- cmpend\n");
 }
 
@@ -1456,7 +1458,9 @@ extern void gpl_lua_get_range(void) {
 
 extern void gpl_lua_compare(void) {
     gpl_lua_load_accum();
-    lprintf("compare = accum\n");
+    compare_level++;
+    compare_start = 1;
+    lprintf("compare%d = accum\n", compare_level);
 }
 
 static void gpl_lua_load_var() {
@@ -1507,13 +1511,13 @@ static void gpl_lua_load_variable() {
 
 extern void gpl_lua_ifcompare(void) {
     gpl_lua_get_parameters(2);
-    if (!in_compare) { lprintf("--cmp start\n"); }
-    if (in_compare) { lua_depth--;}
-    lprintf("-- in_compare = %d\n", in_compare);
-    lprintf("%sif compare == %s then\n", 
-        in_compare ? "else" : "",
+    lprintf("--cmp start\n");
+    if (!compare_start) { lua_depth--; }
+    lprintf("%sif compare%d == %s then\n", 
+        !compare_start ? "else" : "",
+        compare_level,
         lparams.params[0]);
-    if (!in_compare) { in_compare++; }
+    compare_start = 0;
     lua_depth++;
 }
 
@@ -1526,7 +1530,6 @@ extern void gpl_lua_orelse(void) {
     gpl_lua_read_number(buf, BUF_SIZE);
     lua_depth--;
     lprintf("else\n");
-    if (in_compare) { --in_compare; }
     lua_depth++;
 }
 

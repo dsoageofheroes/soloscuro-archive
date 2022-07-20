@@ -109,6 +109,7 @@ static void sprite_load_animation(entity_t *entity, gff_palette_t *pal) {
     entity->anim.destx = entity->anim.x;
     entity->anim.destx -= sol_sprite_getw(entity->anim.spr) / 2;
     entity->anim.desty = entity->anim.y;
+    sol_sprite_set_frame(entity->anim.spr, entity->anim.load_frame);
 
     if (entity->name) {
         entity->anim.desty -= sol_sprite_geth(entity->anim.spr) - (8 * settings_zoom());
@@ -369,6 +370,11 @@ int map_handle_mouse(const uint32_t x, const uint32_t y) {
     mousey = y;
 
     update_mouse_icon();
+
+    dude_t *dude = get_entity_at_location(sol_get_camerax() + mousex, sol_get_cameray() + mousey);
+    if (dude) {
+        printf("%d: %d %d\n", dude->ds_id, dude->anim.x, dude->anim.y);
+    }
 
     return 1; // map always intercepts the mouse...
 }

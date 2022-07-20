@@ -223,7 +223,6 @@ void sol_window_free() {
             windows[i].cleanup();
         }
     }
-    printf("TODO: Do we need to close animations?\n");
-    //animate_close();
+
     sol_font_free();
 }

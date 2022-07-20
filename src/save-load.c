@@ -107,14 +107,12 @@ static int write_entity(FILE *file, entity_t *entity, const char *name) {
 
     fprintf(file, "%s.anim.flags = %d\n", name, entity->anim.flags);
     fprintf(file, "%s.anim.pos = %d\n", name, entity->anim.pos);
-    if (entity->anim.pos > 0) {
-        printf("------------>entity->anim.pos = %d\n", entity->anim.pos);
-    }
     fprintf(file, "%s.anim.x = %d\n", name, entity->anim.x);
     fprintf(file, "%s.anim.y = %d\n", name, entity->anim.y);
     fprintf(file, "%s.anim.xoffset = %d\n", name, entity->anim.xoffset);
     fprintf(file, "%s.anim.yoffset = %d\n", name, entity->anim.yoffset);
     fprintf(file, "%s.anim.bmp_id = %d\n", name, entity->anim.bmp_id);
+    fprintf(file, "%s.anim.load_frame = %d\n", name, sol_sprite_get_frame(entity->anim.spr));
 
     if (entity->anim.scmd_info.gff_idx) {
         if (entity->anim.scmd_info.gff_idx < 0) {
