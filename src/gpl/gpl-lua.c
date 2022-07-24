@@ -517,8 +517,8 @@ static int print_cmd() {
             //is_mas ? 'm' : 'g',
             //script_id, ((size_t)gpl_get_data_ptr()) - gpl_lua_start_ptr);
         lua_depth++;
-        //lprintf("print(\"I'm in func%d\")\n", cfunc_num);
-        //lprintf("gpl.debug()\n");
+        lprintf("print(\"I'm in func%d\")\n", cfunc_num);
+        lprintf("gpl.debug()\n");
         in_func = 1;
         compare_level = 0;
         compare_start = 1;
@@ -1411,31 +1411,50 @@ extern void gpl_lua_pdamage(void) {
     do_damage(1);
 }
 
+static void output_set_from_get(const char *str, const char *to_what) {
+    int32_t val;
+    if (sscanf(str, "gpl.get_lf(%d)", &val) > 0) {
+        lprintf("gpl.set_lf(%d, %s)\n", val, to_what);
+    } else if (sscanf(str, "gpl.get_ln(%d)", &val) > 0) {
+        lprintf("gpl.set_ln(%d, %s)\n", val, to_what);
+    } else if (sscanf(str, "gpl.get_gf(%d)", &val) > 0) {
+        lprintf("gpl.set_gf(%d, %s)\n", val, to_what);
+    } else if (sscanf(str, "gpl.get_gn(%d)", &val) > 0) {
+        lprintf("gpl.set_gn(%d, %s)\n", val, to_what);
+    } else if (sscanf(str, "gpl.get_gbn(%d)", &val) > 0) {
+        lprintf("gpl.set_gbn(%d, %s)\n", val, to_what);
+    } else if (sscanf(str, "gpl.get_lbn(%d)", &val) > 0) {
+        lprintf("gpl.set_lbn(%d, %s)\n", val, to_what);
+    } else {
+        lprintf("gpl.error()\n");
+    }
+}
+
 extern void gpl_lua_word_plus_equal(void) {
     gpl_lua_get_parameters(2);
-    lprintf("--*((uint16_t *)lparams.params[0]) += lparam.params[1];\n");
-    lprintf("gpl.error()");
-    //*((uint16_t *)param.ptr[0]) += param.val[1];
+    //lprintf("--*((uint16_t *)lparams.params[0]) += lparam.params[1];\n");
+    lprintf("accum = %s + %s;\n", (char*)lparams.params[0], (char*)lparams.params[1]);
+    output_set_from_get(lparams.params[0], "accum");
 }
 
 extern void gpl_lua_word_minus_equal(void) {
     gpl_lua_get_parameters(2);
-    lprintf("--*((uint16_t *)lparams.params[0]) -= lparam.params[1];\n");
-    lprintf("gpl.error()");
-    //*((uint16_t *)param.ptr[0]) -= param.val[1];
+    //lprintf("--*((uint16_t *)lparams.params[0]) -= lparam.params[1];\n");
+    lprintf("accum = %s - %s;\n", (char*)lparams.params[0], (char*)lparams.params[1]);
+    output_set_from_get(lparams.params[0], "accum");
 }
 
 extern void gpl_lua_word_times_equal(void) {
     gpl_lua_get_parameters(2);
-    lprintf("--*((uint16_t *)lparams.params[0]) *= lparam.params[1];\n");
-    lprintf("gpl.error()");
+    lprintf("accum = %s * %s;\n", (char*)lparams.params[0], (char*)lparams.params[1]);
+    output_set_from_get(lparams.params[0], "accum");
     //*((uint16_t *)param.ptr[0]) *= param.val[1];
 }
 
 extern void gpl_lua_word_divide_equal(void) {
     gpl_lua_get_parameters(2);
-    lprintf("--*((uint16_t *)lparams.params[0]) /= lparam.params[1];\n");
-    lprintf("gpl.error()");
+    lprintf("accum = %s / %s;\n", (char*)lparams.params[0], (char*)lparams.params[1]);
+    output_set_from_get(lparams.params[0], "accum");
     //*((uint16_t *)param.ptr[0]) /= param.val[1];
 }
 

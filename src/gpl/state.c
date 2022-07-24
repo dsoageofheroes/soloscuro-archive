@@ -859,6 +859,11 @@ static int lua_debug(lua_State *l) {
     return 0;
 }
 
+static int gpl_error(lua_State *l) {
+    //printf("%s\n", luaL_checkstring(l, 1));
+    printf("*********************************** ERROR: SUPER ERROR***********************************\n");
+    return 0;
+}
 
 static const struct luaL_Reg gpl_state_lib[] = {
     {"set_while_callback", set_while_callback},
@@ -922,6 +927,7 @@ static const struct luaL_Reg gpl_state_lib[] = {
     {"play_sound", lua_play_sound},
     {"get_active_name", lua_get_active_name},
     {"debug", lua_debug},
+    {"error", gpl_error},
     {NULL, NULL}
 } ;
 
