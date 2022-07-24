@@ -183,6 +183,11 @@ static size_t lua_pos = 0;
 static int32_t lua_depth = 0; 
 static size_t gpl_lua_start_ptr = 0;
 
+extern void gpl_lua_debug() {
+    printf("GPL LUA DEBUG!\n");
+    gpl_state_debug();
+}
+
 //#define lprintf(...) lua_tab(lua_depth); lua_pos += snprintf(lua_buf + lua_pos, LUA_MAX_SIZE - lua_pos, __VA_ARGS__)
 #define LUA_TAB_AMT (4)
 static void lua_tab(const int amt) {
@@ -512,6 +517,8 @@ static int print_cmd() {
             //is_mas ? 'm' : 'g',
             //script_id, ((size_t)gpl_get_data_ptr()) - gpl_lua_start_ptr);
         lua_depth++;
+        //lprintf("print(\"I'm in func%d\")\n", cfunc_num);
+        //lprintf("gpl.debug()\n");
         in_func = 1;
         compare_level = 0;
         compare_start = 1;
@@ -563,8 +570,9 @@ extern void gpl_lua_load_accum(void) {
 extern void gpl_lua_global_ret(void) {
     in_func = 0;
     //lprintf("gpl.debug(\"return func%ld\")\n", cfunc_num);
+    lprintf("return false\n");
     lua_depth--;
-    lprintf("end --return\n");
+    lprintf("end --gloabl return\n");
     if (lua_depth < 0) { lua_depth = 0; }
 }
 
@@ -1361,8 +1369,9 @@ extern void gpl_lua_global_sub(void) {
 extern void gpl_lua_local_ret(void) {
     in_func = 0;
     //lprintf("gpl.debug(\"return func%ld\")\n", cfunc_num);
+    lprintf("return false\n");
     lua_depth--;
-    lprintf("end --return\n");
+    lprintf("end --local return\n");
 }
 
 static void do_damage(int is_percent) {
@@ -1460,6 +1469,7 @@ extern void gpl_lua_compare(void) {
     gpl_lua_load_accum();
     compare_level++;
     compare_start = 1;
+    //lprintf("print(accum)\n", compare_level);
     lprintf("compare%d = accum\n", compare_level);
 }
 

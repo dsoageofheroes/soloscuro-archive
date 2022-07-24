@@ -400,3 +400,34 @@ extern void sol_combat_set_scmd(entity_t *dude, const combat_scmd_t scmd) {
     dude->anim.scmd_info.res_id = scmd;
 }
 
+extern void sol_combat_kill_all_enemies() {
+    dude_t *dude;
+    dude_t *player = sol_player_get_active();
+    sol_region_t *reg = sol_region_manager_get_current();
+    combat_region_t *cr = sol_arbiter_combat_region(sol_region_manager_get_current());
+
+    if (!cr || !reg || !player) { return; }
+
+    entity_list_for_each((&cr->combatants), dude) {
+        if (sol_player_get_slot(dude) >= 0) { continue; }
+        dude->combat_status = COMBAT_STATUS_DYING;
+        dude->stats.hp = 0;
+        //play_death_sound(dude);
+        //warn("NEED TO IMPLEMENT death animation!\n");
+        if (!entity_list_remove_entity(&sol_arbiter_combat_region(reg)->combatants, dude)) {
+            error("Unable to remove entity from combat region!\n");
+        }
+        if (!entity_list_remove_entity(&sol_arbiter_combat_region(reg)->round.entities, dude)) {
+            error("Unable to remove entity from combat round!\n");
+        }
+        if (!entity_list_remove_entity(reg->entities, dude)) {
+            error("Unable to remove entity from region!\n");
+        }
+        // Only free if not a player.
+        if (sol_player_get_slot(dude) < 0) {
+            entity_free(dude);
+        }
+        return;
+    }
+
+}

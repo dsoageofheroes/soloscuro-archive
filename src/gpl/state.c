@@ -47,6 +47,58 @@ void gpl_state_init() {
 void gpl_state_cleanup() {
 }
 
+void gpl_state_debug() {
+    const size_t max_print = 10;
+
+    printf("GF: %d", gpl_global_flags[0]);
+    for (size_t i = 1; i < MAX_GFLAGS && i < max_print; i++) {
+        printf(", %d", gpl_global_flags[i]);
+    }
+    printf("\n");
+
+    printf("LL: %d", gpl_local_flags[0]);
+    for (size_t i = 1; i < MAX_LFLAGS && i < max_print; i++) {
+        printf(", %d", gpl_local_flags[i]);
+    }
+    printf("\n");
+
+    printf("GN: %d", gpl_global_nums[0]);
+    for (size_t i = 1; i < MAX_GNUMS && i < max_print; i++) {
+        printf(", %d", gpl_global_nums[i]);
+    }
+    printf("\n");
+
+    printf("LN: %d", gpl_local_nums[0]);
+    for (size_t i = 1; i < MAX_LNUMS && i < max_print; i++) {
+        printf(", %d", gpl_local_nums[i]);
+    }
+    printf("\n");
+
+    printf("GBN: %d", gpl_global_bnums[0]);
+    for (size_t i = 1; i < MAX_GBIGNUMS && i < max_print; i++) {
+        printf(", %d", gpl_global_bnums[i]);
+    }
+    printf("\n");
+
+    printf("LBN: %d", gpl_local_bnums[0]);
+    for (size_t i = 1; i < MAX_LBIGNUMS && i < max_print; i++) {
+        printf(", %d", gpl_local_bnums[i]);
+    }
+    printf("\n");
+
+    printf("GSTRS: %d", gpl_global_strs[0]);
+    for (size_t i = 1; i < MAX_GSTRS && i < max_print; i++) {
+        printf(", '%s'", gpl_global_strs[i]);
+    }
+    printf("\n");
+
+    printf("GNAMES: %d", gpl_gnames[0]);
+    for (size_t i = 1; i < MAX_GNAMES && i < max_print; i++) {
+        printf(", %d", gpl_gnames[i]);
+    }
+    printf("\n");
+}
+
 // TODO: this will need to be attached to a region.
 extern void gpl_write_local_state(FILE *file) {
     for (int i = 0; i < MAX_LFLAGS; i++) {
@@ -117,6 +169,7 @@ static int get_gf(lua_State *l) {
         printf("ERROR: " PRI_LI " is out of range for global flags!\n", id);
         exit(1);
     }
+    //printf("get_gf(%d) = %d\n", id, gpl_global_flags[id]);
     lua_pushinteger(l, gpl_global_flags[id]);
     return 1;
 }
@@ -373,12 +426,12 @@ static int get_party(lua_State *l) {
 }
 
 static int is_true(lua_State *l) {
-    if (lua_isboolean(l, 1)) {
-        //printf("------------>boolean = %d, => %d\n", lua_toboolean(l, 1), lua_toboolean(l, 1) == 1);
-        lua_pushboolean(l, lua_toboolean(l, 1) == 1);
-    } else if (lua_isinteger(l, 1)) {
+    if (lua_isinteger(l, 1)) {
         //printf("------------>integer = %lld\n", lua_tointeger(l, 1));
         lua_pushboolean(l, lua_tointeger(l, 1) != 0);
+    } else if (lua_isboolean(l, 1)) {
+        //printf("------------>boolean = %d, => %d\n", lua_toboolean(l, 1), lua_toboolean(l, 1) == 1);
+        lua_pushboolean(l, lua_toboolean(l, 1) == 1);
     } else {
         error("ERROR: did not received a boolean or int for accum testing!\n");
         lua_pushboolean(l, 0);
@@ -436,12 +489,25 @@ static int gpl_rand(lua_State *l) {
 }
 
 static int range(lua_State *l) {
-    const char *x = luaL_checkstring(l, 1);
-    const char *y = luaL_checkstring(l, 2);
+    const uint32_t from = luaL_checkinteger(l, 1);
+    const uint32_t to   = luaL_checkinteger(l, 2);
 
-    debug("Must find range from '%s' to '%s'\n", x, y);
-    lua_pushinteger(l, 0);
+    sol_region_t* reg = sol_region_manager_get_current();
+    entity_t* from_entity = sol_region_find_entity_by_id(reg, from);
+    entity_t* to_entity = sol_region_find_entity_by_id(reg, to);
 
+    if (!from_entity || !to_entity) {
+        debug("Range from '%u' to '%u' not found returning GPL_RANGE_MAX(%u)\n", from, to, GPL_RANGE_MAX);
+        lua_pushinteger(l, GPL_RANGE_MAX);
+        goto exit;
+    }
+
+    uint32_t xdiff = abs(from_entity->mapx - to_entity->mapx);
+    uint32_t ydiff = abs(from_entity->mapy - to_entity->mapy);
+
+    lua_pushinteger(l, xdiff > ydiff ? xdiff : ydiff);
+    debug("Range from '%u' to '%u' %u\n", from, to, xdiff > ydiff ? xdiff : ydiff);
+exit:
     return 1;
 }
 
@@ -789,6 +855,7 @@ static int gpl_set_other_check(lua_State *l) {
 
 static int lua_debug(lua_State *l) {
     //printf("%s\n", luaL_checkstring(l, 1));
+    gpl_lua_debug();
     return 0;
 }
 

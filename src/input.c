@@ -49,6 +49,9 @@ extern void sol_key_down(const sol_key_e key) {
                            }
                            sol_window_push(&popup_window, 0, 0);
                            break;
+        case SOLK_KP_ENTER:
+                           sol_combat_kill_all_enemies();
+                           break;
         case SOLK_KP_MINUS: sol_load_from_file(QUICK_SAVE_LOC);
                            break;
         default: break;

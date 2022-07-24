@@ -4,6 +4,8 @@
 #include "lua-inc.h"
 #include <stdint.h>
 
+#define GPL_RANGE_MAX (999)
+
 typedef enum gpl_gnum_e {
     GNAME_FIGHT,
     GNAME_UNKNOWN1, // X
@@ -34,6 +36,8 @@ char*    gpl_serialize_globals(uint32_t *len);
 void     gpl_deserialize_globals(char *buf);
 char*    gpl_serialize_locals(uint32_t *len);
 void     gpl_deserialize_locals(char *buf);
+
+extern void    gpl_state_debug();
 
 extern int16_t gpl_get_gname(const gpl_gnum_t pos);
 extern void    gpl_set_gname(const gpl_gnum_t index, const int32_t obj);

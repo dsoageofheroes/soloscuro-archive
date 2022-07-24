@@ -65,6 +65,7 @@ extern int    sol_combat_add_attack_animation(sol_region_t *reg, dude_t *dude, e
 extern int sol_combat_add_guard_animation(sol_region_t *reg, dude_t *dude, entity_t *target,
                                         power_t *power, enum entity_action_e action);
 extern int    sol_combat_guard(entity_t *entity);
+extern void   sol_combat_kill_all_enemies();
 
 // pre-processor ordering.
 extern void   sol_combat_is_defeated(sol_region_t *reg, entity_t *dude);

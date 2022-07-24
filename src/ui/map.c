@@ -373,7 +373,7 @@ int map_handle_mouse(const uint32_t x, const uint32_t y) {
 
     dude_t *dude = get_entity_at_location(sol_get_camerax() + mousex, sol_get_cameray() + mousey);
     if (dude) {
-        printf("%d: %d %d\n", dude->ds_id, dude->anim.x, dude->anim.y);
+        //printf("%d: %d %d\n", dude->ds_id, dude->anim.x, dude->anim.y);
     }
 
     return 1; // map always intercepts the mouse...

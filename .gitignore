@@ -30,3 +30,6 @@ ds1/
 ds2/
 gpl/*
 items/
+
+# ctags
+tags
