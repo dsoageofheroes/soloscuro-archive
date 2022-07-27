@@ -231,6 +231,7 @@ int narrate_handle_key_down(const enum entity_action_e action) {
 }
 
 void narrate_free() {
+    sol_window_free_base(narrate);
     sol_window_free_base(menu);
 }
 

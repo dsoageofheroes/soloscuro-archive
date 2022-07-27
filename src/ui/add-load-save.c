@@ -31,7 +31,7 @@ extern char *strdup(const char *s);
 
 static uint16_t mousex, mousey;
 static int16_t selection;
-static uint16_t char_selected;
+static int16_t char_selected;
 static char **entries = NULL;
 static uint16_t *valids = NULL;
 static uint32_t num_entries = 0;
@@ -135,7 +135,6 @@ static void setup_save_load_selection() {
 
         sol_load_get_name(filename, buf, BUF_MAX);
 
-        buf[strlen(buf)-1] = '\0';
         entries[i] = strdup(buf);
         valids[i] = i;
         num_entries++;
@@ -262,6 +261,7 @@ int add_load_save_handle_mouse_movement(const uint32_t x, const uint32_t y) {
 
 int add_load_save_handle_mouse_down(const sol_mouse_button_t button, const uint32_t x, const uint32_t y) {
     const float zoom = settings_zoom();
+
     if (sol_sprite_in_rect(action_btn, x, y)) {
         sol_sprite_set_frame(action_btn, 2);
     }
@@ -284,6 +284,8 @@ int add_load_save_handle_mouse_down(const sol_mouse_button_t button, const uint3
             if (selection < num_valid_entries) {
                 char_selected = res_ids[valids[selection]];
                 sol_textbox_set_text(name_tb, entries[valids[selection]]);
+            } else {
+                char_selected = -1;
             }
         }
     }
@@ -292,17 +294,6 @@ int add_load_save_handle_mouse_down(const sol_mouse_button_t button, const uint3
 
     return 1; // means I captured the mouse click
 }
-
-/*
-static void load_game() {
-    char buf[128];
-    snprintf(buf, 128, SAVE_FORMAT, selection);
-    sol_window_clear();
-    sol_player_close();
-    ls_load_save_file(buf);
-    sol_center_on_player();
-}
-*/
 
 int16_t find_next_save_file() {
     char buf[32];
@@ -319,21 +310,33 @@ int16_t find_next_save_file() {
 
 int add_load_save_handle_mouse_up(const sol_mouse_button_t button, const uint32_t x, const uint32_t y) {
     char filename[32];
+    char msg[128];
 
     if (sol_sprite_in_rect(action_btn, x, y)) {
         if (mode == ACTION_LOAD) {
-            //load_game();
+            if (entries && selection >= 0 && entries[selection]) {
+                sprintf(filename, SAVE_FORMAT, selection);
+                sol_load_from_file(filename);
+            }
             return 1;
         }
         if (mode == ACTION_SAVE) {
-            //TODO: Fix for naming
             if (selection < 0) {
                 selection = find_next_save_file();
             }
             if (selection < 0) { return 0; }
             snprintf(filename, 31, SAVE_FORMAT, selection);
-            //ls_save_to_file(filename, sol_textbox_get_text(name_tb));
-            sol_save_to_file(filename, sol_textbox_get_text(name_tb));
+            if (sol_save_to_file(filename, sol_textbox_get_text(name_tb))) {
+                sprintf(msg, "Game %s saved.", sol_textbox_get_text(name_tb));
+                sol_window_pop();
+                sol_window_push(&popup_window, 100, 75);
+                sol_popup_quick_message(msg);
+            } else {
+                sol_window_push(&popup_window, 100, 75);
+                sol_popup_quick_message("Can't save");
+            }
+            sol_window_push(&popup_window, 0, 0);
+            return 1;
         }
         sol_sprite_set_frame(action_btn, 0);
         if (selection != -1) {
