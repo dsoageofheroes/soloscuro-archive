@@ -5,6 +5,7 @@
 #include "combat-status.h"
 #include "background.h"
 #include "gpl.h"
+#include "innate.h"
 #include "port.h"
 #include "trigger.h"
 #include "settings.h"
@@ -414,13 +415,14 @@ int map_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_
     }
 
     if (ms == MOUSE_TALK && cdude) {//(dude = get_entity_at_location(x, y))) {
-        printf("HERE: %d, %d, %d\n", x, y, cdude->ds_id);
+        //printf("HERE: %d, %d, %d\n", x, y, cdude->ds_id);
         sol_mouse_set_state(MOUSE_POINTER);
-        if (sol_examine_entity(cdude)) {
+        if (sol_examine_entity(cdude) == SOL_SUCCESS) {
             sol_window_push(&examine_window, 0, 0);
         } else {
-            // Do an animation.
-            gpl_request_impl(5, cdude->ds_id, -1, -1);
+            //sol_entity_debug(cdude);
+            // Do an action.
+            sol_innate_action(cdude);
         }
         return 1;
     }

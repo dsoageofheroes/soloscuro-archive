@@ -14,6 +14,7 @@ set(SOLOSCURO_SRCS
     arbiter.c
     trigger.c
     input.c
+    innate.c
     gff/gff-image.c
     gff/gff-xmi.c
     gff/gff-char.c

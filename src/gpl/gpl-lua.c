@@ -517,8 +517,8 @@ static int print_cmd() {
             //is_mas ? 'm' : 'g',
             //script_id, ((size_t)gpl_get_data_ptr()) - gpl_lua_start_ptr);
         lua_depth++;
-        lprintf("print(\"I'm in func%d\")\n", cfunc_num);
-        lprintf("gpl.debug()\n");
+        //lprintf("print(\"I'm in func%d\")\n", cfunc_num);
+        //lprintf("gpl.debug()\n");
         in_func = 1;
         compare_level = 0;
         compare_start = 1;
@@ -1140,20 +1140,7 @@ extern void gpl_lua_take(void) {
     gpl_lua_get_parameters(4);
     int32_t who = atoi(lparams.params[2]);
     int32_t item = atoi(lparams.params[1]);
-    if (who == PARTY) {
-        lprintf("accum = 0\n");
-        lprintf("--For each party member:\n");
-        lprintf("    -- if %d is not grafted take it and update accumulator.\n", item);
-        //if (!grafted(party_character, param.val[1])) {
-            //set_accumulator(get_accumulator() + take(param.val[0], param.val[1], party_character, param.val[3]));
-        //}
-    } else {
-        lprintf("-- if %d is not grafted take it and update accumulator.\n", item);
-        lprintf("accum = 0 -- take out after updating gpl_lua_take\n");
-        //if (!grafted(param.val[2], param.val[1])) {
-            //set_accumulator(take(param.val[0], param.val[1], param.val[2], param.val[3]));
-        //}
-    }
+    lprintf("gpl.take(%d, %d)\n", who, item);
 }
 
 extern void gpl_lua_sound(void) {

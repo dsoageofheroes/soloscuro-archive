@@ -59,6 +59,7 @@ typedef struct entity_s {
     struct entity_animation_list_s actions;
     effect_node_t *effects; // anything currently affecting the entity.
     item_t *inv; // NULL means that there is no inventory on this entity (IE: some monsters.)
+    uint32_t cp;
     //spell_list_t *spells;
     //psionic_list_t *psionics;
 } entity_t;
@@ -92,5 +93,6 @@ extern int       entity_get_priest_level(entity_t *entity);
 extern int       entity_get_ranger_level(entity_t *entity);
 extern int16_t   entity_distance(const entity_t *source, const entity_t *dest);
 extern int       sol_entity_go(entity_t *dude, const uint16_t x, uint16_t y);
+extern void      sol_entity_debug(entity_t *dude);
 
 #endif

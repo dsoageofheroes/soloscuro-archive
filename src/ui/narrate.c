@@ -299,7 +299,7 @@ extern int narrate_select_menu(uint32_t option) {
     int accum = !option_is_exit(option);
     char buf[1024];
 
-    printf("menu_select: %d\n", option);
+    //printf("menu_select: %d\n", option);
     last_option = option;
     if (option >= menu_pos || option < 0) {
         error("select_menu: Menu option %d selected, but only (0 - " PRI_SIZET ") available!\n", option, menu_pos - 1);

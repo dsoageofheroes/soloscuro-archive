@@ -3,8 +3,9 @@
 
 #include "window-manager.h"
 #include "entity.h"
+#include "status.h"
 
-extern int sol_examine_entity(entity_t *dude);
+extern sol_status_t sol_examine_entity(entity_t *dude);
 
 extern sol_wops_t examine_window;
 

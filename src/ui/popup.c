@@ -9,7 +9,7 @@
 
 static sol_sprite_t background, popup_return, option[3], background_popup;
 static char main_text[32], option_text[3][32];
-static int16_t popup_count;
+static int16_t popup_count = -1;
 static uint8_t selection = POPUP_NOTHING;
 static sol_font_t option_font[3];
 static char *popup_text = NULL;
@@ -84,10 +84,15 @@ static void render_popup() {
     sol_sprite_render(background_popup);
     sol_print_line_len(FONT_GREY, popup_text, x, y, len);
 
-    popup_count--;
-    if (popup_count <= 0) {
+    if (popup_count > 0) {
+        popup_count--;
+    }
+    if (popup_count == 0) {
+        popup_count = -1;
         free(popup_text);
         popup_text = NULL;
+        sol_window_push(&popup_window, 0, 0);
+        sol_window_pop();
     }
 }
 

@@ -515,3 +515,41 @@ extern int sol_entity_go(entity_t *dude, const uint16_t x, uint16_t y) {
 
     return 1;
 }
+
+extern void sol_entity_debug(entity_t *dude) {
+    if (!dude) { return; }
+    printf("entity ('%s): \n", dude->name);
+    printf("    .ds_id = %d\n", dude->ds_id);
+    printf("    .size = %d\n", dude->size);
+    printf("    .race = %d\n", dude->race);
+    printf("    .gender = %d\n", dude->gender);
+    printf("    .alignment = %d\n", dude->alignment);
+    printf("    .allegiance = %d\n", dude->allegiance);
+    printf("    .object_flags = %x\n", dude->object_flags);
+    printf("    .direction = %d\n", dude->direction);
+    printf("    .region = %d\n", dude->region);
+    printf("    pos = (%d, %d, %d)\n", dude->mapx, dude->mapy, dude->mapz);
+    printf("    .sound_fx = %d\n", dude->sound_fx);
+    printf("    .attack_sound = %d\n", dude->attack_sound);
+    printf("    .combat_status = %d\n", dude->combat_status);
+    printf("    stats = (%d, %d %d, %d, %d, %d)\n", dude->stats.str, dude->stats.dex, dude->stats.con, dude->stats.intel, dude->stats.wis, dude->stats.cha);
+    printf("    .class[0] = (current_xp = %d, high_xp = %d, class = %d, level = %d, high_level = %d\n",
+            dude->class[0].current_xp,
+            dude->class[0].high_xp,
+            dude->class[0].class,
+            dude->class[0].level,
+            dude->class[0].high_level);
+    printf("    .class[1] = (current_xp = %d, high_xp = %d, class = %d, level = %d, high_level = %d\n",
+            dude->class[1].current_xp,
+            dude->class[1].high_xp,
+            dude->class[1].class,
+            dude->class[1].level,
+            dude->class[1].high_level);
+    printf("    .class[0] = (current_xp = %d, high_xp = %d, class = %d, level = %d, high_level = %d\n",
+            dude->class[2].current_xp,
+            dude->class[2].high_xp,
+            dude->class[2].class,
+            dude->class[2].level,
+            dude->class[2].high_level);
+    printf("    .anim = (spr = %d, scmd = %p)\n", dude->anim.spr, dude->anim.scmd);
+}

@@ -13,6 +13,8 @@
 #include "gpl.h"
 #include "player.h"
 
+#include <string.h>
+
 #define SAVE_FORMAT "save%02d.sav"
 
 static sol_sprite_t background;
@@ -102,6 +104,7 @@ static char* read_save_name(const char *path) {
 }
 
 static void setup_save_load_selection() {
+    char filename[128];
     char buf[BUF_MAX];
     int16_t id = 0;
     FILE *file = NULL;
@@ -121,15 +124,26 @@ static void setup_save_load_selection() {
     valids = malloc(sizeof(uint16_t) * id);
     if (!entries || !valids) { return; }
     num_valid_entries = 0;
-    for (int i = 0; i < id; i++) {
-        //TODO: Store the name and get it back.
-        snprintf(buf, BUF_MAX, SAVE_FORMAT, i);
-        //entries[i] = strdup(buf);
-        entries[i] = read_save_name(buf);
+
+    for (size_t i = 0; i < 100; i++) {
+        sprintf(filename, SAVE_FORMAT, i);
+        file = fopen(filename, "rb");
+
+        if (!file) {
+            break;
+        }
+
+        sol_load_get_name(filename, buf, BUF_MAX);
+
+        buf[strlen(buf)-1] = '\0';
+        entries[i] = strdup(buf);
         valids[i] = i;
         num_entries++;
         num_valid_entries++;
+        
+        fclose(file);
     }
+    return;
 }
 
 void add_load_save_init(const uint32_t x, const uint32_t y) {
@@ -319,7 +333,7 @@ int add_load_save_handle_mouse_up(const sol_mouse_button_t button, const uint32_
             if (selection < 0) { return 0; }
             snprintf(filename, 31, SAVE_FORMAT, selection);
             //ls_save_to_file(filename, sol_textbox_get_text(name_tb));
-            sol_save_to_file(filename);
+            sol_save_to_file(filename, sol_textbox_get_text(name_tb));
         }
         sol_sprite_set_frame(action_btn, 0);
         if (selection != -1) {

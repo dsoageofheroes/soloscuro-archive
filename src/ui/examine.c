@@ -40,18 +40,19 @@ static void update_ui() {
 }
 
 // returns if examine window should pop up
-extern int sol_examine_entity(entity_t *dude) {
+extern sol_status_t sol_examine_entity(entity_t *dude) {
     int amt = 0;
 
     amt += sol_trigger_get_talkto(dude->ds_id).obj ? 1 : 0;
     amt += sol_trigger_get_look(dude->ds_id).obj ? 1 : 0;
     amt += sol_trigger_get_use(dude->ds_id).obj ? 1 : 0;
 
-    if (amt < 1) { return 0; }
+    if (amt < 1) { return SOL_FAILURE; }
 
     entity_to_examine = dude;
     update_ui();
-    return 1;
+
+    return SOL_SUCCESS;
 }
 
 static void examine_init(const uint32_t x, const uint32_t y) {

@@ -36,13 +36,14 @@ extern void sol_key_down(const sol_key_e key) {
         case SOLK_i:       sol_window_toggle(&inventory_window, 0, 0); break;
         case SOLK_c:       sol_window_toggle(&view_character_window, 0, 0); break;
         case SOLK_ESCAPE:  sol_game_loop_signal(WAIT_FINAL, 0); break;
-        case SOLK_F11:     sol_add_load_save_set_mode(ACTION_SAVE);
+        case SOLK_F11:     
+                           sol_add_load_save_set_mode(ACTION_SAVE);
                            sol_window_toggle(&als_window, 0, 0);
                            break;
         case SOLK_F12:     sol_add_load_save_set_mode(ACTION_LOAD);
                            sol_window_toggle(&als_window, 0, 0);
                            break;
-        case SOLK_KP_PLUS: if (sol_save_to_file(QUICK_SAVE_LOC)) {
+        case SOLK_KP_PLUS: if (sol_save_to_file(QUICK_SAVE_LOC, "quick save")) {
                                sol_popup_quick_message("Game saved to quick.sav");
                            } else {
                                sol_popup_quick_message("Can't save");

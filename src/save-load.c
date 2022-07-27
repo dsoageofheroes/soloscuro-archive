@@ -171,16 +171,19 @@ static int write_regions(FILE *file) {
     return 1;
 }
 
-extern int sol_save_to_file(const char *filepath) {
+extern int sol_save_to_file(const char *filepath, const char *name) {
     printf("Need to save to %s\n", filepath);
     FILE *file;
     sol_region_t *reg = sol_region_manager_get_current();
     if (sol_combat_get_current(sol_arbiter_combat_region(reg)) != NULL) { return 0; }
     if (narrate_is_open()) { return 0; }
 
-    file = fopen("quick.sav", "wb");
+    //file = fopen("quick.sav", "wb");
+    file = fopen(filepath, "wb");
     if (!file) { return 0; }
 
+    fputs(name, file);
+    fputs("\n", file);
     fprintf(file, "function init()\n");
     fprintf(file, "local sol = soloscuro\n");
     write_players(file);
@@ -192,6 +195,16 @@ extern int sol_save_to_file(const char *filepath) {
     fprintf(file, "end\n");
 
     fclose(file);
+    return 1;
+}
+
+extern int sol_load_get_name(const char *filepath, char *name, const size_t len) {
+    FILE *file = fopen(filepath, "rb");
+    if (!file) { return 0; }
+
+    fgets(name, len, file);
+    fclose(file);
+
     return 1;
 }
 
