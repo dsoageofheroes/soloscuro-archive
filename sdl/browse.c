@@ -998,6 +998,7 @@ static void render_entry_etab() {
     obj = open_files[gff_idx].entry_table + cobj;
     snprintf(buf, BUF_MAX, "%d of %d etab objects\n", cobj, max_objs);
     sol_print_line_len(0, buf, 320, 40, BUF_MAX);
+    if (!obj) { return; }
     snprintf(buf, BUF_MAX, "pos: (%d, %d, %d)\n", obj->xpos, obj->ypos, obj->zpos);
     sol_print_line_len(0, buf, 320, 60, BUF_MAX);
     snprintf(buf, BUF_MAX, "flags: 0x%x\n", obj->flags);

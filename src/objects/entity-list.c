@@ -2,6 +2,7 @@
 #include "entity-list.h"
 #include "gff.h"
 #include "gfftypes.h"
+#include "statics.h"
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -116,8 +117,9 @@ entity_list_node_t* entity_list_find(entity_list_t *list, entity_t *entity) {
     return NULL;
 }
 
-extern void entity_list_load_etab(entity_list_t *list, const int gff_idx, const int map_id) {
+extern void entity_list_load_etab(entity_list_t *list, sol_static_list_t *ssl, const int gff_idx, const int map_id) {
     if (!list) { return; }
+    sol_static_t s;
 
     if (!open_files[gff_idx].entry_table) {
         gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_ETAB, map_id);
@@ -141,6 +143,14 @@ extern void entity_list_load_etab(entity_list_t *list, const int gff_idx, const 
         if (dude->anim.scmd != NULL && !(dude->anim.scmd->flags & SCMD_LAST)) {
             entity_animation_list_add(&dude->actions, EA_SCMD, dude, NULL, NULL, 30);
             // Animations are continued in the entity action list
+        } else {
+            // NEED TO ADD STATICS HERE!
+            sol_static_from_entity(dude, &s);
+            //printf("have a non animating: (%d, %d, %d): %d + (%d, %d)\n",
+                    //dude->mapx, dude->mapy, dude->mapz, dude->anim.bmp_id,
+                    //dude->anim.xoffset, dude->anim.yoffset
+                    //);
+            sol_static_list_add(ssl, &s);
         }
     }
 }

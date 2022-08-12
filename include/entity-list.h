@@ -2,6 +2,7 @@
 #define ENTITY_LIST_H
 
 #include "entity.h"
+#include "statics.h"
 
 typedef struct entity_list_node_s {
     struct entity_s *entity;
@@ -23,7 +24,7 @@ extern entity_list_node_t* entity_list_add_by_init(entity_list_t *list, struct e
 extern int                 entity_list_remove(entity_list_t *list, entity_list_node_t *node);
 extern int                 entity_list_remove_entity(entity_list_t *list, struct entity_s *entity);
 extern entity_list_node_t* entity_list_find(entity_list_t *list, struct entity_s *entity);
-extern void                entity_list_load_etab(entity_list_t *list, const int gff_idx, const int map_id);
+extern void                entity_list_load_etab(entity_list_t *list, sol_static_list_t *ssl, const int gff_idx, const int map_id);
 
 #define entity_list_for_each(el, obj) \
     obj = (el && el->head) ? el->head->entity : NULL; \

@@ -767,6 +767,10 @@ extern int entity_animation_execute(entity_t *entity) {
 
         if (entity->anim.scmd[action->scmd_pos].delay < action->ticks) {
             //if (entity->name) { printf("->%s: ticks, amt = %d\n", entity->name, action->amt); }
+            if (entity->anim.scmd[action->scmd_pos].flags & SCMD_LAST) {
+                entity_animation_list_remove_current(&entity->actions);
+                return 1;
+            }
             entity->anim.pos = action->scmd_pos = ssi_scmd_next_pos(entity->anim.scmd, action->scmd_pos);
             //printf("HERE: %d\n", entity->anim.pos);
             port_entity_update_scmd(entity);

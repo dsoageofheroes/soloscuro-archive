@@ -300,10 +300,10 @@ static void init() {
         export_all_images(extract_images);
     }
     if (extract_xmis) {
-        export_all_xmis(extract_images);
+        export_all_xmis(extract_xmis);
     }
     if (extract_items) {
-        export_all_items(extract_images);
+        export_all_items(extract_items);
     }
     if (extract_gpl) {
         gpl_lua_load_all_scripts();

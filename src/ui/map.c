@@ -108,12 +108,12 @@ static void sprite_load_animation(entity_t *entity, gff_palette_t *pal) {
     entity->anim.x = (entity->mapx * 16 + entity->anim.xoffset) * zoom;
     entity->anim.y = (entity->mapy * 16 + entity->anim.yoffset + entity->mapz) * zoom;
     entity->anim.destx = entity->anim.x;
-    entity->anim.destx -= sol_sprite_getw(entity->anim.spr) / 2;
+    //entity->anim.destx -= sol_sprite_getw(entity->anim.spr) / 2;
     entity->anim.desty = entity->anim.y;
     sol_sprite_set_frame(entity->anim.spr, entity->anim.load_frame);
 
     if (entity->name) {
-        entity->anim.desty -= sol_sprite_geth(entity->anim.spr) - (8 * settings_zoom());
+        //entity->anim.desty -= sol_sprite_geth(entity->anim.spr) - (8 * settings_zoom());
     }
     entity->anim.movey = entity->anim.movex = entity->anim.left_over = 0.0;
     //printf("%d: %d %d %d (%d, %d)\n", obj->combat_id, obj->mapx, obj->mapy, obj->mapz, anims[anim_pos].x, anims[anim_pos].y);
@@ -178,12 +178,54 @@ static void show_debug_info() {
     }
 
     map_highlight_tile(x, y, 4);
+    //printf("Mouse @ x = %d, y = %d, flags = 0x%x, tile_id = %d, possible tile = %d\n", x, y, cmap->region->flags[y][x], cmap->region->tiles[y][x],
+            //cmap->region->tile_ids[cmap->region->flags[y][x]&0xF]);
+    //printf("0x%x\n", cmap->region->flags[117][57]);
+    //printf("0x%x\n", cmap->region->flags[57][117]);
     for (int x = 0; x < 98; x++) {
         for (int y = 0; y < 128; y++) {
             if (sol_region_is_block(sol_region_manager_get_current(), x, y)) {
                 map_highlight_tile(y, x, 6);
             }
         }
+    }
+}
+
+static void load_wall(const int id) {
+    uint16_t wall_id = (cmap->region->map_id) * 100 + id - 1;
+    gff_palette_t *pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + cmap->region->map_id - 1;
+    uint8_t *data = gff_get_frame_rgba_palette(DSLDATA_GFF_INDEX, GFF_WALL, wall_id, 0, pal);
+
+    if (data) {
+        int w = gff_get_frame_width(DSLDATA_GFF_INDEX, GFF_WALL, wall_id, 0);
+        int h = gff_get_frame_height(DSLDATA_GFF_INDEX, GFF_WALL, wall_id, 0);
+        cmap->region->walls[id] = sol_sprite_create_from_data(data, w, h);
+        free(data);
+    }
+}
+
+static void render_walls() {
+    const int zoom = settings_zoom();
+    const uint32_t xoffset = sol_get_camerax();
+    const uint32_t yoffset = sol_get_cameray();
+    uint32_t xpos = -xoffset;
+    uint32_t ypos = -yoffset;
+    for (int x = 0; x < 98; x++) {
+        for (int y = 0; y < 128; y++) {
+            if (cmap->region->flags[x][y] & 0x1F) {
+                // We have a wall.
+                uint32_t wall_id = cmap->region->flags[x][y] & 0x1F;
+                if (cmap->region->walls[wall_id] == 0) {
+                    load_wall(wall_id);
+                }
+                sol_sprite_set_location(cmap->region->walls[wall_id], xpos,
+                        ypos - sol_sprite_geth(cmap->region->walls[wall_id]) + (16 * zoom));
+                sol_sprite_render(cmap->region->walls[wall_id]);
+            }
+            xpos += zoom * 16;
+        }
+        xpos = -xoffset;
+        ypos += zoom * 16;
     }
 }
 
@@ -196,7 +238,9 @@ void map_render(void *data) {
         sol_sprite_render(game_over);
     }
 
-    if (settings_in_debug()) { show_debug_info(); }
+    render_walls();
+
+    if (sol_in_debug_mode()) { show_debug_info(); }
 }
 
 void map_render_anims() {
@@ -206,6 +250,8 @@ void map_render_anims() {
     animate_sprite_t *anim;
     int hflip = 0, vflip = 0;
     int amt = 0;
+
+    sol_static_list_display(&cmap->region->statics);
 
     entity_list_for_each(cmap->region->entities, dude) {
         amt++;
@@ -373,8 +419,9 @@ int map_handle_mouse(const uint32_t x, const uint32_t y) {
     update_mouse_icon();
 
     dude_t *dude = get_entity_at_location(sol_get_camerax() + mousex, sol_get_cameray() + mousey);
-    if (dude) {
-        //printf("%d: %d %d\n", dude->ds_id, dude->anim.x, dude->anim.y);
+    if (sol_in_debug_mode() && dude) {
+        printf("%d: %d %d\n", dude->ds_id, dude->anim.x, dude->anim.y);
+        sol_entity_debug(dude);
     }
 
     return 1; // map always intercepts the mouse...

@@ -19,7 +19,6 @@ typedef struct noorders_trigger_s {
 
 typedef struct use_trigger_s {
     uint32_t obj, file, addr, global;
-    uint8_t is_door;
 } use_trigger_t;
 
 typedef struct look_trigger_s {
@@ -51,7 +50,7 @@ extern void             sol_trigger_cleanup();
 
 extern int              sol_trigger_add_attack(uint32_t obj, uint32_t file, uint32_t addr);
 extern int              sol_trigger_add_attack_global(uint32_t obj, uint32_t file, uint32_t addr);
-extern int              sol_trigger_add_use(uint32_t obj, uint32_t file, uint32_t addr, const uint8_t);
+extern int              sol_trigger_add_use(uint32_t obj, uint32_t file, uint32_t addr);
 extern int              sol_trigger_add_use_global(uint32_t obj, uint32_t file, uint32_t addr);
 extern int              sol_trigger_add_look(uint32_t obj, uint32_t file, uint32_t addr);
 extern int              sol_trigger_add_look_global(uint32_t obj, uint32_t file, uint32_t addr);
@@ -72,7 +71,6 @@ extern void             sol_trigger_enable_object(const uint32_t obj);
 extern void             sol_trigger_noorders(uint32_t x, uint32_t y);
 extern void             sol_trigger_noorders_enable();
 extern void             sol_trigger_noorders_disable();
-extern void             sol_trigger_set_door(const uint32_t id, const uint8_t is_door);
 extern void             sol_trigger_box_check(uint32_t x, uint32_t y);
 extern int              sol_trigger_tile_check(uint32_t x, uint32_t y);
 extern void             sol_trigger_noorders_event();

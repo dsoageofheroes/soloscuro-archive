@@ -7,6 +7,8 @@
 typedef enum sol_status_e {
     SOL_SUCCESS, // AKA TRUE
     SOL_FAILURE, // AKA FALSE
+    SOL_NOT_IMPLEMENTED,
+    SOL_MEMORY_ERROR,
 } sol_status_t;
 
 #endif

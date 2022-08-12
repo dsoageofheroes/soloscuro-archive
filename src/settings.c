@@ -24,8 +24,6 @@ extern void setting_screen_set(const uint16_t _width, const uint16_t _height) {
     error("MUST resize window!!!!\n");
 }
 
-extern int settings_in_debug() { return 0; }
-
 extern void sol_set_debug(const int val) {
     debug = val;
 }

@@ -7,6 +7,7 @@
 #include "gff-map.h"
 #include "ssi-object.h"
 #include "entity.h"
+#include "statics.h"
 #include "entity-list.h"
 #include "combat-region.h"
 
@@ -30,6 +31,8 @@ typedef struct sol_region_s {
         uint16_t mid;// map to grab a tile from
         uint16_t tid;// tile id from the map
     } sol;
+    sol_static_list_t statics;
+    uint32_t walls[32];
 } sol_region_t;
 
 // external functions...

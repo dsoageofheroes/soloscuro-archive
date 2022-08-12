@@ -23,5 +23,6 @@ typedef enum sol_key_e {
 extern void sol_key_down(const sol_key_e key);
 extern void sol_key_up(const sol_key_e key);
 extern void sol_input_tick();
+extern int sol_in_debug_mode();
 
 #endif

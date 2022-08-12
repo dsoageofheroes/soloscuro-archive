@@ -96,7 +96,8 @@ extern sol_region_t* sol_region_manager_get_region(const int region_id, const in
         ssi_regions[region_id] = sol_region_create(gff_index);
         //ssi_regions[region_id]->assume_loaded = assume_loaded;
         if (!assume_loaded) {
-            entity_list_load_etab(ssi_regions[region_id]->entities, gff_index, region_id);
+            entity_list_load_etab(ssi_regions[region_id]->entities,
+                    &ssi_regions[region_id]->statics, gff_index, region_id);
         }
     }
 

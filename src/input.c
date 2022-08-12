@@ -13,11 +13,15 @@
 
 #define QUICK_SAVE_LOC "quick.sav"
 
-static int xscroll = 0, yscroll = 0;
+static int xscroll = 0, yscroll = 0, in_debug_mode = 0;
 
 extern void sol_input_tick() {
     sol_camera_scrollx(xscroll);
     sol_camera_scrolly(yscroll);
+}
+
+extern int sol_in_debug_mode() {
+    return in_debug_mode;
 }
 
 extern void sol_key_down(const sol_key_e key) {
@@ -54,6 +58,9 @@ extern void sol_key_down(const sol_key_e key) {
                            sol_combat_kill_all_enemies();
                            break;
         case SOLK_KP_MINUS: sol_load_from_file(QUICK_SAVE_LOC);
+                           break;
+        case SOLK_SLASH:
+                           in_debug_mode = !in_debug_mode;
                            break;
         default: break;
     }

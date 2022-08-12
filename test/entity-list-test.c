@@ -3,6 +3,7 @@
 #include "entity.h"
 #include "gff-char.h"
 #include "rules.h"
+#include "statics.h"
 #include "entity-list.h"
 #include <string.h>
 #include <stdlib.h>
@@ -43,10 +44,11 @@ void test_load_etab(void) {
     size_t xsum = 0;
     size_t ysum = 0;
     entity_list_t *list = entity_list_create();
+    sol_static_list_t sl;
 
     snprintf(gff_name, 32, "rgn%x.gff", 42);
     int gff_index = gff_find_index(gff_name);
-    entity_list_load_etab(list, gff_index, 42);
+    entity_list_load_etab(list, &sl, gff_index, 42);
 
     entity_list_for_each(list, dude) {
         xsum += dude->mapx;
