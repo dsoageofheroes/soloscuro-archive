@@ -9,7 +9,7 @@
 #define ITEM_COINS1 (1389)
 #define ITEM_COINS2 (1384)
 
-static int is_door(dude_t *dude) {
+extern int sol_innate_is_door(dude_t *dude) {
     return
         (abs(dude->ds_id) >= 1131 && abs(dude->ds_id) <= 1181)
         || (abs(dude->ds_id) >= 2051 && abs(dude->ds_id) <= 2200)
@@ -20,7 +20,7 @@ static sol_status_t custom_action(dude_t *dude) {
     ds1_item_t ds1_item;
     char msg[1024];
 
-    if (is_door(dude)) {
+    if (sol_innate_is_door(dude)) {
         entity_t *door = dude;
         //printf("DOOR: %d, %d, %d\n", dude->ds_id, dude->mapx, dude->mapy);
         entity_t *twin_door = sol_region_find_entity_by_id(sol_region_manager_get_current(), dude->ds_id + 1);

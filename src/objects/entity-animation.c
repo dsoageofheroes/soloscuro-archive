@@ -206,17 +206,17 @@ static scmd_t throw_anim_scmd[] = {
 };
 
 static scmd_t door_open[] = {
-    {.bmp_idx = 0, .delay = 7, .flags = 0x0, .xoffset = 10, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 1, .delay = 8, .flags = 0x0, .xoffset = 10, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 2, .delay = 8, .flags = 0x0, .xoffset = 10, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 3, .delay = 7, .flags = SCMD_LAST, .xoffset = 10, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 0, .delay = 14, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 1, .delay = 16, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 2, .delay = 16, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 3, .delay = 14, .flags = SCMD_LAST, .xoffset = 0, .yoffset = 0, 0, 0, 0},
 };
 
 static scmd_t door_close[] = {
-    {.bmp_idx = 3, .delay = 7, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 2, .delay = 8, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 1, .delay = 8, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
-    {.bmp_idx = 0, .delay = 7, .flags = SCMD_LAST, .xoffset = 0, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 3, .delay = 14, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 2, .delay = 16, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 1, .delay = 16, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
+    {.bmp_idx = 0, .delay = 14, .flags = SCMD_LAST, .xoffset = 0, .yoffset = 0, 0, 0, 0},
 };
 
 static scmd_t *combat_types[] = {

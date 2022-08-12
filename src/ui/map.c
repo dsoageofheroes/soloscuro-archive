@@ -243,10 +243,22 @@ void map_render(void *data) {
     if (sol_in_debug_mode()) { show_debug_info(); }
 }
 
+static entity_t* get_parent_door(entity_t *dude) {
+    if (!sol_innate_is_door(dude)) { return NULL; }
+
+    entity_t *door2 = sol_region_find_entity_by_id(sol_region_manager_get_current(), dude->ds_id + 1);
+    if (door2 == NULL || (dude->ds_id % 2)) { return NULL; }
+
+    if ((door2->mapx == dude->mapx) || (dude->mapy == door2->mapy)) {
+        return door2;
+    }
+    return NULL;
+}
+
 void map_render_anims() {
     const uint32_t xoffset = sol_get_camerax();
     const uint32_t yoffset = sol_get_cameray();
-    entity_t *dude;
+    entity_t *dude, *parent_door;
     animate_sprite_t *anim;
     int hflip = 0, vflip = 0;
     int amt = 0;
@@ -272,9 +284,22 @@ void map_render_anims() {
             //printf("1]dude->anim.spr = %d, %p, %d, %d (%d, %d)\n", dude->anim.spr, dude->anim.scmd, anim->x, anim->y, anim->w, anim->h);
             //printf("1]dude->anim.scmd_info = %d %d %d\n", dude->anim.scmd_info.gff_idx, dude->anim.scmd_info.res_id, dude->anim.scmd_info.index);
         }
-        sol_sprite_set_location(anim->spr,
-            anim->x - xoffset, // + scmd_xoffset,
-            anim->y - yoffset); // + anim->scmd->yoffset);
+        if (!(parent_door = get_parent_door(dude))) {
+            sol_sprite_set_location(anim->spr,
+                anim->x - xoffset, // + scmd_xoffset,
+                anim->y - yoffset); // + anim->scmd->yoffset);
+        } else {
+            int xdiff = 0, ydiff = 0;
+            if (dude->mapy == parent_door->mapy) {
+                xdiff = 16 * settings_zoom() - sol_sprite_getw(anim->spr);
+            } else {
+                ydiff = sol_sprite_geth(anim->spr);
+                if (ydiff > 32) { ydiff = 0; }
+            }
+            sol_sprite_set_location(anim->spr,
+                anim->x - xoffset + xdiff, // + scmd_xoffset,
+                anim->y - yoffset + ydiff); // + anim->scmd->yoffset);
+        }
         if (dude->name) {
             //printf("->%s\n", dude->name);
             //printf("%s: %d @ (%d, %d) frame %d / %d\n", dude->name, dude->anim.spr,
