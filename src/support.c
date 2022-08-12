@@ -58,10 +58,23 @@ static void write_image(const char *base_path, const int gff_idx, const int type
     char type[5];
     uint32_t *bmp_ptr = (uint32_t*)(bmp_header + 2);
 
-    if (type_id != GFF_BMP && type_id != GFF_ICON && type_id != GFF_PORT) { return; }
+    if (type_id != GFF_BMP && type_id != GFF_ICON && type_id != GFF_PORT && type_id != GFF_TILE && type_id != GFF_WALL) { return; }
 
     if (type_id == GFF_BMP && open_files[gff_idx].pals->len) {
         pal = open_files[gff_idx].pals->palettes;
+    }
+
+    if (type_id == GFF_TILE) {
+        int num;
+        sscanf(open_files[gff_idx].filename, "rgn%x.gff", &num);
+        num--;
+        if (num < open_files[DSLDATA_GFF_INDEX].pals->len) {
+            pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + num;
+        }
+    }
+
+    if (type_id == GFF_WALL) {
+        pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + ((res_id / 100) - 1);
     }
 
     type[4] = '\0';

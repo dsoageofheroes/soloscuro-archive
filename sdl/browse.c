@@ -398,6 +398,7 @@ static void render_entry_icon();
 static void render_entry_port();
 static void render_entry_ojff();
 static void render_entry_tile();
+static void render_entry_wall();
 static void render_entry_rmap();
 static void render_entry_gmap();
 static void render_entry_etab();
@@ -452,6 +453,7 @@ static void render_entry() {
         case GFF_APFM: render_entry_apfm(); break;
         case GFF_BUTN: render_entry_butn(); break;
         case GFF_EBOX: render_entry_ebox(); break;
+        case GFF_WALL: render_entry_wall(); break;
         default:
             render_entry_header();
             sol_print_line_len(0, "Need to implement", 320, 40, 128);
@@ -566,6 +568,14 @@ static void render_entry_tile() {
         pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + num;
     }
     render_entry_as_image(gff_idx, GFF_TILE, res_ids[res_idx], pal, 320, 40);
+}
+
+static void render_entry_wall() {
+    int num;
+    gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes;
+    
+    pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + ((res_ids[res_idx] / 100) - 1);
+    render_entry_as_image(gff_idx, GFF_WALL, res_ids[res_idx], pal, 320, 40);
 }
 
 /*
