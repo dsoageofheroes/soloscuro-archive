@@ -692,11 +692,13 @@ extern void gpl_lua_drop(void) {
 
 extern void gpl_lua_passtime(void) {
     lua_exit("gpl_passtime not implemented\n");
+    exit(1);
 }
 
 extern void gpl_lua_door_tiletrigger(void) {
     lua_exit("Can't parse door_tiletrigger yet.\n");
     lprintf("--unimplmented move box trigger.\n");
+    exit(1);
 }
 
 extern void gpl_lua_move_boxtrigger(void) {
@@ -712,6 +714,7 @@ extern void gpl_lua_door_boxtrigger(void) {
     lprintf("gpl.box_trigger(%s, %s, %s, %s, %s, %s, %s)\n",
         lparams.params[0], lparams.params[1], lparams.params[2], lparams.params[3], lparams.params[4],
         lparams.params[5], lparams.params[6]);
+    exit(1);
 }
 
 extern void gpl_lua_pickup_itemtrigger(void) {

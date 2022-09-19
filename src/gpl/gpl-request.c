@@ -5,6 +5,7 @@
 #include "gpl-state.h"
 #include "port.h"
 #include "trigger.h"
+#include "innate.h"
 
 enum requests {
     REQUEST_NONE, //0
@@ -689,9 +690,7 @@ static void request_door(const int16_t name, const int32_t op, const int32_t ran
         //find the door
         if (door->ds_id == name || door->ds_id == (name - range)) {
             debug("Performing operation '%s' on door %d\n", op == 0 ? "open" : "close", door->ds_id);
-            door->anim.scmd = entity_animation_get_scmd(door, 0, 0, EA_DOOR_OPEN);
-            entity_animation_list_add(&(door->actions), EA_SCMD, door, door, NULL, 30);
-            sol_region_set_block(reg, door->mapx, door->mapy, op);
+            sol_innate_activate_door(door);
         }
     }
 }

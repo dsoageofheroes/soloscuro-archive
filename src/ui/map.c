@@ -119,6 +119,12 @@ static void sprite_load_animation(entity_t *entity, gff_palette_t *pal) {
     //printf("%d: %d %d %d (%d, %d)\n", obj->combat_id, obj->mapx, obj->mapy, obj->mapz, anims[anim_pos].x, anims[anim_pos].y);
     //printf("             (%d, %d)\n", anims[anim_pos].destx, anims[anim_pos].desty);
     //printf("%s: @ %p\n", entity->name, entity->sprite.data);
+    if (sol_innate_is_door(entity) && entity->map_flags & GM_ANIMATING) {
+        printf("IS DOOR and should activate: %d, map_flags = 0x%x\n", entity->ds_id, entity->map_flags);
+        entity->map_flags &= ~GM_ANIMATING;
+        sol_sprite_set_frame(entity->anim.spr, 2);
+        sol_innate_activate_door(entity);
+    }
 }
 
 static map_t *create_map() {

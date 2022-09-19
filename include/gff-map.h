@@ -41,6 +41,8 @@ typedef struct _gff_map_object_t {
     int16_t  index; // bit 15: item is on disk(segobjx.gff), abs(index) = chunk id!
 } gff_map_object_t;
 
+#define GM_ANIMATING (0x01)
+
 // The small 'n' means next. IE: nbmp_idx = next bitmap index.
 typedef struct _gff_script_cmd_t {
     uint8_t nbmp_idx;     // 0-254 = valid, 255 invalid.

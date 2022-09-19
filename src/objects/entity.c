@@ -4,6 +4,7 @@
 #include "item.h"
 #include "gpl.h"
 #include "entity.h"
+#include "innate.h"
 #include "gff.h"
 #include "rules.h"
 #include "port.h"
@@ -283,6 +284,7 @@ entity_t* entity_create_from_etab(gff_map_object_t *entry_table, uint32_t id) {
     dude->anim.xoffset = -disk_object.xoffset + ((gm->xpos) % 16);
     dude->anim.yoffset = -disk_object.yoffset  - disk_object.zpos + ((gm->ypos)) % 16;
     dude->mapz = gm->zpos;
+    dude->map_flags = gm->flags;
 
     return dude;
 }

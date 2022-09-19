@@ -44,6 +44,7 @@ typedef struct entity_s {
     uint8_t alignment;
     int8_t allegiance;
     int8_t object_flags;
+    int8_t map_flags;
     int8_t direction; // Left, Right, Up, Down.
     uint16_t region;
     uint16_t mapx;      // object's x position in the region
