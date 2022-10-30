@@ -16,7 +16,7 @@ typedef enum gpl_gnum_e {
     GNAME_ACTIVE,
     GNAME_PASSIVE,
     GNAME_UNKNOWN8,
-    GNAME_TIME,
+    GNAME_TIME, // confirmed this needs to be updated
     GNAME_UNKNOWNA,
     GNAME_UNKNOWNB,
     GNAME_UNKNOWNC,

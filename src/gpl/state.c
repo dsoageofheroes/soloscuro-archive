@@ -182,7 +182,7 @@ static int set_lf(lua_State *l) {
         exit(1);
     }
     gpl_local_flags[id] = val;
-    debug("gpl_local_flags[" PRI_LI "] = " PRI_LI "\n", id, val);
+    //debug("gpl_local_flags[" PRI_LI "] = " PRI_LI "\n", id, val);
     return 0;
 }
 
@@ -310,7 +310,7 @@ static int get_gname(lua_State *l) {
         printf("ERROR: " PRI_LI " is out of range for local big nums!\n", id);
         exit(1);
     }
-    //printf("GNAME----------------------------------------------------->[" PRI_LI "] = %d\n", id, gpl_gnames[id]);
+    //printf("GNAME----------------------------------------------------->[" PRI_LI "] => %d\n", id, gpl_get_gname(id));
     lua_pushnumber(l, gpl_get_gname(id));
     return 1;
 }
@@ -339,7 +339,7 @@ static int set_gname(lua_State *l) {
     } else {
         gpl_gnames[id] = val;
     }
-    //printf("GNAME----------------------------------------------------->[" PRI_LI "] = %d\n", id, gpl_gnames[id]);
+    //printf("GNAME----------------------------------------------------->[" PRI_LI "] <= %d\n", id, gpl_gnames[id]);
     return 0;
 }
 
@@ -410,12 +410,22 @@ static int set_element(lua_State *l) {
     return 0;
 }
 
+// This is kinda wierd as each object would need an id. But I don't see how that currently would work.
+// So, players have negative numbers.
 static int get_party(lua_State *l) {
     lua_Integer member = luaL_checkinteger(l, 1);
     //static int idx = -1;
-    error("error: gpl.get_party: not implemented returning 9999 for member: " PRI_LI "!\n", member);
+    //error("error: gpl.get_party: not implemented returning 9999 for member: " PRI_LI "!\n", member);
+    if (sol_player_exists(member)) {
+        debug("Party member does not exist in slot: " PRI_LI ", returning 9999!\n", member);
+        lua_pushnumber(l, 9999);
+        return 1;
+    }
+
+    // For now just return the negative of it.
     //lua_pushnumber(l, gpl_gnames[id]);
-    lua_pushnumber(l, 9999);
+    //lua_pushnumber(l, 9999);
+    lua_pushnumber(l, -member);
     /*
     lua_pushnumber(l, idx);
     if (idx == 9999) { idx = -1; return 1;}

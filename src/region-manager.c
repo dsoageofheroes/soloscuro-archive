@@ -101,6 +101,10 @@ extern sol_region_t* sol_region_manager_get_region(const int region_id, const in
         }
     }
 
+    if (current_region != region_id) {
+        // HACK TODO: NEED to setup load/unload of regions correctly!
+        sol_trigger_cleanup();
+    }
     current_region = region_id;
 	for (int i = 0; i < MAX_PCS; i++) {
         dude = sol_player_get(i);

@@ -37,7 +37,7 @@ static void set_door_blocks(dude_t *door, int door_is_open) {
     entity_t *twin_door = find_twin(door);
 
     if (!twin_door) {
-        error("Unable to find twin for door!");
+        error("Unable to find twin for door!\n");
         return;
     }
 

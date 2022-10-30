@@ -76,7 +76,7 @@ extern void sol_gameloop_init() {
     wait_flags[WAIT_FINAL] = 1;
 }
 
-#define TICKS_PER_ROUND (300)
+#define TICKS_PER_ROUND (300) // TODO: Is this really 60?
 extern void sol_game_loop() {
     int ticks_to_increment_time = TICKS_PER_ROUND;
     while (!done) {
@@ -91,7 +91,10 @@ extern void sol_game_loop() {
         }
         if (ticks_to_increment_time <= 0) {
             ticks_to_increment_time = TICKS_PER_ROUND;
+            // TODO: this is a guess...
             gpl_set_gname(GNAME_TIME, gpl_get_gname(GNAME_TIME) + 1);
+            // Time to check for noorders
+            sol_trigger_noorders_event();
         }
         sol_trigger_tick();
         //if (in_replay_mode() && rep_times > 10) {
