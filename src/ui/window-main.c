@@ -6,6 +6,8 @@
 #include "combat.h"
 #include "combat-status.h"
 #include "region-manager.h"
+#include "gpl.h"
+#include "gpl-manager.h"
 #include "popup.h"
 #include "gfftypes.h"
 #include "player.h"
@@ -43,6 +45,8 @@ static int click_action() {
         if(sol_player_get_active() && sol_player_get_active()->name) {
             sol_window_pop();
             // Note: We are deallocated here, so be careful.
+            info("Running Master DSL #99.\n");
+            gpl_lua_execute_script(99, 0, 1);
             sol_window_load_region(42);
             return 1;
         } else {

@@ -12,32 +12,17 @@
 #include <string.h>
 
 // It looks like noorders should be triggered:
+// 0) Every 60-300 game ticks (confirmed, but number is unknown.)
 // 1) On entry of area (unconfirmed)
 // 2) When the object attached to it is moved (animated.) (Unconfirmed.)
 // 3) When character moves off of it via y-axis.  (Unconfirmed.)
 
 static int trigger_noorders = 0;
-
-typedef struct trigger_node_s {
-    union {
-        attack_trigger_t attack;
-        noorders_trigger_t noorders;
-        use_trigger_t use;
-        look_trigger_t look;
-        talkto_trigger_t talkto;
-        usewith_trigger_t usewith;
-        tile_trigger_t tile;
-        box_trigger_t box;
-        los_trigger_t los;
-    };
-    struct trigger_node_s *next;
-} trigger_node_t;
-
-static trigger_node_t *attack_list, *noorders_list, *use_list, *look_list, *talkto_list, *usewith_list, *tile_list, *box_list;
-static trigger_node_t *los_list;
+static sol_triggers_t *triggers = NULL;
+static sol_triggers_t global_triggers;
 
 extern void sol_trigger_init() {
-    attack_list = noorders_list = use_list = look_list = talkto_list = usewith_list = tile_list = box_list = los_list = NULL;
+    memset(&global_triggers, 0x0, sizeof(sol_triggers_t));
     sol_trigger_noorders_disable();
 }
 
@@ -51,73 +36,75 @@ static void free_list(trigger_node_t *list) {
 }
 
 extern void sol_trigger_cleanup() {
-    free_list(attack_list);
-    free_list(noorders_list);
-    free_list(use_list);
-    free_list(look_list);
-    free_list(talkto_list);
-    free_list(usewith_list);
-    free_list(tile_list);
-    free_list(box_list);
-    free_list(los_list);
-    sol_trigger_init();
+    free_list(triggers->attack_list);
+    free_list(triggers->noorders_list);
+    free_list(triggers->use_list);
+    free_list(triggers->look_list);
+    free_list(triggers->talkto_list);
+    free_list(triggers->usewith_list);
+    free_list(triggers->tile_list);
+    free_list(triggers->box_list);
+    free_list(triggers->los_list);
+    triggers = NULL;
+    sol_trigger_noorders_disable();
 }
 
-static int _add_attack_trigger(uint32_t obj, uint32_t file, uint32_t addr, uint32_t global) {
+extern void sol_trigger_set_region(sol_region_t *reg) {
+    triggers = &(reg->triggers);
+}
+
+static int _add_attack_trigger(uint32_t obj, uint32_t file, uint32_t addr, sol_triggers_t *trig) {
     trigger_node_t *to_add = malloc(sizeof(trigger_node_t));
     to_add->attack.obj = obj;
     to_add->attack.file = file;
     to_add->attack.addr = addr;
-    to_add->attack.global = global;
-    to_add->next = attack_list;
-    attack_list = to_add;
+    to_add->next = trig->attack_list;
+    trig->attack_list = to_add;
     return 1;
 }
 
 extern int sol_trigger_add_attack_global(uint32_t obj, uint32_t file, uint32_t addr) {
-    return _add_attack_trigger(obj, file, addr, 1);
+    return _add_attack_trigger(obj, file, addr, &global_triggers);
 }
 
 extern int sol_trigger_add_attack(uint32_t obj, uint32_t file, uint32_t addr) {
-    return _add_attack_trigger(obj, file, addr, 0);
+    return _add_attack_trigger(obj, file, addr, triggers);
 }
 
-static int _add_use_trigger(uint32_t obj, uint32_t file, uint32_t addr, uint32_t global) {
+static int _add_use_trigger(uint32_t obj, uint32_t file, uint32_t addr, sol_triggers_t *trig) {
     trigger_node_t *to_add = malloc(sizeof(trigger_node_t));
     to_add->use.obj = obj;
     to_add->use.file = file;
     to_add->use.addr = addr;
-    to_add->use.global = global;
-    to_add->next = use_list;
-    use_list = to_add;
+    to_add->next = trig->use_list;
+    trig->use_list = to_add;
     return 1;
 }
 
 extern int sol_trigger_add_use(uint32_t obj, uint32_t file, uint32_t addr) {
-    return _add_use_trigger(obj, file, addr, 0);
+    return _add_use_trigger(obj, file, addr, triggers);
 }
 
 extern int sol_trigger_add_use_global(uint32_t obj, uint32_t file, uint32_t addr) {
-    return _add_use_trigger(obj, file, addr, 1);
+    return _add_use_trigger(obj, file, addr, &global_triggers);
 }
 
-static int _add_look_trigger(uint32_t obj, uint32_t file, uint32_t addr, uint32_t global) {
+static int _add_look_trigger(uint32_t obj, uint32_t file, uint32_t addr, sol_triggers_t *trig) {
     trigger_node_t *to_add = malloc(sizeof(trigger_node_t));
     to_add->look.obj = obj;
     to_add->look.file = file;
     to_add->look.addr = addr;
-    to_add->look.global = global;
-    to_add->next = look_list;
-    look_list = to_add;
+    to_add->next = trig->look_list;
+    trig->look_list = to_add;
     return 1;
 }
 
 extern int sol_trigger_add_look(uint32_t obj, uint32_t file, uint32_t addr) {
-    return _add_look_trigger(obj, file, addr, 0);
+    return _add_look_trigger(obj, file, addr, triggers);
 }
 
 extern int sol_trigger_add_look_global(uint32_t obj, uint32_t file, uint32_t addr) {
-    return _add_look_trigger(obj, file, addr, 1);
+    return _add_look_trigger(obj, file, addr, &global_triggers);
 }
 
 extern int sol_trigger_add_noorders(uint32_t obj, uint32_t file, uint32_t addr, int trigger, int run) {
@@ -127,8 +114,8 @@ extern int sol_trigger_add_noorders(uint32_t obj, uint32_t file, uint32_t addr, 
     to_add->noorders.addr = addr;
     to_add->noorders.trigger_on_tile = trigger;
     to_add->noorders.need_to_run = run;
-    to_add->next = noorders_list;
-    noorders_list = to_add;
+    to_add->next = triggers->noorders_list;
+    triggers->noorders_list = to_add;
     if (obj == 0) {
         error("adding no order for obj 0, this makes no sense.\n");
     }
@@ -140,8 +127,8 @@ extern int sol_trigger_add_talkto(uint32_t obj, uint32_t file, uint32_t addr) {
     to_add->talkto.obj = obj;
     to_add->talkto.file = file;
     to_add->talkto.addr = addr;
-    to_add->next = talkto_list;
-    talkto_list = to_add;
+    to_add->next = triggers->talkto_list;
+    triggers->talkto_list = to_add;
     return 1;
 }
 
@@ -151,8 +138,8 @@ extern int sol_trigger_add_usewith(uint32_t obj1, uint32_t obj2, uint32_t file, 
     to_add->usewith.obj2 = obj2;
     to_add->usewith.file = file;
     to_add->usewith.addr = addr;
-    to_add->next = usewith_list;
-    usewith_list = to_add;
+    to_add->next = triggers->usewith_list;
+    triggers->usewith_list = to_add;
     return 1;
 }
 
@@ -163,8 +150,8 @@ extern int sol_trigger_add_tile(uint32_t x, uint32_t y, uint32_t file, uint32_t 
     to_add->tile.file = file;
     to_add->tile.addr = addr;
     to_add->tile.trip = trip;
-    to_add->next = tile_list;
-    tile_list = to_add;
+    to_add->next = triggers->tile_list;
+    triggers->tile_list = to_add;
     return 1;
 }
 
@@ -177,13 +164,13 @@ extern int sol_trigger_add_box(uint32_t x, uint32_t y, uint32_t w, uint32_t h, u
     to_add->box.file = file;
     to_add->box.addr = addr;
     to_add->box.trip = trip;
-    to_add->next = box_list;
-    box_list = to_add;
+    to_add->next = triggers->box_list;
+    triggers->box_list = to_add;
     return 0;
 }
 
 extern talkto_trigger_t sol_trigger_get_talkto(uint32_t obj) {
-    trigger_node_t *rover = talkto_list;
+    trigger_node_t *rover = triggers->talkto_list;
     talkto_trigger_t ret;
     ret.obj = 0;
 
@@ -198,7 +185,7 @@ extern talkto_trigger_t sol_trigger_get_talkto(uint32_t obj) {
 }
 
 extern look_trigger_t sol_trigger_get_look(uint32_t obj) {
-    trigger_node_t *rover = look_list;
+    trigger_node_t *rover = triggers->look_list;
     look_trigger_t ret;
     ret.obj = 0;
 
@@ -213,7 +200,7 @@ extern look_trigger_t sol_trigger_get_look(uint32_t obj) {
 }
 
 extern use_trigger_t sol_trigger_get_use(uint32_t obj) {
-    trigger_node_t *rover = use_list;
+    trigger_node_t *rover = triggers->use_list;
     use_trigger_t ret;
     ret.obj = 0;
 
@@ -235,7 +222,7 @@ static void list_object_clear (trigger_node_t *list, const uint32_t obj, int (*c
     while (rover) {
         while (rover && cmp (rover, obj)) {
             if (!prev) {
-                attack_list = rover->next;
+                triggers->attack_list = rover->next;
             } else {
                 prev->next = rover->next;
             }
@@ -255,9 +242,8 @@ static int _add_los_trigger(uint32_t obj, uint32_t file, uint32_t addr, uint32_t
     to_add->los.file = file;
     to_add->los.addr = addr;
     to_add->los.param = param;
-    to_add->next = los_list;
-    los_list = to_add;
-    printf("adding LOS trigger!\n");
+    to_add->next = triggers->los_list;
+    triggers->los_list = to_add;
     return 1;
 }
 
@@ -272,15 +258,15 @@ static int look_equals(const trigger_node_t *node, const uint32_t obj) { return 
 static int talk_equals(const trigger_node_t *node, const uint32_t obj) { return node->talkto.obj == obj; }
 
 extern void sol_trigger_object_clear(const uint32_t obj) {
-    list_object_clear(attack_list, obj, attack_equals);
-    list_object_clear(noorders_list, obj, noorders_equals);
-    list_object_clear(use_list, obj, use_equals);
-    list_object_clear(look_list, obj, look_equals);
-    list_object_clear(talkto_list, obj, talk_equals);
+    list_object_clear(triggers->attack_list, obj, attack_equals);
+    list_object_clear(triggers->noorders_list, obj, noorders_equals);
+    list_object_clear(triggers->use_list, obj, use_equals);
+    list_object_clear(triggers->look_list, obj, look_equals);
+    list_object_clear(triggers->talkto_list, obj, talk_equals);
 }
 
 extern void sol_trigger_enable_object(const uint32_t obj) {
-    for(trigger_node_t *rover = noorders_list; rover; rover = rover->next) {
+    for(trigger_node_t *rover = triggers->noorders_list; rover; rover = rover->next) {
         if (rover->noorders.obj == obj) {
             rover->noorders.need_to_run = 1;
         }
@@ -301,7 +287,7 @@ extern void sol_trigger_noorders(uint32_t x, uint32_t y) {
     static trigger_node_t *last_door_trigger = NULL;
     static int32_t last_door_y = -1;
     uint8_t found_door = 0;
-    //trigger_node_t *rover = noorders_list;
+    //trigger_node_t *rover = triggers->noorders_list;
     if (trigger_noorders) {
         trigger_noorders = 0;
         sol_trigger_noorders_event();
@@ -310,7 +296,7 @@ extern void sol_trigger_noorders(uint32_t x, uint32_t y) {
 }
 
 extern int sol_trigger_tile_check(uint32_t x, uint32_t y) {
-    trigger_node_t *rover = tile_list, *prev = NULL, *hold = NULL;
+    trigger_node_t *rover = triggers->tile_list, *prev = NULL, *hold = NULL;
 
     while (rover) {
         tile_trigger_t *tile = &(rover->tile);
@@ -321,7 +307,7 @@ extern int sol_trigger_tile_check(uint32_t x, uint32_t y) {
             if (prev) {
                 prev->next = rover->next;
             }else {
-                tile_list = rover->next;
+                triggers->tile_list = rover->next;
             }
 
             // Take out of list.
@@ -334,8 +320,8 @@ extern int sol_trigger_tile_check(uint32_t x, uint32_t y) {
             //exit(1);
             //free(rover);
             // put check back in list.
-            hold->next = tile_list;
-            tile_list = hold;
+            hold->next = triggers->tile_list;
+            triggers->tile_list = hold;
             return 1;
         }
         prev = rover;
@@ -346,7 +332,7 @@ extern int sol_trigger_tile_check(uint32_t x, uint32_t y) {
 }
 
 extern void sol_trigger_box_check(uint32_t x, uint32_t y) {
-    trigger_node_t *rover = box_list, *prev = NULL, *hold = NULL;
+    trigger_node_t *rover = triggers->box_list, *prev = NULL, *hold = NULL;
 
     while (rover) {
         box_trigger_t *box = &(rover->box);
@@ -357,7 +343,7 @@ extern void sol_trigger_box_check(uint32_t x, uint32_t y) {
             if (prev) {
                 prev->next = rover->next;
             }else {
-                box_list = rover->next;
+                triggers->box_list = rover->next;
             }
 
             // Take out of list.
@@ -368,8 +354,8 @@ extern void sol_trigger_box_check(uint32_t x, uint32_t y) {
             gpl_lua_execute_script(box->file, box->addr, 0);
 
             // put check back in list.
-            hold->next = box_list;
-            box_list = hold;
+            hold->next = triggers->box_list;
+            triggers->box_list = hold;
             return;
         }
         prev = rover;
@@ -437,14 +423,14 @@ extern char* sol_trigger_serialize(size_t *len) {
     size_t buf_len = 128, offset = 0;
     char *buf = malloc(buf_len);
 
-    buf = write_trigger_list(attack_list, buf, &buf_len, &offset);
-    buf = write_trigger_list(noorders_list, buf, &buf_len, &offset);
-    buf = write_trigger_list(use_list, buf, &buf_len, &offset);
-    buf = write_trigger_list(look_list, buf, &buf_len, &offset);
-    buf = write_trigger_list(talkto_list, buf, &buf_len, &offset);
-    buf = write_trigger_list(usewith_list, buf, &buf_len, &offset);
-    buf = write_trigger_list(tile_list, buf, &buf_len, &offset);
-    buf = write_trigger_list(box_list, buf, &buf_len, &offset);
+    buf = write_trigger_list(triggers->attack_list, buf, &buf_len, &offset);
+    buf = write_trigger_list(triggers->noorders_list, buf, &buf_len, &offset);
+    buf = write_trigger_list(triggers->use_list, buf, &buf_len, &offset);
+    buf = write_trigger_list(triggers->look_list, buf, &buf_len, &offset);
+    buf = write_trigger_list(triggers->talkto_list, buf, &buf_len, &offset);
+    buf = write_trigger_list(triggers->usewith_list, buf, &buf_len, &offset);
+    buf = write_trigger_list(triggers->tile_list, buf, &buf_len, &offset);
+    buf = write_trigger_list(triggers->box_list, buf, &buf_len, &offset);
 
     *len = offset;
 
@@ -470,49 +456,49 @@ static char* read_trigger_list(trigger_node_t **list, char *buf) {
 extern void sol_trigger_deserialize(char *data) {
     sol_trigger_cleanup();
 
-    char *buf = read_trigger_list(&attack_list, data);
-    buf = read_trigger_list(&noorders_list, buf);
-    buf = read_trigger_list(&use_list, buf);
-    buf = read_trigger_list(&look_list, buf);
-    buf = read_trigger_list(&talkto_list, buf);
-    buf = read_trigger_list(&usewith_list, buf);
-    buf = read_trigger_list(&tile_list, buf);
-    buf = read_trigger_list(&box_list, buf);
+    char *buf = read_trigger_list(&triggers->attack_list, data);
+    buf = read_trigger_list(&triggers->noorders_list, buf);
+    buf = read_trigger_list(&triggers->use_list, buf);
+    buf = read_trigger_list(&triggers->look_list, buf);
+    buf = read_trigger_list(&triggers->talkto_list, buf);
+    buf = read_trigger_list(&triggers->usewith_list, buf);
+    buf = read_trigger_list(&triggers->tile_list, buf);
+    buf = read_trigger_list(&triggers->box_list, buf);
 }
 
 extern void sol_write_triggers(FILE *file) {
-    for (trigger_node_t *rover = attack_list; rover; rover = rover->next) {
+    for (trigger_node_t *rover = triggers->attack_list; rover; rover = rover->next) {
         fprintf(file, "gpl.attack_trigger(%d, %d, %d)\n", rover->attack.obj, rover->attack.file, rover->attack.addr);
     }
-    for (trigger_node_t *rover = use_list; rover; rover = rover->next) {
+    for (trigger_node_t *rover = triggers->use_list; rover; rover = rover->next) {
         fprintf(file, "gpl.use_trigger(%d, %d, %d)\n", rover->use.obj, rover->use.file, rover->use.addr);
     }
-    for (trigger_node_t *rover = look_list; rover; rover = rover->next) {
+    for (trigger_node_t *rover = triggers->look_list; rover; rover = rover->next) {
         fprintf(file, "gpl.look_trigger(%d, %d, %d)\n", rover->look.obj, rover->look.file, rover->look.addr);
     }
-    for (trigger_node_t *rover = talkto_list; rover; rover = rover->next) {
+    for (trigger_node_t *rover = triggers->talkto_list; rover; rover = rover->next) {
         fprintf(file, "gpl.talk_to_trigger(%d, %d, %d)\n", rover->look.obj, rover->look.file, rover->look.addr);
     }
-    for (trigger_node_t *rover = usewith_list; rover; rover = rover->next) {
+    for (trigger_node_t *rover = triggers->usewith_list; rover; rover = rover->next) {
         fprintf(file, "gpl.use_with_trigger(%d, %d, %d, %d)\n", rover->usewith.obj1, rover->usewith.obj2,
                       rover->usewith.file, rover->usewith.addr);
     }
-    for (trigger_node_t *rover = tile_list; rover; rover = rover->next) {
+    for (trigger_node_t *rover = triggers->tile_list; rover; rover = rover->next) {
         fprintf(file, "gpl.tile_trigger(%d, %d, %d, %d, %d)\n", rover->tile.x, rover->tile.y, rover->tile.addr,
                       rover->tile.file, rover->tile.trip);
     }
-    for (trigger_node_t *rover = box_list; rover; rover = rover->next) {
+    for (trigger_node_t *rover = triggers->box_list; rover; rover = rover->next) {
         fprintf(file, "gpl.box_trigger(%d, %d, %d, %d, %d, %d, %d)\n", rover->box.x, rover->box.y,
                       rover->box.w, rover->box.h, rover->box.addr, rover->box.file, rover->box.trip);
     }
-    for (trigger_node_t *rover = noorders_list; rover; rover = rover->next) {
+    for (trigger_node_t *rover = triggers->noorders_list; rover; rover = rover->next) {
         fprintf(file, "gpl.noorders_trigger(%d, %d, %d, %d, %d)\n", rover->noorders.obj, rover->noorders.file,
                 rover->noorders.addr, rover->noorders.trigger_on_tile, rover->noorders.need_to_run);
     }
 }
 
 extern void sol_trigger_noorders_event() {
-    for(trigger_node_t *rover = noorders_list; rover; rover = rover->next) {
+    for(trigger_node_t *rover = triggers->noorders_list; rover; rover = rover->next) {
         //printf("checking noorders %d \n", rover->noorders.obj);
         //if (rover->noorders.obj == (uint32_t) gpl_get_gname(GNAME_PASSIVE)) {
             //printf("executing %d, %d\n", rover->noorders.file, rover->noorders.addr);
@@ -523,7 +509,7 @@ extern void sol_trigger_noorders_event() {
 
 extern void sol_trigger_noorders_entity_check(entity_t *entity) {
     if (!entity) { return; }
-    for(trigger_node_t *rover = noorders_list; rover; rover = rover->next) {
+    for(trigger_node_t *rover = triggers->noorders_list; rover; rover = rover->next) {
         if (rover->noorders.obj == (uint32_t)entity->ds_id) {
             //printf("noorder_entity_check: executing %d, %d\n", rover->noorders.file, rover->noorders.addr);
             gpl_lua_execute_script(rover->noorders.file, rover->noorders.addr, 0);
@@ -594,7 +580,7 @@ extern void sol_trigger_los_check(uint32_t obj, uint32_t file, uint32_t addr, ui
 extern void sol_trigger_tick() {
     dude_t *player = sol_player_get_active();
     static int32_t lposx = 9999, lposy = 9999;
-    for(trigger_node_t *rover = noorders_list; rover; rover = rover->next) {
+    for(trigger_node_t *rover = triggers->noorders_list; rover; rover = rover->next) {
         //printf("sol_trigger_tick: %d,  %d\n", rover->noorders.obj, rover->noorders.trigger_on_tile);
         dude_t *dude = sol_region_find_entity_by_id(sol_region_manager_get_current(), rover->noorders.obj);
         //if (on_object(dude, lposx, lposy) && !on_object(dude, player->mapx, player->mapy)) {

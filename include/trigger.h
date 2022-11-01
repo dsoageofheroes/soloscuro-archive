@@ -5,48 +5,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "common.h"
 #include "entity.h"
-
-typedef struct attack_trigger_s {
-    uint32_t obj, file, addr, global;
-} attack_trigger_t;
-
-typedef struct noorders_trigger_s {
-    uint32_t obj, file, addr;
-    uint8_t need_to_run; // flag if we need to run/execute at the next oppurtunity.
-    uint8_t trigger_on_tile; // flag if we need to run/execute next tile trigger.
-} noorders_trigger_t;
-
-typedef struct use_trigger_s {
-    uint32_t obj, file, addr, global;
-} use_trigger_t;
-
-typedef struct look_trigger_s {
-    uint32_t obj, file, addr, global;
-} look_trigger_t;
-
-typedef struct talkto_trigger_s {
-    uint32_t obj, file, addr;
-} talkto_trigger_t;
-
-typedef struct usewith_trigger_s {
-    uint32_t obj1, obj2, file, addr;
-} usewith_trigger_t;
-
-typedef struct tile_trigger_s {
-    uint32_t x, y, file, addr, trip;
-} tile_trigger_t;
-
-typedef struct box_trigger_s {
-    uint32_t x, y, w, h, file, addr, trip;
-} box_trigger_t;
-
-typedef struct los_trigger_s {
-    uint32_t obj, file, addr, param;
-} los_trigger_t;
+#include "region.h"
 
 extern void             sol_trigger_init();
 extern void             sol_trigger_cleanup();
+extern void             sol_trigger_set_region(sol_region_t *reg);
 
 extern int              sol_trigger_add_attack(uint32_t obj, uint32_t file, uint32_t addr);
 extern int              sol_trigger_add_attack_global(uint32_t obj, uint32_t file, uint32_t addr);

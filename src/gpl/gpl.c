@@ -43,6 +43,7 @@ extern void gpl_set_global(gpl_global_e what, entity_t *entity) {
 void gpl_change_region(const int region_id) {
     //gpl_execute_subroutine(region_id, 0, 1);
     replay_print("rep.change_region(%lld)\n", region_id);
+    sol_region_manager_get_region(region_id, 0);
     gpl_lua_execute_script(region_id, 0, 1);
 }
 
@@ -63,8 +64,6 @@ extern void gpl_init() {
     sol_trigger_init();
     gpl_manager_init();
     sol_region_manager_init();
-    info("Running Master DSL #99.\n");
-    gpl_lua_execute_script(99, 0, 1);
 }
 
 extern void gpl_cleanup() {
