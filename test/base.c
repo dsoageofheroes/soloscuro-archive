@@ -105,6 +105,7 @@ void sol_sprite_render_box(const uint16_t sprite_id, const uint16_t x,
 void sol_sprite_center(const int id, const int x, const int y, const int w, const int h) {}
 uint32_t sol_sprite_num_frames(const uint16_t id) {return 1;}
 void sol_sprite_render_flip(const uint16_t sprite_id, const int horizontal_flip, const int vertical_flip) {}
+void sol_sprite_set_color_mod(const uint16_t sprite_id, const uint8_t r, const uint8_t g, const uint8_t b) {}
 void sol_sprite_print(const sol_sprite_t sprite_id) {}
 
 void sol_mouse_set_as_power(power_t *pw) {}

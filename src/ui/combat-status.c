@@ -168,7 +168,7 @@ extern void sol_combat_action(const entity_action_t *ca) {
         case EA_MAGIC_DAMAGE:
         case EA_BROWN_DAMAGE:
             as = &(ca->target->anim);
-            //sol_sprite_center_spr(combat_attacks, as->spr);
+            sol_sprite_center_spr(combat_attacks, as->spr);
             show_attack = 1;
             damage_amount = ca->damage;
             return;
