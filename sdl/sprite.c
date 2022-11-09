@@ -228,7 +228,14 @@ extern void sol_sprite_render_flip(const uint16_t sprite_id, const int horizonta
     SDL_RendererFlip flip = (horizontal_flip) ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
     flip |= (vertical_flip) ? SDL_FLIP_VERTICAL : SDL_FLIP_NONE;
     sprite_t *sprite = sprites + sprite_id;
+    //SDL_SetTextureColorMod(sprite->tex[sprite->pos], 255, 255, 255);
     SDL_RenderCopyEx(main_get_rend(), sprite->tex[sprite->pos], NULL, (sprite->loc + sprite->pos), 0, NULL, flip);
+}
+
+extern void sol_sprite_set_color_mod(const uint16_t sprite_id, const uint8_t r, const uint8_t g, const uint8_t b) {
+    if (sprite_id == (uint16_t)SPRITE_ERROR) { return; }
+    sprite_t *sprite = sprites + sprite_id;
+    SDL_SetTextureColorMod(sprite->tex[sprite->pos], r, g, b);
 }
 
 void sprite_render_flip(SDL_Renderer *renderer, const uint16_t sprite_id, SDL_RendererFlip flip) {

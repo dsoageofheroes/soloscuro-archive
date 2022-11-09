@@ -4,6 +4,8 @@
 #include "gpl-state.h"
 #include "region-manager.h"
 #include "player.h"
+#include "rules.h"
+
 #include <stdio.h>
 #include <string.h>
 
@@ -38,16 +40,20 @@ extern void sol_combat_clear(combat_region_t *cr) {
 
 extern entity_t* sol_combat_get_current(combat_region_t *cr) {
     if (!cr || !cr->round.entities.head) { return NULL; }
+
     return cr->round.entities.head->entity;
 }
 
 extern void sol_combat_next_combatant(combat_region_t *cr) {
+    dude_t *dude = NULL;
     if (!cr) { return; }
 
     entity_list_remove_entity(&cr->round.entities, cr->round.entities.head->entity);
     if (cr->round.entities.head) {
-        cr->round.entities.head->entity->combat_status = EA_NONE;
-        gpl_set_gname(GNAME_FIGHT, cr->round.entities.head->entity->ds_id);
+        dude = cr->round.entities.head->entity;
+        dude->stats.combat.move = dnd2e_get_move(dude);
+        dude->combat_status = EA_NONE;
+        gpl_set_gname(GNAME_FIGHT, dude->ds_id);
     } else {
         gpl_set_gname(GNAME_FIGHT, 0);
     }

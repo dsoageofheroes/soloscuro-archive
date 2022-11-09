@@ -9,7 +9,10 @@
 #include "combat-region.h"
 #include "region-manager.h"
 #include "trigger.h"
+
+#include <ctype.h>
 #include <stdio.h>
+#include <string.h>
 
 static int save_item(FILE *file, item_t *item, const char *name) {
     fprintf(file, "%s.ds_id = %d\n", name, item->ds_id);
@@ -30,8 +33,18 @@ static int save_inventory(FILE *file, entity_t *entity, const char *name) {
     return 1;
 }
 
+static void trim_end(char *str) {
+    if (!str) { return; }
+    size_t len = strlen(str);
+    while (!isalpha(str[len])) {
+        str[len] = '\0';
+        len--;
+    }
+}
+
 static int write_entity(FILE *file, entity_t *entity, const char *name) {
     if (entity->name) {
+        trim_end(entity->name);
         fprintf(file, "%s.name = \"%s\"\n", name, entity->name);
     }
     fprintf(file, "%s.size = %d\n", name, entity->size);
@@ -178,7 +191,6 @@ extern int sol_save_to_file(const char *filepath, const char *name) {
     if (sol_combat_get_current(sol_arbiter_combat_region(reg)) != NULL) { return 0; }
     if (narrate_is_open()) { return 0; }
 
-    printf("HERE!\n");
     //file = fopen("quick.sav", "wb");
     file = fopen(filepath, "wb");
     if (!file) { return 0; }

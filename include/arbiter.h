@@ -11,5 +11,6 @@ extern combat_region_t* sol_arbiter_combat_region(sol_region_t *reg);
 extern sol_attack_t     sol_arbiter_entity_attack(entity_t *source, entity_t *target, int round, enum entity_action_e action);
 extern void             sol_arbiter_next_round(combat_region_t* cr);
 extern void             sol_arbiter_combat_check(sol_region_t* reg);
+extern int              sol_arbiter_in_combat(dude_t *dude);
 
 #endif

@@ -14,6 +14,7 @@
 #include "region-manager.h"
 #include "ssi-scmd.h"
 #include "player.h"
+#include "port.h"
 #include "examine.h"
 #include "gpl-var.h"
 #include "window-main.h"
@@ -21,10 +22,13 @@
 #include <string.h>
 
 #define MAX_ANIMS (256)
+#define HIGHLIGHT_COUNT_MAX (16)
 
 static map_t *cmap = NULL;
 static int mousex = 0, mousey = 0;
 static uint16_t tile_highlight = SPRITE_ERROR, game_over = SPRITE_ERROR;
+static entity_t *dude_highlighted = NULL;
+static uint16_t highlight_count;
 
 void map_free(map_t *map);
 static void map_load_current_region();
@@ -312,6 +316,7 @@ void map_render_anims() {
                 //sol_sprite_getx(anim->spr), sol_sprite_gety(anim->spr), sol_sprite_get_frame(anim->spr), sol_sprite_num_frames(anim->spr));
         }
         sol_sprite_render_flip(anim->spr, hflip, vflip);
+        //sol_sprite_render_black(anim->spr, hflip, vflip);
     }
     //printf("amt = %d\n", amt);
 
@@ -441,18 +446,40 @@ static void update_mouse_icon() {
     }
 }
 
+static void handle_highlight() {
+    dude_t *old_dude = dude_highlighted;
+
+    dude_highlighted = get_entity_at_location(sol_get_camerax() + mousex, sol_get_cameray() + mousey);
+    if (dude_highlighted && sol_arbiter_in_combat(dude_highlighted)) {
+        highlight_count++;
+        if (highlight_count < HIGHLIGHT_COUNT_MAX) {
+            sol_sprite_set_color_mod(dude_highlighted->anim.spr, 0, 0, 0);
+        } else if (highlight_count < 2*HIGHLIGHT_COUNT_MAX - 1) {
+            sol_sprite_set_color_mod(dude_highlighted->anim.spr, 255, 255, 255);
+        } else {
+            highlight_count = 0;
+        }
+    }
+
+    if (old_dude != dude_highlighted && old_dude) {
+        sol_sprite_set_color_mod(old_dude->anim.spr, 255, 255, 255);
+        highlight_count = 0;
+    }
+}
+
 int map_handle_mouse(const uint32_t x, const uint32_t y) {
     if (!cmap) { return 0; }
 
     mousex = x;
     mousey = y;
 
+    handle_highlight();
+
     update_mouse_icon();
 
-    dude_t *dude = get_entity_at_location(sol_get_camerax() + mousex, sol_get_cameray() + mousey);
-    if (sol_in_debug_mode() && dude) {
-        printf("%d: %d %d\n", dude->ds_id, dude->anim.x, dude->anim.y);
-        sol_entity_debug(dude);
+    if (sol_in_debug_mode() && dude_highlighted) {
+        printf("%d: %d %d\n", dude_highlighted->ds_id, dude_highlighted->anim.x, dude_highlighted->anim.y);
+        sol_entity_debug(dude_highlighted);
     }
 
     return 1; // map always intercepts the mouse...

@@ -294,7 +294,7 @@ extern void sol_combat_update(sol_region_t *reg) {
         sol_arbiter_next_round(cr);
         combatant = sol_combat_get_current(cr);
     }
-    //printf("combatant = %s: %d\n", combatant->name, combatant->stats.num_attacks);
+    //printf("combatant = %s: %d\n", combatant->name, combatant->stats.combat.attack_num);
 
     if (combatant->stats.combat.move <= 0) {
         sol_combat_next_combatant(cr);
@@ -302,6 +302,7 @@ extern void sol_combat_update(sol_region_t *reg) {
         return;
     }
 
+    //printf("2combatant = %s: %d\n", combatant->name, combatant->stats.combat.attack_num);
     if (sol_player_get_slot(combatant) >= 0) { // It is an active player's turn
         return;
     }

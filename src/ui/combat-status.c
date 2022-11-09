@@ -168,14 +168,14 @@ extern void sol_combat_action(const entity_action_t *ca) {
         case EA_MAGIC_DAMAGE:
         case EA_BROWN_DAMAGE:
             as = &(ca->target->anim);
-            sol_sprite_center_spr(combat_attacks, as->spr);
+            //sol_sprite_center_spr(combat_attacks, as->spr);
             show_attack = 1;
             damage_amount = ca->damage;
             return;
         case EA_POWER_CAST:
             source = &(ca->source->anim);
             cast = &(ca->power->cast);
-            sol_sprite_center_spr(cast->spr, source->spr);
+            //sol_sprite_center_spr(cast->spr, source->spr);
             cast->x = sol_sprite_getx(cast->spr) + sol_get_camerax();
             cast->y = sol_sprite_gety(cast->spr) + sol_get_camerax();
             cast->destx = cast->x;
@@ -188,7 +188,7 @@ extern void sol_combat_action(const entity_action_t *ca) {
         case EA_POWER_HIT:
             dest = &(ca->target->anim);
             hit = &(ca->power->hit);
-            sol_sprite_center_spr(hit->spr, dest->spr);
+            //sol_sprite_center_spr(hit->spr, dest->spr);
             hit->x = sol_sprite_getx(hit->spr) + sol_get_camerax();
             hit->y = sol_sprite_gety(hit->spr) + sol_get_cameray();
             hit->destx = hit->x;

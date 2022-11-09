@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <math.h>
 
+static void clear_scmd_status(entity_t *entity);
+
 static entity_animation_node_t *last;
 static entity_animation_node_t *next_animation_head = NULL;
 
@@ -712,6 +714,11 @@ static int apply_action(entity_t *entity, entity_action_t *action) {
         case EA_WALK_UPRIGHT:   ret = entity_animation_check_update(entity, 1, -1); break;
         case EA_WALK_DOWNLEFT:  ret = entity_animation_check_update(entity, -1, 1); break;
         case EA_WALK_DOWNRIGHT: ret = entity_animation_check_update(entity, 1, 1); break;
+        case EA_NONE:
+                                entity->anim.scmd = entity_get_next_scmd(entity, action->action);
+                                clear_scmd_status(entity);
+                                sol_sprite_set_frame_keep_loc(entity->anim.spr, entity->anim.scmd[entity->anim.pos].bmp_idx);
+                                break;
     }
 
     //printf("(%d, %d)\n", entity->mapx, entity->mapy);
@@ -724,6 +731,8 @@ static void update_camera(entity_t *entity, entity_action_t *action) {
     int y = sol_sprite_gety(entity->anim.spr);
     const int buf = 16 * 6 * settings_zoom();
 
+    //printf("%s: x = %d, y = %d, buf = %d, screen = %d, %d\n", entity->name, x, y, buf, settings_screen_width(), settings_screen_height());
+    //printf("(%d, %d), frame: %d\n", entity->mapx, entity->mapy, sol_sprite_get_frame(entity->anim.spr));
     if (x < buf) {
         sol_camera_scrollx(x - buf);
     }
@@ -736,6 +745,14 @@ static void update_camera(entity_t *entity, entity_action_t *action) {
     if (y > (settings_screen_height() - buf)) {
         sol_camera_scrolly(y - (settings_screen_height() - buf));
     }
+}
+
+static void clear_scmd_status(entity_t *entity) {
+    entity->anim.flags = 0x0;
+    entity->anim.pos = 0;
+    entity->anim.flags = 0;
+    entity->anim.left_over = 0x0;
+    entity->anim.movex = entity->anim.movey = 0;
 }
 
 extern int entity_animation_execute(entity_t *entity) {
@@ -759,6 +776,7 @@ extern int entity_animation_execute(entity_t *entity) {
             //action->ticks, action->scmd_pos, entity->anim.scmd[action->scmd_pos].delay);
         if (action->start_amt != -1 && action->amt == action->start_amt) {
             entity->anim.scmd = entity_get_next_scmd(entity, action->action);
+            clear_scmd_status(entity);
             set_anim(entity);
         }
 
@@ -786,11 +804,7 @@ extern int entity_animation_execute(entity_t *entity) {
             entity->actions.head = entity->actions.head->next;
             if (!entity->actions.head) {
                 entity->anim.scmd = entity_animation_face_direction(entity->anim.scmd, to_delete->ca.action);
-                entity->anim.flags = 0x0;
-                entity->anim.pos = 0;
-                entity->anim.flags = 0;
-                entity->anim.left_over = 0x0;
-                entity->anim.movex = entity->anim.movey = 0;
+                clear_scmd_status(entity);
             }
             free (to_delete);
             return 1;

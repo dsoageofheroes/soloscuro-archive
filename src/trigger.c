@@ -498,12 +498,10 @@ extern void sol_write_triggers(FILE *file) {
 }
 
 extern void sol_trigger_noorders_event() {
+    if (!triggers) { return; }
+
     for(trigger_node_t *rover = triggers->noorders_list; rover; rover = rover->next) {
-        //printf("checking noorders %d \n", rover->noorders.obj);
-        //if (rover->noorders.obj == (uint32_t) gpl_get_gname(GNAME_PASSIVE)) {
-            //printf("executing %d, %d\n", rover->noorders.file, rover->noorders.addr);
-            gpl_lua_execute_script(rover->noorders.file, rover->noorders.addr, 0);
-        //}
+        gpl_lua_execute_script(rover->noorders.file, rover->noorders.addr, 0);
     }
 }
 
@@ -575,20 +573,4 @@ extern void sol_trigger_los_check(uint32_t obj, uint32_t file, uint32_t addr, ui
         debug("%d is in los, calling %d:%d param= %d\n", obj, file, addr, param);
         gpl_lua_execute_script(file, addr, 0);
     }
-}
-
-extern void sol_trigger_tick() {
-    dude_t *player = sol_player_get_active();
-    static int32_t lposx = 9999, lposy = 9999;
-    for(trigger_node_t *rover = triggers->noorders_list; rover; rover = rover->next) {
-        //printf("sol_trigger_tick: %d,  %d\n", rover->noorders.obj, rover->noorders.trigger_on_tile);
-        dude_t *dude = sol_region_find_entity_by_id(sol_region_manager_get_current(), rover->noorders.obj);
-        //if (on_object(dude, lposx, lposy) && !on_object(dude, player->mapx, player->mapy)) {
-        if (player && dude && dude->mapy == lposy && dude->mapy != player->mapy) {
-            printf("need to trigger: %d\n", rover->noorders.obj);
-            gpl_lua_execute_script(rover->noorders.file, rover->noorders.addr, 0);
-        }
-    }
-    lposx = player ? player->mapx : 9999;
-    lposy = player ? player->mapy : 9999;
 }

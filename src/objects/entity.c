@@ -380,7 +380,7 @@ extern int entity_attempt_move(dude_t *dude, const int xdiff, const int ydiff, c
     if (sol_region_is_block(region, dude->mapy + ydiff, dude->mapx + xdiff)
         || sol_region_location_blocked(region, dude->mapx + xdiff, dude->mapy + ydiff)) {
 
-        if (cr && (xdiff > 0 || ydiff > 0)) {
+        if (cr && (xdiff != 0 || ydiff != 0)) {
             if (!sol_combat_attempt_action(cr, dude)) { return 0; }
             target = sol_region_find_entity_by_location(
                     sol_region_manager_get_current(), dude->mapx + xdiff, dude->mapy + ydiff);

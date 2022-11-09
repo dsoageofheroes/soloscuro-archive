@@ -96,11 +96,7 @@ extern void sol_game_loop() {
             // Time to check for noorders
             sol_trigger_noorders_event();
         }
-        sol_trigger_tick();
-        //if (in_replay_mode() && rep_times > 10) {
-            //replay_next();
-            //rep_times = 0;
-        //}
+
         started = 1;
         if (sol_region_manager_get_current() && !sol_region_manager_get_current()->actions.head) {
             sol_lua_run_function("idle");
