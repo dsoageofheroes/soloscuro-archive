@@ -96,6 +96,7 @@ static sol_status_t custom_action(dude_t *dude) {
         case ITEM_COINS0:
         case ITEM_COINS1:
         case ITEM_COINS2:
+            sol_map_clear_highlight();
             ssi_item_load(&ds1_item, dude->ds_id);
             sprintf(msg, "YOU FIND %dcp\n", ds1_item.value); 
             sol_window_push(&popup_window, 100, 75);

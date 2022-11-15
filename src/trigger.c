@@ -214,20 +214,23 @@ extern use_trigger_t sol_trigger_get_use(uint32_t obj) {
     return ret;
 }
 
-static void list_object_clear (trigger_node_t *list, const uint32_t obj, int (*cmp)(const trigger_node_t *, 
+static void list_object_clear (trigger_node_t **list, const uint32_t obj, int (*cmp)(const trigger_node_t *, 
         const uint32_t)) {
-    trigger_node_t *rover = list;
-    trigger_node_t *prev = NULL;
+    trigger_node_t *rover = *list;
+    trigger_node_t *prev = NULL, *to_delete = NULL;
 
     while (rover) {
         while (rover && cmp (rover, obj)) {
-            if (!prev) {
-                triggers->attack_list = rover->next;
+            to_delete = rover;
+            rover = rover->next;
+            if (to_delete == *list) {
+                *list = rover;
             } else {
-                prev->next = rover->next;
+                prev->next = rover;
             }
-            free(rover);
-            rover = prev->next;
+            free(to_delete);
+            to_delete = NULL;
+            continue;
         }
         if (rover) {
             prev = rover;
@@ -258,11 +261,13 @@ static int look_equals(const trigger_node_t *node, const uint32_t obj) { return 
 static int talk_equals(const trigger_node_t *node, const uint32_t obj) { return node->talkto.obj == obj; }
 
 extern void sol_trigger_object_clear(const uint32_t obj) {
-    list_object_clear(triggers->attack_list, obj, attack_equals);
-    list_object_clear(triggers->noorders_list, obj, noorders_equals);
-    list_object_clear(triggers->use_list, obj, use_equals);
-    list_object_clear(triggers->look_list, obj, look_equals);
-    list_object_clear(triggers->talkto_list, obj, talk_equals);
+    if (!triggers) { return; }
+
+    list_object_clear(&(triggers->attack_list), obj, attack_equals);
+    list_object_clear(&(triggers->noorders_list), obj, noorders_equals);
+    list_object_clear(&(triggers->use_list), obj, use_equals);
+    list_object_clear(&(triggers->look_list), obj, look_equals);
+    list_object_clear(&(triggers->talkto_list), obj, talk_equals);
 }
 
 extern void sol_trigger_enable_object(const uint32_t obj) {

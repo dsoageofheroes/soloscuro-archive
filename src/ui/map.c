@@ -446,6 +446,8 @@ static void update_mouse_icon() {
     }
 }
 
+extern void sol_map_clear_highlight() { dude_highlighted = NULL; }
+
 static void handle_highlight() {
     dude_t *old_dude = dude_highlighted;
 
