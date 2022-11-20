@@ -189,7 +189,7 @@ extern int sol_save_to_file(const char *filepath, const char *name) {
     FILE *file;
     sol_region_t *reg = sol_region_manager_get_current();
     if (sol_combat_get_current(sol_arbiter_combat_region(reg)) != NULL) { return 0; }
-    if (narrate_is_open()) { return 0; }
+    if (sol_narrate_is_open()) { return 0; }
 
     //file = fopen("quick.sav", "wb");
     file = fopen(filepath, "wb");

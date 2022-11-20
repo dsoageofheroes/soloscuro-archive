@@ -36,6 +36,7 @@ static void free_list(trigger_node_t *list) {
 }
 
 extern void sol_trigger_cleanup() {
+    if (!triggers) { return; }
     free_list(triggers->attack_list);
     free_list(triggers->noorders_list);
     free_list(triggers->use_list);

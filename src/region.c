@@ -323,7 +323,7 @@ extern void sol_region_tick(sol_region_t *reg) {
     int posx, posy, in_combat = 0;
     enum entity_action_e action;
 
-    if (!reg) { return; }
+    if (!reg || sol_map_is_paused()) { return; }
     in_combat = sol_combat_active(sol_arbiter_combat_region(reg));
 
     if (reg->actions.head) {
@@ -343,7 +343,7 @@ extern void sol_region_tick(sol_region_t *reg) {
             }
             continue;
         }
-        if (bad_dude->abilities.must_go && !in_combat && !narrate_is_open()) {
+        if (bad_dude->abilities.must_go && !in_combat && !sol_narrate_is_open()) {
             move_entity(bad_dude, bad_dude->abilities.args.pos.x, bad_dude->abilities.args.pos.y);
             if (bad_dude->mapx == bad_dude->abilities.args.pos.x
                 && bad_dude->mapy == bad_dude->abilities.args.pos.y) {

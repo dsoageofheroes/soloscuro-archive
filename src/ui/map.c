@@ -29,6 +29,7 @@ static int mousex = 0, mousey = 0;
 static uint16_t tile_highlight = SPRITE_ERROR, game_over = SPRITE_ERROR;
 static entity_t *dude_highlighted = NULL;
 static uint16_t highlight_count;
+static int map_pause = 0;
 
 void map_free(map_t *map);
 static void map_load_current_region();
@@ -251,6 +252,12 @@ void map_render(void *data) {
     render_walls();
 
     if (sol_in_debug_mode()) { show_debug_info(); }
+
+    sol_map_set_pause(
+            (sol_mouse_get_state() != MOUSE_POINTER)
+            || (sol_examine_is_open())
+            || (sol_narrate_is_open())
+    );
 }
 
 static entity_t* get_parent_door(entity_t *dude) {
@@ -264,6 +271,9 @@ static entity_t* get_parent_door(entity_t *dude) {
     }
     return NULL;
 }
+
+extern void sol_map_set_pause(int pause) { map_pause = pause; }
+extern int sol_map_is_paused() { return map_pause; }
 
 void map_render_anims() {
     const uint32_t xoffset = sol_get_camerax();

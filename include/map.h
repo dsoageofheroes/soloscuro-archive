@@ -18,6 +18,8 @@ extern void sol_map_place_entity(entity_t *entity);
 extern void sol_map_game_over();
 extern void sol_map_update_active_player(const int prev);
 extern void sol_map_clear_highlight();
+extern void sol_map_set_pause(int pause);
+extern int sol_map_is_paused();
 
 int cmap_is_block(const int row, const int column);
 int cmap_is_actor(const int row, const int column);

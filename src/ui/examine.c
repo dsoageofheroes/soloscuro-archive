@@ -39,6 +39,8 @@ static void update_ui() {
     }
 }
 
+extern int sol_examine_is_open() { return entity_to_examine != NULL; }
+
 // returns if examine window should pop up
 extern sol_status_t sol_examine_entity(entity_t *dude) {
     int amt = 0;

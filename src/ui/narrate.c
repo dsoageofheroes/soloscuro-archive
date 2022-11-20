@@ -65,7 +65,7 @@ static void scroll_menu(int diff) {
     update_menu(1); // force the update
 }
 
-int narrate_is_open() { return display; }
+extern int sol_narrate_is_open() { return display; }
 
 void narrate_init(const uint32_t x, const uint32_t y) {
     const float zoom = settings_zoom();
