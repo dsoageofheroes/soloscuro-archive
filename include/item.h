@@ -5,6 +5,14 @@
 #include "ssi-scmd.h"
 #include "animation.h"
 
+enum ssi_door_status_e {
+    SSI_DOOR_OPEN   = 0x00,
+    SSI_DOOR_CLOSED = 0x01,
+    SSI_DOOR_LOCKED = 0x02,
+    SSI_DOOR_GPL    = 0x04,
+    SSI_DOOR_SECRET = 0x08,
+};
+
 // First the DS1 items structs
 typedef struct _ds1_item_t { // Not confirmed at all...
     int16_t  id; // 0, confirmed (but is negative...), is the OJFF entry
@@ -15,12 +23,12 @@ typedef struct _ds1_item_t { // Not confirmed at all...
     int16_t  item_index; // Correct, maps into it1r.
     int16_t  icon;
     uint16_t charges;
-    uint8_t  data0;
+    uint8_t  special;  // confirmed
     uint8_t  slot;     // confirmed
-    uint8_t  name_idx; //confirmed
+    uint8_t  name_idx; // confirmed
     int8_t   bonus;
     uint16_t priority;
-    int8_t   special;
+    int8_t   data0;
 } __attribute__ ((__packed__)) ds1_item_t;
 
 typedef struct ds_item1r_s {

@@ -514,8 +514,9 @@ extern void sol_trigger_noorders_event() {
 extern void sol_trigger_noorders_entity_check(entity_t *entity) {
     if (!entity) { return; }
     for(trigger_node_t *rover = triggers->noorders_list; rover; rover = rover->next) {
+        printf("checking %d vs %d\n", rover->noorders.obj, entity->ds_id);
         if (rover->noorders.obj == (uint32_t)entity->ds_id) {
-            //printf("noorder_entity_check: executing %d, %d\n", rover->noorders.file, rover->noorders.addr);
+            printf("noorder_entity_check: executing %d, %d\n", rover->noorders.file, rover->noorders.addr);
             gpl_lua_execute_script(rover->noorders.file, rover->noorders.addr, 0);
         }
     }

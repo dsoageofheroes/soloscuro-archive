@@ -167,6 +167,11 @@ uint16_t sprite_get_frame(const uint16_t id) {
     return sprites[id].pos;
 }
 
+extern uint16_t sol_sprite_get_frame_count(const uint16_t id) {
+    if (!valid_id(id)) { return SPRITE_ERROR; }
+    return sprites[id].len;
+}
+
 extern void sol_sprite_set_frame_keep_loc(const uint16_t id, const uint16_t frame) {
     if (!valid_id(id) || frame >= sprites[id].len) { return; }
     int lpos = sprites[id].pos;

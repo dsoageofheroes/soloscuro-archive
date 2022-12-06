@@ -100,6 +100,7 @@ static void map_load_current_region() {
 }
 
 static void sprite_load_animation(entity_t *entity, gff_palette_t *pal) {
+    ds1_item_t ditem;
     const float zoom = settings_zoom();
     entity->anim.spr =
         sol_sprite_new(pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP, entity->anim.bmp_id);
@@ -124,11 +125,32 @@ static void sprite_load_animation(entity_t *entity, gff_palette_t *pal) {
     //printf("%d: %d %d %d (%d, %d)\n", obj->combat_id, obj->mapx, obj->mapy, obj->mapz, anims[anim_pos].x, anims[anim_pos].y);
     //printf("             (%d, %d)\n", anims[anim_pos].destx, anims[anim_pos].desty);
     //printf("%s: @ %p\n", entity->name, entity->sprite.data);
-    if (sol_innate_is_door(entity) && entity->map_flags & GM_ANIMATING) {
-        printf("IS DOOR and should activate: %d, map_flags = 0x%x\n", entity->ds_id, entity->map_flags);
-        entity->map_flags &= ~GM_ANIMATING;
-        sol_sprite_set_frame(entity->anim.spr, 2);
-        sol_innate_activate_door(entity);
+    if (sol_innate_is_door(entity)) {
+        printf("--------->DOOR %d, 0x%x, 0x%x, 0x%x", entity->ds_id, entity->map_flags, entity->object_flags, entity->anim.flags);
+        if (ssi_item_load(&ditem, entity->ds_id)) {
+            printf(", item exists.special = 0x%x", ditem.special);
+        } else {
+            printf("item doesn't exist");
+        }
+        printf("\n");
+    }
+    //if (sol_innate_is_door(entity) && entity->map_flags & GM_ANIMATING) {
+    if (sol_innate_is_door(entity) && ssi_item_load(&ditem, entity->ds_id)) {
+        if (ditem.special & (SSI_DOOR_GPL | SSI_DOOR_SECRET)) {
+            printf("IS_DOOR GPL: %d\n", entity->ds_id );
+            //sol_trigger_noorders_entity_check(entity);
+            if (sol_sprite_get_frame_count(entity->anim.spr) >= 4) {
+                entity->map_flags &= ~GM_ANIMATING;
+                sol_sprite_set_frame(entity->anim.spr, 2);
+                sol_innate_activate_door(entity);
+            }
+        }
+        if (ditem.special & SSI_DOOR_CLOSED) {
+            printf("IS DOOR and should activate: %d, map_flags = 0x%x\n", entity->ds_id, entity->map_flags);
+            entity->map_flags &= ~GM_ANIMATING;
+            sol_sprite_set_frame(entity->anim.spr, 2);
+            sol_innate_activate_door(entity);
+        }
     }
 }
 

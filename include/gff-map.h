@@ -42,6 +42,7 @@ typedef struct _gff_map_object_t {
 } gff_map_object_t;
 
 #define GM_ANIMATING (0x01)
+#define GM_STATIC    (0x02)
 
 // The small 'n' means next. IE: nbmp_idx = next bitmap index.
 typedef struct _gff_script_cmd_t {

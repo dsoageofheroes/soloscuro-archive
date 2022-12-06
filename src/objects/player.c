@@ -280,7 +280,7 @@ extern void sol_player_update() {
     }
 
     if (!sol_narrate_is_open()) {
-        sol_trigger_noorders(dude->mapx, dude->mapy);
+        //sol_trigger_noorders(dude->mapx, dude->mapy);
         //sol_trigger_los_check();
     }
     if (xdiff != 0 || ydiff != 0) {

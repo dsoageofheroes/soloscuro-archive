@@ -145,3 +145,4 @@ void       sol_textbox_render(textbox_t *tb) {}
 void port_entity_update_scmd(entity_t *entity) {}
 extern void sol_camera_scrollx(const int amt) {}
 extern void sol_camera_scrolly(const int amt) {}
+extern uint16_t     sol_sprite_get_frame_count(const uint16_t id){ return 0;}
