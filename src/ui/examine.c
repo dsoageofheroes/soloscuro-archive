@@ -49,7 +49,7 @@ extern sol_status_t sol_examine_entity(entity_t *dude) {
     amt += sol_trigger_get_look(dude->ds_id).obj ? 1 : 0;
     amt += sol_trigger_get_use(dude->ds_id).obj ? 1 : 0;
 
-    if (amt < 1) { return SOL_FAILURE; }
+    if (amt < 1) { return SOL_NO_EXAMINE_TRIGGER; }
 
     entity_to_examine = dude;
     update_ui();

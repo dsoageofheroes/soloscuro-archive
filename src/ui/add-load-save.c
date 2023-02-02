@@ -31,7 +31,7 @@ extern char *strdup(const char *s);
 
 static uint16_t mousex, mousey;
 static int16_t selection;
-static int16_t char_selected;
+static int16_t char_selected = -1;
 static char **entries = NULL;
 static uint16_t *valids = NULL;
 static uint32_t num_entries = 0;

@@ -1,5 +1,4 @@
 set(SOLOSCURO_SRCS
-    annotations/annotations.c
     ssi/ssi-scmd.c
     ssi/ds-load-save.c
     ssi/ssi-item.c
@@ -26,6 +25,7 @@ set(SOLOSCURO_SRCS
     objects/entity.c
     objects/entity-animation.c
     statics.c
+    status.c
     systems/class.c
     systems/stats.c
     systems/race.c

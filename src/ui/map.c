@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include "arbiter.h"
 #include "map.h"
 #include "audio.h"
 #include "narrate.h"
@@ -484,7 +485,7 @@ static void handle_highlight() {
     dude_t *old_dude = dude_highlighted;
 
     dude_highlighted = get_entity_at_location(sol_get_camerax() + mousex, sol_get_cameray() + mousey);
-    if (dude_highlighted && sol_arbiter_in_combat(dude_highlighted)) {
+    if (dude_highlighted && (sol_arbiter_in_combat(dude_highlighted) == SOL_IN_COMBAT)) {
         highlight_count++;
         if (highlight_count < HIGHLIGHT_COUNT_MAX) {
             sol_sprite_set_color_mod(dude_highlighted->anim.spr, 0, 0, 0);

@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "ssi-scmd.h"
+#include "status.h"
 
 // O why did SSI choose this over 0... Many tears...
 #define SPRITE_ERROR (0xFFFF)
@@ -30,7 +31,7 @@ struct entity_action_s;
 struct entity_list_node_s;
 struct entity_list_s;
 
-extern void animation_shift_entity(struct entity_list_s *list, struct entity_list_node_s *en);
-extern void animate_sprite_tick(struct entity_action_s *action, struct entity_s *entity );
+extern sol_status_t sol_animate_shift_entity(struct entity_list_s *list, struct entity_list_node_s *en);
+extern sol_status_t sol_animate_sprite_tick(struct entity_action_s *action, struct entity_s *entity );
 
 #endif

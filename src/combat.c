@@ -218,9 +218,12 @@ static void monster_set_animation(entity_t *monster, entity_action_t *action) {
 extern int sol_combat_add_attack_animation(sol_region_t *reg, dude_t *dude, entity_t *target,
                                         power_t *power, enum entity_action_e action) {
     sol_attack_t     attack;
-    combat_region_t *cr = sol_arbiter_combat_region(reg);
+    sol_status_t     status = SOL_UNKNOWN_ERROR;
+    combat_region_t *cr     = NULL;
 
-    attack = sol_arbiter_entity_attack(dude, target, cr->round.num, action);
+    status = sol_arbiter_combat_region(reg, &cr);
+
+    status = sol_arbiter_entity_attack(dude, target, cr->round.num, action, &attack);
 
     if (attack.damage == -2) { return -2; } // not your move!
 
@@ -277,10 +280,11 @@ static void monster_action(sol_region_t *reg, entity_t *monster) {
 
 extern void sol_combat_update(sol_region_t *reg) {
     entity_t *combatant;
-    combat_region_t *cr;
+    combat_region_t *cr = NULL;
+    sol_status_t status = SOL_NOT_IMPLEMENTED;
     if (reg == NULL) { return; }
 
-    cr = sol_arbiter_combat_region(reg);
+    status = sol_arbiter_combat_region(reg, &cr);
     if (cr == NULL) { return; }
 
     if (sol_combat_check_if_over(cr)) {
@@ -373,9 +377,12 @@ extern int sol_combat_activate_power(power_t *pw, entity_t *source, entity_t *ta
 // entity == NULL, means for any player.
 extern int sol_combat_guard(entity_t *entity) {
     char buf[BUF_LEN];
-    combat_region_t *cr = sol_arbiter_combat_region(sol_region_manager_get_current());
+    sol_status_t status;
+    combat_region_t *cr = NULL;
     entity_t *dude = sol_combat_get_current(cr);
     int pos;
+
+    status = sol_arbiter_combat_region(sol_region_manager_get_current(), &cr);
 
     if (!dude) { return 0; }
     if (sol_player_get_slot(dude) < 0 && !entity) { return 0; }
@@ -402,10 +409,13 @@ extern void sol_combat_set_scmd(entity_t *dude, const combat_scmd_t scmd) {
 }
 
 extern void sol_combat_kill_all_enemies() {
+    sol_status_t status = SOL_NOT_IMPLEMENTED;
     dude_t *dude;
     dude_t *player = sol_player_get_active();
     sol_region_t *reg = sol_region_manager_get_current();
-    combat_region_t *cr = sol_arbiter_combat_region(sol_region_manager_get_current());
+    combat_region_t *cr = NULL;
+
+    status = sol_arbiter_combat_region(reg, &cr);
 
     if (!cr || !reg || !player) { return; }
 
@@ -415,10 +425,10 @@ extern void sol_combat_kill_all_enemies() {
         dude->stats.hp = 0;
         //play_death_sound(dude);
         //warn("NEED TO IMPLEMENT death animation!\n");
-        if (!entity_list_remove_entity(&sol_arbiter_combat_region(reg)->combatants, dude)) {
+        if (!entity_list_remove_entity(&cr->combatants, dude)) {
             error("Unable to remove entity from combat region!\n");
         }
-        if (!entity_list_remove_entity(&sol_arbiter_combat_region(reg)->round.entities, dude)) {
+        if (!entity_list_remove_entity(&cr->round.entities, dude)) {
             error("Unable to remove entity from combat round!\n");
         }
         if (!entity_list_remove_entity(reg->entities, dude)) {

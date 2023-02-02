@@ -117,9 +117,10 @@ entity_list_node_t* entity_list_find(entity_list_t *list, entity_t *entity) {
     return NULL;
 }
 
-extern void entity_list_load_etab(entity_list_t *list, sol_static_list_t *ssl, const int gff_idx, const int map_id) {
-    if (!list) { return; }
+extern sol_status_t entity_list_load_etab(entity_list_t *list, sol_static_list_t *ssl, const int gff_idx, const int map_id) {
+    if (!list) { return SOL_NULL_ARGUMENT; }
     sol_static_t s;
+    sol_status_t status = SOL_NOT_IMPLEMENTED;
 
     if (!open_files[gff_idx].entry_table) {
         gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_ETAB, map_id);
@@ -139,7 +140,9 @@ extern void entity_list_load_etab(entity_list_t *list, sol_static_list_t *ssl, c
         //dude->anim.scmd = gff_map_get_object_scmd(gff_idx, map_id, i, 0);
         gff_map_fill_scmd_info(dude, gff_idx, map_id, i, 0);
         gff_map_load_scmd(dude);
-        animation_shift_entity(list, entity_list_add(list, dude));
+        if ((status = sol_animate_shift_entity(list, entity_list_add(list, dude)))) {
+            return status;
+        }
         if (dude->anim.scmd != NULL && !(dude->anim.scmd->flags & SCMD_LAST)) {
             entity_animation_list_add(&dude->actions, EA_SCMD, dude, NULL, NULL, 30);
             // Animations are continued in the entity action list

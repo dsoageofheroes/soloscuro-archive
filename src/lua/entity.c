@@ -31,17 +31,23 @@ static int push_entity_function(lua_State *l, entity_t *entity, int (*func)(lua_
 }
 
 static int in_combat(lua_State *l) {
+    sol_status_t status = SOL_UNKNOWN_ERROR;
     dude_t *dude = (dude_t*) lua_touserdata(l, lua_upvalueindex(1));
     sol_region_t *reg = sol_region_manager_get_region_with_entity(dude);
-    lua_pushboolean(l, sol_combat_get_current(sol_arbiter_combat_region(reg)) != NULL);
+    combat_region_t *cr = NULL;
+    status = sol_arbiter_combat_region(reg, &cr);
+    lua_pushboolean(l, sol_combat_get_current(cr) != NULL);
     return 1;
 }
 
 static int is_combat_turn(lua_State *l) {
     dude_t *dude = (dude_t*) lua_touserdata(l, lua_upvalueindex(1));
     sol_region_t *reg = sol_region_manager_get_region_with_entity(dude);
+    combat_region_t *cr = NULL;
+    sol_status_t status = SOL_UNKNOWN_ERROR;
 
-    lua_pushboolean(l, sol_combat_get_current(sol_arbiter_combat_region(reg)) == dude);
+    status = sol_arbiter_combat_region(reg, &cr);
+    lua_pushboolean(l, sol_combat_get_current(cr) == dude);
     return 1;
 }
 
@@ -116,7 +122,9 @@ static int give_ds1_item(lua_State *l) {
 
 static int get_closest_enemy(lua_State *l) {
     dude_t   *dude = (dude_t*) lua_touserdata(l, lua_upvalueindex(1));
-    combat_region_t *cr = sol_arbiter_combat_region(sol_region_manager_get_current());
+    sol_status_t status = SOL_UNKNOWN_ERROR;
+    combat_region_t *cr = NULL;
+    status = sol_arbiter_combat_region(sol_region_manager_get_current(), &cr);
     entity_t *enemy = sol_combat_get_closest_enemy(cr, dude->mapx, dude->mapy);
 
     return sol_lua_load_entity (l, enemy);

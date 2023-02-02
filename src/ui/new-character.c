@@ -642,8 +642,7 @@ static void fix_alignment(int direction) { // direction: -1 = previous alignment
         pc.alignment = LAWFUL_GOOD;
     }
 
-    if (!sol_dnd2e_alignment_allowed(pc.alignment, pc.class, 1))
-    {
+    if (sol_dnd2e_alignment_allowed(pc.alignment, pc.class, 1) != SOL_SUCCESS) {
         for (int i = pc.alignment + direction; i != pc.alignment; i += direction) {
             if (i < LAWFUL_GOOD) {
                 i = CHAOTIC_EVIL;
@@ -653,8 +652,7 @@ static void fix_alignment(int direction) { // direction: -1 = previous alignment
                 direction = 1;
             }
 
-            if (sol_dnd2e_alignment_allowed(i, pc.class, 1))
-            {
+            if (sol_dnd2e_alignment_allowed(i, pc.class, 1) == SOL_SUCCESS) {
                 pc.alignment = i;
                 break;
             }

@@ -186,9 +186,12 @@ static int write_regions(FILE *file) {
 
 extern int sol_save_to_file(const char *filepath, const char *name) {
     printf("Need to save to %s\n", filepath);
+    sol_status_t status = SOL_UNKNOWN_ERROR;
+    combat_region_t *cr = NULL;
     FILE *file;
     sol_region_t *reg = sol_region_manager_get_current();
-    if (sol_combat_get_current(sol_arbiter_combat_region(reg)) != NULL) { return 0; }
+    status = sol_arbiter_combat_region(reg, &cr);
+    if (sol_combat_get_current(cr) != NULL) { return 0; }
     if (sol_narrate_is_open()) { return 0; }
 
     //file = fopen("quick.sav", "wb");

@@ -20,9 +20,9 @@
 static combat_region_t combat_regions[MAX_REGIONS];
 static char            region_in_combat[MAX_REGIONS] = {0};
 
-extern int sol_arbiter_hits(entity_animation_node_t *ea) {
-    if (!ea) { return 0; }
-    return 1;
+extern sol_status_t sol_arbiter_hits(entity_animation_node_t *ea) {
+    if (!ea) { return SOL_NULL_ARGUMENT; }
+    return SOL_SUCCESS;
 }
 
 static int get_dist(entity_t *entity, const uint16_t x, const uint16_t y) {
@@ -32,11 +32,17 @@ static int get_dist(entity_t *entity, const uint16_t x, const uint16_t y) {
     return (xdiff > ydiff) ? xdiff : ydiff;
 }
 
-extern combat_region_t* sol_arbiter_combat_region(sol_region_t *reg) {
-    if (!reg || reg->map_id < 0 || reg->map_id >= MAX_REGIONS) { return NULL; }
-    if (!region_in_combat[reg->map_id]) { return NULL; }
+extern sol_status_t sol_arbiter_combat_region(sol_region_t *reg, combat_region_t **cr) {
+    if (!reg) {return SOL_NULL_ARGUMENT; }
+    if (reg->map_id < 0 || reg->map_id >= MAX_REGIONS) { return SOL_ILLEGAL_ARGUMENT; }
 
-    return combat_regions + reg->map_id;
+    if (!region_in_combat[reg->map_id]) {
+        *cr = NULL;
+    } else {
+        *cr = combat_regions + reg->map_id;
+    }
+
+    return SOL_SUCCESS;
 }
 
 static void place_combatants(combat_region_t *cr) {
@@ -51,24 +57,26 @@ static void place_combatants(combat_region_t *cr) {
     }
 }
 
-extern void sol_arbiter_next_round(combat_region_t* cr) {
-    if (!cr) { return; }
+extern sol_status_t sol_arbiter_next_round(combat_region_t* cr) {
+    if (!cr) { return SOL_NULL_ARGUMENT; }
     cr->round.num++;
     // Increment GPL's game time.
     gpl_set_gname(GNAME_TIME, gpl_get_gname(GNAME_TIME) + 60);
     place_combatants(cr);
+    return SOL_SUCCESS;
 }
 
-extern int sol_arbiter_enter_combat(sol_region_t *reg, const uint16_t x, const uint16_t y) {
-    const int dist = 10; // distance of the sphere;
-    dude_t *enemy = NULL;
-    combat_region_t *cr;
+extern sol_status_t sol_arbiter_enter_combat(sol_region_t *reg, const uint16_t x, const uint16_t y) {
+    const int        dist = 10; // distance of the sphere;
+    dude_t          *enemy = NULL;
+    combat_region_t *cr = NULL;
+    sol_status_t     status = SOL_UNKNOWN_ERROR;
 
     // validate args and confirm we can enter combat.
-    if (!reg) { return 0; }
+    if (!reg) { return SOL_NULL_ARGUMENT; }
     if (reg->map_id < 0 || reg->map_id >= MAX_REGIONS) {
         error("reg->map_id = %d, which is out of range!\n", reg->map_id);
-        return 0;
+        return SOL_ILLEGAL_ARGUMENT;
     }
     if (region_in_combat[reg->map_id]) { return 0; }
     cr = combat_regions + reg->map_id;
@@ -103,18 +111,21 @@ extern int sol_arbiter_enter_combat(sol_region_t *reg, const uint16_t x, const u
 
     region_in_combat[reg->map_id] = 1;
 
-    sol_arbiter_next_round(cr);
+    status = sol_arbiter_next_round(cr);
+    sol_status_check(status, "Unable to start next round!\n");
 
-    return region_in_combat[reg->map_id];
+    return region_in_combat[reg->map_id] ? SOL_SUCCESS : SOL_NOT_IN_COMBAT;
 }
 
-extern void sol_arbiter_combat_check(sol_region_t* reg) {
-    if (!reg || reg->map_id < 0 || reg->map_id >= MAX_REGIONS) { return; }
+extern sol_status_t sol_arbiter_combat_check(sol_region_t* reg) {
+    if (!reg || reg->map_id < 0 || reg->map_id >= MAX_REGIONS) { return SOL_NULL_ARGUMENT; }
 
     if (sol_combat_check_if_over(combat_regions + reg->map_id)) {
         region_in_combat[reg->map_id] = 0;
         sol_trigger_noorders_event();
     }
+
+    return SOL_SUCCESS;
 }
 
 // DS Engine: Attacks usually based on weapons. If none, then bare hand.
@@ -126,32 +137,44 @@ extern void sol_arbiter_combat_check(sol_region_t* reg) {
 //            level 10+: +4
 // Monster data should be in the entity.
 // For Now, 1d6, always hits. Need to add thac0 calculation.
-extern sol_attack_t sol_arbiter_entity_attack(entity_t *source, entity_t *target, int round, enum entity_action_e action) {
+extern sol_status_t sol_arbiter_entity_attack(entity_t *source, entity_t *target, int round, enum entity_action_e action, sol_attack_t *attack) {
+    sol_status_t        status = SOL_UNKNOWN_ERROR;
     static sol_attack_t error = { -2, 0 };
-    combat_region_t *cr = sol_arbiter_combat_region(sol_region_manager_get_current());
+    combat_region_t    *cr = NULL;
+
+    status = sol_arbiter_combat_region(sol_region_manager_get_current(), &cr);
+    sol_status_check(status, "Unable to get combat region!");
      
     // For now just use local until MMO is up.
     if (sol_combat_get_current(cr) != source && source->combat_status != EA_GUARD) {
-        return error;//-2 means not your turn.
+        *attack = error;
+        return SOL_ILLEGAL_ATTACK;
     }
 
     switch (action) {
-        case EA_GUARD:   if (!dnd2e_can_melee_again(source, source->stats.combat.attack_num ,round)) { return error; }
-        case EA_MELEE:   return sol_dnd2e_melee_attack(source, target, round);
-        case EA_MISSILE: return sol_dnd2e_range_attack(source, target, round);
+        case EA_GUARD:   if (!dnd2e_can_melee_again(source, source->stats.combat.attack_num ,round)) {
+                             *attack = error;
+                             return SOL_ILLEGAL_ARGUMENT;
+                         }
+        case EA_MELEE:   *attack = sol_dnd2e_melee_attack(source, target, round);
+                         return SOL_ILLEGAL_ATTACK;
+        case EA_MISSILE: *attack = sol_dnd2e_range_attack(source, target, round);
+                         return SOL_ILLEGAL_ATTACK;
         default:
             warn("unknown action %d\n", action);
             error.damage = -2;
-            return error;
+            *attack = error;
     }
+
+    return SOL_SUCCESS;
 }
 
-extern int sol_arbiter_in_combat(dude_t *dude) {
+extern sol_status_t sol_arbiter_in_combat(dude_t *dude) {
     for (size_t i = 0; i < MAX_REGIONS; i++) {
         if (entity_list_find(&(combat_regions[i].combatants), dude)) {
-            return 1;
+            return SOL_IN_COMBAT;
         }
     }
 
-    return 0;
+    return SOL_NOT_IN_COMBAT;
 }

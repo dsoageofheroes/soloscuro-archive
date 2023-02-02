@@ -354,10 +354,11 @@ void entity_free(entity_t *dude) {
 }
 
 extern int entity_attempt_move(dude_t *dude, const int xdiff, const int ydiff, const int speed) {
-    combat_region_t      *cr;
+    combat_region_t      *cr = NULL;
     enum entity_action_e  action;
     sol_region_t         *region;
     entity_t             *target;
+    sol_status_t          status;
 
     action =
           (xdiff == 1 && ydiff == 1) ? EA_WALK_DOWNRIGHT
@@ -371,7 +372,7 @@ extern int entity_attempt_move(dude_t *dude, const int xdiff, const int ydiff, c
         : EA_NONE;
 
     // If we are in combat and it isn't our turn, do nothing.
-    cr = sol_arbiter_combat_region(sol_region_manager_get_current());
+    status = sol_arbiter_combat_region(sol_region_manager_get_current(), &cr);
     if (cr && sol_combat_get_current(cr) != dude) {
         return 0;
     }
@@ -419,7 +420,7 @@ extern int entity_attempt_move(dude_t *dude, const int xdiff, const int ydiff, c
 
     sol_region_t *reg = sol_region_manager_get_current();
     if (reg) {
-        animation_shift_entity(reg->entities, entity_list_find(reg->entities, dude));
+        return sol_animate_shift_entity(reg->entities, entity_list_find(reg->entities, dude));
     }
 
     return 1;

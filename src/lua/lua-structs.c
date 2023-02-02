@@ -240,8 +240,10 @@ static int test_pass (lua_State *l) {
 }
 
 static int in_combat (lua_State *l) {
-    lua_pushboolean(l,
-        sol_combat_get_current(sol_arbiter_combat_region(sol_region_manager_get_current())) != NULL);
+    sol_status_t status = SOL_UNKNOWN_ERROR;
+    combat_region_t *cr = NULL;
+    sol_arbiter_combat_region(sol_region_manager_get_current(), &cr);
+    lua_pushboolean(l, sol_combat_get_current(cr) != NULL);
     return 1;
 }
 

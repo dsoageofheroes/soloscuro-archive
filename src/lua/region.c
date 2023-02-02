@@ -4,6 +4,7 @@
 #include "gff.h"
 #include "port.h"
 #include "arbiter.h"
+#include "status.h"
 #include "gpl-manager.h"
 #include <string.h>
 #include <float.h>
@@ -101,11 +102,14 @@ static int get_first_entity(lua_State *l) {
 
 static int enter_combat (lua_State *l) {
     luaL_checktype(l, 1, LUA_TTABLE);
+    sol_status_t status = SOL_SUCCESS;
     const int x = luaL_checkinteger(l, 2);
     const int y = luaL_checkinteger(l, 3);
 
     sol_region_t *region = (sol_region_t*) lua_touserdata(l, lua_upvalueindex(1));
-    sol_arbiter_enter_combat(region, x, y);
+    if ((status = sol_arbiter_enter_combat(region, x, y))) {
+        sol_status_print(status);
+    }
 
     return 0;
 }
@@ -116,9 +120,7 @@ static int add_entity (lua_State *l) {
     sol_region_t *region = (sol_region_t*) lua_touserdata(l, lua_upvalueindex(1));
     entity_t *entity = (entity_t*) sol_lua_get_userdata(l, 1);
 
-    animation_shift_entity(region->entities, entity_list_add(region->entities, entity));
-
-    return 0;
+    return sol_animate_shift_entity(region->entities, entity_list_add(region->entities, entity));
 }
 
 

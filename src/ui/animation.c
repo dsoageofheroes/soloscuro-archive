@@ -35,9 +35,9 @@ static void swap_with_next(entity_list_node_t *en) {
 }
 
 // WARNING: This may change the head of the animation list!
-void animate_sprite_tick(entity_action_t *action, entity_t *entity ) {
-    if (!entity || !action) { return; }
-    if (action->action == EA_SCMD) { return; }
+extern sol_status_t sol_animate_sprite_tick(entity_action_t *action, entity_t *entity ) {
+    if (!entity || !action)        { return SOL_NULL_ARGUMENT; }
+    if (action->action == EA_SCMD) { return SOL_SUCCESS; }
     animate_sprite_t *anim = &entity->anim;
 
     anim->left_over += fmod(anim->movex ? anim->movex : anim->movey, 1.0);
@@ -52,10 +52,11 @@ void animate_sprite_tick(entity_action_t *action, entity_t *entity ) {
     if (anim->x > anim->destx) { anim->x -= movex_amt; }
     if (anim->y > anim->desty) { anim->y -= movey_amt; }
     //if (entity->name) { printf("(%d %d)\n", anim->x, anim->y); }
+    return SOL_SUCCESS;
 }
 
-extern void animation_shift_entity(entity_list_t *list, entity_list_node_t *en) {
-    if (!en || !list) { return; }
+extern sol_status_t sol_animate_shift_entity(entity_list_t *list, entity_list_node_t *en) {
+    if (!en || !list) { return SOL_NULL_ARGUMENT; }
 
     while (en->next && is_less(en->next->entity, en->entity)) {
         swap_with_next(en);
@@ -66,4 +67,6 @@ extern void animation_shift_entity(entity_list_t *list, entity_list_node_t *en) 
     }
     
     while(list->head->prev) { list->head = list->head->prev; }
+
+    return SOL_SUCCESS;
 }

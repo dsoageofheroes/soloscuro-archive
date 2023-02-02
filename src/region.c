@@ -11,6 +11,7 @@
 #include "entity.h"
 #include "narrate.h"
 #include "background.h"
+#include "status.h"
 #include "trigger.h"
 #include "region-manager.h"
 
@@ -245,10 +246,10 @@ extern int sol_region_location_blocked(sol_region_t *reg, const int32_t x, const
     return sol_region_find_entity_by_location(reg, x, y) ? 1 : 0;
 }
 
-extern void sol_region_add_entity(sol_region_t *reg, entity_t *entity) {
-    if (!reg || !entity) { return; }
+extern sol_status_t sol_region_add_entity(sol_region_t *reg, entity_t *entity) {
+    if (!reg || !entity) { return SOL_NULL_ARGUMENT; }
 
-    animation_shift_entity(reg->entities, entity_list_add(reg->entities, entity));
+    return sol_animate_shift_entity(reg->entities, entity_list_add(reg->entities, entity));
     //animation_list_add(reg->anims, &(entity->anim));
 }
 
@@ -322,9 +323,12 @@ extern void sol_region_tick(sol_region_t *reg) {
     int xdiff, ydiff;
     int posx, posy, in_combat = 0;
     enum entity_action_e action;
+    combat_region_t *cr;
+    sol_status_t status;
 
     if (!reg || sol_map_is_paused()) { return; }
-    in_combat = sol_combat_active(sol_arbiter_combat_region(reg));
+    status = sol_arbiter_combat_region(reg, &cr);
+    in_combat = sol_combat_active(cr);
 
     if (reg->actions.head) {
         if (entity_animation_region_execute(reg)) {
@@ -357,6 +361,7 @@ extern void sol_region_tick(sol_region_t *reg) {
 
             if (calc_distance_to_player(bad_dude) < 5) {
                 sol_arbiter_enter_combat(reg, bad_dude->mapx, bad_dude->mapy);
+                // Don't care about status of above.
                 //combat_initiate(reg, bad_dude->mapx, bad_dude->mapy);
                 //return;
             }

@@ -93,7 +93,7 @@ static const uint32_t alignment_flags[] = {
     NOT_LAWFUL_EVIL      | NOT_NEUTRAL_EVIL        | ONLY_CHAOTIC_EVIL,
 };
 
-int sol_dnd2e_alignment_allowed(const uint8_t alignment, const class_t classes[3], int target_is_pc) {
+sol_status_t sol_dnd2e_alignment_allowed(const uint8_t alignment, const class_t classes[3], int target_is_pc) {
     int allowed = 1;
     int game_type = gff_get_game_type();
 
@@ -109,9 +109,9 @@ int sol_dnd2e_alignment_allowed(const uint8_t alignment, const class_t classes[3
                    ( !target_is_pc || ( game_type != DARKSUN_ONLINE && alignment_flags[alignment] & NOT_EVIL_MORALS ) );
 
         if (!allowed) {
-            return 0;
+            return SOL_ILLEGAL_ALIGNMENT;
         }
     }
 
-    return 1;
+    return SOL_SUCCESS;
 }

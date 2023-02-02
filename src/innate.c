@@ -108,11 +108,11 @@ static sol_status_t custom_action(dude_t *dude) {
             return SOL_SUCCESS;
     }
 
-    return SOL_FAILURE;
+    return SOL_NO_CUSTOM_ACTION;
 }
 
 extern sol_status_t sol_innate_action(dude_t *dude) {
-    if (!dude) { return SOL_FAILURE; }
+    if (!dude) { return SOL_UNKNOWN_ERROR; }
     if (custom_action(dude) == SOL_SUCCESS) { return SOL_SUCCESS; }
 
     gpl_request_impl(5, dude->ds_id, -1, -1);

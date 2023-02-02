@@ -78,7 +78,9 @@ extern void sol_gameloop_init() {
 
 #define TICKS_PER_ROUND (300) // TODO: Is this really 60?
 extern void sol_game_loop() {
+    sol_status_t status = SOL_UNKNOWN_ERROR;
     int ticks_to_increment_time = TICKS_PER_ROUND;
+    combat_region_t *cr = NULL;
     while (!done) {
         port_handle_input();
         //Logic here...
@@ -86,7 +88,8 @@ extern void sol_game_loop() {
         sol_input_tick();
         port_tick();
 
-        if (!sol_combat_active(sol_arbiter_combat_region(sol_region_manager_get_current()))) {
+        status = sol_arbiter_combat_region(sol_region_manager_get_current(), &cr);
+        if (!sol_combat_active(cr)) {
             ticks_to_increment_time--;
         }
         if (ticks_to_increment_time <= 0) {

@@ -53,7 +53,7 @@ extern void             sol_region_generate_move(sol_region_t *reg, entity_t *mo
 extern void             sol_region_move_to_nearest(sol_region_t *reg, struct entity_s *entity);
 extern int              sol_region_location_blocked(sol_region_t *reg, const int32_t x, const int32_t y);
 extern void             sol_region_remove_entity(sol_region_t *reg, struct entity_s *entity);
-extern void             sol_region_add_entity(sol_region_t *reg, struct entity_s *entity);
+extern sol_status_t     sol_region_add_entity(sol_region_t *reg, struct entity_s *entity);
 extern void             sol_region_tick(sol_region_t *reg);
 extern int              sol_region_is_block(sol_region_t *region, int row, int column);
 extern void             sol_region_set_block(sol_region_t *region, int row, int column, int val);

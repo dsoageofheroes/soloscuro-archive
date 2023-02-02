@@ -87,7 +87,10 @@ void combat_status_init(const uint32_t x, const uint32_t y) {
 }
 
 static void get_status() {
-    entity_t *dude = sol_combat_get_current(sol_arbiter_combat_region(sol_region_manager_get_current()));
+    sol_status_t status;
+    combat_region_t *cr = NULL;
+    status = sol_arbiter_combat_region(sol_region_manager_get_current(), &cr);
+    entity_t *dude = sol_combat_get_current(cr);
 
     if (dude) {
         strcpy(combat_status.name, dude->name);
@@ -106,6 +109,8 @@ void combat_status_render(void *data) {
     sol_dim_t loc;
     char buf[128];
     static int last_action = 0;
+    sol_status_t status;
+    combat_region_t *cr = NULL;
 
     if (show_attack) {
         sol_sprite_render(combat_attacks);
@@ -118,7 +123,8 @@ void combat_status_render(void *data) {
         sol_font_render_center(FONT_GREYLIGHT, buf, loc.x, loc.y, loc.w);
     }
 
-    if (!sol_combat_active(sol_arbiter_combat_region(sol_region_manager_get_current()))) { return; }
+    status = sol_arbiter_combat_region(sol_region_manager_get_current(), &cr);
+    if (!sol_combat_active(cr)) { return; }
 
     if (2 == 1) {
         sol_draw_cone(100, 100, 200);

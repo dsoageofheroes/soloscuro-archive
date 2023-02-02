@@ -449,9 +449,12 @@ static void region_animation_last_check(sol_region_t *reg, entity_animation_node
     power_instance_t pi;
     entity_t *target;
     entity_action_t *action;
+    sol_status_t status;
+    combat_region_t *cr = NULL;
+
     switch(todelete->ca.action) {
         case EA_POWER_HIT:
-            if (sol_arbiter_hits(todelete)) {
+            if (sol_arbiter_hits(todelete) == SOL_SUCCESS) {
                 pi.entity = todelete->ca.source;
                 pi.item = NULL;
                 pi.stats = todelete->ca.power;
@@ -467,10 +470,11 @@ static void region_animation_last_check(sol_region_t *reg, entity_animation_node
                 target->combat_status = COMBAT_STATUS_DYING;
                 play_death_sound(target);
                 warn("NEED TO IMPLEMENT death animation!\n");
-                if (!entity_list_remove_entity(&sol_arbiter_combat_region(reg)->combatants, target)) {
+                status = sol_arbiter_combat_region(reg, &cr);
+                if (!entity_list_remove_entity(&cr->combatants, target)) {
                     error("Unable to remove entity from combat region!\n");
                 }
-                if (!entity_list_remove_entity(&sol_arbiter_combat_region(reg)->round.entities, target)) {
+                if (!entity_list_remove_entity(&cr->round.entities, target)) {
                     error("Unable to remove entity from combat round!\n");
                 }
                 if (!entity_list_remove_entity(reg->entities, target)) {
@@ -758,6 +762,7 @@ static void clear_scmd_status(entity_t *entity) {
 extern int entity_animation_execute(entity_t *entity) {
     if (!entity || !entity->actions.head) { return 0; }
     entity_action_t *action = &(entity->actions.head->ca);
+    sol_status_t status = SOL_SUCCESS;
 
     if (action->ticks == 0 && action->amt == action->start_amt) {
         if (!apply_action(entity, action)) {
@@ -810,7 +815,9 @@ extern int entity_animation_execute(entity_t *entity) {
             return 1;
         }
 
-        animate_sprite_tick(action, entity);
+        if ((status = sol_animate_sprite_tick(action, entity))) {
+            return status;
+        }
     }
 
     return 1;
