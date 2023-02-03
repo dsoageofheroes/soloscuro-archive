@@ -291,8 +291,12 @@ static void copy_levels_string(entity_t *pc, char* storage) {
 }
 
 static void copy_exp_tnl_string(entity_t *pc, char* storage) {
+    int32_t next_exp;
     if (pc->class[0].class > -1) {
-        snprintf(storage, BUF_MAX, "EXP: %d (%d)", entity_get_total_exp(pc), sol_dnd2e_class_exp_to_next_level(pc));
+        sol_status_check(
+                sol_dnd2e_class_exp_to_next_level(pc, &next_exp),
+                "Unable to get the experience for next level");
+        snprintf(storage, BUF_MAX, "EXP: %d (%d)", entity_get_total_exp(pc), next_exp);
     }
     else {
         storage[0] = '\0';

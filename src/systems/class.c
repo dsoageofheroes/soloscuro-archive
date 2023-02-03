@@ -1,4 +1,4 @@
-#include "rules.h"
+#include "class.h"
 
 enum {
     A_END   = 0x0,     // End of Allowed Classes
@@ -422,8 +422,8 @@ static int8_t ranger_spell_slots[][10] = {
 
 #define MAX(a,b) (a > b) ? (a) : (b)
 
-extern void sol_dnd2e_class_update_max_spell_slots(entity_t *pc) {
-    if (!pc) { return; }
+extern sol_status_t sol_dnd2e_class_update_max_spell_slots(entity_t *pc) {
+    if (!pc) { return SOL_NULL_ARGUMENT; }
     int wizard_level = entity_get_wizard_level(pc);
     int priest_level = entity_get_priest_level(pc);
     int ranger_level = entity_get_ranger_level(pc);
@@ -437,6 +437,8 @@ extern void sol_dnd2e_class_update_max_spell_slots(entity_t *pc) {
         }
         pc->stats.priest[i].amt = MAX(pc->stats.priest[i].amt, pc->stats.priest[i].max);
     }
+
+    return SOL_SUCCESS;
 }
 
 static int convert_to_class_sel(const uint8_t class) {
@@ -462,16 +464,17 @@ static int convert_to_class_sel(const uint8_t class) {
     return 0; // UNKNOWN CLASS
 }
 
-int sol_dnd2e_is_class_allowed(const uint8_t race, const class_t classes[3]) {
+//int sol_dnd2e_is_class_allowed(const uint8_t race, const class_t classes[3]) {
+extern sol_status_t sol_dnd2e_is_class_allowed(const uint8_t race, const class_t classes[3]) {
     uint16_t class = convert_to_class_sel(classes[0].class);
     const uint16_t *allowed = NULL;
-    if (classes[0].class == -1) { return 0; }
+    if (classes[0].class == -1) { return SOL_ILLEGAL_CLASS; }
 
     //printf("race = %d (%d, %d, %d)\n", race, classes[0], classes[1], classes[2]);
     if (classes[1].class != -1) {
         // NO DUPS.
         if (classes[0].class == classes[1].class || classes[1].class == classes[2].class
-            || classes[0].class == classes[2].class) { return 0; }
+            || classes[0].class == classes[2].class) { return SOL_ILLEGAL_CLASS; }
         class |= convert_to_class_sel(classes[1].class);
         if (classes[2].class != -1) {
             class |= convert_to_class_sel(classes[2].class);
@@ -490,10 +493,10 @@ int sol_dnd2e_is_class_allowed(const uint8_t race, const class_t classes[3]) {
     }
 
     while (allowed && *allowed) {
-        if (*allowed == class) { return 1; }
+        if (*allowed == class) { return SOL_SUCCESS; }
         allowed++;
     }
-    return 0;
+    return SOL_ILLEGAL_CLASS;
 }
 
 static const uint32_t* get_xp_table(const uint8_t class, const uint8_t level) {
@@ -527,53 +530,59 @@ static const uint32_t* get_xp_table(const uint8_t class, const uint8_t level) {
     return NULL;
 }
 
-extern int sol_dnd2e_next_level_exp(const int8_t class, const int8_t clevel) {
+extern sol_status_t sol_dnd2e_next_level_exp(const int8_t class, const int8_t clevel, int8_t *nlevel) {
     const uint32_t *xp_table = get_xp_table(class, clevel);
-    if (xp_table == NULL) { return -1; }
-    if (clevel < 0 || clevel > 19) { return -1; }
+    if (xp_table == NULL)          { return SOL_ILLEGAL_CLASS; }
+    if (clevel < 0 || clevel > 19) { return SOL_ILLEGAL_LEVEL; }
 
-    return xp_table[0];
+    *nlevel = xp_table[0];
+    return SOL_SUCCESS;
 }
 
-extern int sol_dnd2e_class_total_hit_die(const int8_t class, const int8_t level) {
+extern sol_status_t sol_dnd2e_class_total_hit_die(const int8_t class, const int8_t level, uint8_t *hit_die) {
     const uint32_t *xp_table = get_xp_table(class, level);
-    if (xp_table == NULL) { return -1; }
-    if (level < 0 || level > 19) { return -1; }
+    if (xp_table == NULL)        { return SOL_ILLEGAL_CLASS; }
+    if (level < 0 || level > 19) { return SOL_ILLEGAL_LEVEL; }
 
-    return xp_table[1];
+    *hit_die = xp_table[1];
+    return SOL_SUCCESS;
 }
 
-extern int sol_dnd2e_class_level(const uint8_t class, const uint32_t xp) {
+extern sol_status_t sol_dnd2e_class_level(const uint8_t class, const uint32_t xp, uint8_t *class_level) {
     const uint32_t *xp_table = get_xp_table(class, 0);
-    if (!xp_table) { return 0; }
+    if (!xp_table) { return SOL_ILLEGAL_CLASS; }
 
-    for (int i = 0; i < 19; i++) {
+    for (uint8_t i = 0; i < 19; i++) {
         xp_table = get_xp_table(class, i);
         //printf("xp_table[%d] = %d, xp = %u\n", 3*i, xp_table[3*i], xp);
         //if (xp_table[3*(i+1)] > xp) { return i; }
-        if (xp_table[0] > xp) { return i; }
+        if (xp_table[0] > xp) {
+            *class_level = i;
+            return SOL_SUCCESS;
+        }
     }
 
-    return 20; // Current Max is 20.
+    *class_level = 20; // Current Max is 20.
+    return SOL_SUCCESS; 
 }
 
-extern int32_t sol_dnd2e_class_exp_to_next_level(entity_t *pc) {
-    int next_exp = 999999999;
+extern sol_status_t sol_dnd2e_class_exp_to_next_level(entity_t *pc, int32_t *next_exp) {
+    *next_exp = 999999999;
     for (int i = 0; i < 3; i++) {
         if (pc->class[i].level > -1) {
             const uint32_t *xp_table = get_xp_table(pc->class[i].class, pc->class[i].level);
-            if (!xp_table) { return next_exp; }
+            if (!xp_table) { return SOL_ILLEGAL_CLASS; }
             int next = xp_table[0];
-            if (next < next_exp) {
-                next_exp = next;
+            if (next < *next_exp) {
+                *next_exp = next;
             }
         }
     }
-    return next_exp;
+    return SOL_SUCCESS;
 }
 
-extern int32_t sol_dnd2e_class_thac0(entity_t *pc) {
-    int thac0 = 9999;
+extern sol_status_t sol_dnd2e_class_thac0(entity_t *pc, int32_t *thac0_ret) {
+    int32_t thac0 = 9999;
     for (int i = 0; i < 3; i++) {
         switch(pc->class[i].class) {
             case REAL_CLASS_FIGHTER:
@@ -617,11 +626,13 @@ extern int32_t sol_dnd2e_class_thac0(entity_t *pc) {
 
     if (thac0 > 1000) { thac0 = pc->stats.base_thac0; } // not a pc.
 
-    return thac0;
+    *thac0_ret = thac0;
+    return SOL_SUCCESS;
 }
 
-extern void sol_dnd2e_class_apply_stats(entity_t *pc, int class) {
-    if (!pc || class < 0 || class > REAL_CLASS_MAX) { return; }
+extern sol_status_t sol_dnd2e_class_apply_stats(entity_t *pc, int class) {
+    if (!pc)                                 { return SOL_NULL_ARGUMENT; }
+    if (class < 0 || class > REAL_CLASS_MAX) { return SOL_ILLEGAL_CLASS; }
 
     if (pc->stats.str   < class_mininum[class][0]) { pc->stats.str   = class_mininum[class][0]; }
     if (pc->stats.dex   < class_mininum[class][1]) { pc->stats.dex   = class_mininum[class][1]; }
@@ -629,10 +640,12 @@ extern void sol_dnd2e_class_apply_stats(entity_t *pc, int class) {
     if (pc->stats.intel < class_mininum[class][3]) { pc->stats.intel = class_mininum[class][3]; }
     if (pc->stats.wis   < class_mininum[class][4]) { pc->stats.wis   = class_mininum[class][4]; }
     if (pc->stats.cha   < class_mininum[class][5]) { pc->stats.cha   = class_mininum[class][5]; }
+
+    return SOL_SUCCESS;
 }
 
 // return half attacks
-extern int16_t sol_dnd2e_class_attack_num(const entity_t *pc, const item_t *item) {
+extern sol_status_t sol_dnd2e_class_attack_num(const entity_t *pc, const item_t *item, int16_t *attack_num) {
     if (!item || item->type == ITEM_MELEE) { // MELEE
         for (int i = 0; i < 3; i++) {
             switch (pc->class[i].class) {
@@ -642,12 +655,14 @@ extern int16_t sol_dnd2e_class_attack_num(const entity_t *pc, const item_t *item
                 case REAL_CLASS_WATER_RANGER:
                 case REAL_CLASS_FIRE_RANGER:
                 case REAL_CLASS_EARTH_RANGER:
-                    if (pc->class[i].level < 7) { return 2; }
-                    if (pc->class[i].level < 13) { return 3; }
-                    return 4;
+                    if (pc->class[i].level < 7)  { *attack_num = 2; goto found;}
+                    if (pc->class[i].level < 13) { *attack_num = 3; goto found;}
+                    *attack_num = 4;
+                    goto found;
             }
         }
-        return 2;
+        *attack_num = 2;
+        goto found;
     } else if (item->type == ITEM_MISSILE_THROWN || item->type == ITEM_MISSILE_USE_AMMO) { // MISSILE
         for (int i = 0; i < 3; i++) {
             switch (pc->class[i].class) {
@@ -657,22 +672,33 @@ extern int16_t sol_dnd2e_class_attack_num(const entity_t *pc, const item_t *item
                 case REAL_CLASS_WATER_RANGER:
                 case REAL_CLASS_FIRE_RANGER:
                 case REAL_CLASS_EARTH_RANGER:
-                    if (pc->class[i].level < 7) { return 4; }
-                    if (pc->class[i].level < 13) { return 6; }
-                    return 8;
+                    if (pc->class[i].level < 7)  { *attack_num = 4; goto found;}
+                    if (pc->class[i].level < 13) { *attack_num = 6; goto found;}
+                    *attack_num = 8;
+                    goto found;
             }
         }
-        return 2;
+        *attack_num = 2;
+        goto found;
     }
-    return 0;
+
+    *attack_num = 0;
+    return SOL_NO_ATTACK;
+
+found:
+    return SOL_SUCCESS;
 }
 
-extern int sol_dnd2e_class_max_hp(int class, int level, int con_mod) {
-    if (class < 0 || class > REAL_CLASS_MAX) { return 0; }
+extern sol_status_t sol_dnd2e_class_max_hp(int class, int level, int con_mod, int32_t *max_hp) {
+    if (class < 0 || class > REAL_CLASS_MAX) { *max_hp = 0; return SOL_ILLEGAL_CLASS;}
 
-    return level * (hit_die[class] + con_mod);
+    *max_hp = level * (hit_die[class] + con_mod);
+    return SOL_SUCCESS;
 }
 
-extern int sol_dnd2e_class_hp_die(int class) {
-    return hit_die[class];
+extern sol_status_t sol_dnd2e_class_hp_die(int class, int8_t *ht) {
+    if (class < 0 || class > REAL_CLASS_MAX) { *ht = 0; return SOL_ILLEGAL_CLASS;}
+
+    *ht = hit_die[class];
+    return SOL_SUCCESS;
 }

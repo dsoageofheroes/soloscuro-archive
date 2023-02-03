@@ -52,7 +52,8 @@ void load_window(const char *arg) {
         sol_window_push(&interact_window, 0, 0);
     }
     if (!strcmp(arg, "combat")) {
-        combat_status_t* cs = sol_combat_status_get();
+        combat_status_t* cs = NULL;
+        sol_combat_status_get(&cs);
         strcpy(cs->name, "Tex");
         cs->current_hp = 10;
         cs->max_hp = 20;

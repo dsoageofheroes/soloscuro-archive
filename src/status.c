@@ -16,6 +16,17 @@ static const char *status_messages[] = {
     "An attack is not allowed.",
     "The entity is in combat.",
     "The entity is NOT in combat",
+    "Could not initialize audio subsystem.",
+    "The particular item does not exist.",
+    "A buffer was overrun.",
+    "Could not open the device.",
+    "Could not queue up the audio device.",
+    "Could not find the resource.",
+    "The resource has already been freed.",
+    "A resource has not been loaded.",
+    "The class is not allowed for the character.",
+    "The level is out of range.",
+    "There is not available attack for given item and class.",
 };
 
 extern void sol_status_print(sol_status_t error) {

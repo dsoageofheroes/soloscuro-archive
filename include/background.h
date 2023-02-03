@@ -3,9 +3,9 @@
 
 #include "region.h"
 
-extern void sol_background_load_region(sol_region_t *_region);
-extern void sol_background_apply_alpha(const uint8_t alpha);
-extern void sol_background_render();
-extern void sol_background_free();
+extern sol_status_t sol_background_load_region(sol_region_t *_region);
+extern sol_status_t sol_background_apply_alpha(const uint8_t alpha);
+extern sol_status_t sol_background_render();
+extern sol_status_t sol_background_free();
 
 #endif

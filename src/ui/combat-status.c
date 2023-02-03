@@ -35,8 +35,9 @@ static void start_node() {
     sol_audio_play_voc(RESOURCE_GFF_INDEX, GFF_BVOC, list->sound, 1.0);
 }
 
-extern void sol_combat_clear_damage() {
+extern sol_status_t sol_combat_clear_damage() {
     show_attack = 0;
+    return SOL_SUCCESS;
 }
 
 static void pop_list() {
@@ -61,7 +62,10 @@ static void pop_list() {
     start_node();
 }
 
-combat_status_t* sol_combat_status_get() { return &combat_status; }
+extern sol_status_t sol_combat_status_get(combat_status_t **cs) {
+    *cs = &combat_status;
+    return SOL_SUCCESS;
+}
 
 #define MAX_STATUS 9
 const static char *statuses[] = {
@@ -151,7 +155,8 @@ void combat_status_render(void *data) {
 }
 
 // DO NOT STORE THE POINTER TO CA!!!!!!!!
-extern void sol_combat_action(const entity_action_t *ca) {
+extern sol_status_t sol_combat_action(const entity_action_t *ca) {
+    if (!ca) { return SOL_NULL_ARGUMENT; }
     // DO NOT STORE THE POINTER TO CA!!!!!!!!
     float const zoom = settings_zoom();
     animate_sprite_t *as = NULL, *source = NULL, *cast = NULL,
@@ -177,7 +182,7 @@ extern void sol_combat_action(const entity_action_t *ca) {
             sol_sprite_center_spr(combat_attacks, as->spr);
             show_attack = 1;
             damage_amount = ca->damage;
-            return;
+            return SOL_SUCCESS;
         case EA_POWER_CAST:
             source = &(ca->source->anim);
             cast = &(ca->power->cast);
@@ -206,6 +211,7 @@ extern void sol_combat_action(const entity_action_t *ca) {
     }
 
     show_attack = 0;
+    return SOL_SUCCESS;
 }
 
 int combat_status_handle_mouse_movement(const uint32_t x, const uint32_t y) {

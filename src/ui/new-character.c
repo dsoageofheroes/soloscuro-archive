@@ -160,8 +160,7 @@ static void set_class_frames() {
         pc.class[next_class].class = convert_to_actual_class(i);
         if (sol_sprite_get_frame(class_sel[i]) != 1) {
             sol_sprite_set_frame(classes[i], 
-                (next_class < 3 && sol_dnd2e_is_class_allowed(pc.race, pc.class
-                ))
+                (next_class < 3 && (sol_dnd2e_is_class_allowed(pc.race, pc.class) == SOL_SUCCESS))
                 ? 0 : 2);
         }
     }

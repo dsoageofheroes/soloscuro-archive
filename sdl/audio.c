@@ -38,27 +38,34 @@ static SDL_AudioDeviceID audio_device[AUDIO_DEVICE_NUM];
 static SDL_AudioDeviceID music_device;
 static int audio_opened[AUDIO_DEVICE_NUM] = {0, 0, 0, 0};
 
-extern float sol_audio_get_xmi_volume() {
-    return midi_volume;
+extern sol_status_t sol_audio_get(sol_audio_stats_t **stats_arg) {
+    static sol_audio_stats_t stats;
+    if (stats_arg == NULL) { return SOL_NULL_ARGUMENT; }
+
+    stats.xmi_volume = midi_volume;
+    stats.voc_volume = voc_volume;
+    *stats_arg = &stats;
+
+    return SOL_SUCCESS;
 }
 
-extern void sol_audio_set_xmi_volume(const float vol) {
-    if (vol < 0) { midi_volume = 0.0; return; }
-    if (vol > 1.0) { midi_volume = 1.0; return; }
+extern sol_status_t sol_audio_set_xmi_volume(const float vol) {
+    if (vol < 0)   { midi_volume = 0.0; return SOL_ILLEGAL_ARGUMENT; }
+    if (vol > 1.0) { midi_volume = 1.0; return SOL_ILLEGAL_ARGUMENT; }
+
     midi_volume = vol;
+    return SOL_SUCCESS;
 }
 
-extern float sol_audio_get_voc_volume() {
-    return voc_volume;
-}
+extern sol_status_t sol_audio_set_voc_volume(const float vol) {
+    if (vol < 0)   { voc_volume = 0.0; return SOL_ILLEGAL_ARGUMENT; }
+    if (vol > 1.0) { voc_volume = 1.0; return SOL_ILLEGAL_ARGUMENT;  }
 
-extern void sol_audio_set_voc_volume(const float vol) {
-    if (vol < 0) { voc_volume = 0.0; return; }
-    if (vol > 1.0) { voc_volume = 1.0;return;  }
     voc_volume = vol;
+    return SOL_SUCCESS;
 }
 
-extern void sol_audio_init() {
+extern sol_status_t sol_audio_init() {
     spec.freq = 44100;
     spec.format = AUDIO_S16SYS;
     spec.channels = 2;
@@ -70,6 +77,7 @@ extern void sol_audio_init() {
     midi_player = adl_init(spec.freq);
     if (!midi_player) {
         error("Couldn't initialize ADLMIDI: %s\n", adl_errorString());                                                     
+        return SOL_AUDIO_INIT_FAILURE;
     }
 
     adl_switchEmulator(midi_player, ADLMIDI_EMU_DOSBOX);
@@ -79,6 +87,7 @@ extern void sol_audio_init() {
 
     if ((music_device = SDL_OpenAudio(&spec, &obtained)) < 0) {
         error("Couldn't open audio: %s\n", SDL_GetError());                                                                
+        return SOL_AUDIO_INIT_FAILURE;
     }
 
     switch(obtained.format) {
@@ -117,12 +126,13 @@ extern void sol_audio_init() {
     adl_setVolumeRangeModel(midi_player, ADLMIDI_VolumeModel_AIL);
     adl_setScaleModulators(midi_player, 1);
     //adl_setLoopEnabled(midi_player, 1);
+    return SOL_SUCCESS;
 }
 
-static void load_midi() {
+static sol_status_t load_midi() {
     char *buf = NULL;
 
-    if (midi_gff < 0) { return; }
+    if (midi_gff < 0) { return SOL_ILLEGAL_ARGUMENT; }
 
     SDL_PauseAudio(1);
     if (xmi_playing) {
@@ -135,7 +145,7 @@ static void load_midi() {
 
     if (adl_openData(midi_player, buf, chunk.length)) {
         error("Couldn't open music entry (%d, %d, %d): %s\n", midi_gff, midi_type, midi_res_id, adl_errorInfo(midi_player));
-        return;
+        return SOL_DNE;
     }
 
     xmi_playing = 1;
@@ -143,13 +153,15 @@ static void load_midi() {
     SDL_PauseAudio(0);
 
     free(buf);
+    return SOL_SUCCESS;
 }
 
-extern void sol_audio_play_xmi(const int gff_idx, uint32_t type, uint32_t res_id) {
+extern sol_status_t sol_audio_play_xmi(const int gff_idx, uint32_t type, uint32_t res_id) {
     midi_gff = gff_idx;
     midi_type = type;
     midi_res_id = res_id;
-    load_midi();
+
+    return load_midi();
 }
 
 static sf_count_t vfget_filelen (void *user_data) {
@@ -232,12 +244,12 @@ static int get_audio_id() {
     return min_id;
 }
 
-extern void sol_play_sound_effect(const uint16_t id) {
+extern sol_status_t sol_play_sound_effect(const uint16_t id) {
     //printf("sol_player_sound_effect: %d\n", id);
-    sol_audio_play_voc(RESOURCE_GFF_INDEX, GFF_BVOC, id, voc_volume);
+    return sol_audio_play_voc(RESOURCE_GFF_INDEX, GFF_BVOC, id, voc_volume);
 }
 
-extern void sol_audio_play_voc(const int gff_idx, uint32_t type, uint32_t res_id, const float volume) {
+extern sol_status_t sol_audio_play_voc(const int gff_idx, uint32_t type, uint32_t res_id, const float volume) {
     static float buffer [VOC_BUFFER_LEN];
     int readcount;
     SF_VIRTUAL_IO vout;
@@ -269,7 +281,7 @@ extern void sol_audio_play_voc(const int gff_idx, uint32_t type, uint32_t res_id
     if (chunk.length > VOC_BUFFER_LEN) {
         error ("loading %d:%d:%d exceeds buffer (%u vs %d)\n",
                 gff_idx, type, res_id, chunk.length, VOC_BUFFER_LEN);
-        return;
+        return SOL_BUFFER_OVERRUN;
     }
 
     gff_read_chunk(gff_idx, &chunk, audio_data_in.buffer, chunk.length);
@@ -279,12 +291,14 @@ extern void sol_audio_play_voc(const int gff_idx, uint32_t type, uint32_t res_id
     if ((infile = sf_open_virtual (&vin, SFM_READ, &sfinfo, &audio_data_in)) == NULL) {
         printf("error setting up input.\n");
         puts (sf_strerror (NULL));
+        return SOL_DEVICE_OPEN_ERROR;
     }
 
     // setup the output "file"
     sfinfo.format = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
     if ((outfile = sf_open_virtual (&vout, SFM_WRITE, &sfinfo, &audio_data)) == NULL) {
         printf("error setting up output.\n");
+        return SOL_DEVICE_OPEN_ERROR;
     }
 
     // read in (do the translation from VOC to WAV.
@@ -321,13 +335,15 @@ extern void sol_audio_play_voc(const int gff_idx, uint32_t type, uint32_t res_id
     int failure = SDL_QueueAudio(audio_device[audio_id], audio_data.buffer, audio_data.offset);
     if (failure) {
         error ("failure queuing up audio: %d:%d:%d\n", gff_idx, type, res_id);
-        return;
+        return SOL_AUDIO_QUEUE_ERROR;
     }
 
     SDL_PauseAudioDevice(audio_device[audio_id], 0);
 
     sf_close(infile);
     sf_close(outfile);
+
+    return SOL_SUCCESS;
 }
 
 static void soloscuro_audio_callback(void *midi_player, uint8_t *stream, int len) {
@@ -366,7 +382,7 @@ static void soloscuro_audio_callback(void *midi_player, uint8_t *stream, int len
     SDL_memcpy(stream, xmi_buf, samples_count * audio_format.containerSize);
 }
 
-extern void sol_audio_cleanup() {
+extern sol_status_t sol_audio_cleanup() {
     for (int i = 0; i < AUDIO_DEVICE_NUM; i++) {
         if (audio_opened[i]) {
             SDL_CloseAudioDevice(audio_device[i]);
@@ -381,4 +397,6 @@ extern void sol_audio_cleanup() {
 
     adl_close(midi_player);
     SDL_CloseAudio();
+
+    return SOL_SUCCESS;
 }

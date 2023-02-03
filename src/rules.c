@@ -36,19 +36,24 @@ static void set_psp(entity_t *pc) {
 static void do_level_up(entity_t *pc, const uint32_t class_idx, const uint32_t class) {
     int clevel = pc->class[class_idx].level;
     int num_classes = 0;
+    uint8_t current_hit_die, next_hit_die, class_hit_die;
+    sol_status_t status;
 
     for (int i = 0; i < 3 && pc->class[i].class > -1; i++) {
         num_classes++;
     }
 
     // Roll the next HP:
-    int current_hit_die = sol_dnd2e_class_total_hit_die(pc->class[class_idx].class, clevel);
-    int next_hit_die = sol_dnd2e_class_total_hit_die(pc->class[class_idx].class, clevel + 1);
+    status = sol_dnd2e_class_total_hit_die(pc->class[class_idx].class, clevel, &current_hit_die);
+    sol_status_check(status, "Could not find current hit die.");
+    status = sol_dnd2e_class_total_hit_die(pc->class[class_idx].class, clevel + 1, &next_hit_die);
+    sol_status_check(status, "Could not find next hit die.");
     //printf("%d: lvl = %d, chd = %d, nhd = %d\n", pc->class[class_idx].class, clevel, current_hit_die, next_hit_die);
     int hp = 0;
     if (next_hit_die > current_hit_die) {
         //printf("Need to increase HP by up to %d\n", sol_dnd2e_class_hp_die(pc->class[class_idx].class));
-        hp = 1 + (rand() % sol_dnd2e_class_hp_die(pc->class[class_idx].class));
+        sol_dnd2e_class_hp_die(pc->class[class_idx].class, &class_hit_die);
+        hp = 1 + (rand() % class_hit_die);
         hp += sol_dnd2e_hp_mod(&pc->stats);
         hp = (hp / num_classes) + (((hp % num_classes) > 0) ? 1 : 0);
         if (hp < 1) { hp = 1; }
@@ -80,7 +85,12 @@ void dnd2e_set_exp(entity_t *pc, const uint32_t amt) {
 
 void dnd2e_award_exp_to_class(entity_t *pc, const int index, const uint32_t amt) {
     pc->class[index].current_xp += amt;
-    int next_level = sol_dnd2e_class_level(pc->class[index].class, pc->class[index].current_xp);
+    uint8_t next_level;
+
+    sol_status_check(
+            sol_dnd2e_class_level(pc->class[index].class, pc->class[index].current_xp, &next_level),
+            "Unable to get class level");
+
     while (next_level > pc->class[index].level) {
         do_level_up(pc, index, pc->class[index].level);
     }
@@ -115,9 +125,11 @@ int16_t dnd2e_get_ac_pc(entity_t *pc) {
 }
 
 int16_t dnd2e_get_attack_num(const entity_t *pc, const item_t *item) {
+    int16_t attack_num;
     if (item == NULL || !item->ds_id) { return pc->stats.attacks[0].number; }
     // For some reason double attacks are stored for missiles...
-    return item->attack.number + sol_dnd2e_class_attack_num(pc, item);
+    sol_dnd2e_class_attack_num(pc, item, &attack_num);
+    return item->attack.number + attack_num;
 }
 
 int16_t dnd2e_get_attack_sides_pc(const entity_t *pc, const item_t *item) {
@@ -166,6 +178,8 @@ static int calc_starting_exp(entity_t *pc) {
     int most_exp_class = -1;
     int most_exp = -1;
     int starting_level = -1;
+    uint8_t next_level = -1;
+    sol_status_t status;
 
     for (int i = 0; i < 3; i++) {
         if (pc->class[0].class >= 0 ) { num_classes++; }
@@ -174,8 +188,8 @@ static int calc_starting_exp(entity_t *pc) {
     starting_level = (num_classes > 1) ? 2 : 3;
 
     for (int i = 0; i < 3; i++) {
-        int temp = sol_dnd2e_next_level_exp(pc->class[0].class, starting_level - 1);
-        most_exp = most_exp > temp ? most_exp : temp;
+        status = sol_dnd2e_next_level_exp(pc->class[0].class, starting_level - 1, &next_level);
+        most_exp = most_exp > next_level ? most_exp : next_level;
     }
 
     return most_exp * starting_level * num_classes;
@@ -200,23 +214,27 @@ void dnd2e_set_starting_level(entity_t *pc) {
 }
 
 static void adjust_creation_hp(entity_t *pc) {
-    int min_hp = 0; // Right now min_hp is looking for max level
-    int max_hp = 0;
-    int num_levels = 0;
+    int min_hp           = 0; // Right now min_hp is looking for max level
+    int num_levels       = 0;
+    int32_t max_hp       = 0;
+    int32_t class_max_hp = 0;
 
     if (pc->class[0].class > -1) {
         min_hp = (pc->class[0].level > min_hp) ? pc->class[0].level : min_hp;
-        max_hp += sol_dnd2e_class_max_hp(pc->class[0].class, pc->class[0].level, sol_dnd2e_hp_mod(&pc->stats));
+        sol_dnd2e_class_max_hp(pc->class[0].class, pc->class[0].level, sol_dnd2e_hp_mod(&pc->stats), &class_max_hp);
+        max_hp += class_max_hp;
         num_levels++;
     }
     if (pc->class[1].class > -1) {
         min_hp = (pc->class[1].level > min_hp) ? pc->class[1].level : min_hp;
-        max_hp += sol_dnd2e_class_max_hp(pc->class[1].class, pc->class[1].level, sol_dnd2e_hp_mod(&pc->stats));
+        sol_dnd2e_class_max_hp(pc->class[1].class, pc->class[1].level, sol_dnd2e_hp_mod(&pc->stats), &class_max_hp);
+        max_hp += class_max_hp;
         num_levels++;
     }
     if (pc->class[2].class > -1) {
         min_hp = (pc->class[2].level > min_hp) ? pc->class[2].level : min_hp;
-        max_hp += sol_dnd2e_class_max_hp(pc->class[2].class, pc->class[2].level, sol_dnd2e_hp_mod(&pc->stats));
+        sol_dnd2e_class_max_hp(pc->class[2].class, pc->class[2].level, sol_dnd2e_hp_mod(&pc->stats), &class_max_hp);
+        max_hp += class_max_hp;
         num_levels++;
     }
 
@@ -248,7 +266,7 @@ void dnd2e_loop_creation_stats(entity_t *pc) {
 
 int dnd2e_character_is_valid(const entity_t *pc) {
     if (!sol_dnd2e_stats_valid(&pc->stats)) { return 0; }
-    if (!sol_dnd2e_is_class_allowed(pc->race, pc->class)) { return 0; }
+    if (sol_dnd2e_is_class_allowed(pc->race, pc->class) != SOL_SUCCESS) { return 0; }
     if (pc->gender != GENDER_MALE && pc->gender != GENDER_FEMALE) { return 0; }
     if (pc->alignment < LAWFUL_GOOD || pc->alignment > CHAOTIC_EVIL) { return 0; }
     if (pc->class[0].level < 1) { return 0; }
@@ -318,7 +336,10 @@ static int item_thac0_mod(item_t *item) {
 }
 
 int16_t dnd2e_get_thac0(entity_t *pc, int slot) {
-    int class_thac0 = sol_dnd2e_class_thac0(pc);
+    int32_t class_thac0;
+    sol_status_check(
+            sol_dnd2e_class_thac0(pc, &class_thac0),
+            "Unable to class thac0.");
     int weapon_mod = (pc->inv && pc->inv[slot].ds_id)
         ? item_thac0_mod(pc->inv + slot)
         : 0; // bare handed.
@@ -409,6 +430,7 @@ static int16_t roll_damage_weapon(item_t *item) {
 static void populate_melee_sequence(entity_t *source, uint8_t *seq, const int round) {
     int      pos         = 0;
     int      amt         = 0;
+    int16_t  attack_num  = 0;
     item_t  *item        = NULL;
 
     if (!source->inv) {
@@ -431,8 +453,10 @@ static void populate_melee_sequence(entity_t *source, uint8_t *seq, const int ro
 
     item = source->inv + SLOT_HAND0;
     if (item->name[0]) {
-        amt = sol_dnd2e_class_attack_num(source, item) / 2;
-        amt += ((round % 2 == 1) && (sol_dnd2e_class_attack_num(source, item) % 2 == 1)) ? 1 : 0;
+        sol_dnd2e_class_attack_num(source, item, &attack_num);
+        amt = attack_num / 2;
+        sol_dnd2e_class_attack_num(source, item, &attack_num);
+        amt += ((round % 2 == 1) && (attack_num) % 2 == 1) ? 1 : 0;
         for (int i = 0; i < amt; i++) { seq[pos++] = SLOT_HAND0; }
     } else {
         seq[pos++] = SLOT_INNATE0;
@@ -451,12 +475,14 @@ static void populate_melee_sequence(entity_t *source, uint8_t *seq, const int ro
 static void populate_missile_sequence(entity_t *source, uint8_t *seq, const int round) {
     int      pos         = 0;
     int      amt         = 0;
+    int16_t  attack_num  = 0;
     item_t *launcher = source->inv ? source->inv + SLOT_MISSILE : NULL;
     //item_t *ammo = source->inv ? source->inv + SLOT_AMMO : NULL;
 
     if (!launcher || !launcher->name[0]) { goto missile_seq_end; }
-    amt = sol_dnd2e_class_attack_num(source, launcher) / 2;
-    amt += ((round % 2 == 1) && (sol_dnd2e_class_attack_num(source, launcher) % 2 == 1)) ? 1 : 0;
+    sol_dnd2e_class_attack_num(source, launcher, &attack_num);
+    amt = attack_num / 2;
+    amt += ((round % 2 == 1) && (attack_num % 2 == 1)) ? 1 : 0;
     for (int i = 0; i < amt; i++) { seq[pos++] = SLOT_MISSILE; }
 
 missile_seq_end:

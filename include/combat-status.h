@@ -11,10 +11,10 @@ typedef struct combat_status_s {
     uint16_t move;
 } combat_status_t;
 
-combat_status_t* sol_combat_status_get();
-
 extern sol_wops_t combat_status_window;
-extern void sol_combat_action(const entity_action_t *ca);
-extern void sol_combat_clear_damage();
+
+extern sol_status_t sol_combat_action(const entity_action_t *ca);
+extern sol_status_t sol_combat_clear_damage();
+extern sol_status_t sol_combat_status_get(combat_status_t **cs);
 
 #endif

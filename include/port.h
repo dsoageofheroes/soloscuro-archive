@@ -8,6 +8,7 @@
 #ifndef PORT_H
 #define PORT_H
 
+#include "status.h"
 #include "ssi-object.h"
 #include "region.h"
 #include "combat.h"
@@ -59,7 +60,7 @@ extern void port_swap_enitity(int obj_id, entity_t *dude);
 extern void port_load_sprite(animate_sprite_t *anim, gff_palette_t *pal, const int gff_index,
                 const int type, const uint32_t id, const int num_load);
 
-extern void sol_play_sound_effect(const uint16_t id);
+extern sol_status_t sol_play_sound_effect(const uint16_t id);
 
 extern void port_load_item(item_t *item);
 extern int port_load_region(const int region);

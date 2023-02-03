@@ -17,6 +17,17 @@ typedef enum sol_status_e {
     SOL_ILLEGAL_ATTACK,
     SOL_IN_COMBAT,
     SOL_NOT_IN_COMBAT,
+    SOL_AUDIO_INIT_FAILURE,
+    SOL_DNE,
+    SOL_BUFFER_OVERRUN,
+    SOL_DEVICE_OPEN_ERROR,
+    SOL_AUDIO_QUEUE_ERROR,
+    SOL_NOT_FOUND,
+    SOL_ALREADY_FREED,
+    SOL_NOT_LOADED,
+    SOL_ILLEGAL_CLASS,
+    SOL_ILLEGAL_LEVEL,
+    SOL_NO_ATTACK,
 } sol_status_t;
 
 extern void sol_status_print(sol_status_t error);
@@ -27,12 +38,8 @@ extern void sol_status_check(sol_status_t status, const char *msg);
 
 /*
  * Headers to look at next for update to status paradigm
-audio.h
-background.h
-class.h
 combat.h
 combat-region.h
-combat-status.h
 common.h
 description.h
 ds-load-save.h

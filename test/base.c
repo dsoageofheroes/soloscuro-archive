@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include "region.h"
 #include "gpl.h"
+#include "audio.h"
 #include "gpl-manager.h"
 #include "sol-lua-manager.h"
 #include "port.h"
@@ -38,7 +39,7 @@ extern void port_load_item(item_t *item) {
 extern void port_combat_action(entity_action_t *ca) {
 }
 
-extern void port_play_sound_effect(const uint16_t id) {
+extern sol_status_t port_play_sound_effect(const uint16_t id) {
 }
 
 extern void port_start() {
@@ -115,19 +116,18 @@ uint32_t sol_get_cameray() {return 100;}
 
 void sol_center_on_player() {}
 
-void sol_background_load_region(sol_region_t *_region) {}
-void sol_background_apply_alpha(const uint8_t alpha) {}
-void sol_background_render() {}
-void sol_background_free() {}
+sol_status_t sol_background_load_region(sol_region_t *_region) {return SOL_SUCCESS;}
+sol_status_t sol_background_apply_alpha(const uint8_t alpha) {return SOL_SUCCESS;}
+sol_status_t sol_background_render() {return SOL_SUCCESS;}
+sol_status_t sol_background_free() {return SOL_SUCCESS;}
 
-void  sol_audio_init() {}
-void  sol_audio_play_xmi(const int gff_idx, uint32_t type, uint32_t res_id) {}
-void  sol_audio_play_voc(const int gff_idx, uint32_t type, uint32_t res_id, const float volume) {}
-float sol_audio_get_xmi_volume() {return 50;}
-void  sol_audio_set_xmi_volume(const float vol) {}
-float sol_audio_get_voc_volume() {return 50;}
-void  sol_audio_set_voc_volume(const float vol) {}
-void  sol_audio_cleanup() {}
+sol_status_t sol_audio_init() {return SOL_SUCCESS;}
+sol_status_t sol_audio_play_xmi(const int gff_idx, uint32_t type, uint32_t res_id) {return SOL_SUCCESS;}
+sol_status_t sol_audio_play_voc(const int gff_idx, uint32_t type, uint32_t res_id, const float volume) {return SOL_SUCCESS;}
+sol_status_t sol_audio_get(sol_audio_stats_t **stats) { return SOL_SUCCESS; }
+sol_status_t sol_audio_set_xmi_volume(const float vol) {return SOL_SUCCESS;}
+sol_status_t sol_audio_set_voc_volume(const float vol) {return SOL_SUCCESS;}
+sol_status_t sol_audio_cleanup() {return SOL_SUCCESS;}
 
 uint32_t sol_font_pixel_width(sol_font_t font, const char *text, const uint32_t len) { return 8; }
 uint32_t sol_font_pixel_height(sol_font_t font) { return 8; }
@@ -140,7 +140,7 @@ void port_commit_display_frame() {}
 
 void       sol_textbox_set_current(textbox_t *tb) {}
 void sol_font_free() {}
-void sol_play_sound_effect(const uint16_t id) {}
+sol_status_t sol_play_sound_effect(const uint16_t id) {}
 void       sol_textbox_render(textbox_t *tb) {}
 void port_entity_update_scmd(entity_t *entity) {}
 extern void sol_camera_scrollx(const int amt) {}

@@ -114,6 +114,8 @@ static void print_text_help() {
 
 void game_menu_render(void *data) {
     sol_sprite_render(background);
+    sol_audio_stats_t *stats = NULL;
+    sol_status_t status = SOL_UNKNOWN_ERROR;
 
     switch(state) {
         case MENU_SOUND:
@@ -128,10 +130,11 @@ void game_menu_render(void *data) {
                 sol_sprite_render(left_arrow[i]);
                 sol_sprite_render(bars[i]);
             }
+            status = sol_audio_get(&stats);
             sol_sprite_render_box(full_bar, sol_sprite_getx(bars[0]), sol_sprite_gety(bars[0]),
-                sol_sprite_getw(bars[0]) * sol_audio_get_xmi_volume(), sol_sprite_geth(bars[0]));
+                sol_sprite_getw(bars[0]) * stats->xmi_volume, sol_sprite_geth(bars[0]));
             sol_sprite_render_box(full_bar, sol_sprite_getx(bars[1]), sol_sprite_gety(bars[1]),
-                sol_sprite_getw(bars[1]) * sol_audio_get_voc_volume(), sol_sprite_geth(bars[1]));
+                sol_sprite_getw(bars[1]) * stats->voc_volume, sol_sprite_geth(bars[1]));
             break;
         default:
             break;
@@ -187,10 +190,15 @@ int game_menu_handle_mouse_down(const uint32_t button, const uint32_t x, const u
 }
 
 int game_menu_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
-    if (sol_sprite_in_rect(left_arrow[0], x, y)) { sol_audio_set_xmi_volume(sol_audio_get_xmi_volume() - .1); }
-    if (sol_sprite_in_rect(right_arrow[0], x, y)) { sol_audio_set_xmi_volume(sol_audio_get_xmi_volume() + .1); }
-    if (sol_sprite_in_rect(left_arrow[1], x, y)) { sol_audio_set_voc_volume(sol_audio_get_voc_volume() - .1); }
-    if (sol_sprite_in_rect(right_arrow[1], x, y)) { sol_audio_set_voc_volume(sol_audio_get_voc_volume() + .1); }
+    sol_audio_stats_t *stats = NULL;
+    sol_status_t status = SOL_UNKNOWN_ERROR;
+
+    status = sol_audio_get(&stats);
+
+    if (sol_sprite_in_rect(left_arrow[0], x, y)) { sol_audio_set_xmi_volume(stats->xmi_volume - .1); }
+    if (sol_sprite_in_rect(right_arrow[0], x, y)) { sol_audio_set_xmi_volume(stats->xmi_volume + .1); }
+    if (sol_sprite_in_rect(left_arrow[1], x, y)) { sol_audio_set_voc_volume(stats->voc_volume - .1); }
+    if (sol_sprite_in_rect(right_arrow[1], x, y)) { sol_audio_set_voc_volume(stats->voc_volume + .1); }
 
     if (sol_sprite_in_rect(game_return, x, y)) { sol_window_pop(); } 
 

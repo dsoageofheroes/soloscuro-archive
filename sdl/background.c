@@ -11,7 +11,7 @@
 static SDL_Texture **tiles = NULL;
 static sol_region_t *region = NULL;;
 
-static void load_sol_background() {
+static sol_status_t load_sol_background() {
     unsigned char *data;
     uint32_t w, h;
     char buf[32];
@@ -23,7 +23,7 @@ static void load_sol_background() {
     int pid = gff_get_palette_id(DSLDATA_GFF_INDEX, region->sol.mid - 1);
     //printf("gff_file = %d, pid = %d\n", gff_file, pid);
     data = gff_get_frame_rgba_with_palette(gff_file, GFF_TILE, region->sol.tid, 0, pid);
-    if (!data) { return; }
+    if (!data) { return SOL_NOT_FOUND; }
     w = gff_get_frame_width(gff_file, GFF_TILE, region->sol.tid, 0);
     h = gff_get_frame_height(gff_file, GFF_TILE, region->sol.tid, 0);
     tile = SDL_CreateRGBSurfaceFrom(data, w, h, 32, 4*w, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
@@ -33,9 +33,10 @@ static void load_sol_background() {
     SDL_FreeSurface(tile);
 
     free(data);
+    return SOL_SUCCESS;
 }
 
-extern void sol_background_load_region(sol_region_t *_region) {
+extern sol_status_t sol_background_load_region(sol_region_t *_region) {
     SDL_Surface* tile = NULL;
     uint32_t *ids = NULL;
     uint32_t width, height;
@@ -46,8 +47,7 @@ extern void sol_background_load_region(sol_region_t *_region) {
     region = _region;
 
     if (region->sol.mid) {
-        load_sol_background();
-        return;
+        return load_sol_background();
     }
 
     if (region->map_id < 100 && region->map_id > 0) {
@@ -73,10 +73,12 @@ extern void sol_background_load_region(sol_region_t *_region) {
             free(data);
         }
     }
+
+    return SOL_SUCCESS;
 }
 
-extern void sol_background_free() {
-    if (!tiles) { return; }
+extern sol_status_t sol_background_free() {
+    if (!tiles) { return SOL_ALREADY_FREED; }
     for (uint32_t i = 0; i < region->num_tiles; i++) {
         if (tiles[i]) {
             SDL_DestroyTexture(tiles[i]);
@@ -85,17 +87,20 @@ extern void sol_background_free() {
     }
     free(tiles);
     tiles = NULL;
+
+    return SOL_SUCCESS;
 }
 
-extern void sol_background_apply_alpha(const uint8_t alpha) {
-    if (!tiles) { return; }
+extern sol_status_t sol_background_apply_alpha(const uint8_t alpha) {
+    if (!tiles) { return SOL_NOT_LOADED; }
     for (uint32_t i = 0; i < region->num_tiles; i++) {
         SDL_SetTextureAlphaMod(tiles[i + 1], alpha);
     }
+    return SOL_SUCCESS;
 }
 
-extern void sol_background_render_box(const int32_t startx, const int32_t starty) {
-    if (!tiles) { return; }
+extern sol_status_t sol_background_render_box(const int32_t startx, const int32_t starty) {
+    if (!tiles) { return SOL_NOT_LOADED; }
     const int stretch = settings_zoom();
     const uint32_t xoffset = sol_get_camerax();
     const uint32_t yoffset = sol_get_cameray();
@@ -114,8 +119,10 @@ extern void sol_background_render_box(const int32_t startx, const int32_t starty
         tile_loc.x = -xoffset;
         tile_loc.y += stretch * 16;
     }
+
+    return SOL_SUCCESS;
 }
 
-extern void sol_background_render() {
-    sol_background_render_box(-16 * settings_zoom(), -16 * settings_zoom());
+extern sol_status_t sol_background_render() {
+    return sol_background_render_box(-16 * settings_zoom(), -16 * settings_zoom());
 }
