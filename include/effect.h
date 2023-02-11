@@ -19,7 +19,7 @@ enum {
     PREVENT_PSIONIC  = 0x0010,
 };
 
-typedef enum effect_type_e {
+typedef enum sol_effect_type_e {
     EFFECT_POISON     = 0x0001,
     EFFECT_FIRE       = 0x0002,
     EFFECT_COLD       = 0x0004,
@@ -38,9 +38,9 @@ typedef enum effect_type_e {
     EFFECT_OVER2      = 0x8000, // More than a +2
     EFFECT_MELEE      = 0x10000,
     EFFECT_MISSILE    = 0x20000,
-} effect_type_t;
+} sol_effect_type_t;
 
-enum stat_e {
+enum sol_stat_e {
     STAT_STR,
     STAT_DEX,
     STAT_CON,
@@ -77,12 +77,12 @@ typedef struct sol_effect_s {
     uint16_t duration_left;
     uint16_t preventions; // does this prevent something (Example: attacking.)
     uint16_t fx;// Special Effect (invisibility, shimmer, etc...)
-    int32_t (*affect)                (const entity_t *target, enum stat_e stat, const uint64_t effect_type, const int32_t amt);
+    int32_t (*affect)                (const entity_t *target, enum sol_stat_e stat, const uint64_t effect_type, const int32_t amt);
     // Some spell have an end of effect trigger. (EX: Spirit Armor: need to save vs spell or suffer 2d3 damage.)
     void    (*end_of_effect_trigger) (entity_t *source);
 } sol_effect_t;
 
-extern void sol_effect_apply_damage(entity_t *source, entity_t *target, const int32_t damage, effect_type_t type);
-extern void sol_effect_apply_condition(entity_t *source, entity_t *target, uint16_t condition);
+extern sol_status_t sol_effect_apply_damage(sol_entity_t *source, sol_entity_t *target, const int32_t damage, sol_effect_type_t type);
+extern sol_status_t sol_effect_apply_condition(sol_entity_t *source, sol_entity_t *target, uint16_t condition);
 
 #endif

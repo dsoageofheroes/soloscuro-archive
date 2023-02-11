@@ -23,56 +23,64 @@ uint8_t command_implemented = 0; // Temporary while I figure out each function.
 void get_parameters(int16_t amt);
 static entity_t *other = NULL;
 
-gpl_param_t param;
+sol_gpl_param_t param;
 /* End Globals */
 
-extern entity_t* gpl_get_global(gpl_global_e what) {
+extern sol_status_t sol_gpl_get_global(enum sol_gpl_global_e what, sol_entity_t **ent) {
+    if (!ent) { return SOL_NULL_ARGUMENT; }
+
     switch(what) {
-        case GPL_OTHER: return other; break;
+        case GPL_OTHER: *ent = other; return SOL_SUCCESS;
         default: warn("unknown type: %d\n", what); break;
     }
+
+    return SOL_GPL_UNKNOWN_TYPE;
 }
 
-extern void gpl_set_global(gpl_global_e what, entity_t *entity) {
+extern sol_status_t sol_gpl_set_global(enum sol_gpl_global_e what, entity_t *entity) {
     switch(what) {
-        case GPL_OTHER: other = entity; break;
+        case GPL_OTHER: other = entity; return SOL_SUCCESS;
         default: warn("unknown type: %d\n", what); break;
     }
+    return SOL_GPL_UNKNOWN_TYPE;
 }
 
-void gpl_change_region(const int region_id) {
+extern sol_status_t gpl_change_region(const int region_id) {
+    sol_status_t status;
     //gpl_execute_subroutine(region_id, 0, 1);
     replay_print("rep.change_region(%lld)\n", region_id);
     sol_region_manager_get_region(region_id, 0);
-    gpl_lua_execute_script(region_id, 0, 1);
+    return sol_gpl_lua_execute_script(region_id, 0, 1);
 }
 
 static void initialize_gpl_stack() {
-    gpl_global_strings = (gpl_string_t*) malloc(GSTRINGVARSIZE);
-    memset(gpl_global_strings, 0, GSTRINGVARSIZE);
-    gpl_local_strings = (gpl_string_t*) malloc(LSTRINGVARSIZE);
-    memset(gpl_local_strings, 0, LSTRINGVARSIZE);
-    gpl_global_string = (uint8_t*)malloc(TEXTSTRINGSIZE);
+    sol_gpl_global_strings = (sol_gpl_string_t*) malloc(GSTRINGVARSIZE);
+    memset(sol_gpl_global_strings, 0, GSTRINGVARSIZE);
+    sol_gpl_local_strings = (sol_gpl_string_t*) malloc(LSTRINGVARSIZE);
+    memset(sol_gpl_local_strings, 0, LSTRINGVARSIZE);
+    sol_gpl_global_string = (uint8_t*)malloc(TEXTSTRINGSIZE);
 }
 
-extern void gpl_init() {
+extern sol_status_t sol_gpl_init() {
     info("Initalizing DSL.\n");
     initialize_gpl_stack();
-    gpl_init_vars();
+    sol_gpl_init_vars();
     sol_player_init();
     ssi_item_init();
     sol_trigger_init();
-    gpl_manager_init();
+    sol_gpl_manager_init();
     sol_region_manager_init();
+    return SOL_SUCCESS;
 }
 
-extern void gpl_cleanup() {
+extern sol_status_t sol_gpl_cleanup() {
     powers_cleanup();
-    free(gpl_global_string);
-    free(gpl_local_strings);
-    free(gpl_global_strings);
-    gpl_cleanup_vars();
-    gpl_manager_cleanup();
+    free(sol_gpl_global_string);
+    free(sol_gpl_local_strings);
+    free(sol_gpl_global_strings);
+    sol_gpl_cleanup_vars();
+    sol_gpl_manager_cleanup();
     ssi_item_close();
     sol_trigger_cleanup();
+    return SOL_SUCCESS;
 }

@@ -10,7 +10,7 @@
 #define function_map_t uint16_t[MAX_NUM_FUNCTIONS];
 
 //TODO: consolidate the different lua_States!
-extern lua_State     *lua_state;
-extern char*      gpl_lua_print(const size_t script_id, const int is_mas, size_t *script_len);
+extern lua_State   *lua_state;
+extern sol_status_t sol_gpl_lua_print(const size_t script_id, const int is_mas, size_t *script_len, char **text);
 
 #endif

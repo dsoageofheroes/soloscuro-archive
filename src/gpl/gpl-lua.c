@@ -183,9 +183,10 @@ static size_t lua_pos = 0;
 static int32_t lua_depth = 0; 
 static size_t gpl_lua_start_ptr = 0;
 
-extern void gpl_lua_debug() {
+extern sol_status_t gpl_lua_debug() {
     printf("GPL LUA DEBUG!\n");
-    gpl_state_debug();
+    sol_gpl_state_debug();
+    return SOL_SUCCESS;
 }
 
 //#define lprintf(...) lua_tab(lua_depth); lua_pos += snprintf(lua_buf + lua_pos, LUA_MAX_SIZE - lua_pos, __VA_ARGS__)
@@ -262,8 +263,10 @@ static void gpl_lua_get_parameters(int16_t amt) {
 
 static void print_label() {
     if (collect_labels) { return; }
+    unsigned char *data_ptr;
 
-    uint64_t label = ((size_t)gpl_get_data_ptr()) - gpl_lua_start_ptr;
+    sol_gpl_get_data_ptr(&data_ptr);
+    uint64_t label = ((size_t)data_ptr) - gpl_lua_start_ptr;
     for (int i = 0; i < label_pos; i++) {
         if (labels[i] == label) {
             lprintf("::label%lu::\n", label);
@@ -427,6 +430,7 @@ static void do_lua_gpl_command(uint8_t cmd) {
  * with subsequent calls. Make any copies as needed!
  */
 static void gpl_lua_pass(unsigned char *gpl, const size_t len, const int pass_num) {
+    unsigned char *data_ptr;
     lua_pos = 0;
     lua_depth = 0; 
     lua_buf[0] = '\0';
@@ -441,24 +445,26 @@ static void gpl_lua_pass(unsigned char *gpl, const size_t len, const int pass_nu
         collect_labels = 0;
     }
 
-    gpl_push_data_ptr(gpl);
-    gpl_set_data_ptr(gpl, gpl);
+    sol_gpl_push_data_ptr(gpl);
+    sol_gpl_set_data_ptr(gpl, gpl);
     gpl_lua_start_ptr = (size_t)gpl;
-    const size_t start = (size_t)gpl_get_data_ptr();
-    size_t diff = (size_t)gpl_get_data_ptr() - start;
+    sol_gpl_get_data_ptr(&data_ptr);
+    const size_t start = (size_t)data_ptr;
+    size_t diff = (size_t)data_ptr - start;
     is_master_mas = (script_id == 99 && is_mas);
     //printf("gpl = %p, len = %ld\n", gpl, len);
     while (diff < len && print_cmd()) {
-        diff = (size_t)gpl_get_data_ptr() - start;
+        diff = (size_t)data_ptr - start;
     }
     while (lua_depth-- > 0) {
         lprintf("end\n");
     }
     //printf("tranversed = %ld, len = %ld\n", (size_t)gpl_get_data_ptr() - (size_t)start, len);
-    gpl_pop_data_ptr();
+    sol_gpl_pop_data_ptr(NULL);
 }
 
-extern char* gpl_lua_print(const size_t _script_id, const int _is_mas, size_t *script_len) {
+extern sol_status_t sol_gpl_lua_print(const size_t _script_id, const int _is_mas, size_t *script_len, char **text) {
+    if (!script_len || !text) { return SOL_NULL_ARGUMENT; }
     //size_t len;
     unsigned char *gpl = NULL;
     script_id = _script_id;
@@ -471,6 +477,7 @@ extern char* gpl_lua_print(const size_t _script_id, const int _is_mas, size_t *s
     if (!gpl) {
         error ("Unable to alloc for gpl script!\n");
         exit(1);
+        return SOL_MEMORY_ERROR;
     }
     gff_read_chunk(DSLDATA_GFF_INDEX, &chunk, gpl, chunk.length);
     
@@ -505,13 +512,16 @@ extern char* gpl_lua_print(const size_t _script_id, const int _is_mas, size_t *s
     *script_len = lua_pos - 1;
     lua_buf[lua_pos - 1] = '\0';
     free(gpl);
-    return lua_buf;
+    *text = lua_buf;
+    return SOL_SUCCESS;
 }
 
 static int print_cmd() {
+    unsigned char *data_ptr;
     if (!in_func) {
         //lprintf("function func%d (accum) -- address %ld\n", funcnum++, ((size_t)gpl_get_data_ptr()) - gpl_lua_start_ptr);
-        cfunc_num = ((size_t)gpl_get_data_ptr()) - gpl_lua_start_ptr;
+        sol_gpl_get_data_ptr(&data_ptr);
+        cfunc_num = ((size_t)data_ptr) - gpl_lua_start_ptr;
         lprintf("function func%ld ()\n", cfunc_num);
         //lprintf("function %c%ldfunc%ld ()\n", 
             //is_mas ? 'm' : 'g',
@@ -526,7 +536,8 @@ static int print_cmd() {
     } else {
         print_label();
     }
-    uint8_t command = gpl_get_byte();
+    uint8_t command;
+    sol_gpl_get_byte(&command);
     if (!gpl_lua_operations[command].func) {
         printf("Lua code so far:\n%s\n", lua_buf);
         printf("Unimplemented command = 0x%2x\n", command);
@@ -728,7 +739,7 @@ extern void gpl_lua_talktotrigger(void) {
     char *addr = lparams.params[0];
     char *file = lparams.params[1];
     char *name = lparams.params[2];
-    int is_global = (gpl_current_file == GLOBAL_MAS) && (gpl_current_type == MASFILE);
+    int is_global = (sol_gpl_current_file == GLOBAL_MAS) && (sol_gpl_current_type == MASFILE);
 
     lprintf("gpl.talk_to_trigger(%s, %s, %s, %d)\n",
         name, file, addr, is_global);
@@ -826,22 +837,31 @@ extern void gpl_lua_fetch(void) {
 extern void gpl_lua_search(void) {
     char object[BUF_SIZE];
     char buf[BUF_SIZE - 128];
+    uint8_t b;
     //uint32_t answer = 0L;
     gpl_lua_read_number(object, BUF_SIZE);
-    int16_t low_field = gpl_get_byte();
-    int16_t high_field = gpl_get_byte();
+    int16_t low_field;
+    int16_t high_field;
     int16_t field_level = -1, depth = 1;
     int32_t search_for = 0, temp_for = 0;
     uint16_t field[16];
     uint8_t type = 0;
     char *i;
+
+    sol_gpl_get_byte(&b);
+    low_field = b;
+    sol_gpl_get_byte(&b);
+    high_field = b;
     do {
-        if (gpl_peek_one_byte() == OBJ_QUALIFIER) {
-            gpl_get_byte();
+        sol_gpl_peek_one_byte(&b);
+        if (b == OBJ_QUALIFIER) {
+            sol_gpl_get_byte(&b);
         }
         field_level++;
-        field[field_level] = gpl_get_byte();
-        type = gpl_get_byte();
+        sol_gpl_peek_one_byte(&b);
+        field[field_level] = b;
+        sol_gpl_peek_one_byte(&b);
+        type = b;
         if (type >= EQU_SEARCH && type <= GT_SEARCH) {
             gpl_lua_read_number(buf, BUF_SIZE - 128);
             validate_number(buf, "gpl_lua_search");
@@ -855,7 +875,7 @@ extern void gpl_lua_search(void) {
             }
         }
         depth--;
-    } while ( gpl_peek_one_byte() == OBJ_QUALIFIER);
+    } while ( sol_gpl_peek_one_byte(&b) == SOL_SUCCESS && b == OBJ_QUALIFIER);
 
     //i = (object == PARTY || object < 0)
         //? NULL_OBJECT : object;
@@ -963,10 +983,11 @@ extern void gpl_lua_setrecord(void) {
     uint16_t depth = 0;
     int16_t header = 0;
     uint16_t element[MAX_SEARCH_STACK];
-    uint16_t tmp = gpl_peek_half_word();
+    uint16_t tmp;
     int32_t obj_name;
     char buf[BUF_SIZE];
 
+    sol_gpl_peek_half_word(&tmp);
     if (tmp > 0x8000) {
         gpl_lua_access_complex(&header, &depth, element, &obj_name);
         gpl_lua_read_number(buf, BUF_SIZE);
@@ -1036,13 +1057,14 @@ extern void gpl_lua_menu(void) {
     gpl_lua_read_number(buf, BUF_SIZE);
     char *menu = (char*) buf;
     size_t menu_len;
+    uint8_t b;
 
     if (needs_quotes(buf)) {
         lprintf("gpl.narrate_open(NAR_ADD_MENU, \"%s\", 0)\n", menu);
     } else {
         lprintf("gpl.narrate_open(NAR_ADD_MENU, %s, 0)\n", menu);
     }
-    while ((gpl_peek_one_byte() != 0x4A) && (items <= MAXMENU)) {
+    while ((sol_gpl_peek_one_byte(&b) == SOL_SUCCESS && b != 0x4A) && (items <= MAXMENU)) {
         menu_len = gpl_lua_read_number(buf, BUF_SIZE);
         //menu = (char*) gpl_global_big_numptr;
         menu = (char*) buf;
@@ -1065,7 +1087,7 @@ extern void gpl_lua_menu(void) {
         lua_depth--;
         lprintf("end\n");
     }
-    gpl_get_byte();  // get rid of the mend...
+    sol_gpl_get_byte(&b);  // get rid of the mend...
 
     lprintf("if gpl.narrate_show() then return true end --narrate_wait for input\n");
     //lprintf("gpl.narrate_show() --narrate_wait for input\n");
@@ -1506,19 +1528,21 @@ static void gpl_lua_write_complex_var() {
 
 static void gpl_lua_load_variable() {
     int8_t extended = 0;
-    uint8_t datatype;
+    uint8_t datatype, b;
     uint16_t varnum;
-    datatype = gpl_get_byte();
+    sol_gpl_get_byte(&datatype);
     datatype &= 0x7F;
     if ((datatype & EXTENDED_VAR) != 0) {
         extended = 1;
         datatype -= EXTENDED_VAR;
     }
     if (datatype < 0x10) { // simple data type
-        varnum = gpl_get_byte();
+        sol_gpl_get_byte(&b);
+        varnum = b;
         if (extended == 1) {
             varnum *= 0x100;
-            varnum += gpl_get_byte();
+            sol_gpl_get_byte(&b);
+            varnum += b;
         }
         //load_simple_variable(datatype, varnum, 0);
         gpl_lua_load_simple_variable(datatype, varnum);
@@ -1634,7 +1658,7 @@ static void gpl_lua_load_simple_variable(uint16_t type, uint16_t vnum) {
 
 static size_t gpl_lua_read_number(char *buf, const size_t size) {
     int32_t paren_level = 0;
-    int8_t do_next;
+    int8_t do_next, b;
     int16_t opstack[MAX_PARENS];
     int32_t accums[MAX_PARENS];
     char    tmp[1024];
@@ -1642,6 +1666,7 @@ static size_t gpl_lua_read_number(char *buf, const size_t size) {
     int16_t cop, next_op; // current operation
     int32_t cval = 0; // current value, temporary value
     size_t buf_pos = 0;
+
     memset(opstack, 0, sizeof(opstack));
     memset(accums, 0, sizeof(accums));
     memset(buf, 0, size); // TODO: FIXME: we shouldn't need to memset this EVERY time.
@@ -1650,18 +1675,20 @@ static size_t gpl_lua_read_number(char *buf, const size_t size) {
      //   taccum[0] = '\0';
         do_next = 0;
         //printf("buf_pos = %zu\n", buf_pos);
-        cop = gpl_get_byte(); // current operation
+        sol_gpl_get_byte(&b);
+        cop = b; // current operation
         //printf("current operation = 0x%x\n", cop);
         if (cop < 0x80) {
-            cval = cop * 0x100 + gpl_get_byte();
+            sol_gpl_get_byte(&b);
+            cval = cop * 0x100 + b;
             buf_pos += snprintf(buf + buf_pos, size - buf_pos, "%d", cval);
         } else {
             if (cop < OPERATOR_OFFSET) {
                 if (cop & EXTENDED_VAR) { // variable is > 255
                     cop -= EXTENDED_VAR;
-                    gpl_global_big_num = EXTENDED_VAR;
+                    sol_gpl_global_big_num = EXTENDED_VAR;
                 } else {
-                    gpl_global_big_num = 0;
+                    sol_gpl_global_big_num = 0;
                 }
             }
             switch (cop) {
@@ -1683,9 +1710,9 @@ static size_t gpl_lua_read_number(char *buf, const size_t size) {
                 case GPL_LFLAG|0x80:
                 case GPL_GSTRING|0x80:
                 case GPL_LSTRING|0x80: {
-                    gpl_global_big_num += cop & 0x7F;
+                    sol_gpl_global_big_num += cop & 0x7F;
                     //read_simple_num_var();
-                    cval = gpl_global_big_num;
+                    cval = sol_gpl_global_big_num;
                     buf_pos += gpl_lua_read_simple_num_var(buf + buf_pos, size - buf_pos);
                     //printf("updating buf_pos = %d\n", buf_pos);
                     break;
@@ -1696,7 +1723,8 @@ static size_t gpl_lua_read_number(char *buf, const size_t size) {
 
                     // TODO: should this be a function call?
                     lprintf("((");
-                    int cmd = gpl_get_byte();
+                    sol_gpl_get_byte(&b);
+                    int cmd = b;
                     do_lua_gpl_command(cmd);
                     lprintf("))");
 
@@ -1715,7 +1743,8 @@ static size_t gpl_lua_read_number(char *buf, const size_t size) {
                     break;
                 }
                 case GPL_IMMED_BYTE|0x80: {
-                    cval = (int32_t)((int8_t)gpl_get_byte());
+                    sol_gpl_get_byte(&b);
+                    cval = (int32_t)((int8_t)b);
                     //debug("GPL_IMMED_BYTE, cval = %d\n", cval);
                     buf_pos += snprintf(buf + buf_pos, size - buf_pos, "%d", cval);
                     //printf("updating buf_pos = %d\n", buf_pos);
@@ -1742,7 +1771,8 @@ static size_t gpl_lua_read_number(char *buf, const size_t size) {
                     //gpl_global_big_numptr = (int32_t*) read_text();
                     //debug("GPL_IMMED_STRING, cval = %d, '%s'\n", cval, (char*) gpl_global_big_numptr);
                     //TODO FIXME: This should just copy directly in!
-                    char *tmp = gpl_read_text();
+                    char *tmp;
+                    sol_status_check(sol_gpl_read_text(&tmp), "Unable to read immediate string in GPL.");
                     //printf("tmp = %s\n", tmp);
                     buf_pos += strlen(strncpy(buf + buf_pos, tmp, size - buf_pos));
                     //printf("updating buf_pos = %d\n", buf_pos);
@@ -1848,7 +1878,7 @@ static size_t gpl_lua_read_number(char *buf, const size_t size) {
             }
         }
     } while (do_next || 
-        (((next_op = gpl_preview_byte(0)) > OPERATOR_OFFSET && next_op <= OPERATOR_LAST)
+        ((sol_gpl_preview_byte(0, &next_op) == SOL_SUCCESS && next_op > OPERATOR_OFFSET && next_op <= OPERATOR_LAST)
             || (paren_level > 0 && next_op == GPL_HI_CLOSE_PAREN)));
     // We need to look if that above else was executed!
     //printf("accums[0] = %d\n", accums[0]);
@@ -1860,13 +1890,17 @@ static size_t gpl_lua_read_number(char *buf, const size_t size) {
 
 static uint16_t gpl_lua_get_word() {
     uint16_t ret;
-    ret = gpl_get_byte() * 0x100;
-    ret += gpl_get_byte();
+    uint8_t b;
+    sol_gpl_get_byte(&b);
+    ret = b * 0x100;
+    sol_gpl_get_byte(&b);
+    ret += b;
     return ret;
 }
 
 static uint8_t gpl_lua_access_complex(int16_t *header, uint16_t *depth, uint16_t *element, int32_t *obj_name) {
     uint16_t i;
+    uint8_t b;
     
     *obj_name = gpl_lua_get_word();
     //debug("header = %d, depth = %d, element = %d, obj_name = %d\n", *header, *depth, *element, obj_name);
@@ -1901,10 +1935,12 @@ static uint8_t gpl_lua_access_complex(int16_t *header, uint16_t *depth, uint16_t
                 return 0;
         }
     }
-    *depth = gpl_get_byte();
+    sol_gpl_get_byte(&b);
+    *depth = b;
     //debug("--access_compledx:depth = %d\n", *depth);
     for (i = 1; i <= *depth; i++) {
-        element[i-1] = gpl_get_byte();
+        sol_gpl_get_byte(&b);
+        element[i-1] = b;
         //debug("--access_complex:element[%d] = %d\n", i-1, element[i-1]);
     }
 
@@ -1968,16 +2004,21 @@ static int32_t gpl_lua_read_complex(char *buf, size_t *buf_pos, const size_t siz
 }
 
 int gpl_lua_read_simple_num_var(char *buf, const size_t buf_size) {
-    int16_t temps16 = gpl_get_byte();
+    uint8_t b;
+    int16_t temps16;
+   
+    sol_gpl_get_byte(&b);
+    temps16 = b;
 
-    if ((gpl_global_big_num & EXTENDED_VAR) != 0) {
+    if ((sol_gpl_global_big_num & EXTENDED_VAR) != 0) {
         temps16 *= 0x100;
-        temps16 += gpl_get_byte();
-        gpl_global_big_num &= 0x3F;
+        sol_gpl_get_byte(&b);
+        temps16 += b;
+        sol_gpl_global_big_num &= 0x3F;
     }
     //if (debug) { printf("temps16 = %d\n", temps16); }
 
-    switch(gpl_global_big_num) {
+    switch(sol_gpl_global_big_num) {
         case GPL_GFLAG: {
             return snprintf(buf, buf_size, "gpl.get_gf(%d)", temps16);
             break;

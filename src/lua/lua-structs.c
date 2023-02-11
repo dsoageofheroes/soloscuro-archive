@@ -149,14 +149,18 @@ static int load_player (lua_State *l) {
 
 static int create_player (lua_State *l) {
     int n = luaL_checkinteger(l, 1);
-    sol_player_set(n, sol_entity_create_default_human());
+    entity_t *dude;
+    sol_entity_create_default_human(&dude);
+    sol_player_set(n, dude);
     sol_player_load(n);
     return sol_lua_load_entity(l, sol_player_get(n));
 }
 
 static int create_entity (lua_State *l) {
     int has_inventory = luaL_checkinteger(l, 1);
-    return sol_lua_load_entity(l, sol_entity_create(has_inventory));
+    dude_t *dude;
+    sol_entity_create(has_inventory, &dude);
+    return sol_lua_load_entity(l, dude);
 }
 
 static void push_region_lua(lua_State *l, sol_region_t *reg) {
@@ -658,7 +662,7 @@ static const luaL_Reg slots_methods[] = {
 
 static int ability_get(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    ability_set_t *ability = sol_lua_get_userdata(l, -3);
+    sol_ability_set_t *ability = sol_lua_get_userdata(l, -3);
 
     //printf("indexing '%s' of saves %p\n", str, attack);
     GET_INTEGER_TABLE(ability, hunt);
@@ -672,7 +676,7 @@ static int ability_get(lua_State *l) {
 
 static int ability_set(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    ability_set_t *ability = sol_lua_get_userdata(l, -4);
+    sol_ability_set_t *ability = sol_lua_get_userdata(l, -4);
 
     if (lua_isinteger(l, 3)) {
         const int num = luaL_checkinteger(l, 3);
@@ -692,7 +696,7 @@ static const luaL_Reg ability_methods[] = {
 
 static int class_get(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    class_t *class = sol_lua_get_userdata(l, -3);
+    sol_class_t *class = sol_lua_get_userdata(l, -3);
 
     //printf("indexing '%s' of saves %p\n", str, attack);
     GET_INTEGER_TABLE(class, current_xp);
@@ -708,7 +712,7 @@ static int class_get(lua_State *l) {
 
 static int class_set(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    class_t *class = sol_lua_get_userdata(l, -4);
+    sol_class_t *class = sol_lua_get_userdata(l, -4);
 
     if (lua_isinteger(l, 3)) {
         const int num = luaL_checkinteger(l, 3);

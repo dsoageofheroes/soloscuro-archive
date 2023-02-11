@@ -161,7 +161,7 @@ static void browse_handle_input() {
                 //handle_mouse_motion();
                 break;
             case SDL_MOUSEBUTTONDOWN:
-                if (sol_game_loop_is_waiting_for(WAIT_NARRATE_CONTINUE)) {
+                if (sol_game_loop_is_waiting_for(WAIT_NARRATE_CONTINUE) == SOL_SUCCESS) {
                     sol_game_loop_signal(WAIT_NARRATE_CONTINUE, 0);
                 }
                 //handle_mouse_click();
@@ -264,7 +264,7 @@ static void print_menu() {
     int row = 0;
     SDL_Rect rect;
 
-    sol_print_line_len(0, "GFFs:", 20, 20, 1<<12);
+    sol_status_check(sol_print_line_len(0, "GFFs:", 20, 20, 1<<12), "Unable to print line");
 
     row_max = 0;
     for (int i = 0; i < NUM_FILES; i++) {

@@ -43,6 +43,8 @@ static void trim_end(char *str) {
 }
 
 static int write_entity(FILE *file, entity_t *entity, const char *name) {
+    sol_sprite_info_t info;
+
     if (entity->name) {
         trim_end(entity->name);
         fprintf(file, "%s.name = \"%s\"\n", name, entity->name);
@@ -118,6 +120,7 @@ static int write_entity(FILE *file, entity_t *entity, const char *name) {
 
     save_inventory(file, entity, name);
 
+    sol_status_check(sol_sprite_get_info(entity->anim.spr, &info), "Unable to get sprite info.");
     fprintf(file, "%s.anim.flags = %d\n", name, entity->anim.flags);
     fprintf(file, "%s.anim.pos = %d\n", name, entity->anim.pos);
     fprintf(file, "%s.anim.x = %d\n", name, entity->anim.x);
@@ -125,7 +128,7 @@ static int write_entity(FILE *file, entity_t *entity, const char *name) {
     fprintf(file, "%s.anim.xoffset = %d\n", name, entity->anim.xoffset);
     fprintf(file, "%s.anim.yoffset = %d\n", name, entity->anim.yoffset);
     fprintf(file, "%s.anim.bmp_id = %d\n", name, entity->anim.bmp_id);
-    fprintf(file, "%s.anim.load_frame = %d\n", name, sol_sprite_get_frame(entity->anim.spr));
+    fprintf(file, "%s.anim.load_frame = %d\n", name, info.current_frame);
 
     if (entity->anim.scmd_info.gff_idx) {
         if (entity->anim.scmd_info.gff_idx < 0) {
@@ -169,11 +172,11 @@ static int write_regions(FILE *file) {
     sol_region_t *reg = sol_region_manager_get_current();
 
     write_region(file, reg);
-    gpl_write_local_state(file);
-    gpl_write_global_state(file);
+    sol_gpl_write_local_state(file);
+    sol_gpl_write_global_state(file);
     sol_write_triggers(file);
 
-    entity_list_for_each(reg->entities, entity) {
+    sol_entity_list_for_each(reg->entities, entity) {
         if (sol_player_get_slot(entity) < 0) {
             fprintf(file, "e = sol.create_entity(%d)\n", entity->inv ? 1 : 0);
             write_entity(file, entity, "e");
@@ -234,10 +237,10 @@ extern int sol_load_get_name(const char *filepath, char *name, const size_t len)
 extern int sol_load_from_file(const char *filepath) {
     sol_window_clear();
     sol_region_manager_cleanup(1);
-    gpl_cleanup();
+    sol_gpl_cleanup();
     sol_player_close();
     sol_trigger_cleanup();
-    gpl_init();
+    sol_gpl_init();
     sol_gameloop_init();
     sol_lua_load(filepath);
     return 0;

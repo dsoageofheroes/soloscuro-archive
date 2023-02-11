@@ -2,8 +2,9 @@
 #ifndef DS_LOAD_SAVE_H
 #define DS_LOAD_SAVE_H
 
-extern void ls_save_to_file(const char *path, char *save_name);
-extern int  ls_load_save_file(const char *path);
-extern int  ds_load_character_charsave(const int slot, const int res_id);
+#include "status.h"
+
+extern sol_status_t sol_ls_save_to_file(const char *path, char *save_name);
+extern sol_status_t sol_load_character_charsave(const int slot, const int res_id);
 
 #endif

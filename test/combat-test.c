@@ -56,7 +56,7 @@ static entity_t *monsters[100];
 static int num_monsters = 0;
 
 static void create_basic_monsters(region_t *reg) {
-    monsters[num_monsters] = entity_create_from_objex(-269); // Slig
+    sol_entity_create_from_objex(-269, &monsters[num_monsters]); // Slig
     monsters[num_monsters]->mapx = 25;
     monsters[num_monsters]->mapy = 20;
     monsters[num_monsters]->abilities.hunt = 1;
@@ -64,7 +64,7 @@ static void create_basic_monsters(region_t *reg) {
     entity_list_add(reg->cr.combatants, monsters[num_monsters]);
     num_monsters++;
 
-    monsters[num_monsters] = entity_create_from_objex(-269); // Slig
+    sol_entity_create_from_objex(-269, &monsters[num_monsters]); // Slig
     monsters[num_monsters]->mapx = 25;
     monsters[num_monsters]->mapy = 21;
     monsters[num_monsters]->abilities.hunt = 1;
@@ -72,7 +72,7 @@ static void create_basic_monsters(region_t *reg) {
     entity_list_add(reg->cr.combatants, monsters[num_monsters]);
     num_monsters++;
 
-    monsters[num_monsters] = entity_create_from_objex(-269); // Slig
+    sol_entity_create_from_objex(-269, &monsters[num_monsters]); // Slig
     monsters[num_monsters]->mapx = 24;
     monsters[num_monsters]->mapy = 20;
     monsters[num_monsters]->abilities.hunt = 1;
@@ -80,7 +80,7 @@ static void create_basic_monsters(region_t *reg) {
     entity_list_add(reg->cr.combatants, monsters[num_monsters]);
     num_monsters++;
 
-    monsters[num_monsters] = entity_create_from_objex(-150); // Screamer Beatle
+    sol_entity_create_from_objex(-150, &monsters[num_monsters]); // Slig
     monsters[num_monsters]->mapx = 24;
     monsters[num_monsters]->mapy = 20;
     monsters[num_monsters]->abilities.hunt = 1;

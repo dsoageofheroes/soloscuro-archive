@@ -30,13 +30,20 @@ void interact_init(const uint32_t x, const uint32_t y) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     const float zoom = settings_zoom();
 
-    background = sol_sprite_new(pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 3020);
-    talk = sol_sprite_new(pal, 3 + x, 58 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 15105);
-    get = sol_sprite_new(pal,  23 + x, 58 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 15106);
-    use = sol_sprite_new(pal,  43 + x, 58 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 15107);
-    box = sol_sprite_new(pal,  60 + x, 59 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 15109);
-    bar = sol_sprite_new(pal,  6 + x, 7 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20107);
-    bar_border = sol_sprite_new(pal,  5 + x, 6 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20106);
+    sol_status_check(sol_sprite_new(pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 3020, &background),
+            "Unable to load spr check.");
+    sol_status_check(sol_sprite_new(pal, 3 + x, 58 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 15105, &talk),
+            "Unable to load spr check.");
+    sol_status_check(sol_sprite_new(pal,  23 + x, 58 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 15106, &get),
+            "Unable to load spr check.");
+    sol_status_check(sol_sprite_new(pal,  43 + x, 58 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 15107, &use),
+            "Unable to load spr check.");
+    sol_status_check(sol_sprite_new(pal,  60 + x, 59 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 15109, &box),
+            "Unable to load spr check.");
+    sol_status_check(sol_sprite_new(pal,  6 + x, 7 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20107, &bar),
+            "Unable to load spr check.");
+    sol_status_check(sol_sprite_new(pal,  5 + x, 6 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20106, &bar_border),
+            "Unable to load spr check.");
 
     action_loc.x = (62 + x) * zoom;
     action_loc.y = (61 + y) * zoom;
@@ -51,6 +58,7 @@ void interact_init(const uint32_t x, const uint32_t y) {
 }
 
 void interact_render(void *data) {
+    sol_sprite_info_t info;
     float amt = entity
         ? entity->stats.hp / (float) entity->stats.high_hp
         : 0;
@@ -60,18 +68,22 @@ void interact_render(void *data) {
     sol_sprite_render(get);
     sol_sprite_render(bar_border);
     sol_sprite_render(box);
-    sol_sprite_render_box(bar, sol_sprite_getx(bar_border), sol_sprite_gety(bar_border),
-        sol_sprite_getw(bar_border) * (amt > 1.0 ? 1.0 : amt), sol_sprite_geth(bar_border));
+    sol_status_check(sol_sprite_get_info(bar_border, &info), "Unable to get bar sprite info");
+    sol_sprite_render_box(bar, info.x, info.y,
+        info.w * (amt > 1.0 ? 1.0 : amt), info.h);
 
-    sol_print_line_len(FONT_GREY, action_text, action_loc.x, action_loc.y, sizeof(action_text));
-    sol_print_line_len(FONT_GREYLIGHT, name_text, name_loc.x, name_loc.y, sizeof(name_text));
-    sol_print_line_len(FONT_GREYLIGHT, info_text, info_loc.x, info_loc.y, sizeof(info_text));
+    sol_status_check(sol_print_line_len(FONT_GREY, action_text, action_loc.x, action_loc.y, sizeof(action_text)),
+            "Unable to print.");
+    sol_status_check(sol_print_line_len(FONT_GREYLIGHT, name_text, name_loc.x, name_loc.y, sizeof(name_text)),
+            "Unable to print.");
+    sol_status_check(sol_print_line_len(FONT_GREYLIGHT, info_text, info_loc.x, info_loc.y, sizeof(info_text)),
+            "Unable to print.");
 }
 
 static int get_sprite_mouse_is_on(const uint32_t x, const uint32_t y) {
-    if (sol_sprite_in_rect(talk, x, y)) { return talk; }
-    if (sol_sprite_in_rect(get, x, y)) { return get; }
-    if (sol_sprite_in_rect(use, x, y)) { return use; }
+    if (sol_sprite_in_rect(talk, x, y) == SOL_SUCCESS) { return talk; }
+    if (sol_sprite_in_rect(get, x, y) == SOL_SUCCESS) { return get; }
+    if (sol_sprite_in_rect(use, x, y) == SOL_SUCCESS) { return use; }
     
     return SPRITE_ERROR;
 }
@@ -82,9 +94,9 @@ int interact_handle_mouse_movement(const uint32_t x, const uint32_t y) {
     sol_sprite_t cur_sprite = get_sprite_mouse_is_on(x, y);
 
     if (last_sprite != cur_sprite) {
-        sol_sprite_set_frame(cur_sprite, sol_sprite_get_frame(cur_sprite) + 1);
+        sol_sprite_increment_frame(cur_sprite, 1);
         if (last_sprite != SPRITE_ERROR) {
-            sol_sprite_set_frame(last_sprite, sol_sprite_get_frame(last_sprite) - 1);
+            sol_sprite_increment_frame(last_sprite, -1);
         }
     }
     
@@ -108,13 +120,13 @@ int interact_handle_mouse_up(const uint32_t button, const uint32_t x, const uint
 }
 
 void interact_free() {
-    sol_sprite_free(background);
-    sol_sprite_free(talk);
-    sol_sprite_free(get);
-    sol_sprite_free(use);
-    sol_sprite_free(bar);
-    sol_sprite_free(bar_border);
-    sol_sprite_free(box);
+    sol_status_check(sol_sprite_free(background), "Unable to free sprite");
+    sol_status_check(sol_sprite_free(talk), "Unable to free sprite");
+    sol_status_check(sol_sprite_free(get), "Unable to free sprite");
+    sol_status_check(sol_sprite_free(use), "Unable to free sprite");
+    sol_status_check(sol_sprite_free(bar), "Unable to free sprite");
+    sol_status_check(sol_sprite_free(bar_border), "Unable to free sprite");
+    sol_status_check(sol_sprite_free(box), "Unable to free sprite");
 }
 
 sol_wops_t interact_window = {

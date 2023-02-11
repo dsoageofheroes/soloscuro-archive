@@ -90,7 +90,7 @@ static int get_first_entity(lua_State *l) {
     const char *name = luaL_checkstring(l, 1);
     sol_region_t *region = (sol_region_t*) lua_touserdata(l, lua_upvalueindex(1));
 
-    entity_list_for_each(region->entities, dude) {
+    sol_entity_list_for_each(region->entities, dude) {
         if (!strcmp(name, dude->name)) {
             return sol_lua_load_entity (l, dude);
         }
@@ -107,9 +107,7 @@ static int enter_combat (lua_State *l) {
     const int y = luaL_checkinteger(l, 3);
 
     sol_region_t *region = (sol_region_t*) lua_touserdata(l, lua_upvalueindex(1));
-    if ((status = sol_arbiter_enter_combat(region, x, y))) {
-        sol_status_print(status);
-    }
+    sol_status_warn(sol_arbiter_enter_combat(region, x, y), "Can't put entity in combat.");
 
     return 0;
 }
@@ -118,9 +116,12 @@ static int add_entity (lua_State *l) {
     luaL_checktype(l, 1, LUA_TTABLE);
 
     sol_region_t *region = (sol_region_t*) lua_touserdata(l, lua_upvalueindex(1));
-    entity_t *entity = (entity_t*) sol_lua_get_userdata(l, 1);
+    sol_entity_t *entity = (sol_entity_t*) sol_lua_get_userdata(l, 1);
 
-    return sol_animate_shift_entity(region->entities, entity_list_add(region->entities, entity));
+    //return sol_animate_shift_entity(region->entities, entity_list_add(region->entities, entity));
+    sol_entity_list_add(region->entities, entity, NULL);
+    return 0;
+    //return sol_entity_list_add(region->entities, entity, NULL) == SOL_SUCCESS;
 }
 
 
@@ -144,7 +145,7 @@ extern int sol_lua_region_function(sol_region_t *region, const char *func, lua_S
         return push_region_function(l, region, add_entity);
     }
     if (!strcmp(func, "run_mas")) {
-        gpl_lua_execute_script(region->map_id, 0, 1);
+        sol_gpl_lua_execute_script(region->map_id, 0, 1);
     }
     lua_pushinteger(l, 0);
     return 1;

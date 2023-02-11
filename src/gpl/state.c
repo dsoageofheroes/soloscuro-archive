@@ -12,6 +12,7 @@
 #include "trigger.h"
 #include "player.h"
 #include "narrate.h"
+#include "sprite.h"
 #include <string.h>
 #include <stdlib.h>
 
@@ -35,19 +36,20 @@ static int32_t gpl_local_bnums[MAX_LBIGNUMS];
 static char    gpl_global_strs[MAX_GSTRS][STRING_SIZE];
 static int16_t gpl_gnames[MAX_GNAMES];
 
-void gpl_state_init() {
+extern sol_status_t sol_gpl_state_init() {
     memset(gpl_global_flags, 0x0, sizeof(int8_t) * MAX_GFLAGS);
     memset(gpl_global_nums, 0x0, sizeof(int16_t) * MAX_GNUMS);
     memset(gpl_global_bnums, 0x0, sizeof(int32_t) * MAX_GBIGNUMS);
     memset(gpl_global_strs, 0x0, sizeof(char) * MAX_GSTRS * STRING_SIZE);
     memset(gpl_gnames, 0x0, sizeof(int16_t) * MAX_GNAMES);
-    gpl_local_clear();
+    return sol_gpl_local_clear();
 }
 
-void gpl_state_cleanup() {
+extern sol_status_t sol_gpl_state_cleanup() {
+    return SOL_SUCCESS;
 }
 
-void gpl_state_debug() {
+extern sol_status_t sol_gpl_state_debug() {
     const size_t max_print = 10;
 
     printf("GF: %d", gpl_global_flags[0]);
@@ -97,10 +99,11 @@ void gpl_state_debug() {
         printf(", %d", gpl_gnames[i]);
     }
     printf("\n");
+    return SOL_SUCCESS;
 }
 
 // TODO: this will need to be attached to a region.
-extern void gpl_write_local_state(FILE *file) {
+extern sol_status_t sol_gpl_write_local_state(FILE *file) {
     for (int i = 0; i < MAX_LFLAGS; i++) {
         fprintf(file, "gpl.set_lf(%d, %d)\n", i, gpl_local_flags[i]);
     }
@@ -112,9 +115,10 @@ extern void gpl_write_local_state(FILE *file) {
     for (int i = 0; i < MAX_LBIGNUMS; i++) {
         fprintf(file, "gpl.set_lbn(%d, %d)\n", i, gpl_local_bnums[i]);
     }
+    return SOL_SUCCESS;
 }
 
-extern void gpl_write_global_state(FILE *file) {
+extern sol_status_t sol_gpl_write_global_state(FILE *file) {
     for (int i = 0; i < MAX_GFLAGS; i++) {
         fprintf(file, "gpl.set_gf(%d, %d)\n", i, gpl_global_flags[i]);
     }
@@ -134,6 +138,7 @@ extern void gpl_write_global_state(FILE *file) {
     for (int i = 0; i < MAX_GSTRS; i++) {
         fprintf(file, "gpl.set_gstr(%d, \"%s\")\n", i, gpl_global_strs[i]);
     }
+    return SOL_SUCCESS;
 }
 
 static int set_while_callback(lua_State *l) {
@@ -143,10 +148,11 @@ static int set_while_callback(lua_State *l) {
 }
 
 // Public to C library
-extern void gpl_set_gname(const gpl_gnum_t index, const int32_t obj) {
-    if (index < 0 || index > MAX_GNAMES) { return; }
+extern sol_status_t sol_gpl_set_gname(const gpl_gnum_t index, const int32_t obj) {
+    if (index < 0 || index > MAX_GNAMES) { return SOL_OUT_OF_RANGE; }
     //printf("GNAME----------------------------------------------------->[%d] = %d\n", index, obj);
     gpl_gnames[index] = obj;
+    return SOL_SUCCESS;
 }
 
 // Public to LUA
@@ -306,12 +312,14 @@ static int get_gstr(lua_State *l) {
 
 static int get_gname(lua_State *l) {
     lua_Integer id = luaL_checkinteger(l, 1);
+    int16_t gn;
     if (id < 0 || id >= MAX_GNAMES) {
         printf("ERROR: " PRI_LI " is out of range for local big nums!\n", id);
         exit(1);
     }
     //printf("GNAME----------------------------------------------------->[" PRI_LI "] => %d\n", id, gpl_get_gname(id));
-    lua_pushnumber(l, gpl_get_gname(id));
+    sol_status_check(sol_gpl_get_gname(id, &gn), "Unable to get gname.");
+    lua_pushnumber(l, gn);
     return 1;
 }
 
@@ -382,6 +390,7 @@ static int get_element_entity(lua_State *l, dude_t *dude, const int depth, const
 }
 
 static int get_element(lua_State *l) {
+    sol_entity_t *ent;
     lua_Integer obj_name = luaL_checkinteger(l, 1);
     lua_Integer header   = luaL_checkinteger(l, 2);
     lua_Integer depth    = luaL_checkinteger(l, 3);
@@ -391,7 +400,8 @@ static int get_element(lua_State *l) {
         case 0x25: // POV -- active char?
             return get_element_entity(l, sol_player_get_active(), depth, element);
         case 0x28: // OTHER
-            return get_element_entity(l, gpl_get_global(GPL_OTHER), depth, element);
+            sol_gpl_get_global(GPL_OTHER, &ent);
+            return get_element_entity(l, ent, depth, element);
     }
     //lua_pushnumber(l, obj);
     warn("get_element(%lld, %lld, %lld, %lld) -- %lld, failed to find\n", obj_name, header, depth, element, obj_name & 0x7FFF);
@@ -455,7 +465,7 @@ static int gpl_getX(lua_State *l) {
     sol_region_t *reg = sol_region_manager_get_current();
     dude_t *dude = NULL;
 
-    entity_list_for_each(reg->entities, dude) {
+    sol_entity_list_for_each(reg->entities, dude) {
         if (dude->ds_id == id) {
             lua_pushnumber(l, dude->mapx - (dude->anim.xoffset + 15) / 16); // the +15 forces a round up.
             return 1;
@@ -471,7 +481,7 @@ static int gpl_getY(lua_State *l) {
     sol_region_t *reg = sol_region_manager_get_current();
     dude_t *dude = NULL;
 
-    entity_list_for_each(reg->entities, dude) {
+    sol_entity_list_for_each(reg->entities, dude) {
         if (dude->ds_id == id) {
             lua_pushnumber(l, dude->mapy - (dude->anim.yoffset + 15) / 16); // the +15 forces a round up.
             return 1;
@@ -637,7 +647,7 @@ static int request(lua_State *l) {
 
     //warn("Need to implement: request: cmd: " PRI_LI " obj_type: %s num1: " PRI_LI " num2: " PRI_LI "\n", cmd, obj_type, num1, num2);
     lua_pushinteger(l,
-        gpl_request_impl(cmd, atol(obj_type), num1, num2));
+        sol_gpl_request_impl(cmd, atol(obj_type), num1, num2));
     return 1;
 }
 
@@ -658,18 +668,19 @@ static int gpl_clone(lua_State *l) {
     for (int i = 0; i < qty; i++) {
         debug("Cloning %d to: %lld, %lld\n", obj, x, y);
 
-        dude_t *dude = entity_create_from_objex(obj);
+        dude_t *dude;
+        sol_entity_create_from_objex(obj, &dude);
         dude->mapx = x;
         dude->mapy = y;
         dude->anim.xoffset = 0;
         dude->anim.yoffset = 0;
         entry_id = dude->ds_id;
-        gpl_set_global(GPL_OTHER, dude);
+        sol_gpl_set_global(GPL_OTHER, dude);
 
         if (dude) {
             sol_region_move_to_nearest(sol_region_manager_get_current(), dude);
             sol_region_add_entity(sol_region_manager_get_current(), dude);
-            port_load_sprite(&(dude->anim), pal, OBJEX_GFF_INDEX, GFF_BMP, dude->anim.bmp_id,
+            sol_sprite_load(&(dude->anim), pal, OBJEX_GFF_INDEX, GFF_BMP, dude->anim.bmp_id,
                 (dude->name) ? 2 : 1);
             sol_map_place_entity(dude);
             //TODO: Should reshift the entity?
@@ -685,7 +696,7 @@ static int gpl_hunt(lua_State *l) {
     lua_Integer obj = luaL_checkinteger(l, 1);
     dude_t *dude = NULL;
 
-    entity_list_for_each(sol_region_manager_get_current()->entities, dude) {
+    sol_entity_list_for_each(sol_region_manager_get_current()->entities, dude) {
         if (dude->ds_id == (int)obj) {
             dude->abilities.hunt = 1;
         } 
@@ -759,7 +770,7 @@ static int gpl_goxy1(lua_State *l) {
 
     entity_t *dude = sol_region_find_entity_by_id(sol_region_manager_get_current(), obj);
     printf("%lld needs to go to (%lld, %lld), currently (%d, %d)\n", obj, x, y, dude->mapx, dude->mapy);
-    lua_pushboolean(l, sol_entity_go(dude, x, y));
+    lua_pushboolean(l, sol_entity_go(dude, x, y) == SOL_SUCCESS);
 
     return 1;
 }
@@ -791,7 +802,7 @@ static int call_function(lua_State *l) {
 
     debug("*****************calling file: " PRI_LI " addr: " PRI_LI "\n", file, addr);
     //replay_print("gpl.call_function(" PRI_LI ", " PRI_LI ")\n", file, addr);
-    gpl_lua_execute_script(file, addr, 0);
+    sol_gpl_lua_execute_script(file, addr, 0);
 
     return 0;
 }
@@ -818,7 +829,7 @@ static int lua_narrate_show(lua_State *l) {
     sol_game_loop_wait_for_signal(WAIT_NARRATE_SELECT);
 
     // In exit after a show means we need to exit lua.
-    lua_pushboolean(l, gpl_in_exit());
+    lua_pushboolean(l, sol_gpl_in_exit() == SOL_SUCCESS);
 
     return 1;
 }
@@ -954,21 +965,24 @@ static void set_globals(lua_State *l) {
     luaL_dostring(l, buf);
 }
 
-void gpl_state_register(lua_State *l) {
+extern sol_status_t sol_gpl_state_register(lua_State *l) {
     set_globals(l);
     lua_newtable(l);
     luaL_setfuncs(l, gpl_state_lib, 0);
     lua_setglobal(l, "gpl");
+    return SOL_SUCCESS;
 }
 
-void gpl_local_clear() {
+extern sol_status_t sol_gpl_local_clear() {
     memset(gpl_local_flags, 0x0, sizeof(int8_t) * MAX_LFLAGS);
     memset(gpl_local_nums, 0x0, sizeof(int16_t) * MAX_LNUMS);
     memset(gpl_local_bnums, 0x0, sizeof(int32_t) * MAX_LBIGNUMS);
     //memset(gpl_local_bnums, 0x0, sizeof(int32_t) * MAX_LBIGNUMS); string!
+    return SOL_SUCCESS;
 }
 
-char* gpl_serialize_globals(uint32_t *len) {
+extern sol_status_t sol_gpl_serialize_globals(uint32_t *len, char **serial) {
+    if (!len || !serial) { return SOL_NULL_ARGUMENT; }
     *len =
         sizeof(gpl_global_flags) +
         sizeof(gpl_global_nums) +
@@ -976,6 +990,7 @@ char* gpl_serialize_globals(uint32_t *len) {
         sizeof(gpl_global_strs) +
         sizeof(gpl_gnames);
     char *ret = malloc(*len);
+    if (!ret) { return SOL_MEMORY_ERROR; }
     char *buf = ret;
     memcpy(buf, gpl_global_flags, sizeof(gpl_global_flags));
     buf += sizeof(gpl_global_flags);
@@ -988,10 +1003,11 @@ char* gpl_serialize_globals(uint32_t *len) {
     memcpy(buf, gpl_gnames, sizeof(gpl_gnames));
     buf += sizeof(gpl_gnames);
 
-    return ret;
+    *serial = ret;
+    return SOL_SUCCESS;
 }
 
-void gpl_deserialize_globals(char *buf) {
+extern sol_status_t sol_gpl_deserialize_globals(char *buf) {
     memcpy(gpl_global_flags, buf, sizeof(gpl_global_flags));
     buf += sizeof(gpl_global_flags);
     memcpy(gpl_global_nums, buf, sizeof(gpl_global_nums));
@@ -1002,23 +1018,27 @@ void gpl_deserialize_globals(char *buf) {
     buf += sizeof(gpl_global_strs);
     memcpy(gpl_gnames, buf, sizeof(gpl_gnames));
     buf += sizeof(gpl_gnames);
+    return SOL_SUCCESS;
 }
 
-void gpl_deserialize_locals(char *buf) {
+extern sol_status_t sol_gpl_deserialize_locals(char *buf) {
     memcpy(gpl_local_flags, buf, sizeof(gpl_local_flags));
     buf += sizeof(gpl_local_flags);
     memcpy(gpl_local_nums, buf, sizeof(gpl_local_nums));
     buf += sizeof(gpl_local_nums);
     memcpy(gpl_local_bnums, buf, sizeof(gpl_local_bnums));
     buf += sizeof(gpl_local_bnums);
+    return SOL_SUCCESS;
 }
 
-char* gpl_serialize_locals(uint32_t *len) {
+extern sol_status_t sol_gpl_serialize_locals(uint32_t *len, char **serial) {
+    if (!len || !serial) { return SOL_NULL_ARGUMENT; }
     *len =
         sizeof(gpl_local_flags) +
         sizeof(gpl_local_nums) +
         sizeof(gpl_local_bnums);
     char *ret = malloc(*len);
+    if (!ret) { return SOL_MEMORY_ERROR; }
     char *buf = ret;
     memcpy(buf, gpl_local_flags, sizeof(gpl_local_flags));
     buf += sizeof(gpl_local_flags);
@@ -1027,10 +1047,13 @@ char* gpl_serialize_locals(uint32_t *len) {
     memcpy(buf, gpl_local_bnums, sizeof(gpl_local_bnums));
     buf += sizeof(gpl_local_bnums);
 
-    return ret;
+    *serial = ret;
+    return SOL_SUCCESS;
 }
 
-extern int16_t gpl_get_gname(gpl_gnum_t pos) {
+extern sol_status_t sol_gpl_get_gname(gpl_gnum_t pos, int16_t *gn) {
+    if (pos < 0 || pos >= MAX_GNAMES) { return SOL_OUT_OF_RANGE; }
     //printf("gpl_get_gname[%d] = %d\n", pos, gpl_gnames[pos]);
-    return gpl_gnames[pos];
+    *gn = gpl_gnames[pos];
+    return SOL_SUCCESS;
 }

@@ -24,6 +24,7 @@ set(SOLOSCURO_SRCS
     objects/entity-list.c
     objects/entity.c
     objects/entity-animation.c
+    sprite.c
     statics.c
     status.c
     systems/class.c

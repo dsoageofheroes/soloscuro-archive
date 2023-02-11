@@ -50,6 +50,6 @@ enum {
     NOT_CHAOTIC_EVIL     = 1 << 29,
 };
 
-sol_status_t sol_dnd2e_alignment_allowed(const uint8_t alignment, const class_t classes[3], int target_is_pc);
+sol_status_t sol_dnd2e_alignment_allowed(const uint8_t alignment, const sol_class_t classes[3], int target_is_pc);
 
 #endif

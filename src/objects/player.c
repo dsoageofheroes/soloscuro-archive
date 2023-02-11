@@ -36,11 +36,11 @@ static int active = -1;
 
 static void free_sprites(const int slot) {
     if (players_spr[slot].main != SPRITE_ERROR) {
-        sol_sprite_free(players_spr[slot].main);
+        sol_status_check(sol_sprite_free(players_spr[slot].main), "Unable to free sprite.");
         players_spr[slot].main = SPRITE_ERROR;
     }
     if (players_spr[slot].port != SPRITE_ERROR) {
-        sol_sprite_free(players_spr[slot].port);
+        sol_status_check(sol_sprite_free(players_spr[slot].port), "Unable to free sprite.");
         players_spr[slot].port = SPRITE_ERROR;
     }
 }
@@ -55,60 +55,92 @@ static void load_character_sprite(const int slot, const float zoom) {
 
     switch(dude->race) {
         case RACE_HALFELF:
-            players_spr[slot].port = sol_sprite_new(pal, 0, 0,
-                zoom, RESOURCE_GFF_INDEX, GFF_BMP, dude->gender == GENDER_MALE ? 20006 : 20007);
-            players_spr[slot].main = sol_sprite_new(pal, 0, 0,
-                zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2095 : 2099);
+            sol_status_check(sol_sprite_new(pal, 0, 0,
+                zoom, RESOURCE_GFF_INDEX, GFF_BMP, dude->gender == GENDER_MALE ? 20006 : 20007,
+                &players_spr[slot].port),
+                    "Unable to load portrait for half-elf");
+            sol_status_check(sol_sprite_new(pal, 0, 0,
+                zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2095 : 2099,
+                &players_spr[slot].main),
+                    "Unable to load main sprite for half-elf");
             dude->anim.bmp_id = (dude->gender == GENDER_MALE) ? 2095 : 2099;
             break;
         case RACE_HUMAN:
-            players_spr[slot].port = sol_sprite_new(pal, 0, 0,
-                zoom, RESOURCE_GFF_INDEX, GFF_BMP, dude->gender == GENDER_MALE ? 20000 : 20001);
-            players_spr[slot].main = sol_sprite_new(pal, 0, 0,
-                zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2095 : 2099);
+            sol_status_check(sol_sprite_new(pal, 0, 0,
+                zoom, RESOURCE_GFF_INDEX, GFF_BMP, dude->gender == GENDER_MALE ? 20000 : 20001,
+                &players_spr[slot].port),
+                    "Unable to load portrait for human");
+            sol_status_check(sol_sprite_new(pal, 0, 0,
+                zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2095 : 2099,
+                &players_spr[slot].main),
+                    "Unable to load main sprite for human");
             dude->anim.bmp_id = (dude->gender == GENDER_MALE) ? 2095 : 2099;
             dude->anim.spr = players_spr[slot].main;
             break;
         case RACE_DWARF:
-            players_spr[slot].port = sol_sprite_new(pal, 0, 0,
-                zoom, RESOURCE_GFF_INDEX, GFF_BMP, dude->gender == GENDER_MALE ? 20002 : 20003);
-            players_spr[slot].main = sol_sprite_new(pal, 0, 0,
-                zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2055 : 2053);
+            sol_status_check(sol_sprite_new(pal, 0, 0,
+                zoom, RESOURCE_GFF_INDEX, GFF_BMP, dude->gender == GENDER_MALE ? 20002 : 20003,
+                &players_spr[slot].port),
+                    "Unable to load portrait for dwarf");
+            sol_status_check(sol_sprite_new(pal, 0, 0,
+                zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2055 : 2053,
+                &players_spr[slot].main),
+                    "Unable to load main sprite for dwarf");
             dude->anim.bmp_id = (dude->gender == GENDER_MALE) ? 2055 : 2053;
             break;
         case RACE_ELF:
-            players_spr[slot].port = sol_sprite_new(pal, 0, 0,
-                zoom, RESOURCE_GFF_INDEX, GFF_BMP, dude->gender == GENDER_MALE ? 20004 : 20005);
-            players_spr[slot].main = sol_sprite_new(pal, 0, 0,
-                zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2061 : 2059);
+            sol_status_check(sol_sprite_new(pal, 0, 0,
+                zoom, RESOURCE_GFF_INDEX, GFF_BMP, dude->gender == GENDER_MALE ? 20004 : 20005,
+                &players_spr[slot].port),
+                    "Unable to load portrait for elf");
+            sol_status_check(sol_sprite_new(pal, 0, 0,
+                zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2061 : 2059,
+                &players_spr[slot].main),
+                    "Unable to load main sprite for elf");
             dude->anim.bmp_id = (dude->gender == GENDER_MALE) ? 2061 : 2059;
             break;
         case RACE_HALFGIANT:
-            players_spr[slot].port = sol_sprite_new(pal, 0, 0,
-                zoom, RESOURCE_GFF_INDEX, GFF_BMP, dude->gender == GENDER_MALE ? 20008 : 20009);
-            players_spr[slot].main = sol_sprite_new(pal, 0, 0,
-                zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2072 : 2074);
+            sol_status_check(sol_sprite_new(pal, 0, 0,
+                zoom, RESOURCE_GFF_INDEX, GFF_BMP, dude->gender == GENDER_MALE ? 20008 : 20009,
+                &players_spr[slot].port),
+                    "Unable to load portrait for half-giant");
+            sol_status_check(sol_sprite_new(pal, 0, 0,
+                zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2072 : 2074,
+                &players_spr[slot].main),
+                    "Unable to load main sprite for half-giant");
             dude->anim.bmp_id = (dude->gender == GENDER_MALE) ? 2072 : 2074;
             break;
         case RACE_HALFLING:
-            players_spr[slot].port = sol_sprite_new(pal, 0, 0,
-                zoom, RESOURCE_GFF_INDEX, GFF_BMP, dude->gender == GENDER_MALE ? 20010 : 20011);
-            players_spr[slot].main = sol_sprite_new(pal, 0, 0,
-                zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2068 : 2070);
+            sol_status_check(sol_sprite_new(pal, 0, 0,
+                zoom, RESOURCE_GFF_INDEX, GFF_BMP, dude->gender == GENDER_MALE ? 20010 : 20011,
+                &players_spr[slot].port),
+                    "Unable to load portrait for halfling");
+            sol_status_check(sol_sprite_new(pal, 0, 0,
+                zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2068 : 2070,
+                &players_spr[slot].main),
+                    "Unable to load main sprite for halfling");
             dude->anim.bmp_id = (dude->gender == GENDER_MALE) ? 2068 : 2070;
             break;
         case RACE_MUL:
-            players_spr[slot].port = sol_sprite_new(pal, 0, 0,
-                zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20012);
-            players_spr[slot].main = sol_sprite_new(pal, 0, 0,
-                zoom, OBJEX_GFF_INDEX, GFF_BMP, 2093);
+            sol_status_check(sol_sprite_new(pal, 0, 0,
+                zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20012,
+                &players_spr[slot].port),
+                    "Unable to load portrait for mul");
+            sol_status_check(sol_sprite_new(pal, 0, 0,
+                zoom, OBJEX_GFF_INDEX, GFF_BMP, 2093,
+                &players_spr[slot].main),
+                    "Unable to load main sprite for mul");
             dude->anim.bmp_id = 2093;
             break;
         case RACE_THRIKREEN:
-            players_spr[slot].port = sol_sprite_new(pal, 0, 0,
-                zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20013);
-            players_spr[slot].main = sol_sprite_new(pal, 0, 0,
-                zoom, OBJEX_GFF_INDEX, GFF_BMP, 2097);
+            sol_status_check(sol_sprite_new(pal, 0, 0,
+                zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20013,
+                &players_spr[slot].port),
+                    "Unable to load portrait for thrikreen");
+            sol_status_check(sol_sprite_new(pal, 0, 0,
+                zoom, OBJEX_GFF_INDEX, GFF_BMP, 2097,
+                &players_spr[slot].main),
+                    "Unable to load main sprite for thrikreen");
             dude->anim.bmp_id = 2097;
             break;
     }
@@ -153,7 +185,7 @@ extern void sol_player_cleanup() {
 
 extern void sol_player_free(const int slot) {
     if (players[slot]) {
-        entity_free(players[slot]);
+        sol_entity_free(players[slot]);
     }
     players[slot] = NULL;
 }
@@ -266,7 +298,7 @@ extern void sol_player_update() {
     const int speed = 2;
 
     if (game_over()) { sol_map_game_over(); return; }
-    if (!sol_started()) { return; }
+    if (sol_started() != SOL_SUCCESS) { return; }
 
     if (--count > 0) { return; }
 
@@ -275,7 +307,7 @@ extern void sol_player_update() {
     if (direction & PLAYER_LEFT)  { xdiff -= 1; }
     if (direction & PLAYER_RIGHT) { xdiff += 1; }
 
-    if (sol_player_freeze()) {
+    if (sol_player_freeze() == SOL_SUCCESS) {
         xdiff = ydiff = 0;
     }
 
@@ -288,7 +320,7 @@ extern void sol_player_update() {
         sol_trigger_tile_check(dude->mapx, dude->mapy);
     }
 
-    entity_attempt_move(dude, xdiff, ydiff, speed);
+    sol_entity_attempt_move(dude, xdiff, ydiff, speed);
 
     count = settings_ticks_per_move() / speed;
 }
@@ -305,7 +337,7 @@ extern void sol_player_condense() {
     for (int i = 0; i < MAX_PCS; i++) {
         entity_t *player = sol_player_get(i);
         if (player != sol_player_get_active() && player->name) {
-            entity_animation_update(player, -999, -999);
+            sol_entity_animation_update(player, -999, -999);
         }
     }
 }

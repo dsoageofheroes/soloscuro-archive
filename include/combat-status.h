@@ -13,7 +13,7 @@ typedef struct combat_status_s {
 
 extern sol_wops_t combat_status_window;
 
-extern sol_status_t sol_combat_action(const entity_action_t *ca);
+extern sol_status_t sol_combat_action(const sol_entity_action_t *ca);
 extern sol_status_t sol_combat_clear_damage();
 extern sol_status_t sol_combat_status_get(combat_status_t **cs);
 

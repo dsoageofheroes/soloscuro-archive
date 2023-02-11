@@ -5,6 +5,7 @@
 #include "gpl.h"
 #include "port.h"
 #include "entity.h"
+#include "sprite.h"
 
 extern item_t* sol_inventory_create() {
     item_t *ret = calloc(1, sizeof(inventory_t));
@@ -124,7 +125,7 @@ static void free_item(item_t *item) {
     if (!item) { return; }
 
     if (item->anim.spr != SPRITE_ERROR) {
-        sol_sprite_free(item->anim.spr);
+        sol_status_check(sol_sprite_free(item->anim.spr), "Unable to free sprite.");
         item->anim.spr = SPRITE_ERROR;
     }
 }
@@ -148,14 +149,16 @@ extern void item_free_inventory(item_t *inv) {
 }
 
 // TODO: Implement!
-extern int item_get_wizard_level(item_t *item) {
-    if (!item) { return 0; }
-    return 0;
+extern sol_status_t sol_item_get_wizard_level(item_t *item, uint8_t *level) {
+    if (!item) { return SOL_NULL_ARGUMENT; }
+
+    return SOL_NOT_IMPLEMENTED;
 }
 
-extern int item_get_priest_level(item_t *item) {
-    if (!item) { return 0; }
-    return 0;
+extern sol_status_t sol_item_get_priest_level(item_t *item, uint8_t *level) {
+    if (!item) { return SOL_NULL_ARGUMENT; }
+
+    return SOL_NOT_IMPLEMENTED;
 }
 
 extern animate_sprite_t* item_icon(item_t *item) {
@@ -166,7 +169,7 @@ extern animate_sprite_t* item_icon(item_t *item) {
     //if (!port_valid_sprite(&item->sprite)) {
     if (item->anim.spr == SPRITE_ERROR) {
         if (!item->anim.bmp_id) { return NULL; }
-        port_load_sprite(&item->anim, pal, OBJEX_GFF_INDEX, GFF_BMP, item->anim.bmp_id, 1);
+        sol_sprite_load(&item->anim, pal, OBJEX_GFF_INDEX, GFF_BMP, item->anim.bmp_id, 1);
     }
 
     return &(item->anim);
@@ -183,23 +186,23 @@ extern void sol_give_ds1_item(entity_t *pc, const int slot, const int item_index
 
 extern void item_set_starting(dude_t *dude) {
     if (!dude) { return; }
-    int has_gladiator = entity_has_class(dude, REAL_CLASS_GLADIATOR);
-    int has_fighter = entity_has_class(dude, REAL_CLASS_FIGHTER);
-    int has_ranger = entity_has_class(dude, REAL_CLASS_AIR_RANGER)
-        || entity_has_class(dude, REAL_CLASS_EARTH_RANGER)
-        || entity_has_class(dude, REAL_CLASS_FIRE_RANGER)
-        || entity_has_class(dude, REAL_CLASS_WATER_RANGER);
-    int has_druid = entity_has_class(dude, REAL_CLASS_AIR_DRUID)
-        || entity_has_class(dude, REAL_CLASS_EARTH_DRUID)
-        || entity_has_class(dude, REAL_CLASS_FIRE_DRUID)
-        || entity_has_class(dude, REAL_CLASS_WATER_DRUID);
-    int has_cleric = entity_has_class(dude, REAL_CLASS_AIR_CLERIC)
-        || entity_has_class(dude, REAL_CLASS_EARTH_CLERIC)
-        || entity_has_class(dude, REAL_CLASS_FIRE_CLERIC)
-        || entity_has_class(dude, REAL_CLASS_WATER_CLERIC);
-    int has_psionicist = entity_has_class(dude, REAL_CLASS_PSIONICIST);
-    int has_thief = entity_has_class(dude, REAL_CLASS_THIEF);
-    int has_preserver = entity_has_class(dude, REAL_CLASS_PRESERVER);
+    int has_gladiator = sol_entity_has_class(dude, REAL_CLASS_GLADIATOR) == SOL_SUCCESS;
+    int has_fighter = sol_entity_has_class(dude, REAL_CLASS_FIGHTER) == SOL_SUCCESS;
+    int has_ranger = sol_entity_has_class(dude, REAL_CLASS_AIR_RANGER) == SOL_SUCCESS
+        || sol_entity_has_class(dude, REAL_CLASS_EARTH_RANGER) == SOL_SUCCESS
+        || sol_entity_has_class(dude, REAL_CLASS_FIRE_RANGER) == SOL_SUCCESS
+        || sol_entity_has_class(dude, REAL_CLASS_WATER_RANGER) == SOL_SUCCESS;
+    int has_druid = sol_entity_has_class(dude, REAL_CLASS_AIR_DRUID) == SOL_SUCCESS
+        || sol_entity_has_class(dude, REAL_CLASS_EARTH_DRUID) == SOL_SUCCESS
+        || sol_entity_has_class(dude, REAL_CLASS_FIRE_DRUID) == SOL_SUCCESS
+        || sol_entity_has_class(dude, REAL_CLASS_WATER_DRUID) == SOL_SUCCESS;
+    int has_cleric = sol_entity_has_class(dude, REAL_CLASS_AIR_CLERIC) == SOL_SUCCESS
+        || sol_entity_has_class(dude, REAL_CLASS_EARTH_CLERIC) == SOL_SUCCESS
+        || sol_entity_has_class(dude, REAL_CLASS_FIRE_CLERIC) == SOL_SUCCESS
+        || sol_entity_has_class(dude, REAL_CLASS_WATER_CLERIC) == SOL_SUCCESS;
+    int has_psionicist = sol_entity_has_class(dude, REAL_CLASS_PSIONICIST) == SOL_SUCCESS;
+    int has_thief = sol_entity_has_class(dude, REAL_CLASS_THIEF) == SOL_SUCCESS;
+    int has_preserver = sol_entity_has_class(dude, REAL_CLASS_PRESERVER) == SOL_SUCCESS;
 
     item_free_inventory(dude->inv);
     if (dude->inv) {

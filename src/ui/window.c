@@ -31,7 +31,8 @@ static int load_button_from_gff(const int res_id, sol_button_t *button) {
     button->base_height = ssi_button->frame.height;
 
     //render_entry_as_image(gff_idx, GFF_ICON, button->icon_id, open_files[pal_idx].pals->palettes, 320, 92);
-    button->spr = sol_sprite_new(open_files[pal_idx].pals->palettes, 0, 0, settings_zoom(), RESOURCE_GFF_INDEX, GFF_ICON, button->icon_id);
+    sol_status_check(sol_sprite_new(open_files[pal_idx].pals->palettes, 0, 0, settings_zoom(), RESOURCE_GFF_INDEX, GFF_ICON, button->icon_id, &button->spr),
+        "Unable to load button's sprite.");
 
     return 1;
 }
@@ -87,7 +88,8 @@ static int load_box_from_gff(const int res_id, sol_box_t *box) {
     box->base_width = ssi_box->frame.width;
     box->base_height = ssi_box->frame.height;
 
-    box->spr = sol_sprite_new(open_files[pal_idx].pals->palettes, 0, 0, settings_zoom(), RESOURCE_GFF_INDEX, GFF_BMP, box->bmp_id);
+    sol_status_check(sol_sprite_new(open_files[pal_idx].pals->palettes, 0, 0, settings_zoom(), RESOURCE_GFF_INDEX, GFF_BMP, box->bmp_id, &box->spr),
+        "Unable to load box's sprite.");
 
     return 1;
 }
@@ -154,7 +156,7 @@ extern void sol_window_free_base(sol_window_t *win) {
 
     if (win->buttons) {
         for (int i = 0; i < win->num_buttons; i++) {
-            sol_sprite_free(win->buttons[i].spr);
+            sol_status_check(sol_sprite_free(win->buttons[i].spr), "Unable to free sprite");
             if (win->buttons[i].text) { free(win->buttons[i].text); }
         }
         free(win->buttons);
@@ -164,7 +166,7 @@ extern void sol_window_free_base(sol_window_t *win) {
 
     if (win->frames) {
         for (int i = 0; i < win->num_frames; i++) {
-            sol_sprite_free(win->frames[i].spr);
+            sol_status_check(sol_sprite_free(win->frames[i].spr), "Unable to free sprite");
         }
         free(win->frames);
         win->frames = NULL;
@@ -173,7 +175,7 @@ extern void sol_window_free_base(sol_window_t *win) {
 
     if (win->boxes) {
         for (int i = 0; i < win->num_boxes; i++) {
-            sol_sprite_free(win->boxes[i].spr);
+            sol_status_check(sol_sprite_free(win->boxes[i].spr), "Unable to free sprite");
         }
         free(win->boxes);
         win->boxes = NULL;
@@ -182,7 +184,7 @@ extern void sol_window_free_base(sol_window_t *win) {
 
     if (win->underlays) {
         for (int i = 0; i < win->num_underlays; i++) {
-            sol_sprite_free(win->underlays[i].spr);
+            sol_status_check(sol_sprite_free(win->underlays[i].spr), "Unable to free sprite");
         }
         free(win->underlays);
         win->underlays = NULL;
@@ -194,12 +196,14 @@ extern void sol_window_free_base(sol_window_t *win) {
 
 extern size_t sol_window_get_button(sol_window_t *win, const uint32_t x, const uint32_t y) {
     if (!win) { return -1; }
+    sol_sprite_info_t info;
 
     for (int i = 0; i < win->num_buttons; i++) {
-        uint32_t sx = sol_sprite_getx(win->buttons[i].spr);
-        uint32_t sy = sol_sprite_gety(win->buttons[i].spr);
-        uint32_t sw = sol_sprite_getw(win->buttons[i].spr);
-        uint32_t sh = sol_sprite_geth(win->buttons[i].spr);
+        sol_status_check(sol_sprite_get_info(win->buttons[i].spr, &info), "Unable to get window button sprite info");
+        uint32_t sx = info.x;
+        uint32_t sy = info.y;
+        uint32_t sw = info.w;
+        uint32_t sh = info.h;
         //printf("x = %d, @(%d, %d) (%d x %d)\n", x, sx, sy, sw, sh);
         if (sx <= x && (sx + sw) >= x && sy <= y && (sy + sh) >= y) {
             return i;
@@ -225,6 +229,7 @@ extern void sol_window_set_pos(sol_window_t *win, const int x, const int y) {
 }
 
 extern void sol_window_render_base(sol_window_t *win) {
+    sol_sprite_info_t info;
     if (!win) { return; }
 
     for (int i = 0; i < win->num_underlays; i++) {
@@ -239,14 +244,15 @@ extern void sol_window_render_base(sol_window_t *win) {
         if (win->buttons[i].disabled) { continue; }
         sol_sprite_render(win->buttons[i].spr);
         if (win->buttons[i].text) {
+            sol_status_check(sol_sprite_get_info(win->buttons[i].spr, &info), "Unable to get window button sprite info");
             if (i == 0) { printf("%d:'%s' (%d x %d) %d\n", i, win->buttons[i].text,
-                sol_sprite_getx(win->buttons[i].spr),
-                sol_sprite_gety(win->buttons[i].spr),
+                info.x,
+                info.y,
                 win->buttons[i].offsetx
                 ); }
             sol_print_line_len(win->buttons[i].font, win->buttons[i].text,
-                sol_sprite_getx(win->buttons[i].spr) + 2 * settings_zoom(),
-                sol_sprite_gety(win->buttons[i].spr) + 2 * settings_zoom(),
+                info.x + 2 * settings_zoom(),
+                info.y + 2 * settings_zoom(),
                 32);
         }
     }
@@ -274,6 +280,7 @@ extern void sol_button_set_enabled(sol_button_t *button, const int val) {
 }
 
 static void load_frame_bmp(sol_frame_t *frame, int res_id) {
+    sol_sprite_info_t info;
     int pal_idx = gff_get_game_type() == DARKSUN_ONLINE
         ? RESFLOP_GFF_INDEX
         : RESOURCE_GFF_INDEX;
@@ -283,9 +290,11 @@ static void load_frame_bmp(sol_frame_t *frame, int res_id) {
     memset(frame, 0x0, sizeof(sol_frame_t));
     frame->spr = SPRITE_ERROR;
     frame->bmp_id = res_id;
-    frame->spr = sol_sprite_new(open_files[pal_idx].pals->palettes, 0, 0, settings_zoom(), RESOURCE_GFF_INDEX, GFF_BMP, frame->bmp_id);
-    frame->base_width = sol_sprite_getw(frame->spr);
-    frame->base_height = sol_sprite_geth(frame->spr);
+    sol_status_check(sol_sprite_new(open_files[pal_idx].pals->palettes, 0, 0, settings_zoom(), RESOURCE_GFF_INDEX, GFF_BMP, frame->bmp_id, &frame->spr),
+        "Unable to load frame's sprite");
+    sol_status_check(sol_sprite_get_info(frame->spr, &info), "Unable to get frame sprite info");
+    frame->base_width = info.w;
+    frame->base_height = info.h;
 }
 
 static void add_underlay(sol_window_t *win, const int res_id, const int x, const int y) {

@@ -12,6 +12,7 @@
 #include "settings.h"
 #include "gpl.h"
 #include "player.h"
+#include "status.h"
 
 #include <string.h>
 
@@ -145,6 +146,14 @@ static void setup_save_load_selection() {
     return;
 }
 
+static void setup_title_action(gff_palette_t *pal, int tid, int aid) {
+    const float zoom = settings_zoom();
+    sol_status_check(sol_sprite_new(pal, 115 + xoffset / zoom, 0 + yoffset / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, tid, &title),
+            "Unable to create title sprite");
+    sol_status_check(sol_sprite_new(pal, 230 + xoffset / zoom, 30 + yoffset / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, aid, &action_btn),
+            "Unable to create action btn sprite");
+}
+
 void add_load_save_init(const uint32_t x, const uint32_t y) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     const float zoom = settings_zoom();
@@ -153,34 +162,42 @@ void add_load_save_init(const uint32_t x, const uint32_t y) {
     xoffset = x;
     yoffset = y;
 
-    background = sol_sprite_new(pal, 0 + x / zoom, 0 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 3009);
-    up_arrow = sol_sprite_new(pal, 215 + x / zoom, 30 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2093);
-    down_arrow = sol_sprite_new(pal, 215 + x / zoom, 130 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2094);
-    exit_btn = sol_sprite_new(pal, 230 + x / zoom, 50 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2058);
-    delete_btn = sol_sprite_new(pal, 215 + x / zoom, 150 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2097);
-    bar = sol_sprite_new(pal, 45 + x / zoom, 31 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 18100);
+    sol_status_check(
+            sol_sprite_new(pal, 0 + x / zoom, 0 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 3009, &background),
+            "Unable to load als background.");
+    sol_status_check(
+        sol_sprite_new(pal, 215 + x / zoom, 30 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2093, &up_arrow),
+        "Unable to load als up_arrow.");
+    sol_status_check(
+        sol_sprite_new(pal, 215 + x / zoom, 130 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2094, &down_arrow),
+        "Unable to load als down_arrow.");
+    sol_status_check(
+        sol_sprite_new(pal, 230 + x / zoom, 50 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2058, &exit_btn),
+        "Unable to load als exit_btn.");
+    sol_status_check(
+        sol_sprite_new(pal, 215 + x / zoom, 150 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2097, &delete_btn),
+        "Unable to load als delete_btn.");
+    sol_status_check(
+        sol_sprite_new(pal, 45 + x / zoom, 31 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 18100, &bar),
+        "Unable to load als bar.");
     name_tb = sol_textbox_create(32, 50 + x / zoom, 148 + y / zoom);
     sol_textbox_set_current(name_tb);
 
     switch(mode) {
         case ACTION_ADD:
-            title = sol_sprite_new(pal, 115 + x / zoom, 0 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6036); // Add
-            action_btn = sol_sprite_new(pal, 230 + x / zoom, 30 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6037); // add
+            setup_title_action(pal, 6036, 6037);
             setup_character_selection();
             break;
         case ACTION_SAVE:
-            title = sol_sprite_new(pal, 115 + x / zoom, 0 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2056); // SAVE
-            action_btn = sol_sprite_new(pal, 230 + x / zoom, 30 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2057); // save
+            setup_title_action(pal, 2056, 2057);
             setup_save_load_selection();
             break;
         case ACTION_LOAD:
-            title = sol_sprite_new(pal, 115 + x / zoom, 0 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6030); // Load
-            action_btn = sol_sprite_new(pal, 230 + x / zoom, 30 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6031); // load
+            setup_title_action(pal, 6030, 6031);
             setup_save_load_selection();
             break;
         case ACTION_DROP:
-            title = sol_sprite_new(pal, 115 + x / zoom, 0 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6038); // Drop
-            action_btn = sol_sprite_new(pal, 230 + x / zoom, 30 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 6039); // drop
+            setup_title_action(pal, 6038, 6039);
             break;
         default:
             error("action %d selected, but not implemented in als!\n", mode);
@@ -204,16 +221,18 @@ void add_load_save_render(void *data) {
         if (selection >= 0 && (i == (selection - top_entry))) {
             sol_sprite_set_frame(bar, 1);
         }
-        if (sol_sprite_in_rect(bar, mousex, mousey)) {
-            sol_sprite_set_frame(bar, sol_sprite_get_frame(bar) + 2);
+        if (sol_sprite_in_rect(bar, mousex, mousey) == SOL_SUCCESS) {
+            sol_sprite_increment_frame(bar, 2);
         }
         sol_sprite_render(bar);
     }
 
     for (uint16_t i = top_entry; i < top_entry + 10 && i < num_valid_entries; i++) {
-        sol_print_line_len((selection != i) ? FONT_GREY : FONT_REDDARK,
+        sol_status_check(
+            sol_print_line_len((selection != i) ? FONT_GREY : FONT_REDDARK,
                 entries[valids[i]],
-                zoom * 47 + xoffset, zoom * (31 + (i - top_entry) * 11) + yoffset, 1<<10);
+                zoom * 47 + xoffset, zoom * (31 + (i - top_entry) * 11) + yoffset, 1<<10),
+            "Unable to print.");
     }
 
     sol_textbox_render(name_tb);
@@ -222,22 +241,23 @@ void add_load_save_render(void *data) {
 int add_load_save_handle_mouse_movement(const uint32_t x, const uint32_t y) {
     static uint16_t last_spr = SPRITE_ERROR;
     uint16_t cspr = SPRITE_ERROR;
+    sol_sprite_info_t info;
     mousex = x;
     mousey = y;
 
-    if (sol_sprite_in_rect(action_btn, x, y)) {
+    if (sol_sprite_in_rect(action_btn, x, y) == SOL_SUCCESS) {
         cspr = action_btn;
     }
-    if (sol_sprite_in_rect(delete_btn, x, y)) {
+    if (sol_sprite_in_rect(delete_btn, x, y) == SOL_SUCCESS) {
         cspr = delete_btn;
     }
-    if (sol_sprite_in_rect(exit_btn, x, y)) {
+    if (sol_sprite_in_rect(exit_btn, x, y) == SOL_SUCCESS) {
         cspr = exit_btn;
     }
-    if (sol_sprite_in_rect(up_arrow, x, y)) {
+    if (sol_sprite_in_rect(up_arrow, x, y) == SOL_SUCCESS) {
         cspr = up_arrow;
     }
-    if (sol_sprite_in_rect(down_arrow, x, y)) {
+    if (sol_sprite_in_rect(down_arrow, x, y) == SOL_SUCCESS) {
         cspr = down_arrow;
     }
 
@@ -245,12 +265,16 @@ int add_load_save_handle_mouse_movement(const uint32_t x, const uint32_t y) {
     sol_sprite_set_frame(exit_btn, 0);
     sol_sprite_set_frame(delete_btn, 0);
 
-    if (sol_sprite_get_frame(cspr) < 2) {
+    sol_status_check(sol_sprite_get_info(cspr, &info), "Unable to get sprite info.");
+    //if (sol_sprite_get_frame(cspr) < 2) {
+    if (info.current_frame < 2) {
         sol_sprite_set_frame(cspr, 1);
     }
 
     if (last_spr != SPRITE_ERROR && last_spr != cspr) {
-        if (sol_sprite_get_frame(last_spr) < 2) {
+        sol_status_check(sol_sprite_get_info(last_spr, &info), "Unable to get sprite info.");
+        //if (sol_sprite_get_frame(last_spr) < 2) {
+        if (info.current_frame < 2) {
             sol_sprite_set_frame(last_spr, 0);
         }
     }
@@ -262,24 +286,24 @@ int add_load_save_handle_mouse_movement(const uint32_t x, const uint32_t y) {
 int add_load_save_handle_mouse_down(const sol_mouse_button_t button, const uint32_t x, const uint32_t y) {
     const float zoom = settings_zoom();
 
-    if (sol_sprite_in_rect(action_btn, x, y)) {
+    if (sol_sprite_in_rect(action_btn, x, y) == SOL_SUCCESS) {
         sol_sprite_set_frame(action_btn, 2);
     }
-    if (sol_sprite_in_rect(exit_btn, x, y)) {
+    if (sol_sprite_in_rect(exit_btn, x, y) == SOL_SUCCESS) {
         sol_sprite_set_frame(exit_btn, 2);
     }
-    if (sol_sprite_in_rect(delete_btn, x, y)) {
+    if (sol_sprite_in_rect(delete_btn, x, y) == SOL_SUCCESS) {
         sol_sprite_set_frame(delete_btn, 2);
     }
-    if (sol_sprite_in_rect(up_arrow, x, y)) {
+    if (sol_sprite_in_rect(up_arrow, x, y) == SOL_SUCCESS) {
         sol_sprite_set_frame(up_arrow, 3);
     }
-    if (sol_sprite_in_rect(down_arrow, x, y)) {
+    if (sol_sprite_in_rect(down_arrow, x, y) == SOL_SUCCESS) {
         sol_sprite_set_frame(down_arrow, 3);
     }
     for (int i = 0; i < 10; i++) {
         sol_sprite_set_location(bar, xoffset + (zoom * 45), yoffset + (zoom * (31 + i * 11)));
-        if (sol_sprite_in_rect(bar, x, y)) {
+        if (sol_sprite_in_rect(bar, x, y) == SOL_SUCCESS) {
             selection = top_entry + i;
             if (selection < num_valid_entries) {
                 char_selected = res_ids[valids[selection]];
@@ -312,7 +336,7 @@ int add_load_save_handle_mouse_up(const sol_mouse_button_t button, const uint32_
     char filename[32];
     char msg[128];
 
-    if (sol_sprite_in_rect(action_btn, x, y)) {
+    if (sol_sprite_in_rect(action_btn, x, y) == SOL_SUCCESS) {
         if (mode == ACTION_LOAD) {
             if (entries && selection >= 0 && entries[selection]) {
                 sprintf(filename, SAVE_FORMAT, selection);
@@ -344,11 +368,11 @@ int add_load_save_handle_mouse_up(const sol_mouse_button_t button, const uint32_
             sol_window_pop();
         }
     }
-    if (sol_sprite_in_rect(exit_btn, x, y)) {
+    if (sol_sprite_in_rect(exit_btn, x, y) == SOL_SUCCESS) {
         sol_sprite_set_frame(exit_btn, 0);
         sol_window_pop();
     }
-    if (sol_sprite_in_rect(delete_btn, x, y)) {
+    if (sol_sprite_in_rect(delete_btn, x, y) == SOL_SUCCESS) {
         sol_sprite_set_frame(delete_btn, 0);
         if (selection != -1) {
             sol_sprite_set_frame(delete_btn, 3);
@@ -359,11 +383,11 @@ int add_load_save_handle_mouse_up(const sol_mouse_button_t button, const uint32_
             sol_popup_set_option(2, "CANCEL");
         }
     }
-    if (sol_sprite_in_rect(up_arrow, x, y)) {
+    if (sol_sprite_in_rect(up_arrow, x, y) == SOL_SUCCESS) {
         sol_sprite_set_frame(up_arrow, 0);
         if (top_entry > 0) { top_entry--; }
     }
-    if (sol_sprite_in_rect(down_arrow, x, y)) {
+    if (sol_sprite_in_rect(down_arrow, x, y) == SOL_SUCCESS) {
         sol_sprite_set_frame(down_arrow, 0);
         if (top_entry < num_valid_entries - 10) { top_entry++; }
     }
@@ -381,14 +405,14 @@ void add_load_save_return_control () {
 }
 
 void add_load_save_free() {
-    sol_sprite_free(background);
-    sol_sprite_free(up_arrow);
-    sol_sprite_free(down_arrow);
-    sol_sprite_free(exit_btn);
-    sol_sprite_free(delete_btn);
-    sol_sprite_free(action_btn);
-    sol_sprite_free(title);
-    sol_sprite_free(bar);
+    sol_status_check(sol_sprite_free(background), "Unable to free sprite");
+    sol_status_check(sol_sprite_free(up_arrow), "Unable to free sprite");
+    sol_status_check(sol_sprite_free(down_arrow), "Unable to free sprite");
+    sol_status_check(sol_sprite_free(exit_btn), "Unable to free sprite");
+    sol_status_check(sol_sprite_free(delete_btn), "Unable to free sprite");
+    sol_status_check(sol_sprite_free(action_btn), "Unable to free sprite");
+    sol_status_check(sol_sprite_free(title), "Unable to free sprite");
+    sol_status_check(sol_sprite_free(bar), "Unable to free sprite");
     free_entries();
     sol_textbox_free(name_tb);
     sol_textbox_set_current(NULL);

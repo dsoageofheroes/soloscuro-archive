@@ -6,23 +6,26 @@
 static int is_less(entity_t *e0, entity_t *e1) {
     int map0y = e0->mapy; // * 16 + a0->entity->sprite.yoffset)
     int map1y = e1->mapy; // * 16 + a1->entity->sprite.yoffset)
+    sol_sprite_info_t info;
 
     if (e0->mapz != e1->mapz) {
         return e0->mapz > e1->mapz;
     }
 
     if (map0y == map1y) {
-        map0y = sol_sprite_gety(e0->anim.spr) - sol_sprite_geth(e0->anim.spr);
-        map1y = sol_sprite_gety(e1->anim.spr) - sol_sprite_geth(e1->anim.spr);
+        sol_status_check(sol_sprite_get_info(e0->anim.spr, &info), "Unable to get entity0 sprite info");
+        map0y = info.y - info.h;
+        sol_status_check(sol_sprite_get_info(e1->anim.spr, &info), "Unable to get entity1 sprite info");
+        map1y = info.y - info.h;
     }
 
     return map0y < map1y;
 }
 
 // This function assumes an AND an->next are valid!
-static void swap_with_next(entity_list_node_t *en) {
-    entity_list_node_t *next = en->next;
-    entity_list_node_t *prev = en->prev;
+static void swap_with_next(sol_entity_list_node_t *en) {
+    sol_entity_list_node_t *next = en->next;
+    sol_entity_list_node_t *prev = en->prev;
 
     if (next->next) { next->next->prev = en; }
 
@@ -35,7 +38,7 @@ static void swap_with_next(entity_list_node_t *en) {
 }
 
 // WARNING: This may change the head of the animation list!
-extern sol_status_t sol_animate_sprite_tick(entity_action_t *action, entity_t *entity ) {
+extern sol_status_t sol_animate_sprite_tick(sol_entity_action_t *action, entity_t *entity ) {
     if (!entity || !action)        { return SOL_NULL_ARGUMENT; }
     if (action->action == EA_SCMD) { return SOL_SUCCESS; }
     animate_sprite_t *anim = &entity->anim;
@@ -55,7 +58,7 @@ extern sol_status_t sol_animate_sprite_tick(entity_action_t *action, entity_t *e
     return SOL_SUCCESS;
 }
 
-extern sol_status_t sol_animate_shift_entity(entity_list_t *list, entity_list_node_t *en) {
+extern sol_status_t sol_animate_shift_entity(sol_entity_list_t *list, sol_entity_list_node_t *en) {
     if (!en || !list) { return SOL_NULL_ARGUMENT; }
 
     while (en->next && is_less(en->next->entity, en->entity)) {

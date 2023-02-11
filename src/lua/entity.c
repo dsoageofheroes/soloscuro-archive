@@ -53,7 +53,7 @@ static int is_combat_turn(lua_State *l) {
 
 static int move_entity(lua_State *l, const int xdiff, const int ydiff) {
     dude_t *dude = (dude_t*) lua_touserdata(l, lua_upvalueindex(1));
-    lua_pushboolean(l, entity_attempt_move(dude, xdiff, ydiff, 1));
+    lua_pushboolean(l, sol_entity_attempt_move(dude, xdiff, ydiff, 1) == SOL_SUCCESS);
     return 1;
 }
 
@@ -87,7 +87,7 @@ static int load_scmd(lua_State *l) {
     // map based scmd need to load and start the animation
     if (!gff_map_load_scmd(dude)) { return 0; }
     if (dude->anim.scmd != NULL && !(dude->anim.scmd->flags & SCMD_LAST)) {
-        entity_animation_list_add(&dude->actions, EA_SCMD, dude, NULL, NULL, 30);
+        sol_entity_animation_list_add(&dude->actions, EA_SCMD, dude, NULL, NULL, 30);
         // Animations are continued in the entity action list
     }
 

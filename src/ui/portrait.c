@@ -30,7 +30,8 @@ void sol_portrait_load() {
         }
         gff_read_chunk(DSLDATA_GFF_INDEX, &chunk, buf, chunk.length);
         data = gff_get_portrait(buf, &w, &h);
-        portraits[id] = sol_sprite_create_from_data(data, w, h);
+        sol_status_check(sol_sprite_create_from_data(data, w, h, &portraits[id]),
+                "Unable to create portrait.");
         free(data);
     }
 

@@ -4,12 +4,13 @@
 #include <stdint.h>
 #include "ssi-scmd.h"
 #include "status.h"
+#include "sprite.h"
 
 // O why did SSI choose this over 0... Many tears...
 #define SPRITE_ERROR (0xFFFF)
 
 typedef struct animate_sprite_s {
-    uint16_t spr;
+    sol_sprite_t spr;
     uint16_t flags;
     uint16_t delay;
     uint16_t pos;
@@ -26,12 +27,12 @@ typedef struct animate_sprite_s {
 
 } animate_sprite_t;
 
-struct entity_s;
-struct entity_action_s;
-struct entity_list_node_s;
-struct entity_list_s;
+struct sol_entity_s;
+struct sol_entity_action_s;
+struct sol_entity_list_node_s;
+struct sol_entity_list_s;
 
-extern sol_status_t sol_animate_shift_entity(struct entity_list_s *list, struct entity_list_node_s *en);
-extern sol_status_t sol_animate_sprite_tick(struct entity_action_s *action, struct entity_s *entity );
+extern sol_status_t sol_animate_shift_entity(struct sol_entity_list_s *list, struct sol_entity_list_node_s *en);
+extern sol_status_t sol_animate_sprite_tick(struct sol_entity_action_s *action, struct sol_entity_s *entity );
 
 #endif

@@ -6,31 +6,58 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-extern entity_list_t* entity_list_create() {
-    return (entity_list_t*) calloc(1, sizeof(entity_list_t));
+extern sol_status_t sol_entity_list_create(sol_entity_list_t** ret) {
+    if (!ret) { return SOL_NULL_ARGUMENT; }
+
+    *ret = (sol_entity_list_t*) calloc(1, sizeof(sol_entity_list_t));
+
+    return *ret == NULL ? SOL_MEMORY_ERROR : SOL_SUCCESS;
 }
 
-extern void entity_list_clear(entity_list_t *list) {
+extern sol_status_t sol_entity_list_clear(sol_entity_list_t *list) {
+    sol_status_t status;
+
+    if (!list) { return SOL_NULL_ARGUMENT; }
+
     while (list && list->head) {
-        entity_list_remove(list, list->head);
+        if ((status = sol_entity_list_remove(list, list->head)) != SOL_SUCCESS) {
+            return status;
+        }
     }
+
+    return SOL_SUCCESS;
 }
 
-extern void entity_list_free(entity_list_t *list) {
-    entity_list_clear(list);
+extern sol_status_t sol_entity_list_free(sol_entity_list_t *list) {
+    sol_status_t status;
+    if (!list) { return SOL_NULL_ARGUMENT; }
+
+    status = sol_entity_list_clear(list);
+    if (status != SOL_SUCCESS) { return SOL_NULL_ARGUMENT; }
     free(list);
+
+    return SOL_SUCCESS;
 }
 
-extern void entity_list_free_all(entity_list_t *list) {
+extern sol_status_t sol_entity_list_free_all(sol_entity_list_t *list) {
+    sol_status_t status;
+
+    if (!list) { return SOL_NULL_ARGUMENT; }
+
     while (list && list->head) {
-        entity_free(list->head->entity);
-        entity_list_remove(list, list->head);
+        sol_entity_free(list->head->entity);
+        if ((status = sol_entity_list_remove(list, list->head)) != SOL_SUCCESS) {
+            return status;
+        }
     }
+
     free(list);
+
+    return SOL_SUCCESS;
 }
 
-static entity_list_node_t* create_node(struct entity_s *entity, entity_list_node_t *next, entity_list_node_t *prev) {
-    entity_list_node_t *node = (entity_list_node_t*) malloc(sizeof(entity_list_node_t));
+static sol_entity_list_node_t* create_node(sol_entity_t *entity, sol_entity_list_node_t *next, sol_entity_list_node_t *prev) {
+    sol_entity_list_node_t *node = (sol_entity_list_node_t*) malloc(sizeof(sol_entity_list_node_t));
 
     node->entity = entity;
     node->next = next;
@@ -39,48 +66,72 @@ static entity_list_node_t* create_node(struct entity_s *entity, entity_list_node
     return node;
 }
 
-extern entity_list_node_t* entity_list_add_by_init(entity_list_t *list, struct entity_s *entity) {
-    entity_list_node_t *rover;
-    entity_list_node_t *node = create_node(entity, NULL, NULL);
+extern sol_status_t sol_entity_list_add_by_init(sol_entity_list_t *list, sol_entity_t *entity, sol_entity_list_node_t **node) {
+    sol_entity_list_node_t *rover;
+    sol_entity_list_node_t *tnode;
+
+    if (!list || !entity) { return SOL_NULL_ARGUMENT; }
+   
+    tnode = create_node(entity, NULL, NULL);
+    if (tnode == NULL) { return SOL_MEMORY_ERROR; }
 
     if (!list->head) {
-        list->head = node;
-        return node;
+        list->head = tnode;
+        if (node) {
+            *node = tnode;
+        }
+        return SOL_SUCCESS;
     }
 
     rover = list->head;
     while (rover->next != NULL 
-        && (rover->next->entity->stats.combat.initiative < node->entity->stats.combat.initiative)) {
+        && (rover->next->entity->stats.combat.initiative < tnode->entity->stats.combat.initiative)) {
         rover = rover->next;
     }
 
     if (rover->next == NULL) {
-        rover->next = node;
-        node->prev = rover;
-        return node;
+        rover->next = tnode;
+        tnode->prev = rover;
+        if (node) {
+            *node = tnode;
+        }
+        return SOL_SUCCESS;
     }
 
-    node->prev = rover;
-    node->next = rover->next;
-    rover->next->prev = node;
-    rover->next = node;
+    tnode->prev = rover;
+    tnode->next = rover->next;
+    rover->next->prev = tnode;
+    rover->next = tnode;
 
-    return node;
+    if (node) {
+        *node = tnode;
+    }
+
+    return SOL_SUCCESS;
 }
 
-extern entity_list_node_t* entity_list_add(entity_list_t *list, entity_t *entity) {
-    if (!list) { return NULL; }
-    entity_list_node_t *node = create_node(entity, list->head, NULL);
+extern sol_status_t sol_entity_list_add(sol_entity_list_t *list, sol_entity_t *entity, sol_entity_list_node_t **ret_node) {
+    if (!list || !entity) { return SOL_NULL_ARGUMENT; }
+    sol_entity_list_node_t *node;
+   
+    node = create_node(entity, list->head, NULL);
+    if (!node) { return SOL_MEMORY_ERROR; }
 
     if (list->head) {
         list->head->prev = node;
     }
 
-    return list->head = node;
+    if (ret_node) {
+        *ret_node = node;
+    }
+
+    list->head = node;
+
+    return SOL_SUCCESS;
 }
 
-extern int entity_list_remove(entity_list_t *list, entity_list_node_t *node) {
-    if (node == NULL || list == NULL) { return 0; }
+extern sol_status_t sol_entity_list_remove(sol_entity_list_t *list, sol_entity_list_node_t *node) {
+    if (node == NULL || list == NULL) { return SOL_NULL_ARGUMENT; }
 
     if (node == list->head) {
         list->head = node->next;
@@ -88,7 +139,7 @@ extern int entity_list_remove(entity_list_t *list, entity_list_node_t *node) {
             list->head->prev = NULL;
         }
         free(node);
-        return 1;
+        return SOL_SUCCESS;
     }
 
     if (node->next) {
@@ -97,27 +148,39 @@ extern int entity_list_remove(entity_list_t *list, entity_list_node_t *node) {
     node->prev->next = node->next;
 
     free(node);
-    return 1;
+    return SOL_SUCCESS;
 }
 
-extern int entity_list_remove_entity(entity_list_t *list, struct entity_s *entity) {
-    entity_list_remove(list, entity_list_find(list, entity));
+extern sol_status_t sol_entity_list_remove_entity(sol_entity_list_t *list, sol_entity_t *entity) {
+    sol_status_t status;
+    sol_entity_list_node_t *node;
+
+    if ((status = sol_entity_list_find(list, entity, &node)) != SOL_SUCCESS) {
+        return status;
+    }
+
+    return sol_entity_list_remove(list, node);
 }
 
-entity_list_node_t* entity_list_find(entity_list_t *list, entity_t *entity) {
-    entity_list_node_t* rover = list->head;
+extern sol_status_t sol_entity_list_find(sol_entity_list_t *list, sol_entity_t *entity, sol_entity_list_node_t **node) {
+    sol_entity_list_node_t* rover = list->head;
+
+    if (!entity || !list) { return SOL_NULL_ARGUMENT; }
 
     while(rover) {
         if (rover->entity == entity) { // Warning: pointer comparison
-            return rover;
+            if (node) {
+                *node = rover;
+            }
+            return SOL_SUCCESS;
         }
         rover = rover->next;
     }
 
-    return NULL;
+    return SOL_NOT_FOUND;
 }
 
-extern sol_status_t entity_list_load_etab(entity_list_t *list, sol_static_list_t *ssl, const int gff_idx, const int map_id) {
+extern sol_status_t sol_entity_list_load_etab(sol_entity_list_t *list, sol_static_list_t *ssl, const int gff_idx, const int map_id) {
     if (!list) { return SOL_NULL_ARGUMENT; }
     sol_static_t s;
     sol_status_t status = SOL_NOT_IMPLEMENTED;
@@ -136,15 +199,17 @@ extern sol_status_t entity_list_load_etab(entity_list_t *list, sol_static_list_t
     int num_objs = gff_map_get_num_objects(gff_idx, map_id);
 
     for (int i = 0; i < num_objs; i++) {
-        dude_t *dude = entity_create_from_etab(open_files[gff_idx].entry_table, i);
+        dude_t *dude;
+        sol_entity_create_from_etab(open_files[gff_idx].entry_table, i, &dude);
         //dude->anim.scmd = gff_map_get_object_scmd(gff_idx, map_id, i, 0);
         gff_map_fill_scmd_info(dude, gff_idx, map_id, i, 0);
         gff_map_load_scmd(dude);
-        if ((status = sol_animate_shift_entity(list, entity_list_add(list, dude)))) {
-            return status;
-        }
+        sol_entity_list_add(list, dude, NULL);
+        //if ((status = sol_animate_shift_entity(list, entity_list_add(list, dude)))) {
+            //return status;
+        //}
         if (dude->anim.scmd != NULL && !(dude->anim.scmd->flags & SCMD_LAST)) {
-            entity_animation_list_add(&dude->actions, EA_SCMD, dude, NULL, NULL, 30);
+            sol_entity_animation_list_add(&dude->actions, EA_SCMD, dude, NULL, NULL, 30);
             // Animations are continued in the entity action list
         } else {
             // NEED TO ADD STATICS HERE!
@@ -156,4 +221,6 @@ extern sol_status_t entity_list_load_etab(entity_list_t *list, sol_static_list_t
             sol_static_list_add(ssl, &s);
         }
     }
+
+    return SOL_SUCCESS;
 }

@@ -90,7 +90,8 @@ void print_text() {
     while (i < text_pos) {
         amt = len;
         while (i + amt < text_pos && amt > 0 && narrate_text[i + amt] != ' ') { amt--; }
-        sol_print_line_len(0, narrate_text + i, 200, y, amt);
+        sol_status_check(sol_print_line_len(0, narrate_text + i, 200, y, amt),
+                "Unable to print.");
         i += amt;
         while (isspace(narrate_text[i])) { i++; }
         y += 16;
@@ -109,17 +110,22 @@ void sol_ui_narrate_close() {
 void narrate_render(void *data) {
     (void) data;
     update_menu(0);
+    sol_sprite_info_t info;
+
     if (display_menu) {
         sol_window_render_base(menu);
-        sol_print_line_len(FONT_YELLOW, menu_options[0], winx + 3 * settings_zoom(), 
-            sol_sprite_gety(menu->underlays[0].spr) + 3 * settings_zoom(), 0x7FFFFFFF);
+        sol_status_check(sol_sprite_get_info(menu->underlays[0].spr, &info), "Unable to get menu options sprite info");
+        sol_status_check(sol_print_line_len(FONT_YELLOW, menu_options[0], winx + 3 * settings_zoom(), 
+            info.y + 3 * settings_zoom(), 0x7FFFFFFF),
+            "Unable to print.");
     }
 
     if (display) {
+        sol_status_check(sol_sprite_get_info(narrate->buttons[3].spr, &info), "Unable to get window button sprite info");
         sol_window_render_base(narrate);
         sol_portrait_display(portrait_index,
-            sol_sprite_getx(narrate->buttons[3].spr) + 8 * settings_zoom(),
-            sol_sprite_gety(narrate->buttons[3].spr) + 7 * settings_zoom());
+            info.x + 8 * settings_zoom(),
+            info.y + 7 * settings_zoom());
         print_text();
     }
 }
@@ -216,12 +222,12 @@ int narrate_handle_mouse_up(const uint32_t _button, const uint32_t x, const uint
     return display; // zero means I did not handle the mouse click, so another window may.
 }
 
-int narrate_handle_key_down(const enum entity_action_e action) {
+int narrate_handle_key_down(const enum sol_entity_action_e action) {
     if (!display) { return 0; }
 
     switch (action) {
         case EA_ACTIVATE:
-            if (sol_game_loop_is_waiting_for(WAIT_NARRATE_CONTINUE)) {
+            if (sol_game_loop_is_waiting_for(WAIT_NARRATE_CONTINUE) == SOL_SUCCESS) {
                 sol_game_loop_signal(WAIT_NARRATE_CONTINUE, 0);
             }
         default:
@@ -310,11 +316,11 @@ extern int narrate_select_menu(uint32_t option) {
     sol_ui_narrate_clear();
     snprintf(buf, 1024, "func%d()\n", menu_addrs[option]);
     //game_loop_signal(WAIT_NARRATE_SELECT, accum);
-    if (!gpl_in_exit()) {
+    if (sol_gpl_in_exit() != SOL_SUCCESS) {
         sol_game_loop_signal(WAIT_NARRATE_SELECT, option);
-        gpl_execute_string(buf);
+        sol_gpl_execute_string(buf);
     }
-    if (gpl_in_exit() || option >= 0) {
+    if (sol_gpl_in_exit() == SOL_SUCCESS || option >= 0) {
         sol_game_loop_signal(WAIT_NARRATE_SELECT, option);
     }
     return accum;

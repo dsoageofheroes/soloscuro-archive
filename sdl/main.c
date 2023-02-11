@@ -74,7 +74,7 @@ extern void port_commit_display_frame() {
     SDL_RenderPresent(main_get_rend());
 };
 
-static enum entity_action_e sdl_to_ea(const SDL_Keysym key) {
+static enum sol_entity_action_e sdl_to_ea(const SDL_Keysym key) {
     return EA_ACTIVATE;
 }
 
@@ -144,7 +144,7 @@ void handle_input() {
                 handle_mouse_motion();
                 break;
             case SDL_MOUSEBUTTONDOWN:
-                if (sol_game_loop_is_waiting_for(WAIT_NARRATE_CONTINUE)) {
+                if (sol_game_loop_is_waiting_for(WAIT_NARRATE_CONTINUE) == SOL_SUCCESS) {
                     narrate_clear();
                     sol_game_loop_signal(WAIT_NARRATE_CONTINUE, 0);
                 }
@@ -206,6 +206,9 @@ static int sdl_init(const int what) {
     return SDL_Init(what);
 }
 
+static void init_sdl() {
+}
+
 static void gui_init() {
     xmappos = 0;
     ymappos = 0;
@@ -229,7 +232,6 @@ static void gui_init() {
     renderer = SDL_CreateRenderer(win, -1, 0);
 
     last_tick = SDL_GetTicks();
-
     sol_sprite_init();
     sol_window_init();
 }
@@ -251,7 +253,7 @@ void port_close() {
     sol_player_close();
     sol_window_free();
 
-    gpl_cleanup();
+    sol_gpl_cleanup();
     gff_cleanup();
     sol_mouse_free();
 
@@ -284,7 +286,8 @@ static void init() {
     }
 
     // rest requires special open.
-    gui_init();
+    sol_sprite_init();
+    sol_window_init();
 
     font_init(renderer);
 
@@ -306,7 +309,7 @@ static void init() {
         export_all_items(extract_items);
     }
     if (extract_gpl) {
-        gpl_lua_load_all_scripts();
+        sol_gpl_lua_load_all_scripts();
     }
 }
 
@@ -364,8 +367,10 @@ int main(int argc, char *argv[]) {
         gff_init();
         gff_load_directory(ds1_gffs);
     }
+
+    gui_init();
     powers_init();
-    gpl_init();
+    sol_gpl_init();
     sol_lua_register_globals();
 
     init();

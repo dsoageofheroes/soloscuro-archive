@@ -21,27 +21,29 @@ static void sol_render() {
     port_window_render();
 }
 
-extern int sol_still_running() { return !done; }
-extern int sol_started() { return started; }
+extern sol_status_t sol_still_running() { return done ? SOL_STOPPED : SOL_SUCCESS; }
+extern sol_status_t sol_started() { return started ? SOL_SUCCESS : SOL_STOPPED; }
 
-extern int sol_player_freeze() {
-    return wait_flags[WAIT_NARRATE_CONTINUE]
-        || wait_flags[WAIT_NARRATE_SELECT];
+extern sol_status_t sol_player_freeze() {
+    return 
+        (wait_flags[WAIT_NARRATE_CONTINUE]
+        || wait_flags[WAIT_NARRATE_SELECT])
+        ? SOL_SUCCESS
+        : SOL_NOT_FOUND;
 }
 
-extern int sol_game_loop_is_waiting_for(int signal) {
+extern sol_status_t sol_game_loop_is_waiting_for(int signal) {
     if (signal < 0 || signal >= WAIT_MAX_SIGNALS) {
-        error("Received signal %d!\n", signal);
-        return 0;
+        return SOL_OUT_OF_RANGE;
     }
 
-    return wait_flags[signal];
+    return wait_flags[signal] == 0 ? SOL_NOT_FOUND : SOL_SUCCESS;
 }
 
-extern int sol_game_loop_signal(int signal, int _accum) {
+extern sol_status_t sol_game_loop_signal(int signal, int _accum) {
     if (signal < 0 || signal >= WAIT_MAX_SIGNALS) {
         error("Received signal %d!\n", signal);
-        return 0;
+        return SOL_OUT_OF_RANGE;
     }
     //replay_print("rep.signal(%d, %d)\n", signal, _accum);
     if (wait_flags[signal]) {
@@ -52,13 +54,13 @@ extern int sol_game_loop_signal(int signal, int _accum) {
     } 
     warn("signal %d received, but not waiting on it...\n", signal);
     done = 1;
-    return 0;
+    return SOL_SUCCESS;
 }
 
-extern int sol_game_loop_wait_for_signal(int signal) {
+extern sol_status_t sol_game_loop_wait_for_signal(int signal) {
     if (signal < 0 || signal >= WAIT_MAX_SIGNALS) {
         error("Received signal %d!\n", signal);
-        return 0 ;
+        return SOL_OUT_OF_RANGE;
     }
     wait_flags[signal]++;
     while (wait_flags[signal]) {
@@ -68,16 +70,18 @@ extern int sol_game_loop_wait_for_signal(int signal) {
         port_tick();
     }
     done = 0;
-    return accum;
+    return SOL_SUCCESS;
 }
 
-extern void sol_gameloop_init() {
+extern sol_status_t sol_gameloop_init() {
     memset(wait_flags, 0x0, sizeof(uint8_t) * WAIT_MAX_SIGNALS);
     wait_flags[WAIT_FINAL] = 1;
+    return SOL_SUCCESS;
 }
 
 #define TICKS_PER_ROUND (300) // TODO: Is this really 60?
-extern void sol_game_loop() {
+extern sol_status_t sol_game_loop() {
+    int16_t gn;
     sol_status_t status = SOL_UNKNOWN_ERROR;
     int ticks_to_increment_time = TICKS_PER_ROUND;
     combat_region_t *cr = NULL;
@@ -95,7 +99,9 @@ extern void sol_game_loop() {
         if (ticks_to_increment_time <= 0) {
             ticks_to_increment_time = TICKS_PER_ROUND;
             // TODO: this is a guess...
-            gpl_set_gname(GNAME_TIME, gpl_get_gname(GNAME_TIME) + 1);
+            status = sol_gpl_get_gname(GNAME_TIME, &gn);
+            gn += 1;
+            sol_gpl_set_gname(GNAME_TIME, gn);
             // Time to check for noorders
             sol_trigger_noorders_event();
         }
@@ -106,4 +112,6 @@ extern void sol_game_loop() {
         }
     }
     port_close();
+
+    return SOL_SUCCESS;
 }

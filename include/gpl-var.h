@@ -110,23 +110,23 @@ enum {UNUSED_CHECK_INDEX,
     MAX_CHECK_TYPES
 };
 
-typedef struct _name_s {
+typedef struct sol_gpl_name_s {
     uint16_t addr; // Address of DSL routine
     uint16_t file; // file # holding DSL routine
     int16_t name; // name header ? negative vale mean name/id
     uint8_t global; // is global?  If not erase on region change!
-} name_t;
+} sol_gpl_name_t;
 
-typedef struct _name2_s {
+typedef struct sol_gpl_name2_s {
     uint16_t addr; // Address of DSL routine
     uint16_t file; // file # holding DSL routine
     int16_t name1; // name #1
     int16_t name2; // name #2
     uint8_t global; // is global?  if not erase on region change!
-} name2_t;
+} sol_gpl_name2_t;
 
 
-typedef struct box_s {
+typedef struct sol_gpl_box_s {
     uint16_t addr; // Addr of DSL routine in file
     uint16_t file; // the file
     uint16_t x;    // x coordinate
@@ -134,52 +134,54 @@ typedef struct box_s {
     uint8_t xd;    // x dimention (width/height)
     uint8_t yd;    // y dimention (width/height)
     uint8_t trip;  // Is this a PC only, or can anyone trip this event?
-} box_t;
+} sol_gpl_box_t;
 
-typedef struct tile_s {
+typedef struct sol_gpl_tile_s {
     uint16_t addr; // addr of DSL rout in file
     uint16_t file; // the file
     uint16_t x;    // x coordinate of the tile
     uint16_t y;    // y coordinate of the tile
     uint8_t trip;  // Is this PC only, or can anyone trip the event?
-} tile_t;
+} sol_gpl_tile_t;
 
-typedef struct gpl_check_s {
+typedef struct sol_gpl_check_s {
     union {
-        box_t box_check;
-        tile_t tile_check;
-        name_t name_check;
-        name2_t name2_check;
+        sol_gpl_box_t box_check;
+        sol_gpl_tile_t tile_check;
+        sol_gpl_name_t name_check;
+        sol_gpl_name2_t name2_check;
     } data;
     uint8_t type;
     uint16_t next;
-} gpl_check_t;
+} sol_gpl_check_t;
 
 #define GPL_MAX_CALL (2)
-typedef struct gpl_control_s {
+typedef struct sol_gpl_control_s {
     int16_t destx;
     int16_t desty;
     int16_t cmd[GPL_MAX_CALL];
     int16_t addr[GPL_MAX_CALL];
     int16_t file[GPL_MAX_CALL];
     uint8_t flags;
-} gpl_control_t;
+} sol_gpl_control_t;
 
 #define MAX_OBJECT_PATH (1000)
 
-extern int32_t        gpl_global_big_num;
-extern int32_t       *gpl_global_big_numptr;
-extern uint16_t       gpl_current_file;
-extern uint16_t       gpl_current_type;
+extern int32_t      sol_gpl_global_big_num;
+extern int32_t     *sol_gpl_global_big_numptr;
+extern uint16_t     sol_gpl_current_file;
+extern uint16_t     sol_gpl_current_type;
 
-extern void           gpl_init_vars();
-extern void           gpl_cleanup_vars();
-extern void           gpl_set_data_ptr(unsigned char *start, unsigned char *cpos);
-extern unsigned char* gpl_get_data_start_ptr();
-extern unsigned char* gpl_get_data_ptr();
-extern void           gpl_push_data_ptr(unsigned char *data);
-extern unsigned char* gpl_pop_data_ptr();
-extern uint16_t       gpl_peek_half_word();
-extern uint8_t        gpl_preview_byte(uint8_t offset);
+extern sol_status_t sol_gpl_init_vars();
+extern sol_status_t sol_gpl_cleanup_vars();
+extern sol_status_t sol_gpl_set_data_ptr(unsigned char *start, unsigned char *cpos);
+extern sol_status_t sol_gpl_push_data_ptr(unsigned char *data);
+
+extern sol_status_t sol_gpl_get_data_start_ptr(unsigned char **ret);
+extern sol_status_t sol_gpl_get_data_ptr(unsigned char **ret);
+extern sol_status_t sol_gpl_pop_data_ptr(unsigned char **ret);
+
+extern sol_status_t sol_gpl_peek_half_word(uint16_t *hw);
+extern sol_status_t sol_gpl_preview_byte(uint8_t offset, uint16_t *d);
 
 #endif

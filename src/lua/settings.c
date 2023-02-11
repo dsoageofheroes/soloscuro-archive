@@ -47,7 +47,7 @@ static int sol_load_charsave(lua_State *l) {
     lua_Integer slot = luaL_checkinteger(l, 1);
     lua_Integer id = luaL_checkinteger(l, 2);
 
-    if (!ds_load_character_charsave(slot, id)) {
+    if (sol_load_character_charsave(slot, id) != SOL_SUCCESS) {
         lua_pushboolean(l, 0);
         return 1;
     }

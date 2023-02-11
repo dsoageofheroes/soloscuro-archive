@@ -9,10 +9,10 @@
 #include <stdlib.h>
 #include <math.h>
 
-static void clear_scmd_status(entity_t *entity);
+static void clear_scmd_status(sol_entity_t *entity);
 
-static entity_animation_node_t *last;
-static entity_animation_node_t *next_animation_head = NULL;
+static sol_entity_animation_node_t *last;
+static sol_entity_animation_node_t *next_animation_head = NULL;
 
 static scmd_t combat_move_down[] = {
     {.bmp_idx = 3, .delay = 7, .flags = 0x0, .xoffset = 0, .yoffset = 0, 0, 0, 0},
@@ -302,7 +302,7 @@ static scmd_t* get_scmd(scmd_t *current_scmd, const int xdiff, const int ydiff) 
     return current_scmd;
 }
 
-static scmd_t* get_entity_scmd(scmd_t *current_scmd, enum entity_action_e action) {
+static scmd_t* get_entity_scmd(scmd_t *current_scmd, enum sol_entity_action_e action) {
     current_scmd = get_scmd(current_scmd, 0, 0);
 
     if (action == EA_MELEE) {
@@ -326,50 +326,60 @@ static scmd_t* get_entity_scmd(scmd_t *current_scmd, enum entity_action_e action
     return current_scmd;
 }
 
-extern scmd_t* entity_animation_face_direction(scmd_t *current_scmd, const enum entity_action_e action) {
+extern sol_status_t sol_entity_animation_face_direction(scmd_t *current_scmd, const enum sol_entity_action_e action, scmd_t **ret) {
     switch (action) {
         case EA_WALK_DOWNLEFT:
         case EA_WALK_UPLEFT:
         case EA_WALK_LEFT:
-            return combat_stand_left;
+            *ret = combat_stand_left;
+            return SOL_SUCCESS;
         case EA_WALK_DOWNRIGHT:
         case EA_WALK_UPRIGHT:
         case EA_WALK_RIGHT:
-            return combat_stand_right;
+            *ret = combat_stand_right;
+            return SOL_SUCCESS;
         case EA_WALK_UP:
-            return combat_stand_up;
+            *ret = combat_stand_up;
+            return SOL_SUCCESS;
         case EA_WALK_DOWN:
-            return combat_stand_down;
+            *ret = combat_stand_down;
+            return SOL_SUCCESS;
         default:
-            return current_scmd;
+            *ret = current_scmd;
+            return SOL_SUCCESS;
     }
+
+    return SOL_NOT_FOUND;
 }
 
-extern scmd_t* entity_animation_get_scmd(struct entity_s *entity, const int xdiff, const int ydiff,
-        const enum entity_action_e action) {
-    if (action != EA_NONE) { return get_entity_scmd(entity->anim.scmd, action); }
+extern sol_status_t sol_entity_animation_get_scmd(struct sol_entity_s *entity, const int xdiff, const int ydiff,
+        const enum sol_entity_action_e action, scmd_t **ret) {
+    if (entity == NULL) { return SOL_NULL_ARGUMENT; }
+    if (action != EA_NONE) {
+        *ret = get_entity_scmd(entity->anim.scmd, action);
+        return SOL_SUCCESS;
+    }
     switch(entity->direction) {
-        case EA_WALK_RIGHT: return combat_stand_right;
-        case EA_WALK_UP: return combat_stand_up;
-        case EA_WALK_DOWN: return combat_stand_down;
+        case EA_WALK_RIGHT: *ret = combat_stand_right; return SOL_SUCCESS;
+        case EA_WALK_UP: *ret = combat_stand_up; return SOL_SUCCESS;
+        case EA_WALK_DOWN: *ret = combat_stand_down; return SOL_SUCCESS;
     }
 
-    return combat_stand_left;
+    *ret = combat_stand_left;
+    return SOL_SUCCESS;
 }
 
-extern void entity_animation_add(enum entity_action_e action, entity_t *source, entity_t *target,
+extern sol_status_t sol_entity_animation_add(enum sol_entity_action_e action, sol_entity_t *source, sol_entity_t *target,
         power_t *power, const int32_t amt) {
-    entity_animation_list_t list;
+    sol_status_t status;
+    sol_entity_animation_list_t list;
     list.head = next_animation_head;
-    entity_animation_list_add(&list, action, source, target, power, amt);
+    status = sol_entity_animation_list_add(&list, action, source, target, power, amt);
     next_animation_head = list.head;
+    return status;
 }
 
-extern int entity_animation_has_more() {
-    return next_animation_head != NULL;
-}
-
-static void play_death_sound(entity_t *target) {
+static void play_death_sound(sol_entity_t *target) {
     if (!target) { return; }
 
     if (target->attack_sound) {
@@ -378,7 +388,7 @@ static void play_death_sound(entity_t *target) {
     }
 }
 
-static void play_melee_sound(entity_t *source) {
+static void play_melee_sound(sol_entity_t *source) {
     if (source->attack_sound) {
         sol_play_sound_effect(source->attack_sound);
         return;
@@ -394,7 +404,7 @@ static void play_melee_sound(entity_t *source) {
     sol_play_sound_effect(7);
 }
 
-static void play_damage_sound(entity_t *target) {
+static void play_damage_sound(sol_entity_t *target) {
     if (!target) { return; }
 
     if (target->attack_sound) {
@@ -408,10 +418,10 @@ static void play_damage_sound(entity_t *target) {
 
 static int region_damage_execute(power_t *pw, sol_region_t *reg) {
     if (!reg || !reg->actions.head) { return 0; }
-    entity_action_t *action = &(reg->actions.head->ca);
+    sol_entity_action_t *action = &(reg->actions.head->ca);
 
-    entity_t *source = action->source;
-    entity_t *target = action->target;
+    sol_entity_t *source = action->source;
+    sol_entity_t *target = action->target;
 
     switch(action->action) {
         case EA_MELEE:
@@ -445,10 +455,10 @@ static int region_damage_execute(power_t *pw, sol_region_t *reg) {
 
 // This is called right before the animation is freed.
 // It has already been removed from the region's list.
-static void region_animation_last_check(sol_region_t *reg, entity_animation_node_t *todelete) {
+static void region_animation_last_check(sol_region_t *reg, sol_entity_animation_node_t *todelete) {
     power_instance_t pi;
-    entity_t *target;
-    entity_action_t *action;
+    sol_entity_t *target;
+    sol_entity_action_t *action;
     sol_status_t status;
     combat_region_t *cr = NULL;
 
@@ -471,18 +481,18 @@ static void region_animation_last_check(sol_region_t *reg, entity_animation_node
                 play_death_sound(target);
                 warn("NEED TO IMPLEMENT death animation!\n");
                 status = sol_arbiter_combat_region(reg, &cr);
-                if (!entity_list_remove_entity(&cr->combatants, target)) {
+                if (!sol_entity_list_remove_entity(&cr->combatants, target)) {
                     error("Unable to remove entity from combat region!\n");
                 }
-                if (!entity_list_remove_entity(&cr->round.entities, target)) {
+                if (!sol_entity_list_remove_entity(&cr->round.entities, target)) {
                     error("Unable to remove entity from combat round!\n");
                 }
-                if (!entity_list_remove_entity(reg->entities, target)) {
+                if (!sol_entity_list_remove_entity(reg->entities, target)) {
                     error("Unable to remove entity from region!\n");
                 }
                 // Only free if not a player.
                 if (sol_player_get_slot(target) < 0) {
-                    entity_free(target);
+                    sol_entity_free(target);
                 }
                 target = NULL;
             }
@@ -492,7 +502,7 @@ static void region_animation_last_check(sol_region_t *reg, entity_animation_node
     }
 }
 
-static int frame_offset(const entity_t *source, const entity_t *dest) {
+static int frame_offset(const sol_entity_t *source, const sol_entity_t *dest) {
     int diffx = abs(dest->mapx - source->mapx);
     int diffy = abs(dest->mapy - source->mapy);
     float angle = atan ((float)diffx / (float)diffy);
@@ -518,33 +528,36 @@ static int frame_offset(const entity_t *source, const entity_t *dest) {
 }
 
 // sound 63: is PC doing range attack
-extern int entity_animation_region_execute(sol_region_t *reg) {
+extern sol_status_t sol_entity_animation_region_execute(sol_region_t *reg) {
     power_t pw;
-    if (!reg || !reg->actions.head) { return 0; }
-    entity_action_t *action = &(reg->actions.head->ca);
+    sol_sprite_info_t info;
+    if (!reg)               { return SOL_NULL_ARGUMENT;}
+    if (!reg->actions.head) { return SOL_NOT_EMPTY; }
+    sol_entity_action_t *action = &(reg->actions.head->ca);
 
     if (action->action == EA_WAIT_ON_ENTITY) {
         // If the source died or is done with the animation.
         if (!action->source || !action->source->actions.head) {
-            entity_animation_node_t *tmp = reg->actions.head;
+            sol_entity_animation_node_t *tmp = reg->actions.head;
             reg->actions.head = reg->actions.head->next;
             free (tmp);
-            return 1;
+            return SOL_SUCCESS;
         }
         // Execute that entity's animation and get out.
         //printf("source = %s\n", action->source->name);
-        entity_animation_execute(action->source);
-        return 1;
+        sol_entity_animation_execute(action->source);
+        return SOL_SUCCESS;
     }
 
     if (!action->power && !action->damage) {
         //entity_animation_list_add_effect(&(reg->actions), EA_MAGIC_DAMAGE, source, target, NULL, 0, damage);
         error("Only handle power actions at the moment!");
-        return 0;
+        return SOL_NOT_IMPLEMENTED;
     }
 
     if (action->start_amt == action->amt && action->action == EA_POWER_THROW) {
-        int frame_count = sol_sprite_num_frames(action->power->thrown.spr);
+        sol_status_check(sol_sprite_get_info(action->power->thrown.spr, &info), "Unable to get action sprite info.");
+        int frame_count = info.num_frames;
         if (frame_count != 9) {
             //TODO: fix this for testing (this error happens all over unit tests.)
             error("Unknown frame for thrown animation! need to code...\n");
@@ -558,15 +571,15 @@ extern int entity_animation_region_execute(sol_region_t *reg) {
     if (action->damage) {
         action->amt--;
         if (action->amt == 0) {
-            entity_animation_list_remove_current(&reg->actions);
+            sol_entity_animation_list_remove_current(&reg->actions);
             action = &(reg->actions.head->ca);
             if (action->action == EA_DAMAGE_APPLY) {
                 region_damage_execute(&pw, reg);
                 region_animation_last_check(reg, reg->actions.head);
-                entity_animation_list_remove_current(&reg->actions);
+                sol_entity_animation_list_remove_current(&reg->actions);
             }
         }
-        return 1;
+        return SOL_SUCCESS;
     }
     power_t *power = reg->actions.head->ca.power;
 
@@ -591,27 +604,28 @@ extern int entity_animation_region_execute(sol_region_t *reg) {
         }
 
         if (action->start_amt >= 0 && action->amt <= 0) {
-            entity_animation_node_t *tmp = reg->actions.head;
+            sol_entity_animation_node_t *tmp = reg->actions.head;
             reg->actions.head = reg->actions.head->next;
             region_animation_last_check(reg, tmp);
             free (tmp);
-            return 1;
+            return SOL_SUCCESS;
         }
     }
 
-    return 1;
+    return SOL_SUCCESS;
 }
 
-static int entity_animation_check_update(entity_t *entity, const int16_t xdiff, const int16_t ydiff) {
+static int entity_animation_check_update(sol_entity_t *entity, const int16_t xdiff, const int16_t ydiff) {
     if (sol_region_location_blocked(sol_region_manager_get_current(), entity->mapx + xdiff, entity->mapy + ydiff)) {
         return 0;
     }
 
-    entity_animation_update(entity, xdiff, ydiff);
+    sol_entity_animation_update(entity, xdiff, ydiff);
     return 1;
 }
 
-extern void entity_animation_update(entity_t *entity, const int16_t xdiff, const int16_t ydiff) {
+extern sol_status_t sol_entity_animation_update(sol_entity_t *entity, const int16_t xdiff, const int16_t ydiff) {
+    if (!entity) { return SOL_NULL_ARGUMENT; }
     animate_sprite_t *as = &(entity->anim);
     const float zoom = settings_zoom();
     //printf("cur:%d %d\n", as->x, as->y);
@@ -627,15 +641,16 @@ extern void entity_animation_update(entity_t *entity, const int16_t xdiff, const
         as->destx -= (as->w - 16 * zoom) / 2;
     }
     as->desty -= as->h - (16 * zoom);
+    return SOL_SUCCESS;
 }
 
 
-extern int entity_animation_list_empty(entity_animation_list_t *list) {
-    return !(list && list->head);
+extern sol_status_t sol_entity_animation_list_empty(sol_entity_animation_list_t *list) {
+    return (list && list->head) ? SOL_SUCCESS : SOL_NOT_EMPTY;
 }
 
-static void set_anim(entity_t *entity) {
-    entity_action_t *action = &(entity->actions.head->ca);
+static void set_anim(sol_entity_t *entity) {
+    sol_entity_action_t *action = &(entity->actions.head->ca);
     const int distance = 32;
     const int ticks_per_move = action->start_amt;
     entity->anim.flags = 0x0;
@@ -664,7 +679,7 @@ static void set_anim(entity_t *entity) {
     }
 }
 
-static scmd_t* get_melee_scmd(entity_t *dude) {
+static scmd_t* get_melee_scmd(sol_entity_t *dude) {
     switch(dude->direction) {
         case EA_WALK_RIGHT: return combat_melee_right;
         case EA_WALK_UP: return combat_melee_up;
@@ -674,7 +689,7 @@ static scmd_t* get_melee_scmd(entity_t *dude) {
     return combat_melee_left;
 }
 
-static scmd_t* entity_get_next_scmd(entity_t *entity, const enum entity_action_e action) {
+static scmd_t* entity_get_next_scmd(sol_entity_t *entity, const enum sol_entity_action_e action) {
     switch (action) {
         case EA_WALK_UPLEFT:
         case EA_WALK_DOWNLEFT:
@@ -705,7 +720,7 @@ static scmd_t* entity_get_next_scmd(entity_t *entity, const enum entity_action_e
     return entity->anim.scmd;
 }
 
-static int apply_action(entity_t *entity, entity_action_t *action) {
+static int apply_action(sol_entity_t *entity, sol_entity_action_t *action) {
     animate_sprite_t *anim = &entity->anim;
     int ret = 1;
 
@@ -730,9 +745,11 @@ static int apply_action(entity_t *entity, entity_action_t *action) {
     return ret;
 }
 
-static void update_camera(entity_t *entity, entity_action_t *action) {
-    int x = sol_sprite_getx(entity->anim.spr);
-    int y = sol_sprite_gety(entity->anim.spr);
+static void update_camera(sol_entity_t *entity, sol_entity_action_t *action) {
+    sol_sprite_info_t info;
+    sol_status_check(sol_sprite_get_info(entity->anim.spr, &info), "Unable to get entity sprite info");
+    int x = info.x;
+    int y = info.y;
     const int buf = 16 * 6 * settings_zoom();
 
     //printf("%s: x = %d, y = %d, buf = %d, screen = %d, %d\n", entity->name, x, y, buf, settings_screen_width(), settings_screen_height());
@@ -751,7 +768,7 @@ static void update_camera(entity_t *entity, entity_action_t *action) {
     }
 }
 
-static void clear_scmd_status(entity_t *entity) {
+static void clear_scmd_status(sol_entity_t *entity) {
     entity->anim.flags = 0x0;
     entity->anim.pos = 0;
     entity->anim.flags = 0;
@@ -759,15 +776,17 @@ static void clear_scmd_status(entity_t *entity) {
     entity->anim.movex = entity->anim.movey = 0;
 }
 
-extern int entity_animation_execute(entity_t *entity) {
-    if (!entity || !entity->actions.head) { return 0; }
-    entity_action_t *action = &(entity->actions.head->ca);
+extern sol_status_t sol_entity_animation_execute(sol_entity_t *entity) {
+    if (!entity)               { return SOL_NULL_ARGUMENT; }
+    if (!entity->actions.head) { return SOL_NOT_EMPTY; }
+
+    sol_entity_action_t *action = &(entity->actions.head->ca);
     sol_status_t status = SOL_SUCCESS;
 
     if (action->ticks == 0 && action->amt == action->start_amt) {
         if (!apply_action(entity, action)) {
-            entity_animation_list_free(&entity->actions);
-            return 0;
+            sol_entity_animation_list_free(&entity->actions);
+            return SOL_UNKNOWN_ERROR;
         }
     }
 
@@ -791,8 +810,8 @@ extern int entity_animation_execute(entity_t *entity) {
         if (entity->anim.scmd[action->scmd_pos].delay < action->ticks) {
             //if (entity->name) { printf("->%s: ticks, amt = %d\n", entity->name, action->amt); }
             if (entity->anim.scmd[action->scmd_pos].flags & SCMD_LAST) {
-                entity_animation_list_remove_current(&entity->actions);
-                return 1;
+                sol_entity_animation_list_remove_current(&entity->actions);
+                return SOL_SUCCESS;
             }
             entity->anim.pos = action->scmd_pos = ssi_scmd_next_pos(entity->anim.scmd, action->scmd_pos);
             //printf("HERE: %d\n", entity->anim.pos);
@@ -805,14 +824,14 @@ extern int entity_animation_execute(entity_t *entity) {
             // SCMD are a special action that we assume is a loop.
             if (action->action == EA_SCMD) { action->amt = action->start_amt; continue;}
 
-            entity_animation_node_t *to_delete = entity->actions.head;
+            sol_entity_animation_node_t *to_delete = entity->actions.head;
             entity->actions.head = entity->actions.head->next;
             if (!entity->actions.head) {
-                entity->anim.scmd = entity_animation_face_direction(entity->anim.scmd, to_delete->ca.action);
+                sol_entity_animation_face_direction(entity->anim.scmd, to_delete->ca.action, &entity->anim.scmd);
                 clear_scmd_status(entity);
             }
             free (to_delete);
-            return 1;
+            return SOL_SUCCESS;
         }
 
         if ((status = sol_animate_sprite_tick(action, entity))) {
@@ -820,59 +839,63 @@ extern int entity_animation_execute(entity_t *entity) {
         }
     }
 
-    return 1;
+    return SOL_SUCCESS;
 }
 
-extern int entity_animation_list_remove_current(entity_animation_list_t *list) {
-    if (!list || !list->head) { return 0; }
-    entity_animation_node_t *to_delete = list->head;
+extern sol_status_t sol_entity_animation_list_remove_current(sol_entity_animation_list_t *list) {
+    if (!list)       { return SOL_NULL_ARGUMENT;}
+    if (!list->head) { return SOL_NOT_EMPTY; }
+
+    sol_entity_animation_node_t *to_delete = list->head;
     list->head = list->head->next;
     free(to_delete);
+
+    return SOL_SUCCESS;
 }
 
-extern void entity_animation_list_remove_references(entity_animation_list_t *list, struct entity_s *dead) {
-    if (!list || !dead) { return; }
+extern sol_status_t sol_entity_animation_list_remove_references(sol_entity_animation_list_t *list, sol_entity_t *dead) {
+    if (!list || !dead) { return SOL_NULL_ARGUMENT; }
 
-    for (entity_animation_node_t *rover = list->head; rover ; rover = rover->next) {
+    for (sol_entity_animation_node_t *rover = list->head; rover ; rover = rover->next) {
         if (rover->ca.source == dead) { rover->ca.source = NULL; }
         if (rover->ca.target == dead) { rover->ca.target = NULL; }
     }
+
+    return SOL_SUCCESS;
 }
 
-entity_animation_list_t* entity_animation_list_create() {
-    return calloc(1, sizeof(entity_animation_list_t));
-}
-
-void entity_animation_list_free(entity_animation_list_t *list) {
-    if (!list) { return; }
+extern sol_status_t sol_entity_animation_list_free(sol_entity_animation_list_t *list) {
+    if (!list) { return SOL_NULL_ARGUMENT; }
 
     if (list->head) {
-        entity_animation_node_t *to_delete = NULL;
-        for (entity_animation_node_t *rover = list->head; rover ; rover = rover->next) {
+        sol_entity_animation_node_t *to_delete = NULL;
+        for (sol_entity_animation_node_t *rover = list->head; rover ; rover = rover->next) {
             if (to_delete) { free(to_delete); }
             to_delete = rover;
         }
         free(to_delete);
         list->head = NULL;
     }
+
+    return SOL_SUCCESS;
 }
 
-extern void entity_animation_list_add_effect(entity_animation_list_t *list, enum entity_action_e action,
-        entity_t *source, entity_t *target, power_t *power, const int32_t amt, const int damage) {
-     entity_animation_list_add_speed(list, action, source, target, power, amt, 1, damage);
+extern sol_status_t sol_entity_animation_list_add_effect(sol_entity_animation_list_t *list, enum sol_entity_action_e action,
+        sol_entity_t *source, sol_entity_t *target, power_t *power, const int32_t amt, const int damage) {
+     return sol_entity_animation_list_add_speed(list, action, source, target, power, amt, 1, damage);
 }
 
-void entity_animation_list_add(entity_animation_list_t *list, enum entity_action_e action,
-        entity_t *source, entity_t *target, power_t *power, const int32_t amt) {
-     entity_animation_list_add_speed(list, action, source, target, power, amt, 1, 0);
+extern sol_status_t sol_entity_animation_list_add(sol_entity_animation_list_t *list, enum sol_entity_action_e action,
+        sol_entity_t *source, sol_entity_t *target, power_t *power, const int32_t amt) {
+     return sol_entity_animation_list_add_speed(list, action, source, target, power, amt, 1, 0);
 }
-extern void entity_animation_list_add_speed(entity_animation_list_t *list, enum entity_action_e action,
-        struct entity_s *source, struct entity_s *target, struct power_s *power, const int32_t amt, const int32_t speed,
+extern sol_status_t sol_entity_animation_list_add_speed(sol_entity_animation_list_t *list, enum sol_entity_action_e action,
+        sol_entity_t *source, sol_entity_t *target, struct power_s *power, const int32_t amt, const int32_t speed,
         const int32_t damage) {
-    if (!list) { return; }
+    if (!list) { return SOL_NULL_ARGUMENT; }
     //printf("add_speed: %s, %d\n", source ? source->name : "?", speed);
-    entity_animation_node_t *toadd = malloc(sizeof(entity_animation_node_t));
-    entity_animation_node_t *rover = list->head;
+    sol_entity_animation_node_t *toadd = malloc(sizeof(sol_entity_animation_node_t));
+    sol_entity_animation_node_t *rover = list->head;
 
     toadd->ca.action = action;
     toadd->ca.source = source;
@@ -892,12 +915,15 @@ extern void entity_animation_list_add_speed(entity_animation_list_t *list, enum 
         while (rover->next) { rover = rover->next; }
         rover->next = toadd;
     }
+
+    return SOL_SUCCESS;
 }
 
-extern void sol_animation_render(const entity_action_t *ea) {
-    if (ea == NULL) { return; }
+extern sol_status_t sol_animation_render(const sol_entity_action_t *ea) {
+    if (ea == NULL) { return SOL_NULL_ARGUMENT; }
     sol_sprite_t spr = SPRITE_ERROR;
     scmd_t *scmd;
+    sol_sprite_info_t info;
 
     switch (ea->action) {
         case EA_POWER_APPLY:
@@ -909,10 +935,12 @@ extern void sol_animation_render(const entity_action_t *ea) {
             spr = ea->power->thrown.spr;
             scmd = ea->power->thrown.scmd + ea->scmd_pos;
             float percent_there = (float)(ea->start_amt - ea->amt) / (float)ea->start_amt;
-            int32_t sx = sol_sprite_getx(ea->source->anim.spr);
-            int32_t sy = sol_sprite_gety(ea->source->anim.spr);
-            int32_t tx = sol_sprite_getx(ea->target->anim.spr);
-            int32_t ty = sol_sprite_gety(ea->target->anim.spr);
+            sol_status_check(sol_sprite_get_info(ea->source->anim.spr, &info), "Unable to get entity source sprite info");
+            int32_t sx = info.x;
+            int32_t sy = info.y;
+            sol_status_check(sol_sprite_get_info(ea->target->anim.spr, &info), "Unable to get entity target sprite info");
+            int32_t tx = info.x;
+            int32_t ty = info.y;
             int32_t x = abs(sx - tx);
             int32_t y = abs(sy - ty);
 
@@ -921,28 +949,30 @@ extern void sol_animation_render(const entity_action_t *ea) {
 
             sol_sprite_set_location(spr, x, y);
             sol_sprite_render_flip(spr, scmd->flags & SCMD_XMIRROR, scmd->flags & SCMD_YMIRROR);
-            return;
+            return SOL_SUCCESS;
         case EA_POWER_HIT:
             spr = ea->power->hit.spr;
             sol_sprite_center_spr(spr, ea->target->anim.spr);
-            break;
+            return SOL_SUCCESS;
         case EA_RED_DAMAGE:
         case EA_BIG_RED_DAMAGE:
         case EA_GREEN_DAMAGE:
         case EA_MAGIC_DAMAGE:
         case EA_BROWN_DAMAGE:
             sol_combat_action(ea);
-            break;
-        case EA_WAIT_ON_ENTITY: return; // don't render!
+            return SOL_SUCCESS;
+        case EA_WAIT_ON_ENTITY:
+            return SOL_WAIT_ACTIONS; // don't render!
         default:
             spr = ea->source->anim.spr;
         break;
     }
 
     sol_sprite_render_flip(spr, 0, 0);
+    return SOL_SUCCESS;
 }
 
-extern void sol_combat_update_scmd_info(entity_t *dude) {
+extern void sol_combat_update_scmd_info(sol_entity_t *dude) {
     if (!dude || dude->anim.scmd_info.gff_idx >= 0) { return; }
     for (int i = 0; i < 20; i++) {
         if (dude->anim.scmd == combat_types[i]) {

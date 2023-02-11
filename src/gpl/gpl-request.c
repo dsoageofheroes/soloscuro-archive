@@ -151,9 +151,8 @@ static void camp(int16_t instr, int16_t hours, int16_t who) {
 
 static void request_door(const int16_t name, const int32_t op, const int32_t range);
 
-extern uint32_t gpl_request_impl(int16_t token, int16_t name,
+extern sol_status_t sol_gpl_request_impl(int16_t token, int16_t name,
         int32_t num1, int32_t num2) {
-    int answer = 0;
     disk_object_t dobj;
 
     switch (token) {
@@ -625,7 +624,7 @@ extern uint32_t gpl_request_impl(int16_t token, int16_t name,
         default:
             error("request %d not implemented\n", token);
     }
-    return answer;
+    return SOL_SUCCESS;
 }
 
 static int16_t request_to_do(int16_t name, int16_t rectype, int (*request_proc)(int16_t, long, long), long param1, long param2) {
@@ -646,7 +645,7 @@ static int req_animation(int16_t object, long notused1, long notused2) {
     (void)notused1;
     (void)notused2;
     dude_t *dude = sol_region_find_entity_by_id(sol_region_manager_get_current(), object);
-    gpl_set_gname(GNAME_PASSIVE, object);
+    sol_gpl_set_gname(GNAME_PASSIVE, object);
 
     if (dude) {
         if (!dude->anim.scmd || dude->anim.scmd == ssi_scmd_empty()) {
@@ -672,7 +671,7 @@ static int req_animation(int16_t object, long notused1, long notused2) {
 static int req_set_allegiance(int16_t object, long allegiance, long notused2) {
     dude_t *dude = NULL;
 
-    entity_list_for_each(sol_region_manager_get_current()->entities, dude) {
+    sol_entity_list_for_each(sol_region_manager_get_current()->entities, dude) {
         if (dude->ds_id == object) {
             //printf("set_allegiance: %d to %d\n", object, allegiance);
             dude->allegiance = allegiance;
@@ -686,7 +685,7 @@ static void request_door(const int16_t name, const int32_t op, const int32_t ran
     sol_region_t *reg = sol_region_manager_get_current();
     dude_t *door = NULL;
 
-    entity_list_for_each(reg->entities, door)  {
+    sol_entity_list_for_each(reg->entities, door)  {
         //find the door
         if (door->ds_id == name || door->ds_id == (name - range)) {
             debug("Performing operation '%s' on door %d\n", op == 0 ? "open" : "close", door->ds_id);

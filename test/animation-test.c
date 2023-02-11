@@ -76,9 +76,9 @@ void test_swap(void) {
     an[1] = animation_list_add(al, as[1]);
     an[2] = animation_list_add(al, as[2]);
 
-    an[0]->anim->entity = entity_create_fake(0, 0);
-    an[1]->anim->entity = entity_create_fake(0, 0);
-    an[2]->anim->entity = entity_create_fake(0, 0);
+    sol_entity_create_fake(0, 0, &an[0]->anim.entity);
+    sol_entity_create_fake(0, 0, &an[1]->anim.entity);
+    sol_entity_create_fake(0, 0, &an[2]->anim.entity);
 
     as[0]->entity->mapy = 30;
     as[1]->entity->mapy = 20;

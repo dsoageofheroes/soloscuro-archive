@@ -26,32 +26,34 @@ static lua_State *lua_states[MAX_STACK];
 static int        in_exit[MAX_STACK];
 static size_t lua_stack_pos = 0;
 
-static void write_lua(const char *path, const char *lua, const size_t len);
+static sol_status_t write_lua(const char *path, const char *lua, const size_t len);
 static void gpl_lua_load_scripts();
 
-extern void gpl_set_exit() {
+extern sol_status_t gpl_set_exit() {
     for (size_t i = 0; i < lua_stack_pos; i++) {
         in_exit[i] = 1;
     }
     //in_exit[lua_stack_pos - 1] = 1;
     //printf("set_exit: lua_stack_pos = %zu\n", lua_stack_pos);
+    return SOL_SUCCESS;
 }
 
-extern int  gpl_in_exit()  {
-    if (lua_stack_pos < 1) { return 0; }
+extern sol_status_t sol_gpl_in_exit()  {
+    if (lua_stack_pos < 1) { return SOL_OUT_OF_RANGE; }
     //printf("in_exit: lua_space_pos = %zu, exit: %d\n", lua_stack_pos, in_exit[lua_stack_pos - 1]);
-    return in_exit[lua_stack_pos - 1];
+    return in_exit[lua_stack_pos - 1] ? SOL_SUCCESS : SOL_ACTIVE;
 }
 
-void gpl_manager_init() {
-    gpl_state_init();
+extern sol_status_t sol_gpl_manager_init() {
+    sol_gpl_state_init();
 
     mas_scripts = gpl_scripts = NULL;
 
     gpl_lua_load_scripts();
+    return SOL_SUCCESS;
 }
 
-static void write_lua(const char *path, const char *lua, const size_t len) {
+static sol_status_t write_lua(const char *path, const char *lua, const size_t len) {
     FILE *file = fopen(path, "w+");
 
     if (!file) {
@@ -64,11 +66,14 @@ static void write_lua(const char *path, const char *lua, const size_t len) {
         fclose(file);
     } else {
         fprintf(stderr, "Warning, unable to write to %s\n", path);
+        return SOL_NOT_FOUND;
     }
+
+    return SOL_SUCCESS;
 }
 
 #define DSL_MAX (1<<14)
-void gpl_lua_load_script(const uint32_t script_id, const uint8_t is_mas) {
+static sol_status_t gpl_lua_load_script(const uint32_t script_id, const uint8_t is_mas) {
     size_t script_len;
     unsigned char gpl[DSL_MAX];
     char buf[1024];
@@ -80,26 +85,34 @@ void gpl_lua_load_script(const uint32_t script_id, const uint8_t is_mas) {
     if (chunk.length > DSL_MAX) {
         error("DSL chunk size %d is larger than max (%d)\n", chunk.length, DSL_MAX);
     }
-    if (!gff_read_chunk(DSLDATA_GFF_INDEX, &chunk, gpl, chunk.length)) { return; }
+    if (!gff_read_chunk(DSLDATA_GFF_INDEX, &chunk, gpl, chunk.length)) { return SOL_GFF_CHUNK_NOT_FOUND; }
 
     debug("Converting %s %d to lua, length = %d\n",
         is_mas ? "MAS" : "GPL",
         script_id, chunk.length);
     //script_ptr = gpl_lua_print(gpl, len, is_master_mas, &script_len);
-    script_ptr = gpl_lua_print(script_id, is_mas, &script_len);
+    sol_gpl_lua_print(script_id, is_mas, &script_len, &script_ptr);
     script[script_id] = malloc(sizeof(char) * (script_len + 1)); // (A)
     strncpy(script[script_id], script_ptr, script_len);
     script[script_id][script_len] = '\0'; // Okay because of (A)
     sprintf(buf, "gpl/%d-%s.lua", script_id,
         is_mas ? "mas" : "gpl");
-    write_lua(buf, script[script_id], script_len);
+    return write_lua(buf, script[script_id], script_len);
 }
 
-void gpl_lua_load_all_scripts() {
+extern sol_status_t sol_gpl_lua_load_all_scripts() {
+    sol_status_t status;
+
     for (int i = 0; i < 100; i++) {
-        gpl_lua_load_script(i, 0);
-        gpl_lua_load_script(i, 1);
+        if ((status = gpl_lua_load_script(i, 0)) != SOL_SUCCESS) {
+            return status;
+        }
+        if ((status = gpl_lua_load_script(i, 1)) != SOL_SUCCESS) {
+            return status;
+        }
     }
+
+    return SOL_SUCCESS;
 }
 
 void gpl_lua_load_scripts() {
@@ -123,13 +136,14 @@ void gpl_lua_load_scripts() {
     free(ids);
 }
 
-extern void gpl_push_context() {
+extern sol_status_t sol_gpl_push_context() {
     clua = lua_states[lua_stack_pos++] = luaL_newstate();
     luaL_openlibs(clua);
-    gpl_state_register(clua);
+    sol_gpl_state_register(clua);
+    return SOL_SUCCESS;
 }
 
-extern void gpl_pop_context() {
+extern sol_status_t gpl_pop_context() {
     if (lua_stack_pos <= 0) {
         error("Trying to close a gpl lua that DNE!");
         exit(1);
@@ -140,33 +154,34 @@ extern void gpl_pop_context() {
     in_exit[lua_stack_pos] = 0;
 
     clua = lua_stack_pos > 0 ? lua_states[lua_stack_pos] : NULL;
+
+    return SOL_SUCCESS;
 }
 
-uint8_t gpl_lua_execute_script(size_t file, size_t addr, uint8_t is_mas) {
+extern sol_status_t sol_gpl_lua_execute_script(size_t file, size_t addr, uint8_t is_mas) {
     char **scripts = is_mas ? mas_scripts : gpl_scripts;
     size_t size = is_mas ? mas_max : gpl_max;
     char func[BUF_SIZE];
-    int ret = 1;
 
     debug("execute_script(" PRI_SIZET ", " PRI_SIZET ", %d)\n", file, addr, is_mas);
     snprintf(func, BUF_SIZE, "func" PRI_SIZET "", addr);
 
-    if (file < 0 || file >= size) { return 0; }
+    if (file < 0 || file >= size) { return SOL_OUT_OF_RANGE; }
 
     if (scripts[file] == NULL) {
         gpl_lua_load_script(file, is_mas);
     }
 
-    if (scripts[file] == NULL) { return 0; }
+    if (scripts[file] == NULL) { return SOL_NOT_FOUND; }
 
-    gpl_push_context();
+    sol_gpl_push_context();
     if (luaL_dostring(clua, scripts[file])) {
         error("Error: unable to load %s script " PRI_SIZET ":" PRI_SIZET "\n",
             is_mas ? "MAS" : "GPL",
             file, addr);
         error("error: %s\n", lua_tostring(clua, -1));
         gpl_pop_context();
-        return 0;
+        return SOL_GPL_EXECUTE_ERROR;
     }
     lua_getglobal(clua, func);
     if (lua_pcall(clua, 0, 0, 0)) {
@@ -174,16 +189,18 @@ uint8_t gpl_lua_execute_script(size_t file, size_t addr, uint8_t is_mas) {
             is_mas ? "MAS" : "GPL",
             file, addr);
         error("error: %s\n", lua_tostring(clua, -1));
-        ret = 0;
+        return SOL_GPL_FUNCTION_DNE;
     }
 
     debug("exiting execute_script(" PRI_SIZET ", " PRI_SIZET ", %d)\n", file, addr, is_mas);
     gpl_pop_context();
 
-    return ret;
+    return SOL_SUCCESS;
 }
 
-extern void gpl_execute_string(const char *str) {
+extern sol_status_t sol_gpl_execute_string(const char *str) {
+    if (!str) { return SOL_NULL_ARGUMENT; }
+
     if (!clua) {
         error("trying to call internal gpl execute string, but no context!\n");
         exit(1);
@@ -192,10 +209,13 @@ extern void gpl_execute_string(const char *str) {
     if (luaL_dostring(clua, str)) {
         error("Unable to execute '%s'!\n", str);
         error("%s\n", lua_tostring(clua, -1));
+        return SOL_ILLEGAL_ARGUMENT;
     }
+
+    return SOL_SUCCESS;
 }
 
-void gpl_manager_cleanup() {
+extern sol_status_t sol_gpl_manager_cleanup() {
     int i;
 
     if (mas_scripts) {
@@ -220,5 +240,6 @@ void gpl_manager_cleanup() {
     }
     gpl_scripts = NULL;
 
-    gpl_state_cleanup();
+    sol_gpl_state_cleanup();
+    return SOL_SUCCESS;
 }

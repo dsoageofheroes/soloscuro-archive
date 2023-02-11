@@ -80,8 +80,10 @@ static void apply_character(dude_t *dude, ds_character_t *ch) {
     dude->attack_sound = ch->attack_sound;
 }
 
-extern entity_t* sol_entity_create_default_human() {
+extern sol_status_t sol_entity_create_default_human(entity_t **ret) {
     entity_t *dude = malloc(sizeof(entity_t));
+    if (!dude) { return SOL_MEMORY_ERROR; }
+
     memset(dude, 0x0, sizeof(entity_t));
     dude->stats.hp = 4;
     dude->stats.high_hp = 4;
@@ -109,11 +111,14 @@ extern entity_t* sol_entity_create_default_human() {
     debug("Need to set default size!\n");
     dude->size = 0;
     dude->inv = sol_inventory_create();
-    return dude;
+
+    *ret = dude;
+    return SOL_SUCCESS;
 }
 
-extern entity_t* sol_entity_create(const int add_inventory) {
+extern sol_status_t sol_entity_create(const int add_inventory, entity_t **ret) {
     entity_t *dude = malloc(sizeof(entity_t));
+    if (!dude) { return SOL_MEMORY_ERROR; }
     memset(dude, 0x0, sizeof(entity_t));
     dude->stats.str = dude->stats.dex = dude->stats.con = dude->stats.intel = dude->stats.wis = dude->stats.cha = 10;
     dude->stats.base_ac = 10;
@@ -127,17 +132,19 @@ extern entity_t* sol_entity_create(const int add_inventory) {
     if (add_inventory) {
         dude->inv = sol_inventory_create();
     }
-    return dude;
+
+    *ret = dude;
+    return SOL_SUCCESS;
 }
 
-entity_t* entity_create_from_objex(const int id) {
+extern sol_status_t sol_entity_create_from_objex(const int id, entity_t **ret) {
     dude_t *dude = malloc(sizeof(dude_t));
     char *buf = NULL;
     rdff_disk_object_t *rdff = NULL;
     disk_object_t dobj;
     size_t rdff_pos = 0;
 
-    if (!dude) { goto error; }
+    if (!dude) { return SOL_MEMORY_ERROR; }
     memset(dude, 0x0, sizeof(dude_t));
     dude->anim.spr = SPRITE_ERROR;
 
@@ -193,26 +200,33 @@ entity_t* entity_create_from_objex(const int id) {
 
     if (buf) { free(buf); }
 
-    return dude;
+    *ret = dude;
+    return SOL_SUCCESS;
 error:
     if (dude) { free(dude); }
     if (buf) { free(buf); }
-    return NULL;
+    return SOL_GFF_ERROR;
 }
 
-extern entity_t* entity_create_clone(entity_t *clone) {
-    entity_t *ret = entity_create_from_objex(-1 * abs(clone->ds_id));
+extern sol_status_t sol_entity_create_clone(entity_t *clone, entity_t **dude) {
+    sol_status_t status;
+    entity_t *ret;
+    if ((status = sol_entity_create_from_objex(-1 * abs(clone->ds_id), &ret)) != SOL_SUCCESS) {
+        return status;
+    }
+    if (!ret) { return SOL_NULL_ARGUMENT; }
 
     ret->abilities = clone->abilities;
     ret->mapx = clone->mapx;
     ret->mapy = clone->mapy;
     ret->mapz = clone->mapz;
 
-    return ret;
+    *dude = ret;
+    return SOL_SUCCESS;
 }
 
 //TODO: Flesh this out. It is currently used for player, but will be use for future entitys;
-extern void entity_load_from_object(entity_t *entity, const char *data) {
+extern sol_status_t sol_entity_load_from_object(entity_t *entity, const char *data) {
     item_t *inv = entity->inv;
     effect_node_t *effects = entity->effects;
     memcpy(entity, data, sizeof(entity_t));
@@ -222,17 +236,19 @@ extern void entity_load_from_object(entity_t *entity, const char *data) {
     if (!entity->inv) {
         entity->inv = sol_inventory_create();
     }
+
+    return SOL_SUCCESS;
 }
 
 #define BUF_MAX (1<<14)
-void entity_load_from_gff(entity_t *entity, const int gff_idx, const int player, const int res_id) {
+extern sol_status_t sol_entity_load_from_gff(entity_t *entity, const int gff_idx, const int player, const int res_id) {
     char buf[BUF_MAX];
     rdff_header_t *rdff;
     size_t offset = 0;
     int num_items;
     //ds1_item_t *pc_items = (ds1_item_t*)(entity->inventory);
     gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_CHAR, res_id);
-    if (gff_read_chunk(gff_idx, &chunk, &buf, sizeof(buf)) < 34) { return; }
+    if (gff_read_chunk(gff_idx, &chunk, &buf, sizeof(buf)) < 34) { return SOL_GFF_ERROR; }
 
     rdff = (rdff_disk_object_t*) (buf);
     num_items = rdff->blocknum - 2;
@@ -266,10 +282,12 @@ void entity_load_from_gff(entity_t *entity, const int gff_idx, const int player,
 
     chunk = gff_find_chunk_header(gff_idx, GFF_PSST, res_id);
     //if (!gff_read_chunk(gff_idx, &chunk, ds_player_get_psionics(player), sizeof(psionic_list_t))) { return; }
+    return SOL_SUCCESS;
 }
 
-entity_t* entity_create_from_etab(gff_map_object_t *entry_table, uint32_t id) {
+extern sol_status_t sol_entity_create_from_etab(gff_map_object_t *entry_table, uint32_t id, entity_t **ret) {
     dude_t *dude = calloc(1, sizeof(dude_t));
+    if (!dude) { return SOL_MEMORY_ERROR; }
     const gff_map_object_t *gm = entry_table + id;
     disk_object_t disk_object;
 
@@ -286,21 +304,29 @@ entity_t* entity_create_from_etab(gff_map_object_t *entry_table, uint32_t id) {
     dude->mapz = gm->zpos;
     dude->map_flags = gm->flags;
 
-    return dude;
+    *ret = dude;
+    return SOL_SUCCESS;
 }
 
-extern void entity_copy_item(entity_t *entity, item_t *item, const size_t slot) {
-    if (!entity || !item || slot < 0 || slot >= ITEM_SLOT_MAX) {return;}
+extern sol_status_t sol_entity_copy_item(entity_t *entity, item_t *item, const size_t slot) {
+    if (!entity || !item) { return SOL_NULL_ARGUMENT; }
+    if (slot < 0 || slot >= ITEM_SLOT_MAX) {return SOL_OUT_OF_RANGE;}
     //TODO: Take care of effects!
     memcpy(entity->inv + slot, item, sizeof(item_t));
+
+    return SOL_SUCCESS;
 }
 
-extern void entity_clear_item(entity_t *entity, const size_t slot) {
+extern sol_status_t sol_entity_clear_item(entity_t *entity, const size_t slot) {
+    if (!entity) { return SOL_NULL_ARGUMENT; }
+    if (slot < 0 || slot >= ITEM_SLOT_MAX) {return SOL_OUT_OF_RANGE;}
     memset(entity->inv + slot, 0x0, sizeof(item_t));
     entity->inv[slot].anim.spr = SPRITE_ERROR;
+    return SOL_SUCCESS;
 }
 
-extern uint32_t entity_get_total_exp(entity_t *entity) {
+extern sol_status_t sol_entity_get_total_exp(entity_t *entity, uint32_t *exp) {
+    if (!entity) { return SOL_NULL_ARGUMENT; }
     uint32_t total_exp = 0;
 
     for (int i = 0; i < 3; i++) {
@@ -309,34 +335,43 @@ extern uint32_t entity_get_total_exp(entity_t *entity) {
         }
     }
 
-    return total_exp;
+    *exp = total_exp;
+    return SOL_SUCCESS;
 }
 
-extern int entity_has_class(const entity_t *dude, const uint16_t class) {
-    return dude &&
+extern sol_status_t sol_entity_has_class(const entity_t *dude, const uint16_t class) {
+    if (!dude) { return SOL_NULL_ARGUMENT; }
+    return (dude &&
         (dude->class[0].class == class
           || dude->class[1].class == class
           || dude->class[2].class == class
-          );
+          )) ? SOL_SUCCESS : SOL_NO_CLASS;
 }
 
-extern void sol_entity_gui_free(entity_t *entity) {
-    if (!entity) { return; }
+extern sol_status_t sol_entity_gui_free(entity_t *entity) {
+    if (!entity) { return SOL_NULL_ARGUMENT; }
 
-    sol_sprite_free(entity->anim.spr);
+    sol_status_warn(sol_sprite_free(entity->anim.spr), "Unable to free sprite.");
     entity->anim.spr = SPRITE_ERROR;
+
+    return SOL_SUCCESS;
 }
 
-void entity_free(entity_t *dude) {
-    if (!dude) { return; }
+extern sol_status_t sol_entity_free(entity_t *dude) {
+    if (!dude) { return SOL_NULL_ARGUMENT; }
     sol_region_t *reg = sol_region_manager_get_current();
+    sol_status_t status;
+    sol_entity_list_node_t *node;
 
-    entity_animation_list_free(&(dude->actions));
+    sol_entity_animation_list_free(&(dude->actions));
     item_free_inventory(dude->inv);
 
     if (reg) {
-        entity_animation_list_remove_references(&reg->actions, dude);
-        entity_list_remove(reg->entities, entity_list_find(reg->entities, dude));
+        sol_entity_animation_list_remove_references(&reg->actions, dude);
+        if ((status = sol_entity_list_find(reg->entities, dude, &node)) != SOL_SUCCESS) {
+            return status;
+        }
+        sol_entity_list_remove(reg->entities, node);
     }
 
     sol_entity_gui_free(dude);
@@ -351,15 +386,18 @@ void entity_free(entity_t *dude) {
     }
 
     free(dude); // Dude has got to be free!
+    return SOL_SUCCESS;
 }
 
-extern int entity_attempt_move(dude_t *dude, const int xdiff, const int ydiff, const int speed) {
-    combat_region_t      *cr = NULL;
-    enum entity_action_e  action;
-    sol_region_t         *region;
-    entity_t             *target;
-    sol_status_t          status;
+extern sol_status_t sol_entity_attempt_move(dude_t *dude, const int xdiff, const int ydiff, const int speed) {
+    combat_region_t          *cr = NULL;
+    enum sol_entity_action_e  action;
+    sol_region_t             *region;
+    sol_entity_t             *target;
+    sol_entity_list_node_t   *node;
+    sol_status_t              status;
 
+    if (!dude) { return SOL_NULL_ARGUMENT; }
     action =
           (xdiff == 1 && ydiff == 1) ? EA_WALK_DOWNRIGHT
         : (xdiff == 1 && ydiff == -1) ? EA_WALK_UPRIGHT
@@ -374,7 +412,7 @@ extern int entity_attempt_move(dude_t *dude, const int xdiff, const int ydiff, c
     // If we are in combat and it isn't our turn, do nothing.
     status = sol_arbiter_combat_region(sol_region_manager_get_current(), &cr);
     if (cr && sol_combat_get_current(cr) != dude) {
-        return 0;
+        return SOL_NOT_TURN;
     }
 
     region = sol_region_manager_get_current();
@@ -382,35 +420,36 @@ extern int entity_attempt_move(dude_t *dude, const int xdiff, const int ydiff, c
         || sol_region_location_blocked(region, dude->mapx + xdiff, dude->mapy + ydiff)) {
 
         if (cr && (xdiff != 0 || ydiff != 0)) {
-            if (!sol_combat_attempt_action(cr, dude)) { return 0; }
+            if ((status = sol_combat_attempt_action(cr, dude)) != SOL_SUCCESS) { return status; }
             target = sol_region_find_entity_by_location(
                     sol_region_manager_get_current(), dude->mapx + xdiff, dude->mapy + ydiff);
             if (target) {
                 sol_combat_add_attack_animation(sol_region_manager_get_current(), dude,
                     target, NULL, EA_MELEE);
             }
-            return 0;
+            // We did a combat action.
+            return SOL_SUCCESS;
         }
-        return 1;
+        return SOL_BLOCKED;
     }
 
     // We aren't moving...
     if (action == EA_NONE) {
         dude->anim.movex = dude->anim.movey = 0.0;
         if (dude->actions.head == NULL) {
-            entity_animation_list_add(&(dude->actions), EA_NONE, dude, NULL, NULL, 1);
+            sol_entity_animation_list_add(&(dude->actions), EA_NONE, dude, NULL, NULL, 1);
         }
-        return 1;
+        return SOL_SUCCESS;
     }
 
-    if (!entity_animation_list_empty(&(dude->actions))) {
+    if (sol_entity_animation_list_empty(&(dude->actions)) != SOL_SUCCESS) {
         // We need to wait for the rest of my actions.
-        return 0;
+        return SOL_WAIT_ACTIONS;
     }
 
-    if (cr && !sol_combat_attempt_action(cr, dude)) { return 0; }
+    if (cr && (status = sol_combat_attempt_action(cr, dude)) != SOL_SUCCESS) { return status; }
 
-    entity_animation_list_add_speed(&(dude->actions), action, dude, NULL,
+    sol_entity_animation_list_add_speed(&(dude->actions), action, dude, NULL,
             NULL, settings_ticks_per_move(), speed, 0);
 
     //dude->mapx += xdiff;
@@ -420,107 +459,172 @@ extern int entity_attempt_move(dude_t *dude, const int xdiff, const int ydiff, c
 
     sol_region_t *reg = sol_region_manager_get_current();
     if (reg) {
-        return sol_animate_shift_entity(reg->entities, entity_list_find(reg->entities, dude));
+        if ((status = sol_entity_list_find(reg->entities, dude, &node)) != SOL_SUCCESS) {
+            return status;
+        }
+        return sol_animate_shift_entity(reg->entities, node);
     }
 
-    return 1;
+    return SOL_SUCCESS;
 }
 
-extern int entity_has_wizard_slot(entity_t *entity, const int level) {
-    if (!entity || level < 0 || level > 10) { return 0; }
-    return entity->stats.wizard[level].amt;
+extern sol_status_t sol_entity_has_wizard_slot(entity_t *entity, const int level) {
+    if (!entity) { return SOL_NULL_ARGUMENT; }
+    if (level < 0 || level > 10) { return SOL_OUT_OF_RANGE; }
+    return entity->stats.wizard[level].amt ? SOL_SUCCESS : SOL_NO_CLASS;
 }
 
-extern int entity_has_priest_slot(entity_t *entity, const int level) {
-    if (!entity || level < 0 || level > 10) { return 0; }
-    return entity->stats.priest[level].amt;
+extern sol_status_t sol_entity_has_priest_slot(entity_t *entity, const int level) {
+    if (!entity) { return SOL_NULL_ARGUMENT; }
+    if (level < 0 || level > 10) { return SOL_OUT_OF_RANGE; }
+    return entity->stats.priest[level].amt ? SOL_SUCCESS : SOL_NO_CLASS;
 }
 
-extern int entity_take_wizard_slot(entity_t *entity, const int level) {
-    if (!entity || level < 0 || level > 10) { return 0; }
-    if (entity->stats.wizard[level].amt < 1) { return 0; }
+extern sol_status_t sol_entity_take_wizard_slot(entity_t *entity, const int level) {
+    if (!entity) { return SOL_NULL_ARGUMENT; }
+    if (level < 0 || level > 10) { return SOL_OUT_OF_RANGE; }
+    if (entity->stats.wizard[level].amt < 1) { return SOL_NO_SLOTS_LEFT; }
     entity->stats.wizard[level].amt--;
-    return 1;
+    return SOL_SUCCESS;
 }
 
-extern int entity_take_priest_slot(entity_t *entity, const int level) {
-    if (!entity || level < 0 || level > 10) { return 0; }
-    if (entity->stats.priest[level].amt < 1) { return 0; }
+extern sol_status_t entity_take_priest_slot(entity_t *entity, const int level) {
+    if (!entity) { return SOL_NULL_ARGUMENT; }
+    if (level < 0 || level > 10) { return SOL_OUT_OF_RANGE; }
+    if (entity->stats.priest[level].amt < 1) { return SOL_NO_SLOTS_LEFT; }
     entity->stats.wizard[level].amt--;
-    return 1;
+    return SOL_SUCCESS;
 }
 
-extern int entity_get_level(entity_t *entity, const int class) {
-    if (!entity || class < 0 || class > 20) { return 0; }
-    if (entity->class[0].class == class) { return entity->class[0].level; }
-    if (entity->class[1].class == class) { return entity->class[1].level; }
-    if (entity->class[2].class == class) { return entity->class[2].level; }
-    return 0;
+extern sol_status_t sol_entity_get_level(entity_t *entity, const int class, uint8_t *level) {
+    sol_status_t status = SOL_NOT_FOUND;
+    if (!entity) { return SOL_NULL_ARGUMENT; }
+    if (class < 0 || class > 20) { return SOL_OUT_OF_RANGE; }
+    if (entity->class[0].class == class) { *level = entity->class[0].level; status = SOL_SUCCESS; }
+    if (entity->class[1].class == class) { *level = entity->class[1].level; status = SOL_SUCCESS; }
+    if (entity->class[2].class == class) { *level = entity->class[2].level; status = SOL_SUCCESS; }
+    return status;
 }
 
-extern int entity_get_wizard_level(entity_t *entity) {
-    int max = 0, lvl;
-    lvl = entity_get_level(entity, REAL_CLASS_PRESERVER); max = lvl > max ? lvl : max;
-    lvl = entity_get_level(entity, REAL_CLASS_DEFILER); max = lvl > max ? lvl : max;
-    return max;
+extern sol_status_t sol_entity_get_wizard_level(entity_t *entity, uint8_t *level) {
+    uint8_t max = 0, lvl;
+    sol_status_t status, ret_status = SOL_NOT_FOUND;
+
+    if (!entity) { return SOL_NULL_ARGUMENT; }
+
+    if ((status = sol_entity_get_level(entity, REAL_CLASS_PRESERVER, &lvl)) == SOL_SUCCESS) {
+        max = lvl > max ? lvl : max;
+        ret_status = SOL_SUCCESS;
+    }
+    if ((status = sol_entity_get_level(entity, REAL_CLASS_DEFILER, &lvl)) == SOL_SUCCESS) {
+        max = lvl > max ? lvl : max;
+        ret_status = SOL_SUCCESS;
+    }
+
+    *level = max;
+    return ret_status;
 }
 
-extern int entity_get_priest_level(entity_t *entity) {
-    int max = 0, lvl;
-    lvl = entity_has_class(entity, REAL_CLASS_AIR_DRUID); max = lvl > max ? lvl : max;
-    lvl = entity_has_class(entity, REAL_CLASS_EARTH_DRUID); max = lvl > max ? lvl : max;
-    lvl = entity_has_class(entity, REAL_CLASS_FIRE_DRUID); max = lvl > max ? lvl : max;
-    lvl = entity_has_class(entity, REAL_CLASS_WATER_DRUID); max = lvl > max ? lvl : max;
-    lvl = entity_has_class(entity, REAL_CLASS_AIR_CLERIC); max = lvl > max ? lvl : max;
-    lvl = entity_has_class(entity, REAL_CLASS_EARTH_CLERIC); max = lvl > max ? lvl : max;
-    lvl = entity_has_class(entity, REAL_CLASS_FIRE_CLERIC); max = lvl > max ? lvl : max;
-    lvl = entity_has_class(entity, REAL_CLASS_WATER_CLERIC); max = lvl > max ? lvl : max;
-    return max;
+extern sol_status_t sol_entity_get_priest_level(entity_t *entity, uint8_t *level) {
+    uint8_t max = 0, lvl;
+    sol_status_t status = SOL_NOT_FOUND;
+    if (sol_entity_get_level(entity, REAL_CLASS_AIR_DRUID, &lvl) == SOL_SUCCESS) {
+        max = lvl > max ? lvl : max;
+        status = SOL_SUCCESS;
+    }
+    if (sol_entity_get_level(entity, REAL_CLASS_EARTH_DRUID, &lvl) == SOL_SUCCESS) {
+        max = lvl > max ? lvl : max;
+        status = SOL_SUCCESS;
+    }
+    if (sol_entity_get_level(entity, REAL_CLASS_FIRE_DRUID, &lvl) == SOL_SUCCESS) {
+        max = lvl > max ? lvl : max;
+        status = SOL_SUCCESS;
+    }
+    if (sol_entity_get_level(entity, REAL_CLASS_WATER_DRUID, &lvl) == SOL_SUCCESS) {
+        max = lvl > max ? lvl : max;
+        status = SOL_SUCCESS;
+    }
+    if (sol_entity_get_level(entity, REAL_CLASS_AIR_CLERIC, &lvl) == SOL_SUCCESS) {
+        max = lvl > max ? lvl : max;
+        status = SOL_SUCCESS;
+    }
+    if (sol_entity_get_level(entity, REAL_CLASS_EARTH_CLERIC, &lvl) == SOL_SUCCESS) {
+        max = lvl > max ? lvl : max;
+        status = SOL_SUCCESS;
+    }
+    if (sol_entity_get_level(entity, REAL_CLASS_FIRE_CLERIC, &lvl) == SOL_SUCCESS) {
+        max = lvl > max ? lvl : max;
+        status = SOL_SUCCESS;
+    }
+    if (sol_entity_get_level(entity, REAL_CLASS_WATER_CLERIC, &lvl) == SOL_SUCCESS) {
+        max = lvl > max ? lvl : max;
+        status = SOL_SUCCESS;
+    }
+    *level = max;
+    return status;
 }
 
-extern int entity_get_ranger_level(entity_t *entity) {
-    int max = 0, lvl;
-    lvl = entity_has_class(entity, REAL_CLASS_AIR_RANGER); max = lvl > max ? lvl : max;
-    lvl = entity_has_class(entity, REAL_CLASS_EARTH_RANGER); max = lvl > max ? lvl : max;
-    lvl = entity_has_class(entity, REAL_CLASS_FIRE_RANGER); max = lvl > max ? lvl : max;
-    lvl = entity_has_class(entity, REAL_CLASS_WATER_RANGER); max = lvl > max ? lvl : max;
-    return max;
+extern sol_status_t sol_entity_get_ranger_level(entity_t *entity, uint8_t *level) {
+    uint8_t max = 0, lvl;
+    sol_status_t status = SOL_NOT_FOUND;
+
+    if(sol_entity_get_level(entity, REAL_CLASS_AIR_RANGER, &lvl) == SOL_SUCCESS) {
+        max = lvl > max ? lvl : max;
+        status = SOL_SUCCESS;
+    }
+    if(sol_entity_get_level(entity, REAL_CLASS_EARTH_RANGER, &lvl) == SOL_SUCCESS) {
+        max = lvl > max ? lvl : max;
+        status = SOL_SUCCESS;
+    }
+    if(sol_entity_get_level(entity, REAL_CLASS_FIRE_RANGER, &lvl) == SOL_SUCCESS) {
+        max = lvl > max ? lvl : max;
+        status = SOL_SUCCESS;
+    }
+    if(sol_entity_get_level(entity, REAL_CLASS_WATER_RANGER, &lvl) == SOL_SUCCESS) {
+        max = lvl > max ? lvl : max;
+        status = SOL_SUCCESS;
+    }
+    *level = max;
+    return status;
 }
 
-extern entity_t* entity_create_fake(const int mapx, const int mapy) {
+extern sol_status_t sol_entity_create_fake(const int mapx, const int mapy, entity_t **ret) {
     dude_t *dude = calloc(1, sizeof(dude_t));
+    if (!dude) { return SOL_MEMORY_ERROR; }
     dude->mapx = mapx;
     dude->mapy = mapy;
     dude->anim.spr = SPRITE_ERROR;
-    return dude;
+    *ret = dude;
+    return SOL_SUCCESS;
 }
 
-extern int entity_is_fake(entity_t *entity) {
-    return (entity->ds_id == 0);
+extern sol_status_t sol_entity_is_fake(entity_t *entity) {
+    return (entity->ds_id == 0) ? SOL_SUCCESS : SOL_IS_REAL;
 }
 
-extern int16_t entity_distance(const entity_t *source, const entity_t *dest) {
-    if (!source || !dest) { return -1; }
+extern sol_status_t sol_entity_distance(const entity_t *source, const entity_t *dest, int16_t *dist) {
+    if (!source || !dest) { return SOL_NULL_ARGUMENT; }
 
     int dx = abs(source->mapx - dest->mapx);
     int dy = abs(source->mapy - dest->mapy);
 
-    return dx > dy ? dx : dy;
+    *dist = dx > dy ? dx : dy;
+    return SOL_SUCCESS;
 }
 
-extern int sol_entity_go(entity_t *dude, const uint16_t x, uint16_t y) {
-    if (!dude) { return 0; }
+extern sol_status_t sol_entity_go(entity_t *dude, const uint16_t x, uint16_t y) {
+    if (!dude) { return SOL_NULL_ARGUMENT; }
 
     dude->abilities.must_go = 1;
     dude->abilities.args.pos.x = x;
     dude->abilities.args.pos.y = y;
     debug("%s given go order to (%d, %d)\n", dude->name, x, y);
 
-    return 1;
+    return SOL_SUCCESS;
 }
 
-extern void sol_entity_debug(entity_t *dude) {
-    if (!dude) { return; }
+extern sol_status_t sol_entity_debug(entity_t *dude) {
+    if (!dude) { return SOL_NULL_ARGUMENT; }
     printf("entity ('%s): \n", dude->name);
     printf("    .ds_id = %d\n", dude->ds_id);
     printf("    .size = %d\n", dude->size);
@@ -555,4 +659,5 @@ extern void sol_entity_debug(entity_t *dude) {
             dude->class[2].level,
             dude->class[2].high_level);
     printf("    .anim = (spr = %d, scmd = %p)\n", dude->anim.spr, dude->anim.scmd);
+    return SOL_SUCCESS;
 }

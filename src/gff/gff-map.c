@@ -72,7 +72,7 @@ int gff_map_fill_scmd_info(dude_t *dude, int gff_index, int res_id, int obj_id, 
     return 1;
 }
 
-extern int gff_map_load_scmd(struct entity_s *dude) {
+extern int gff_map_load_scmd(sol_entity_t *dude) {
     if (!dude) { return 0; }
 
     //printf("scmd loading: %d, %d, %d\n", dude->anim.scmd_info.gff_idx, dude->anim.scmd_info.res_id, dude->anim.scmd_info.index);

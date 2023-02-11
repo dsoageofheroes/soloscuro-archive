@@ -36,9 +36,6 @@ extern void port_load_item(item_t *item) {
 //extern void port_load_sprite(sprite_info_t *spr, gff_palette_t *pal, const int gff_index, const int type, const uint32_t id) {
 //}
 
-extern void port_combat_action(entity_action_t *ca) {
-}
-
 extern sol_status_t port_play_sound_effect(const uint16_t id) {
 }
 
@@ -78,36 +75,44 @@ enum mouse_state sol_mouse_get_state(){ return 0;}
 void             sol_mouse_set_state(const enum mouse_state state){}
 
 static int sprite_id = 0;
-void sol_sprite_init() {}
-sol_sprite_t sol_sprite_new(gff_palette_t *pal,
+extern sol_sprite_t sol_sprite_init() { return SOL_SUCCESS; }
+extern sol_status_t sol_sprite_new(gff_palette_t *pal,
         const int offsetx, const int offsety, const float zoom,
-        const int gff_idx, const int type_id, const int res_id) {return ++sprite_id;}
-uint16_t sol_sprite_append(uint16_t sprite_id, gff_palette_t *pal,
+        const int gff_idx, const int type_id, const int res_id,
+        sol_sprite_t *spr) {
+    *spr =  ++sprite_id;
+    return SOL_SUCCESS;
+}
+extern sol_status_t sol_sprite_append(sol_sprite_t sprite_id, gff_palette_t *pal,
         const int offsetx, const int offsety, const float zoom,
-        const int gff_idx, const int type_id, const int res_id) {return ++sprite_id;}
-sol_sprite_t sol_sprite_create_from_data(unsigned char *data, const uint32_t w, const uint32_t h) {return ++sprite_id;}
-void sol_sprite_set_location(const sol_sprite_t id, const uint32_t x, const uint32_t y) {}
-void sol_sprite_render(const sol_sprite_t id) {}
-uint32_t sol_sprite_getx(const sol_sprite_t id) {return 0;}
-uint32_t sol_sprite_gety(const sol_sprite_t id) {return 0;}
-uint32_t sol_sprite_getw(const sol_sprite_t id) {return 0;}
-uint32_t sol_sprite_geth(const sol_sprite_t id) {return 0;}
-void sol_sprite_set_alpha(const sol_sprite_t id, const uint8_t alpha) {}
-void sol_sprite_free(const sol_sprite_t id) {}
-void sol_sprite_set_frame(const uint16_t id, const uint16_t frame) {}
-void sol_sprite_set_frame_keep_loc(const uint16_t id, const uint16_t frame) {}
-uint16_t sol_sprite_get_frame(const uint16_t id) {return 0;}
-int sol_sprite_in_rect(const uint16_t id, const uint32_t x, const uint32_t y) {return 0;}
-void sol_print_line_len(const sol_font_t font, const char *text, size_t x, size_t y, const uint32_t len) {}
-void sol_font_render_center(sol_font_t font, const char *str, const uint16_t x, const uint16_t y, const uint16_t w) {}
-void sol_sprite_center_spr(const int dest, const int src) {}
-void sol_sprite_render_box(const uint16_t sprite_id, const uint16_t x,
-    const uint16_t y, const uint16_t w, const uint16_t h) {}
-void sol_sprite_center(const int id, const int x, const int y, const int w, const int h) {}
-uint32_t sol_sprite_num_frames(const uint16_t id) {return 1;}
-void sol_sprite_render_flip(const uint16_t sprite_id, const int horizontal_flip, const int vertical_flip) {}
-void sol_sprite_set_color_mod(const uint16_t sprite_id, const uint8_t r, const uint8_t g, const uint8_t b) {}
-void sol_sprite_print(const sol_sprite_t sprite_id) {}
+        const int gff_idx, const int type_id, const int res_id) {return SOL_SUCCESS;}
+extern sol_status_t sol_sprite_create_from_data(unsigned char *data, const uint32_t w, const uint32_t h, sol_sprite_t *spr) {
+    *spr = ++sprite_id;
+    return SOL_SUCCESS;
+}
+extern sol_status_t sol_sprite_set_location(const sol_sprite_t id, const uint32_t x, const uint32_t y) {return SOL_SUCCESS;}
+extern sol_status_t sol_sprite_render(const sol_sprite_t id) {return SOL_SUCCESS;}
+extern sol_status_t sol_sprite_get_info(const sol_sprite_t id, sol_sprite_info_t *loc) {
+    loc->x = loc->y = loc->w = loc->h = 100;
+    loc->num_frames = 1;
+    return SOL_SUCCESS;
+}
+sol_status_t sol_sprite_set_alpha(const sol_sprite_t id, const uint8_t alpha) {return SOL_SUCCESS;}
+sol_status_t sol_sprite_free(const sol_sprite_t id) {return SOL_SUCCESS;}
+sol_status_t sol_sprite_set_frame(const sol_sprite_t id, const uint16_t frame) {return SOL_SUCCESS;}
+sol_status_t sol_sprite_increment_frame(const sol_sprite_t id, const int16_t amt) {return SOL_SUCCESS;}
+sol_status_t sol_sprite_set_frame_keep_loc(const sol_sprite_t id, const uint16_t frame) {return SOL_SUCCESS;}
+sol_status_t sol_sprite_in_rect(const uint16_t id, const uint32_t x, const uint32_t y) {return SOL_SPRITE_NOT_IN_RECT;}
+sol_status_t sol_sprite_center_spr(const int dest, const int src) {return SOL_SUCCESS;}
+sol_status_t sol_sprite_center(const int id, const int x, const int y, const int w, const int h) {return SOL_SUCCESS;}
+sol_status_t sol_sprite_render_box(const uint16_t sprite_id, const uint16_t x,
+    const uint16_t y, const uint16_t w, const uint16_t h) {return SOL_SUCCESS;}
+sol_status_t sol_sprite_render_flip(const uint16_t sprite_id, const int horizontal_flip, const int vertical_flip) {return SOL_SUCCESS;}
+sol_status_t sol_sprite_set_color_mod(const uint16_t sprite_id, const uint8_t r, const uint8_t g, const uint8_t b) {return SOL_SUCCESS;}
+sol_status_t sol_sprite_print(const sol_sprite_t sprite_id) {return SOL_SUCCESS;}
+
+sol_status_t sol_print_line_len(const sol_font_t font, const char *text, size_t x, size_t y, const uint32_t len) {return SOL_SUCCESS;}
+sol_status_t sol_font_render_center(sol_font_t font, const char *str, const uint16_t x, const uint16_t y, const uint16_t w) {return SOL_SUCCESS;}
 
 void sol_mouse_set_as_power(power_t *pw) {}
 void sol_draw_cone(int sx, int sy, int range) {}
@@ -140,8 +145,8 @@ void port_commit_display_frame() {}
 
 void       sol_textbox_set_current(textbox_t *tb) {}
 void sol_font_free() {}
-sol_status_t sol_play_sound_effect(const uint16_t id) {}
-void       sol_textbox_render(textbox_t *tb) {}
+sol_status_t sol_play_sound_effect(const uint16_t id) {return SOL_SUCCESS; }
+sol_status_t sol_textbox_render(textbox_t *tb) {return SOL_SUCCESS; }
 void port_entity_update_scmd(entity_t *entity) {}
 extern void sol_camera_scrollx(const int amt) {}
 extern void sol_camera_scrolly(const int amt) {}

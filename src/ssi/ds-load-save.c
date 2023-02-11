@@ -115,7 +115,7 @@ static void save_regions(const int id) {
     rdff_header_t rdff;
 
     if (reg) {
-        entity_list_for_each(reg->entities, entity) {
+        sol_entity_list_for_each(reg->entities, entity) {
             if (entity->name) {
                 rdff.load_action = RDFF_OBJECT;
                 rdff.blocknum = 0;
@@ -135,11 +135,11 @@ static void save_regions(const int id) {
     }
     free(buf);
 
-    buf = gpl_serialize_globals(&len);
+    sol_gpl_serialize_globals(&len, &buf);
     gff_add_chunk(id, GFF_GDAT, 99, buf, len);
     free(buf);
 
-    buf = gpl_serialize_locals(&len);
+    sol_gpl_serialize_locals(&len, &buf);
     gff_add_chunk(id, GFF_GDAT, dude->region, buf, len);
     free(buf);
 }
@@ -186,8 +186,10 @@ static void load_regions(const int id) {
 }
 */
 
-extern void ls_save_to_file(const char *path, char *save_name) {
+extern sol_status_t sol_ls_save_to_file(const char *path, char *save_name) {
+    if (!path || !save_name) { return SOL_NULL_ARGUMENT; }
     int id = gff_create(path);
+    if (id < 0) { return SOL_GFF_NO_ID; }
 
     gff_add_type(id, GFF_PSIN);
     gff_add_type(id, GFF_PSST);
@@ -217,11 +219,13 @@ extern void ls_save_to_file(const char *path, char *save_name) {
 
     free(triggers);
     gff_close(id);
+
+    return SOL_SUCCESS;
 }
 
 extern char* ls_create_save_file(char *name) {
     char *path = get_next_save_file();
-    ls_save_to_file(path, name);
+    sol_ls_save_to_file(path, name);
     return path;
 }
 
@@ -231,16 +235,17 @@ static int load_player(const int id, const int player, const int res_id) {
     char buf[BUF_MAX];
     rdff_header_t *rdff;
     size_t offset = 0;
-    dude_t *dude = NULL;
+    dude_t *dude = NULL, *tmp = NULL;
     gff_chunk_header_t chunk = gff_find_chunk_header(id, GFF_CHAR, res_id);
     if (gff_read_chunk(id, &chunk, &buf, sizeof(buf)) < 34) { return 0; }
 
     sol_player_free(player);
     dude = sol_player_get(player);
-    if (dude) { entity_free (dude); }
-    sol_player_set(player, entity_create_fake(30, 10));
+    if (dude) { sol_entity_free (dude); }
+    sol_entity_create_fake(30, 10, &tmp);
+    sol_player_set(player, tmp);
     dude = sol_player_get(player);
-    entity_load_from_gff(dude, id, player, res_id);
+    sol_entity_load_from_gff(dude, id, player, res_id);
 
     rdff = (rdff_disk_object_t*) (buf);
     offset += sizeof(rdff_disk_object_t);
@@ -254,7 +259,7 @@ static int load_player(const int id, const int player, const int res_id) {
     } else if (rdff->type == PLAYER_OBJECT) {
         sol_player_free(player);
         dude = sol_player_get(player);
-        entity_load_from_object(dude, buf + offset);
+        sol_entity_load_from_object(dude, buf + offset);
         dude->anim.scmd = sol_combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
         offset += rdff->len;
     }
@@ -279,9 +284,9 @@ static int load_player(const int id, const int player, const int res_id) {
     return 1;
 }
 
-extern int ds_load_character_charsave(const int slot, const int res_id) {
-    if (slot < 0 || slot >= 4) { return 0; }
-    return load_player(CHARSAVE_GFF_INDEX, slot, res_id);
+extern sol_status_t sol_load_character_charsave(const int slot, const int res_id) {
+    if (slot < 0 || slot >= 4) { return SOL_OUT_OF_RANGE; }
+    return load_player(CHARSAVE_GFF_INDEX, slot, res_id) ? SOL_SUCCESS : SOL_UNKNOWN_ERROR;
 }
 
 /*

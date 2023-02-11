@@ -21,10 +21,10 @@ void tearDown() {
 }
 
 void test_basic(void) {
-    gpl_manager_init();
-    gpl_push_context();
+    sol_gpl_manager_init();
+    sol_gpl_push_context();
     gpl_pop_context();
-    gpl_manager_cleanup();
+    sol_gpl_manager_cleanup();
 }
 
 const char basic_test[] = 
@@ -34,23 +34,23 @@ const char basic_test[] =
     ;
 
 void test_basic_script(void) {
-    gpl_manager_init();
-    gpl_push_context();
-    gpl_execute_string(basic_test);
+    sol_gpl_manager_init();
+    sol_gpl_push_context();
+    sol_gpl_execute_string(basic_test);
     gpl_pop_context();
-    gpl_manager_cleanup();
+    sol_gpl_manager_cleanup();
 }
 
 void test_combat_smoke(void) {
-    gpl_manager_init();
-    gpl_push_context();
+    sol_gpl_manager_init();
+    sol_gpl_push_context();
     if (sol_lua_load("test/lua/combat/00-combat-smoke-test.lua")) {
         TEST_ASSERT_MESSAGE(0, "Unable to load lua\n");
     }
     sol_test_info_t sti = sol_get_lua_test();
     TEST_ASSERT_MESSAGE(!sti.failed, sti.msg);
     gpl_pop_context();
-    gpl_manager_cleanup();
+    sol_gpl_manager_cleanup();
 }
 
 void test_combat_init(void) {
@@ -78,8 +78,8 @@ void test_combat_move(void) {
 }
 
 void test_combat_multi_round(void) {
-    gpl_manager_init();
-    gpl_push_context();
+    sol_gpl_manager_init();
+    sol_gpl_push_context();
     if (sol_lua_load("test/lua/combat/04-player-attack.lua")) {
         TEST_ASSERT_MESSAGE(0, "Unable to load lua\n");
     }
@@ -87,7 +87,7 @@ void test_combat_multi_round(void) {
     printf("----------------->%s\n", sti.msg);
     TEST_ASSERT_MESSAGE(!sti.failed, sti.msg);
     gpl_pop_context();
-    gpl_manager_cleanup();
+    sol_gpl_manager_cleanup();
 }
 
 int main(void) {

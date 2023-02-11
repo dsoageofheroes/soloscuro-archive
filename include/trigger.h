@@ -27,9 +27,9 @@ extern int              sol_trigger_add_box(uint32_t x, uint32_t y, uint32_t w, 
                                 uint32_t file, uint32_t addr, uint32_t trip);
 extern int              sol_trigger_add_los(uint32_t obj, uint32_t file, uint32_t addr, uint32_t param);
 
-extern talkto_trigger_t sol_trigger_get_talkto(uint32_t obj);
-extern look_trigger_t   sol_trigger_get_look(uint32_t obj);
-extern use_trigger_t    sol_trigger_get_use(uint32_t obj);
+extern sol_talkto_trigger_t sol_trigger_get_talkto(uint32_t obj);
+extern sol_look_trigger_t   sol_trigger_get_look(uint32_t obj);
+extern sol_use_trigger_t    sol_trigger_get_use(uint32_t obj);
 extern void             sol_trigger_use(uint32_t obj);
 extern void             sol_trigger_object_clear(const uint32_t obj);
 extern void             sol_trigger_enable_object(const uint32_t obj);

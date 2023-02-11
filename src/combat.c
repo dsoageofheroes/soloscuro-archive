@@ -14,19 +14,19 @@
 
 static int current_player = 0;
 static int wait_on_player = 0;
-static entity_action_t monster_actions[MAX_COMBAT_ACTIONS]; // list of actions for a monster's turn.
+static sol_entity_action_t monster_actions[MAX_COMBAT_ACTIONS]; // list of actions for a monster's turn.
 static int monster_step = -1; // keep track of what step of the action the monster is on.
-static enum entity_action_e player_action;
+static enum sol_entity_action_e player_action;
 
 // For BFS
 typedef struct action_node_s {
     int num_moves;
     uint16_t x, y;
-    entity_action_t actions[MAX_COMBAT_ACTIONS];
+    sol_entity_action_t actions[MAX_COMBAT_ACTIONS];
     struct action_node_s *next;
 } action_node_t;
 
-static void queue_add(action_node_t **head, action_node_t **tail, action_node_t *current, const enum entity_action_e action) {
+static void queue_add(action_node_t **head, action_node_t **tail, action_node_t *current, const enum sol_entity_action_e action) {
     action_node_t *new = malloc(sizeof(action_node_t));
     memcpy(new, current, sizeof(action_node_t));
     new->actions[new->num_moves].action = action;
@@ -54,10 +54,10 @@ static void queue_add(action_node_t **head, action_node_t **tail, action_node_t 
     }
 }
 
-static entity_t* player_exists_in_pos(sol_region_t *reg, const uint16_t x, const uint16_t y) {
+static sol_entity_t* player_exists_in_pos(sol_region_t *reg, const uint16_t x, const uint16_t y) {
     for (int i = 0; i < MAX_PCS; i++) {
         if (!sol_player_exists(i)) { continue; }
-        entity_t *player = sol_player_get(i);
+        sol_entity_t *player = sol_player_get(i);
         //printf("(%d, %d) -> player(%d, %d)\n", x, y, player->mapx, player->mapy);
         if (player->mapx == x && player->mapy == y) { return player; }
     }
@@ -65,8 +65,8 @@ static entity_t* player_exists_in_pos(sol_region_t *reg, const uint16_t x, const
     return NULL;
 }
 
-static entity_t* player_to_attack(sol_region_t *reg, action_node_t *node) {
-    entity_t *player = NULL;
+static sol_entity_t* player_to_attack(sol_region_t *reg, action_node_t *node) {
+    sol_entity_t *player = NULL;
     if (!node) { return NULL; }
     if ((player = player_exists_in_pos(reg, node->x + 1, node->y + 0)) != NULL) {
         if (player->combat_status != COMBAT_STATUS_DYING) {
@@ -112,10 +112,10 @@ static entity_t* player_to_attack(sol_region_t *reg, action_node_t *node) {
     return NULL;
 }
 
-static entity_t* entity_at_location(const sol_region_t *reg, entity_t *entity, const int32_t x, const int32_t y) {
+static sol_entity_t* entity_at_location(const sol_region_t *reg, sol_entity_t *entity, const int32_t x, const int32_t y) {
     dude_t *dude = NULL;
 
-    entity_list_for_each(reg->entities, dude) {
+    sol_entity_list_for_each(reg->entities, dude) {
         //printf("(%s: %d, %d) ?= (%s: %d, %d)\n", dude->name, dude->mapx, dude->mapy, entity->name, entity->mapx, entity->mapy);
         if (dude != entity && dude->mapx == x && dude->mapy == y) {
             return dude;
@@ -125,11 +125,11 @@ static entity_t* entity_at_location(const sol_region_t *reg, entity_t *entity, c
     return NULL;
 }
 
-static void generate_monster_move_attack_closest(sol_region_t *reg, entity_t *monster) {
+static void generate_monster_move_attack_closest(sol_region_t *reg, sol_entity_t *monster) {
     // Start of AI, lets just go to the closest PC and attack.
     static uint8_t visit_flags[MAP_ROWS][MAP_COLUMNS];
-    entity_t *player;
-    memset(monster_actions, 0x0, sizeof(entity_action_t) * MAX_COMBAT_ACTIONS);
+    sol_entity_t *player;
+    memset(monster_actions, 0x0, sizeof(sol_entity_action_t) * MAX_COMBAT_ACTIONS);
     memset(visit_flags, 0x0, sizeof(uint8_t) * MAP_ROWS * MAP_COLUMNS);
     action_node_t *rover = malloc(sizeof(action_node_t));
     memset(rover, 0x0, sizeof(action_node_t));
@@ -191,9 +191,9 @@ static void generate_monster_move_attack_closest(sol_region_t *reg, entity_t *mo
     printf("NEED TO move and guard!\n");
 }
 
-static entity_action_t clear = { NULL, NULL, 0, EA_NONE };
+static sol_entity_action_t clear = { NULL, NULL, 0, EA_NONE };
 
-static void monster_set_animation(entity_t *monster, entity_action_t *action) {
+static void monster_set_animation(sol_entity_t *monster, sol_entity_action_t *action) {
     int32_t xdiff = 0, ydiff = 0;
     switch(action->action) {
         case EA_WALK_UPLEFT:
@@ -215,8 +215,8 @@ static void monster_set_animation(entity_t *monster, entity_action_t *action) {
     }
 }
 
-extern int sol_combat_add_attack_animation(sol_region_t *reg, dude_t *dude, entity_t *target,
-                                        power_t *power, enum entity_action_e action) {
+extern int sol_combat_add_attack_animation(sol_region_t *reg, dude_t *dude, sol_entity_t *target,
+                                        power_t *power, enum sol_entity_action_e action) {
     sol_attack_t     attack;
     sol_status_t     status = SOL_UNKNOWN_ERROR;
     combat_region_t *cr     = NULL;
@@ -232,20 +232,20 @@ extern int sol_combat_add_attack_animation(sol_region_t *reg, dude_t *dude, enti
         return -1;
     }
 
-    entity_animation_list_add_effect(&(dude->actions), action, dude, target, power, 30, 30);
-    entity_animation_list_add(&(dude->actions), EA_NONE, dude, NULL, NULL, 1);
-    entity_animation_list_add(&reg->actions, EA_WAIT_ON_ENTITY, dude, NULL, NULL, 30);
+    sol_entity_animation_list_add_effect(&(dude->actions), action, dude, target, power, 30, 30);
+    sol_entity_animation_list_add(&(dude->actions), EA_NONE, dude, NULL, NULL, 1);
+    sol_entity_animation_list_add(&reg->actions, EA_WAIT_ON_ENTITY, dude, NULL, NULL, 30);
 
     if (attack.damage > 0) {
-        entity_animation_list_add_effect(&reg->actions, EA_RED_DAMAGE, dude, target, NULL, 30, attack.damage);
-        entity_animation_list_add_effect(&reg->actions, EA_DAMAGE_APPLY, dude, target, NULL, 0, attack.damage);
+        sol_entity_animation_list_add_effect(&reg->actions, EA_RED_DAMAGE, dude, target, NULL, 30, attack.damage);
+        sol_entity_animation_list_add_effect(&reg->actions, EA_DAMAGE_APPLY, dude, target, NULL, 0, attack.damage);
     }
 
     return 0;
 }
 
-static void monster_action(sol_region_t *reg, entity_t *monster) {
-    entity_action_t *action;
+static void monster_action(sol_region_t *reg, sol_entity_t *monster) {
+    sol_entity_action_t *action;
 
     if (monster_step < 0) {
         generate_monster_move_attack_closest(reg, monster);
@@ -271,7 +271,7 @@ static void monster_action(sol_region_t *reg, entity_t *monster) {
         return;
     }
 
-    entity_animation_list_add_effect(&(monster->actions), action->action,
+    sol_entity_animation_list_add_effect(&(monster->actions), action->action,
         action->source, action->target, action->power, 30, action->damage);
     monster_set_animation(monster, action);
     monster_step++;
@@ -279,7 +279,7 @@ static void monster_action(sol_region_t *reg, entity_t *monster) {
 }
 
 extern void sol_combat_update(sol_region_t *reg) {
-    entity_t *combatant;
+    sol_entity_t *combatant;
     combat_region_t *cr = NULL;
     sol_status_t status = SOL_NOT_IMPLEMENTED;
     if (reg == NULL) { return; }
@@ -312,8 +312,8 @@ extern void sol_combat_update(sol_region_t *reg) {
     }
 
     // still waiting on last animation to complete.
-    if (!entity_animation_list_empty(&combatant->actions)
-        || !entity_animation_list_empty(&reg->actions)
+    if (sol_entity_animation_list_empty(&combatant->actions) != SOL_SUCCESS
+        || sol_entity_animation_list_empty(&reg->actions) != SOL_SUCCESS
         ) { return; }
 
     // Now check for guard: TODO: also check if we just moved and multi-guard
@@ -321,7 +321,7 @@ extern void sol_combat_update(sol_region_t *reg) {
     monster_action(reg, combatant);
 }
 
-extern int sol_combat_activate_power(power_t *pw, entity_t *source, entity_t *target, const int32_t x, const int32_t y) {
+extern int sol_combat_activate_power(power_t *pw, sol_entity_t *source, sol_entity_t *target, const int32_t x, const int32_t y) {
     if (!pw || !source) { return 0; }
     sol_region_t *reg = sol_region_manager_get_current();
     power_instance_t pi;
@@ -336,19 +336,19 @@ extern int sol_combat_activate_power(power_t *pw, entity_t *source, entity_t *ta
 
     if (!target) { // time to make a fake target for the power.
         warn("Creating fake entity...\n");
-        target = entity_create_fake(x, y);
+        sol_entity_create_fake(x, y, &target);
     }
 
     if (pw->cast.scmd) {
-        entity_animation_list_add(&(reg->actions), EA_POWER_CAST, source, target, pw, 30);
+        sol_entity_animation_list_add(&(reg->actions), EA_POWER_CAST, source, target, pw, 30);
     }
 
     if (pw->thrown.scmd) {
-        entity_animation_list_add(&(reg->actions), EA_POWER_THROW, source, target, pw, 30);
+        sol_entity_animation_list_add(&(reg->actions), EA_POWER_THROW, source, target, pw, 30);
     }
 
     if (pw->hit.scmd) {
-        entity_animation_list_add(&(reg->actions), EA_POWER_HIT, source, target, pw, 30);
+        sol_entity_animation_list_add(&(reg->actions), EA_POWER_HIT, source, target, pw, 30);
     }
 
     switch (pw->shape) {
@@ -362,7 +362,7 @@ extern int sol_combat_activate_power(power_t *pw, entity_t *source, entity_t *ta
         case TARGET_ALLY:
         case TARGET_SELF:
         case TARGET_ENEMY:
-            entity_animation_list_add(&(source->actions), EA_POWER_APPLY, source, target, pw, 0);
+            sol_entity_animation_list_add(&(source->actions), EA_POWER_APPLY, source, target, pw, 0);
             break;
         case TARGET_CONE:
         case TARGET_RECTANGLE:
@@ -375,11 +375,11 @@ extern int sol_combat_activate_power(power_t *pw, entity_t *source, entity_t *ta
 
 #define BUF_LEN (128)
 // entity == NULL, means for any player.
-extern int sol_combat_guard(entity_t *entity) {
+extern int sol_combat_guard(sol_entity_t *entity) {
     char buf[BUF_LEN];
     sol_status_t status;
     combat_region_t *cr = NULL;
-    entity_t *dude = sol_combat_get_current(cr);
+    sol_entity_t *dude = sol_combat_get_current(cr);
     int pos;
 
     status = sol_arbiter_combat_region(sol_region_manager_get_current(), &cr);
@@ -402,7 +402,7 @@ extern int sol_combat_active(combat_region_t *cr) {
     return cr->combatants.head != 0;
 }
 
-extern void sol_combat_set_scmd(entity_t *dude, const combat_scmd_t scmd) {
+extern void sol_combat_set_scmd(sol_entity_t *dude, const combat_scmd_t scmd) {
     dude->anim.scmd = sol_combat_get_scmd(scmd);
     dude->anim.scmd_info.gff_idx = -1;
     dude->anim.scmd_info.res_id = scmd;
@@ -419,24 +419,24 @@ extern void sol_combat_kill_all_enemies() {
 
     if (!cr || !reg || !player) { return; }
 
-    entity_list_for_each((&cr->combatants), dude) {
+    sol_entity_list_for_each((&cr->combatants), dude) {
         if (sol_player_get_slot(dude) >= 0) { continue; }
         dude->combat_status = COMBAT_STATUS_DYING;
         dude->stats.hp = 0;
         //play_death_sound(dude);
         //warn("NEED TO IMPLEMENT death animation!\n");
-        if (!entity_list_remove_entity(&cr->combatants, dude)) {
+        if (!sol_entity_list_remove_entity(&cr->combatants, dude)) {
             error("Unable to remove entity from combat region!\n");
         }
-        if (!entity_list_remove_entity(&cr->round.entities, dude)) {
+        if (!sol_entity_list_remove_entity(&cr->round.entities, dude)) {
             error("Unable to remove entity from combat round!\n");
         }
-        if (!entity_list_remove_entity(reg->entities, dude)) {
+        if (!sol_entity_list_remove_entity(reg->entities, dude)) {
             error("Unable to remove entity from region!\n");
         }
         // Only free if not a player.
         if (sol_player_get_slot(dude) < 0) {
-            entity_free(dude);
+            sol_entity_free(dude);
         }
         return;
     }

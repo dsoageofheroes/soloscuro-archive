@@ -424,9 +424,12 @@ static int8_t ranger_spell_slots[][10] = {
 
 extern sol_status_t sol_dnd2e_class_update_max_spell_slots(entity_t *pc) {
     if (!pc) { return SOL_NULL_ARGUMENT; }
-    int wizard_level = entity_get_wizard_level(pc);
-    int priest_level = entity_get_priest_level(pc);
-    int ranger_level = entity_get_ranger_level(pc);
+    uint8_t wizard_level = 0, priest_level = 0, ranger_level = 0;
+    sol_status_t status;
+
+    sol_entity_get_wizard_level(pc, &wizard_level);
+    sol_entity_get_priest_level(pc, &priest_level);
+    sol_entity_get_ranger_level(pc, &ranger_level);
 
     for (int i = 0; i < 10; i++) {
         pc->stats.wizard[i].max = wizard_spell_slots[wizard_level][i];
@@ -464,8 +467,7 @@ static int convert_to_class_sel(const uint8_t class) {
     return 0; // UNKNOWN CLASS
 }
 
-//int sol_dnd2e_is_class_allowed(const uint8_t race, const class_t classes[3]) {
-extern sol_status_t sol_dnd2e_is_class_allowed(const uint8_t race, const class_t classes[3]) {
+extern sol_status_t sol_dnd2e_is_class_allowed(const uint8_t race, const sol_class_t classes[3]) {
     uint16_t class = convert_to_class_sel(classes[0].class);
     const uint16_t *allowed = NULL;
     if (classes[0].class == -1) { return SOL_ILLEGAL_CLASS; }

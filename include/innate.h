@@ -9,8 +9,7 @@
 #include "entity.h"
 
 extern sol_status_t sol_innate_action(dude_t *dude);
-extern int sol_innate_is_door(dude_t *dude);
-extern int sol_innate_is_door2(dude_t *dude);
+extern sol_status_t sol_innate_is_door(dude_t *dude);
 extern sol_status_t sol_innate_activate_door(dude_t *door);
 
 #endif

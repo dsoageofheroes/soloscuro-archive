@@ -67,9 +67,13 @@ static uint16_t calc_offset(textbox_t *tb) {
     return offset;
 }
 
-void sol_textbox_render(textbox_t *tb) {
-    if (!tb) { return; }
-    print_line_len(main_get_rend(), FONT_GREYLIGHT, tb->text, tb->xpos, tb->ypos, tb->text_len);
+extern sol_status_t sol_textbox_render(textbox_t *tb) {
+    sol_status_t status;
+    if (!tb) { return SOL_NULL_ARGUMENT; }
+
+    if ((status = sol_print_line_len(FONT_GREYLIGHT, tb->text, tb->xpos, tb->ypos, tb->text_len)) != SOL_SUCCESS) {
+        return status;
+    }
 
     if (tb->in_focus) {
         tb->cursor_countdown--;

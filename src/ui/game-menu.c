@@ -28,8 +28,11 @@ enum menu_state {
 enum menu_state state = MENU_SOUND;
 
 static void set_locations(sol_sprite_t sprite, const uint32_t x, const uint32_t y) {
-    int frame = sol_sprite_get_frame(sprite);
-    for (uint32_t i = 0; i < sol_sprite_num_frames(sprite); i++) {
+    sol_sprite_info_t info;
+
+    sol_status_check(sol_sprite_get_info(sprite, &info), "Unable to get sprite info.");
+    int frame = info.current_frame;
+    for (uint32_t i = 0; i < info.num_frames; i++) {
         sol_sprite_set_frame(sprite, i);
         sol_sprite_set_location(sprite, x, y);
     }
@@ -56,29 +59,40 @@ void game_menu_init(const uint32_t x, const uint32_t y) {
     xoffset = x / zoom;
     yoffset = y / zoom;
 
-    background = sol_sprite_new(pal, 0 + xoffset, 0 + yoffset, zoom,
-            RESOURCE_GFF_INDEX, GFF_BMP, 10000);
-    music_icon = sol_sprite_new(pal, 48 + xoffset, 24 + yoffset, zoom,
-            RESOURCE_GFF_INDEX, GFF_ICON, 16100);
-    sound_icon = sol_sprite_new(pal, 48 + xoffset, 42 + yoffset, zoom,
-            RESOURCE_GFF_INDEX, GFF_ICON, 16101);
-    animations = sol_sprite_new(pal, 48 + xoffset, 78 + yoffset, zoom,
-            RESOURCE_GFF_INDEX, GFF_ICON, 16103);
-    info = sol_sprite_new(pal, 68 + xoffset, 78 + yoffset, zoom,
-            RESOURCE_GFF_INDEX, GFF_ICON, 16102);
-    game_return = sol_sprite_new(pal, 138 + xoffset, 78 + yoffset, zoom,
-            RESOURCE_GFF_INDEX, GFF_ICON, 10108);
-    game_menu = sol_sprite_new(pal, 108 + xoffset, 78 + yoffset, zoom,
-            RESOURCE_GFF_INDEX, GFF_ICON, 11101);
-    full_bar = sol_sprite_new(pal, 0, 0, zoom,
-            RESOURCE_GFF_INDEX, GFF_BMP, 20107);
+    sol_status_check(sol_sprite_new(pal, 0 + xoffset, 0 + yoffset, zoom,
+            RESOURCE_GFF_INDEX, GFF_BMP, 10000, &background),
+            "Unable load game menu sprite");
+    sol_status_check(sol_sprite_new(pal, 48 + xoffset, 24 + yoffset, zoom,
+            RESOURCE_GFF_INDEX, GFF_ICON, 16100, &music_icon),
+            "Unable load game menu sprite");
+    sol_status_check(sol_sprite_new(pal, 48 + xoffset, 42 + yoffset, zoom,
+            RESOURCE_GFF_INDEX, GFF_ICON, 16101, &sound_icon),
+            "Unable load game menu sprite");
+    sol_status_check(sol_sprite_new(pal, 48 + xoffset, 78 + yoffset, zoom,
+            RESOURCE_GFF_INDEX, GFF_ICON, 16103, &animations),
+            "Unable load game menu sprite");
+    sol_status_check(sol_sprite_new(pal, 68 + xoffset, 78 + yoffset, zoom,
+            RESOURCE_GFF_INDEX, GFF_ICON, 16102, &info),
+            "Unable load game menu sprite");
+    sol_status_check(sol_sprite_new(pal, 138 + xoffset, 78 + yoffset, zoom,
+            RESOURCE_GFF_INDEX, GFF_ICON, 10108, &game_return),
+            "Unable load game menu sprite");
+    sol_status_check(sol_sprite_new(pal, 108 + xoffset, 78 + yoffset, zoom,
+            RESOURCE_GFF_INDEX, GFF_ICON, 11101, &game_menu),
+            "Unable load game menu sprite");
+    sol_status_check(sol_sprite_new(pal, 0, 0, zoom,
+            RESOURCE_GFF_INDEX, GFF_BMP, 20107, &full_bar),
+            "Unable load game menu sprite");
     for (int i = 0; i < NUM_ARROWS; i++) {
-        right_arrow[i] = sol_sprite_new(pal, 0, 0, zoom,
-                RESOURCE_GFF_INDEX, GFF_ICON, 16104);
-        left_arrow[i] = sol_sprite_new(pal, 0, 0, zoom,
-                RESOURCE_GFF_INDEX, GFF_ICON, 16105);
-        bars[i] = sol_sprite_new(pal, 0, 0, zoom,
-                RESOURCE_GFF_INDEX, GFF_BMP, 20106);
+        sol_status_check(sol_sprite_new(pal, 0, 0, zoom,
+                RESOURCE_GFF_INDEX, GFF_ICON, 16104, &right_arrow[i]),
+                "Unable load game menu sprite");
+        sol_status_check(sol_sprite_new(pal, 0, 0, zoom,
+                RESOURCE_GFF_INDEX, GFF_ICON, 16105, &left_arrow[i]),
+                "Unable load game menu sprite");
+        sol_status_check(sol_sprite_new(pal, 0, 0, zoom,
+                RESOURCE_GFF_INDEX, GFF_BMP, 20106, &bars[i]),
+                "Unable load game menu sprite");
     }
 
     help_loc.x = (xoffset + 43) * zoom;
@@ -116,6 +130,7 @@ void game_menu_render(void *data) {
     sol_sprite_render(background);
     sol_audio_stats_t *stats = NULL;
     sol_status_t status = SOL_UNKNOWN_ERROR;
+    sol_sprite_info_t sinfo;
 
     switch(state) {
         case MENU_SOUND:
@@ -131,10 +146,12 @@ void game_menu_render(void *data) {
                 sol_sprite_render(bars[i]);
             }
             status = sol_audio_get(&stats);
-            sol_sprite_render_box(full_bar, sol_sprite_getx(bars[0]), sol_sprite_gety(bars[0]),
-                sol_sprite_getw(bars[0]) * stats->xmi_volume, sol_sprite_geth(bars[0]));
-            sol_sprite_render_box(full_bar, sol_sprite_getx(bars[1]), sol_sprite_gety(bars[1]),
-                sol_sprite_getw(bars[1]) * stats->voc_volume, sol_sprite_geth(bars[1]));
+            sol_status_check(sol_sprite_get_info(bars[0], &sinfo), "Unable to get bars sprite info");
+            sol_sprite_render_box(full_bar, sinfo.x, sinfo.y,
+                sinfo.w * stats->xmi_volume, sinfo.h);
+            sol_status_check(sol_sprite_get_info(bars[1], &sinfo), "Unable to get bars sprite info");
+            sol_sprite_render_box(full_bar, sinfo.x, sinfo.y,
+                sinfo.w * stats->voc_volume, sinfo.h);
             break;
         default:
             break;
@@ -146,17 +163,17 @@ void game_menu_render(void *data) {
 static int get_sprite_mouse_is_on(const uint32_t x, const uint32_t y) {
     switch(state) {
         case MENU_SOUND:
-            if (sol_sprite_in_rect(music_icon, x, y)) { return music_icon; }
-            if (sol_sprite_in_rect(sound_icon, x, y)) { return sound_icon; }
-            if (sol_sprite_in_rect(animations, x, y)) { return animations; }
-            if (sol_sprite_in_rect(info, x, y)) { return info; }
-            if (sol_sprite_in_rect(game_menu, x, y)) { return game_menu; }
-            if (sol_sprite_in_rect(game_return, x, y)) { return game_return; }
+            if (sol_sprite_in_rect(music_icon, x, y) == SOL_SUCCESS) { return music_icon; }
+            if (sol_sprite_in_rect(sound_icon, x, y) == SOL_SUCCESS) { return sound_icon; }
+            if (sol_sprite_in_rect(animations, x, y) == SOL_SUCCESS) { return animations; }
+            if (sol_sprite_in_rect(info, x, y) == SOL_SUCCESS) { return info; }
+            if (sol_sprite_in_rect(game_menu, x, y) == SOL_SUCCESS) { return game_menu; }
+            if (sol_sprite_in_rect(game_return, x, y) == SOL_SUCCESS) { return game_return; }
 
             for (int i = 0; i < NUM_ARROWS; i++) {
-                if (sol_sprite_in_rect(left_arrow[i], x, y)) { return left_arrow[i]; }
-                if (sol_sprite_in_rect(right_arrow[i], x, y)) { return right_arrow[i]; }
-                if (sol_sprite_in_rect(bars[i], x, y)) { return bars[i]; }
+                if (sol_sprite_in_rect(left_arrow[i], x, y) == SOL_SUCCESS) { return left_arrow[i]; }
+                if (sol_sprite_in_rect(right_arrow[i], x, y) == SOL_SUCCESS) { return right_arrow[i]; }
+                if (sol_sprite_in_rect(bars[i], x, y) == SOL_SUCCESS) { return bars[i]; }
             }
 
             break;
@@ -175,9 +192,9 @@ int game_menu_handle_mouse_movement(const uint32_t x, const uint32_t y) {
     uint16_t cur_sprite = get_sprite_mouse_is_on(x, y);
 
     if (last_sprite != cur_sprite) {
-        sol_sprite_set_frame(cur_sprite, sol_sprite_get_frame(cur_sprite) + 1);
+        sol_sprite_increment_frame(cur_sprite, 1);
         if (last_sprite != SPRITE_ERROR) {
-            sol_sprite_set_frame(last_sprite, sol_sprite_get_frame(last_sprite) - 1);
+            sol_sprite_increment_frame(last_sprite, -1);
         }
     }
 
@@ -195,32 +212,32 @@ int game_menu_handle_mouse_up(const uint32_t button, const uint32_t x, const uin
 
     status = sol_audio_get(&stats);
 
-    if (sol_sprite_in_rect(left_arrow[0], x, y)) { sol_audio_set_xmi_volume(stats->xmi_volume - .1); }
-    if (sol_sprite_in_rect(right_arrow[0], x, y)) { sol_audio_set_xmi_volume(stats->xmi_volume + .1); }
-    if (sol_sprite_in_rect(left_arrow[1], x, y)) { sol_audio_set_voc_volume(stats->voc_volume - .1); }
-    if (sol_sprite_in_rect(right_arrow[1], x, y)) { sol_audio_set_voc_volume(stats->voc_volume + .1); }
+    if (sol_sprite_in_rect(left_arrow[0], x, y) == SOL_SUCCESS) { sol_audio_set_xmi_volume(stats->xmi_volume - .1); }
+    if (sol_sprite_in_rect(right_arrow[0], x, y) == SOL_SUCCESS) { sol_audio_set_xmi_volume(stats->xmi_volume + .1); }
+    if (sol_sprite_in_rect(left_arrow[1], x, y) == SOL_SUCCESS) { sol_audio_set_voc_volume(stats->voc_volume - .1); }
+    if (sol_sprite_in_rect(right_arrow[1], x, y) == SOL_SUCCESS) { sol_audio_set_voc_volume(stats->voc_volume + .1); }
 
-    if (sol_sprite_in_rect(game_return, x, y)) { sol_window_pop(); } 
+    if (sol_sprite_in_rect(game_return, x, y) == SOL_SUCCESS) { sol_window_pop(); } 
 
     return 1; // means I captured the mouse click
 }
 
 void game_menu_free() {
-    sol_sprite_free(background);
-    sol_sprite_free(music_icon);
-    sol_sprite_free(sound_icon);
+    sol_status_check(sol_sprite_free(background), "Unable to free sprite");
+    sol_status_check(sol_sprite_free(music_icon), "Unable to free sprite");
+    sol_status_check(sol_sprite_free(sound_icon), "Unable to free sprite");
 
     for (int i = 0; i < NUM_ARROWS; i++) {
-        sol_sprite_free(left_arrow[i]);
-        sol_sprite_free(right_arrow[i]);
-        sol_sprite_free(bars[i]);
+        sol_status_check(sol_sprite_free(left_arrow[i]), "Unable to free sprite");
+        sol_status_check(sol_sprite_free(right_arrow[i]), "Unable to free sprite");
+        sol_status_check(sol_sprite_free(bars[i]), "Unable to free sprite");
     }
 
-    sol_sprite_free(animations);
-    sol_sprite_free(info);
-    sol_sprite_free(game_return);
-    sol_sprite_free(game_menu);
-    sol_sprite_free(full_bar);
+    sol_status_check(sol_sprite_free(animations), "Unable to free sprite");
+    sol_status_check(sol_sprite_free(info), "Unable to free sprite");
+    sol_status_check(sol_sprite_free(game_return), "Unable to free sprite");
+    sol_status_check(sol_sprite_free(game_menu), "Unable to free sprite");
+    sol_status_check(sol_sprite_free(full_bar), "Unable to free sprite");
 }
 
 static uint32_t game_menu_get_width() { return 210 * settings_zoom(); }

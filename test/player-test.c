@@ -19,11 +19,13 @@ void tearDown() {
 
 void test_basic(void) {
     sol_player_init();
+    entity_t *dude;
     TEST_ASSERT_EQUAL_INT(0, sol_player_exists(0));
     TEST_ASSERT_EQUAL_INT(0, sol_player_exists(1));
     TEST_ASSERT_EQUAL_INT(0, sol_player_exists(2));
     TEST_ASSERT_EQUAL_INT(0, sol_player_exists(3));
-    sol_player_set(1, entity_create_fake(30, 10));
+    sol_entity_create_fake(30, 10, &dude);
+    sol_player_set(1, dude);
     TEST_ASSERT_EQUAL_INT(0, sol_player_exists(0));
     TEST_ASSERT_EQUAL_INT(0, sol_player_exists(1));
     TEST_ASSERT_EQUAL_INT(0, sol_player_exists(2));

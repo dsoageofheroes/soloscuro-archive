@@ -906,10 +906,10 @@ static void generate_activate(power_entry_t pw, char *name, FILE *file) {
     if (psi >= 0) {
     } else if (wiz >= 0) {
         fprintf(file, "    (void) power_level; // avoid unused error.\n");
-        fprintf(file, "    return entity_has_wizard_slot(source->entity, %d);\n", get_level());
+        fprintf(file, "    return sol_entity_has_wizard_slot(source->entity, %d) == SOL_SUCCESS;\n", get_level());
     } else if (pri >= 0) {
         fprintf(file, "    (void) power_level; // avoid unused error.\n");
-        fprintf(file, "    return entity_has_priest_slot(source->entity, %d);\n", get_level());
+        fprintf(file, "    return sol_entity_has_priest_slot(source->entity, %d) == SOL_SUCCESS;\n", get_level());
     } else if (psi >= 0) {
         fprintf(file, "    NEED TO DO PSI CALC!\n");
     } else if (innate >= 0) {
@@ -928,10 +928,10 @@ static void generate_pay(power_entry_t pw, char *name, FILE *file) {
     if (psi >= 0) {
     } else if (wiz >= 0) {
         fprintf(file, "    (void) power_level; // avoid unused error.\n");
-        fprintf(file, "    return entity_take_wizard_slot(source->entity, %d);\n", get_level());
+        fprintf(file, "    return sol_entity_take_wizard_slot(source->entity, %d) == SOL_SUCCESS;\n", get_level());
     } else if (pri >= 0) {
         fprintf(file, "    (void) power_level; // avoid unused error.\n");
-        fprintf(file, "    return entity_take_priest_slot(source->entity, %d);\n", get_level());
+        fprintf(file, "    return sol_entity_take_priest_slot(source->entity, %d) == SOL_SUCCESS;\n", get_level());
     } else if (psi >= 0) {
         fprintf(file, "    NEED TO DO PSI CALC!\n");
     } else if (innate >= 0) {
@@ -967,8 +967,10 @@ static void generate_apply(power_entry_t pw, char *name, FILE *file) {
     fprintf(file, "    if (!source || !entity) { return; }\n");
     fprintf(file, "    size_t num_dice = 0, mod = 0, damage = 0;\n");
     fprintf(file, "    uint64_t effect_type = 0;\n");
-    fprintf(file, "    int caster_level = (source->entity) ? entity_get_%s_level(source->entity)\n", type);
-    fprintf(file, "            : item_get_%s_level(source->item);\n\n", type);
+    fprintf(file, "    uint8_t caster_level = 0;\n");
+    fprintf(file, "    sol_status_t status = (source->entity)\n");
+    fprintf(file, "            ? sol_entity_get_%s_level(source->entity, &caster_level)\n", type);
+    fprintf(file, "            : sol_item_get_%s_level(source->item, &caster_level);\n\n", type);
     
     //if (pw.info.damage.dice > 0) {
     if (pw.info.damage.sides > 0) {
@@ -1062,20 +1064,22 @@ static void generate_affect(power_entry_t pw, char *name, FILE *file) {
 static void generate_update(power_entry_t pw, char *name, FILE *file) {
     fprintf(file, "\nstatic int %s_%s_update       (power_t *power, power_instance_t *source) {\n", type, name);
     fprintf(file, "    if (!power || ! source) { return 0;}\n");
+    fprintf(file, "    uint8_t caster_level;\n");
+    fprintf(file, "    sol_status_t status;\n");
     fprintf(file, "    entity_t *entity = source->entity;\n");
     //fprintf(file, "    int made_save = 0;\n");
     //fprintf(file, "    item_t *item = source->item;\n\n");
     fprintf(file, "\n");
 
     fprintf(file, "    if (entity) {\n");
+    fprintf(file, "        status = sol_entity_get_%s_level(entity, &caster_level);\n", type);
     fprintf(file, "        power->range = %d",
         (dsopw.info.range) < 0
         ? 0
         : dsopw.info.range
         );
     if (pw.info.range_per_level > 0) {
-        fprintf(file, " + (%d * entity_get_%s_level(entity))",
-            dsopw.info.range_per_level, type);
+        fprintf(file, " + (%d * caster_level)");
     }
         //snprintf(range_buf, 255, "%d feet + %d per level", pw.info.range, pw.info.range_per_level);
     fprintf(file, ";\n");
@@ -1085,8 +1089,7 @@ static void generate_update(power_entry_t pw, char *name, FILE *file) {
         : dsopw.info.area
         );
     if (pw.info.area_per_level > 0) {
-        fprintf(file, " + (%d * entity_get_%s_level(entity))",
-            dsopw.info.area_per_level, type);
+        fprintf(file, " + (%d * caster_level)");
     }
         //snprintf(range_buf, 255, "%d feet + %d per level", pw.info.range, pw.info.range_per_level);
     fprintf(file, ";\n");

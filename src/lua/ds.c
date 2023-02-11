@@ -45,7 +45,7 @@ int lua_gff_load_directory(lua_State *L) {
     const char *path = luaL_checklstring(L, 1, &len);
 
     gff_load_directory(path);
-    gpl_init();
+    sol_gpl_init();
 
     return 0;
 }

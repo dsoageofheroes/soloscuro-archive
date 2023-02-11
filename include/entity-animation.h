@@ -3,10 +3,11 @@
 
 #include <stdint.h>
 #include "ssi-scmd.h"
+#include "status.h"
 
 struct sol_region_s;
 
-enum entity_action_e {
+enum sol_entity_action_e {
     EA_NONE,
     EA_WALK_LEFT,
     EA_WALK_RIGHT,
@@ -40,53 +41,48 @@ enum entity_action_e {
     EA_END,
 };
 
-struct entity_s;
+struct sol_entity_s;
 struct power_s;
 struct region_s;
 
-typedef struct entity_action_s {
-    struct entity_s *source;
-    struct entity_s *target;
+typedef struct sol_entity_action_s {
+    struct sol_entity_s *source;
+    struct sol_entity_s *target;
     struct power_s  *power;
-    enum entity_action_e action;
+    enum sol_entity_action_e action;
     int32_t amt, start_amt, ticks, scmd_pos;
     int32_t speed, damage;
-} entity_action_t;
+} sol_entity_action_t;
 
-typedef struct entity_animation_node_s {
-    entity_action_t ca;
-    struct entity_animation_node_s *next;
-} entity_animation_node_t;
+typedef struct sol_entity_animation_node_s {
+    sol_entity_action_t ca;
+    struct sol_entity_animation_node_s *next;
+} sol_entity_animation_node_t;
 
-typedef struct entity_animation_list_s {
-    entity_animation_node_t *head;
-    entity_animation_node_t *last_to_execute;
-} entity_animation_list_t;
+typedef struct sol_entity_animation_list_s {
+    sol_entity_animation_node_t *head;
+    sol_entity_animation_node_t *last_to_execute;
+} sol_entity_animation_list_t;
 
-extern void entity_animation_add(enum entity_action_e action, struct entity_s *source, struct entity_s *target,
-        struct power_s *power, const int32_t amt);
-extern scmd_t* entity_animation_face_direction(scmd_t *current_scmd, const enum entity_action_e action);
-extern int entity_animation_region_execute(struct sol_region_s *reg);
-extern int entity_animation_has_more();
-
-entity_animation_list_t* entity_animation_list_create();
-void                     entity_animation_list_free(entity_animation_list_t *list);
-void                     entity_animation_list_add(entity_animation_list_t *list, enum entity_action_e action,
-        struct entity_s *source, struct entity_s *target, struct power_s *power, const int32_t amt);
-extern void              entity_animation_list_add_speed(entity_animation_list_t *list, enum entity_action_e action,
-        struct entity_s *source, struct entity_s *target, struct power_s *power, const int32_t amt, const int32_t speed,
+extern sol_status_t sol_entity_animation_list_remove_references(sol_entity_animation_list_t *list, struct sol_entity_s *dead);
+extern sol_status_t sol_animation_render(const sol_entity_action_t *ea);
+extern sol_status_t sol_entity_animation_update(struct sol_entity_s *entity, const int16_t xdiff, const int16_t ydiff);
+extern sol_status_t sol_entity_animation_list_empty(sol_entity_animation_list_t *list);
+extern sol_status_t sol_entity_animation_list_remove_current(sol_entity_animation_list_t *list);
+extern sol_status_t sol_entity_animation_execute(struct sol_entity_s *entity);
+extern sol_status_t sol_entity_animation_region_execute(struct sol_region_s *reg);
+extern sol_status_t sol_entity_animation_list_free(sol_entity_animation_list_t *list);
+extern sol_status_t sol_entity_animation_list_add(sol_entity_animation_list_t *list, enum sol_entity_action_e action,
+        struct sol_entity_s *source, struct sol_entity_s *target, struct power_s *power, const int32_t amt);
+extern sol_status_t sol_entity_animation_list_add_speed(sol_entity_animation_list_t *list, enum sol_entity_action_e action,
+        struct sol_entity_s *source, struct sol_entity_s *target, struct power_s *power, const int32_t amt, const int32_t speed,
         const int32_t damage);
-extern void              entity_animation_list_add_effect(entity_animation_list_t *list, enum entity_action_e action,
-        struct entity_s *source, struct entity_s *target, struct power_s *power, const int32_t amt, const int damage);
-extern int               entity_animation_list_execute(entity_animation_list_t *list, struct sol_region_s *reg);
-extern int               entity_animation_list_empty(entity_animation_list_t *list);
-extern int               entity_animation_list_remove_current(entity_animation_list_t *list);
-extern void              entity_animation_list_remove_references(entity_animation_list_t *list, struct entity_s *dead);
-extern void              sol_animation_render(const entity_action_t *ea);
-extern void              entity_animation_update(struct entity_s *entity, const int16_t xdiff, const int16_t ydiff);
+extern sol_status_t sol_entity_animation_list_add_effect(sol_entity_animation_list_t *list, enum sol_entity_action_e action,
+        struct sol_entity_s *source, struct sol_entity_s *target, struct power_s *power, const int32_t amt, const int damage);
+extern sol_status_t sol_entity_animation_add(enum sol_entity_action_e action, struct sol_entity_s *source, struct sol_entity_s *target,
+        struct power_s *power, const int32_t amt);
+extern sol_status_t sol_entity_animation_face_direction(scmd_t *current_scmd, const enum sol_entity_action_e action, scmd_t **ret);
+extern sol_status_t sol_entity_animation_get_scmd(struct sol_entity_s *entity, const int xdiff, const int ydiff,
+        const enum sol_entity_action_e action, scmd_t **ret);
 
-struct entity_s;
-extern int entity_animation_execute(struct entity_s *entity);
-extern scmd_t* entity_animation_get_scmd(struct entity_s *entity, const int xdiff, const int ydiff,
-        const enum entity_action_e action);
 #endif

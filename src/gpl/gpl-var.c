@@ -3,8 +3,8 @@
 #include <string.h>
 
 /* externals first */
-uint16_t gpl_current_file = 0;
-uint16_t gpl_current_type = 0;
+uint16_t sol_gpl_current_file = 0;
+uint16_t sol_gpl_current_type = 0;
 
 /* Now static to file... */
 static uint8_t gpl_global_flags[GPL_GFLAGVAR_SIZE];
@@ -12,14 +12,14 @@ static uint8_t gpl_local_flags[GPL_LFLAGVAR_SIZE];
 static int32_t accum; //, number;
 static unsigned char* gpl_data;
 static unsigned char* gpl_data_start;
-static int16_t *gpl_global_nums = 0;
-static int16_t *gpl_local_nums = 0;
-static int32_t *gpl_global_bnums = 0;
-static int32_t *gpl_local_bnums = 0;
-static gpl_control_t control_table[MAX_OBJECT_PATH];
+static int16_t *sol_gpl_global_nums = 0;
+static int16_t *sol_gpl_local_nums = 0;
+static int32_t *sol_gpl_global_bnums = 0;
+static int32_t *sol_gpl_local_bnums = 0;
+static sol_gpl_control_t control_table[MAX_OBJECT_PATH];
 static gpl_check_index_t gunused_checks;
 
-static gpl_check_t *check;
+static sol_gpl_check_t *check;
 lua_State *lua_state = NULL;
 
 // For Debugging
@@ -38,44 +38,44 @@ const char* debug_index_names[] = {
     "MOVE BOX CHECK",
 };
 
-static gpl_check_t checks[MAX_CHECK_TYPES][MAX_GPL_CHECKS];
+static sol_gpl_check_t checks[MAX_CHECK_TYPES][MAX_GPL_CHECKS];
 static int checks_pos[MAX_CHECK_TYPES];
-static name_t new_name;
-static name2_t new_name2;
+static sol_gpl_name_t new_name;
+static sol_gpl_name2_t new_name2;
 
-typedef struct _gpl_state_t {
+typedef struct sol_gpl_state_s {
     unsigned char *gpl_data_start;
     unsigned char *gpl_data;
-} gpl_state_t;
+} sol_gpl_state_t;
 
-int32_t gpl_global_big_num;
-int32_t *gpl_global_big_numptr;
+int32_t sol_gpl_global_big_num;
+int32_t *sol_gpl_global_big_numptr;
 #define MAX_GPL_STATES     (100)
 static int gpl_state_pos = -1;
-static gpl_state_t states[MAX_GPL_STATES];
+static sol_gpl_state_t states[MAX_GPL_STATES];
 
 /* All those commands... */
-void global_addr_name(gpl_param_t *par) {
+void global_addr_name(sol_gpl_param_t *par) {
     new_name.addr = par->val[0];
     new_name.file = par->val[1];
     new_name.name = par->val[2];
     new_name.global = 0;
 
-    if (gpl_current_file == GLOBAL_MAS) {
-        if (gpl_current_type == MASFILE) {
+    if (sol_gpl_current_file == GLOBAL_MAS) {
+        if (sol_gpl_current_type == MASFILE) {
             new_name.global = 1;
         }
     }
 }
 
-void name_name_global_addr(gpl_param_t *par) {
+void name_name_global_addr(sol_gpl_param_t *par) {
     new_name2.name1 = par->val[0];
     new_name2.name2 = par->val[1];
     new_name2.addr = par->val[2];
     new_name2.file = par->val[3];
     new_name2.global = 0;
-    if (gpl_current_file == GLOBAL_MAS) {
-        if (gpl_current_type == MASFILE) {
+    if (sol_gpl_current_file == GLOBAL_MAS) {
+        if (sol_gpl_current_type == MASFILE) {
             //printf("GLOBAL!!!!!!!!!!!!!\n");
             new_name2.global = 1;
         }
@@ -128,10 +128,10 @@ void generic_name_check(int check_index) {
 }
 
 void print_all_checks() {
-    box_t box;
-    tile_t tile;
-    name_t name;
-    name2_t name2;
+    sol_gpl_box_t box;
+    sol_gpl_tile_t tile;
+    sol_gpl_name_t name;
+    sol_gpl_name2_t name2;
     for (int i = 0; i < MAX_CHECK_TYPES; i++) {
         for (int j = 0; j < checks_pos[i]; j++) {
             box   = checks[i][j].data.box_check;
@@ -201,40 +201,44 @@ typedef struct gpl_check_s {
 }
 
 #define GPL_CHECKS (200)
-extern void gpl_init_vars() {
+extern sol_status_t sol_gpl_init_vars() {
     memset(gpl_global_flags, 0x00, GPL_GFLAGVAR_SIZE);
     memset(gpl_local_flags, 0x00, GPL_LFLAGVAR_SIZE);
-    gpl_global_bnums = malloc(GPL_GBIGNUMVAR_SIZE * sizeof(int32_t));
-    memset(gpl_global_bnums, 0x00, GPL_GBIGNUMVAR_SIZE * sizeof(int32_t));
-    gpl_global_nums = malloc(GPL_GNUMVAR_SIZE);
-    memset(gpl_global_nums, 0x00, GPL_GNUMVAR_SIZE);
-    gpl_local_bnums = malloc(GPL_LBIGNUMVAR_SIZE * sizeof(int32_t));
-    memset(gpl_local_bnums, 0x00, GPL_LBIGNUMVAR_SIZE * sizeof(int32_t));
-    gpl_local_nums = malloc(GPL_LNUMVAR_SIZE);
-    memset(gpl_local_nums, 0x00, GPL_LNUMVAR_SIZE);
-    memset(checks, 0x00, sizeof(gpl_check_t) * MAX_CHECK_TYPES * MAX_GPL_CHECKS);
+    sol_gpl_global_bnums = malloc(GPL_GBIGNUMVAR_SIZE * sizeof(int32_t));
+    memset(sol_gpl_global_bnums, 0x00, GPL_GBIGNUMVAR_SIZE * sizeof(int32_t));
+    sol_gpl_global_nums = malloc(GPL_GNUMVAR_SIZE);
+    memset(sol_gpl_global_nums, 0x00, GPL_GNUMVAR_SIZE);
+    sol_gpl_local_bnums = malloc(GPL_LBIGNUMVAR_SIZE * sizeof(int32_t));
+    memset(sol_gpl_local_bnums, 0x00, GPL_LBIGNUMVAR_SIZE * sizeof(int32_t));
+    sol_gpl_local_nums = malloc(GPL_LNUMVAR_SIZE);
+    memset(sol_gpl_local_nums, 0x00, GPL_LNUMVAR_SIZE);
+    memset(checks, 0x00, sizeof(sol_gpl_check_t) * MAX_CHECK_TYPES * MAX_GPL_CHECKS);
     memset(checks_pos, 0x00, sizeof(int) * MAX_CHECK_TYPES);
-    memset(control_table, 0x00, sizeof(gpl_control_t) * MAX_OBJECT_PATH);
+    memset(control_table, 0x00, sizeof(sol_gpl_control_t) * MAX_OBJECT_PATH);
     gunused_checks = 0;
-    check = (gpl_check_t*) malloc(sizeof(gpl_check_t) * GPL_CHECKS);
-    memset(check, 0x0, sizeof(gpl_check_t) * GPL_CHECKS);
+    check = (sol_gpl_check_t*) malloc(sizeof(sol_gpl_check_t) * GPL_CHECKS);
+    memset(check, 0x0, sizeof(sol_gpl_check_t) * GPL_CHECKS);
     for (int i = 0; i < GPL_CHECKS; i++) {
         check[i].next = i + 1;
     }
     check[GPL_CHECKS - 1].next = NULL_CHECK;
+    return SOL_SUCCESS;
 }
 
-extern void gpl_cleanup_vars() {
-    free(gpl_global_bnums);
-    free(gpl_global_nums);
-    free(gpl_local_bnums);
-    free(gpl_local_nums);
+extern sol_status_t sol_gpl_cleanup_vars() {
+    free(sol_gpl_global_bnums);
+    free(sol_gpl_global_nums);
+    free(sol_gpl_local_bnums);
+    free(sol_gpl_local_nums);
     free(check);
+    return SOL_SUCCESS;
 }
 
-extern void gpl_set_data_ptr(unsigned char *start, unsigned char *cpos) {
+extern sol_status_t sol_gpl_set_data_ptr(unsigned char *start, unsigned char *cpos) {
+    if (!start || !cpos) { return SOL_NULL_ARGUMENT; }
     gpl_data_start = start;
     gpl_data = cpos;
+    return SOL_SUCCESS;
 }
 
 void set_accumulator(int32_t a) {
@@ -246,19 +250,24 @@ int32_t get_accumulator() {
     return accum;
 }
 
-extern unsigned char* gpl_get_data_start_ptr() {
-    return gpl_data_start;
+extern sol_status_t sol_gpl_get_data_start_ptr(unsigned char **d) {
+    if (!d) { return SOL_NULL_ARGUMENT; }
+    *d = gpl_data_start;
+    return SOL_SUCCESS;
 }
 
-extern unsigned char* gpl_get_data_ptr() {
-    return gpl_data;
+extern sol_status_t sol_gpl_get_data_ptr(unsigned char **d) {
+    if (!d) { return SOL_NULL_ARGUMENT; }
+    *d = gpl_data;
+    return SOL_SUCCESS;
 }
 
-extern void gpl_push_data_ptr(unsigned char *data) {
+extern sol_status_t sol_gpl_push_data_ptr(unsigned char *data) {
+    if (!data) { return SOL_NULL_ARGUMENT; }
     // The first one isn't pushed on the stack.
     if (gpl_state_pos < 0) {
         gpl_state_pos = 0;
-        return;
+        return SOL_SUCCESS;
     }
 
     states[gpl_state_pos].gpl_data_start = gpl_data_start;
@@ -268,61 +277,75 @@ extern void gpl_push_data_ptr(unsigned char *data) {
     gpl_data_start = data;
 
     debug("pushing %p: %p\n", gpl_data_start, gpl_data);
+    return SOL_SUCCESS;
 }
 
 void clear_local_vars() {
     //memset(gpl_global_flags, 0x0, GPL_GFLAGVAR_SIZE);
 }
 
-extern unsigned char* gpl_pop_data_ptr() {
-    gpl_state_pos--;
-
+extern sol_status_t sol_gpl_pop_data_ptr(unsigned char **d) {
     if (gpl_state_pos < 0) {
-        return NULL;
+        return SOL_OUT_OF_RANGE;
     }
+
+    gpl_state_pos--;
 
     gpl_data_start = states[gpl_state_pos].gpl_data_start;
     gpl_data = states[gpl_state_pos].gpl_data;
 
     debug("pop %p: %p\n", gpl_data_start, gpl_data);
-    return states[gpl_state_pos].gpl_data_start;
+    if (d) {
+        *d = states[gpl_state_pos].gpl_data_start;
+    }
+    return SOL_SUCCESS;
 }
 
-uint8_t gpl_get_byte() {
-    uint8_t answer = (uint8_t) *gpl_data;
+extern sol_status_t sol_gpl_get_byte(uint8_t *b) {
+    *b = (uint8_t) *gpl_data;
     gpl_data++;
-    return answer;
+    return SOL_SUCCESS;
 }
 
 static uint16_t get_word() {
     uint16_t ret;
-    ret = gpl_get_byte() * 0x100;
-    ret += gpl_get_byte();
+    uint8_t b;
+    sol_gpl_get_byte(&b);
+    ret = b * 0x100;
+    sol_gpl_get_byte(&b);
+    ret += b;
     return ret;
 }
 
-extern uint8_t gpl_peek_one_byte() {
-    return *gpl_data;
+extern sol_status_t sol_gpl_peek_one_byte(uint8_t *d) {
+    *d = *gpl_data;
+    return SOL_SUCCESS;
 }
 
-extern uint16_t gpl_peek_half_word() {
+extern sol_status_t sol_gpl_peek_half_word(uint16_t *d) {
     uint16_t ret;
     ret = (*gpl_data) *0x100;
     ret += *(gpl_data + 1);
-    return ret;
+    *d = ret;
+    return SOL_SUCCESS;
 }
 
 uint16_t get_half_word() {
-    uint16_t ret = gpl_get_byte() * 0x100;
-    ret += gpl_get_byte();
+    uint8_t b;
+    sol_gpl_get_byte(&b);
+    uint16_t ret = b * 0x100;
+    sol_gpl_get_byte(&b);
+    ret += b;
     return ret;
 }
 
-extern uint8_t gpl_preview_byte(uint8_t offset) {
-    return *(gpl_data + offset);
+extern sol_status_t sol_gpl_preview_byte(uint8_t offset, uint16_t *d) {
+    *d = *(gpl_data + offset);
+    return SOL_SUCCESS;
 }
 
 static uint8_t access_complex(int16_t *header, uint16_t *depth, uint16_t *element) {
+    uint8_t b;
     uint16_t i;
     int32_t obj_name;
     
@@ -345,10 +368,12 @@ static uint8_t access_complex(int16_t *header, uint16_t *depth, uint16_t *elemen
                 return 0;
         }
     }
-    *depth = gpl_get_byte();
+    sol_gpl_get_byte(&b);
+    *depth = b;
     debug("depth = %d\n", *depth);
     for (i = 1; i <= *depth; i++) {
-        element[i-1] = gpl_get_byte();
+        sol_gpl_get_byte(&b);
+        element[i-1] = b;
         debug("element[%d] = %d\n", i-1, element[i-1]);
     }
 
@@ -381,8 +406,9 @@ void setrecord() {
     uint16_t depth = 0;
     int16_t header = 0;
     uint16_t element[MAX_SEARCH_STACK];
-    uint16_t tmp = gpl_peek_half_word();
+    uint16_t tmp;
 
+    sol_gpl_peek_half_word(&tmp);
     if (tmp > 0x8000) {
         access_complex(&header, &depth, element);
         //accum = read_number();
@@ -402,7 +428,7 @@ void setrecord() {
     }
 }
 
-void set_any_order(name_t *name, int16_t to, int16_t los_order, int16_t range) {
+void set_any_order(sol_gpl_name_t *name, int16_t to, int16_t los_order, int16_t range) {
     warn("set_any_order: lua callback needed: Get all objects with 'name' and set then to to with los_order and in range\n");
     warn("then set the order!");
     /*
@@ -446,7 +472,7 @@ static void insert_check(check_index_t *cindex) {
 */
 
 void use_with_check() {
-    name2_t name = new_name2;
+    sol_gpl_name2_t name = new_name2;
     int check_index = USE_WITH_CHECK_INDEX;
     int cpos = checks_pos[check_index]; // Where in the list we are.
     if (cpos > MAX_GPL_CHECKS) {
@@ -465,7 +491,7 @@ void use_with_check() {
         name.name2, name.global);
 }
 
-void generic_box_check(int check_index, box_t box) {
+void generic_box_check(int check_index, sol_gpl_box_t box) {
     int cpos = checks_pos[check_index]; // Where in the list we are.
     if (cpos > MAX_GPL_CHECKS) {
         fprintf(stderr, "FATAL ERROR: Max checks reached! ci = %d\n", check_index);
@@ -483,7 +509,7 @@ void generic_box_check(int check_index, box_t box) {
         box.y, box.trip);
 }
 
-void generic_tile_check(int check_index, tile_t tile) {
+void generic_tile_check(int check_index, sol_gpl_tile_t tile) {
     int cpos = checks_pos[check_index]; // Where in the list we are.
     if (cpos > MAX_GPL_CHECKS) {
         fprintf(stderr, "FATAL ERROR: Max checks reached! ci = %d\n", check_index);
@@ -501,7 +527,7 @@ void generic_tile_check(int check_index, tile_t tile) {
         tile.y, tile.trip);
 }
 
-static void add_save_orders(int16_t los_order, name_t name, int16_t range, int ordertype) {
+static void add_save_orders(int16_t los_order, sol_gpl_name_t name, int16_t range, int ordertype) {
     if (name.name < 0) {
         warn("*******************add_save_orders (with name < 0) not implemented****************\n");
         warn("addr = %d, file = %d, name = %d, global = %d\n", name.addr, name.file, name.name, name.global);

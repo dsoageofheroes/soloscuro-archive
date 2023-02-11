@@ -10,14 +10,13 @@ enum {
     WAIT_MAX_SIGNALS,
 };
 
-extern void sol_gameloop_init();
-extern void sol_game_loop();
-extern int  sol_game_loop_wait_for_signal(int signal);
-extern int  sol_game_loop_signal(int signal, int _accum);
-extern int  sol_game_loop_is_waiting_for(int signal);
-extern int  sol_player_freeze();
-extern void sol_game_loop();
-extern int  sol_still_running();
-extern int  sol_started();
+extern sol_status_t sol_gameloop_init();
+extern sol_status_t sol_game_loop();
+extern sol_status_t sol_game_loop_wait_for_signal(int signal);
+extern sol_status_t sol_game_loop_signal(int signal, int _accum);
+extern sol_status_t sol_game_loop_is_waiting_for(int signal);
+extern sol_status_t sol_player_freeze();
+extern sol_status_t sol_still_running();
+extern sol_status_t sol_started();
 
 #endif

@@ -88,37 +88,64 @@ void view_character_init(const uint32_t _x, const uint32_t _y) {
     memset(message, 0x0, sizeof(message));
     memset(power_list, 0x0, sizeof(power_t*) * MAX_POWERS);
 
-    panel = sol_sprite_new(pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 11000);
-    effects = sol_sprite_new(pal, 80 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20075);
-    view_char = sol_sprite_new(pal, 60 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20079);
-    use = sol_sprite_new(pal, 115 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20080);
-    sun = sol_sprite_new(pal, 50 + x, 0 + y - 11, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20028);
+    sol_status_check(sol_sprite_new(pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 11000, &panel),
+            "Unable load vc");
+    sol_status_check(sol_sprite_new(pal, 80 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20075, &effects),
+            "Unable load vc");
+    sol_status_check(sol_sprite_new(pal, 60 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20079, &view_char),
+            "Unable load vc");
+    sol_status_check(sol_sprite_new(pal, 115 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20080, &use),
+            "Unable load vc");
+    sol_status_check(sol_sprite_new(pal, 50 + x, 0 + y - 11, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20028, &sun),
+            "Unable load vc");
 
-    character = sol_sprite_new(pal, 45 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 10100);
-    inv = sol_sprite_new(pal, 68 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11102);
-    powers = sol_sprite_new(pal, 91 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11103);
-    status = sol_sprite_new(pal, 112 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11104);
-    game_return = sol_sprite_new(pal, 252 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 10108);
-    game_menu = sol_sprite_new(pal, 222 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11101);
-    slots = sol_sprite_new(pal, 53 + x, 3 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 13007);
-    power_highlight = sol_sprite_new(pal, 53 + x, 3 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20088);
-    power_background = sol_sprite_new(pal, 53 + x, 3 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 15002);
+    sol_status_check(sol_sprite_new(pal, 45 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 10100, &character),
+            "Unable load vc");
+    sol_status_check(sol_sprite_new(pal, 68 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11102, &inv),
+            "Unable load vc");
+    sol_status_check(sol_sprite_new(pal, 91 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11103, &powers),
+            "Unable load vc");
+    sol_status_check(sol_sprite_new(pal, 112 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11104, &status),
+            "Unable load vc");
+    sol_status_check(sol_sprite_new(pal, 252 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 10108, &game_return),
+            "Unable load vc");
+    sol_status_check(sol_sprite_new(pal, 222 + x, 155 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11101, &game_menu),
+            "Unable load vc");
+    sol_status_check(sol_sprite_new(pal, 53 + x, 3 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 13007, &slots),
+            "Unable load vc");
+    power_highlight = sol_sprite_new(pal, 53 + x, 3 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20088, &power_highlight),
+    power_background = sol_sprite_new(pal, 53 + x, 3 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 15002, &power_background),
 
-    ai[0] = sol_sprite_new(pal, 45 + x, 40 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111);
-    ai[1] = sol_sprite_new(pal, 45 + x, 100 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111);
-    ai[2] = sol_sprite_new(pal, 95 + x, 40 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111);
-    ai[3] = sol_sprite_new(pal, 95 + x, 100 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111);
-    leader[0] = sol_sprite_new(pal, 45 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11106);
-    leader[1] = sol_sprite_new(pal, 45 + x, 90 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11106);
-    leader[2] = sol_sprite_new(pal, 95 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11106);
-    leader[3] = sol_sprite_new(pal, 95 + x, 90 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11106);
-    ports[0] = sol_sprite_new(pal, 55 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11100);
-    ports[1] = sol_sprite_new(pal, 55 + x, 90 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11100);
-    ports[2] = sol_sprite_new(pal, 105 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11100);
-    ports[3] = sol_sprite_new(pal, 105 + x, 90 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11100);
-    buttons[0] = sol_sprite_new(pal, 131 + x, 157 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11109);
-    buttons[1] = sol_sprite_new(pal, 172 + x, 157 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11110);
-    buttons[2] = sol_sprite_new(pal, 172 + x, 157 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 13006);
+    sol_status_check(sol_sprite_new(pal, 45 + x, 40 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111, &ai[0]),
+            "Unable load vc");
+    sol_status_check(sol_sprite_new(pal, 45 + x, 100 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111, &ai[1]),
+            "Unable load vc");
+    sol_status_check(sol_sprite_new(pal, 95 + x, 40 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111, &ai[2]),
+            "Unable load vc");
+    sol_status_check(sol_sprite_new(pal, 95 + x, 100 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11111, &ai[3]),
+            "Unable load vc");
+    sol_status_check(sol_sprite_new(pal, 45 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11106, &leader[0]),
+            "Unable load vc");
+    sol_status_check(sol_sprite_new(pal, 45 + x, 90 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11106, &leader[1]),
+            "Unable load vc");
+    sol_status_check(sol_sprite_new(pal, 95 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11106, &leader[2]),
+            "Unable load vc");
+    sol_status_check(sol_sprite_new(pal, 95 + x, 90 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11106, &leader[3]),
+            "Unable load vc");
+    sol_status_check(sol_sprite_new(pal, 55 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11100, &ports[0]),
+            "Unable load vc");
+    sol_status_check(sol_sprite_new(pal, 55 + x, 90 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11100, &ports[1]),
+            "Unable load vc");
+    sol_status_check(sol_sprite_new(pal, 105 + x, 30 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11100, &ports[2]),
+            "Unable load vc");
+    sol_status_check(sol_sprite_new(pal, 105 + x, 90 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11100, &ports[3]),
+            "Unable load vc");
+    sol_status_check(sol_sprite_new(pal, 131 + x, 157 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11109, &buttons[0]),
+            "Unable load vc");
+    sol_status_check(sol_sprite_new(pal, 172 + x, 157 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 11110, &buttons[1]),
+            "Unable load vc");
+    sol_status_check(sol_sprite_new(pal, 172 + x, 157 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 13006, &buttons[2]),
+            "Unable load vc");
     power_name = sol_label_create_at_pos(0, -1, "MAGE", FONT_GREY, (135 + x) * zoom, (158 + y) * zoom);
     power_level = sol_label_create_at_pos(0, -1, "LEVEL 1", FONT_GREY, (175 + x) * zoom, (158 + y) * zoom);
 
@@ -195,7 +222,7 @@ static power_t* find_power(const uint32_t x, const uint32_t y) {
     size_t power_pos = 0;
     while (power_list[power_pos]) {
         animate_sprite_t *as = &(power_list[power_pos]->icon);
-        if (as && sol_sprite_in_rect(as->spr, x, y)) {
+        if (as && sol_sprite_in_rect(as->spr, x, y) == SOL_SUCCESS) {
             return power_list[power_pos];
         }
         power_pos++;
@@ -207,13 +234,15 @@ static power_t* find_power(const uint32_t x, const uint32_t y) {
 static void sprite_highlight(const uint32_t x, const uint32_t y) {
     const float zoom = settings_zoom();
     power_t *pw = find_power(x, y);
+    sol_sprite_info_t info;
 
     if (!pw) { return; }
-
     animate_sprite_t *as = &(pw->icon);
+
+    sol_status_check(sol_sprite_get_info(as->spr, &info), "Unable to get sprite info.");
     sol_sprite_set_frame(power_highlight, 4);
-    sol_sprite_set_location(power_highlight, sol_sprite_getx(as->spr) - 1 * zoom,
-            sol_sprite_gety(as->spr) - 1 * zoom);
+    sol_sprite_set_location(power_highlight, info.x - 1 * zoom,
+            info.y - 1 * zoom);
     sol_sprite_render(power_highlight);
     strcpy(message, pw->name);
 }
@@ -252,6 +281,7 @@ static int get_next_len(const char *str, const int max) {
 void view_character_render(void *data) {
     char buf[BUF_MAX];
     const float zoom = settings_zoom();
+    sol_sprite_info_t info;
 
     message[0] = '\0';
     sol_sprite_render(sun);
@@ -302,7 +332,8 @@ void view_character_render(void *data) {
             sol_sprite_render(ports[i]);
             sol_player_center(i, xoffset + x * zoom, yoffset + (y - 34) * zoom, 34 * zoom, 34 * zoom);
             sol_sprite_t spr = sol_player_get_sprite(i);
-            if (sol_sprite_geth(spr) > 30 * zoom) {
+            sol_status_check(sol_sprite_get_info(spr, &info), "Unable to get sprite info.");
+            if (info.h > 30 * zoom) {
                 sol_sprite_set_frame(spr, 0);
                 sol_sprite_render_box(spr, xoffset + x * zoom, yoffset + (y - 34) * zoom,
                     34 * zoom, 34 * zoom);
@@ -326,24 +357,24 @@ void view_character_render(void *data) {
 }
 
 static int get_sprite_mouse_is_on(const uint32_t x, const uint32_t y) {
-    if (sol_sprite_in_rect(character, x, y)) { return character; }
-    if (sol_sprite_in_rect(inv, x, y)) { return inv; }
-    if (sol_sprite_in_rect(powers, x, y)) { return powers; }
-    if (sol_sprite_in_rect(status, x, y)) { return status; }
-    if (sol_sprite_in_rect(game_menu, x, y)) { return game_menu; }
-    if (sol_sprite_in_rect(game_return, x, y)) { return game_return; }
+    if (sol_sprite_in_rect(character, x, y) == SOL_SUCCESS) { return character; }
+    if (sol_sprite_in_rect(inv, x, y) == SOL_SUCCESS) { return inv; }
+    if (sol_sprite_in_rect(powers, x, y) == SOL_SUCCESS) { return powers; }
+    if (sol_sprite_in_rect(status, x, y) == SOL_SUCCESS) { return status; }
+    if (sol_sprite_in_rect(game_menu, x, y) == SOL_SUCCESS) { return game_menu; }
+    if (sol_sprite_in_rect(game_return, x, y) == SOL_SUCCESS) { return game_return; }
     //if (sol_sprite_in_rect(effects, x, y)) { return effects; }
 
     for (int i = 0; i < 4; i++) {
-        if (sol_sprite_in_rect(ai[i], x, y)) { return ai[i]; }
-        if (sol_sprite_in_rect(leader[i], x, y)) { return leader[i]; }
+        if (sol_sprite_in_rect(ai[i], x, y) == SOL_SUCCESS) { return ai[i]; }
+        if (sol_sprite_in_rect(leader[i], x, y) == SOL_SUCCESS) { return leader[i]; }
         //if (sol_sprite_in_rect(port_background[i], x, y)) { return port_background[i]; }
-        if (sol_sprite_in_rect(ports[i], x, y)) { return ports[i]; }
+        if (sol_sprite_in_rect(ports[i], x, y) == SOL_SUCCESS) { return ports[i]; }
     }
 
     if (mode == 2) {
-        if (sol_sprite_in_rect(buttons[0], x, y)) { return buttons[0]; }
-        if (sol_sprite_in_rect(buttons[1], x, y)) { return buttons[1]; }
+        if (sol_sprite_in_rect(buttons[0], x, y) == SOL_SUCCESS) { return buttons[0]; }
+        if (sol_sprite_in_rect(buttons[1], x, y) == SOL_SUCCESS) { return buttons[1]; }
     }
 
     return SPRITE_ERROR;
@@ -356,9 +387,9 @@ int view_character_handle_mouse_movement(const uint32_t x, const uint32_t y) {
     mousex = x; mousey = y;
 
     if (last_sprite != cur_sprite) {
-        sol_sprite_set_frame(cur_sprite, sol_sprite_get_frame(cur_sprite) + 1);
+        sol_sprite_increment_frame(cur_sprite, 1);
         if (last_sprite != SPRITE_ERROR) {
-            sol_sprite_set_frame(last_sprite, sol_sprite_get_frame(last_sprite) - 1);
+            sol_sprite_increment_frame(last_sprite, -1);
         }
     }
     
@@ -369,16 +400,16 @@ int view_character_handle_mouse_movement(const uint32_t x, const uint32_t y) {
 int view_character_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
     //static int32_t player_selected = 0;
     for (int i = 0; i < 4; i++) {
-        if (sol_sprite_in_rect(ports[i], x, y)
+        if (sol_sprite_in_rect(ports[i], x, y) == SOL_SUCCESS
                 && sol_player_exists(i)
                 ) {
             player_selected = i;
             strcpy(description, sol_player_get(player_selected)->name);
         }
-        if (sol_sprite_in_rect(leader[i], x, y)) {
+        if (sol_sprite_in_rect(leader[i], x, y) == SOL_SUCCESS) {
             sol_player_set_active(i);
         }
-        if (sol_sprite_in_rect(ai[i], x, y)) {
+        if (sol_sprite_in_rect(ai[i], x, y) == SOL_SUCCESS) {
             sol_player_set_ai(i, !sol_player_ai(i));
         }
     }
@@ -386,14 +417,14 @@ int view_character_handle_mouse_down(const uint32_t button, const uint32_t x, co
 }
 
 int view_character_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
-    if (power_to_display && sol_sprite_in_rect(power_background, x, y)) {
+    if (power_to_display && sol_sprite_in_rect(power_background, x, y) == SOL_SUCCESS) {
         power_to_display = NULL;
         return 1;
     }
 
     if (button == SOL_MOUSE_BUTTON_RIGHT) {
         for (int i = 0; i < 4; i++) {
-            if (sol_sprite_in_rect(ports[i], x, y)) {
+            if (sol_sprite_in_rect(ports[i], x, y) == SOL_SUCCESS) {
                 slot_clicked = i;
                 sol_window_push(&popup_window, 100, 75);
                 sol_popup_set_message("INACTIVE CHARACTER");
@@ -429,15 +460,15 @@ int view_character_handle_mouse_up(const uint32_t button, const uint32_t x, cons
     sol_sprite_set_frame(powers, 0);
     sol_sprite_set_frame(status, 0);
 
-    if (sol_sprite_in_rect(game_return, x, y)) { sol_window_pop(); return 1; } 
-    if (sol_sprite_in_rect(character, x, y)) { mode = 0; }
-    if (sol_sprite_in_rect(inv, x, y)) { sol_window_push(&inventory_window, 0, 0); return 1;}
-    if (sol_sprite_in_rect(powers, x, y)) { mode = 2; }
-    if (sol_sprite_in_rect(status, x, y)) { mode = 3; }
+    if (sol_sprite_in_rect(game_return, x, y) == SOL_SUCCESS) { sol_window_pop(); return 1; } 
+    if (sol_sprite_in_rect(character, x, y) == SOL_SUCCESS) { mode = 0; }
+    if (sol_sprite_in_rect(inv, x, y) == SOL_SUCCESS) { sol_window_push(&inventory_window, 0, 0); return 1;}
+    if (sol_sprite_in_rect(powers, x, y) == SOL_SUCCESS) { mode = 2; }
+    if (sol_sprite_in_rect(status, x, y) == SOL_SUCCESS) { mode = 3; }
 
     if (mode == 2) {
-        if (sol_sprite_in_rect(buttons[0], x, y)) { return buttons[0]; }
-        if (sol_sprite_in_rect(buttons[1], x, y)) {
+        if (sol_sprite_in_rect(buttons[0], x, y) == SOL_SUCCESS) { return buttons[0]; }
+        if (sol_sprite_in_rect(buttons[1], x, y) == SOL_SUCCESS) {
             level = (level + 1) % 6;
             if (level < 1) { level = 1; }
             set_power(0, level);
@@ -448,28 +479,28 @@ int view_character_handle_mouse_up(const uint32_t button, const uint32_t x, cons
 }
 
 void view_character_free() {
-    sol_sprite_free(sun);
-    sol_sprite_free(panel);
-    sol_sprite_free(use);
-    sol_sprite_free(view_char);
-    sol_sprite_free(effects);
+    sol_status_check(sol_sprite_free(sun), "Unable to free sprite");
+    sol_status_check(sol_sprite_free(panel), "Unable to free sprite");
+    sol_status_check(sol_sprite_free(use), "Unable to free sprite");
+    sol_status_check(sol_sprite_free(view_char), "Unable to free sprite");
+    sol_status_check(sol_sprite_free(effects), "Unable to free sprite");
 
     for (int i = 0; i < 4; i++) {
-        sol_sprite_free(ai[i]);
-        sol_sprite_free(leader[i]);
-        sol_sprite_free(ports[i]);
+        sol_status_check(sol_sprite_free(ai[i]), "Unable to free sprite");
+        sol_status_check(sol_sprite_free(leader[i]), "Unable to free sprite");
+        sol_status_check(sol_sprite_free(ports[i]), "Unable to free sprite");
     }
     for (int i = 0; i < 3; i++) {
-        sol_sprite_free(buttons[i]);
+        sol_status_check(sol_sprite_free(buttons[i]), "Unable to free sprite");
     }
-    sol_sprite_free(game_return);
-    sol_sprite_free(game_menu);
-    sol_sprite_free(character);
-    sol_sprite_free(inv);
-    sol_sprite_free(powers);
-    sol_sprite_free(status);
-    sol_sprite_free(power_highlight);
-    sol_sprite_free(power_background);
+    sol_status_check(sol_sprite_free(game_return), "Unable to free sprite");
+    sol_status_check(sol_sprite_free(game_menu), "Unable to free sprite");
+    sol_status_check(sol_sprite_free(character), "Unable to free sprite");
+    sol_status_check(sol_sprite_free(inv), "Unable to free sprite");
+    sol_status_check(sol_sprite_free(powers), "Unable to free sprite");
+    sol_status_check(sol_sprite_free(status), "Unable to free sprite");
+    sol_status_check(sol_sprite_free(power_highlight), "Unable to free sprite");
+    sol_status_check(sol_sprite_free(power_background), "Unable to free sprite");
 }
 
 void view_character_return_control () {
@@ -512,7 +543,7 @@ void view_character_return_control () {
         if (sol_add_load_save_get_action() == ACTION_ADD) {
             uint32_t sel = sol_add_load_save_get_selection();
             //if (!ds_player_load_character_charsave(slot_clicked, sel)) {
-            if (!ds_load_character_charsave(slot_clicked, sel)) {
+            if (sol_load_character_charsave(slot_clicked, sel) != SOL_SUCCESS) {
                 printf("Char loading failed.\n");
             } else {
                 sol_player_load_zoom(slot_clicked, settings_zoom());

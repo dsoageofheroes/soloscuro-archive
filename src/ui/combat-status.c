@@ -21,7 +21,7 @@ typedef struct animate_sprite_node_list_s {
     power_t *power;
     entity_t *source;
     entity_t *target;
-    enum entity_action_e action;
+    enum sol_entity_action_e action;
     int cycles;
     int is_moving;
     uint16_t sound;
@@ -46,8 +46,8 @@ static void pop_list() {
     animate_sprite_node_list_t *delme = list;
     list = list->next;
 
-    if (entity_is_fake(delme->target)) {
-        entity_free(delme->target);
+    if (sol_entity_is_fake(delme->target) == SOL_SUCCESS) {
+        sol_entity_free(delme->target);
     }
 
     if (delme->action == EA_POWER_HIT) {
@@ -86,8 +86,12 @@ void combat_status_init(const uint32_t x, const uint32_t y) {
     xoffset = settings_screen_width() - 100 * settings_zoom();
     yoffset = 5 * settings_zoom();
 
-    background = sol_sprite_new(pal, 0 + xoffset / settings_zoom(), 0 + yoffset / settings_zoom(), zoom, RESOURCE_GFF_INDEX, GFF_BMP, 5016);
-    combat_attacks = sol_sprite_new(pal, 0, 0, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 5014);
+    sol_status_check(
+            sol_sprite_new(pal, 0 + xoffset / settings_zoom(), 0 + yoffset / settings_zoom(), zoom, RESOURCE_GFF_INDEX, GFF_BMP, 5016, &background),
+            "Unable to load background for combat status");
+    sol_status_check(
+            sol_sprite_new(pal, 0, 0, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 5014, &combat_attacks),
+            "Unable to load attacks sprite for combat status");
 }
 
 static void get_status() {
@@ -115,14 +119,16 @@ void combat_status_render(void *data) {
     static int last_action = 0;
     sol_status_t status;
     combat_region_t *cr = NULL;
+    sol_sprite_info_t info;
 
     if (show_attack) {
+        sol_status_check(sol_sprite_get_info(combat_attacks, &info), "Unable to get combat attacks sprite info");
         sol_sprite_render(combat_attacks);
-        loc.x = sol_sprite_getx(combat_attacks);
-        loc.y = sol_sprite_gety(combat_attacks)
-            + sol_sprite_geth(combat_attacks) / 2
+        loc.x = info.x;
+        loc.y = info.y
+            + info.h / 2
             - 8 / 2 * settings_zoom(); // last one is font size / 2
-        loc.w = sol_sprite_getw(combat_attacks);
+        loc.w = info.w;
         snprintf(buf, 128, "%d", damage_amount);
         sol_font_render_center(FONT_GREYLIGHT, buf, loc.x, loc.y, loc.w);
     }
@@ -137,9 +143,10 @@ void combat_status_render(void *data) {
     sol_sprite_render(background);
     get_status();
 
+    sol_status_check(sol_sprite_get_info(background, &info), "Unable to get background sprite info.");
     loc.x = xoffset;
     loc.y = yoffset + 2 * zoom;
-    loc.w = sol_sprite_getw(background);
+    loc.w = info.w;
 
     sol_font_render_center(FONT_GREYLIGHT, combat_status.name, loc.x, loc.y, loc.w);
     snprintf(buf, 127, "%d/%d", combat_status.current_hp, combat_status.max_hp);
@@ -155,13 +162,14 @@ void combat_status_render(void *data) {
 }
 
 // DO NOT STORE THE POINTER TO CA!!!!!!!!
-extern sol_status_t sol_combat_action(const entity_action_t *ca) {
+extern sol_status_t sol_combat_action(const sol_entity_action_t *ca) {
     if (!ca) { return SOL_NULL_ARGUMENT; }
     // DO NOT STORE THE POINTER TO CA!!!!!!!!
     float const zoom = settings_zoom();
     animate_sprite_t *as = NULL, *source = NULL, *cast = NULL,
         *dest = NULL, *hit = NULL, *throw = NULL;
     int dir = 0;
+    sol_sprite_info_t info;
 
     switch (ca->action) {
         case EA_RED_DAMAGE: sol_sprite_set_frame(combat_attacks, 0); break;
@@ -184,11 +192,12 @@ extern sol_status_t sol_combat_action(const entity_action_t *ca) {
             damage_amount = ca->damage;
             return SOL_SUCCESS;
         case EA_POWER_CAST:
+            sol_status_check(sol_sprite_get_info(cast->spr, &info), "Unable to get cast sprite info");
             source = &(ca->source->anim);
             cast = &(ca->power->cast);
             //sol_sprite_center_spr(cast->spr, source->spr);
-            cast->x = sol_sprite_getx(cast->spr) + sol_get_camerax();
-            cast->y = sol_sprite_gety(cast->spr) + sol_get_camerax();
+            cast->x = info.x + sol_get_camerax();
+            cast->y = info.y + sol_get_camerax();
             cast->destx = cast->x;
             cast->desty = cast->y;
             cast->scmd = sol_combat_get_scmd(COMBAT_POWER_CAST);
@@ -197,11 +206,12 @@ extern sol_status_t sol_combat_action(const entity_action_t *ca) {
         case EA_POWER_THROW: // handled in entity-animations
             break;
         case EA_POWER_HIT:
+            sol_status_check(sol_sprite_get_info(hit->spr, &info), "Unable to get cast sprite info");
             dest = &(ca->target->anim);
             hit = &(ca->power->hit);
             //sol_sprite_center_spr(hit->spr, dest->spr);
-            hit->x = sol_sprite_getx(hit->spr) + sol_get_camerax();
-            hit->y = sol_sprite_gety(hit->spr) + sol_get_cameray();
+            hit->x = info.x + sol_get_camerax();
+            hit->y = info.y + sol_get_cameray();
             hit->destx = hit->x;
             hit->desty = hit->y;
             hit->scmd = sol_combat_get_scmd(COMBAT_POWER_CAST);
@@ -229,7 +239,7 @@ int combat_status_handle_mouse_up(const uint32_t button, const uint32_t x, const
 }
 
 void combat_status_free() {
-    sol_sprite_free(background);
+    sol_status_check(sol_sprite_free(background), "Unable to free sprite");
 }
 
 sol_wops_t combat_status_window = {

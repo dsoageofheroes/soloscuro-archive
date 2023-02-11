@@ -27,34 +27,33 @@
 #define NULL_CHECK (0xFFFF)
 
 #define MAX_PARAMETERS (8)
-typedef struct gpl_param_s {
+typedef struct sol_gpl_param_s {
     int32_t val[MAX_PARAMETERS];
     int32_t *ptr[MAX_PARAMETERS];
-} gpl_param_t;
+} sol_gpl_param_t;
 
-typedef enum gpl_global_e {
+enum sol_gpl_global_e {
     GPL_POV,
     GPL_OTHER
-} gpl_global_e;
+};
 
-extern gpl_param_t param;
+extern sol_gpl_param_t param;
 
-extern void      gpl_init();
-extern void      gpl_execute_function(const int gff_idx, const int res_id, const int file_id);
-extern void      gpl_change_region(const int region_id);
-extern void      gpl_write_local_state(FILE *file);
-extern void      gpl_write_global_state(FILE *file);
+extern sol_status_t sol_gpl_init();
+extern sol_status_t sol_gpl_change_region(const int region_id);
+extern sol_status_t sol_gpl_write_local_state(FILE *file);
+extern sol_status_t sol_gpl_write_global_state(FILE *file);
 
-extern uint32_t  gpl_request_impl(int16_t token, int16_t name,
+extern sol_status_t sol_gpl_cleanup();
+extern sol_status_t sol_gpl_set_global(enum sol_gpl_global_e what, entity_t *entity);
+
+extern sol_status_t sol_gpl_request_impl(int16_t token, int16_t name,
         int32_t num1, int32_t num2);
-extern void      gpl_cleanup();
-extern void      gpl_set_quiet(const int val);
-extern entity_t* gpl_get_global(gpl_global_e what);
-extern void      gpl_set_global(gpl_global_e what, entity_t *entity);
+extern sol_status_t sol_gpl_get_global(enum sol_gpl_global_e what, sol_entity_t **ent);
 
 /* Begin Parsing functions */ 
-extern uint8_t   gpl_peek_one_byte();
-extern uint8_t   gpl_get_byte();
+extern sol_status_t sol_gpl_peek_one_byte(uint8_t *d);
+extern sol_status_t sol_gpl_get_byte(uint8_t *d);
 /* End Parsing functions */ 
 
 extern uint8_t command_implemented; // Temporary while I figure out each function.

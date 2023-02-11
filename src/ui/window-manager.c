@@ -106,21 +106,29 @@ int port_load_region(const int region) {
 
 extern int sol_window_load_region(const int region) {
     entity_t *dude;
+    sol_region_t *reg = NULL;
+
+    reg = sol_region_manager_get_region(region, 0);
     sol_window_clear();
-    sol_region_manager_set_current(sol_region_manager_get_region(region, 0));
+    sol_region_manager_set_current(reg);
 
     sol_window_push(&map_window, 0, 0);
     sol_window_push(&narrate_window, 0, 0);
     sol_window_push(&combat_status_window, 295, 5);
 
-    entity_list_for_each(sol_region_manager_get_current()->entities, dude) {
+    sol_status_check(sol_region_manager_load_etab(reg),
+            "Unable to load etab");
+
+    sol_entity_list_for_each(sol_region_manager_get_current()->entities, dude) {
         port_entity_update_scmd(dude);
+        //sol_status_check(sol_animate_shift_entity(reg->entities, entity_list_find(reg->entities, dude)),
+            //"Unable to shift entity during map load.");
     }
 
     sol_center_on_player();
 
     // Now that we are loaded, execute the script!
-    gpl_lua_execute_script(sol_region_manager_get_current()->map_id, 0, 1);
+    sol_gpl_lua_execute_script(sol_region_manager_get_current()->map_id, 0, 1);
     return 1;
 }
 
@@ -159,7 +167,7 @@ extern void sol_window_handle_mouse_down(const sol_mouse_button_t button, const 
     }
 }
 
-extern int sol_window_handle_key_down(const enum entity_action_e action) {
+extern int sol_window_handle_key_down(const enum sol_entity_action_e action) {
     for (int i = MAX_SCREENS-1; i >= 0; i--) {
         if (windows[i].key_down && windows[i].key_down(action)) {
             return 1;

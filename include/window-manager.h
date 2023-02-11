@@ -13,7 +13,7 @@ typedef struct sol_wops_s {
     int (*mouse_movement) (const uint32_t x, const uint32_t y);
     int (*mouse_up) (const sol_mouse_button_t button, const uint32_t x, const uint32_t y);
     int (*mouse_down) (const sol_mouse_button_t button, const uint32_t x, const uint32_t y);
-    int (*key_down) (const enum entity_action_e);
+    int (*key_down) (const enum sol_entity_action_e);
     int (*key_press) (const sol_key_e e);
     void (*return_control) ();
     uint32_t (*get_width) ();
@@ -32,7 +32,7 @@ void sol_window_pop();
 void sol_window_handle_mouse(const uint32_t x, const uint32_t y);
 void sol_window_handle_mouse_down(const sol_mouse_button_t button, const uint32_t x, const uint32_t y);
 void sol_window_handle_mouse_up(const sol_mouse_button_t button, const uint32_t x, const uint32_t y);
-int  sol_window_handle_key_down(const enum entity_action_e);
+int  sol_window_handle_key_down(const enum sol_entity_action_e);
 int  sol_window_handle_key_press(const enum sol_key_e e);
 int  sol_window_load_region(const int region);
 void sol_window_clear();

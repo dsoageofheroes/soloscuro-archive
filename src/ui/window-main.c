@@ -29,12 +29,18 @@ void main_init(const uint32_t x, const uint32_t y) {
     xoffset = x;
     yoffset = y;
 
-    background = sol_sprite_new(pal, x / zoom, 20 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20029);
-    sun = sol_sprite_new(pal, 45 + x / zoom, 0 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20028);
-    start = sol_sprite_new(pal, 90 + x / zoom, 45 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2048);
-    create_characters = sol_sprite_new(pal, 45 + x / zoom, 62 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2049);
-    load_save = sol_sprite_new(pal, 60 + x / zoom, 80 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2050);
-    exit_dos = sol_sprite_new(pal, 90 + x / zoom, 100 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2051);
+    sol_status_check(sol_sprite_new(pal, x / zoom, 20 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20029, &background),
+            "Unable to load main sprite.");
+    sol_status_check(sol_sprite_new(pal, 45 + x / zoom, 0 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20028, &sun),
+            "Unable to load main sprite.");
+    sol_status_check(sol_sprite_new(pal, 90 + x / zoom, 45 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2048, &start),
+            "Unable to load main sprite.");
+    sol_status_check(sol_sprite_new(pal, 45 + x / zoom, 62 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2049, &create_characters),
+            "Unable to load main sprite.");
+    sol_status_check(sol_sprite_new(pal, 60 + x / zoom, 80 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2050, &load_save),
+            "Unable to load main sprite.");
+    sol_status_check(sol_sprite_new(pal, 90 + x / zoom, 100 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2051, &exit_dos),
+            "Unable to load main sprite.");
 }
 
 static int click_action() {
@@ -46,7 +52,7 @@ static int click_action() {
             sol_window_pop();
             // Note: We are deallocated here, so be careful.
             info("Running Master DSL #99.\n");
-            gpl_lua_execute_script(99, 0, 1);
+            sol_gpl_lua_execute_script(99, 0, 1);
             sol_window_load_region(42);
             return 1;
         } else {
@@ -90,10 +96,10 @@ void main_render(void *data) {
 }
 
 static uint16_t get_sprite(const uint32_t x, const uint32_t y) {
-    if (sol_sprite_in_rect(start, x, y)) { return start; }
-    if (sol_sprite_in_rect(create_characters, x, y)) { return create_characters; }
-    if (sol_sprite_in_rect(load_save, x, y)) { return load_save; }
-    if (sol_sprite_in_rect(exit_dos, x, y)) { return exit_dos; }
+    if (sol_sprite_in_rect(start, x, y) == SOL_SUCCESS) { return start; }
+    if (sol_sprite_in_rect(create_characters, x, y) == SOL_SUCCESS) { return create_characters; }
+    if (sol_sprite_in_rect(load_save, x, y) == SOL_SUCCESS) { return load_save; }
+    if (sol_sprite_in_rect(exit_dos, x, y) == SOL_SUCCESS) { return exit_dos; }
 
     return SPRITE_ERROR;
 }
@@ -104,9 +110,9 @@ int main_handle_mouse_movement(const uint32_t x, const uint32_t y) {
     uint16_t cur_sprite = get_sprite(x, y);
 
     if (last_sprite != cur_sprite) {
-        sol_sprite_set_frame(cur_sprite, sol_sprite_get_frame(cur_sprite) + 1);
+        sol_sprite_increment_frame(cur_sprite, 1);
         if (last_sprite != SPRITE_ERROR) {
-            sol_sprite_set_frame(last_sprite, sol_sprite_get_frame(last_sprite) - 1);
+            sol_sprite_increment_frame(last_sprite, -1);
         }
     }
     
@@ -129,12 +135,12 @@ int main_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t
 }
 
 void main_free() {
-    sol_sprite_free(sun);
-    sol_sprite_free(background);
-    sol_sprite_free(start);
-    sol_sprite_free(create_characters);
-    sol_sprite_free(load_save);
-    sol_sprite_free(exit_dos);
+    sol_status_check(sol_sprite_free(sun), "Unable to free sprite");
+    sol_status_check(sol_sprite_free(background), "Unable to free sprite");
+    sol_status_check(sol_sprite_free(start), "Unable to free sprite");
+    sol_status_check(sol_sprite_free(create_characters), "Unable to free sprite");
+    sol_status_check(sol_sprite_free(load_save), "Unable to free sprite");
+    sol_status_check(sol_sprite_free(exit_dos), "Unable to free sprite");
 }
 
 sol_wops_t main_window = {

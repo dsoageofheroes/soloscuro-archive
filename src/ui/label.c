@@ -13,10 +13,11 @@ static sol_screen_type_t screen_type;
 
 #define BUF_MAX (1<<10)
 
-extern void sol_label_render(struct sol_label_s* label) {
+extern sol_status_t sol_label_render(struct sol_label_s* label) {
     if (label->visible) {
-        sol_print_line_len(label->font, label->text, label->x, label->y, strlen(label->text));
+        return sol_print_line_len(label->font, label->text, label->x, label->y, strlen(label->text));
     }
+    return SOL_LABEL_NOT_FOUND;
 }
 
 extern void sol_label_set(sol_label_t *label, const char *buf, const int32_t x, const int32_t y) {
@@ -43,8 +44,9 @@ extern uint32_t sol_label_pixel_width(struct sol_label_s* label) {
     if (label->__m_pixel_width_do_not_use == 0 || label->text != label->__m_old_text_do_not_use)
     {
         label->__m_old_text_do_not_use = label->text;
-        label->__m_pixel_width_do_not_use = sol_font_pixel_width(label->font,
-                                                             label->text, strlen(label->text));
+        sol_font_pixel_width(label->font,
+                label->text, strlen(label->text),
+                &label->__m_pixel_width_do_not_use);
     }
 
     return label->__m_pixel_width_do_not_use;
@@ -74,7 +76,8 @@ extern sol_label_t sol_label_create_at_pos(int parent, int id, char* text, sol_f
 }
 
 extern sol_label_t *sol_label_point_in(sol_label_t *label, const int32_t x, const int32_t y) {
-    int font_h = sol_font_pixel_height(FONT_GREYLIGHT);
+    int font_h;
+    sol_font_pixel_height(FONT_GREYLIGHT, &font_h);
     int font_w = sol_label_pixel_width(label);
 
     if ( (x >= label->x && x <= (label->x + font_w)) &&
@@ -291,12 +294,13 @@ static void copy_levels_string(entity_t *pc, char* storage) {
 }
 
 static void copy_exp_tnl_string(entity_t *pc, char* storage) {
-    int32_t next_exp;
+    int32_t next_exp, total_exp;
     if (pc->class[0].class > -1) {
         sol_status_check(
                 sol_dnd2e_class_exp_to_next_level(pc, &next_exp),
                 "Unable to get the experience for next level");
-        snprintf(storage, BUF_MAX, "EXP: %d (%d)", entity_get_total_exp(pc), next_exp);
+        sol_entity_get_total_exp(pc, &total_exp);
+        snprintf(storage, BUF_MAX, "EXP: %d (%d)", total_exp, next_exp);
     }
     else {
         storage[0] = '\0';
@@ -378,6 +382,7 @@ extern void sol_label_set_positions(int32_t oX, int32_t oY, const sol_screen_typ
     int tab_hp_psp = (screen_type != SCREEN_VIEW_CHARACTER);
     int exp_new_line = (screen_type == SCREEN_VIEW_CHARACTER);
     int yadj = (screen_type == SCREEN_VIEW_CHARACTER) ? 13 : 15;
+    uint32_t width;
 
     labels[LABEL_NAME].x = oX;
     labels[LABEL_NAME].y = oY;
@@ -415,7 +420,8 @@ extern void sol_label_set_positions(int32_t oX, int32_t oY, const sol_screen_typ
     labels[LABEL_GENDER].x = (oX = 170);
     labels[LABEL_GENDER].y = (oY = 270);
 
-    labels[LABEL_RACE].x = oX + sol_font_pixel_width(FONT_GREYLIGHT, labels[LABEL_RACE].text, strlen(labels[LABEL_RACE].text));
+    sol_font_pixel_width(FONT_GREYLIGHT, labels[LABEL_RACE].text, strlen(labels[LABEL_RACE].text), &width);
+    labels[LABEL_RACE].x = oX + width;
     labels[LABEL_RACE].y = (oY = 270);
 
     labels[LABEL_ALIGNMENT].x = oX;
@@ -448,44 +454,52 @@ extern void sol_label_set_positions(int32_t oX, int32_t oY, const sol_screen_typ
     }
 }
 
-extern void sol_label_render_offset(sol_label_t *label, const int16_t offsetx, const int16_t offsety) {
-    sol_print_line_len(label->font, label->text, offsetx + label->x, offsety + label->y, strlen(label->text));
+static sol_status_t sol_label_render_offset(sol_label_t *label, const int16_t offsetx, const int16_t offsety) {
+    return sol_print_line_len(label->font, label->text, offsetx + label->x, offsety + label->y, strlen(label->text));
 }
 
-extern void sol_label_render_gra(const int16_t offsetx, const int16_t offsety) {
-    sol_label_render_offset(labels + LABEL_GENDER, offsetx, offsety);
-    sol_label_render_offset(labels + LABEL_RACE, offsetx, offsety);
-    sol_label_render_offset(labels + LABEL_ALIGNMENT, offsetx, offsety);
+extern sol_status_t sol_label_render_gra(const int16_t offsetx, const int16_t offsety) {
+    sol_status_t status;
+    if((status = sol_label_render_offset(labels + LABEL_GENDER, offsetx, offsety)) != SOL_SUCCESS) { return status; }
+    if((status = sol_label_render_offset(labels + LABEL_RACE, offsetx, offsety)) != SOL_SUCCESS) { return status; }
+    if((status = sol_label_render_offset(labels + LABEL_ALIGNMENT, offsetx, offsety)) != SOL_SUCCESS) { return status; }
+    return SOL_SUCCESS;
 }
 
-extern void sol_label_render_class_and_combat(const int16_t offsetx, const int16_t offsety) {
-    sol_label_render_offset(labels + LABEL_CLASSES, offsetx, offsety);
-    sol_label_render_offset(labels + LABEL_LEVELS, offsetx, offsety);
-    sol_label_render_offset(labels + LABEL_EXP_TNL, offsetx, offsety);
-    sol_label_render_offset(labels + LABEL_AC, offsetx, offsety);
-    sol_label_render_offset(labels + LABEL_DAM, offsetx, offsety);
-    sol_label_render_offset(labels + LABEL_HP, offsetx, offsety);
-    sol_label_render_offset(labels + LABEL_PSP, offsetx, offsety);
+extern sol_status_t sol_label_render_class_and_combat(const int16_t offsetx, const int16_t offsety) {
+    sol_status_t status;
+    if((status = sol_label_render_offset(labels + LABEL_CLASSES, offsetx, offsety)) != SOL_SUCCESS) { return status; }
+    if((status = sol_label_render_offset(labels + LABEL_LEVELS, offsetx, offsety)) != SOL_SUCCESS) { return status; }
+    if((status = sol_label_render_offset(labels + LABEL_EXP_TNL, offsetx, offsety)) != SOL_SUCCESS) { return status; }
+    if((status = sol_label_render_offset(labels + LABEL_AC, offsetx, offsety)) != SOL_SUCCESS) { return status; }
+    if((status = sol_label_render_offset(labels + LABEL_DAM, offsetx, offsety)) != SOL_SUCCESS) { return status; }
+    if((status = sol_label_render_offset(labels + LABEL_HP, offsetx, offsety)) != SOL_SUCCESS) { return status; }
+    if((status = sol_label_render_offset(labels + LABEL_PSP, offsetx, offsety)) != SOL_SUCCESS) { return status; }
+    return SOL_SUCCESS;
 }
 
-extern void sol_label_render_full(const int16_t offsetx, const int16_t offsety) {
-    sol_label_render_stats(offsetx, offsety);
-    sol_label_render_offset(labels + LABEL_NAME, offsetx, offsety);
-    sol_label_render_gra(offsetx, offsety);
-    sol_label_render_class_and_combat(offsetx, offsety);
+extern sol_status_t sol_label_render_full(const int16_t offsetx, const int16_t offsety) {
+    sol_status_t status;
+    if((status = sol_label_render_stats(offsetx, offsety)) != SOL_SUCCESS) { return status; }
+    if((status = sol_label_render_offset(labels + LABEL_NAME, offsetx, offsety)) != SOL_SUCCESS) { return status; }
+    if((status = sol_label_render_gra(offsetx, offsety)) != SOL_SUCCESS) { return status; }
+    if((status = sol_label_render_class_and_combat(offsetx, offsety)) != SOL_SUCCESS) { return status; }
+    return SOL_SUCCESS;
 }
 
-extern void sol_label_render_stats(const int16_t offsetx, const int16_t offsety) {
-    sol_label_render_offset(labels + LABEL_STR, offsetx, offsety);
-    sol_label_render_offset(labels + LABEL_STR_VAL, offsetx, offsety);
-    sol_label_render_offset(labels + LABEL_DEX, offsetx, offsety);
-    sol_label_render_offset(labels + LABEL_DEX_VAL, offsetx, offsety);
-    sol_label_render_offset(labels + LABEL_CON, offsetx, offsety);
-    sol_label_render_offset(labels + LABEL_CON_VAL, offsetx, offsety);
-    sol_label_render_offset(labels + LABEL_INT, offsetx, offsety);
-    sol_label_render_offset(labels + LABEL_INT_VAL, offsetx, offsety);
-    sol_label_render_offset(labels + LABEL_WIS, offsetx, offsety);
-    sol_label_render_offset(labels + LABEL_WIS_VAL, offsetx, offsety);
-    sol_label_render_offset(labels + LABEL_CHA, offsetx, offsety);
-    sol_label_render_offset(labels + LABEL_CHA_VAL, offsetx, offsety);
+extern sol_status_t sol_label_render_stats(const int16_t offsetx, const int16_t offsety) {
+    sol_status_t status;
+    if((status = sol_label_render_offset(labels + LABEL_STR, offsetx, offsety)) != SOL_SUCCESS) { return status; }
+    if((status = sol_label_render_offset(labels + LABEL_STR_VAL, offsetx, offsety)) != SOL_SUCCESS) { return status; }
+    if((status = sol_label_render_offset(labels + LABEL_DEX, offsetx, offsety)) != SOL_SUCCESS) { return status; }
+    if((status = sol_label_render_offset(labels + LABEL_DEX_VAL, offsetx, offsety)) != SOL_SUCCESS) { return status; }
+    if((status = sol_label_render_offset(labels + LABEL_CON, offsetx, offsety)) != SOL_SUCCESS) { return status; }
+    if((status = sol_label_render_offset(labels + LABEL_CON_VAL, offsetx, offsety)) != SOL_SUCCESS) { return status; }
+    if((status = sol_label_render_offset(labels + LABEL_INT, offsetx, offsety)) != SOL_SUCCESS) { return status; }
+    if((status = sol_label_render_offset(labels + LABEL_INT_VAL, offsetx, offsety)) != SOL_SUCCESS) { return status; }
+    if((status = sol_label_render_offset(labels + LABEL_WIS, offsetx, offsety)) != SOL_SUCCESS) { return status; }
+    if((status = sol_label_render_offset(labels + LABEL_WIS_VAL, offsetx, offsety)) != SOL_SUCCESS) { return status; }
+    if((status = sol_label_render_offset(labels + LABEL_CHA, offsetx, offsety)) != SOL_SUCCESS) { return status; }
+    if((status = sol_label_render_offset(labels + LABEL_CHA_VAL, offsetx, offsety)) != SOL_SUCCESS) { return status; }
+    return SOL_SUCCESS;
 }

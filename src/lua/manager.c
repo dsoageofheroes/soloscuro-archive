@@ -14,7 +14,7 @@ extern lua_State* sol_lua_get_state() {
 
     // inject the Lua state with everything.
     sol_lua_settings_register(lua_state);
-    gpl_state_register(lua_state);
+    sol_gpl_state_register(lua_state);
     luaL_dostring(lua_state, "function init() end\n");
     luaL_dostring(lua_state, "function keydown() end\n");
     luaL_dostring(lua_state, "function keyup() end\n");

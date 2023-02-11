@@ -6,6 +6,7 @@
 #include "port.h"
 #include "gpl.h"
 #include "settings.h"
+#include "sprite.h"
 
 extern power_t* power_create() {
     power_t *ret = calloc(1, sizeof(power_t));
@@ -35,7 +36,7 @@ extern animate_sprite_t* power_get_icon(power_t *pw) {
     if (!pw) { return NULL; }
 
     if (pw->icon.spr == SPRITE_ERROR) {
-        port_load_sprite(&(pw->icon), pal, RESOURCE_GFF_INDEX, GFF_ICON, pw->icon_id, 1);
+        sol_sprite_load(&(pw->icon), pal, RESOURCE_GFF_INDEX, GFF_ICON, pw->icon_id, 1);
     }
 
     return &(pw->icon);
@@ -122,7 +123,7 @@ extern void powers_set_icon(power_t *power, const uint32_t id) {
     if (!power) { return; }
 
     power->icon_id = id;
-    port_load_sprite(&(power->icon), pal, RESOURCE_GFF_INDEX, GFF_ICON, id, 1);
+    sol_sprite_load(&(power->icon), pal, RESOURCE_GFF_INDEX, GFF_ICON, id, 1);
 }
 
 extern void powers_set_thrown(power_t *power, const uint32_t id) {
@@ -174,8 +175,10 @@ extern enum target_shape power_get_target_type(power_t *power) {
 static void load_power_sprite(animate_sprite_t *spr, combat_scmd_t type) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
 
-    spr->spr = sol_sprite_new(pal, 0, 0, settings_zoom(),
-        OBJEX_GFF_INDEX, GFF_BMP, spr->bmp_id);
+    sol_status_check(
+        sol_sprite_new(pal, 0, 0, settings_zoom(),
+            OBJEX_GFF_INDEX, GFF_BMP, spr->bmp_id, &(spr->spr)),
+        "Unable to create sprite for power.");
 
     if (spr->spr && spr->spr != SPRITE_ERROR) {
         spr->scmd = sol_combat_get_scmd(type);

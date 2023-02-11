@@ -5,7 +5,7 @@
 
 #include "entity.h"
 
-extern sol_status_t sol_dnd2e_is_class_allowed(const uint8_t race, const class_t classes[3]);
+extern sol_status_t sol_dnd2e_is_class_allowed(const uint8_t race, const sol_class_t classes[3]);
 extern sol_status_t sol_dnd2e_next_level_exp(const int8_t class, const int8_t clevel, int8_t *nlevel);
 extern sol_status_t sol_dnd2e_class_total_hit_die(const int8_t class, const int8_t level, uint8_t *hit_die);
 extern sol_status_t sol_dnd2e_class_level(const uint8_t class, const uint32_t xp, uint8_t *class_level);

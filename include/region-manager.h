@@ -5,6 +5,8 @@
 
 #define MAX_REGIONS (0x100)
 
+extern sol_status_t sol_region_manager_load_etab(sol_region_t *reg);
+
 extern void          sol_region_manager_init();
 extern void          sol_region_manager_cleanup(int free_entities);
 extern sol_region_t* sol_region_manager_get_region(const int region_id, const int assume_loaded);

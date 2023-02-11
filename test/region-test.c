@@ -51,7 +51,7 @@ void test_simple(void) {
 }
 
 void test_ds1_gff(void) {
-    sol_region_t *reg = sol_region_create(gff_find_index("rgn2a.gff"));
+    sol_region_t *reg = sol_region_create(gff_find_index("rgn2a.gff"), 42);
     sol_region_tick(reg);
     sol_combat_update(reg);
 
@@ -91,7 +91,7 @@ void test_ds1_gff(void) {
 }
 
 void test_get_ds1_tiles(void) {
-    sol_region_t *reg = sol_region_create(gff_find_index("rgn2a.gff"));
+    sol_region_t *reg = sol_region_create(gff_find_index("rgn2a.gff"), 42);
     uint32_t w, h;
     unsigned char *data = NULL;
 

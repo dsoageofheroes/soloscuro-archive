@@ -5,63 +5,63 @@
 
 #include <stdint.h>
 
-typedef struct attack_trigger_s {
+typedef struct sol_attack_trigger_s {
     uint32_t obj, file, addr;
-} attack_trigger_t;
+} sol_attack_trigger_t;
 
-typedef struct noorders_trigger_s {
+typedef struct sol_noorders_trigger_s {
     uint32_t obj, file, addr;
     uint8_t need_to_run; // flag if we need to run/execute at the next oppurtunity.
     uint8_t trigger_on_tile; // flag if we need to run/execute next tile trigger.
-} noorders_trigger_t;
+} sol_noorders_trigger_t;
 
-typedef struct use_trigger_s {
+typedef struct sol_use_trigger_s {
     uint32_t obj, file, addr;
-} use_trigger_t;
+} sol_use_trigger_t;
 
-typedef struct look_trigger_s {
+typedef struct sol_look_trigger_s {
     uint32_t obj, file, addr;
-} look_trigger_t;
+} sol_look_trigger_t;
 
-typedef struct talkto_trigger_s {
+typedef struct sol_talkto_trigger_s {
     uint32_t obj, file, addr;
-} talkto_trigger_t;
+} sol_talkto_trigger_t;
 
-typedef struct usewith_trigger_s {
+typedef struct sol_usewith_trigger_s {
     uint32_t obj1, obj2, file, addr;
-} usewith_trigger_t;
+} sol_usewith_trigger_t;
 
-typedef struct tile_trigger_s {
+typedef struct sol_tile_trigger_s {
     uint32_t x, y, file, addr, trip;
-} tile_trigger_t;
+} sol_tile_trigger_t;
 
-typedef struct box_trigger_s {
+typedef struct sol_box_trigger_s {
     uint32_t x, y, w, h, file, addr, trip;
-} box_trigger_t;
+} sol_box_trigger_t;
 
-typedef struct los_trigger_s {
+typedef struct sol_los_trigger_s {
     uint32_t obj, file, addr, param;
-} los_trigger_t;
+} sol_los_trigger_t;
 
-typedef struct trigger_node_s {
+typedef struct sol_trigger_node_s {
     union {
-        attack_trigger_t attack;
-        noorders_trigger_t noorders;
-        use_trigger_t use;
-        look_trigger_t look;
-        talkto_trigger_t talkto;
-        usewith_trigger_t usewith;
-        tile_trigger_t tile;
-        box_trigger_t box;
-        los_trigger_t los;
+        sol_attack_trigger_t attack;
+        sol_noorders_trigger_t noorders;
+        sol_use_trigger_t use;
+        sol_look_trigger_t look;
+        sol_talkto_trigger_t talkto;
+        sol_usewith_trigger_t usewith;
+        sol_tile_trigger_t tile;
+        sol_box_trigger_t box;
+        sol_los_trigger_t los;
     };
-    struct trigger_node_s *next;
-} trigger_node_t;
+    struct sol_trigger_node_s *next;
+} sol_trigger_node_t;
 
 typedef struct sol_triggers_s {
-    trigger_node_t *attack_list, *noorders_list, *use_list, *look_list,
-                   *talkto_list, *usewith_list, *tile_list, *box_list,
-                   *los_list;
+    sol_trigger_node_t *attack_list, *noorders_list, *use_list, *look_list,
+                       *talkto_list, *usewith_list, *tile_list, *box_list,
+                       *los_list;
 } sol_triggers_t;
 
 #endif

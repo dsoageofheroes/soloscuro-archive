@@ -23,23 +23,20 @@ typedef enum gpl_gnum_e {
     GNAME_NUM
 } gpl_gnum_t;
 
-void     gpl_state_init();
-void     gpl_state_cleanup();
-void     gpl_state_register(lua_State *l);
+extern sol_status_t sol_gpl_state_init();
+extern sol_status_t sol_gpl_state_cleanup();
+extern sol_status_t sol_gpl_state_register(lua_State *l);
 
-uint32_t gpl_get_region();
-uint32_t gpl_get_gff_index();
+extern sol_status_t sol_gpl_local_clear();
+extern sol_status_t sol_gpl_deserialize_globals(char *buf);
+extern sol_status_t sol_gpl_deserialize_locals(char *buf);
+extern sol_status_t sol_gpl_state_debug();
+extern sol_status_t sol_gpl_set_gname(const gpl_gnum_t index, const int32_t obj);
 
-void     gpl_local_clear();
+extern sol_status_t sol_gpl_get_gname(const gpl_gnum_t pos, int16_t *gn);
 
-char*    gpl_serialize_globals(uint32_t *len);
-void     gpl_deserialize_globals(char *buf);
-char*    gpl_serialize_locals(uint32_t *len);
-void     gpl_deserialize_locals(char *buf);
+extern sol_status_t sol_gpl_serialize_globals(uint32_t *len, char **ret);
+extern sol_status_t sol_gpl_serialize_locals(uint32_t *len, char **ret);
 
-extern void    gpl_state_debug();
-
-extern int16_t gpl_get_gname(const gpl_gnum_t pos);
-extern void    gpl_set_gname(const gpl_gnum_t index, const int32_t obj);
 
 #endif

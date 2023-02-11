@@ -21,17 +21,19 @@ extern void sol_region_manager_init() {
 }
 
 static void free_entities(sol_region_t *reg) {
-    dude_t *dude;
+    sol_dude_t *dude;
+    sol_entity_list_node_t *node = NULL;
 
     // Don't free the players, so we will get rid of them first.
     for (int i = 0; i < MAX_PCS; i++) {
-        entity_list_remove(reg->entities, entity_list_find(reg->entities, sol_player_get(i)));
+        sol_entity_list_find(reg->entities, sol_player_get(i), &node);
+        sol_entity_list_remove(reg->entities, node);
     }
 
     while (reg->entities->head) {
         dude = reg->entities->head->entity;
-        entity_list_remove_entity(reg->entities, dude);
-        entity_free(dude);
+        sol_entity_list_remove_entity(reg->entities, dude);
+        sol_entity_free(dude);
     }
 }
 
@@ -60,7 +62,7 @@ extern void sol_region_manager_cleanup(int _free_entities) {
 static int entity_is_in_region(const entity_t *entity, const sol_region_t *reg) {
     dude_t *dude;
 
-    entity_list_for_each(reg->entities, dude) {
+    sol_entity_list_for_each(reg->entities, dude) {
         if (dude == entity) { return 1; }
     }
 
@@ -81,6 +83,13 @@ extern sol_region_t* sol_region_manager_get_region_with_entity(const entity_t *e
     return NULL;
 }
 
+extern sol_status_t sol_region_manager_load_etab(sol_region_t *reg) {
+    if (!reg) { return SOL_NULL_ARGUMENT; }
+
+    return sol_entity_list_load_etab(reg->entities,
+        &reg->statics, reg->gff_file, reg->region_id);
+}
+
 // NOTE: only set assume_loaded on creation!
 extern sol_region_t* sol_region_manager_get_region(const int region_id, const int assume_loaded) {
     char gff_name[32];
@@ -93,12 +102,14 @@ extern sol_region_t* sol_region_manager_get_region(const int region_id, const in
         int gff_index = gff_find_index(gff_name);
         if (gff_index < 0 ) { return NULL; }
 
-        ssi_regions[region_id] = sol_region_create(gff_index);
+        ssi_regions[region_id] = sol_region_create(gff_index, region_id);
         //ssi_regions[region_id]->assume_loaded = assume_loaded;
+        /*
         if (!assume_loaded) {
             entity_list_load_etab(ssi_regions[region_id]->entities,
                     &ssi_regions[region_id]->statics, gff_index, region_id);
         }
+        */
     }
 
     current_region = region_id;
@@ -152,17 +163,19 @@ extern void sol_region_manager_set_current(sol_region_t *region) {
     }
 
     if (player) {
-        entity_list_add(region->entities, player);
+        sol_entity_list_add(region->entities, player, NULL);
         if (!player->anim.scmd) { player->anim.scmd = ssi_scmd_empty(); }
     }
-    gpl_set_gname(GNAME_REGION, region->map_id);
+    sol_gpl_set_gname(GNAME_REGION, region->map_id);
 }
 
 extern void sol_region_manager_remove_players() {
     sol_region_t* reg = sol_region_manager_get_current();
+    sol_entity_list_node_t *node = NULL;
     if (!reg) { return; }
 
     for (int i = 0; i < MAX_PCS; i++) {
-        entity_list_remove(reg->entities, entity_list_find(reg->entities, sol_player_get(i)));
+        sol_entity_list_find(reg->entities, sol_player_get(i), &node);
+        sol_entity_list_remove(reg->entities, node);
     }
 }

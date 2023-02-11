@@ -27,9 +27,9 @@
 
 static map_t *cmap = NULL;
 static int mousex = 0, mousey = 0;
-static uint16_t tile_highlight = SPRITE_ERROR, game_over = SPRITE_ERROR;
+static sol_sprite_t tile_highlight = SPRITE_ERROR, game_over = SPRITE_ERROR;
 static entity_t *dude_highlighted = NULL;
-static uint16_t highlight_count;
+static sol_sprite_t highlight_count;
 static int map_pause = 0;
 
 void map_free(map_t *map);
@@ -52,7 +52,7 @@ void map_load(const uint32_t _x, const uint32_t _y) {
 void map_cleanup() {
     map_free(cmap);
     if (tile_highlight != SPRITE_ERROR) {
-        sol_sprite_free(tile_highlight);
+        sol_status_check(sol_sprite_free(tile_highlight), "Unable to free sprite");
         tile_highlight = SPRITE_ERROR;
     }
     cmap = NULL;
@@ -81,7 +81,7 @@ static void map_load_current_region() {
     }
 
     dude_t *dude;
-    entity_list_for_each(map->region->entities, dude) {
+    sol_entity_list_for_each(map->region->entities, dude) {
         if (dude->anim.spr == SPRITE_ERROR) {
             sprite_load_animation(dude, pal);
         }
@@ -103,15 +103,19 @@ static void map_load_current_region() {
 static void sprite_load_animation(entity_t *entity, gff_palette_t *pal) {
     ds1_item_t ditem;
     const float zoom = settings_zoom();
-    entity->anim.spr =
-        sol_sprite_new(pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP, entity->anim.bmp_id);
+    sol_sprite_info_t info;
+    sol_status_check(
+        sol_sprite_new(pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP, entity->anim.bmp_id, &entity->anim.spr),
+        "Unable to load entity sprite.");
     if (entity->name) { // If it is a combat entity, then we need to add the combat sprites
-        sol_sprite_append(entity->anim.spr, pal, 0, 0, zoom,
-            OBJEX_GFF_INDEX, GFF_BMP, entity->anim.bmp_id + 1);
+        sol_status_check(sol_sprite_append(entity->anim.spr, pal, 0, 0, zoom,
+            OBJEX_GFF_INDEX, GFF_BMP, entity->anim.bmp_id + 1),
+                    "Unable to append sprite.");
     }
     entity->anim.delay = 0;
-    entity->anim.w = sol_sprite_getw(entity->anim.spr);
-    entity->anim.h = sol_sprite_geth(entity->anim.spr);
+    sol_status_check(sol_sprite_get_info(entity->anim.spr, &info), "Unable to get entity sprite info.");
+    entity->anim.w = info.w;
+    entity->anim.h = info.h;
     entity->anim.x = (entity->mapx * 16 + entity->anim.xoffset) * zoom;
     entity->anim.y = (entity->mapy * 16 + entity->anim.yoffset + entity->mapz) * zoom;
     entity->anim.destx = entity->anim.x;
@@ -126,7 +130,7 @@ static void sprite_load_animation(entity_t *entity, gff_palette_t *pal) {
     //printf("%d: %d %d %d (%d, %d)\n", obj->combat_id, obj->mapx, obj->mapy, obj->mapz, anims[anim_pos].x, anims[anim_pos].y);
     //printf("             (%d, %d)\n", anims[anim_pos].destx, anims[anim_pos].desty);
     //printf("%s: @ %p\n", entity->name, entity->sprite.data);
-    if (sol_innate_is_door(entity)) {
+    if (sol_innate_is_door(entity) == SOL_SUCCESS) {
         printf("--------->DOOR %d, 0x%x, 0x%x, 0x%x", entity->ds_id, entity->map_flags, entity->object_flags, entity->anim.flags);
         if (ssi_item_load(&ditem, entity->ds_id)) {
             printf(", item exists.special = 0x%x", ditem.special);
@@ -136,11 +140,11 @@ static void sprite_load_animation(entity_t *entity, gff_palette_t *pal) {
         printf("\n");
     }
     //if (sol_innate_is_door(entity) && entity->map_flags & GM_ANIMATING) {
-    if (sol_innate_is_door(entity) && ssi_item_load(&ditem, entity->ds_id)) {
+    if (sol_innate_is_door(entity) == SOL_SUCCESS && ssi_item_load(&ditem, entity->ds_id)) {
         if (ditem.special & (SSI_DOOR_GPL | SSI_DOOR_SECRET)) {
             printf("IS_DOOR GPL: %d\n", entity->ds_id );
             //sol_trigger_noorders_entity_check(entity);
-            if (sol_sprite_get_frame_count(entity->anim.spr) >= 4) {
+            if (info.num_frames >= 4) {
                 entity->map_flags &= ~GM_ANIMATING;
                 sol_sprite_set_frame(entity->anim.spr, 2);
                 sol_innate_activate_door(entity);
@@ -179,7 +183,7 @@ void map_apply_alpha(const uint8_t alpha) {
 
     sol_background_apply_alpha(alpha);
 
-    entity_list_for_each(cmap->region->entities, entity) {
+    sol_entity_list_for_each(cmap->region->entities, entity) {
         if (entity->anim.spr != SPRITE_ERROR) {
             sol_sprite_set_alpha(entity->anim.spr, alpha);
         }
@@ -208,7 +212,8 @@ static void show_debug_info() {
     if (tile_highlight == SPRITE_ERROR) {
         const float zoom = settings_zoom();
         gff_palette_t* pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
-        tile_highlight = sol_sprite_new(pal, 0, 0, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20088);
+        sol_status_check(sol_sprite_new(pal, 0, 0, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 20088, &tile_highlight),
+                "Unable to load tile highlight.");
     }
 
     map_highlight_tile(x, y, 4);
@@ -233,7 +238,8 @@ static void load_wall(const int id) {
     if (data) {
         int w = gff_get_frame_width(DSLDATA_GFF_INDEX, GFF_WALL, wall_id, 0);
         int h = gff_get_frame_height(DSLDATA_GFF_INDEX, GFF_WALL, wall_id, 0);
-        cmap->region->walls[id] = sol_sprite_create_from_data(data, w, h);
+        sol_status_check(sol_sprite_create_from_data(data, w, h, &cmap->region->walls[id]),
+            "Unable to load wall sprite.");
         free(data);
     }
 }
@@ -244,6 +250,8 @@ static void render_walls() {
     const uint32_t yoffset = sol_get_cameray();
     uint32_t xpos = -xoffset;
     uint32_t ypos = -yoffset;
+    sol_sprite_info_t info;
+
     for (int x = 0; x < 98; x++) {
         for (int y = 0; y < 128; y++) {
             if (cmap->region->flags[x][y] & 0x1F) {
@@ -252,8 +260,9 @@ static void render_walls() {
                 if (cmap->region->walls[wall_id] == 0) {
                     load_wall(wall_id);
                 }
+                sol_status_check(sol_sprite_get_info(cmap->region->walls[wall_id], &info), "Unable to get wall sprite info");
                 sol_sprite_set_location(cmap->region->walls[wall_id], xpos,
-                        ypos - sol_sprite_geth(cmap->region->walls[wall_id]) + (16 * zoom));
+                        ypos - info.h + (16 * zoom));
                 sol_sprite_render(cmap->region->walls[wall_id]);
             }
             xpos += zoom * 16;
@@ -278,13 +287,13 @@ void map_render(void *data) {
 
     sol_map_set_pause(
             (sol_mouse_get_state() != MOUSE_POINTER)
-            || (sol_examine_is_open())
+            || (sol_examine_is_open() == SOL_SUCCESS)
             || (sol_narrate_is_open())
     );
 }
 
 static entity_t* get_parent_door(entity_t *dude) {
-    if (!sol_innate_is_door(dude)) { return NULL; }
+    if (sol_innate_is_door(dude) != SOL_SUCCESS) { return NULL; }
 
     entity_t *door2 = sol_region_find_entity_by_id(sol_region_manager_get_current(), dude->ds_id + 1);
     if (door2 == NULL || (dude->ds_id % 2)) { return NULL; }
@@ -305,10 +314,11 @@ void map_render_anims() {
     animate_sprite_t *anim;
     int hflip = 0, vflip = 0;
     int amt = 0;
+    sol_sprite_info_t info;
 
     sol_static_list_display(&cmap->region->statics);
 
-    entity_list_for_each(cmap->region->entities, dude) {
+    sol_entity_list_for_each(cmap->region->entities, dude) {
         amt++;
         hflip = vflip = 0;
         //if (dude->name) { printf("-> %s, %d, %d, %d\n", dude->name, dude->mapx, dude->mapy, dude->anim.spr); }
@@ -333,10 +343,11 @@ void map_render_anims() {
                 anim->y - yoffset); // + anim->scmd->yoffset);
         } else {
             int xdiff = 0, ydiff = 0;
+            sol_status_check(sol_sprite_get_info(anim->spr, &info), "Unable to get anim sprite info.");
             if (dude->mapy == parent_door->mapy) {
-                xdiff = 16 * settings_zoom() - sol_sprite_getw(anim->spr);
+                xdiff = 16 * settings_zoom() - info.w;
             } else {
-                ydiff = sol_sprite_geth(anim->spr);
+                ydiff = info.h;
                 if (ydiff > 32) { ydiff = 0; }
             }
             sol_sprite_set_location(anim->spr,
@@ -373,11 +384,13 @@ extern void sol_map_update_active_player(const int prev) {
 void sol_map_place_entity(entity_t *entity) {
     animate_sprite_t *as = &(entity->anim);
     const float zoom = settings_zoom();
+    sol_sprite_info_t info;
 
     as->x = as->destx = entity->mapx * 16 * zoom;
     as->y = as->desty = entity->mapy * 16 * zoom;
-    as->w = sol_sprite_getw(entity->anim.spr);
-    as->h = sol_sprite_geth(entity->anim.spr);
+    sol_status_check(sol_sprite_get_info(entity->anim.spr, &info), "Unable to get entity sprite info.");
+    as->w = info.w;
+    as->h = info.h;
     if (as->w > 16 * zoom) {
         //printf("width = %d\n", as->w);
         as->x = as->destx -= (as->w - 16 * zoom) / 2;
@@ -385,33 +398,14 @@ void sol_map_place_entity(entity_t *entity) {
     as->y = as->desty -= as->h - (16 * zoom);
 }
 
-extern void port_load_sprite(animate_sprite_t *anim, gff_palette_t *pal, const int gff_index,
-                const int type, const uint32_t id, const int num_load) {
-    if (!anim) { return; }
-
-    if (anim->scmd) {
-        error("port_load_sprite not implemented for sprites with a scmd!\n");
-    }
-
-    if (anim->spr == SPRITE_ERROR) {
-        anim->spr = sol_sprite_new(pal, 0, 0, settings_zoom(), gff_index, type, id);
-
-        // Now append anything else needed.
-        for (int i = 1; i < num_load; i++) {
-            sol_sprite_append(anim->spr, pal, 0, 0, settings_zoom(),
-                gff_index, type, id + i);
-        }
-    }
-    //printf("valid = %d\n", sprite_valid(asn->anim->spr));
-}
-
 void port_swap_enitity(int obj_id, entity_t *dude) {
     gff_palette_t *pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + cmap->region->map_id - 1;
     const int zoom = 2.0;
 
-    sol_sprite_free(dude->anim.spr);
-    dude->anim.spr =
-        sol_sprite_new(pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP, dude->anim.bmp_id);
+    sol_status_check(sol_sprite_free(dude->anim.spr), "Unable to free sprite");
+    sol_status_check(
+        sol_sprite_new(pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP, dude->anim.bmp_id, &dude->anim.spr),
+        "Unable to load spr for swap.");
 }
 
 #define CLICKABLE (0x10)
@@ -421,10 +415,10 @@ entity_t* get_entity_at_location(const uint32_t x, const uint32_t y) {
     const int mapy = y - sol_get_cameray();
     if (!cmap) { return 0; }
 
-    entity_list_for_each(cmap->region->entities, dude) {
+    sol_entity_list_for_each(cmap->region->entities, dude) {
         if (dude->anim.spr == SPRITE_ERROR) { continue; }
 
-        if (sol_sprite_in_rect(dude->anim.spr, mapx, mapy)) {
+        if (sol_sprite_in_rect(dude->anim.spr, mapx, mapy) == SOL_SUCCESS) {
             //printf("%s: %d: %d, %d (%d, %d)\n", dude->name, dude->ds_id, dude->mapx * 16, dude->mapy * 16, mapx, mapy);
             return dude;
         }
@@ -592,19 +586,23 @@ extern void port_load_item(item_t *item) {
     if (!item) { return; }
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
 
-    item->anim.spr = sol_sprite_new(pal, 0, 0, settings_zoom(),
-            OBJEX_GFF_INDEX, GFF_BMP, item->anim.bmp_id);
+    sol_status_check(sol_sprite_new(pal, 0, 0, settings_zoom(),
+            OBJEX_GFF_INDEX, GFF_BMP, item->anim.bmp_id, &item->anim.spr),
+        "Unable to load item's spr.");
 }
 
 extern void sol_map_game_over() {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes;
     const float zoom = settings_zoom();
+    sol_sprite_info_t info;
 
     if (game_over == SPRITE_ERROR) {
-        game_over = sol_sprite_new(pal, 0, 0, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 10004);
+        sol_status_check(sol_sprite_new(pal, 0, 0, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 10004, &game_over),
+                "Unable to load game over sprite.");
+        sol_status_check(sol_sprite_get_info(game_over, &info), "Unable to get entity sprite info.");
         sol_sprite_set_location(game_over, 
-            settings_screen_width() / 2 - sol_sprite_getw(game_over) / 2,
-            settings_screen_height() / 2 - sol_sprite_geth(game_over) / 2);
+            settings_screen_width() / 2 - info.w / 2,
+            settings_screen_height() / 2 - info.h / 2);
     }
 }
 

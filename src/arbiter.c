@@ -20,7 +20,7 @@
 static combat_region_t combat_regions[MAX_REGIONS];
 static char            region_in_combat[MAX_REGIONS] = {0};
 
-extern sol_status_t sol_arbiter_hits(entity_animation_node_t *ea) {
+extern sol_status_t sol_arbiter_hits(sol_entity_animation_node_t *ea) {
     if (!ea) { return SOL_NULL_ARGUMENT; }
     return SOL_SUCCESS;
 }
@@ -49,19 +49,25 @@ static void place_combatants(combat_region_t *cr) {
     if (!cr) { return; }
     dude_t *entity = NULL;
 
-    entity_list_for_each((&(cr->combatants)), entity) {
+    sol_entity_list_for_each((&(cr->combatants)), entity) {
         memset(&entity->stats.combat, 0x0, sizeof(combat_round_stats_t));
         entity->stats.combat.initiative = dnd2e_roll_initiative(entity);
         entity->stats.combat.move = dnd2e_get_move(entity);
-        entity_list_add_by_init((&cr->round.entities), entity);
+        sol_entity_list_add_by_init((&cr->round.entities), entity, NULL);
     }
 }
 
 extern sol_status_t sol_arbiter_next_round(combat_region_t* cr) {
     if (!cr) { return SOL_NULL_ARGUMENT; }
+    int16_t gn;
+    sol_status_t status;
+
     cr->round.num++;
     // Increment GPL's game time.
-    gpl_set_gname(GNAME_TIME, gpl_get_gname(GNAME_TIME) + 60);
+    if ((status = sol_gpl_get_gname(GNAME_TIME, &gn)) != SOL_SUCCESS) {
+        return status;
+    }
+    sol_gpl_set_gname(GNAME_TIME, gn + 60);
     place_combatants(cr);
     return SOL_SUCCESS;
 }
@@ -98,9 +104,9 @@ extern sol_status_t sol_arbiter_enter_combat(sol_region_t *reg, const uint16_t x
         }
     }
 
-    entity_list_for_each(reg->entities, enemy) {
+    sol_entity_list_for_each(reg->entities, enemy) {
         if (enemy->name && get_dist(enemy, x, y) <= dist) {
-            entity_list_add(&(cr->combatants), enemy);
+            sol_entity_list_add(&(cr->combatants), enemy, NULL);
         }
     }
 
@@ -137,7 +143,7 @@ extern sol_status_t sol_arbiter_combat_check(sol_region_t* reg) {
 //            level 10+: +4
 // Monster data should be in the entity.
 // For Now, 1d6, always hits. Need to add thac0 calculation.
-extern sol_status_t sol_arbiter_entity_attack(entity_t *source, entity_t *target, int round, enum entity_action_e action, sol_attack_t *attack) {
+extern sol_status_t sol_arbiter_entity_attack(entity_t *source, entity_t *target, int round, enum sol_entity_action_e action, sol_attack_t *attack) {
     sol_status_t        status = SOL_UNKNOWN_ERROR;
     static sol_attack_t error = { -2, 0 };
     combat_region_t    *cr = NULL;
@@ -171,7 +177,7 @@ extern sol_status_t sol_arbiter_entity_attack(entity_t *source, entity_t *target
 
 extern sol_status_t sol_arbiter_in_combat(dude_t *dude) {
     for (size_t i = 0; i < MAX_REGIONS; i++) {
-        if (entity_list_find(&(combat_regions[i].combatants), dude)) {
+        if (sol_entity_list_find(&(combat_regions[i].combatants), dude, NULL) == SOL_SUCCESS) {
             return SOL_IN_COMBAT;
         }
     }

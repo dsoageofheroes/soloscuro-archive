@@ -24,11 +24,12 @@ static void update_ui() {
             sol_trigger_get_talkto(entity_to_examine->ds_id).obj ? 0 : 2); // TALK
 
         if (entity_to_examine->name == NULL) {
-            entity_t* t = entity_create_from_objex(entity_to_examine->ds_id);
+            entity_t* t;
+            sol_entity_create_from_objex(entity_to_examine->ds_id, &t);
             entity_to_examine->name = strdup(t->name ? t->name : "");
             entity_to_examine->class[0].level = t->class[0].level;
             t->ds_id = 9999;
-            entity_free(t);
+            sol_entity_free(t);
         }
         sprintf(level_text, "LEVEL: %d", entity_to_examine->class[0].level);
     } else {
@@ -39,7 +40,7 @@ static void update_ui() {
     }
 }
 
-extern int sol_examine_is_open() { return entity_to_examine != NULL; }
+extern sol_status_t sol_examine_is_open() { return entity_to_examine == NULL ? SOL_IS_CLOSED : SOL_SUCCESS; }
 
 // returns if examine window should pop up
 extern sol_status_t sol_examine_entity(entity_t *dude) {
@@ -63,7 +64,8 @@ static void examine_init(const uint32_t x, const uint32_t y) {
     winy = y;
     win = sol_window_from_gff(3020);
     sol_window_set_pos(win, winx, winy);
-    bar = sol_sprite_new(pal, 0, 0, 2.0, RESOURCE_GFF_INDEX, GFF_BMP, 20107);
+    sol_status_check(sol_sprite_new(pal, 0, 0, 2.0, RESOURCE_GFF_INDEX, GFF_BMP, 20107, &bar),
+        "unable to create bar spr for examine.");
     sol_sprite_set_location(bar, winx + 6 * settings_zoom(), winy + 6 * settings_zoom());
     update_ui();
 }
@@ -76,16 +78,19 @@ const char *button_texts[] = {
 };
 
 static int examine_handle_mouse_movement(const uint32_t x, const uint32_t y) {
-    static size_t last_button = -1;
-    size_t        button = sol_window_get_button(win, x, y);
+    static size_t     last_button = -1;
+    size_t            button = sol_window_get_button(win, x, y);
+    sol_sprite_info_t info;
 
     if (button != last_button) {
         //printf("button = %zu, last_button = %zu\n", button, last_button);
-        if (last_button < win->num_buttons && sol_sprite_get_frame(win->buttons[last_button].spr) != 2) {
+        sol_status_check(sol_sprite_get_info(win->buttons[last_button].spr, &info), "Unable to get sprite info");
+        if (last_button < win->num_buttons && info.current_frame != 2) {
             sol_sprite_set_frame_keep_loc(win->buttons[last_button].spr, 0);
             sol_button_set_text(win->buttons + 3, "", FONT_GREY);
         }
-        if (button < win->num_buttons && sol_sprite_get_frame(win->buttons[button].spr) != 2) {
+        sol_status_check(sol_sprite_get_info(win->buttons[button].spr, &info), "Unable to get sprite info");
+        if (button < win->num_buttons && info.current_frame != 2) {
             sol_sprite_set_frame_keep_loc(win->buttons[button].spr, 1);
             sol_button_set_text(win->buttons + 3, button_texts[button], FONT_GREY);
         }
@@ -103,23 +108,25 @@ static int examine_handle_mouse_down(const uint32_t button, const uint32_t x, co
 }
 
 static int examine_handle_mouse_up(const uint32_t _button, const uint32_t x, const uint32_t y) {
-    (void)        _button;
-    size_t        button = sol_window_get_button(win, x, y);
-    int           id = entity_to_examine->ds_id;
+    (void)            _button;
+    size_t            button = sol_window_get_button(win, x, y);
+    int               id = entity_to_examine->ds_id;
+    sol_sprite_info_t info;
 
+    sol_status_check(sol_sprite_get_info(win->buttons[button].spr, &info), "Unable to get sprite info");
     switch (button) {
         case 0: // GET
-            if (sol_sprite_get_frame(win->buttons[button].spr) == 2) { break; }
+            if (info.current_frame == 2) { break; }
             sol_window_pop();
             //sol_trigger_use_click(id);
             break;
         case 1: // USE
-            if (sol_sprite_get_frame(win->buttons[button].spr) == 2) { break; }
+            if (info.current_frame == 2) { break; }
             sol_window_pop();
             sol_trigger_use(id);
             break;
         case 2: // TALK
-            if (sol_sprite_get_frame(win->buttons[button].spr) == 2) { break; }
+            if (info.current_frame == 2) { break; }
             sol_window_pop();
             sol_trigger_talk_click(id);
             break;
@@ -129,7 +136,7 @@ static int examine_handle_mouse_up(const uint32_t _button, const uint32_t x, con
 
 static void examine_free() {
     sol_window_free_base(win);
-    sol_sprite_free(bar);
+    sol_status_check(sol_sprite_free(bar), "Unable to free sprite");
     entity_to_examine = NULL;
     bar = SPRITE_ERROR;
 }
@@ -139,12 +146,14 @@ static void examine_render(void *data) {
     sol_window_render_base(win);
     sol_sprite_render(bar);
     if (entity_to_examine) {
-        sol_print_line_len(FONT_GREYLIGHT, entity_to_examine->name,
+        sol_status_check(sol_print_line_len(FONT_GREYLIGHT, entity_to_examine->name,
             winx + 6 * settings_zoom(),
-            winx + 26 * settings_zoom(), 32);
-        sol_print_line_len(FONT_GREYLIGHT, level_text,
+            winx + 26 * settings_zoom(), 32),
+                "Unable to print.");
+        sol_status_check(sol_print_line_len(FONT_GREYLIGHT, level_text,
             winx + 6 * settings_zoom(),
-            winx + 34 * settings_zoom(), 32);
+            winx + 34 * settings_zoom(), 32),
+                "Unable to print.");
     }
 }
 

@@ -9,11 +9,13 @@
 #define ITEM_COINS1 (1389)
 #define ITEM_COINS2 (1384)
 
-extern int sol_innate_is_door(dude_t *dude) {
+extern sol_status_t sol_innate_is_door(dude_t *dude) {
     return
         (abs(dude->ds_id) >= 1131 && abs(dude->ds_id) <= 1181)
         || (abs(dude->ds_id) >= 2051 && abs(dude->ds_id) <= 2200)
-        || (abs(dude->ds_id) >= 2400 && abs(dude->ds_id) <= 2949);
+        || (abs(dude->ds_id) >= 2400 && abs(dude->ds_id) <= 2949)
+        ? SOL_SUCCESS
+        : SOL_NOT_FOUND;
 }
 
 static entity_t* find_twin(entity_t *door) {
@@ -35,6 +37,7 @@ static entity_t* find_twin(entity_t *door) {
 static void set_door_blocks(dude_t *door, int door_is_open) {
     sol_region_t *reg = sol_region_manager_get_current();
     entity_t *twin_door = find_twin(door);
+    sol_sprite_info_t info;
 
     if (!twin_door) {
         error("Unable to find twin for door!\n");
@@ -42,8 +45,9 @@ static void set_door_blocks(dude_t *door, int door_is_open) {
     }
 
     // Something is backwards...
+    sol_status_check(sol_sprite_get_info(door->anim.spr, &info), "Unable to get menu options sprite info");
     if (door->mapx == twin_door->mapx) {
-        for (int diff = 0; diff < ((sol_sprite_getw(door->anim.spr) + 1) / (16 * settings_zoom())); diff++) {
+        for (int diff = 0; diff < (info.w + 1) / (16 * settings_zoom()); diff++) {
         for (int i = door->mapy + 1; i < twin_door->mapy; i++) {
             if (door_is_open) {
                 sol_region_clear_block(reg, i, door->mapx + diff, MAP_BLOCK);
@@ -53,7 +57,7 @@ static void set_door_blocks(dude_t *door, int door_is_open) {
         }
         }
     } else {
-        for (int diff = 0; diff < ((sol_sprite_geth(door->anim.spr) + 0) / (16 * settings_zoom())); diff++) {
+        for (int diff = 0; diff < (info.h + 0) / (16 * settings_zoom()); diff++) {
         for (int i = door->mapx + 1; i < twin_door->mapx; i++) {
             if (door_is_open) {
                 sol_region_clear_block(reg, door->mapy - diff, i, MAP_BLOCK);
@@ -66,10 +70,12 @@ static void set_door_blocks(dude_t *door, int door_is_open) {
 }
 
 extern sol_status_t sol_innate_activate_door(dude_t *door) {
-    enum entity_action_e action = sol_sprite_get_frame(door->anim.spr) == 0 ? EA_DOOR_OPEN : EA_DOOR_CLOSE;
-    door->anim.scmd = entity_animation_get_scmd(door, 0, 0, action);
+    sol_sprite_info_t info;
+    sol_status_check(sol_sprite_get_info(door->anim.spr, &info), "Unable to get door's sprite info");
+    enum sol_entity_action_e action = info.current_frame == 0 ? EA_DOOR_OPEN : EA_DOOR_CLOSE;
+    sol_entity_animation_get_scmd(door, 0, 0, action, &door->anim.scmd);
     set_door_blocks(door, action == EA_DOOR_OPEN);
-    entity_animation_list_add(&(door->actions), EA_SCMD, door, door, NULL, 30);
+    sol_entity_animation_list_add(&(door->actions), EA_SCMD, door, door, NULL, 30);
 
     return SOL_SUCCESS;
 }
@@ -78,7 +84,7 @@ static sol_status_t custom_action(dude_t *dude) {
     ds1_item_t ds1_item;
     char msg[1024];
 
-    if (sol_innate_is_door(dude)) {
+    if (sol_innate_is_door(dude) == SOL_SUCCESS) {
         entity_t *door = dude;
         //printf("DOOR: %d, %d, %d\n", dude->ds_id, dude->mapx, dude->mapy);
         // The GPL appears to only operate on one of the doors
@@ -104,7 +110,7 @@ static sol_status_t custom_action(dude_t *dude) {
             sol_player_get_active()->cp + ds1_item.value;
             //printf("->%s\n", ds1_item->name);
             sol_region_remove_entity(sol_region_manager_get_current(), dude);
-            entity_free(dude);
+            sol_entity_free(dude);
             return SOL_SUCCESS;
     }
 
@@ -115,6 +121,6 @@ extern sol_status_t sol_innate_action(dude_t *dude) {
     if (!dude) { return SOL_UNKNOWN_ERROR; }
     if (custom_action(dude) == SOL_SUCCESS) { return SOL_SUCCESS; }
 
-    gpl_request_impl(5, dude->ds_id, -1, -1);
+    sol_gpl_request_impl(5, dude->ds_id, -1, -1);
     return SOL_SUCCESS;
 }

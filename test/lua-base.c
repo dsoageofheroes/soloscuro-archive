@@ -23,14 +23,14 @@ void setUp() {
     //gff_load_directory("ds1");
     sol_lua_load_preload("lua/settings.lua");
     powers_init();
-    gpl_init();
+    sol_gpl_init();
     sol_lua_register_globals();
 }
 
 void tearDown() {
     sol_region_manager_cleanup(1);
     gff_cleanup();
-    gpl_cleanup();
+    sol_gpl_cleanup();
 }
 
 void the_test(void) {

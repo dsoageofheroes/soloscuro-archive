@@ -20,7 +20,7 @@ static void set_psp(entity_t *pc) {
     if (pc->stats.wis >= 15) {
         pc->stats.high_psp += 20 + 2 * (pc->stats.wis - 15);
     }
-    if (entity_has_class(pc, REAL_CLASS_PSIONICIST)) {
+    if (sol_entity_has_class(pc, REAL_CLASS_PSIONICIST) == SOL_SUCCESS) {
         int psi_level = 0;
         if (pc->class[0].class == REAL_CLASS_PSIONICIST) { psi_level = pc->class[0].level; }
         if (pc->class[1].class == REAL_CLASS_PSIONICIST) { psi_level = pc->class[1].level; }
@@ -551,11 +551,14 @@ extern sol_attack_t sol_dnd2e_range_attack(entity_t *source, entity_t *target, c
     static sol_attack_t error = { -2, 0 };
     item_t *launcher = source->inv ? source->inv + SLOT_MISSILE : NULL;
     item_t *ammo = source->inv ? source->inv + SLOT_AMMO : NULL;
+    int16_t dist = -1;
 
     if (!launcher || !ammo || !launcher->name || !ammo->name) { return error; }
     if (!launcher->name[0] || !ammo->name[0]) { return error;}
     if (launcher->attack.range <= 1) { return error; }
-    if (launcher->attack.range < entity_distance(source, target)) { return error; }
+    sol_status_check(sol_entity_distance(source, target, &dist), "Unable to calc distance");
+
+    if (launcher->attack.range < dist) { return error; }
 
     return sol_dnd2e_attack(source, target, round, EA_MISSILE);
 }

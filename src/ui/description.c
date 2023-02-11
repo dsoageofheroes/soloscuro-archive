@@ -12,15 +12,18 @@ static sol_sprite_t background, icon;
 static char main_text[BUF_SIZE];
 
 static void description_init(const uint32_t x, const uint32_t y) {
+    sol_sprite_info_t info;
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     const float zoom = settings_zoom();
 
-    background = sol_sprite_new(pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 15002);
-    sol_sprite_set_location(background, (x + sol_sprite_getw(background)/2) * zoom,
+    sol_status_check(sol_sprite_new(pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 15002, &background),
+               "Unable to load description sprite.");
+    sol_status_check(sol_sprite_get_info(background, &info), "Unable to get background sprite info.");
+    sol_sprite_set_location(background, (x + info.w/2) * zoom,
                                         y * zoom);
     if (icon != SPRITE_ERROR) {
-        sol_sprite_set_location(icon, sol_sprite_getx(background) + (8 * zoom),
-             sol_sprite_gety(background) + (8 * zoom) );
+        sol_sprite_set_location(icon, info.x + (8 * zoom),
+             info.y + (8 * zoom) );
     }
 }
 
@@ -37,21 +40,23 @@ static int next_pos_main_text(const int pos, const int len) {
 }
 
 static void description_render(void *data) {
+    sol_sprite_info_t info;
     sol_sprite_render(background);
     sol_sprite_render(icon);
-    uint16_t x = sol_sprite_getx(icon) + (20 * settings_zoom());
-    uint16_t y = sol_sprite_gety(icon) + (8 * settings_zoom());
+    sol_status_check(sol_sprite_get_info(icon, &info), "Unable to get icon sprite info");
+    uint16_t x = info.x + (20 * settings_zoom());
+    uint16_t y = info.y + (8 * settings_zoom());
     int len = strlen(main_text) + 1;
     int pos = next_pos_main_text(0, 20);
 
-    sol_print_line_len(FONT_BLACK, main_text, x, y, pos);
+    sol_status_check(sol_print_line_len(FONT_BLACK, main_text, x, y, pos), "Unable to print line.");
     x -= 20 * settings_zoom();
 
     int next_pos = pos + 1;
     pos = next_pos_main_text(next_pos, 26);
     while (next_pos < len) {
         y += (9 * settings_zoom());
-        sol_print_line_len(FONT_BLACK, main_text + next_pos, x, y, pos - next_pos);
+        sol_status_check(sol_print_line_len(FONT_BLACK, main_text + next_pos, x, y, pos - next_pos), "Unable to print line.");
         next_pos = pos + 1;
         pos = next_pos_main_text(next_pos, 26);
     }
@@ -71,21 +76,27 @@ static int description_handle_mouse_up(const uint32_t button, const uint32_t x, 
 }
 
 static void description_free() {
-    sol_sprite_free(background);
+    sol_status_check(sol_sprite_free(background), "Unable to free sprite");
 }
 
-extern void sol_description_set_message(const char *msg) {
+extern sol_status_t sol_description_set_message(const char *msg) {
+    if (!msg) { return SOL_NULL_ARGUMENT; }
     strncpy(main_text, msg, BUF_SIZE - 1);
     main_text[BUF_SIZE - 1] = '\0';
+    return SOL_SUCCESS;
 }
 
-extern void sol_description_set_icon(const uint16_t icon_id) {
+extern sol_status_t sol_description_set_icon(const uint16_t icon_id) {
     const float zoom = settings_zoom();
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
+    sol_sprite_info_t info;
 
-    icon = sol_sprite_new(pal, 0, 0, settings_zoom(), RESOURCE_GFF_INDEX, GFF_ICON, icon_id);
-    sol_sprite_set_location(icon, sol_sprite_getx(background) + (8 * zoom),
-             sol_sprite_gety(background) + (8 * zoom) );
+    sol_status_check(sol_sprite_new(pal, 0, 0, settings_zoom(), RESOURCE_GFF_INDEX, GFF_ICON, icon_id, &icon),
+         "Unable to load description icon sprite");
+    sol_status_check(sol_sprite_get_info(icon, &info), "Unable to get background sprite info");
+    sol_sprite_set_location(icon, info.x + (8 * zoom),
+             info.y + (8 * zoom) );
+    return SOL_SUCCESS;
 }
 
 sol_wops_t description_window = {
