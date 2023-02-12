@@ -45,10 +45,12 @@ void main_init(const uint32_t x, const uint32_t y) {
 
 static int click_action() {
     int ret = 0;
+    sol_entity_t *active;
+
     if (count_down_spr == exit_dos) { sol_game_loop_signal(WAIT_FINAL, 0); }
     if (count_down_spr == create_characters) { sol_window_push(&view_character_window, 0, 10); }
     if (count_down_spr == start) {
-        if(sol_player_get_active() && sol_player_get_active()->name) {
+        if(sol_player_get_active(&active) == SOL_SUCCESS && active->name) {
             sol_window_pop();
             // Note: We are deallocated here, so be careful.
             info("Running Master DSL #99.\n");

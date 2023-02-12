@@ -30,7 +30,7 @@ int port_ask_yes_no() {
 void port_change_region(sol_region_t *reg) {
 }
 
-extern void port_load_item(item_t *item) {
+extern void port_load_item(sol_item_t *item) {
 }
 
 //extern void port_load_sprite(sprite_info_t *spr, gff_palette_t *pal, const int gff_index, const int type, const uint32_t id) {
@@ -65,14 +65,14 @@ extern uint32_t port_sprite_geth(const uint16_t id) {
     return id;
 }
 
-void             sol_mouse_init(){}
-void             sol_mouse_set_as_item(item_t *item){}
-power_t*         sol_mouse_get_power(){return NULL;}
-void             sol_mouse_free_item(){}
-item_t*          sol_mouse_get_item(){return NULL;}
-void             sol_mouse_free(){}
-enum mouse_state sol_mouse_get_state(){ return 0;}
-void             sol_mouse_set_state(const enum mouse_state state){}
+sol_status_t sol_mouse_init(){}
+sol_status_t sol_mouse_set_as_item(sol_item_t *item){}
+sol_status_t sol_mouse_free_item(){}
+sol_status_t sol_mouse_free(){}
+sol_status_t sol_mouse_set_state(const enum sol_mouse_state_e state){}
+sol_status_t sol_mouse_get_power(power_t **p){*p = NULL; return SOL_SUCCESS;}
+sol_status_t sol_mouse_get_item(sol_item_t **i){*i = NULL; return SOL_SUCCESS;}
+sol_status_t sol_mouse_get_state(enum sol_mouse_state_e *ms){ *ms = 0; return SOL_SUCCESS;}
 
 static int sprite_id = 0;
 extern sol_sprite_t sol_sprite_init() { return SOL_SUCCESS; }

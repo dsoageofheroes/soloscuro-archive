@@ -10,6 +10,7 @@
 #include "port.h"
 #include "entity.h"
 #include "narrate.h"
+#include "map.h"
 #include "background.h"
 #include "status.h"
 #include "trigger.h"
@@ -273,7 +274,8 @@ static int calc_distance_to_player(sol_entity_t *entity) {
 
     //for (int i = 0; i < MAX_PCS; i++) {
         //if (player_exists(i)) {
-            sol_entity_t *dude = sol_player_get_active();
+            sol_entity_t *dude;
+            sol_player_get_active(&dude);
             int xdiff = (entity->mapx - dude->mapx);
             int ydiff = (entity->mapy - dude->mapy);
             if (xdiff < 0) { xdiff *= -1;}
@@ -332,14 +334,14 @@ static int move_entity(sol_entity_t *entity, const int x, const int y) {
 }
 
 extern void sol_region_tick(sol_region_t *reg) {
-    dude_t *bad_dude = NULL;
+    dude_t *bad_dude = NULL, *dude;
     int xdiff, ydiff;
     int posx, posy, in_combat = 0;
     enum sol_entity_action_e action;
     combat_region_t *cr;
     sol_status_t status;
 
-    if (!reg || sol_map_is_paused()) { return; }
+    if (!reg || sol_map_is_paused() == SOL_SUCCESS) { return; }
     status = sol_arbiter_combat_region(reg, &cr);
     in_combat = sol_combat_active(cr);
 
@@ -360,7 +362,7 @@ extern void sol_region_tick(sol_region_t *reg) {
             }
             continue;
         }
-        if (bad_dude->abilities.must_go && !in_combat && !sol_narrate_is_open()) {
+        if (bad_dude->abilities.must_go && !in_combat && sol_narrate_is_open() != SOL_SUCCESS) {
             move_entity(bad_dude, bad_dude->abilities.args.pos.x, bad_dude->abilities.args.pos.y);
             if (bad_dude->mapx == bad_dude->abilities.args.pos.x
                 && bad_dude->mapy == bad_dude->abilities.args.pos.y) {
@@ -370,7 +372,8 @@ extern void sol_region_tick(sol_region_t *reg) {
             }
         }
         if (bad_dude->abilities.hunt && !in_combat) {
-            move_entity(bad_dude, sol_player_get_active()->mapx, sol_player_get_active()->mapy);
+            sol_player_get_active(&dude);
+            move_entity(bad_dude, dude->mapx, dude->mapy);
 
             if (calc_distance_to_player(bad_dude) < 5) {
                 sol_arbiter_enter_combat(reg, bad_dude->mapx, bad_dude->mapy);

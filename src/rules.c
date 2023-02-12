@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-static void set_psp(entity_t *pc) {
+static void set_psp(sol_entity_t *pc) {
     pc->stats.high_psp = 0;
     if (pc->stats.con > 15) {
         pc->stats.high_psp += pc->stats.con - 15;
@@ -33,7 +33,7 @@ static void set_psp(entity_t *pc) {
     pc->stats.psp = pc->stats.high_psp;
 }
 
-static void do_level_up(entity_t *pc, const uint32_t class_idx, const uint32_t class) {
+static void do_level_up(sol_entity_t *pc, const uint32_t class_idx, const uint32_t class) {
     int clevel = pc->class[class_idx].level;
     int num_classes = 0;
     uint8_t current_hit_die, next_hit_die, class_hit_die;
@@ -69,7 +69,7 @@ static void do_level_up(entity_t *pc, const uint32_t class_idx, const uint32_t c
     set_psp(pc);
 }
 
-void dnd2e_set_exp(entity_t *pc, const uint32_t amt) {
+void dnd2e_set_exp(sol_entity_t *pc, const uint32_t amt) {
     pc->stats.hp = pc->stats.high_hp = 0;
     for (int i = 0; i < 3; i++) {
         if (pc->class[i].class > -1) {
@@ -83,7 +83,7 @@ void dnd2e_set_exp(entity_t *pc, const uint32_t amt) {
     dnd2e_award_exp(pc, amt);
 }
 
-void dnd2e_award_exp_to_class(entity_t *pc, const int index, const uint32_t amt) {
+void dnd2e_award_exp_to_class(sol_entity_t *pc, const int index, const uint32_t amt) {
     pc->class[index].current_xp += amt;
     uint8_t next_level;
 
@@ -96,7 +96,7 @@ void dnd2e_award_exp_to_class(entity_t *pc, const int index, const uint32_t amt)
     }
 }
 
-void dnd2e_award_exp(entity_t *pc, const uint32_t amt) {
+void dnd2e_award_exp(sol_entity_t *pc, const uint32_t amt) {
     int num_classes = 0;
     for (int i = 0; i < 3 && pc->class[i].level > -1; i++) {
         //printf("pc->leve[%d] = %d\n",i, pc->level[i]);
@@ -107,13 +107,13 @@ void dnd2e_award_exp(entity_t *pc, const uint32_t amt) {
     }
 }
 
-int16_t dnd2e_get_ac_pc(entity_t *pc) {
+int16_t dnd2e_get_ac_pc(sol_entity_t *pc) {
     int ac_bonus = 0;
 
     if (!dnd2e_character_is_valid(pc)) { return 10; }
 
     if (pc->inv) {
-        item_t *item = pc->inv;
+        sol_item_t *item = pc->inv;
         for (int i = 0; i <= SLOT_FOOT; i++) {
             if (item[i].ds_id) {
                 ac_bonus += -item[i].ac;
@@ -124,7 +124,7 @@ int16_t dnd2e_get_ac_pc(entity_t *pc) {
     return pc->stats.base_ac + sol_dnd2e_ac_mod(&pc->stats) + ac_bonus;
 }
 
-int16_t dnd2e_get_attack_num(const entity_t *pc, const item_t *item) {
+int16_t dnd2e_get_attack_num(const sol_entity_t *pc, const sol_item_t *item) {
     int16_t attack_num;
     if (item == NULL || !item->ds_id) { return pc->stats.attacks[0].number; }
     // For some reason double attacks are stored for missiles...
@@ -132,12 +132,12 @@ int16_t dnd2e_get_attack_num(const entity_t *pc, const item_t *item) {
     return item->attack.number + attack_num;
 }
 
-int16_t dnd2e_get_attack_sides_pc(const entity_t *pc, const item_t *item) {
+int16_t dnd2e_get_attack_sides_pc(const sol_entity_t *pc, const sol_item_t *item) {
     if (item == NULL || !item->ds_id) { return pc->stats.attacks[0].sides; }
     return item->attack.sides;
 }
 
-int16_t dnd2e_get_attack_die_pc(const entity_t *pc, const item_t *item) {
+int16_t dnd2e_get_attack_die_pc(const sol_entity_t *pc, const sol_item_t *item) {
     if (item == NULL || !item->ds_id) { return pc->stats.attacks[0].num_dice; }
     return item->attack.num_dice;
 }
@@ -151,7 +151,7 @@ enum {
     MATERIAL_LEATHER = (1<<3),
 };
 
-int16_t dnd2e_get_attack_mod_pc(const entity_t *pc, const item_t *item) {
+int16_t dnd2e_get_attack_mod_pc(const sol_entity_t *pc, const sol_item_t *item) {
     uint16_t material_mod = 0;
 
     if (!dnd2e_character_is_valid(pc)) { return 0; }
@@ -173,7 +173,7 @@ int16_t dnd2e_get_attack_mod_pc(const entity_t *pc, const item_t *item) {
             + sol_dnd2e_melee_damage_mod(&pc->stats);
 }
 
-static int calc_starting_exp(entity_t *pc) {
+static int calc_starting_exp(sol_entity_t *pc) {
     int num_classes = 0;
     int most_exp_class = -1;
     int most_exp = -1;
@@ -195,7 +195,7 @@ static int calc_starting_exp(entity_t *pc) {
     return most_exp * starting_level * num_classes;
 }
 
-void dnd2e_randomize_stats_pc(entity_t *pc) {
+void dnd2e_randomize_stats_pc(sol_entity_t *pc) {
     pc->stats.str = 10 + (rand() % 11);
     pc->stats.dex = 10 + (rand() % 11);
     pc->stats.con = 10 + (rand() % 11);
@@ -209,11 +209,11 @@ void dnd2e_randomize_stats_pc(entity_t *pc) {
     dnd2e_set_starting_level(pc);
 }
 
-void dnd2e_set_starting_level(entity_t *pc) {
+void dnd2e_set_starting_level(sol_entity_t *pc) {
     dnd2e_set_exp(pc, calc_starting_exp(pc)); // Also sets HP & PSP
 }
 
-static void adjust_creation_hp(entity_t *pc) {
+static void adjust_creation_hp(sol_entity_t *pc) {
     int min_hp           = 0; // Right now min_hp is looking for max level
     int num_levels       = 0;
     int32_t max_hp       = 0;
@@ -251,7 +251,7 @@ static void adjust_creation_hp(entity_t *pc) {
     //printf("(%d, %d) %d %d %d\n", min_hp, max_hp, pc->class[0].class, pc->class[1].class, pc->class[2].class);
 }
 
-void dnd2e_loop_creation_stats(entity_t *pc) {
+void dnd2e_loop_creation_stats(sol_entity_t *pc) {
     if (!pc || pc->race < 0 || pc->race > RACE_THRIKREEN) { return; }
 
     sol_dnd2e_race_apply_initial_stats(pc);
@@ -264,7 +264,7 @@ void dnd2e_loop_creation_stats(entity_t *pc) {
     set_psp(pc);
 }
 
-int dnd2e_character_is_valid(const entity_t *pc) {
+int dnd2e_character_is_valid(const sol_entity_t *pc) {
     if (!sol_dnd2e_stats_valid(&pc->stats)) { return 0; }
     if (sol_dnd2e_is_class_allowed(pc->race, pc->class) != SOL_SUCCESS) { return 0; }
     if (pc->gender != GENDER_MALE && pc->gender != GENDER_FEMALE) { return 0; }
@@ -312,11 +312,11 @@ int dnd2e_psin_is_valid(ds_character_t *pc, psin_t *psi) {
     return num_psionics == 1;
 }
 
-int16_t dnd2e_get_move(entity_t *pc) {
+int16_t dnd2e_get_move(sol_entity_t *pc) {
     return pc->stats.base_move;
 }
 
-static int item_thac0_mod(item_t *item) {
+static int item_thac0_mod(sol_item_t *item) {
     int thac0_mod = 0;
 
     switch(item->material) {
@@ -335,7 +335,7 @@ static int item_thac0_mod(item_t *item) {
     return thac0_mod;
 }
 
-int16_t dnd2e_get_thac0(entity_t *pc, int slot) {
+int16_t dnd2e_get_thac0(sol_entity_t *pc, int slot) {
     int32_t class_thac0;
     sol_status_check(
             sol_dnd2e_class_thac0(pc, &class_thac0),
@@ -367,18 +367,18 @@ extern int16_t dnd2e_dice_roll(const uint16_t num, const uint16_t sides) {
 
 // Missle modification is in original DS engine, so is d10. Although DS was highest goes first, we are lowest.
 // TODO: Add mods for race, spell efects, etc...
-int dnd2e_roll_initiative(entity_t *entity) {
+int dnd2e_roll_initiative(sol_entity_t *entity) {
     return (rand() % 10) + sol_dnd2e_reaction_mod(&entity->stats);
 }
 int dnd2e_roll_sub_roll() {
     return rand();
 }
 
-int16_t dnd2e_calc_ac(entity_t *entity) {
+int16_t dnd2e_calc_ac(sol_entity_t *entity) {
     int ac_bonus = 0;
 
     if (entity->inv) {
-        item_t *item = entity->inv;
+        sol_item_t *item = entity->inv;
         for (int i = 0; i <= SLOT_FOOT; i++) {
             if (item[i].ds_id) {
                 ac_bonus += item[i].ac;
@@ -410,7 +410,7 @@ static int16_t roll_damage_innate(innate_attack_t *attack) {
     return amt;
 }
 
-static int16_t roll_damage_weapon(item_t *item) {
+static int16_t roll_damage_weapon(sol_item_t *item) {
     int16_t amt = 0;
 
     for (int i = 0; i < item->attack.num_dice; i++) {
@@ -427,11 +427,11 @@ static int16_t roll_damage_weapon(item_t *item) {
     return amt;
 }
 
-static void populate_melee_sequence(entity_t *source, uint8_t *seq, const int round) {
+static void populate_melee_sequence(sol_entity_t *source, uint8_t *seq, const int round) {
     int      pos         = 0;
     int      amt         = 0;
     int16_t  attack_num  = 0;
-    item_t  *item        = NULL;
+    sol_item_t  *item        = NULL;
 
     if (!source->inv) {
         // Usually monster so we go with innate attacks.
@@ -472,11 +472,11 @@ static void populate_melee_sequence(entity_t *source, uint8_t *seq, const int ro
     seq[pos] = SLOT_END;
 }
 
-static void populate_missile_sequence(entity_t *source, uint8_t *seq, const int round) {
+static void populate_missile_sequence(sol_entity_t *source, uint8_t *seq, const int round) {
     int      pos         = 0;
     int      amt         = 0;
     int16_t  attack_num  = 0;
-    item_t *launcher = source->inv ? source->inv + SLOT_MISSILE : NULL;
+    sol_item_t *launcher = source->inv ? source->inv + SLOT_MISSILE : NULL;
     //item_t *ammo = source->inv ? source->inv + SLOT_AMMO : NULL;
 
     if (!launcher || !launcher->name[0]) { goto missile_seq_end; }
@@ -489,7 +489,7 @@ missile_seq_end:
     seq[pos] = SLOT_END;
 }
 
-static int get_next_attack(entity_t *source, const int attack_num, const int round, const uint16_t type) {
+static int get_next_attack(sol_entity_t *source, const int attack_num, const int round, const uint16_t type) {
     static uint8_t  attack_sequence[16];
 
     if (attack_num == 0) {
@@ -507,16 +507,16 @@ static int get_next_attack(entity_t *source, const int attack_num, const int rou
     return attack_sequence[attack_num];
 }
 
-extern int16_t dnd2e_can_melee_again(entity_t *source, const int attack_num, const int round) {
+extern int16_t dnd2e_can_melee_again(sol_entity_t *source, const int attack_num, const int round) {
     int next_attack = get_next_attack(source, attack_num, round, EA_MELEE);
     return next_attack != -1 && next_attack != SLOT_END;
 }
 
-static sol_attack_t sol_dnd2e_attack(entity_t *source, entity_t *target, const int round, const int type) {
+static sol_attack_t sol_dnd2e_attack(sol_entity_t *source, sol_entity_t *target, const int round, const int type) {
     static sol_attack_t invalid_attack = { -1, 0 };
     sol_attack_t attack = {0, 0};
     int16_t thac0 = 20, attack_slot, damage_source_slot;
-    item_t *item;
+    sol_item_t *item;
 
     if (!source || !target || source->stats.combat.attack_num < 0) { return invalid_attack; }
 
@@ -532,7 +532,7 @@ static sol_attack_t sol_dnd2e_attack(entity_t *source, entity_t *target, const i
     }
 
     damage_source_slot = (attack_slot == SLOT_MISSILE) ? SLOT_AMMO : attack_slot;
-    item = sol_item_get((inventory_t*) source->inv, damage_source_slot);
+    sol_item_get((sol_inventory_t*) source->inv, damage_source_slot, &item);
     if (item) {
         //printf("ITEM: %s\n", item->name);
         //printf("damage mod = %d\n", sol_dnd2e_melee_damage_mod(&source->stats));
@@ -547,10 +547,10 @@ static sol_attack_t sol_dnd2e_attack(entity_t *source, entity_t *target, const i
     return attack;
 }
 
-extern sol_attack_t sol_dnd2e_range_attack(entity_t *source, entity_t *target, const int round) {
+extern sol_attack_t sol_dnd2e_range_attack(sol_entity_t *source, sol_entity_t *target, const int round) {
     static sol_attack_t error = { -2, 0 };
-    item_t *launcher = source->inv ? source->inv + SLOT_MISSILE : NULL;
-    item_t *ammo = source->inv ? source->inv + SLOT_AMMO : NULL;
+    sol_item_t *launcher = source->inv ? source->inv + SLOT_MISSILE : NULL;
+    sol_item_t *ammo = source->inv ? source->inv + SLOT_AMMO : NULL;
     int16_t dist = -1;
 
     if (!launcher || !ammo || !launcher->name || !ammo->name) { return error; }
@@ -564,6 +564,6 @@ extern sol_attack_t sol_dnd2e_range_attack(entity_t *source, entity_t *target, c
 }
 
 // returns the amt of damage done. 0 means miss/absorbed, negative means attack is not legit, or out of round.
-extern sol_attack_t sol_dnd2e_melee_attack(entity_t *source, entity_t *target, const int round) {
+extern sol_attack_t sol_dnd2e_melee_attack(sol_entity_t *source, sol_entity_t *target, const int round) {
     return sol_dnd2e_attack(source, target, round, EA_MELEE);
 }

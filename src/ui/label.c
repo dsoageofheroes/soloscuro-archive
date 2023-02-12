@@ -20,27 +20,30 @@ extern sol_status_t sol_label_render(struct sol_label_s* label) {
     return SOL_LABEL_NOT_FOUND;
 }
 
-extern void sol_label_set(sol_label_t *label, const char *buf, const int32_t x, const int32_t y) {
+extern sol_status_t sol_label_set(sol_label_t *label, const char *buf, const int32_t x, const int32_t y) {
+    if (!label || !buf) { return SOL_NULL_ARGUMENT; }
     sol_label_set_text(label, buf);
     label->x = x;
     label->y = y;
+    return SOL_SUCCESS;
 }
 
-extern void sol_label_set_text(sol_label_t *label, const char* string) {
-    if (label != NULL) {
-        free(label->text);
-        label->text = (char*)malloc( (strlen(string) + 1) * sizeof(string) );
+extern sol_status_t sol_label_set_text(sol_label_t *label, const char* string) {
+    if (!label || !string) { return SOL_NULL_ARGUMENT; }
 
-        if (label->text == NULL) {
-            printf("couldn't malloc in sol_label_set_text() - label id = %d\n", label->id);
-            return;
-        }
-
-        strcpy(label->text, string);
+    free(label->text);
+    label->text = (char*)malloc( (strlen(string) + 1) * sizeof(string) );
+    if (label->text == NULL) {
+        printf("couldn't malloc in sol_label_set_text() - label id = %d\n", label->id);
+        return SOL_MEMORY_ERROR;
     }
+
+    strcpy(label->text, string);
+    return SOL_SUCCESS;
 }
 
-extern uint32_t sol_label_pixel_width(struct sol_label_s* label) {
+extern sol_status_t sol_label_pixel_width(struct sol_label_s* label, uint32_t *width) {
+    if (!label) { return SOL_NULL_ARGUMENT; }
     if (label->__m_pixel_width_do_not_use == 0 || label->text != label->__m_old_text_do_not_use)
     {
         label->__m_old_text_do_not_use = label->text;
@@ -49,7 +52,8 @@ extern uint32_t sol_label_pixel_width(struct sol_label_s* label) {
                 &label->__m_pixel_width_do_not_use);
     }
 
-    return label->__m_pixel_width_do_not_use;
+    *width = label->__m_pixel_width_do_not_use;
+    return SOL_SUCCESS;
 }
 
 
@@ -66,145 +70,178 @@ extern sol_label_t create_label(int parent, int id, char* text, sol_font_t font)
     return new_label;
 }
 
-extern sol_label_t sol_label_create_at_pos(int parent, int id, char* text, sol_font_t font, int16_t x, int16_t y) {
+extern sol_status_t sol_label_create_at_pos(int parent, int id, char* text, sol_font_t font, int16_t x, int16_t y, sol_label_t *l) {
     sol_label_t new_label = create_label(parent, id, text, font);
 
     new_label.x = x;
     new_label.y = y;
 
-    return new_label;
+    *l = new_label;
+    return SOL_SUCCESS;
 }
 
-extern sol_label_t *sol_label_point_in(sol_label_t *label, const int32_t x, const int32_t y) {
+extern sol_status_t sol_label_point_in(sol_label_t *label, const int32_t x, const int32_t y, sol_label_t **l) {
+    if (!label) { return SOL_NULL_ARGUMENT; }
     int font_h;
     sol_font_pixel_height(FONT_GREYLIGHT, &font_h);
-    int font_w = sol_label_pixel_width(label);
-
-    if ( (x >= label->x && x <= (label->x + font_w)) &&
-         (y >= label->y && y <= (label->y + font_h)) ) {
-        return label;
+    uint32_t font_w;
+    
+    sol_label_pixel_width(label, &font_w);
+    if (!((x >= label->x && x <= (label->x + font_w)) &&
+         (y >= label->y && y <= (label->y + font_h)))) {
+        return SOL_OUT_OF_RANGE;
     }
 
-    return NULL;
+    if (l) { *l = label; }
+    return SOL_SUCCESS;
 }
 
-extern sol_label_t* sol_label_group_point_in(const int32_t x, const int32_t y) {
+extern sol_status_t sol_label_group_point_in(const int32_t x, const int32_t y, sol_label_t **l) {
+    if (!l) { return SOL_NULL_ARGUMENT; }
     for (int i = 0; i < LABEL_END; i++) {
-        if (sol_label_point_in(labels + i, x, y)) { return labels + i; }
+        if (sol_label_point_in(labels + i, x, y, NULL)) {
+            *l = labels + i;
+            return SOL_SUCCESS;
+        }
     }
-    return NULL;
+    return SOL_LABEL_NOT_FOUND;
 }
 
-extern void sol_label_group_set_font(sol_font_t font) {
+extern sol_status_t sol_label_group_set_font(sol_font_t font) {
     for (int i = 0; i < LABEL_END; i++) {
         labels[i].font = font;
     }
+    return SOL_SUCCESS;
 }
 
-extern void sol_label_create_group() {
+extern sol_status_t sol_label_create_group() {
     int oX = 8, oY = 249;
     char buf[64];
     const float zoom = settings_zoom();
 
-    if (labels_created) { return; }
+    if (labels_created) { return SOL_SUCCESS; }
 
     strcpy(buf, "");
-    labels[LABEL_NAME]           = sol_label_create_at_pos(0, LABEL_NAME,
-                                                       "NAME:", FONT_GREYLIGHT,
-                                                       0 + oX, 0 + oY);
+    sol_label_create_at_pos(0, LABEL_NAME,
+                            "NAME:", FONT_GREYLIGHT,
+                            0 + oX, 0 + oY,
+                            &labels[LABEL_NAME]);
 
-    labels[LABEL_STR]            = sol_label_create_at_pos(0, LABEL_STR,
-                                                       "STR:", FONT_GREYLIGHT,
-                                                       (oX += 12) + 0, (oY += 20) + 0);
+    sol_label_create_at_pos(0, LABEL_STR,
+                            "STR:", FONT_GREYLIGHT,
+                            (oX += 12) + 0, (oY += 20) + 0,
+                            &labels[LABEL_STR]);
 
-    labels[LABEL_STR_VAL]        = sol_label_create_at_pos(0, LABEL_STR_VAL,
-                                                       buf, FONT_GREYLIGHT,
-                                                       oX + 26 * zoom, oY);
+    sol_label_create_at_pos(0, LABEL_STR_VAL,
+                            buf, FONT_GREYLIGHT,
+                            oX + 26 * zoom, oY,
+                            &labels[LABEL_STR_VAL]);
     
-    labels[LABEL_DEX]            = sol_label_create_at_pos(0, LABEL_DEX,
-                                                       "DEX:", FONT_GREYLIGHT,
-                                                       0 + oX, (oY += 15) + 0);
+    sol_label_create_at_pos(0, LABEL_DEX,
+                            "DEX:", FONT_GREYLIGHT,
+                            0 + oX, (oY += 15) + 0,
+                            &labels[LABEL_DEX]);
 
-    labels[LABEL_DEX_VAL]        = sol_label_create_at_pos(0, LABEL_DEX_VAL,
-                                                       buf, FONT_GREYLIGHT,
-                                                       oX + 26 * zoom, oY);
+    sol_label_create_at_pos(0, LABEL_DEX_VAL,
+                            buf, FONT_GREYLIGHT,
+                            oX + 26 * zoom, oY,
+                            &labels[LABEL_DEX_VAL]);
     
-    labels[LABEL_CON]            = sol_label_create_at_pos(0, LABEL_CON,
-                                                       "CON:", FONT_GREYLIGHT,
-                                                       0 + oX, (oY += 15) + 0);
-    labels[LABEL_CON_VAL]        = sol_label_create_at_pos(0, LABEL_CON_VAL,
-                                                       buf, FONT_GREYLIGHT,
-                                                       oX + 26 * zoom, oY);
+    sol_label_create_at_pos(0, LABEL_CON,
+                            "CON:", FONT_GREYLIGHT,
+                            0 + oX, (oY += 15) + 0,
+                            &labels[LABEL_CON]);
+    sol_label_create_at_pos(0, LABEL_CON_VAL,
+                            buf, FONT_GREYLIGHT,
+                            oX + 26 * zoom, oY,
+                            &labels[LABEL_CON_VAL]);
     
-    labels[LABEL_INT]            = sol_label_create_at_pos(0, LABEL_INT,
-                                                       "INT:", FONT_GREYLIGHT,
-                                                       0 + oX, (oY += 15) + 0);
-    labels[LABEL_INT_VAL]        = sol_label_create_at_pos(0, LABEL_INT_VAL,
-                                                       buf, FONT_GREYLIGHT,
-                                                       oX + 26 * zoom, oY);
+    sol_label_create_at_pos(0, LABEL_INT,
+                            "INT:", FONT_GREYLIGHT,
+                            0 + oX, (oY += 15) + 0,
+                            &labels[LABEL_INT]);
+    sol_label_create_at_pos(0, LABEL_INT_VAL,
+                            buf, FONT_GREYLIGHT,
+                            oX + 26 * zoom, oY,
+                            &labels[LABEL_INT_VAL]);
 
-    labels[LABEL_WIS]            = sol_label_create_at_pos(0, LABEL_WIS,
-                                                       "WIS:", FONT_GREYLIGHT,
-                                                       0 + oX, (oY += 15) + 0);
+    sol_label_create_at_pos(0, LABEL_WIS,
+                            "WIS:", FONT_GREYLIGHT,
+                            0 + oX, (oY += 15) + 0,
+                            &labels[LABEL_WIS]);
 
-    labels[LABEL_WIS_VAL]        = sol_label_create_at_pos(0, LABEL_WIS_VAL,
-                                                       buf, FONT_GREYLIGHT,
-                                                       oX + 26 * zoom, oY);
+    sol_label_create_at_pos(0, LABEL_WIS_VAL,
+                            buf, FONT_GREYLIGHT,
+                            oX + 26 * zoom, oY,
+                            &labels[LABEL_WIS_VAL]);
 
-    labels[LABEL_CHA]            = sol_label_create_at_pos(0, LABEL_CHA,
-                                                       "CHA:", FONT_GREYLIGHT,
-                                                       0 + oX, (oY += 15) + 0);
+    sol_label_create_at_pos(0, LABEL_CHA,
+                            "CHA:", FONT_GREYLIGHT,
+                            0 + oX, (oY += 15) + 0,
+                            &labels[LABEL_CHA]);
 
-    labels[LABEL_CHA_VAL]        = sol_label_create_at_pos(0, LABEL_CHA_VAL,
-                                                       buf, FONT_GREYLIGHT,
-                                                       oX + 26 * zoom, oY);
+    sol_label_create_at_pos(0, LABEL_CHA_VAL,
+                            buf, FONT_GREYLIGHT,
+                            oX + 26 * zoom, oY,
+                            &labels[LABEL_CHA_VAL]);
 
-    labels[LABEL_GENDER]         = sol_label_create_at_pos(0, LABEL_GENDER,
-                                                       buf, FONT_GREYLIGHT,
-                                                       0, 0);
+    sol_label_create_at_pos(0, LABEL_GENDER,
+                            buf, FONT_GREYLIGHT,
+                            0, 0,
+                            &labels[LABEL_GENDER]);
 
-    labels[LABEL_RACE]           = sol_label_create_at_pos(0, LABEL_RACE,
-                                                       buf, FONT_GREYLIGHT,
-                                                       0, 0);
+    sol_label_create_at_pos(0, LABEL_RACE,
+                            buf, FONT_GREYLIGHT,
+                            0, 0,
+                            &labels[LABEL_RACE]);
 
-    labels[LABEL_ALIGNMENT]      = sol_label_create_at_pos(0, LABEL_ALIGNMENT,
-                                                       buf, FONT_GREYLIGHT,
-                                                       0, 0);
+    sol_label_create_at_pos(0, LABEL_ALIGNMENT,
+                            buf, FONT_GREYLIGHT,
+                            0, 0,
+                            &labels[LABEL_ALIGNMENT]);
 
-    labels[LABEL_CLASSES]        = sol_label_create_at_pos(0, LABEL_CLASSES,
-                                                       buf, FONT_GREYLIGHT,
-                                                       0 + oX, (oY += 15) + 0);
+    sol_label_create_at_pos(0, LABEL_CLASSES,
+                            buf, FONT_GREYLIGHT,
+                            0 + oX, (oY += 15) + 0,
+                            &labels[LABEL_CLASSES]);
 
-    labels[LABEL_LEVELS]         = sol_label_create_at_pos(0, LABEL_LEVELS,
-                                                       buf, FONT_GREYLIGHT,
-                                                       0 + oX, (oY += 15) + 0);
+    sol_label_create_at_pos(0, LABEL_LEVELS,
+                            buf, FONT_GREYLIGHT,
+                            0 + oX, (oY += 15) + 0,
+                            &labels[LABEL_LEVELS]);
 
-    labels[LABEL_EXP_TNL]        = sol_label_create_at_pos(0, LABEL_EXP_TNL,
-                                                       buf, FONT_GREYLIGHT,
-                                                       0 + oX + 70, 0 + oY);
+    sol_label_create_at_pos(0, LABEL_EXP_TNL,
+                            buf, FONT_GREYLIGHT,
+                            0 + oX + 70, 0 + oY,
+                            &labels[LABEL_EXP_TNL]);
 
-    labels[LABEL_AC]             = sol_label_create_at_pos(0, LABEL_AC,
-                                                       buf, FONT_GREYLIGHT,
-                                                       0 + oX, (oY += 15) + 0);
+    sol_label_create_at_pos(0, LABEL_AC,
+                            buf, FONT_GREYLIGHT,
+                            0 + oX, (oY += 15) + 0,
+                            &labels[LABEL_AC]);
 
-    labels[LABEL_DAM]            = sol_label_create_at_pos(0, LABEL_DAM,
-                                                       buf, FONT_GREYLIGHT,
-                                                       0 + oX + 70, 0 + oY);
+    sol_label_create_at_pos(0, LABEL_DAM,
+                            buf, FONT_GREYLIGHT,
+                            0 + oX + 70, 0 + oY,
+                            &labels[LABEL_DAM]);
 
-    labels[LABEL_HP]             = sol_label_create_at_pos(0, LABEL_HP,
-                                                       buf, FONT_GREYLIGHT,
-                                                       0 + (oX += 20), 0 + (oY += 15));
+    sol_label_create_at_pos(0, LABEL_HP,
+                            buf, FONT_GREYLIGHT,
+                            0 + (oX += 20), 0 + (oY += 15),
+                            &labels[LABEL_HP]);
 
-    labels[LABEL_PSP]            = sol_label_create_at_pos(0, LABEL_PSP,
-                                                       buf, FONT_GREYLIGHT,
-                                                       0 + (oX), 0 + (oY += 15));
+    sol_label_create_at_pos(0, LABEL_PSP,
+                            buf, FONT_GREYLIGHT,
+                            0 + (oX), 0 + (oY += 15),
+                            &labels[LABEL_PSP]);
     for (int i = 0; i < LABEL_END; i++) {
         labels[i].id = i;
     }
     labels_created = 1;
+    return SOL_SUCCESS;
 }
 
-static const char* get_gender_as_string(entity_t *pc) {
+static const char* get_gender_as_string(sol_entity_t *pc) {
     switch(pc->gender) {
         case GENDER_MALE:   return "MALE";
         case GENDER_FEMALE: return "FEMALE";
@@ -213,7 +250,7 @@ static const char* get_gender_as_string(entity_t *pc) {
     return "UNKNOWN";
 }
 
-static const char* get_race_as_string(entity_t *pc) {
+static const char* get_race_as_string(sol_entity_t *pc) {
     switch(pc->race) {
         case RACE_HUMAN:     return "HUMAN";
         case RACE_DWARF:     return "DWARF";
@@ -227,7 +264,7 @@ static const char* get_race_as_string(entity_t *pc) {
     return "UNKNOWN";
 }
 
-static const char* get_alignment_as_string(entity_t *pc) {
+static const char* get_alignment_as_string(sol_entity_t *pc) {
     switch(pc->alignment) {
         case LAWFUL_GOOD:     return "LAWFUL GOOD";
         case LAWFUL_NEUTRAL:  return "LAWFUL NEUTRAL";
@@ -269,7 +306,7 @@ static const char* get_class_name(const uint8_t class) {
     return 0; // UNKNOWN CLASS
 }
 
-static void copy_classes_string(entity_t *pc, char* storage) {
+static void copy_classes_string(sol_entity_t *pc, char* storage) {
     int pos = 0;
 
     for (int i = 0; i < 3; i++) {
@@ -281,7 +318,7 @@ static void copy_classes_string(entity_t *pc, char* storage) {
     storage[pos] = '\0';
 }
 
-static void copy_levels_string(entity_t *pc, char* storage) {
+static void copy_levels_string(sol_entity_t *pc, char* storage) {
     int pos = 0;
 
     for (int i = 0; i < 3; i++) {
@@ -293,7 +330,7 @@ static void copy_levels_string(entity_t *pc, char* storage) {
     storage[pos] = '\0';
 }
 
-static void copy_exp_tnl_string(entity_t *pc, char* storage) {
+static void copy_exp_tnl_string(sol_entity_t *pc, char* storage) {
     int32_t next_exp, total_exp;
     if (pc->class[0].class > -1) {
         sol_status_check(
@@ -307,9 +344,9 @@ static void copy_exp_tnl_string(entity_t *pc, char* storage) {
     }
 }
 
-static void copy_dam_string(entity_t *pc, char* storage) {
+static void copy_dam_string(sol_entity_t *pc, char* storage) {
     int pos = 0;
-    item_t *items = pc ? pc->inv : NULL;
+    sol_item_t *items = pc ? pc->inv : NULL;
     int attack_num = dnd2e_get_attack_num(pc, items ? items + 3 : NULL);
     int sides = dnd2e_get_attack_sides_pc(pc, items ? items + 3 : NULL);
     int mod = dnd2e_get_attack_mod_pc(pc, items ? items + 3 : NULL);
@@ -321,10 +358,13 @@ static void copy_dam_string(entity_t *pc, char* storage) {
 }
 
 
-extern void sol_label_set_group(entity_t *dude, sol_screen_type_t _screen_type) {
-    screen_type = _screen_type;
+extern sol_status_t sol_label_set_group(sol_entity_t *dude, sol_screen_type_t _screen_type) {
     char buf[BUF_MAX];
-    int show_hp_psp = (screen_type == SCREEN_VIEW_CHARACTER);
+    int show_hp_psp;
+    if (!dude) { return SOL_NULL_ARGUMENT; }
+
+    screen_type = _screen_type;
+    show_hp_psp = (screen_type == SCREEN_VIEW_CHARACTER);
 
     snprintf(buf, 127, "%d", dude->stats.str);
     sol_label_set_text(labels + LABEL_STR_VAL, buf);
@@ -375,9 +415,11 @@ extern void sol_label_set_group(entity_t *dude, sol_screen_type_t _screen_type) 
             (show_hp_psp) ? "PSP: " : "",
             dude->stats.psp, dude->stats.high_psp);
     sol_label_set_text(labels + LABEL_PSP, buf);
+
+    return SOL_SUCCESS;
 }
 
-extern void sol_label_set_positions(int32_t oX, int32_t oY, const sol_screen_type_t _screen_type) {
+extern sol_status_t sol_label_set_positions(int32_t oX, int32_t oY, const sol_screen_type_t _screen_type) {
     screen_type = _screen_type;
     int tab_hp_psp = (screen_type != SCREEN_VIEW_CHARACTER);
     int exp_new_line = (screen_type == SCREEN_VIEW_CHARACTER);
@@ -452,6 +494,8 @@ extern void sol_label_set_positions(int32_t oX, int32_t oY, const sol_screen_typ
         labels[LABEL_HP].y = (oY += yadj);
         labels[LABEL_PSP].y = (oY += yadj);
     }
+
+    return SOL_SUCCESS;
 }
 
 static sol_status_t sol_label_render_offset(sol_label_t *label, const int16_t offsetx, const int16_t offsety) {

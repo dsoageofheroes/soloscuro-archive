@@ -11,8 +11,9 @@
 
 static int entity_cast(lua_State *l) {
     //sol_lua_dumpstack (l);
-    dude_t *dude = (dude_t*) lua_touserdata(l, lua_upvalueindex(1));
-    dude_t *target = (dude_t*) sol_lua_get_userdata(l, -1 - lua_gettop(l));
+    sol_dude_t *dude = (sol_dude_t*) lua_touserdata(l, lua_upvalueindex(1));
+    sol_dude_t *target;
+    sol_lua_get_userdata(l, -1 - lua_gettop(l), (void**)&target);
     power_t *pw = pw = wizard_get_spell(luaL_checkinteger(l,2));
 
     if (!pw) {
@@ -24,15 +25,15 @@ static int entity_cast(lua_State *l) {
     return 1;
 }
 
-static int push_entity_function(lua_State *l, entity_t *entity, int (*func)(lua_State *l)) {
+static sol_status_t push_entity_function(lua_State *l, sol_entity_t *entity, int (*func)(lua_State *l)) {
     lua_pushlightuserdata(l, entity);
     lua_pushcclosure(l, func, 1);
-    return 1;
+    return SOL_SUCCESS;
 }
 
 static int in_combat(lua_State *l) {
     sol_status_t status = SOL_UNKNOWN_ERROR;
-    dude_t *dude = (dude_t*) lua_touserdata(l, lua_upvalueindex(1));
+    sol_dude_t *dude = (sol_dude_t*) lua_touserdata(l, lua_upvalueindex(1));
     sol_region_t *reg = sol_region_manager_get_region_with_entity(dude);
     combat_region_t *cr = NULL;
     status = sol_arbiter_combat_region(reg, &cr);
@@ -41,7 +42,7 @@ static int in_combat(lua_State *l) {
 }
 
 static int is_combat_turn(lua_State *l) {
-    dude_t *dude = (dude_t*) lua_touserdata(l, lua_upvalueindex(1));
+    sol_dude_t *dude = (sol_dude_t*) lua_touserdata(l, lua_upvalueindex(1));
     sol_region_t *reg = sol_region_manager_get_region_with_entity(dude);
     combat_region_t *cr = NULL;
     sol_status_t status = SOL_UNKNOWN_ERROR;
@@ -52,7 +53,7 @@ static int is_combat_turn(lua_State *l) {
 }
 
 static int move_entity(lua_State *l, const int xdiff, const int ydiff) {
-    dude_t *dude = (dude_t*) lua_touserdata(l, lua_upvalueindex(1));
+    sol_dude_t *dude = (sol_dude_t*) lua_touserdata(l, lua_upvalueindex(1));
     lua_pushboolean(l, sol_entity_attempt_move(dude, xdiff, ydiff, 1) == SOL_SUCCESS);
     return 1;
 }
@@ -67,13 +68,13 @@ static int move_down_left(lua_State *l) { return move_entity(l, -1, 1); }
 static int move_down_right(lua_State *l) { return move_entity(l, 1, 1); }
 
 static int guard(lua_State *l) {
-    dude_t *dude = (dude_t*) lua_touserdata(l, lua_upvalueindex(1));
+    sol_dude_t *dude = (sol_dude_t*) lua_touserdata(l, lua_upvalueindex(1));
     lua_pushboolean(l, sol_combat_guard(dude));
     return 1;
 }
 
 static int load_scmd(lua_State *l) {
-    dude_t *dude = (dude_t*) lua_touserdata(l, lua_upvalueindex(1));
+    sol_dude_t *dude = (sol_dude_t*) lua_touserdata(l, lua_upvalueindex(1));
 
     dude->anim.scmd_info.gff_idx = luaL_checkinteger(l, 1);
     dude->anim.scmd_info.res_id = luaL_checkinteger(l, 2);
@@ -95,7 +96,7 @@ static int load_scmd(lua_State *l) {
 }
 
 static int set_class(lua_State *l) {
-    dude_t   *dude = (dude_t*) lua_touserdata(l, lua_upvalueindex(1));
+    sol_dude_t   *dude = (sol_dude_t*) lua_touserdata(l, lua_upvalueindex(1));
     uint16_t  which = luaL_checkinteger(l, 1);
     uint16_t  class = luaL_checkinteger(l, 2);
     dude->class[which].class = class;
@@ -103,14 +104,14 @@ static int set_class(lua_State *l) {
 }
 
 static int award_exp(lua_State *l) {
-    dude_t   *dude = (dude_t*) lua_touserdata(l, lua_upvalueindex(1));
+    sol_dude_t   *dude = (sol_dude_t*) lua_touserdata(l, lua_upvalueindex(1));
     uint32_t  exp = luaL_checkinteger(l, 1);
 
     dnd2e_award_exp(dude, exp);
 }
 
 static int give_ds1_item(lua_State *l) {
-    dude_t   *dude = (dude_t*) lua_touserdata(l, lua_upvalueindex(1));
+    sol_dude_t   *dude = (sol_dude_t*) lua_touserdata(l, lua_upvalueindex(1));
     int32_t   slot = luaL_checkinteger(l, 1);
     int32_t   item_index = luaL_checkinteger(l, 2);
     int32_t   item_id = luaL_checkinteger(l, 3);
@@ -121,32 +122,33 @@ static int give_ds1_item(lua_State *l) {
 }
 
 static int get_closest_enemy(lua_State *l) {
-    dude_t   *dude = (dude_t*) lua_touserdata(l, lua_upvalueindex(1));
+    sol_dude_t   *dude = (sol_dude_t*) lua_touserdata(l, lua_upvalueindex(1));
     sol_status_t status = SOL_UNKNOWN_ERROR;
     combat_region_t *cr = NULL;
     status = sol_arbiter_combat_region(sol_region_manager_get_current(), &cr);
-    entity_t *enemy = sol_combat_get_closest_enemy(cr, dude->mapx, dude->mapy);
+    sol_entity_t *enemy = sol_combat_get_closest_enemy(cr, dude->mapx, dude->mapy);
 
-    return sol_lua_load_entity (l, enemy);
+    return sol_lua_load_entity (l, enemy) == SOL_SUCCESS ? 1 : 0;
 }
 
 static int attack_range(lua_State *l) {
-    dude_t *dude = (dude_t*) lua_touserdata(l, lua_upvalueindex(1));
-    dude_t *target = (dude_t*) sol_lua_get_userdata(l, -1 - lua_gettop(l));
+    sol_dude_t *dude = (sol_dude_t*) lua_touserdata(l, lua_upvalueindex(1));
+    sol_dude_t *target;
 
+    sol_lua_get_userdata(l, -1 - lua_gettop(l), (void**)&target);
     sol_combat_add_attack_animation(sol_region_manager_get_current(), dude, target, NULL, EA_MISSILE);
     return 0;
 }
 
 static int hunt(lua_State *l) {
-    dude_t *dude = (dude_t*) lua_touserdata(l, lua_upvalueindex(1));
+    sol_dude_t *dude = (sol_dude_t*) lua_touserdata(l, lua_upvalueindex(1));
 
     dude->abilities.hunt = 1;
     return 0;
 }
 
 static int move(lua_State *l) {
-    dude_t *dude  = (dude_t*) lua_touserdata(l, lua_upvalueindex(1));
+    sol_dude_t *dude  = (sol_dude_t*) lua_touserdata(l, lua_upvalueindex(1));
     int32_t x     = luaL_checkinteger(l, 1);
     int32_t y     = luaL_checkinteger(l, 2);
     int32_t speed = luaL_checkinteger(l, 2);
@@ -155,7 +157,7 @@ static int move(lua_State *l) {
     return 0;
 }
 
-extern int sol_lua_entity_function(entity_t *entity, const char *func, lua_State *l) {
+extern sol_status_t sol_lua_entity_function(sol_entity_t *entity, const char *func, lua_State *l) {
     if (!strcmp(func, "cast")) {
         return push_entity_function(l, entity, entity_cast);
     } else if (!strcmp(func, "in_combat")) {
@@ -198,5 +200,5 @@ extern int sol_lua_entity_function(entity_t *entity, const char *func, lua_State
         return push_entity_function(l, entity, load_scmd);
     }
     lua_pushinteger(l, 0);
-    return 1;
+    return SOL_SUCCESS;
 }

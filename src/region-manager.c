@@ -26,7 +26,8 @@ static void free_entities(sol_region_t *reg) {
 
     // Don't free the players, so we will get rid of them first.
     for (int i = 0; i < MAX_PCS; i++) {
-        sol_entity_list_find(reg->entities, sol_player_get(i), &node);
+        sol_player_get(i, &dude);
+        sol_entity_list_find(reg->entities, dude, &node);
         sol_entity_list_remove(reg->entities, node);
     }
 
@@ -59,7 +60,7 @@ extern void sol_region_manager_cleanup(int _free_entities) {
 }
 
 // private: we assume entity and reg are valid.
-static int entity_is_in_region(const entity_t *entity, const sol_region_t *reg) {
+static int entity_is_in_region(const sol_entity_t *entity, const sol_region_t *reg) {
     dude_t *dude;
 
     sol_entity_list_for_each(reg->entities, dude) {
@@ -69,7 +70,7 @@ static int entity_is_in_region(const entity_t *entity, const sol_region_t *reg) 
     return 0;
 }
 
-extern sol_region_t* sol_region_manager_get_region_with_entity(const entity_t *entity) {
+extern sol_region_t* sol_region_manager_get_region_with_entity(const sol_entity_t *entity) {
     sol_region_t *reg;
     if (!entity) { return NULL; }
 
@@ -93,7 +94,7 @@ extern sol_status_t sol_region_manager_load_etab(sol_region_t *reg) {
 // NOTE: only set assume_loaded on creation!
 extern sol_region_t* sol_region_manager_get_region(const int region_id, const int assume_loaded) {
     char gff_name[32];
-    entity_t *dude = NULL;
+    sol_entity_t *dude = NULL;
 
     if (region_id >= MAX_REGIONS && region_id < 2 * MAX_REGIONS) { return sol_regions[region_id - MAX_REGIONS]; }
 
@@ -115,7 +116,7 @@ extern sol_region_t* sol_region_manager_get_region(const int region_id, const in
     current_region = region_id;
     sol_trigger_set_region(ssi_regions[region_id]);
 	for (int i = 0; i < MAX_PCS; i++) {
-        dude = sol_player_get(i);
+        sol_player_get(i, &dude);
         if (dude) {
             dude->region = region_id;
         }
@@ -149,7 +150,8 @@ extern int sol_region_manager_add_region(sol_region_t *region) {
 extern void sol_region_manager_set_current(sol_region_t *region) {
     if (!region) { return; }
 
-    entity_t *player = sol_player_get_active();
+    sol_entity_t *player;
+    sol_player_get_active(&player);
     sol_region_manager_remove_players();
 
     for (int i = 0; i < MAX_REGIONS; i++) {
@@ -171,11 +173,13 @@ extern void sol_region_manager_set_current(sol_region_t *region) {
 
 extern void sol_region_manager_remove_players() {
     sol_region_t* reg = sol_region_manager_get_current();
+    sol_dude_t *player;
     sol_entity_list_node_t *node = NULL;
     if (!reg) { return; }
 
     for (int i = 0; i < MAX_PCS; i++) {
-        sol_entity_list_find(reg->entities, sol_player_get(i), &node);
+        sol_player_get(i, &player);
+        sol_entity_list_find(reg->entities, player, &node);
         sol_entity_list_remove(reg->entities, node);
     }
 }

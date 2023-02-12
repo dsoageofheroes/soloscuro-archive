@@ -371,7 +371,7 @@ static int get_id(lua_State *l) {
     return 1;
 }
 
-static int get_element_entity(lua_State *l, dude_t *dude, const int depth, const int element) {
+static int get_element_entity(lua_State *l, sol_dude_t *dude, const int depth, const int element) {
     if (!dude) {
         warn("passed a null entity! (depth = %d, element = %d)\n", depth, element);
         lua_pushnumber(l, -1);
@@ -390,7 +390,7 @@ static int get_element_entity(lua_State *l, dude_t *dude, const int depth, const
 }
 
 static int get_element(lua_State *l) {
-    sol_entity_t *ent;
+    sol_entity_t *ent, *active;
     lua_Integer obj_name = luaL_checkinteger(l, 1);
     lua_Integer header   = luaL_checkinteger(l, 2);
     lua_Integer depth    = luaL_checkinteger(l, 3);
@@ -398,7 +398,8 @@ static int get_element(lua_State *l) {
     //printf("get_element(%lld, %lld, %lld, %lld) -- %lld\n", obj_name, header, depth, element, obj_name & 0x7FFF);
     switch(obj_name & 0x7FFF) {
         case 0x25: // POV -- active char?
-            return get_element_entity(l, sol_player_get_active(), depth, element);
+            sol_player_get_active(&active);
+            return get_element_entity(l, active, depth, element);
         case 0x28: // OTHER
             sol_gpl_get_global(GPL_OTHER, &ent);
             return get_element_entity(l, ent, depth, element);
@@ -426,7 +427,7 @@ static int get_party(lua_State *l) {
     lua_Integer member = luaL_checkinteger(l, 1);
     //static int idx = -1;
     //error("error: gpl.get_party: not implemented returning 9999 for member: " PRI_LI "!\n", member);
-    if (sol_player_exists(member)) {
+    if (sol_player_exists(member) != SOL_SUCCESS) {
         debug("Party member does not exist in slot: " PRI_LI ", returning 9999!\n", member);
         lua_pushnumber(l, 9999);
         return 1;
@@ -463,7 +464,7 @@ static int is_true(lua_State *l) {
 static int gpl_getX(lua_State *l) {
     lua_Integer id = luaL_checkinteger(l, 1);
     sol_region_t *reg = sol_region_manager_get_current();
-    dude_t *dude = NULL;
+    sol_dude_t *dude = NULL;
 
     sol_entity_list_for_each(reg->entities, dude) {
         if (dude->ds_id == id) {
@@ -479,7 +480,7 @@ static int gpl_getX(lua_State *l) {
 static int gpl_getY(lua_State *l) {
     lua_Integer id = luaL_checkinteger(l, 1);
     sol_region_t *reg = sol_region_manager_get_current();
-    dude_t *dude = NULL;
+    sol_dude_t *dude = NULL;
 
     sol_entity_list_for_each(reg->entities, dude) {
         if (dude->ds_id == id) {
@@ -513,8 +514,8 @@ static int range(lua_State *l) {
     const uint32_t to   = luaL_checkinteger(l, 2);
 
     sol_region_t* reg = sol_region_manager_get_current();
-    entity_t* from_entity = sol_region_find_entity_by_id(reg, from);
-    entity_t* to_entity = sol_region_find_entity_by_id(reg, to);
+    sol_entity_t* from_entity = sol_region_find_entity_by_id(reg, from);
+    sol_entity_t* to_entity = sol_region_find_entity_by_id(reg, to);
 
     if (!from_entity || !to_entity) {
         debug("Range from '%u' to '%u' not found returning GPL_RANGE_MAX(%u)\n", from, to, GPL_RANGE_MAX);
@@ -668,7 +669,7 @@ static int gpl_clone(lua_State *l) {
     for (int i = 0; i < qty; i++) {
         debug("Cloning %d to: %lld, %lld\n", obj, x, y);
 
-        dude_t *dude;
+        sol_dude_t *dude;
         sol_entity_create_from_objex(obj, &dude);
         dude->mapx = x;
         dude->mapy = y;
@@ -694,7 +695,7 @@ static int gpl_clone(lua_State *l) {
 
 static int gpl_hunt(lua_State *l) {
     lua_Integer obj = luaL_checkinteger(l, 1);
-    dude_t *dude = NULL;
+    sol_dude_t *dude = NULL;
 
     sol_entity_list_for_each(sol_region_manager_get_current()->entities, dude) {
         if (dude->ds_id == (int)obj) {
@@ -706,7 +707,7 @@ static int gpl_hunt(lua_State *l) {
 }
 
 static int gpl_ask_yes_no(lua_State *l) {
-    lua_pushinteger(l, sol_ui_narrate_ask_yes_no());
+    lua_pushinteger(l, sol_narrate_ask_yes_no() == SOL_SUCCESS ? 1 : 0);
     return 1;
 }
 
@@ -717,7 +718,8 @@ static int gpl_tport_party(lua_State *l) {
 
     error("TPORT PARTY NOT IMPLEMENTED, need to transport to map %lld @ (%lld, %lld).\n", map_id, mapx, mapy);
     sol_window_clear();
-    entity_t *player = sol_player_get_active();
+    sol_entity_t *player;
+    sol_player_get_active(&player);
     player->mapx = mapx;
     player->mapy = mapy;
     sol_window_load_region(map_id);
@@ -768,7 +770,7 @@ static int gpl_goxy1(lua_State *l) {
     lua_Integer y = luaL_checkinteger(l, 2);
     lua_Integer obj = luaL_checkinteger(l, 3);
 
-    entity_t *dude = sol_region_find_entity_by_id(sol_region_manager_get_current(), obj);
+    sol_entity_t *dude = sol_region_find_entity_by_id(sol_region_manager_get_current(), obj);
     printf("%lld needs to go to (%lld, %lld), currently (%d, %d)\n", obj, x, y, dude->mapx, dude->mapy);
     lua_pushboolean(l, sol_entity_go(dude, x, y) == SOL_SUCCESS);
 
@@ -818,7 +820,7 @@ static int lua_narrate_open(lua_State *l) {
     const char *text = luaL_checkstring(l, 2);
     lua_Integer index = luaL_checkinteger(l, 3);
 
-    narrate_open(cmd, text, index);
+    sol_narrate_open(cmd, text, index);
     debug("I need to do " PRI_LI " with text '%s' at index " PRI_LI "\n", cmd, text, index);
 
     return 0;
@@ -842,8 +844,9 @@ static int lua_play_sound(lua_State *l) {
 }
 
 static int lua_get_active_name(lua_State *l) {
-    entity_t *dude = sol_player_get_active();
+    sol_entity_t *dude;
 
+    sol_player_get_active(&dude);
     lua_pushstring(l, (!dude || !dude->name)
         ? "?"
         : dude->name);

@@ -20,17 +20,19 @@ const static size_t ds1_icon_res[] = {
 
 static SDL_Cursor **cursors;
 static int num_cursors;
-static item_t *item_data = NULL;
+static sol_item_t *item_data = NULL;
 static power_t *power = NULL;
 static SDL_Cursor *item_cursor;
 static SDL_Cursor *power_cursor;
-static enum mouse_state state = MOUSE_POINTER;
+static enum sol_mouse_state_e state = MOUSE_POINTER;
 
-extern enum mouse_state sol_mouse_get_state() {
-    return state;
+extern sol_status_t sol_mouse_get_state(enum sol_mouse_state_e *ms) {
+    if (!ms) { return SOL_NULL_ARGUMENT; }
+    *ms = state;
+    return SOL_SUCCESS;
 }
 
-extern void sol_mouse_set_state(const enum mouse_state _state) {
+extern sol_status_t sol_mouse_set_state(const enum sol_mouse_state_e _state) {
     switch(_state) {
         case MOUSE_POINTER:    SDL_SetCursor(cursors[0]); break;
         case MOUSE_NO_POINTER: SDL_SetCursor(cursors[1]); break;
@@ -45,22 +47,23 @@ extern void sol_mouse_set_state(const enum mouse_state _state) {
         case MOUSE_ITEM:
             if (!item_cursor) {
                 error ("Trying to set item cursor, but no item selected!\n");
-                return;
+                return SOL_NOT_FOUND;
             }
             SDL_SetCursor(item_cursor);
             break;
         case MOUSE_POWER:
             if (!power_cursor) {
                 error ("Trying to set power cursor, but no power selected!\n");
-                return;
+                return SOL_NOT_FOUND;
             }
             SDL_SetCursor(power_cursor);
             break;
         default:
             error ("Unknown mouse state requested: %d\n", _state);
-            return;
+            return SOL_UNKNOWN_ERROR;
     }
     state = _state;
+    return SOL_SUCCESS;
 }
 
 static SDL_Cursor* create_cursor(const int gff_idx, const int type_idx, const size_t res_id) {
@@ -93,10 +96,10 @@ static SDL_Cursor* create_cursor(const int gff_idx, const int type_idx, const si
     return c;
 }
 
-extern void sol_mouse_init() {
+extern sol_status_t sol_mouse_init() {
     if (gff_get_game_type() != DARKSUN_1) {
         warn("Mouse cursor implemented in DS1 only right now. Not loading mouse cursor.");
-        return;
+        return SOL_NOT_IMPLEMENTED;
     }
     num_cursors = sizeof(ds1_icon_res) / sizeof(size_t);
     cursors = malloc(sizeof(SDL_Cursor*) * num_cursors);
@@ -110,9 +113,10 @@ extern void sol_mouse_init() {
     item_data = NULL;
     item_cursor = NULL;
     power_cursor = NULL;
+    return SOL_SUCCESS;
 }
 
-extern void sol_mouse_free() {
+extern sol_status_t sol_mouse_free() {
     for (int i = 0; i < num_cursors; i++) {
         SDL_FreeCursor(cursors[i]);
     }
@@ -124,35 +128,41 @@ extern void sol_mouse_free() {
         item_cursor = NULL;
     }
     if (item_data) {
-        item_free(item_data);
+        sol_item_free(item_data);
         item_data = NULL;
     }
     if (power_cursor) {
         SDL_FreeCursor(power_cursor);
         power_cursor = NULL;
     }
+    return SOL_SUCCESS;
 }
 
-extern void sol_mouse_set_as_item(item_t *item) {
+extern sol_status_t sol_mouse_set_as_item(sol_item_t *item) {
+    if (!item) { return SOL_NULL_ARGUMENT; }
     if (item_data) { 
-        item_free_except_graphics(item_data);
+        sol_item_free_except_graphics(item_data);
         item_data = NULL;
     }
 
-    item_data = item_dup(item);
+    sol_item_dup(item, &item_data);
 
     // Unfortunately, in SDL you are suppose to use a surface for the cursor.
     // So, we will store the texture for later and load the mouse as a surface.
     if (item_cursor) { SDL_FreeCursor(item_cursor); }
     item_cursor = create_cursor(OBJEX_GFF_INDEX, GFF_BMP, item->anim.bmp_id);
     sol_mouse_set_state(MOUSE_ITEM);
+    return SOL_SUCCESS;
 }
 
-extern item_t* sol_mouse_get_item() {
-    return item_data;
+extern sol_status_t sol_mouse_get_item(sol_item_t **item) {
+    if (!item) { return SOL_NULL_ARGUMENT; }
+
+    *item = item_data;
+    return SOL_SUCCESS;
 }
 
-extern void sol_mouse_free_item() {
+extern sol_status_t sol_mouse_free_item() {
     if (item_data) {
         free(item_data);
         item_data = NULL;
@@ -161,10 +171,13 @@ extern void sol_mouse_free_item() {
     if (item_cursor) { SDL_FreeCursor(item_cursor); }
 
     SDL_SetCursor(cursors[0]);
+    return SOL_SUCCESS;
 }
 
-extern power_t* sol_mouse_get_power() {
-    return power;
+extern sol_status_t sol_mouse_get_power(power_t **p) {
+    if (!p) { return SOL_NULL_ARGUMENT; }
+    *p = power;
+    return SOL_SUCCESS;
 }
 
 extern void sol_mouse_set_as_power(power_t *pw) {

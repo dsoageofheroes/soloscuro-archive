@@ -56,8 +56,9 @@ static void queue_add(action_node_t **head, action_node_t **tail, action_node_t 
 
 static sol_entity_t* player_exists_in_pos(sol_region_t *reg, const uint16_t x, const uint16_t y) {
     for (int i = 0; i < MAX_PCS; i++) {
-        if (!sol_player_exists(i)) { continue; }
-        sol_entity_t *player = sol_player_get(i);
+        if (sol_player_exists(i) != SOL_SUCCESS) { continue; }
+        sol_entity_t *player;
+        sol_player_get(i, &player);
         //printf("(%d, %d) -> player(%d, %d)\n", x, y, player->mapx, player->mapy);
         if (player->mapx == x && player->mapy == y) { return player; }
     }
@@ -113,7 +114,7 @@ static sol_entity_t* player_to_attack(sol_region_t *reg, action_node_t *node) {
 }
 
 static sol_entity_t* entity_at_location(const sol_region_t *reg, sol_entity_t *entity, const int32_t x, const int32_t y) {
-    dude_t *dude = NULL;
+    sol_dude_t *dude = NULL;
 
     sol_entity_list_for_each(reg->entities, dude) {
         //printf("(%s: %d, %d) ?= (%s: %d, %d)\n", dude->name, dude->mapx, dude->mapy, entity->name, entity->mapx, entity->mapy);
@@ -215,7 +216,7 @@ static void monster_set_animation(sol_entity_t *monster, sol_entity_action_t *ac
     }
 }
 
-extern int sol_combat_add_attack_animation(sol_region_t *reg, dude_t *dude, sol_entity_t *target,
+extern int sol_combat_add_attack_animation(sol_region_t *reg, sol_dude_t *dude, sol_entity_t *target,
                                         power_t *power, enum sol_entity_action_e action) {
     sol_attack_t     attack;
     sol_status_t     status = SOL_UNKNOWN_ERROR;
@@ -282,6 +283,8 @@ extern void sol_combat_update(sol_region_t *reg) {
     sol_entity_t *combatant;
     combat_region_t *cr = NULL;
     sol_status_t status = SOL_NOT_IMPLEMENTED;
+    int slot;
+
     if (reg == NULL) { return; }
 
     status = sol_arbiter_combat_region(reg, &cr);
@@ -307,7 +310,7 @@ extern void sol_combat_update(sol_region_t *reg) {
     }
 
     //printf("2combatant = %s: %d\n", combatant->name, combatant->stats.combat.attack_num);
-    if (sol_player_get_slot(combatant) >= 0) { // It is an active player's turn
+    if (sol_player_get_slot(combatant, &slot) == SOL_SUCCESS && slot  >= 0) { // It is an active player's turn
         return;
     }
 
@@ -380,12 +383,12 @@ extern int sol_combat_guard(sol_entity_t *entity) {
     sol_status_t status;
     combat_region_t *cr = NULL;
     sol_entity_t *dude = sol_combat_get_current(cr);
-    int pos;
+    int pos, slot;
 
     status = sol_arbiter_combat_region(sol_region_manager_get_current(), &cr);
 
     if (!dude) { return 0; }
-    if (sol_player_get_slot(dude) < 0 && !entity) { return 0; }
+    if (sol_player_get_slot(dude, &slot) == SOL_SUCCESS && slot < 0 && !entity) { return 0; }
     if (entity && dude != entity) { return 0; }
 
     pos = snprintf(buf, BUF_LEN - 1, "%s guards", dude->name);
@@ -410,17 +413,19 @@ extern void sol_combat_set_scmd(sol_entity_t *dude, const combat_scmd_t scmd) {
 
 extern void sol_combat_kill_all_enemies() {
     sol_status_t status = SOL_NOT_IMPLEMENTED;
-    dude_t *dude;
-    dude_t *player = sol_player_get_active();
+    sol_dude_t *dude;
+    sol_dude_t *player;
     sol_region_t *reg = sol_region_manager_get_current();
     combat_region_t *cr = NULL;
+    int slot;
 
+    sol_player_get_active(&player);
     status = sol_arbiter_combat_region(reg, &cr);
 
     if (!cr || !reg || !player) { return; }
 
     sol_entity_list_for_each((&cr->combatants), dude) {
-        if (sol_player_get_slot(dude) >= 0) { continue; }
+        if (sol_player_get_slot(dude, &slot) == SOL_SUCCESS && slot >= 0) { continue; }
         dude->combat_status = COMBAT_STATUS_DYING;
         dude->stats.hp = 0;
         //play_death_sound(dude);
@@ -435,7 +440,7 @@ extern void sol_combat_kill_all_enemies() {
             error("Unable to remove entity from region!\n");
         }
         // Only free if not a player.
-        if (sol_player_get_slot(dude) < 0) {
+        if (sol_player_get_slot(dude, &slot) == SOL_SUCCESS && slot < 0) {
             sol_entity_free(dude);
         }
         return;

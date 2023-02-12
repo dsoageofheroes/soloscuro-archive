@@ -50,6 +50,11 @@ typedef enum sol_status_e {
     SOL_GFF_CHUNK_NOT_FOUND,
     SOL_ACTIVE,
     SOL_GPL_UNKNOWN_TYPE,
+    SOL_UNKNOWN_KEY,
+    SOL_ILLEGAL_SLOT,
+    SOL_NOT_INITIALIZED,
+    SOL_NO,
+    SOL_GAME_OVER,
     SOL_UNKNOWN_ERROR,
 } sol_status_t;
 
@@ -71,20 +76,6 @@ gff-image.h
 gff-map.h
 gfftypes.h
 gff-xmi.h
-input.h
-interact.h
-inventory.h
-item.h
-label.h
-lua-entity.h
-lua-inc.h
-lua-region.h
-map.h
-mouse.h
-narrate.h
-new-character.h
-player.h
-popup.h
 port.h
 portrait.h
 powers.h

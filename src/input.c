@@ -7,6 +7,7 @@
 #include "inventory.h"
 #include "popup.h"
 #include "settings.h"
+#include "trigger.h"
 #include "save-load.h"
 #include "view-character.h"
 #include <stdio.h>
@@ -15,16 +16,17 @@
 
 static int xscroll = 0, yscroll = 0, in_debug_mode = 0;
 
-extern void sol_input_tick() {
+extern sol_status_t sol_input_tick() {
     sol_camera_scrollx(xscroll);
     sol_camera_scrolly(yscroll);
+    return SOL_SUCCESS;
 }
 
-extern int sol_in_debug_mode() {
-    return in_debug_mode;
+extern sol_status_t sol_in_debug_mode() {
+    return in_debug_mode ? SOL_SUCCESS : SOL_NOT_FOUND;
 }
 
-extern void sol_key_down(const sol_key_e key) {
+extern sol_status_t sol_key_down(const sol_key_e key) {
     float zoom = settings_zoom();
     switch(key) {
         case SOLK_g:       sol_combat_guard(NULL); break;
@@ -62,11 +64,13 @@ extern void sol_key_down(const sol_key_e key) {
         case SOLK_SLASH:
                            in_debug_mode = !in_debug_mode;
                            break;
-        default: break;
+        default: return SOL_UNKNOWN_KEY;
     }
+
+    return SOL_SUCCESS;
 }
 
-extern void sol_key_up(const sol_key_e key) {
+extern sol_status_t sol_key_up(const sol_key_e key) {
     //printf("keyup = %d\n", key);
     switch(key) {
         case SOLK_LEFT:   sol_player_unmove(PLAYER_LEFT); break;
@@ -80,6 +84,7 @@ extern void sol_key_up(const sol_key_e key) {
         case SOLK_o:
             sol_trigger_talk_click(-89);
             break;
-        default: break;
+        default: return SOL_UNKNOWN_KEY;
     }
+    return SOL_SUCCESS;
 }

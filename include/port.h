@@ -43,7 +43,7 @@ extern void port_swap_enitity(int obj_id, entity_t *dude);
 
 extern sol_status_t sol_play_sound_effect(const uint16_t id);
 
-extern void port_load_item(item_t *item);
+extern void port_load_item(sol_item_t *item);
 extern int port_load_region(const int region);
 
 extern void port_start();

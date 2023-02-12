@@ -22,15 +22,17 @@ static sol_dim_t initial_locs[] = {{ 10, 4, 0, 0 }, // main
                                   { 10, 41, 0, 0 }, // option 2
 };
 
-extern void sol_popup_set_message(const char *msg) {
+extern sol_status_t sol_popup_set_message(const char *msg) {
     strncpy(main_text, msg, 31);
     main_text[31] = '\0';
+    return SOL_SUCCESS;
 }
 
-extern void sol_popup_set_option(const sol_popup_t idx, const char *msg) {
-    if (idx < 0 || idx > 2) { return; }
+extern sol_status_t sol_popup_set_option(const sol_popup_t idx, const char *msg) {
+    if (idx < 0 || idx > 2) { return SOL_OUT_OF_RANGE; }
     strncpy(option_text[idx], msg, 31);
     option_text[idx][31] = '\0';
+    return SOL_SUCCESS;
 }
 
 static void popup_init(const uint32_t x, const uint32_t y) {
@@ -183,13 +185,14 @@ static void popup_free() {
     if (popup_text) { free(popup_text); }
 }
 
-uint8_t sol_popup_get_selection() { return selection; }
-void sol_popup_clear_selection() { selection = POPUP_NOTHING; }
+extern sol_status_t sol_popup_get_selection(uint8_t *sel) { *sel = selection; return SOL_SUCCESS; }
+extern sol_status_t sol_popup_clear_selection() { selection = POPUP_NOTHING; return SOL_SUCCESS; }
 
-extern void sol_popup_quick_message(const char *msg) {
+extern sol_status_t sol_popup_quick_message(const char *msg) {
     if (popup_text) { free(popup_text); }
     popup_text = strdup(msg);
     popup_count = 60;
+    return SOL_SUCCESS;
 }
 
 sol_wops_t popup_window = {

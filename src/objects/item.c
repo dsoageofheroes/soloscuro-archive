@@ -7,15 +7,21 @@
 #include "entity.h"
 #include "sprite.h"
 
-extern item_t* sol_inventory_create() {
-    item_t *ret = calloc(1, sizeof(inventory_t));
+extern sol_status_t sol_inventory_create(sol_item_t **d) {
+    if (!d) { return SOL_NULL_ARGUMENT; }
+
+    sol_item_t *ret = calloc(1, sizeof(sol_inventory_t));
+    if (!ret) { return SOL_MEMORY_ERROR; }
+
     for (int i = 0; i < 26; i++) {
         ret[i].anim.spr = SPRITE_ERROR;
     }
-    return ret;
+
+    *d = ret;
+    return SOL_SUCCESS;
 }
 
-static int32_t get_bmp_id(item_t *item) {
+static int32_t get_bmp_id(sol_item_t *item) {
     disk_object_t dobj;
     if (!item) { return -1; }
 
@@ -28,13 +34,13 @@ static int32_t get_bmp_id(item_t *item) {
     return dobj.bmp_id;
 }
 
-void item_convert_from_ds1(item_t *item, const ds1_item_t *ds1_item) {
-    if (!item || !ds1_item) { return; }
+extern sol_status_t sol_item_convert_from_ds1(sol_item_t *item, const ds1_item_t *ds1_item) {
+    if (!item || !ds1_item) { return SOL_NULL_ARGUMENT; }
     const ds_item1r_t *ds1_item1r = ssi_get_item1r(ds1_item->item_index);
 
     if (!ds1_item1r) {
         error("Unable to find item1r for %d\n", ds1_item->item_index);
-        return;
+        return SOL_NOT_FOUND;
     }
 
     item->ds_id = ds1_item->id;
@@ -72,56 +78,64 @@ void item_convert_from_ds1(item_t *item, const ds1_item_t *ds1_item) {
     item->item_index = ds1_item->item_index;
 
     port_load_item(item);
+    return SOL_SUCCESS;
 }
 
-int item_allowed_in_slot(item_t *item, const int slot) {
-    if (!item || slot < 0 || slot > 25) { return 0; }
+extern sol_status_t sol_item_allowed_in_slot(sol_item_t *item, const int slot) {
+    if (!item)                 { return SOL_NULL_ARGUMENT; }
+    if (slot < 0 || slot > 25) { return SOL_OUT_OF_RANGE; }
 
-    if (slot > 13) { return 1; } // backpack is always okay!
+    if (slot > 13) { return SOL_SUCCESS; } // backpack is always okay!
 
     switch (item->placement) {
         case 1: // Chest
-            return slot == SLOT_CHEST;
+            return slot == SLOT_CHEST ? SOL_SUCCESS : SOL_ILLEGAL_SLOT;
         case 2: // Waist
-            return slot == SLOT_WAIST;
+            return slot == SLOT_WAIST ? SOL_SUCCESS : SOL_ILLEGAL_SLOT;
         case 3: // ARM
-            return slot == SLOT_ARM;
+            return slot == SLOT_ARM ? SOL_SUCCESS : SOL_ILLEGAL_SLOT;
         case 4: // FOOT
-            return slot == SLOT_FOOT;
+            return slot == SLOT_FOOT ? SOL_SUCCESS : SOL_ILLEGAL_SLOT;
         case 5: // HAND
-            return slot == SLOT_HAND0 || slot == SLOT_HAND1;
+            return slot == SLOT_HAND0 || slot == SLOT_HAND1 ? SOL_SUCCESS : SOL_ILLEGAL_SLOT;
         case 6: // HEAD
-            return slot == SLOT_HEAD;
+            return slot == SLOT_HEAD ? SOL_SUCCESS : SOL_ILLEGAL_SLOT;
         case 7: // NECK
-            return slot == SLOT_NECK;
+            return slot == SLOT_NECK ? SOL_SUCCESS : SOL_ILLEGAL_SLOT;
         case 8: // CLOAK
-            return slot == SLOT_CLOAK;
+            return slot == SLOT_CLOAK ? SOL_SUCCESS : SOL_ILLEGAL_SLOT;
         case 9: // FINGER
-            return slot == SLOT_FINGER0 || slot == SLOT_FINGER1;
+            return slot == SLOT_FINGER0 || slot == SLOT_FINGER1 ? SOL_SUCCESS : SOL_ILLEGAL_SLOT;
         case 10: // LEGS
-            return slot == SLOT_LEGS;
+            return slot == SLOT_LEGS ? SOL_SUCCESS : SOL_ILLEGAL_SLOT;
         case 11: // AMMO
-            return slot == SLOT_AMMO;
+            return slot == SLOT_AMMO ? SOL_SUCCESS : SOL_ILLEGAL_SLOT;
         case 12: // MISSILE
-            return slot == SLOT_MISSILE;
+            return slot == SLOT_MISSILE ? SOL_SUCCESS : SOL_ILLEGAL_SLOT;
     }
 
-    return 0;
+    return SOL_UNKNOWN_ERROR;
 }
 
-extern item_t* item_dup(item_t *item) {
-    item_t *ret = malloc(sizeof(item_t));
-    memcpy(ret, item, sizeof(item_t));
-    return ret;
+extern sol_status_t sol_item_dup(sol_item_t *item, sol_item_t **d) {
+    if (!item || !d) { return SOL_NULL_ARGUMENT; }
+
+    sol_item_t *ret = malloc(sizeof(sol_item_t));
+    if (!ret) { return SOL_MEMORY_ERROR; }
+
+    memcpy(ret, item, sizeof(sol_item_t));
+    *d = ret;
+    return SOL_SUCCESS;
 }
 
-void item_free_except_graphics(item_t *item) {
-    if (item) {
-        free(item);
-    }
+extern sol_status_t sol_item_free_except_graphics(sol_item_t *item) {
+    if (!item) { return SOL_NULL_ARGUMENT; }
+
+    free(item);
+    return SOL_SUCCESS;
 }
 
-static void free_item(item_t *item) {
+static void free_item(sol_item_t *item) {
     if (!item) { return; }
 
     if (item->anim.spr != SPRITE_ERROR) {
@@ -130,62 +144,66 @@ static void free_item(item_t *item) {
     }
 }
 
-void item_free(item_t *item) {
-    if (item) {
-        free_item(item);
-        free(item);
-    }
+extern sol_status_t sol_item_free(sol_item_t *item) {
+    if (!item) { return SOL_NULL_ARGUMENT; }
+
+    free_item(item);
+    free(item);
+    return SOL_SUCCESS;
 }
 
-extern void item_free_inventory(item_t *inv) {
-    if (!inv) { return; }
-    item_t *items = (item_t*)inv;
+extern sol_status_t sol_item_free_inventory(sol_item_t *inv) {
+    if (!inv) { return SOL_NULL_ARGUMENT; }
+    sol_item_t *items = (sol_item_t*)inv;
 
     for (int i = 0; i < 26; i++) {
         free_item(items + i);
     }
 
     //TODO: Free up the effects!
+    return SOL_SUCCESS;
 }
 
 // TODO: Implement!
-extern sol_status_t sol_item_get_wizard_level(item_t *item, uint8_t *level) {
+extern sol_status_t sol_item_get_wizard_level(sol_item_t *item, uint8_t *level) {
     if (!item) { return SOL_NULL_ARGUMENT; }
 
     return SOL_NOT_IMPLEMENTED;
 }
 
-extern sol_status_t sol_item_get_priest_level(item_t *item, uint8_t *level) {
+extern sol_status_t sol_item_get_priest_level(sol_item_t *item, uint8_t *level) {
     if (!item) { return SOL_NULL_ARGUMENT; }
 
     return SOL_NOT_IMPLEMENTED;
 }
 
-extern animate_sprite_t* item_icon(item_t *item) {
+extern sol_status_t sol_item_icon(sol_item_t *item, animate_sprite_t **d) {
+    if (!item || !d) { return SOL_NULL_ARGUMENT; }
+
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
-
-    if (!item) { return NULL; }
 
     //if (!port_valid_sprite(&item->sprite)) {
     if (item->anim.spr == SPRITE_ERROR) {
-        if (!item->anim.bmp_id) { return NULL; }
+        if (!item->anim.bmp_id) { return SOL_NOT_FOUND; }
         sol_sprite_load(&item->anim, pal, OBJEX_GFF_INDEX, GFF_BMP, item->anim.bmp_id, 1);
     }
 
-    return &(item->anim);
+    *d = &(item->anim);
+    return SOL_SUCCESS;
 }
 
-extern void sol_give_ds1_item(entity_t *pc, const int slot, const int item_index, const int id) {
-    if (!pc->inv) { pc->inv = sol_inventory_create(); }
+extern sol_status_t sol_give_ds1_item(entity_t *pc, const int slot, const int item_index, const int id) {
+    if (!pc) { return SOL_NULL_ARGUMENT; }
+    if (!pc->inv) { sol_inventory_create(&pc->inv); }
     ds1_item_t ds1_item;
     ds1_item.slot = SLOT_HAND0;
     ds1_item.item_index = item_index;
     ssi_item_load(&ds1_item, id);
-    item_convert_from_ds1(pc->inv + slot, &ds1_item);
+    return sol_item_convert_from_ds1(pc->inv + slot, &ds1_item);
 }
 
-extern void item_set_starting(dude_t *dude) {
-    if (!dude) { return; }
+extern sol_status_t sol_item_set_starting(sol_dude_t *dude) {
+    if (!dude) { return SOL_NULL_ARGUMENT; }
     int has_gladiator = sol_entity_has_class(dude, REAL_CLASS_GLADIATOR) == SOL_SUCCESS;
     int has_fighter = sol_entity_has_class(dude, REAL_CLASS_FIGHTER) == SOL_SUCCESS;
     int has_ranger = sol_entity_has_class(dude, REAL_CLASS_AIR_RANGER) == SOL_SUCCESS
@@ -204,19 +222,19 @@ extern void item_set_starting(dude_t *dude) {
     int has_thief = sol_entity_has_class(dude, REAL_CLASS_THIEF) == SOL_SUCCESS;
     int has_preserver = sol_entity_has_class(dude, REAL_CLASS_PRESERVER) == SOL_SUCCESS;
 
-    item_free_inventory(dude->inv);
+    sol_item_free_inventory(dude->inv);
     if (dude->inv) {
-        memset(dude->inv, 0x0, sizeof(inventory_t));
+        memset(dude->inv, 0x0, sizeof(sol_inventory_t));
         for (int i = 0; i < 26; i++) {
             dude->inv[i].anim.spr = SPRITE_ERROR;
         }
     } else {
-        dude->inv = sol_inventory_create();
+        sol_inventory_create(&dude->inv);
     }
 
     if (dude->race == RACE_THRIKREEN) {
         sol_give_ds1_item(dude, SLOT_MISSILE, 48, -1010);
-        return;
+        return SOL_SUCCESS;
     }
 
     if (has_gladiator || has_fighter || has_ranger || has_thief) {
@@ -226,7 +244,7 @@ extern void item_set_starting(dude_t *dude) {
     } else if (has_preserver) {
         sol_give_ds1_item(dude, SLOT_HAND0, 3, -1019); // quaterstaff
     } else {
-        return; // Dude has no class!
+        return SOL_NO_CLASS; // Dude has no class!
     }
 
     if (has_gladiator) {
@@ -253,12 +271,17 @@ extern void item_set_starting(dude_t *dude) {
     } else if (has_druid || has_thief || has_preserver) {
         sol_give_ds1_item(dude, SLOT_MISSILE, 64, -1015); // sling
     }
+
+    return SOL_SUCCESS;
 }
 
-extern item_t* sol_item_get(inventory_t *inv, const int8_t slot) {
-    item_t *item = (item_t*) inv;
-    if (!inv || slot < 0 || slot >= SLOT_END) { return NULL; }
-    if ((item + slot)->name[0] == 0) { return NULL; }
+extern sol_status_t sol_item_get(sol_inventory_t *inv, const int8_t slot, sol_item_t **d) {
+    if (!inv || !d) { return SOL_NULL_ARGUMENT; }
 
-    return item + slot;
+    sol_item_t *item = (sol_item_t*) inv;
+    if (!inv || slot < 0 || slot >= SLOT_END) { return SOL_OUT_OF_RANGE; }
+    if ((item + slot)->name[0] == 0) { return SOL_NOT_FOUND; }
+
+    *d = item + slot;
+    return SOL_SUCCESS;
 }

@@ -56,7 +56,7 @@ static int race_sprite_offsets_y[]   = {   27,   28,   33,   33,   28,   26,   2
 static int race_sprite_ids[]         = { 2095, 2099, 2055, 2053, 2061, 2059, 2095, 2099, 2072, 2074, 2068, 2070, 2093, 2093, 2097, 2097 };
 
 static int offsetx, offsety;
-static entity_t pc;
+static sol_entity_t pc;
 static psin_t psi; // psi group
 static ssi_spell_list_t spells;
 static psionic_list_t psionics;
@@ -69,28 +69,34 @@ static void update_ui();
 static void select_class(uint8_t class);
 static void fix_alignment(int direction);
 
-entity_t* sol_new_character_get_pc() {
-    if (!is_valid) { return NULL; }
-    return &pc;
+sol_status_t sol_new_character_get_pc(sol_entity_t **e) {
+    if (!is_valid) { return SOL_NOT_INITIALIZED; }
+    *e = &pc;
+    return SOL_SUCCESS;
 }
 
-psin_t* sol_new_character_get_psin() {
-    if (!is_valid) { return NULL; }
-    return &psi;
+sol_status_t sol_new_character_get_psin(psin_t **p) {
+    if (!is_valid) { return SOL_NOT_INITIALIZED; }
+    *p = &psi;
+    return SOL_SUCCESS;
 }
 
-ssi_spell_list_t* sol_new_character_get_spell_list() {
-    if (!is_valid) { return NULL; }
-    return &spells;
+sol_status_t sol_new_character_get_spell_list(ssi_spell_list_t **s) {
+    if (!is_valid) { return SOL_NOT_INITIALIZED; }
+    *s = &spells;
+    return SOL_SUCCESS;
 }
 
-psionic_list_t* sol_new_character_get_psionic_list() {
-    if (!is_valid) { return NULL; }
-    return &psionics;
+sol_status_t sol_new_character_get_psionic_list(psionic_list_t **p) {
+    if (!is_valid) { return SOL_NOT_INITIALIZED; }
+    *p = &psionics;
+    return SOL_SUCCESS;
 }
 
-char* sol_new_character_get_name() {
-    return sol_textbox_get_text(name_tb);
+sol_status_t sol_new_character_get_name(char **n) {
+    if (!is_valid) { return SOL_NOT_INITIALIZED; }
+    *n = sol_textbox_get_text(name_tb);
+    return SOL_SUCCESS;
 }
 
 // FIXME - For DS2/DSO, there may be new random names (I don't think there are?)
@@ -190,7 +196,7 @@ static void load_character_sprite() {
 }
 
 static void init_pc() {
-    memset(&pc, 0x0, sizeof(entity_t));
+    memset(&pc, 0x0, sizeof(sol_entity_t));
     pc.race = RACE_HUMAN;
     pc.gender = GENDER_MALE;
     pc.alignment = TRUE_NEUTRAL;
@@ -304,10 +310,10 @@ static void new_character_init(const uint32_t _x, const uint32_t _y) {
     srand(time(NULL));
     load_character_sprite();
     dnd2e_randomize_stats_pc(&pc);
-    item_set_starting(&pc);
+    sol_item_set_starting(&pc);
     set_class_frames(); // go ahead and setup the new class frames
     select_class(2); // Fighter is the default class
-    item_set_starting(&pc);
+    sol_item_set_starting(&pc);
     sol_label_create_group();
 }
 
@@ -659,7 +665,7 @@ static void fix_race_gender() { // move the race/gender to the appropiate spot
     select_class(2); // Default to Fighter whenever race changes
     dnd2e_randomize_stats_pc(&pc);
     dnd2e_loop_creation_stats(&pc); // in case something need adjustment
-    item_set_starting(&pc);
+    sol_item_set_starting(&pc);
 }
 
 static void fix_alignment(int direction) { // direction: -1 = previous alignment, 1 = next alignment
@@ -750,7 +756,7 @@ int new_character_handle_mouse_down(const uint32_t button, const uint32_t x, con
     }
 
     last_sprite_mousedowned = 0;
-    last_label_mousedowned  = sol_label_group_point_in(x - offsetx, y - offsety);
+    sol_label_group_point_in(x - offsetx, y - offsety, &last_label_mousedowned);
 
     if (sol_sprite_in_rect(done_button, x, y) == SOL_SUCCESS) {
         last_sprite_mousedowned = done_button;
@@ -817,13 +823,16 @@ int new_character_handle_mouse_down(const uint32_t button, const uint32_t x, con
 
 int new_character_handle_mouse_up(const uint32_t button, const uint32_t x, const uint32_t y) {
     sol_sprite_info_t info;
+    sol_label_t *label;
+    char *name;
     // Only support Left and Right mouse buttons for now
     if (button != SOL_MOUSE_BUTTON_LEFT && button != SOL_MOUSE_BUTTON_RIGHT) {
         return 1;
     }
 
-    if (last_label_mousedowned != NULL &&
-        last_label_mousedowned == sol_label_group_point_in(x - offsetx, y - offsety))
+    if (last_label_mousedowned != NULL
+        && SOL_SUCCESS == sol_label_group_point_in(x - offsetx, y - offsety, &label)
+        && last_label_mousedowned == label)
     {
         switch (last_label_mousedowned->id)
         {
@@ -878,13 +887,13 @@ int new_character_handle_mouse_up(const uint32_t button, const uint32_t x, const
             if (info.current_frame == 1) {
                 deselect_class(i);
                 dnd2e_set_starting_level(&pc);
-                item_set_starting(&pc);
+                sol_item_set_starting(&pc);
             } else {
                 sol_status_check(sol_sprite_get_info(classes[i], &info), "Unable to get sprite info.");
                 if (info.current_frame < 2) {
                     select_class(i);
                     dnd2e_set_starting_level(&pc);
-                    item_set_starting(&pc);
+                    sol_item_set_starting(&pc);
                 }
             } 
         }
@@ -948,7 +957,8 @@ int new_character_handle_mouse_up(const uint32_t button, const uint32_t x, const
 
     if (last_sprite_mousedowned == done_button && sol_sprite_in_rect(done_button, x, y) == SOL_SUCCESS) {
         is_valid = 1;
-        pc.name = strdup(sol_new_character_get_name());
+        sol_new_character_get_name(&name);
+        pc.name = strdup(name);
         sol_window_pop();
     }
 

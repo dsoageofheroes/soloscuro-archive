@@ -25,7 +25,7 @@ extern sol_status_t sol_arbiter_hits(sol_entity_animation_node_t *ea) {
     return SOL_SUCCESS;
 }
 
-static int get_dist(entity_t *entity, const uint16_t x, const uint16_t y) {
+static int get_dist(sol_entity_t *entity, const uint16_t x, const uint16_t y) {
     int xdiff = abs(entity->mapx - x);
     int ydiff = abs(entity->mapy - y);
 
@@ -47,7 +47,7 @@ extern sol_status_t sol_arbiter_combat_region(sol_region_t *reg, combat_region_t
 
 static void place_combatants(combat_region_t *cr) {
     if (!cr) { return; }
-    dude_t *entity = NULL;
+    sol_dude_t *entity = NULL;
 
     sol_entity_list_for_each((&(cr->combatants)), entity) {
         memset(&entity->stats.combat, 0x0, sizeof(combat_round_stats_t));
@@ -74,7 +74,7 @@ extern sol_status_t sol_arbiter_next_round(combat_region_t* cr) {
 
 extern sol_status_t sol_arbiter_enter_combat(sol_region_t *reg, const uint16_t x, const uint16_t y) {
     const int        dist = 10; // distance of the sphere;
-    dude_t          *enemy = NULL;
+    sol_dude_t          *enemy = NULL;
     combat_region_t *cr = NULL;
     sol_status_t     status = SOL_UNKNOWN_ERROR;
 
@@ -90,8 +90,10 @@ extern sol_status_t sol_arbiter_enter_combat(sol_region_t *reg, const uint16_t x
     sol_combat_region_init(cr);
 
     for (int i = 0; i < 4; i++) {
-        dude_t *next_player = sol_player_get(i);
-        if (next_player && next_player != sol_player_get_active() && next_player->name) { // next_player exists.
+        sol_dude_t *next_player, *active;
+        sol_player_get(i, &next_player);
+        sol_player_get_active(&active);
+        if (next_player && next_player != active && next_player->name) { // next_player exists.
             //printf("Adding %s (%d, %d)\n", next_player->name, next_player->mapx, next_player->mapy);
             // force a load of player's sprites.
             error("Not adding player %s\n", next_player->name);
@@ -143,7 +145,7 @@ extern sol_status_t sol_arbiter_combat_check(sol_region_t* reg) {
 //            level 10+: +4
 // Monster data should be in the entity.
 // For Now, 1d6, always hits. Need to add thac0 calculation.
-extern sol_status_t sol_arbiter_entity_attack(entity_t *source, entity_t *target, int round, enum sol_entity_action_e action, sol_attack_t *attack) {
+extern sol_status_t sol_arbiter_entity_attack(sol_entity_t *source, sol_entity_t *target, int round, enum sol_entity_action_e action, sol_attack_t *attack) {
     sol_status_t        status = SOL_UNKNOWN_ERROR;
     static sol_attack_t error = { -2, 0 };
     combat_region_t    *cr = NULL;
@@ -175,7 +177,7 @@ extern sol_status_t sol_arbiter_entity_attack(entity_t *source, entity_t *target
     return SOL_SUCCESS;
 }
 
-extern sol_status_t sol_arbiter_in_combat(dude_t *dude) {
+extern sol_status_t sol_arbiter_in_combat(sol_dude_t *dude) {
     for (size_t i = 0; i < MAX_REGIONS; i++) {
         if (sol_entity_list_find(&(combat_regions[i].combatants), dude, NULL) == SOL_SUCCESS) {
             return SOL_IN_COMBAT;

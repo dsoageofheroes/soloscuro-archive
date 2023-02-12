@@ -79,10 +79,10 @@ static int region_set_tile_id(lua_State *l) {
     return 0;
 }
 
-static int push_region_function(lua_State *l, sol_region_t *region, int (*func)(lua_State *l)) {
+static sol_status_t push_region_function(lua_State *l, sol_region_t *region, int (*func)(lua_State *l)) {
     lua_pushlightuserdata(l, region);
     lua_pushcclosure(l, func, 1);
-    return 1;
+    return SOL_SUCCESS;
 }
 
 static int get_first_entity(lua_State *l) {
@@ -92,7 +92,7 @@ static int get_first_entity(lua_State *l) {
 
     sol_entity_list_for_each(region->entities, dude) {
         if (!strcmp(name, dude->name)) {
-            return sol_lua_load_entity (l, dude);
+            return sol_lua_load_entity (l, dude) == SOL_SUCCESS ? 1 : 0;
         }
     }
 
@@ -116,7 +116,8 @@ static int add_entity (lua_State *l) {
     luaL_checktype(l, 1, LUA_TTABLE);
 
     sol_region_t *region = (sol_region_t*) lua_touserdata(l, lua_upvalueindex(1));
-    sol_entity_t *entity = (sol_entity_t*) sol_lua_get_userdata(l, 1);
+    sol_entity_t *entity;
+    sol_lua_get_userdata(l, 1, (void**)&entity);
 
     //return sol_animate_shift_entity(region->entities, entity_list_add(region->entities, entity));
     sol_entity_list_add(region->entities, entity, NULL);
@@ -125,7 +126,7 @@ static int add_entity (lua_State *l) {
 }
 
 
-extern int sol_lua_region_function(sol_region_t *region, const char *func, lua_State *l) {
+extern sol_status_t sol_lua_region_function(sol_region_t *region, const char *func, lua_State *l) {
     if (!strcmp(func, "set_tile_id")) {
         return push_region_function(l, region, region_set_tile_id);
     }
@@ -148,5 +149,5 @@ extern int sol_lua_region_function(sol_region_t *region, const char *func, lua_S
         sol_gpl_lua_execute_script(region->map_id, 0, 1);
     }
     lua_pushinteger(l, 0);
-    return 1;
+    return SOL_SUCCESS;
 }

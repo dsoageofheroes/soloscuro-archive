@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <string.h>
 
-static int save_item(FILE *file, item_t *item, const char *name) {
+static int save_item(FILE *file, sol_item_t *item, const char *name) {
     fprintf(file, "%s.ds_id = %d\n", name, item->ds_id);
     fprintf(file, "-- Need to finish saving the item...\n");
     return 1;
@@ -144,7 +144,7 @@ static int write_entity(FILE *file, entity_t *entity, const char *name) {
 static int write_players(FILE *file) {
     dude_t *dude;
     for (int i = 0; i < MAX_PCS; i++) {
-        dude = sol_player_get(i);
+        sol_player_get(i, &dude);
         if (dude) {
             fprintf(file, "p = sol.create_player(%d)\n", i);
             write_entity(file, dude, "p");
@@ -168,6 +168,7 @@ static int write_region(FILE *file, sol_region_t *reg) {
 }
 
 static int write_regions(FILE *file) {
+    int slot;
     dude_t *entity = NULL;
     sol_region_t *reg = sol_region_manager_get_current();
 
@@ -177,7 +178,7 @@ static int write_regions(FILE *file) {
     sol_write_triggers(file);
 
     sol_entity_list_for_each(reg->entities, entity) {
-        if (sol_player_get_slot(entity) < 0) {
+        if (sol_player_get_slot(entity, &slot) == SOL_SUCCESS && slot < 0) {
             fprintf(file, "e = sol.create_entity(%d)\n", entity->inv ? 1 : 0);
             write_entity(file, entity, "e");
             fprintf(file, "reg.add_entity(e)\n");
@@ -195,7 +196,7 @@ extern int sol_save_to_file(const char *filepath, const char *name) {
     sol_region_t *reg = sol_region_manager_get_current();
     status = sol_arbiter_combat_region(reg, &cr);
     if (sol_combat_get_current(cr) != NULL) { return 0; }
-    if (sol_narrate_is_open()) { return 0; }
+    if (sol_narrate_is_open() == SOL_SUCCESS) { return 0; }
 
     //file = fopen("quick.sav", "wb");
     file = fopen(filepath, "wb");

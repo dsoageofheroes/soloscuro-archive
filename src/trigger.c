@@ -575,7 +575,9 @@ static int in_los(const uint32_t obj, dude_t *entity) {
 
 extern void sol_trigger_los_check(uint32_t obj, uint32_t file, uint32_t addr, uint32_t param) {
     //printf("los CHECK: %d\n", in_los(obj, sol_player_get_active()));
-    if (in_los(obj, sol_player_get_active())) {
+    sol_dude_t *player;
+    sol_player_get_active(&player);
+    if (in_los(obj, player)) {
         debug("%d is in los, calling %d:%d param= %d\n", obj, file, addr, param);
         sol_gpl_lua_execute_script(file, addr, 0);
     }

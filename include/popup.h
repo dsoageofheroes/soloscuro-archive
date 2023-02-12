@@ -11,11 +11,11 @@ typedef enum sol_popup_e {
     POPUP_NOTHING
 } sol_popup_t;
 
-extern void    sol_popup_quick_message(const char *msg);
-extern void    sol_popup_set_message(const char *msg);
-extern void    sol_popup_set_option(const sol_popup_t idx, const char *msg);
-extern uint8_t sol_popup_get_selection();
-extern void    sol_popup_clear_selection();
+extern sol_status_t sol_popup_quick_message(const char *msg);
+extern sol_status_t sol_popup_set_message(const char *msg);
+extern sol_status_t sol_popup_set_option(const sol_popup_t idx, const char *msg);
+extern sol_status_t sol_popup_clear_selection();
+extern sol_status_t sol_popup_get_selection(uint8_t *sel);
 
 extern sol_wops_t popup_window;
 

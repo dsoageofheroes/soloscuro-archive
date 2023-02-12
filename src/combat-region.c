@@ -96,14 +96,14 @@ extern int sol_combat_guard_check(combat_region_t *cr) {
 
 extern entity_t* sol_combat_get_closest_enemy(combat_region_t *cr, const int x, const int y) {
     entity_t *dude, *ret = NULL;
-    int       max = 9999999;
+    int       max = 9999999, slot;
 
     sol_entity_list_for_each((&(cr->combatants)), dude) {
         int dx = abs(dude->mapx - x);
         int dy = abs(dude->mapy - y);
         int tmax = dx > dy ? dx : dy;
 
-        if (sol_player_get_slot(dude) >= 0) { continue; } 
+        if (sol_player_get_slot(dude, &slot) == SOL_SUCCESS && slot >= 0) { continue; } 
         if (tmax == 0) { continue; }
         if (tmax < max) {
             max = tmax;

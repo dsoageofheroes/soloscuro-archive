@@ -11,19 +11,11 @@ enum {
     NAR_EDIT_BOX
 };
 
-void narrate_init(const uint32_t x, const uint32_t y);
-void narrate_render(void *data);
-int narrate_handle_mouse_movement(const uint32_t x, const uint32_t y);
-int narrate_handle_mouse_click(const uint32_t button, const uint32_t x, const uint32_t y);
-void narrate_clear();
-void narrate_free();
-extern int sol_narrate_is_open();
-extern int8_t narrate_open(int16_t action, const char *text, int16_t index);
-extern int narrate_select_menu(uint32_t option);
-extern int    sol_ui_narrate_ask_yes_no();
-extern int8_t sol_ui_narrate_open(int16_t action, const char *text, int16_t index);
-extern void   sol_ui_narrate_clear();
-extern void   sol_ui_narrate_close();
+extern sol_status_t sol_narrate_clear();
+extern sol_status_t sol_narrate_is_open();
+extern sol_status_t sol_narrate_open(int16_t action, const char *text, int16_t index);
+extern sol_status_t sol_narrate_select_menu(uint32_t option, int *noption);
+extern sol_status_t sol_narrate_ask_yes_no();
 
 extern sol_wops_t narrate_window;
 

@@ -80,9 +80,11 @@ void view_character_init(const uint32_t _x, const uint32_t _y) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
     const float zoom = settings_zoom();
     uint32_t x = _x / settings_zoom(), y = _y / settings_zoom();
+    sol_dude_t *player;
     xoffset = _x;
     yoffset = _y;
-    player_selected = sol_player_get_slot(sol_player_get_active());
+    sol_player_get_active(&player);
+    sol_player_get_slot(player, &player_selected);
 
     memset(description, 0x0, sizeof(description));
     memset(message, 0x0, sizeof(message));
@@ -146,8 +148,8 @@ void view_character_init(const uint32_t _x, const uint32_t _y) {
             "Unable load vc");
     sol_status_check(sol_sprite_new(pal, 172 + x, 157 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 13006, &buttons[2]),
             "Unable load vc");
-    power_name = sol_label_create_at_pos(0, -1, "MAGE", FONT_GREY, (135 + x) * zoom, (158 + y) * zoom);
-    power_level = sol_label_create_at_pos(0, -1, "LEVEL 1", FONT_GREY, (175 + x) * zoom, (158 + y) * zoom);
+    sol_label_create_at_pos(0, -1, "MAGE", FONT_GREY, (135 + x) * zoom, (158 + y) * zoom, &power_name);
+    sol_label_create_at_pos(0, -1, "LEVEL 1", FONT_GREY, (175 + x) * zoom, (158 + y) * zoom, &power_level);
 
     for (int i = 0; i < 4; i++) {
         sol_sprite_set_frame(ports[i], 2);
@@ -162,8 +164,9 @@ void view_character_init(const uint32_t _x, const uint32_t _y) {
     set_zoom(&description_loc, zoom);
 
     strcpy(description, "description");
-    if (sol_player_get_active() && sol_player_get_active()->name) {
-        strcpy(description, sol_player_get_active()->name);
+    sol_player_get_active(&player);
+    if (player && player->name) {
+        strcpy(description, player->name);
     }
     //strcpy(message, "message");
     sol_label_create_group();
@@ -175,17 +178,19 @@ void view_character_init(const uint32_t _x, const uint32_t _y) {
 
 static void render_character() {
     const float zoom = settings_zoom();
+    sol_dude_t *player;
 
-    if (!sol_player_get(player_selected)) { return; }
+    sol_player_get(player_selected, &player);
+    if (!player) { return; }
 
-    sol_label_set_group(sol_player_get(player_selected), SCREEN_VIEW_CHARACTER);
+    sol_label_set_group(player, SCREEN_VIEW_CHARACTER);
     sol_label_set_positions(143 * zoom, 30 * zoom, SCREEN_VIEW_CHARACTER);
     sol_label_render_stats(xoffset, yoffset);
     sol_label_render_gra(xoffset + (64 * zoom), yoffset - (49 * zoom));
     sol_label_render_class_and_combat(xoffset + (64 * zoom), yoffset - (42 * zoom));
 
     sol_sprite_set_frame(slots, 0);
-    item_t *items = sol_player_get(player_selected)->inv;
+    sol_item_t *items = player->inv;
     animate_sprite_t *as = NULL;
     sol_sprite_set_location(slots, xoffset + (205 * zoom), yoffset + (41 * zoom));
     sol_sprite_render(slots);
@@ -282,6 +287,7 @@ void view_character_render(void *data) {
     char buf[BUF_MAX];
     const float zoom = settings_zoom();
     sol_sprite_info_t info;
+    sol_dude_t *player, *active;
 
     message[0] = '\0';
     sol_sprite_render(sun);
@@ -301,20 +307,23 @@ void view_character_render(void *data) {
 
     for (int i = 0; i < 4; i++) {
         sol_sprite_set_frame(ai[i], 0);
-        if (sol_player_ai(i)) {
+        if (sol_player_ai(i) != SOL_SUCCESS) {
             sol_sprite_set_frame(ai[i], 1);
         }
         sol_sprite_render(ai[i]);
         sol_sprite_set_frame(leader[i], 0);
-        if (sol_player_exists(i) && sol_player_get(i) == sol_player_get_active()) {
+        sol_player_get(i, &player);
+        sol_player_get_active(&active);
+        if (sol_player_exists(i) == SOL_SUCCESS && player == active) {
             sol_sprite_set_frame(leader[i], 1);
         }
         sol_sprite_render(leader[i]);
     }
 
     for (int i = 0; i < 4; i++) {
-        if (sol_player_exists(i)) {
-            entity_t *player = sol_player_get(i);
+        if (sol_player_exists(i) == SOL_SUCCESS) {
+            sol_entity_t *player;
+            sol_player_get(i, &player);
             int x = 56, y = 64;
             if (i == 1 || i == 3) { y += 60; }
             if (i == 2 || i == 3) { x += 50; }
@@ -331,7 +340,8 @@ void view_character_render(void *data) {
             sol_sprite_set_frame(ports[i], (i == player_selected) ? 3 : 0);
             sol_sprite_render(ports[i]);
             sol_player_center(i, xoffset + x * zoom, yoffset + (y - 34) * zoom, 34 * zoom, 34 * zoom);
-            sol_sprite_t spr = sol_player_get_sprite(i);
+            sol_sprite_t spr;
+            sol_player_get_sprite(i, &spr);
             sol_status_check(sol_sprite_get_info(spr, &info), "Unable to get sprite info.");
             if (info.h > 30 * zoom) {
                 sol_sprite_set_frame(spr, 0);
@@ -398,19 +408,20 @@ int view_character_handle_mouse_movement(const uint32_t x, const uint32_t y) {
 }
 
 int view_character_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
-    //static int32_t player_selected = 0;
+    sol_entity_t *player;
     for (int i = 0; i < 4; i++) {
         if (sol_sprite_in_rect(ports[i], x, y) == SOL_SUCCESS
-                && sol_player_exists(i)
+                && sol_player_exists(i) == SOL_SUCCESS
                 ) {
             player_selected = i;
-            strcpy(description, sol_player_get(player_selected)->name);
+            sol_player_get(player_selected, &player);
+            strcpy(description, player->name);
         }
         if (sol_sprite_in_rect(leader[i], x, y) == SOL_SUCCESS) {
             sol_player_set_active(i);
         }
         if (sol_sprite_in_rect(ai[i], x, y) == SOL_SUCCESS) {
-            sol_player_set_ai(i, !sol_player_ai(i));
+            sol_player_set_ai(i, sol_player_ai(i) == SOL_SUCCESS ? 0 : 1);
         }
     }
     return 1; // means I captured the mouse click
@@ -504,15 +515,16 @@ void view_character_free() {
 }
 
 void view_character_return_control () {
+    uint8_t sel;
     sol_label_group_set_font(FONT_YELLOW);
     if (last_selection == SELECT_POPUP) {
-        if (sol_popup_get_selection() == POPUP_0) { // new
+        if (sol_popup_get_selection(&sel) == SOL_SUCCESS && sel == POPUP_0) { // new
             sol_popup_clear_selection();
             sol_window_push(&new_character_window, 0, 0);
             last_selection = SELECT_NEW;
             return;
         }
-        if (sol_popup_get_selection() == POPUP_1) { // ADD
+        if (sol_popup_get_selection(&sel) == SOL_SUCCESS && sel == POPUP_1) { // ADD
             sol_popup_clear_selection();
             sol_add_load_save_set_mode(ACTION_ADD);
             sol_window_push(&als_window, 0, 0);
@@ -520,10 +532,14 @@ void view_character_return_control () {
             return;
         }
     } else if (last_selection == SELECT_NEW) {
-        entity_t *pc = sol_new_character_get_pc();
-        psin_t* psi = sol_new_character_get_psin();
-        ssi_spell_list_t* spells = sol_new_character_get_spell_list();
-        psionic_list_t* psionics = sol_new_character_get_psionic_list();
+        sol_entity_t *pc;
+        sol_new_character_get_pc(&pc);
+        psin_t* psi;
+        sol_new_character_get_psin(&psi);
+        ssi_spell_list_t* spells;
+        sol_new_character_get_spell_list(&spells);
+        psionic_list_t* psionics;
+        sol_new_character_get_psionic_list(&psionics);
         if (pc && psi && spells && psionics) {
             if (dnd2e_character_is_valid(pc)) {
                 sol_player_set(slot_clicked, pc);

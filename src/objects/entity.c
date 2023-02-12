@@ -80,11 +80,11 @@ static void apply_character(dude_t *dude, ds_character_t *ch) {
     dude->attack_sound = ch->attack_sound;
 }
 
-extern sol_status_t sol_entity_create_default_human(entity_t **ret) {
-    entity_t *dude = malloc(sizeof(entity_t));
+extern sol_status_t sol_entity_create_default_human(sol_entity_t **ret) {
+    sol_entity_t *dude = malloc(sizeof(sol_entity_t));
     if (!dude) { return SOL_MEMORY_ERROR; }
 
-    memset(dude, 0x0, sizeof(entity_t));
+    memset(dude, 0x0, sizeof(sol_entity_t));
     dude->stats.hp = 4;
     dude->stats.high_hp = 4;
     dude->race = RACE_HUMAN;
@@ -110,16 +110,16 @@ extern sol_status_t sol_entity_create_default_human(entity_t **ret) {
     dude->anim.spr = SPRITE_ERROR;
     debug("Need to set default size!\n");
     dude->size = 0;
-    dude->inv = sol_inventory_create();
+    sol_inventory_create(&dude->inv);
 
     *ret = dude;
     return SOL_SUCCESS;
 }
 
-extern sol_status_t sol_entity_create(const int add_inventory, entity_t **ret) {
-    entity_t *dude = malloc(sizeof(entity_t));
+extern sol_status_t sol_entity_create(const int add_inventory, sol_entity_t **ret) {
+    sol_entity_t *dude = malloc(sizeof(sol_entity_t));
     if (!dude) { return SOL_MEMORY_ERROR; }
-    memset(dude, 0x0, sizeof(entity_t));
+    memset(dude, 0x0, sizeof(sol_entity_t));
     dude->stats.str = dude->stats.dex = dude->stats.con = dude->stats.intel = dude->stats.wis = dude->stats.cha = 10;
     dude->stats.base_ac = 10;
     dude->stats.base_move = 12;
@@ -130,14 +130,14 @@ extern sol_status_t sol_entity_create(const int add_inventory, entity_t **ret) {
     dude->stats.saves.spell = 20;
     dude->anim.spr = SPRITE_ERROR;
     if (add_inventory) {
-        dude->inv = sol_inventory_create();
+        sol_inventory_create(&dude->inv);
     }
 
     *ret = dude;
     return SOL_SUCCESS;
 }
 
-extern sol_status_t sol_entity_create_from_objex(const int id, entity_t **ret) {
+extern sol_status_t sol_entity_create_from_objex(const int id, sol_entity_t **ret) {
     dude_t *dude = malloc(sizeof(dude_t));
     char *buf = NULL;
     rdff_disk_object_t *rdff = NULL;
@@ -208,9 +208,9 @@ error:
     return SOL_GFF_ERROR;
 }
 
-extern sol_status_t sol_entity_create_clone(entity_t *clone, entity_t **dude) {
+extern sol_status_t sol_entity_create_clone(sol_entity_t *clone, sol_entity_t **dude) {
     sol_status_t status;
-    entity_t *ret;
+    sol_entity_t *ret;
     if ((status = sol_entity_create_from_objex(-1 * abs(clone->ds_id), &ret)) != SOL_SUCCESS) {
         return status;
     }
@@ -226,22 +226,22 @@ extern sol_status_t sol_entity_create_clone(entity_t *clone, entity_t **dude) {
 }
 
 //TODO: Flesh this out. It is currently used for player, but will be use for future entitys;
-extern sol_status_t sol_entity_load_from_object(entity_t *entity, const char *data) {
-    item_t *inv = entity->inv;
-    effect_node_t *effects = entity->effects;
-    memcpy(entity, data, sizeof(entity_t));
+extern sol_status_t sol_entity_load_from_object(sol_entity_t *entity, const char *data) {
+    sol_item_t *inv = entity->inv;
+    sol_effect_node_t *effects = entity->effects;
+    memcpy(entity, data, sizeof(sol_entity_t));
     entity->inv = inv;
     entity->effects = effects;
 
     if (!entity->inv) {
-        entity->inv = sol_inventory_create();
+        sol_inventory_create(&entity->inv);
     }
 
     return SOL_SUCCESS;
 }
 
 #define BUF_MAX (1<<14)
-extern sol_status_t sol_entity_load_from_gff(entity_t *entity, const int gff_idx, const int player, const int res_id) {
+extern sol_status_t sol_entity_load_from_gff(sol_entity_t *entity, const int gff_idx, const int player, const int res_id) {
     char buf[BUF_MAX];
     rdff_header_t *rdff;
     size_t offset = 0;
@@ -262,14 +262,14 @@ extern sol_status_t sol_entity_load_from_gff(entity_t *entity, const int gff_idx
     offset += rdff->len;
 
     if (!entity->inv) {
-        entity->inv = sol_inventory_create();
+        sol_inventory_create(&entity->inv);
     }
 
     for (int i = 0; i < num_items; i++) {
         rdff = (rdff_disk_object_t*) (buf + offset);
         offset += sizeof(rdff_disk_object_t);
         int slot = ((ds1_item_t*)(buf + offset))->slot;
-        item_convert_from_ds1(entity->inv + slot, (ds1_item_t*)(buf + offset));
+        sol_item_convert_from_ds1(entity->inv + slot, (ds1_item_t*)(buf + offset));
         //memcpy(pc_items + slot, buf + offset, sizeof(ds1_item_t));
         offset += rdff->len;
     }
@@ -285,7 +285,7 @@ extern sol_status_t sol_entity_load_from_gff(entity_t *entity, const int gff_idx
     return SOL_SUCCESS;
 }
 
-extern sol_status_t sol_entity_create_from_etab(gff_map_object_t *entry_table, uint32_t id, entity_t **ret) {
+extern sol_status_t sol_entity_create_from_etab(gff_map_object_t *entry_table, uint32_t id, sol_entity_t **ret) {
     dude_t *dude = calloc(1, sizeof(dude_t));
     if (!dude) { return SOL_MEMORY_ERROR; }
     const gff_map_object_t *gm = entry_table + id;
@@ -308,24 +308,24 @@ extern sol_status_t sol_entity_create_from_etab(gff_map_object_t *entry_table, u
     return SOL_SUCCESS;
 }
 
-extern sol_status_t sol_entity_copy_item(entity_t *entity, item_t *item, const size_t slot) {
+extern sol_status_t sol_entity_copy_item(sol_entity_t *entity, sol_item_t *item, const size_t slot) {
     if (!entity || !item) { return SOL_NULL_ARGUMENT; }
     if (slot < 0 || slot >= ITEM_SLOT_MAX) {return SOL_OUT_OF_RANGE;}
     //TODO: Take care of effects!
-    memcpy(entity->inv + slot, item, sizeof(item_t));
+    memcpy(entity->inv + slot, item, sizeof(sol_item_t));
 
     return SOL_SUCCESS;
 }
 
-extern sol_status_t sol_entity_clear_item(entity_t *entity, const size_t slot) {
+extern sol_status_t sol_entity_clear_item(sol_entity_t *entity, const size_t slot) {
     if (!entity) { return SOL_NULL_ARGUMENT; }
     if (slot < 0 || slot >= ITEM_SLOT_MAX) {return SOL_OUT_OF_RANGE;}
-    memset(entity->inv + slot, 0x0, sizeof(item_t));
+    memset(entity->inv + slot, 0x0, sizeof(sol_item_t));
     entity->inv[slot].anim.spr = SPRITE_ERROR;
     return SOL_SUCCESS;
 }
 
-extern sol_status_t sol_entity_get_total_exp(entity_t *entity, uint32_t *exp) {
+extern sol_status_t sol_entity_get_total_exp(sol_entity_t *entity, uint32_t *exp) {
     if (!entity) { return SOL_NULL_ARGUMENT; }
     uint32_t total_exp = 0;
 
@@ -339,7 +339,7 @@ extern sol_status_t sol_entity_get_total_exp(entity_t *entity, uint32_t *exp) {
     return SOL_SUCCESS;
 }
 
-extern sol_status_t sol_entity_has_class(const entity_t *dude, const uint16_t class) {
+extern sol_status_t sol_entity_has_class(const sol_entity_t *dude, const uint16_t class) {
     if (!dude) { return SOL_NULL_ARGUMENT; }
     return (dude &&
         (dude->class[0].class == class
@@ -348,7 +348,7 @@ extern sol_status_t sol_entity_has_class(const entity_t *dude, const uint16_t cl
           )) ? SOL_SUCCESS : SOL_NO_CLASS;
 }
 
-extern sol_status_t sol_entity_gui_free(entity_t *entity) {
+extern sol_status_t sol_entity_gui_free(sol_entity_t *entity) {
     if (!entity) { return SOL_NULL_ARGUMENT; }
 
     sol_status_warn(sol_sprite_free(entity->anim.spr), "Unable to free sprite.");
@@ -357,14 +357,14 @@ extern sol_status_t sol_entity_gui_free(entity_t *entity) {
     return SOL_SUCCESS;
 }
 
-extern sol_status_t sol_entity_free(entity_t *dude) {
+extern sol_status_t sol_entity_free(sol_entity_t *dude) {
     if (!dude) { return SOL_NULL_ARGUMENT; }
     sol_region_t *reg = sol_region_manager_get_current();
     sol_status_t status;
     sol_entity_list_node_t *node;
 
     sol_entity_animation_list_free(&(dude->actions));
-    item_free_inventory(dude->inv);
+    sol_item_free_inventory(dude->inv);
 
     if (reg) {
         sol_entity_animation_list_remove_references(&reg->actions, dude);
@@ -468,19 +468,19 @@ extern sol_status_t sol_entity_attempt_move(dude_t *dude, const int xdiff, const
     return SOL_SUCCESS;
 }
 
-extern sol_status_t sol_entity_has_wizard_slot(entity_t *entity, const int level) {
+extern sol_status_t sol_entity_has_wizard_slot(sol_entity_t *entity, const int level) {
     if (!entity) { return SOL_NULL_ARGUMENT; }
     if (level < 0 || level > 10) { return SOL_OUT_OF_RANGE; }
     return entity->stats.wizard[level].amt ? SOL_SUCCESS : SOL_NO_CLASS;
 }
 
-extern sol_status_t sol_entity_has_priest_slot(entity_t *entity, const int level) {
+extern sol_status_t sol_entity_has_priest_slot(sol_entity_t *entity, const int level) {
     if (!entity) { return SOL_NULL_ARGUMENT; }
     if (level < 0 || level > 10) { return SOL_OUT_OF_RANGE; }
     return entity->stats.priest[level].amt ? SOL_SUCCESS : SOL_NO_CLASS;
 }
 
-extern sol_status_t sol_entity_take_wizard_slot(entity_t *entity, const int level) {
+extern sol_status_t sol_entity_take_wizard_slot(sol_entity_t *entity, const int level) {
     if (!entity) { return SOL_NULL_ARGUMENT; }
     if (level < 0 || level > 10) { return SOL_OUT_OF_RANGE; }
     if (entity->stats.wizard[level].amt < 1) { return SOL_NO_SLOTS_LEFT; }
@@ -488,7 +488,7 @@ extern sol_status_t sol_entity_take_wizard_slot(entity_t *entity, const int leve
     return SOL_SUCCESS;
 }
 
-extern sol_status_t entity_take_priest_slot(entity_t *entity, const int level) {
+extern sol_status_t sol_entity_take_priest_slot(sol_entity_t *entity, const int level) {
     if (!entity) { return SOL_NULL_ARGUMENT; }
     if (level < 0 || level > 10) { return SOL_OUT_OF_RANGE; }
     if (entity->stats.priest[level].amt < 1) { return SOL_NO_SLOTS_LEFT; }
@@ -496,7 +496,7 @@ extern sol_status_t entity_take_priest_slot(entity_t *entity, const int level) {
     return SOL_SUCCESS;
 }
 
-extern sol_status_t sol_entity_get_level(entity_t *entity, const int class, uint8_t *level) {
+extern sol_status_t sol_entity_get_level(sol_entity_t *entity, const int class, uint8_t *level) {
     sol_status_t status = SOL_NOT_FOUND;
     if (!entity) { return SOL_NULL_ARGUMENT; }
     if (class < 0 || class > 20) { return SOL_OUT_OF_RANGE; }
@@ -506,7 +506,7 @@ extern sol_status_t sol_entity_get_level(entity_t *entity, const int class, uint
     return status;
 }
 
-extern sol_status_t sol_entity_get_wizard_level(entity_t *entity, uint8_t *level) {
+extern sol_status_t sol_entity_get_wizard_level(sol_entity_t *entity, uint8_t *level) {
     uint8_t max = 0, lvl;
     sol_status_t status, ret_status = SOL_NOT_FOUND;
 
@@ -525,7 +525,7 @@ extern sol_status_t sol_entity_get_wizard_level(entity_t *entity, uint8_t *level
     return ret_status;
 }
 
-extern sol_status_t sol_entity_get_priest_level(entity_t *entity, uint8_t *level) {
+extern sol_status_t sol_entity_get_priest_level(sol_entity_t *entity, uint8_t *level) {
     uint8_t max = 0, lvl;
     sol_status_t status = SOL_NOT_FOUND;
     if (sol_entity_get_level(entity, REAL_CLASS_AIR_DRUID, &lvl) == SOL_SUCCESS) {
@@ -564,7 +564,7 @@ extern sol_status_t sol_entity_get_priest_level(entity_t *entity, uint8_t *level
     return status;
 }
 
-extern sol_status_t sol_entity_get_ranger_level(entity_t *entity, uint8_t *level) {
+extern sol_status_t sol_entity_get_ranger_level(sol_entity_t *entity, uint8_t *level) {
     uint8_t max = 0, lvl;
     sol_status_t status = SOL_NOT_FOUND;
 
@@ -588,7 +588,7 @@ extern sol_status_t sol_entity_get_ranger_level(entity_t *entity, uint8_t *level
     return status;
 }
 
-extern sol_status_t sol_entity_create_fake(const int mapx, const int mapy, entity_t **ret) {
+extern sol_status_t sol_entity_create_fake(const int mapx, const int mapy, sol_entity_t **ret) {
     dude_t *dude = calloc(1, sizeof(dude_t));
     if (!dude) { return SOL_MEMORY_ERROR; }
     dude->mapx = mapx;
@@ -598,11 +598,11 @@ extern sol_status_t sol_entity_create_fake(const int mapx, const int mapy, entit
     return SOL_SUCCESS;
 }
 
-extern sol_status_t sol_entity_is_fake(entity_t *entity) {
+extern sol_status_t sol_entity_is_fake(sol_entity_t *entity) {
     return (entity->ds_id == 0) ? SOL_SUCCESS : SOL_IS_REAL;
 }
 
-extern sol_status_t sol_entity_distance(const entity_t *source, const entity_t *dest, int16_t *dist) {
+extern sol_status_t sol_entity_distance(const sol_entity_t *source, const sol_entity_t *dest, int16_t *dist) {
     if (!source || !dest) { return SOL_NULL_ARGUMENT; }
 
     int dx = abs(source->mapx - dest->mapx);
@@ -612,7 +612,7 @@ extern sol_status_t sol_entity_distance(const entity_t *source, const entity_t *
     return SOL_SUCCESS;
 }
 
-extern sol_status_t sol_entity_go(entity_t *dude, const uint16_t x, uint16_t y) {
+extern sol_status_t sol_entity_go(sol_entity_t *dude, const uint16_t x, uint16_t y) {
     if (!dude) { return SOL_NULL_ARGUMENT; }
 
     dude->abilities.must_go = 1;
@@ -623,7 +623,7 @@ extern sol_status_t sol_entity_go(entity_t *dude, const uint16_t x, uint16_t y) 
     return SOL_SUCCESS;
 }
 
-extern sol_status_t sol_entity_debug(entity_t *dude) {
+extern sol_status_t sol_entity_debug(sol_entity_t *dude) {
     if (!dude) { return SOL_NULL_ARGUMENT; }
     printf("entity ('%s): \n", dude->name);
     printf("    .ds_id = %d\n", dude->ds_id);

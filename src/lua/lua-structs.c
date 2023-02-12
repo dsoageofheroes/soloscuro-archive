@@ -17,7 +17,7 @@ extern char *strdup(const char *s); // Not in standard.
 #define SET_INTEGER_TABLE(a, field, num) if (!strcmp(str, #field)) { a->field = num; return 0; }
 #define SET_STRING_TABLE(a, field, num) if (!strcmp(str, #field)) { if (a->field) { free(a->field); } a->field = strdup(num); return 0; }
 
-extern void* sol_lua_get_userdata(lua_State *l, const int loc) {
+extern sol_status_t sol_lua_get_userdata(lua_State *l, const int loc, void **data) {
     void *ret = NULL;
     luaL_checktype(l, 1, LUA_TTABLE);
 
@@ -26,7 +26,8 @@ extern void* sol_lua_get_userdata(lua_State *l, const int loc) {
     ret = lua_touserdata(l, -1);
     lua_pop(l, 1);
 
-    return ret;
+    *data = ret;
+    return SOL_SUCCESS;
 }
 
 static void push_table_start(lua_State *l, void *data, const char *name) {
@@ -48,7 +49,7 @@ static void push_table(lua_State *l, void *data, const char *name, const char *m
     push_table_end(l, metaname);
 }
 
-extern void sol_lua_dumpstack (lua_State *L) {
+extern sol_status_t sol_lua_dumpstack (lua_State *L) {
   int top=lua_gettop(L);
   for (int i=-5; i <= top; i++) {
     printf("%d\t%s\t", i, luaL_typename(L,i));
@@ -70,9 +71,10 @@ extern void sol_lua_dumpstack (lua_State *L) {
         break;
     }
   }
+  return SOL_SUCCESS;
 }
 
-extern int sol_lua_load_entity (lua_State *l, dude_t *dude) {
+extern sol_status_t sol_lua_load_entity (lua_State *l, dude_t *dude) {
     lua_newtable(l); // entity table
     lua_pushlightuserdata(l, dude);
     lua_setfield(l, -2, "ptr__");
@@ -139,28 +141,32 @@ extern int sol_lua_load_entity (lua_State *l, dude_t *dude) {
 
     luaL_setmetatable(l, "soloscuro.entity"); // entity meta
 
-    return 1;
+    return SOL_SUCCESS;
 }
 
 static int load_player (lua_State *l) {
+    sol_entity_t *player;
     int n = luaL_checkinteger(l, 1);
-    return sol_lua_load_entity(l, sol_player_get(n));
+    sol_player_get(n, &player);
+    return sol_lua_load_entity(l, player) == SOL_SUCCESS ? 1 : 0;
 }
 
 static int create_player (lua_State *l) {
     int n = luaL_checkinteger(l, 1);
-    entity_t *dude;
+    sol_entity_t *player;
+    sol_entity_t *dude;
     sol_entity_create_default_human(&dude);
     sol_player_set(n, dude);
     sol_player_load(n);
-    return sol_lua_load_entity(l, sol_player_get(n));
+    sol_player_get(n, &player);
+    return sol_lua_load_entity(l, player) == SOL_SUCCESS ? 1 : 0;
 }
 
 static int create_entity (lua_State *l) {
     int has_inventory = luaL_checkinteger(l, 1);
     dude_t *dude;
     sol_entity_create(has_inventory, &dude);
-    return sol_lua_load_entity(l, dude);
+    return sol_lua_load_entity(l, dude) == SOL_SUCCESS ? 1 : 0;
 }
 
 static void push_region_lua(lua_State *l, sol_region_t *reg) {
@@ -193,7 +199,8 @@ static int create_region (lua_State *l) {
 static int set_region (lua_State *l) {
     luaL_checktype(l, 1, LUA_TTABLE);
 
-    sol_region_t *region = sol_lua_get_userdata(l, 1);
+    sol_region_t *region;
+    sol_lua_get_userdata(l, 1, (void*)&region);
     sol_region_manager_add_region(region);
     sol_region_manager_set_current(region);
 
@@ -281,8 +288,9 @@ extern const struct luaL_Reg* lua_struct_get_funcs() {
 
 static int entity_get(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    entity_t *dude = (entity_t*)sol_lua_get_userdata(l, -3);
-
+    sol_entity_t *dude;
+   
+    sol_lua_get_userdata(l, -3, (void**)&dude);
     if (!dude) {
         lua_pushnil(l);
         return 1;
@@ -320,13 +328,14 @@ static int entity_get(lua_State *l) {
     GET_INTEGER_TABLE(dude, combat_status);
     GET_INTEGER_TABLE(dude, ds_id);
     //if (!strcmp(str, "blah")) { lua_pushcfunction(l, blah); return 1; }
-    return sol_lua_entity_function(dude, str, l);
+    return sol_lua_entity_function(dude, str, l) == SOL_SUCCESS ? 1 : 0;
 }
 
 static int entity_set(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    entity_t *dude = sol_lua_get_userdata(l, -4);
+    sol_entity_t *dude;
 
+    sol_lua_get_userdata(l, -4, (void**)&dude);
     if (lua_isinteger(l, 3)) {
         const int num = luaL_checkinteger(l, 3);
         SET_INTEGER_TABLE(dude, size, num);
@@ -367,8 +376,9 @@ static const luaL_Reg entity_methods[] = {
 
 static int stats_get(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    stats_t *stats = sol_lua_get_userdata(l, -3);
+    stats_t *stats;
 
+    sol_lua_get_userdata(l, -3, (void**)&stats);
     //printf("indexing '%s' of stats %p\n", str, stats);
     GET_INTEGER_TABLE(stats, str);
     GET_INTEGER_TABLE(stats, dex);
@@ -399,8 +409,9 @@ static int stats_get(lua_State *l) {
 
 static int stats_set(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    stats_t *stats = sol_lua_get_userdata(l, -4);
+    stats_t *stats;
 
+    sol_lua_get_userdata(l, -4, (void**)&stats);
     if (lua_isinteger(l, 3)) {
         const int num = luaL_checkinteger(l, 3);
         SET_INTEGER_TABLE(stats, str, num);
@@ -437,8 +448,9 @@ static const luaL_Reg stats_methods[] = {
 
 static int animate_get(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    animate_sprite_t *as = sol_lua_get_userdata(l, -3);
+    animate_sprite_t *as;
 
+    sol_lua_get_userdata(l, -3, (void**) &as);
     //printf("indexing '%s' of attack %p\n", str, attack);
     GET_INTEGER_TABLE(as, flags);
     GET_INTEGER_TABLE(as, delay);
@@ -461,8 +473,9 @@ static int animate_get(lua_State *l) {
 
 static int animate_set(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    animate_sprite_t *as = sol_lua_get_userdata(l, -4);
+    animate_sprite_t *as;
 
+    sol_lua_get_userdata(l, -4, (void**) &as);
     if (lua_isinteger(l, 3)) {
         const int num = luaL_checkinteger(l, 3);
         SET_INTEGER_TABLE(as, flags, num);
@@ -490,8 +503,9 @@ static const luaL_Reg animate_methods[] = {
 
 static int attack_get(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    innate_attack_t *attack = sol_lua_get_userdata(l, -3);
+    innate_attack_t *attack;
 
+    sol_lua_get_userdata(l, -3, (void**)&attack);
     //printf("indexing '%s' of attack %p\n", str, attack);
     GET_INTEGER_TABLE(attack, number);
     GET_INTEGER_TABLE(attack, num_dice);
@@ -506,8 +520,9 @@ static int attack_get(lua_State *l) {
 
 static int attack_set(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    innate_attack_t *attack = sol_lua_get_userdata(l, -4);
+    innate_attack_t *attack;
 
+    sol_lua_get_userdata(l, -4, (void**)&attack);
     if (lua_isinteger(l, 3)) {
         const int num = luaL_checkinteger(l, 3);
         SET_INTEGER_TABLE(attack, number, num);
@@ -527,8 +542,9 @@ static const luaL_Reg attack_methods[] = {
 
 static int gff_get(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    gff_file_t *file = sol_lua_get_userdata(l, -3);
+    gff_file_t *file;
 
+    sol_lua_get_userdata(l, -3, (void**)&file);
     printf("indexing '%s' of file %p\n", str, file);
     //GET_INTEGER_TABLE(file, number);
     //GET_INTEGER_TABLE(file, num_dice);
@@ -543,8 +559,9 @@ static int gff_get(lua_State *l) {
 
 static int gff_set(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    gff_file_t *file = sol_lua_get_userdata(l, -4);
+    gff_file_t *file;
 
+    sol_lua_get_userdata(l, -4, (void**)&file);
     if (lua_isinteger(l, 3)) {
         const int num = luaL_checkinteger(l, 3);
         printf("set %s=%d for %p\n", str, num, file);
@@ -565,8 +582,9 @@ static const luaL_Reg gff_methods[] = {
 
 static int saves_get(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    saving_throws_t *saves = sol_lua_get_userdata(l, -3);
+    saving_throws_t *saves;
 
+    sol_lua_get_userdata(l, -3, (void**)&saves);
     //printf("indexing '%s' of saves %p\n", str, saves);
     GET_INTEGER_TABLE(saves, paralysis);
     GET_INTEGER_TABLE(saves, wand);
@@ -581,8 +599,9 @@ static int saves_get(lua_State *l) {
 
 static int saves_set(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    saving_throws_t *saves = sol_lua_get_userdata(l, -4);
+    saving_throws_t *saves;
 
+    sol_lua_get_userdata(l, -4, (void**)&saves);
     if (lua_isinteger(l, 3)) {
         const int num = luaL_checkinteger(l, 3);
         SET_INTEGER_TABLE(saves, paralysis, num);
@@ -602,8 +621,9 @@ static const luaL_Reg saves_methods[] = {
 
 static int item_get(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    item_t *item = sol_lua_get_userdata(l, -3);
+    sol_item_t *item;
 
+    sol_lua_get_userdata(l, -3, (void**)&item);
     //printf("indexing '%s' of saves %p\n", str, saves);
     GET_INTEGER_TABLE(item, ds_id);
     //if (!strcmp(str, "blah")) { lua_pushcfunction(l, blah); return 1; }
@@ -614,8 +634,9 @@ static int item_get(lua_State *l) {
 
 static int item_set(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    item_t *item = sol_lua_get_userdata(l, -4);
+    sol_item_t *item;
 
+    sol_lua_get_userdata(l, -4, (void**)&item);
     if (lua_isinteger(l, 3)) {
         const int num = luaL_checkinteger(l, 3);
         SET_INTEGER_TABLE(item, ds_id, num);
@@ -631,8 +652,9 @@ static const luaL_Reg item_methods[] = {
 
 static int slots_get(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    sol_slots_t *slot = sol_lua_get_userdata(l, -3);
+    sol_slots_t *slot;
 
+    sol_lua_get_userdata(l, -3, (void**) &slot);
     //printf("indexing '%s' of saves %p\n", str, attack);
     GET_INTEGER_TABLE(slot, amt);
     GET_INTEGER_TABLE(slot, max);
@@ -644,8 +666,9 @@ static int slots_get(lua_State *l) {
 
 static int slots_set(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    sol_slots_t *slot = sol_lua_get_userdata(l, -4);
+    sol_slots_t *slot;
 
+    sol_lua_get_userdata(l, -4, (void**)&slot);
     if (lua_isinteger(l, 3)) {
         const int num = luaL_checkinteger(l, 3);
         SET_INTEGER_TABLE(slot, amt, num);
@@ -662,8 +685,9 @@ static const luaL_Reg slots_methods[] = {
 
 static int ability_get(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    sol_ability_set_t *ability = sol_lua_get_userdata(l, -3);
+    sol_ability_set_t *ability;
 
+    sol_lua_get_userdata(l, -3, (void**)&ability);
     //printf("indexing '%s' of saves %p\n", str, attack);
     GET_INTEGER_TABLE(ability, hunt);
     GET_INTEGER_TABLE(ability, must_go);
@@ -676,8 +700,9 @@ static int ability_get(lua_State *l) {
 
 static int ability_set(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    sol_ability_set_t *ability = sol_lua_get_userdata(l, -4);
+    sol_ability_set_t *ability;
 
+    sol_lua_get_userdata(l, -4, (void**)&ability);
     if (lua_isinteger(l, 3)) {
         const int num = luaL_checkinteger(l, 3);
         SET_INTEGER_TABLE(ability, hunt, num);
@@ -696,8 +721,9 @@ static const luaL_Reg ability_methods[] = {
 
 static int class_get(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    sol_class_t *class = sol_lua_get_userdata(l, -3);
+    sol_class_t *class;
 
+    sol_lua_get_userdata(l, -3, (void**)&class);
     //printf("indexing '%s' of saves %p\n", str, attack);
     GET_INTEGER_TABLE(class, current_xp);
     GET_INTEGER_TABLE(class, high_xp);
@@ -712,8 +738,9 @@ static int class_get(lua_State *l) {
 
 static int class_set(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    sol_class_t *class = sol_lua_get_userdata(l, -4);
+    sol_class_t *class;
 
+    sol_lua_get_userdata(l, -4, (void**)&class);
     if (lua_isinteger(l, 3)) {
         const int num = luaL_checkinteger(l, 3);
         SET_INTEGER_TABLE(class, current_xp, num);
@@ -733,8 +760,9 @@ static const luaL_Reg class_methods[] = {
 
 static int region_get(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    sol_region_t *region = sol_lua_get_userdata(l, -3);
+    sol_region_t *region;
 
+    sol_lua_get_userdata(l, -3, (void**)&region);
     GET_INTEGER_TABLE(region, map_id);
     GET_INTEGER_TABLE(region, palette_id);
     GET_INTEGER_TABLE(region, gff_file);
@@ -745,20 +773,22 @@ static int region_get(lua_State *l) {
         sol_lua_dumpstack (l);
         return 0;
     }
-    return sol_lua_region_function(region, str, l);
+    return sol_lua_region_function(region, str, l) == SOL_SUCCESS ? 1 : 0;
 }
 
 static int region_set(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    sol_region_t *region = sol_lua_get_userdata(l, -4);
+    sol_region_t *region;
 
+    sol_lua_get_userdata(l, -4, (void**)&region);
     if (lua_isinteger(l, 3)) {
         const int num = luaL_checkinteger(l, 3);
         SET_INTEGER_TABLE(region, map_id, num);
         SET_INTEGER_TABLE(region, palette_id, num);
         //SET_INTEGER_TABLE(region, assume_loaded, num);
     } else if (lua_istable(l, 3)) {
-        gff_file_t *file = sol_lua_get_userdata(l, 3);
+        gff_file_t *file;
+        sol_lua_get_userdata(l, 3, (void**)&file);
         if (!strcmp("gff_file", str)) {
             region->gff_file = file - open_files;
         }

@@ -1,6 +1,8 @@
 #ifndef SOL_INPUT_H
 #define SOL_INPUT_H
 
+#include "status.h"
+
 typedef enum sol_key_e {
     SOLK_RETURN = 1,
     SOLK_ESCAPE, SOLK_BACKSPACE, SOLK_TAB, SOLK_SPACE, SOLK_EXCLAIM, SOLK_QUOTEDBL,
@@ -20,9 +22,9 @@ typedef enum sol_key_e {
     SOLK_KP_8, SOLK_KP_9, SOLK_KP_0, SOLK_KP_PERIOD 
 } sol_key_e;
 
-extern void sol_key_down(const sol_key_e key);
-extern void sol_key_up(const sol_key_e key);
-extern void sol_input_tick();
-extern int sol_in_debug_mode();
+extern sol_status_t sol_key_down(const sol_key_e key);
+extern sol_status_t sol_key_up(const sol_key_e key);
+extern sol_status_t sol_input_tick();
+extern sol_status_t sol_in_debug_mode();
 
 #endif

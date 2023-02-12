@@ -57,7 +57,7 @@ extern void sol_window_load(int layer, sol_wops_t *window, const uint32_t x, con
     }
 
     if (grey_out_map) {
-        map_apply_alpha(127);
+        sol_map_apply_alpha(127);
     }
 }
 
@@ -146,9 +146,6 @@ extern void sol_window_render(const uint32_t xmappos, const uint32_t ymappos) {
 
 static uint32_t mousex, mousey;
 
-extern uint32_t sol_mouse_getx() { return mousex; }
-extern uint32_t sol_mouse_gety() { return mousey; }
-
 extern void sol_window_handle_mouse(const uint32_t x, const uint32_t y) {
     mousex = x;
     mousey = y;
@@ -221,7 +218,7 @@ void sol_window_pop() {
     }
 
     if (!grey_out_map) {
-        map_apply_alpha(255);
+        sol_map_apply_alpha(255);
     }
 }
 

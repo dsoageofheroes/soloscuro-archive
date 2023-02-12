@@ -422,7 +422,7 @@ static int8_t ranger_spell_slots[][10] = {
 
 #define MAX(a,b) (a > b) ? (a) : (b)
 
-extern sol_status_t sol_dnd2e_class_update_max_spell_slots(entity_t *pc) {
+extern sol_status_t sol_dnd2e_class_update_max_spell_slots(sol_entity_t *pc) {
     if (!pc) { return SOL_NULL_ARGUMENT; }
     uint8_t wizard_level = 0, priest_level = 0, ranger_level = 0;
     sol_status_t status;
@@ -568,7 +568,7 @@ extern sol_status_t sol_dnd2e_class_level(const uint8_t class, const uint32_t xp
     return SOL_SUCCESS; 
 }
 
-extern sol_status_t sol_dnd2e_class_exp_to_next_level(entity_t *pc, int32_t *next_exp) {
+extern sol_status_t sol_dnd2e_class_exp_to_next_level(sol_entity_t *pc, int32_t *next_exp) {
     *next_exp = 999999999;
     for (int i = 0; i < 3; i++) {
         if (pc->class[i].level > -1) {
@@ -583,7 +583,7 @@ extern sol_status_t sol_dnd2e_class_exp_to_next_level(entity_t *pc, int32_t *nex
     return SOL_SUCCESS;
 }
 
-extern sol_status_t sol_dnd2e_class_thac0(entity_t *pc, int32_t *thac0_ret) {
+extern sol_status_t sol_dnd2e_class_thac0(sol_entity_t *pc, int32_t *thac0_ret) {
     int32_t thac0 = 9999;
     for (int i = 0; i < 3; i++) {
         switch(pc->class[i].class) {
@@ -632,7 +632,7 @@ extern sol_status_t sol_dnd2e_class_thac0(entity_t *pc, int32_t *thac0_ret) {
     return SOL_SUCCESS;
 }
 
-extern sol_status_t sol_dnd2e_class_apply_stats(entity_t *pc, int class) {
+extern sol_status_t sol_dnd2e_class_apply_stats(sol_entity_t *pc, int class) {
     if (!pc)                                 { return SOL_NULL_ARGUMENT; }
     if (class < 0 || class > REAL_CLASS_MAX) { return SOL_ILLEGAL_CLASS; }
 
@@ -647,7 +647,7 @@ extern sol_status_t sol_dnd2e_class_apply_stats(entity_t *pc, int class) {
 }
 
 // return half attacks
-extern sol_status_t sol_dnd2e_class_attack_num(const entity_t *pc, const item_t *item, int16_t *attack_num) {
+extern sol_status_t sol_dnd2e_class_attack_num(const sol_entity_t *pc, const sol_item_t *item, int16_t *attack_num) {
     if (!item || item->type == ITEM_MELEE) { // MELEE
         for (int i = 0; i < 3; i++) {
             switch (pc->class[i].class) {

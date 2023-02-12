@@ -202,7 +202,7 @@ static int do_slot_highlight(const uint16_t frame, const uint16_t pos) {
 
 #define BUF_MAX (1<<8)
 
-static int display_attack(entity_t *entity, item_t *item, const int xpos, const int ypos) {
+static int display_attack(sol_entity_t *entity, sol_item_t *item, const int xpos, const int ypos) {
     char buf[BUF_MAX];
     int pos = 0;
     int offset = 0;
@@ -240,9 +240,11 @@ static int display_attack(entity_t *entity, item_t *item, const int xpos, const 
 
 static void render_character() {
     char buf[BUF_MAX];
-    entity_t *player = sol_player_get(char_selected);
+    sol_entity_t *player;
+    sol_player_get(char_selected, &player);
     if (!player) { return; }
-    inventory_t *player_items = sol_player_get_inventory(char_selected);
+    sol_inventory_t *player_items;
+    sol_player_get_inventory(char_selected, &player_items);
     const float zoom = settings_zoom();
 
     if (player->name == NULL) { return; } // no character.
@@ -301,7 +303,8 @@ static void render_character() {
     }
 }
 
-static void render_backpack_slot(const int slot, const int frame, const int x, const int y, item_t *items) {
+static void render_backpack_slot(const int slot, const int frame, const int x, const int y, sol_item_t *items) {
+    sol_item_t *item;
     sol_sprite_set_frame(slots, 5);
     sol_sprite_set_location(slots, x, y);
     sol_sprite_render(slots);
@@ -317,7 +320,8 @@ static void render_backpack_slot(const int slot, const int frame, const int x, c
 
     do_slot_highlight(5, 14);
 
-    if (item_allowed_in_slot(sol_mouse_get_item(), slot)) {
+    sol_mouse_get_item(&item);
+    if (sol_item_allowed_in_slot(item, slot) == SOL_SUCCESS) {
         sol_sprite_set_frame(slots, sol_sprite_in_rect(slots, mousex, mousey) == SOL_SUCCESS ? 8 : 4);
         sol_sprite_set_location(slots, x, y);
         sol_sprite_render(slots);
@@ -325,12 +329,14 @@ static void render_backpack_slot(const int slot, const int frame, const int x, c
 }
 
 void inventory_window_render(void *data) {
+    sol_item_t *item;
     const float zoom = settings_zoom();
     sol_sprite_info_t info;
 
     description[0] = '\0';
-    entity_t *player = sol_player_get(char_selected);
-    item_t *items = player ? player->inv : NULL;
+    sol_entity_t *player, *active;
+    sol_player_get(char_selected, &player);
+    sol_item_t *items = player ? player->inv : NULL;
     animate_sprite_t *as = NULL;
 
     sol_sprite_render(panel);
@@ -352,22 +358,24 @@ void inventory_window_render(void *data) {
 
     for (int i = 0; i < 4; i++) {
         sol_sprite_set_frame(ai[i], 0);
-        if (sol_player_ai(i)) {
+        if (sol_player_ai(i) == SOL_SUCCESS) {
             sol_sprite_set_frame(ai[i], 1);
         }
         sol_sprite_set_frame(leader[i], 0);
-        if (sol_player_exists(i) && sol_player_get(i) == sol_player_get_active()) {
+        sol_player_get(i, &player);
+        sol_player_get_active(&active);
+        if (sol_player_exists(i) == SOL_SUCCESS && player == active) {
             sol_sprite_set_frame(leader[i], 1);
         }
         sol_sprite_render(ai[i]);
         sol_sprite_render(leader[i]);
         //sol_sprite_render(port_background[i]);
-        sol_sprite_set_frame(ports[i], sol_player_exists(i) ? 1 : 2);
+        sol_sprite_set_frame(ports[i], sol_player_exists(i) == SOL_SUCCESS ? 1 : 2);
         sol_sprite_render(ports[i]);
         if (sol_sprite_in_rect(ports[i], mousex, mousey) == SOL_SUCCESS) {
             sol_sprite_set_frame(ports[i], 1);
             sol_sprite_render(ports[i]);
-            if (sol_player_exists(i)) {
+            if (sol_player_exists(i) == SOL_SUCCESS) {
                 snprintf(description, 128, "%s%s",
                         i == char_selected ? "" : "SELECT ",
                         player->name);
@@ -385,7 +393,11 @@ void inventory_window_render(void *data) {
     }
 
     for (int i = 9; i < 23; i++) {
-        as = items ? item_icon(items + i - 9) : NULL;
+        if (items) {
+            sol_item_icon(items + i - 9, &as);
+        } else {
+            as = NULL;
+        }
         sol_sprite_set_frame(slots, i);
         sol_status_check(sol_sprite_get_info(slots, &info), "Unable to get slots sprite info");
         int32_t x = info.x;
@@ -400,7 +412,8 @@ void inventory_window_render(void *data) {
             sol_sprite_render(slots);
         }
         do_slot_highlight(i, i - 9);
-        if (item_allowed_in_slot(sol_mouse_get_item(), i - 9)) {
+        sol_mouse_get_item(&item);
+        if (sol_item_allowed_in_slot(item, i - 9) == SOL_SUCCESS) {
             sol_sprite_set_frame(slots, sol_sprite_in_rect(slots, mousex, mousey) == SOL_SUCCESS ? 8 : 4);
             sol_sprite_set_location(slots, x, y);
             sol_sprite_render(slots);
@@ -427,7 +440,8 @@ void inventory_window_render(void *data) {
 
     for (int i = 0; i < 4; i++) {
         sol_player_center(i, xoffset + 12 * zoom, yoffset + (4 + 48 * i) * zoom, 34 * zoom, 34 * zoom);
-        sol_sprite_t spr = sol_player_get_sprite(i);
+        sol_sprite_t spr;
+        sol_player_get_sprite(i, &spr);
         sol_status_check(sol_sprite_get_info(spr, &info), "Unable to get sprite info.");
         if (info.h > 30 * zoom) {
             sol_sprite_set_frame(spr, 0);
@@ -438,7 +452,7 @@ void inventory_window_render(void *data) {
         }
     }
 
-    if (sol_player_exists(char_selected)) {
+    if (sol_player_exists(char_selected) == SOL_SUCCESS) {
         sol_player_center_portrait(char_selected, xoffset + (75) * zoom, yoffset + (36) * zoom, 90 * zoom, 125 * zoom);
         sol_player_render_portrait(char_selected);
     }
@@ -489,25 +503,28 @@ int inventory_window_handle_mouse_down(const uint32_t button, const uint32_t x, 
             sol_player_set_active(i);
         }
         if (sol_sprite_in_rect(ai[i], x, y) == SOL_SUCCESS) {
-            sol_player_set_ai(i, !sol_player_ai(i));
+            sol_player_set_ai(i, sol_player_ai(i) == SOL_SUCCESS ? 0 : 1);
         }
     }
     return 1; // means I captured the mouse click
 }
 
 static void clicked_slot(const int slot) {
-    item_t* mouse_item = sol_mouse_get_item();
-    entity_t *player = sol_player_get(char_selected);
-    item_t *player_item = player->inv + slot;
+    sol_item_t* mouse_item;
+    sol_mouse_get_item(&mouse_item);
+    sol_entity_t *player;
+    sol_item_t *player_item;
 
+    sol_player_get(char_selected, &player);
+    player_item = player->inv + slot;
     if (mouse_item) { // mouse has an item
-        if (!item_allowed_in_slot(sol_mouse_get_item(), slot)) { return; }
+        if (sol_item_allowed_in_slot(mouse_item, slot) != SOL_SUCCESS) { return; }
         if (player_item->ds_id) { // If we are doing a swap
             // Order matters.
-            player_item = item_dup(player_item);
+            sol_item_dup(player_item, &player_item);
             sol_entity_copy_item(player, mouse_item, slot);
             sol_mouse_set_as_item(player_item);
-            item_free_except_graphics(player_item);
+            sol_item_free_except_graphics(player_item);
         } else {
             sol_entity_copy_item(player, mouse_item, slot);
             sol_mouse_free_item();
@@ -532,7 +549,7 @@ int inventory_window_handle_mouse_up(const uint32_t button, const uint32_t x, co
                 sol_popup_set_option(2, "CANCEL");
                 last_selection = SELECT_POPUP;
             } else if (button == SOL_MOUSE_BUTTON_LEFT) {
-                if (sol_player_exists(i)) {
+                if (sol_player_exists(i) == SOL_SUCCESS) {
                     char_selected = i;
                 }
             }
@@ -592,24 +609,29 @@ void inventory_window_free() {
 }
 
 void inventory_window_return_control () {
+    uint8_t sel;
     if (last_selection == SELECT_POPUP) {
-        if (sol_popup_get_selection() == POPUP_0) { // new
+        if (sol_popup_get_selection(&sel) == SOL_SUCCESS && sel == POPUP_0) { // new
             sol_popup_clear_selection();
             sol_window_push(&new_character_window, 0, 0);
             last_selection = SELECT_NEW;
             return;
         }
-        if (sol_popup_get_selection() == POPUP_1) { // ADD
+        if (sol_popup_get_selection(&sel) == SOL_SUCCESS && sel == POPUP_1) { // ADD
             sol_popup_clear_selection();
             sol_window_push(&als_window, 0, 0);
             last_selection = SELECT_ALS;
             return;
         }
     } else if (last_selection == SELECT_NEW) {
-        entity_t *pc = sol_new_character_get_pc();
-        psin_t* psi = sol_new_character_get_psin();
-        ssi_spell_list_t* spells = sol_new_character_get_spell_list();
-        psionic_list_t* psionics = sol_new_character_get_psionic_list();
+        sol_entity_t *pc;
+        sol_new_character_get_pc(&pc);
+        psin_t* psi;
+        sol_new_character_get_psin(&psi);
+        ssi_spell_list_t* spells;
+        sol_new_character_get_spell_list(&spells);
+        psionic_list_t* psionics;
+        sol_new_character_get_psionic_list(&psionics);
         //char *name = new_character_get_name();
         if (pc && psi && spells && psionics) {
             if (dnd2e_character_is_valid(pc)) {// && dnd2e_psin_is_valid(pc, psi)) {

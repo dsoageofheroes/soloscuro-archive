@@ -49,6 +49,10 @@ static const char *status_messages[] = {
     "The request chunk was not found in the requested GFF.",
     "The given resource is still active.",
     "The given gpl type received is unknown.",
+    "The key is unknown.",
+    "The item/object does not go in that slot.",
+    "The user selected no.",
+    "The game is over, waiting for restart.",
     "Unknown error occurred.",
 };
 

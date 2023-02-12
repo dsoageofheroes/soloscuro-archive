@@ -5,7 +5,7 @@
 #include "port.h"
 #include "powers.h"
 
-enum mouse_state {
+enum sol_mouse_state_e {
     MOUSE_POINTER,
     MOUSE_NO_POINTER,
     MOUSE_MELEE,
@@ -26,15 +26,13 @@ typedef enum sol_mouse_button_e {
     SOL_MOUSE_BUTTON_MIDDLE,
 } sol_mouse_button_t;
 
-extern void             sol_mouse_init();
-extern void             sol_mouse_set_as_item(item_t *item);
-extern power_t*         sol_mouse_get_power();
-extern void             sol_mouse_free_item();
-extern item_t*          sol_mouse_get_item();
-extern void             sol_mouse_free();
-extern enum mouse_state sol_mouse_get_state();
-extern void             sol_mouse_set_state(const enum mouse_state state);
-extern uint32_t         sol_mouse_getx();
-extern uint32_t         sol_mouse_gety();
+extern sol_status_t sol_mouse_init();
+extern sol_status_t sol_mouse_set_as_item(sol_item_t *item);
+extern sol_status_t sol_mouse_free_item();
+extern sol_status_t sol_mouse_free();
+extern sol_status_t sol_mouse_set_state(const enum sol_mouse_state_e state);
+extern sol_status_t sol_mouse_get_item(sol_item_t **item);
+extern sol_status_t sol_mouse_get_power(power_t **power);
+extern sol_status_t sol_mouse_get_state(enum sol_mouse_state_e *ms);
 
 #endif

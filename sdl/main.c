@@ -145,7 +145,7 @@ void handle_input() {
                 break;
             case SDL_MOUSEBUTTONDOWN:
                 if (sol_game_loop_is_waiting_for(WAIT_NARRATE_CONTINUE) == SOL_SUCCESS) {
-                    narrate_clear();
+                    sol_narrate_clear();
                     sol_game_loop_signal(WAIT_NARRATE_CONTINUE, 0);
                 }
                 handle_mouse_down(convert_mouse_button(event.button.button));
@@ -175,7 +175,8 @@ void sol_center_on_player() {
     int w, h;
 
     SDL_GetRendererOutputSize(renderer, &w, &h);
-    dude_t *dude = sol_player_get_active();
+    dude_t *dude;
+    sol_player_get_active(&dude);
 
     xmappos = dude->mapx * 16 * settings_zoom() - w / 2;
     ymappos = dude->mapy * 16 * settings_zoom() - h / 2;
@@ -267,7 +268,7 @@ void port_close() {
 
 extern void port_start() {
     port_init();
-    map_load_region(sol_region_manager_get_current());
+    sol_map_load_region(sol_region_manager_get_current());
 
     sol_game_loop();
 

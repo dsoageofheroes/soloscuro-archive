@@ -395,8 +395,9 @@ int add_load_save_handle_mouse_up(const sol_mouse_button_t button, const uint32_
 }
 
 void add_load_save_return_control () {
+    uint8_t sel;
     sol_sprite_set_frame(delete_btn, 0);
-    if (sol_popup_get_selection() == POPUP_0) {
+    if (sol_popup_get_selection(&sel) == SOL_SUCCESS && sel == POPUP_0) {
         //printf("Need to delete! %d\n", res_ids[valids[selection]]);
         gff_char_delete(res_ids[valids[selection]]);
         setup_character_selection();

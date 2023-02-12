@@ -58,23 +58,21 @@ typedef enum sol_screen_type_e {
     SCREEN_END
 } sol_screen_type_t;
 
-extern void         sol_label_create_group();
+extern sol_status_t sol_label_create_group();
 extern sol_status_t sol_label_render(sol_label_t *label);
-extern void         sol_label_set(sol_label_t *label, const char *buf, const int32_t x, const int32_t y);
-extern sol_label_t  sol_label_create_at_pos(int parent, int id, char* text, sol_font_t font, int16_t x, int16_t y);
-extern sol_label_t  sol_label_create(int parent, int id, char* text, sol_font_t font);
-extern void         sol_label_set_text(sol_label_t  *label, const char* string);
-extern uint32_t     sol_label_pixel_width(sol_label_t  *label);
-extern sol_label_t* sol_label_point_in(sol_label_t *label, const int32_t x, const int32_t y);
-
-extern void         sol_label_create_group();
-extern void         sol_label_group_set_font(sol_font_t font);
-extern void         sol_label_set_group(entity_t *dude, sol_screen_type_t _screen_type);
-extern void         sol_label_set_positions(int32_t oX, int32_t oY, const sol_screen_type_t screen_type);
+extern sol_status_t sol_label_set(sol_label_t *label, const char *buf, const int32_t x, const int32_t y);
+extern sol_status_t sol_label_set_text(sol_label_t  *label, const char* string);
+extern sol_status_t sol_label_create_group();
+extern sol_status_t sol_label_group_set_font(sol_font_t font);
+extern sol_status_t sol_label_set_group(entity_t *dude, sol_screen_type_t _screen_type);
+extern sol_status_t sol_label_set_positions(int32_t oX, int32_t oY, const sol_screen_type_t screen_type);
 extern sol_status_t sol_label_render_full(const int16_t offsetx, const int16_t offsety);
 extern sol_status_t sol_label_render_stats(const int16_t offsetx, const int16_t offsety);
 extern sol_status_t sol_label_render_gra(const int16_t offsetx, const int16_t offsety);
 extern sol_status_t sol_label_render_class_and_combat(const int16_t offsetx, const int16_t offsety);
-extern sol_label_t* sol_label_group_point_in(const int32_t x, const int32_t y);
+extern sol_status_t sol_label_create_at_pos(int parent, int id, char* text, sol_font_t font, int16_t x, int16_t y, sol_label_t *l);
+extern sol_status_t sol_label_point_in(sol_label_t *label, const int32_t x, const int32_t y, sol_label_t **l);
+extern sol_status_t sol_label_group_point_in(const int32_t x, const int32_t y, sol_label_t **l);
+extern sol_status_t sol_label_pixel_width(sol_label_t  *label, uint32_t *width);
 
 #endif

@@ -57,8 +57,8 @@ typedef struct sol_entity_s {
     animate_sprite_t anim;
     sol_ability_set_t abilities;
     struct sol_entity_animation_list_s actions;
-    effect_node_t *effects; // anything currently affecting the entity.
-    item_t *inv; // NULL means that there is no inventory on this entity (IE: some monsters.)
+    sol_effect_node_t *effects; // anything currently affecting the entity.
+    sol_item_t *inv; // NULL means that there is no inventory on this entity (IE: some monsters.)
     uint32_t cp;
     //spell_list_t *spells;
     //psionic_list_t *psionics;
@@ -82,7 +82,7 @@ extern sol_status_t sol_entity_is_fake(entity_t *entity);
 extern sol_status_t sol_entity_free(entity_t *entity);
 extern sol_status_t sol_entity_gui_free(entity_t *entity);
 extern sol_status_t sol_entity_load_from_gff(entity_t *entity, const int gff_idx, const int player, const int res_id);
-extern sol_status_t sol_entity_copy_item(entity_t *entity, item_t *item, const size_t slot);
+extern sol_status_t sol_entity_copy_item(entity_t *entity, sol_item_t *item, const size_t slot);
 extern sol_status_t sol_entity_clear_item(entity_t *entity, const size_t slot);
 extern sol_status_t sol_entity_load_from_object(entity_t *entity, const char *data);
 extern sol_status_t sol_entity_get_total_exp(entity_t *entity, uint32_t *exp);

@@ -82,6 +82,7 @@ extern sol_status_t sol_innate_activate_door(dude_t *door) {
 
 static sol_status_t custom_action(dude_t *dude) {
     ds1_item_t ds1_item;
+    sol_entity_t *active;
     char msg[1024];
 
     if (sol_innate_is_door(dude) == SOL_SUCCESS) {
@@ -107,7 +108,8 @@ static sol_status_t custom_action(dude_t *dude) {
             sprintf(msg, "YOU FIND %dcp\n", ds1_item.value); 
             sol_window_push(&popup_window, 100, 75);
             sol_popup_quick_message(msg);
-            sol_player_get_active()->cp + ds1_item.value;
+            //sol_player_get_active(&active);
+            //active->cp + ds1_item.value;
             //printf("->%s\n", ds1_item->name);
             sol_region_remove_entity(sol_region_manager_get_current(), dude);
             sol_entity_free(dude);

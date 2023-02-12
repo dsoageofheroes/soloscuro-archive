@@ -49,7 +49,7 @@ static int replay_select_menu(lua_State *l) {
     lua_Integer menu_id = luaL_checkinteger(l, 1);
     //printf("REPLAY: selecting menu: %lld\n", menu_id);
     fflush(stdout);
-    narrate_select_menu(menu_id);
+    sol_narrate_select_menu(menu_id, NULL);
     return 0;
 }
 

@@ -65,7 +65,7 @@ static void scroll_menu(int diff) {
     update_menu(1); // force the update
 }
 
-extern int sol_narrate_is_open() { return display; }
+extern sol_status_t sol_narrate_is_open() { return display ? SOL_SUCCESS : SOL_STOPPED; }
 
 void narrate_init(const uint32_t x, const uint32_t y) {
     const float zoom = settings_zoom();
@@ -98,11 +98,7 @@ void print_text() {
     }
 }
 
-void sol_ui_narrate_clear() {
-    clear();
-}
-
-void sol_ui_narrate_close() {
+void narrate_close_ui() {
     display = 0;
     clear();
 }
@@ -130,8 +126,9 @@ void narrate_render(void *data) {
     }
 }
 
-void narrate_clear() {
+extern sol_status_t sol_narrate_clear() {
     text_pos = 0;
+    return SOL_SUCCESS;
 }
 
 static int add_text(const char *to_add) {
@@ -181,7 +178,7 @@ int8_t sol_ui_narrate_open(int16_t action, const char *text, int16_t index) {
     return 0;
 }
 
-int narrate_handle_mouse_movement(const uint32_t x, const uint32_t y) {
+static int narrate_handle_mouse_movement(const uint32_t x, const uint32_t y) {
     size_t button = sol_window_get_button(menu, x, y);
     static size_t last_button = 9999;
 
@@ -197,18 +194,18 @@ int narrate_handle_mouse_movement(const uint32_t x, const uint32_t y) {
     return display; // zero means I did not handle the mouse, so another window may.
 }
 
-int narrate_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
+static int narrate_handle_mouse_down(const uint32_t button, const uint32_t x, const uint32_t y) {
     (void)button;(void)x;(void)y;
     return display;
 }
 
-int narrate_handle_mouse_up(const uint32_t _button, const uint32_t x, const uint32_t y) {
+static int narrate_handle_mouse_up(const uint32_t _button, const uint32_t x, const uint32_t y) {
     (void)_button;
     int option;
     size_t button = sol_window_get_button(menu, x, y);
 
     if (display_menu && button >= 1 && button <= 5) {
-        option = narrate_select_menu(button);
+        sol_narrate_select_menu(button, &option);
     }
 
     if (button == 0) { // UP
@@ -241,27 +238,27 @@ void narrate_free() {
     sol_window_free_base(menu);
 }
 
-extern int sol_ui_narrate_ask_yes_no() {
-    narrate_open(NAR_ADD_MENU, "", 0);
-    narrate_open(NAR_ADD_MENU, "  Yes", 1);
-    narrate_open(NAR_ADD_MENU, "  No", 2);
+extern sol_status_t sol_narrate_ask_yes_no() {
+    sol_narrate_open(NAR_ADD_MENU, "", 0);
+    sol_narrate_open(NAR_ADD_MENU, "  Yes", 1);
+    sol_narrate_open(NAR_ADD_MENU, "  No", 2);
     sol_game_loop_wait_for_signal(WAIT_NARRATE_SELECT);
 
-    sol_ui_narrate_close();
-    return (last_option == 2) ? 0 : 1;
+    narrate_close_ui();
+    return (last_option == 2) ? SOL_NO : SOL_SUCCESS;
 }
 
-extern int8_t narrate_open(int16_t action, const char *text, int16_t index) {
+extern sol_status_t sol_narrate_open(int16_t action, const char *text, int16_t index) {
     if (action == NAR_SHOW_TEXT) {
         if (strncmp("END", text, 3) == 0 || index == 0) {
             if (text_pos == 0) { return 0; }
             sol_game_loop_wait_for_signal(WAIT_NARRATE_CONTINUE);
-            narrate_clear();
-            return 0;
+            sol_narrate_clear();
+            return SOL_SUCCESS;
         }
         if (strncmp("CLOSE", text, 5) == 0) {
-            sol_ui_narrate_close();
-            return 0;
+            narrate_close_ui();
+            return SOL_SUCCESS;
         }
     }
     sol_ui_narrate_open(action, text, index);
@@ -287,9 +284,10 @@ extern int8_t narrate_open(int16_t action, const char *text, int16_t index) {
         default:
             error("narrate_open: ERROR unknown action %d\n", action);
             exit(1);
+            return SOL_NOT_FOUND;
     }
 
-    return 0;
+    return SOL_SUCCESS;
 }
 
 static int option_is_exit(const uint32_t option) {
@@ -300,7 +298,7 @@ static int option_is_exit(const uint32_t option) {
     return 0;
 }
 
-extern int narrate_select_menu(uint32_t option) {
+extern sol_status_t sol_narrate_select_menu(uint32_t option, int *noption) {
     option += menu_start_pos;
 
     int accum = !option_is_exit(option);
@@ -313,7 +311,7 @@ extern int narrate_select_menu(uint32_t option) {
         return -1;
     }
     menu_pos = 0;
-    sol_ui_narrate_clear();
+    clear();
     snprintf(buf, 1024, "func%d()\n", menu_addrs[option]);
     //game_loop_signal(WAIT_NARRATE_SELECT, accum);
     if (sol_gpl_in_exit() != SOL_SUCCESS) {
@@ -323,18 +321,20 @@ extern int narrate_select_menu(uint32_t option) {
     if (sol_gpl_in_exit() == SOL_SUCCESS || option >= 0) {
         sol_game_loop_signal(WAIT_NARRATE_SELECT, option);
     }
-    return accum;
+   
+    if (noption) {*noption = accum;}
+    return SOL_SUCCESS;
 }
 
 static int narrate_key_press (const sol_key_e e) {
     if (!display_menu) { return 0; }
 
     switch(e) {
-        case SOLK_1: narrate_select_menu(1); break;
-        case SOLK_2: narrate_select_menu(2); break;
-        case SOLK_3: narrate_select_menu(3); break;
-        case SOLK_4: narrate_select_menu(4); break;
-        case SOLK_5: narrate_select_menu(5); break;
+        case SOLK_1: sol_narrate_select_menu(1, NULL); break;
+        case SOLK_2: sol_narrate_select_menu(2, NULL); break;
+        case SOLK_3: sol_narrate_select_menu(3, NULL); break;
+        case SOLK_4: sol_narrate_select_menu(4, NULL); break;
+        case SOLK_5: sol_narrate_select_menu(5, NULL); break;
         default: break;
     }
 

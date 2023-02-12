@@ -49,9 +49,9 @@ typedef struct power_s {
 // This (power/spell entity) is an instance of the spell on a tile in the region. EX: Grease
 // During creation a COPY of the entity or item is made, but only one per group.
 typedef struct power_instance_s {
-    entity_t *entity;
-    item_t   *item;
-    power_t  *stats;
+    entity_t   *entity;
+    sol_item_t *item;
+    power_t    *stats;
     struct power_instance_s *next, *prev;
 } power_instance_t;
 

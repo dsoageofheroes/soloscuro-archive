@@ -49,8 +49,9 @@ static void add_player_to_save(const int id, const int player) {
     char *buf = malloc(buf_len);
     rdff_header_t rdff;
     int num_items = 0;
-    dude_t *dude = sol_player_get(player);
-    item_t *item = dude->inv;
+    sol_dude_t *dude;
+    sol_player_get(player, &dude);
+    sol_item_t *item = dude->inv;
 
     for (int i = 0; i < 26; i++) {
         if (item && item[i].ds_id) {
@@ -63,7 +64,7 @@ static void add_player_to_save(const int id, const int player) {
     rdff.type = PLAYER_OBJECT;
     rdff.index = id;
     rdff.from = id;
-    rdff.len = sizeof(entity_t);
+    rdff.len = sizeof(sol_entity_t);
     buf = append(buf, &offset, &buf_len, &rdff, sizeof(rdff_header_t));
     buf = append(buf, &offset, &buf_len, dude, rdff.len);
 
@@ -86,10 +87,10 @@ static void add_player_to_save(const int id, const int player) {
             rdff.type = FULL_ITEM_OBJECT;
             rdff.index = i;
             rdff.from = item[i].ds_id;
-            rdff.len = sizeof(item_t);
+            rdff.len = sizeof(sol_item_t);
             //TODO: Add effects!
             buf = append(buf, &offset, &buf_len, &rdff, sizeof(rdff_header_t));
-            buf = append(buf, &offset, &buf_len, item + i, sizeof(item_t));
+            buf = append(buf, &offset, &buf_len, item + i, sizeof(sol_item_t));
         }
     }
 
@@ -107,13 +108,14 @@ static void add_player_to_save(const int id, const int player) {
 
 static void save_regions(const int id) {
     sol_region_t *reg = sol_region_manager_get_current();
-    dude_t *dude = sol_player_get_active();
-    dude_t *entity = NULL;
+    sol_dude_t *dude;
+    sol_dude_t *entity = NULL;
     size_t buf_len = 128, offset = 0;
     uint32_t len;
     char *buf = malloc(buf_len);
     rdff_header_t rdff;
 
+    sol_player_get_active(&dude);
     if (reg) {
         sol_entity_list_for_each(reg->entities, entity) {
             if (entity->name) {
@@ -121,9 +123,9 @@ static void save_regions(const int id) {
                 rdff.blocknum = 0;
                 rdff.type = PLAYER_OBJECT;
                 rdff.index = rdff.from = 0;
-                rdff.len = sizeof(entity_t);
+                rdff.len = sizeof(sol_entity_t);
                 buf = append(buf, &offset, &buf_len, &rdff, sizeof(rdff_header_t));
-                buf = append(buf, &offset, &buf_len, entity, sizeof(entity_t));
+                buf = append(buf, &offset, &buf_len, entity, sizeof(sol_entity_t));
                 // Any of his items will need to go here.
             }
         }
@@ -147,9 +149,9 @@ static void save_regions(const int id) {
 //TODO: Will need to save off ALL regions when we get to multiple regions
 /*
 static void load_regions(const int id) {
-    //entity_t *entity = NULL;
+    //sol_entity_t *entity = NULL;
     //gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes;
-    dude_t *dude = sol_player_get_active();
+    sol_dude_t *dude = sol_player_get_active();
     sol_region_t *reg = sol_region_manager_get_region(dude->region, 0);
     char *buf = NULL;
     rdff_header_t *rdff = NULL;
@@ -169,14 +171,14 @@ static void load_regions(const int id) {
         rdff = (rdff_header_t*)(buf + offset);
         while(offset < chunk.length && rdff->type == PLAYER_OBJECT) {
             offset += sizeof(rdff_header_t);
-            entity_t* dude = entity_create_clone((entity_t*)(buf + offset));
+            sol_entity_t* dude = entity_create_clone((sol_entity_t*)(buf + offset));
             //printf("dude->name = %s, hunt = %d, (%d, %d)\n", dude->name, dude->abilities.hunt,
                 //dude->mapx, dude->mapy);
 
             entity_list_add(reg->entities, dude);
             //port_add_entity(dude, pal);
 
-            offset += sizeof(entity_t);
+            offset += sizeof(sol_entity_t);
             rdff = (rdff_header_t*)(buf + offset);
         }
         free(buf);
@@ -235,16 +237,16 @@ static int load_player(const int id, const int player, const int res_id) {
     char buf[BUF_MAX];
     rdff_header_t *rdff;
     size_t offset = 0;
-    dude_t *dude = NULL, *tmp = NULL;
+    sol_dude_t *dude = NULL, *tmp = NULL;
     gff_chunk_header_t chunk = gff_find_chunk_header(id, GFF_CHAR, res_id);
     if (gff_read_chunk(id, &chunk, &buf, sizeof(buf)) < 34) { return 0; }
 
     sol_player_free(player);
-    dude = sol_player_get(player);
+    sol_player_get(player, &dude);
     if (dude) { sol_entity_free (dude); }
     sol_entity_create_fake(30, 10, &tmp);
     sol_player_set(player, tmp);
-    dude = sol_player_get(player);
+    sol_player_get(player, &dude);
     sol_entity_load_from_gff(dude, id, player, res_id);
 
     rdff = (rdff_disk_object_t*) (buf);
@@ -258,7 +260,7 @@ static int load_player(const int id, const int player, const int res_id) {
         offset += rdff->len;
     } else if (rdff->type == PLAYER_OBJECT) {
         sol_player_free(player);
-        dude = sol_player_get(player);
+        sol_player_get(player, &dude);
         sol_entity_load_from_object(dude, buf + offset);
         dude->anim.scmd = sol_combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
         offset += rdff->len;

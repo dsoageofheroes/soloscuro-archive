@@ -461,6 +461,7 @@ static void region_animation_last_check(sol_region_t *reg, sol_entity_animation_
     sol_entity_action_t *action;
     sol_status_t status;
     combat_region_t *cr = NULL;
+    int slot;
 
     switch(todelete->ca.action) {
         case EA_POWER_HIT:
@@ -491,7 +492,7 @@ static void region_animation_last_check(sol_region_t *reg, sol_entity_animation_
                     error("Unable to remove entity from region!\n");
                 }
                 // Only free if not a player.
-                if (sol_player_get_slot(target) < 0) {
+                if (sol_player_get_slot(target, &slot) == SOL_SUCCESS && slot < 0) {
                     sol_entity_free(target);
                 }
                 target = NULL;
@@ -780,6 +781,7 @@ extern sol_status_t sol_entity_animation_execute(sol_entity_t *entity) {
     if (!entity)               { return SOL_NULL_ARGUMENT; }
     if (!entity->actions.head) { return SOL_NOT_EMPTY; }
 
+    sol_entity_t *active;
     sol_entity_action_t *action = &(entity->actions.head->ca);
     sol_status_t status = SOL_SUCCESS;
 
@@ -790,7 +792,8 @@ extern sol_status_t sol_entity_animation_execute(sol_entity_t *entity) {
         }
     }
 
-    if (entity == sol_player_get_active()) {
+    sol_player_get_active(&active);
+    if (entity == active) {
         update_camera(entity, action);
     }
 

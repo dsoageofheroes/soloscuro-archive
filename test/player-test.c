@@ -19,19 +19,19 @@ void tearDown() {
 
 void test_basic(void) {
     sol_player_init();
-    entity_t *dude;
-    TEST_ASSERT_EQUAL_INT(0, sol_player_exists(0));
-    TEST_ASSERT_EQUAL_INT(0, sol_player_exists(1));
-    TEST_ASSERT_EQUAL_INT(0, sol_player_exists(2));
-    TEST_ASSERT_EQUAL_INT(0, sol_player_exists(3));
+    entity_t *dude, *player;
+    TEST_ASSERT_EQUAL_INT(0, sol_player_exists(0) != SOL_SUCCESS);
+    TEST_ASSERT_EQUAL_INT(0, sol_player_exists(1) != SOL_SUCCESS);
+    TEST_ASSERT_EQUAL_INT(0, sol_player_exists(2) != SOL_SUCCESS);
+    TEST_ASSERT_EQUAL_INT(0, sol_player_exists(3) != SOL_SUCCESS);
     sol_entity_create_fake(30, 10, &dude);
     sol_player_set(1, dude);
-    TEST_ASSERT_EQUAL_INT(0, sol_player_exists(0));
-    TEST_ASSERT_EQUAL_INT(0, sol_player_exists(1));
-    TEST_ASSERT_EQUAL_INT(0, sol_player_exists(2));
-    TEST_ASSERT_EQUAL_INT(0, sol_player_exists(3));
-    TEST_ASSERT_NOT_NULL(sol_player_get(1));
-    sol_player_get(1)->name = strdup("HELLO!");
+    TEST_ASSERT_EQUAL_INT(0, sol_player_exists(0) != SOL_SUCCESS);
+    TEST_ASSERT_EQUAL_INT(0, sol_player_exists(1) != SOL_SUCCESS);
+    TEST_ASSERT_EQUAL_INT(0, sol_player_exists(2) != SOL_SUCCESS);
+    TEST_ASSERT_EQUAL_INT(0, sol_player_exists(3) != SOL_SUCCESS);
+    TEST_ASSERT_NOT_NULL(sol_player_get(1, &player) == SOL_SUCCESS);
+    player->name = strdup("HELLO!");
     sol_player_cleanup();
 }
 
