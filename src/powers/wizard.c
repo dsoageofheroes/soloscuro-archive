@@ -5,15 +5,15 @@
 #include "gff.h"
 #include "gfftypes.h"
 
-static power_list_t* wizard_spells[10] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
-static power_t*      wizard_spell_list[WIZ_MAX];
+static sol_power_list_t* wizard_spells[10] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+static sol_power_t*      wizard_spell_list[WIZ_MAX];
 
-extern power_list_t* wizard_get_spells(const int level) {
+extern sol_power_list_t* wizard_get_spells(const int level) {
     if (level < 1 || level > 10) { return NULL; }
     return wizard_spells[level - 1];
 }
 
-extern power_t* wizard_get_spell(const int idx) {
+extern sol_power_t* wizard_get_spell(const int idx) {
     if (idx < 0 || idx >= WIZ_MAX) { return NULL; }
     //if (idx < 0 || idx >= WIZ_MAX) { return NULL; }
     //if (!wizard_spell_list) { exit(1); }
@@ -22,18 +22,18 @@ extern power_t* wizard_get_spell(const int idx) {
 }
 
 extern void wizard_init() {
-    memset(wizard_spell_list, 0x0, sizeof(power_t*) * WIZ_MAX);
+    memset(wizard_spell_list, 0x0, sizeof(sol_power_t*) * WIZ_MAX);
 }
 
-extern void wizard_add_power(power_t *pw, const int idx) {
+extern void wizard_add_power(sol_power_t *pw, const int idx) {
     int index = pw->level - 1;
     if (index < 0 || index > 9) { return; }
-    if (!wizard_spells[index]) { wizard_spells[index] = power_list_create(); }
+    if (!wizard_spells[index]) { sol_power_list_create(&wizard_spells[index]); }
     if (!pw->description) {
-        power_free(pw);
+        sol_power_free(pw);
         return;
     }
-    power_list_add(wizard_spells[index], pw);
+    sol_power_list_add(wizard_spells[index], pw);
     wizard_spell_list[idx] = pw;
     debug("Added %s to wizard level %d (%p)\n", pw->name, pw->level, pw);
 }
@@ -41,7 +41,7 @@ extern void wizard_add_power(power_t *pw, const int idx) {
 extern void wizard_cleanup() {
     for (int i = 0; i < 10; i++) {
         if (wizard_spells[i]) {
-            power_list_free(wizard_spells[i]);
+            sol_power_list_free(wizard_spells[i]);
             wizard_spells[i] = NULL;
         }
     }
@@ -110,7 +110,7 @@ void spell_get_psin_name(uint8_t psin, char name[32]) {
     }
 }
 
-int spell_has_psin(psin_t *psin, const uint8_t psi) {
+int spell_has_psin(sol_psin_t *psin, const uint8_t psi) {
     switch (psi) {
         case PSIONIC_PSYCHOKINETIC:
             return psin->types[0];
@@ -126,7 +126,7 @@ int spell_has_psin(psin_t *psin, const uint8_t psi) {
     return 0;
 }
 
-void spell_set_psin(psin_t *psin, const uint8_t psi, const int on) {
+void spell_set_psin(sol_psin_t *psin, const uint8_t psi, const int on) {
     switch (psi) {
         case PSIONIC_PSYCHOKINETIC:
             psin->types[0] = (on) ? 1 : 0;
@@ -140,12 +140,12 @@ void spell_set_psin(psin_t *psin, const uint8_t psi, const int on) {
     }
 }
 
-void spell_set_psionic(psionic_list_t *psi, uint16_t power) {
+void spell_set_psionic(sol_psionic_list_t *psi, uint16_t power) {
     if (power < 0 || power >= PSIONIC_MAX) { return; }
     psi->psionics[power] = 1;
 }
 
-int spell_has_psionic(psionic_list_t *psi, uint16_t power) {
+int spell_has_psionic(sol_psionic_list_t *psi, uint16_t power) {
     if (power < 0 || power >= PSIONIC_MAX) { return 0; }
     return psi->psionics[power];
 }
@@ -160,7 +160,7 @@ int spell_has_spell(ssi_spell_list_t *spells, uint16_t spell) {
     return (spells->spells[spell / 8] >> (spell % 8)) & 0x01;
 }
 
-extern void spells_set_icon(power_t *spell, const uint16_t id) {
+extern void spells_set_icon(sol_power_t *spell, const uint16_t id) {
     if (!spell) { return; }
     /*
     spell->icon.bmp_id = id;
@@ -170,7 +170,7 @@ extern void spells_set_icon(power_t *spell, const uint16_t id) {
     */
 }
 
-extern void spells_set_thrown(power_t *spell, const uint16_t id) {
+extern void spells_set_thrown(sol_power_t *spell, const uint16_t id) {
     if (!spell) { return; }
     /*
     spell->thrown.bmp_id = id;
@@ -180,7 +180,7 @@ extern void spells_set_thrown(power_t *spell, const uint16_t id) {
     */
 }
 
-extern void spells_set_hit(power_t *spell, const uint16_t id) {
+extern void spells_set_hit(sol_power_t *spell, const uint16_t id) {
     if (!spell) { return; }
     /*
     spell->hit.bmp_id = id;

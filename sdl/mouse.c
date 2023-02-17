@@ -21,7 +21,7 @@ const static size_t ds1_icon_res[] = {
 static SDL_Cursor **cursors;
 static int num_cursors;
 static sol_item_t *item_data = NULL;
-static power_t *power = NULL;
+static sol_power_t *power = NULL;
 static SDL_Cursor *item_cursor;
 static SDL_Cursor *power_cursor;
 static enum sol_mouse_state_e state = MOUSE_POINTER;
@@ -174,13 +174,13 @@ extern sol_status_t sol_mouse_free_item() {
     return SOL_SUCCESS;
 }
 
-extern sol_status_t sol_mouse_get_power(power_t **p) {
+extern sol_status_t sol_mouse_get_power(sol_power_t **p) {
     if (!p) { return SOL_NULL_ARGUMENT; }
     *p = power;
     return SOL_SUCCESS;
 }
 
-extern void sol_mouse_set_as_power(power_t *pw) {
+extern void sol_mouse_set_as_power(sol_power_t *pw) {
     if (!pw) { return; }
     if (power_cursor) { SDL_FreeCursor(power_cursor); }
 

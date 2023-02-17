@@ -11,7 +11,6 @@
 #include "gpl-var.h"
 //#include "gameloop.h"
 #include "player.h"
-#include "replay.h"
 #include "trigger.h"
 
 #define DSL_ORDER     (0)
@@ -47,9 +46,9 @@ extern sol_status_t sol_gpl_set_global(enum sol_gpl_global_e what, entity_t *ent
 
 extern sol_status_t gpl_change_region(const int region_id) {
     sol_status_t status;
+    sol_region_t *reg;
     //gpl_execute_subroutine(region_id, 0, 1);
-    replay_print("rep.change_region(%lld)\n", region_id);
-    sol_region_manager_get_region(region_id, 0);
+    sol_region_manager_get_region(region_id, 0, &reg);
     return sol_gpl_lua_execute_script(region_id, 0, 1);
 }
 

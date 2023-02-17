@@ -626,11 +626,11 @@ void inventory_window_return_control () {
     } else if (last_selection == SELECT_NEW) {
         sol_entity_t *pc;
         sol_new_character_get_pc(&pc);
-        psin_t* psi;
+        sol_psin_t* psi;
         sol_new_character_get_psin(&psi);
         ssi_spell_list_t* spells;
         sol_new_character_get_spell_list(&spells);
-        psionic_list_t* psionics;
+        sol_psionic_list_t* psionics;
         sol_new_character_get_psionic_list(&psionics);
         //char *name = new_character_get_name();
         if (pc && psi && spells && psionics) {

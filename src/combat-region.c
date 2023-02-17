@@ -71,6 +71,7 @@ extern sol_status_t sol_combat_attempt_action(combat_region_t *cr, dude_t *dude)
 
 // This is called right at the end of an animation.
 extern int sol_combat_guard_check(combat_region_t *cr) {
+    sol_region_t *reg;
     entity_t *dude = sol_combat_get_current(cr), *enemy = NULL;
     if (!dude) { return 0; }
       
@@ -80,7 +81,8 @@ extern int sol_combat_guard_check(combat_region_t *cr) {
         if (abs(enemy->mapx - dude->mapx) <= 1 && abs(enemy->mapy - dude->mapy) <= 1) {
             if (enemy->combat_status == EA_GUARD) {
                 //printf("%s should attack %s!\n", enemy->name, dude->name);
-                if (sol_combat_add_attack_animation(sol_region_manager_get_current(),
+                sol_region_manager_get_current(&reg);
+                if (sol_combat_add_attack_animation(reg,
                               enemy, dude, NULL, EA_GUARD) == -2) {
                     enemy->combat_status = EA_NONE;
                     //printf("out of attacks.\n");

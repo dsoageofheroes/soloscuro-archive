@@ -3,7 +3,6 @@
 #include "gpl-state.h"
 #include "region.h"
 #include "region-manager.h"
-#include "replay.h"
 #include "trigger.h"
 #include "player.h"
 #include "port.h"
@@ -380,7 +379,6 @@ extern void sol_trigger_talk_click(uint32_t obj) {
     sol_talkto_trigger_t tt = sol_trigger_get_talkto(obj);
     sol_look_trigger_t lt = sol_trigger_get_look(obj);
 
-    replay_print("rep.talk_click(%d)\n", obj);
     sol_gpl_set_gname(GNAME_PASSIVE, obj);
     sol_gpl_local_clear();
 
@@ -523,10 +521,11 @@ extern void sol_trigger_noorders_entity_check(entity_t *entity) {
 
 static int in_los(const uint32_t obj, dude_t *entity) {
     entity_t     *los_obj;
-    sol_region_t *reg = sol_region_manager_get_current();
+    sol_region_t *reg;
 
+    sol_region_manager_get_current(&reg);
     if (!entity || !reg) { return 0; }
-    los_obj = sol_region_find_entity_by_id(reg, obj);
+    sol_region_find_entity_by_id(reg, obj, &los_obj);
     if (!los_obj) { return 0; }
 
     int dx = entity->mapx - los_obj->mapx;
@@ -541,31 +540,31 @@ static int in_los(const uint32_t obj, dude_t *entity) {
     // TODO: This needs testing badly...
     while (x != entity->mapx || y != entity->mapy) {
         //printf("(%d, %d)\n", x, y);
-        if (sol_region_is_block(reg, y, x)) { return 0; }
+        if (sol_region_is_block(reg, y, x) == SOL_SUCCESS) { return 0; }
         if (x != entity->mapx) {
             int py = (x - los_obj->mapx) * dy / dx;
             x += (los_obj->mapx > entity->mapx) ? -1 : 1;
             int cy = (x - los_obj->mapx) * dy / dx;
-            if (sol_region_is_block(reg, y, x)) { return 0; }
+            if (sol_region_is_block(reg, y, x) == SOL_SUCCESS) { return 0; }
             // Need to see if y is in the wrong plane.
             //printf("(%d) py = %d, cy = %d\n", y, py, cy);
             while (py != cy) {
                 y += (py < cy) ? 1 : -1;
                 py += (py < cy) ? 1 : -1;
-                if (sol_region_is_block(reg, y, x)) { return 0; }
+                if (sol_region_is_block(reg, y, x) == SOL_SUCCESS) { return 0; }
             }
             //dx / dy
         } else {
             int px = (y - los_obj->mapy) * dx / dy;
             y += (los_obj->mapy > entity->mapy) ? -1 : 1;
             int cx = (y - los_obj->mapy) * dx / dy;
-            if (sol_region_is_block(reg, y, x)) { return 0; }
+            if (sol_region_is_block(reg, y, x) == SOL_SUCCESS) { return 0; }
             // Need to see if y is in the wrong plane.
             //printf("(%d) py = %d, cy = %d\n", y, py, cy);
             while (px != cx) {
                 x += (px < cx) ? 1 : -1;
                 px += (px < cx) ? 1 : -1;
-                if (sol_region_is_block(reg, y, x)) { return 0; }
+                if (sol_region_is_block(reg, y, x) == SOL_SUCCESS) { return 0; }
             }
         }
     }

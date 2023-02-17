@@ -3,7 +3,7 @@
 
 #include "entity.h"
 
-extern void sol_dnd2e_race_apply_mods(entity_t *pc);
-extern void sol_dnd2e_race_apply_initial_stats(entity_t *dude);
+extern sol_status_t sol_dnd2e_race_apply_mods(sol_entity_t *pc);
+extern sol_status_t sol_dnd2e_race_apply_initial_stats(sol_entity_t *dude);
 
 #endif

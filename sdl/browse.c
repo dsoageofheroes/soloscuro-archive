@@ -942,10 +942,12 @@ static void render_entry_font() {
 static struct sol_region_s *region = NULL;;
 static void render_entry_rmap() {
     render_entry_header();
+    sol_region_t *reg;
 
-    if (!sol_region_manager_get_current() || change_region) {
+    sol_region_manager_get_current(&reg);
+    if (!reg || change_region) {
         printf("-> %d\n", res_ids[res_idx]);
-        region = sol_region_manager_get_region(res_ids[res_idx], 1);
+        sol_region_manager_get_region(res_ids[res_idx], 1, &region);
         sol_region_manager_set_current(region);
         sol_background_load_region(region);
         change_region = 0;
@@ -965,7 +967,7 @@ static void render_entry_gmap() {
 
     for (int i = mapx; i < MAP_ROWS; i++) {
         for (int j = mapy; j < MAP_COLUMNS; j++) {
-            if (sol_region_is_block(region, i, j)) {
+            if (sol_region_is_block(region, i, j) == SOL_SUCCESS) {
                 //printf("(%d, %d)\n, ", i, j);
                 SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, SDL_ALPHA_OPAQUE);
             //} else if (gpl_region_is_actor(region, i, j)) {
@@ -1337,7 +1339,7 @@ static void render_entry_psin() {
     char name[32];
     char buf[BUF_MAX];
     size_t pos = 0;
-    psin_t psin;
+    sol_psin_t psin;
     gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_PSIN, res_ids[res_idx]);
     gff_read_chunk(gff_idx, &chunk, &psin, sizeof(psin));
 

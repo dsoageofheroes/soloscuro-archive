@@ -5,7 +5,6 @@
 #include "entity-animation.h"
 #include "gff.h"
 #include "gfftypes.h"
-#include "replay.h"
 #include "gpl-manager.h"
 #include "gameloop.h"
 #include "settings.h"

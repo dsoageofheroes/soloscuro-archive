@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-typedef struct psi_abilities_s {
+typedef struct sol_psi_abilities_s {
     unsigned int psychokinesis    : 1;
     unsigned int psychometabolism : 1;
     unsigned int telepathy        : 1;
@@ -35,14 +35,14 @@ typedef struct psi_abilities_s {
     unsigned int superior_invisibility : 1;
     unsigned int tower_of_iron_will    : 1;
     unsigned int ego_whip              : 1;
-} psi_abilities_t;
+} sol_psi_abilities_t;
 
-typedef struct psin_s {
+typedef struct sol_psin_s {
     uint8_t types[7];
-} psin_t;
+} sol_psin_t;
 
-typedef struct psionic_list_s {
+typedef struct sol_psionic_list_s {
     uint8_t psionics[34];
-} psionic_list_t;
+} sol_psionic_list_t;
 
 #endif

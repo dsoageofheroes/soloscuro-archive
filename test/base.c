@@ -70,7 +70,7 @@ sol_status_t sol_mouse_set_as_item(sol_item_t *item){}
 sol_status_t sol_mouse_free_item(){}
 sol_status_t sol_mouse_free(){}
 sol_status_t sol_mouse_set_state(const enum sol_mouse_state_e state){}
-sol_status_t sol_mouse_get_power(power_t **p){*p = NULL; return SOL_SUCCESS;}
+sol_status_t sol_mouse_get_power(sol_power_t **p){*p = NULL; return SOL_SUCCESS;}
 sol_status_t sol_mouse_get_item(sol_item_t **i){*i = NULL; return SOL_SUCCESS;}
 sol_status_t sol_mouse_get_state(enum sol_mouse_state_e *ms){ *ms = 0; return SOL_SUCCESS;}
 
@@ -114,7 +114,7 @@ sol_status_t sol_sprite_print(const sol_sprite_t sprite_id) {return SOL_SUCCESS;
 sol_status_t sol_print_line_len(const sol_font_t font, const char *text, size_t x, size_t y, const uint32_t len) {return SOL_SUCCESS;}
 sol_status_t sol_font_render_center(sol_font_t font, const char *str, const uint16_t x, const uint16_t y, const uint16_t w) {return SOL_SUCCESS;}
 
-void sol_mouse_set_as_power(power_t *pw) {}
+void sol_mouse_set_as_power(sol_power_t *pw) {}
 void sol_draw_cone(int sx, int sy, int range) {}
 uint32_t sol_get_camerax() {return 100;}
 uint32_t sol_get_cameray() {return 100;}

@@ -8,7 +8,8 @@
 
 // TODO: Finish the Implementation!
 extern sol_status_t sol_effect_apply_damage(sol_entity_t *source, sol_entity_t *target, const int32_t damage, sol_effect_type_t type) {
-    sol_region_t *reg = sol_region_manager_get_current();
+    sol_region_t *reg;
+    sol_region_manager_get_current(&reg);
     if (type & EFFECT_MAGIC) {
         sol_entity_animation_list_add_effect(&(reg->actions), EA_MAGIC_DAMAGE, source, target, NULL, 30, damage);
         sol_entity_animation_list_add_effect(&(reg->actions), EA_DAMAGE_APPLY, source, target, NULL, 0, damage);

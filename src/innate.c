@@ -19,14 +19,18 @@ extern sol_status_t sol_innate_is_door(dude_t *dude) {
 }
 
 static entity_t* find_twin(entity_t *door) {
+    sol_region_t *reg;
+    entity_t *twin_door;
     if (!door) { return NULL; }
 
-    entity_t *twin_door = sol_region_find_entity_by_id(sol_region_manager_get_current(), door->ds_id + 1);
+
+    sol_region_manager_get_current(&reg);
+    sol_region_find_entity_by_id(reg, door->ds_id + 1, &twin_door);
     if (twin_door && (twin_door->mapx == door->mapx || twin_door->mapy == door->mapy)) {
         return twin_door;
     }
 
-    twin_door = sol_region_find_entity_by_id(sol_region_manager_get_current(), door->ds_id - 1);
+    sol_region_find_entity_by_id(reg, door->ds_id - 1, &twin_door);
     if (twin_door && (twin_door->mapx == door->mapx || twin_door->mapy == door->mapy)) {
         return twin_door;
     }
@@ -35,10 +39,11 @@ static entity_t* find_twin(entity_t *door) {
 }
 
 static void set_door_blocks(dude_t *door, int door_is_open) {
-    sol_region_t *reg = sol_region_manager_get_current();
+    sol_region_t *reg;
     entity_t *twin_door = find_twin(door);
     sol_sprite_info_t info;
 
+    sol_region_manager_get_current(&reg);
     if (!twin_door) {
         error("Unable to find twin for door!\n");
         return;
@@ -83,6 +88,7 @@ extern sol_status_t sol_innate_activate_door(dude_t *door) {
 static sol_status_t custom_action(dude_t *dude) {
     ds1_item_t ds1_item;
     sol_entity_t *active;
+    sol_region_t *reg;
     char msg[1024];
 
     if (sol_innate_is_door(dude) == SOL_SUCCESS) {
@@ -111,7 +117,8 @@ static sol_status_t custom_action(dude_t *dude) {
             //sol_player_get_active(&active);
             //active->cp + ds1_item.value;
             //printf("->%s\n", ds1_item->name);
-            sol_region_remove_entity(sol_region_manager_get_current(), dude);
+            sol_region_manager_get_current(&reg);
+            sol_region_remove_entity(reg, dude);
             sol_entity_free(dude);
             return SOL_SUCCESS;
     }

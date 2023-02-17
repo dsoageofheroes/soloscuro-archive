@@ -35,8 +35,8 @@ static int32_t player_selected = 0;
 static uint32_t xoffset, yoffset;
 static uint32_t mousex = 0, mousey = 0;
 static int mode = 2; // 0 = char, 2 = powers, 3 = status
-static power_t *power_list[MAX_POWERS];
-static power_t *power_to_display = NULL;
+static sol_power_t *power_list[MAX_POWERS];
+static sol_power_t *power_to_display = NULL;
 static int level = 1;
 
 static sol_dim_t initial_locs[] = {{ 155, 28, 0, 0 }, // description
@@ -61,8 +61,8 @@ static sol_dim_t apply_params(const sol_dim_t rect, const uint32_t x, const uint
 
 static void set_power(const int type, const int level) {
     char buf[64];
-    power_list_t *powers = wizard_get_spells(level);
-    power_instance_t *rover = powers ? powers->head : NULL;
+    sol_power_list_t *powers = wizard_get_spells(level);
+    sol_power_instance_t *rover = powers ? powers->head : NULL;
     size_t power_pos = 0;
     if (!rover) { return; }
     while (rover) {
@@ -88,7 +88,7 @@ void view_character_init(const uint32_t _x, const uint32_t _y) {
 
     memset(description, 0x0, sizeof(description));
     memset(message, 0x0, sizeof(message));
-    memset(power_list, 0x0, sizeof(power_t*) * MAX_POWERS);
+    memset(power_list, 0x0, sizeof(sol_power_t*) * MAX_POWERS);
 
     sol_status_check(sol_sprite_new(pal, 0 + x, 0 + y, zoom, RESOURCE_GFF_INDEX, GFF_BMP, 11000, &panel),
             "Unable load vc");
@@ -223,7 +223,7 @@ static void render_character() {
     }
 }
 
-static power_t* find_power(const uint32_t x, const uint32_t y) {
+static sol_power_t* find_power(const uint32_t x, const uint32_t y) {
     size_t power_pos = 0;
     while (power_list[power_pos]) {
         animate_sprite_t *as = &(power_list[power_pos]->icon);
@@ -238,7 +238,7 @@ static power_t* find_power(const uint32_t x, const uint32_t y) {
 
 static void sprite_highlight(const uint32_t x, const uint32_t y) {
     const float zoom = settings_zoom();
-    power_t *pw = find_power(x, y);
+    sol_power_t *pw = find_power(x, y);
     sol_sprite_info_t info;
 
     if (!pw) { return; }
@@ -261,7 +261,8 @@ static void render_powers() {
     sol_label_render(&power_level);
 
     for (int i = 0; i < MAX_POWERS && power_list[i]; i++) {
-        animate_sprite_t *as = power_get_icon(power_list[i]);
+        animate_sprite_t *as;
+        sol_power_get_icon(power_list[i], &as);
         sol_sprite_set_location(as->spr, xoffset + (170 + (i % 5) * 20) * zoom,
             yoffset + (42 + (i / 5) * 20) * zoom);
         sol_sprite_render(as->spr);
@@ -534,11 +535,11 @@ void view_character_return_control () {
     } else if (last_selection == SELECT_NEW) {
         sol_entity_t *pc;
         sol_new_character_get_pc(&pc);
-        psin_t* psi;
+        sol_psin_t* psi;
         sol_new_character_get_psin(&psi);
         ssi_spell_list_t* spells;
         sol_new_character_get_spell_list(&spells);
-        psionic_list_t* psionics;
+        sol_psionic_list_t* psionics;
         sol_new_character_get_psionic_list(&psionics);
         if (pc && psi && spells && psionics) {
             if (dnd2e_character_is_valid(pc)) {

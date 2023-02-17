@@ -16,8 +16,11 @@ static uint8_t wait_flags[WAIT_MAX_SIGNALS];
 static int accum = 0;
 
 static void sol_render() {
-    sol_region_tick(sol_region_manager_get_current());
-    sol_combat_update(sol_region_manager_get_current());
+    sol_region_t *reg;
+
+    sol_region_manager_get_current(&reg);
+    sol_region_tick(reg);
+    sol_combat_update(reg);
     port_window_render();
 }
 
@@ -85,6 +88,7 @@ extern sol_status_t sol_game_loop() {
     sol_status_t status = SOL_UNKNOWN_ERROR;
     int ticks_to_increment_time = TICKS_PER_ROUND;
     combat_region_t *cr = NULL;
+    sol_region_t *reg;
     while (!done) {
         port_handle_input();
         //Logic here...
@@ -92,7 +96,8 @@ extern sol_status_t sol_game_loop() {
         sol_input_tick();
         port_tick();
 
-        status = sol_arbiter_combat_region(sol_region_manager_get_current(), &cr);
+        sol_region_manager_get_current(&reg);
+        status = sol_arbiter_combat_region(reg, &cr);
         if (!sol_combat_active(cr)) {
             ticks_to_increment_time--;
         }
@@ -107,7 +112,7 @@ extern sol_status_t sol_game_loop() {
         }
 
         started = 1;
-        if (sol_region_manager_get_current() && !sol_region_manager_get_current()->actions.head) {
+        if (reg && !reg->actions.head) {
             sol_lua_run_function("idle");
         }
     }

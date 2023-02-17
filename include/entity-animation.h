@@ -42,13 +42,13 @@ enum sol_entity_action_e {
 };
 
 struct sol_entity_s;
-struct power_s;
+struct sol_power_s;
 struct region_s;
 
 typedef struct sol_entity_action_s {
     struct sol_entity_s *source;
     struct sol_entity_s *target;
-    struct power_s  *power;
+    struct sol_power_s  *power;
     enum sol_entity_action_e action;
     int32_t amt, start_amt, ticks, scmd_pos;
     int32_t speed, damage;
@@ -73,14 +73,14 @@ extern sol_status_t sol_entity_animation_execute(struct sol_entity_s *entity);
 extern sol_status_t sol_entity_animation_region_execute(struct sol_region_s *reg);
 extern sol_status_t sol_entity_animation_list_free(sol_entity_animation_list_t *list);
 extern sol_status_t sol_entity_animation_list_add(sol_entity_animation_list_t *list, enum sol_entity_action_e action,
-        struct sol_entity_s *source, struct sol_entity_s *target, struct power_s *power, const int32_t amt);
+        struct sol_entity_s *source, struct sol_entity_s *target, struct sol_power_s *power, const int32_t amt);
 extern sol_status_t sol_entity_animation_list_add_speed(sol_entity_animation_list_t *list, enum sol_entity_action_e action,
-        struct sol_entity_s *source, struct sol_entity_s *target, struct power_s *power, const int32_t amt, const int32_t speed,
+        struct sol_entity_s *source, struct sol_entity_s *target, struct sol_power_s *power, const int32_t amt, const int32_t speed,
         const int32_t damage);
 extern sol_status_t sol_entity_animation_list_add_effect(sol_entity_animation_list_t *list, enum sol_entity_action_e action,
-        struct sol_entity_s *source, struct sol_entity_s *target, struct power_s *power, const int32_t amt, const int damage);
+        struct sol_entity_s *source, struct sol_entity_s *target, struct sol_power_s *power, const int32_t amt, const int damage);
 extern sol_status_t sol_entity_animation_add(enum sol_entity_action_e action, struct sol_entity_s *source, struct sol_entity_s *target,
-        struct power_s *power, const int32_t amt);
+        struct sol_power_s *power, const int32_t amt);
 extern sol_status_t sol_entity_animation_face_direction(scmd_t *current_scmd, const enum sol_entity_action_e action, scmd_t **ret);
 extern sol_status_t sol_entity_animation_get_scmd(struct sol_entity_s *entity, const int xdiff, const int ydiff,
         const enum sol_entity_action_e action, scmd_t **ret);

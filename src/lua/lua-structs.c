@@ -192,7 +192,9 @@ static void push_region_lua(lua_State *l, sol_region_t *reg) {
 }
 
 static int create_region (lua_State *l) {
-    push_region_lua(l, sol_region_create_empty());
+    sol_region_t *reg;
+    sol_region_create_empty(&reg);
+    push_region_lua(l, reg);
     return 1;
 }
 
@@ -208,7 +210,9 @@ static int set_region (lua_State *l) {
 }
 
 static int get_region (lua_State *l) {
-    push_region_lua(l, sol_region_manager_get_current());
+    sol_region_t *reg;
+    sol_region_manager_get_current(&reg);
+    push_region_lua(l, reg);
 
     return 1;
 }
@@ -253,14 +257,19 @@ static int test_pass (lua_State *l) {
 static int in_combat (lua_State *l) {
     sol_status_t status = SOL_UNKNOWN_ERROR;
     combat_region_t *cr = NULL;
-    sol_arbiter_combat_region(sol_region_manager_get_current(), &cr);
+    sol_region_t *reg;
+
+    sol_region_manager_get_current(&reg);
+    sol_arbiter_combat_region(reg, &cr);
     lua_pushboolean(l, sol_combat_get_current(cr) != NULL);
     return 1;
 }
 
 static int load_region(lua_State *l) {
     const int num = lua_gettop(l) >= 2 ? luaL_checkinteger(l, 2) : 0;
-    push_region_lua(l, sol_region_manager_get_region(lua_tointeger(l, 1), num));
+    sol_region_t *reg;
+    sol_region_manager_get_region(lua_tointeger(l, 1), num, &reg);
+    push_region_lua(l, reg);
     return 1;
 }
 

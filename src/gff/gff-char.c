@@ -20,7 +20,7 @@ int gff_char_delete(const int id) {
     return 0; // FAILED
 }
 
-static void create_combat(entity_t *pc, char *name, ds1_combat_t *combat) {
+static void create_combat(sol_entity_t *pc, char *name, ds1_combat_t *combat) {
     combat->hp = pc->stats.high_hp;
     combat->psp = pc->stats.psp;
     combat->char_index = 0; // TODO: do we need an index?
@@ -50,7 +50,7 @@ static void create_combat(entity_t *pc, char *name, ds1_combat_t *combat) {
     combat->name[15] = '\0';
 }
 
-static void write_CHAR_entry(gff_chunk_header_t chunk, entity_t *pc, ds1_combat_t *combat) {
+static void write_CHAR_entry(gff_chunk_header_t chunk, sol_entity_t *pc, ds1_combat_t *combat) {
     char *buf = malloc(chunk.length);
     rdff_header_t rdff;
     size_t offset = 0;
@@ -91,7 +91,7 @@ static void write_CHAR_entry(gff_chunk_header_t chunk, entity_t *pc, ds1_combat_
     free(buf);
 }
 
-int gff_char_add_character(entity_t *pc, psin_t *psi, ssi_spell_list_t *spells, psionic_list_t *psionics, char *name) {
+int gff_char_add_character(sol_entity_t *pc, sol_psin_t *psi, ssi_spell_list_t *spells, sol_psionic_list_t *psionics, char *name) {
     ds1_combat_t combat;
     uint32_t res_ids[1<<10];
     int16_t max_id = 1;
@@ -118,9 +118,9 @@ int gff_char_add_character(entity_t *pc, psin_t *psi, ssi_spell_list_t *spells, 
     printf("open_slot = %d, replace_id = %d, id = %d\n", open_slot, replace_id, id);
     if (open_slot == -1) {
         gff_add_chunk(CHARSAVE_GFF_INDEX, GFF_CHAR, id, (char*)res_ids, 1<<10);
-        gff_add_chunk(CHARSAVE_GFF_INDEX, GFF_PSST, id, (char*)res_ids, sizeof(psionic_list_t));
+        gff_add_chunk(CHARSAVE_GFF_INDEX, GFF_PSST, id, (char*)res_ids, sizeof(sol_psionic_list_t));
         gff_add_chunk(CHARSAVE_GFF_INDEX, GFF_SPST, id, (char*)res_ids, sizeof(ssi_spell_list_t));
-        gff_add_chunk(CHARSAVE_GFF_INDEX, GFF_PSIN, id, (char*)res_ids, sizeof(psin_t));
+        gff_add_chunk(CHARSAVE_GFF_INDEX, GFF_PSIN, id, (char*)res_ids, sizeof(sol_psin_t));
         gff_add_chunk(CHARSAVE_GFF_INDEX, GFF_CACT, id, (char*)res_ids, 2);
         replace_id = open_slot = id;
     }

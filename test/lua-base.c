@@ -22,7 +22,7 @@ void setUp() {
     //gff_init();
     //gff_load_directory("ds1");
     sol_lua_load_preload("lua/settings.lua");
-    powers_init();
+    sol_powers_init();
     sol_gpl_init();
     sol_lua_register_globals();
 }

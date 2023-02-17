@@ -170,8 +170,9 @@ static int write_region(FILE *file, sol_region_t *reg) {
 static int write_regions(FILE *file) {
     int slot;
     dude_t *entity = NULL;
-    sol_region_t *reg = sol_region_manager_get_current();
+    sol_region_t *reg;
 
+    sol_region_manager_get_current(&reg);
     write_region(file, reg);
     sol_gpl_write_local_state(file);
     sol_gpl_write_global_state(file);
@@ -193,7 +194,8 @@ extern int sol_save_to_file(const char *filepath, const char *name) {
     sol_status_t status = SOL_UNKNOWN_ERROR;
     combat_region_t *cr = NULL;
     FILE *file;
-    sol_region_t *reg = sol_region_manager_get_current();
+    sol_region_t *reg;
+    sol_region_manager_get_current(&reg);
     status = sol_arbiter_combat_region(reg, &cr);
     if (sol_combat_get_current(cr) != NULL) { return 0; }
     if (sol_narrate_is_open() == SOL_SUCCESS) { return 0; }

@@ -107,7 +107,7 @@ static void add_player_to_save(const int id, const int player) {
 }
 
 static void save_regions(const int id) {
-    sol_region_t *reg = sol_region_manager_get_current();
+    sol_region_t *reg;
     sol_dude_t *dude;
     sol_dude_t *entity = NULL;
     size_t buf_len = 128, offset = 0;
@@ -115,6 +115,7 @@ static void save_regions(const int id) {
     char *buf = malloc(buf_len);
     rdff_header_t rdff;
 
+    sol_region_manager_get_current(&reg);
     sol_player_get_active(&dude);
     if (reg) {
         sol_entity_list_for_each(reg->entities, entity) {

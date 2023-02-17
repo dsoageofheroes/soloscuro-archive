@@ -15,9 +15,10 @@ static sol_region_t *ssi_regions[MAX_REGIONS];
 static sol_region_t *sol_regions[MAX_REGIONS];
 static int current_region = -1; // will need to eliminate for server code.
 
-extern void sol_region_manager_init() {
+extern sol_status_t sol_region_manager_init() {
     memset(ssi_regions, 0x0, sizeof(ssi_regions));
     memset(sol_regions, 0x0, sizeof(sol_regions));
+    return SOL_SUCCESS;
 }
 
 static void free_entities(sol_region_t *reg) {
@@ -38,7 +39,7 @@ static void free_entities(sol_region_t *reg) {
     }
 }
 
-extern void sol_region_manager_cleanup(int _free_entities) {
+extern sol_status_t sol_region_manager_cleanup(int _free_entities) {
     for (int i = 0; i < MAX_REGIONS; i++) {
         if (ssi_regions[i]) {
             if (_free_entities) {
@@ -57,6 +58,8 @@ extern void sol_region_manager_cleanup(int _free_entities) {
     }
     memset(ssi_regions, 0x0, sizeof(ssi_regions));
     memset(sol_regions, 0x0, sizeof(sol_regions));
+
+    return SOL_SUCCESS;
 }
 
 // private: we assume entity and reg are valid.
@@ -70,18 +73,18 @@ static int entity_is_in_region(const sol_entity_t *entity, const sol_region_t *r
     return 0;
 }
 
-extern sol_region_t* sol_region_manager_get_region_with_entity(const sol_entity_t *entity) {
+extern sol_status_t sol_region_manager_get_region_with_entity(const sol_entity_t *entity, sol_region_t **r) {
     sol_region_t *reg;
-    if (!entity) { return NULL; }
+    if (!entity || !r) { return SOL_NULL_ARGUMENT; }
 
     for (int i = 0; i < MAX_REGIONS; i++) {
         reg = ssi_regions[i];
-        if (reg && entity_is_in_region(entity, reg)) { return reg; }
+        if (reg && entity_is_in_region(entity, reg)) { *r = reg; return SOL_SUCCESS; }
         reg = sol_regions[i];
-        if (reg && entity_is_in_region(entity, reg)) { return reg; }
+        if (reg && entity_is_in_region(entity, reg)) { *r = reg; return SOL_SUCCESS; }
     }
 
-    return NULL;
+    return SOL_SUCCESS;
 }
 
 extern sol_status_t sol_region_manager_load_etab(sol_region_t *reg) {
@@ -92,18 +95,21 @@ extern sol_status_t sol_region_manager_load_etab(sol_region_t *reg) {
 }
 
 // NOTE: only set assume_loaded on creation!
-extern sol_region_t* sol_region_manager_get_region(const int region_id, const int assume_loaded) {
+extern sol_status_t sol_region_manager_get_region(const int region_id, const int assume_loaded, sol_region_t **r) {
     char gff_name[32];
     sol_entity_t *dude = NULL;
 
-    if (region_id >= MAX_REGIONS && region_id < 2 * MAX_REGIONS) { return sol_regions[region_id - MAX_REGIONS]; }
+    if (!r) { return SOL_NULL_ARGUMENT; }
+
+    *r = NULL;
+    if (region_id >= MAX_REGIONS && region_id < 2 * MAX_REGIONS) { *r = sol_regions[region_id - MAX_REGIONS];  return SOL_SUCCESS; }
 
     if (!ssi_regions[region_id]) {
         snprintf(gff_name, 32, "rgn%02x.gff", region_id);
         int gff_index = gff_find_index(gff_name);
-        if (gff_index < 0 ) { return NULL; }
+        if (gff_index < 0 ) { return SOL_OUT_OF_RANGE; }
 
-        ssi_regions[region_id] = sol_region_create(gff_index, region_id);
+        sol_region_create(gff_index, region_id, &ssi_regions[region_id]);
         //ssi_regions[region_id]->assume_loaded = assume_loaded;
         /*
         if (!assume_loaded) {
@@ -122,33 +128,41 @@ extern sol_region_t* sol_region_manager_get_region(const int region_id, const in
         }
     }
 
-    return ssi_regions[region_id];
+    *r = ssi_regions[region_id];
+    return SOL_SUCCESS;
 }
 
-extern sol_region_t* sol_region_manager_get_current() {
-    if (current_region < 0) { return NULL; }
+extern sol_status_t sol_region_manager_get_current(sol_region_t **r) {
+    if (!r) { return SOL_NULL_ARGUMENT; }
+
+    *r = NULL;
+    if (current_region < 0) { return SOL_OUT_OF_RANGE; }
     if (current_region < MAX_REGIONS) {
-        return ssi_regions[current_region];
+        *r = ssi_regions[current_region];
+        return SOL_SUCCESS;
     }
 
-    return sol_regions[current_region - MAX_REGIONS];
+    *r = sol_regions[current_region - MAX_REGIONS];
+    return SOL_SUCCESS;
 }
 
-extern int sol_region_manager_add_region(sol_region_t *region) {
+extern sol_status_t sol_region_manager_add_region(sol_region_t *region) {
     int pos = 0;
+    
+    if (!region) { return SOL_NULL_ARGUMENT; }
     for (pos = 0; pos < MAX_REGIONS && sol_regions[pos]; pos++) { ; }
 
-    if (pos >= MAX_REGIONS) { return -1; }
+    if (pos >= MAX_REGIONS) { return SOL_OUT_OF_RANGE; }
 
     sol_regions[pos] = region;
     if (region) {
         region->map_id = pos;
     }
-    return pos;
+    return SOL_SUCCESS;
 }
 
-extern void sol_region_manager_set_current(sol_region_t *region) {
-    if (!region) { return; }
+extern sol_status_t sol_region_manager_set_current(sol_region_t *region) {
+    if (!region) { return SOL_NULL_ARGUMENT; }
 
     sol_entity_t *player;
     sol_player_get_active(&player);
@@ -169,17 +183,21 @@ extern void sol_region_manager_set_current(sol_region_t *region) {
         if (!player->anim.scmd) { player->anim.scmd = ssi_scmd_empty(); }
     }
     sol_gpl_set_gname(GNAME_REGION, region->map_id);
+
+    return SOL_SUCCESS;
 }
 
-extern void sol_region_manager_remove_players() {
-    sol_region_t* reg = sol_region_manager_get_current();
+extern sol_status_t sol_region_manager_remove_players() {
+    sol_region_t* reg;
+    sol_region_manager_get_current(&reg);
     sol_dude_t *player;
     sol_entity_list_node_t *node = NULL;
-    if (!reg) { return; }
+    if (!reg) { return SOL_NULL_ARGUMENT; }
 
     for (int i = 0; i < MAX_PCS; i++) {
         sol_player_get(i, &player);
         sol_entity_list_find(reg->entities, player, &node);
         sol_entity_list_remove(reg->entities, node);
     }
+    return SOL_SUCCESS;
 }

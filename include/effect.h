@@ -72,7 +72,7 @@ enum sol_stat_e {
 };
 
 typedef struct sol_effect_s {
-    power_t *pw; // the power that generated this effect.
+    sol_power_t *pw; // the power that generated this effect.
     uint16_t duration_type; // indefinite/rounds
     uint16_t duration_left;
     uint16_t preventions; // does this prevent something (Example: attacking.)

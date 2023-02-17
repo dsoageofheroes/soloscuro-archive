@@ -53,6 +53,7 @@ static const char *status_messages[] = {
     "The item/object does not go in that slot.",
     "The user selected no.",
     "The game is over, waiting for restart.",
+    "The game is paused.",
     "Unknown error occurred.",
 };
 

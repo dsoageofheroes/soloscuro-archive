@@ -20,7 +20,6 @@
 #include "combat.h"
 #include "gpl.h"
 #include "gpl-manager.h"
-#include "replay.h"
 #include "region-manager.h"
 #include "ds-load-save.h"
 #include "player.h"
@@ -46,7 +45,6 @@ static int8_t run_lua = 1, quick_load = 0;
 static const char *windowed = NULL, *extract_images = NULL, *extract_xmis = NULL,
                   *extract_items = NULL, *extract_gpl = NULL, *lua_script = "lua/main.lua";
 static char *ds1_gffs = NULL;
-static char *replay = NULL;
 
 static uint32_t xmappos, ymappos;
 static int32_t xmapdiff, ymapdiff;
@@ -120,6 +118,7 @@ void main_exit_game() {
 }
 
 void handle_input() {
+    sol_region_t *reg;
     SDL_Event event;
     while (SDL_PollEvent(&event) != 0) {
         switch(event.type) {
@@ -157,7 +156,8 @@ void handle_input() {
     }
 
     handle_mouse_motion();
-    if (sol_region_manager_get_current()) {
+    sol_region_manager_get_current(&reg);
+    if (reg) {
         sol_player_update();
     }
 }
@@ -267,12 +267,13 @@ void port_close() {
 }
 
 extern void port_start() {
+    sol_region_t *reg;
     port_init();
-    sol_map_load_region(sol_region_manager_get_current());
+
+    sol_region_manager_get_current(&reg);
+    sol_map_load_region(reg);
 
     sol_game_loop();
-
-    replay_cleanup();
 }
 
 static void init() {
@@ -319,9 +320,6 @@ void parse_args(int argc, char *argv[]) {
         if (!strcmp(argv[i], "--ds1") && i < (argc-1)) {
             ds1_gffs = argv[++i];
         }
-        if (!strcmp(argv[i], "--replay") && i < (argc-1)) {
-            replay = argv[++i];
-        }
         if (!strcmp(argv[i], "--browse") && i < (argc)) {
             browser_mode = 1; run_lua = 0;
         }
@@ -350,8 +348,6 @@ void parse_args(int argc, char *argv[]) {
             quick_load = 1;
         }
     }
-
-    //replay_init("replay.lua");
 }
 
 int main(int argc, char *argv[]) {
@@ -370,7 +366,7 @@ int main(int argc, char *argv[]) {
     }
 
     gui_init();
-    powers_init();
+    sol_powers_init();
     sol_gpl_init();
     sol_lua_register_globals();
 
@@ -378,13 +374,7 @@ int main(int argc, char *argv[]) {
 
     if (!run_lua) { return 0; }
 
-    if (replay) {
-        replay_game(replay);
-    }
-
     sol_game_loop();
-
-    replay_cleanup();
 
     return 0;
 }

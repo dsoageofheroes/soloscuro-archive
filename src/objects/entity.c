@@ -359,10 +359,11 @@ extern sol_status_t sol_entity_gui_free(sol_entity_t *entity) {
 
 extern sol_status_t sol_entity_free(sol_entity_t *dude) {
     if (!dude) { return SOL_NULL_ARGUMENT; }
-    sol_region_t *reg = sol_region_manager_get_current();
+    sol_region_t *reg;
     sol_status_t status;
     sol_entity_list_node_t *node;
 
+    sol_region_manager_get_current(&reg);
     sol_entity_animation_list_free(&(dude->actions));
     sol_item_free_inventory(dude->inv);
 
@@ -410,21 +411,21 @@ extern sol_status_t sol_entity_attempt_move(dude_t *dude, const int xdiff, const
         : EA_NONE;
 
     // If we are in combat and it isn't our turn, do nothing.
-    status = sol_arbiter_combat_region(sol_region_manager_get_current(), &cr);
+    sol_region_manager_get_current(&region);
+    status = sol_arbiter_combat_region(region, &cr);
     if (cr && sol_combat_get_current(cr) != dude) {
         return SOL_NOT_TURN;
     }
 
-    region = sol_region_manager_get_current();
-    if (sol_region_is_block(region, dude->mapy + ydiff, dude->mapx + xdiff)
+    if (sol_region_is_block(region, dude->mapy + ydiff, dude->mapx + xdiff) == SOL_SUCCESS
         || sol_region_location_blocked(region, dude->mapx + xdiff, dude->mapy + ydiff)) {
 
         if (cr && (xdiff != 0 || ydiff != 0)) {
             if ((status = sol_combat_attempt_action(cr, dude)) != SOL_SUCCESS) { return status; }
-            target = sol_region_find_entity_by_location(
-                    sol_region_manager_get_current(), dude->mapx + xdiff, dude->mapy + ydiff);
+            sol_region_find_entity_by_location(
+                    region, dude->mapx + xdiff, dude->mapy + ydiff, &target);
             if (target) {
-                sol_combat_add_attack_animation(sol_region_manager_get_current(), dude,
+                sol_combat_add_attack_animation(region, dude,
                     target, NULL, EA_MELEE);
             }
             // We did a combat action.
@@ -457,7 +458,8 @@ extern sol_status_t sol_entity_attempt_move(dude_t *dude, const int xdiff, const
     //dude->anim.destx += (xdiff * 32);
     //dude->anim.desty += (ydiff * 32);
 
-    sol_region_t *reg = sol_region_manager_get_current();
+    sol_region_t *reg;
+    sol_region_manager_get_current(&reg);
     if (reg) {
         if ((status = sol_entity_list_find(reg->entities, dude, &node)) != SOL_SUCCESS) {
             return status;

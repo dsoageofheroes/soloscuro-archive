@@ -7,7 +7,6 @@
 #include "port.h"
 #include "map.h"
 #include "ssi-scmd.h"
-#include "replay.h"
 #include "region-manager.h"
 #include "trigger.h"
 #include "player.h"
@@ -463,9 +462,10 @@ static int is_true(lua_State *l) {
 
 static int gpl_getX(lua_State *l) {
     lua_Integer id = luaL_checkinteger(l, 1);
-    sol_region_t *reg = sol_region_manager_get_current();
+    sol_region_t *reg;
     sol_dude_t *dude = NULL;
 
+    sol_region_manager_get_current(&reg);
     sol_entity_list_for_each(reg->entities, dude) {
         if (dude->ds_id == id) {
             lua_pushnumber(l, dude->mapx - (dude->anim.xoffset + 15) / 16); // the +15 forces a round up.
@@ -479,9 +479,10 @@ static int gpl_getX(lua_State *l) {
 
 static int gpl_getY(lua_State *l) {
     lua_Integer id = luaL_checkinteger(l, 1);
-    sol_region_t *reg = sol_region_manager_get_current();
+    sol_region_t *reg;
     sol_dude_t *dude = NULL;
 
+    sol_region_manager_get_current(&reg);
     sol_entity_list_for_each(reg->entities, dude) {
         if (dude->ds_id == id) {
             lua_pushnumber(l, dude->mapy - (dude->anim.yoffset + 15) / 16); // the +15 forces a round up.
@@ -513,9 +514,11 @@ static int range(lua_State *l) {
     const uint32_t from = luaL_checkinteger(l, 1);
     const uint32_t to   = luaL_checkinteger(l, 2);
 
-    sol_region_t* reg = sol_region_manager_get_current();
-    sol_entity_t* from_entity = sol_region_find_entity_by_id(reg, from);
-    sol_entity_t* to_entity = sol_region_find_entity_by_id(reg, to);
+    sol_region_t* reg;
+    sol_region_manager_get_current(&reg);
+    sol_entity_t* from_entity, *to_entity;
+    sol_region_find_entity_by_id(reg, from, &from_entity);
+    sol_region_find_entity_by_id(reg, to, &to_entity);
 
     if (!from_entity || !to_entity) {
         debug("Range from '%u' to '%u' not found returning GPL_RANGE_MAX(%u)\n", from, to, GPL_RANGE_MAX);
@@ -661,6 +664,7 @@ static int gpl_clone(lua_State *l) {
     lua_Integer placement = luaL_checkinteger(l, 6);
     int16_t entry_id = -1;
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes;
+    sol_region_t *reg;
 
     debug("gpl-clone: obj: " PRI_LI ", qty: " PRI_LI ", (" PRI_LI ", "
              PRI_LI ") pri: " PRI_LI ", pla:" PRI_LI "\n", obj, qty, x, y,
@@ -679,8 +683,9 @@ static int gpl_clone(lua_State *l) {
         sol_gpl_set_global(GPL_OTHER, dude);
 
         if (dude) {
-            sol_region_move_to_nearest(sol_region_manager_get_current(), dude);
-            sol_region_add_entity(sol_region_manager_get_current(), dude);
+            sol_region_manager_get_current(&reg);
+            sol_region_move_to_nearest(reg, dude);
+            sol_region_add_entity(reg, dude);
             sol_sprite_load(&(dude->anim), pal, OBJEX_GFF_INDEX, GFF_BMP, dude->anim.bmp_id,
                 (dude->name) ? 2 : 1);
             sol_map_place_entity(dude);
@@ -696,8 +701,10 @@ static int gpl_clone(lua_State *l) {
 static int gpl_hunt(lua_State *l) {
     lua_Integer obj = luaL_checkinteger(l, 1);
     sol_dude_t *dude = NULL;
+    sol_region_t *reg;
 
-    sol_entity_list_for_each(sol_region_manager_get_current()->entities, dude) {
+    sol_region_manager_get_current(&reg);
+    sol_entity_list_for_each(reg->entities, dude) {
         if (dude->ds_id == (int)obj) {
             dude->abilities.hunt = 1;
         } 
@@ -770,7 +777,11 @@ static int gpl_goxy1(lua_State *l) {
     lua_Integer y = luaL_checkinteger(l, 2);
     lua_Integer obj = luaL_checkinteger(l, 3);
 
-    sol_entity_t *dude = sol_region_find_entity_by_id(sol_region_manager_get_current(), obj);
+    sol_entity_t *dude;
+    sol_region_t *reg;
+
+    sol_region_manager_get_current(&reg);
+    sol_region_find_entity_by_id(reg, obj, &dude);
     printf("%lld needs to go to (%lld, %lld), currently (%d, %d)\n", obj, x, y, dude->mapx, dude->mapy);
     lua_pushboolean(l, sol_entity_go(dude, x, y) == SOL_SUCCESS);
 
@@ -803,7 +814,6 @@ static int call_function(lua_State *l) {
     lua_Integer addr = luaL_checkinteger(l, 2);
 
     debug("*****************calling file: " PRI_LI " addr: " PRI_LI "\n", file, addr);
-    //replay_print("gpl.call_function(" PRI_LI ", " PRI_LI ")\n", file, addr);
     sol_gpl_lua_execute_script(file, addr, 0);
 
     return 0;

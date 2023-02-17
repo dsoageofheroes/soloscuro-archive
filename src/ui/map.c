@@ -46,9 +46,12 @@ static void sprite_load_animation(sol_entity_t *entity, gff_palette_t *pal);
 void map_render_anims();
 
 void map_load(const uint32_t _x, const uint32_t _y) {
-    if (!cmap && sol_region_manager_get_current()) {
+    sol_region_t *reg;
+
+    sol_region_manager_get_current(&reg);
+    if (!cmap && reg) {
         cmap = create_map();
-        cmap->region = sol_region_manager_get_current();
+        cmap->region = reg;
         map_load_current_region();
         sol_center_on_player();
     }
@@ -71,7 +74,9 @@ void map_free(map_t *map) {
 }
 
 static int cmap_is_block(const int row, const int column) {
-    return sol_region_manager_get_current()->flags[row][column];
+    sol_region_t *reg;
+    sol_region_manager_get_current(&reg);
+    return reg->flags[row][column];
 }
 
 static void map_load_current_region() {
@@ -213,6 +218,7 @@ extern sol_status_t sol_map_highlight_tile(const int tilex, const int tiley, con
 }
 
 static void show_debug_info() {
+    sol_region_t *reg;
     const uint32_t xoffset = sol_get_camerax();
     const uint32_t yoffset = sol_get_cameray();
     const float zoom = settings_zoom();
@@ -233,7 +239,8 @@ static void show_debug_info() {
     //printf("0x%x\n", cmap->region->flags[57][117]);
     for (int x = 0; x < 98; x++) {
         for (int y = 0; y < 128; y++) {
-            if (sol_region_is_block(sol_region_manager_get_current(), x, y)) {
+            sol_region_manager_get_current(&reg);
+            if (sol_region_is_block(reg, x, y) == SOL_SUCCESS) {
                 sol_map_highlight_tile(y, x, 6);
             }
         }
@@ -305,9 +312,12 @@ void map_render(void *data) {
 }
 
 static sol_entity_t* get_parent_door(sol_entity_t *dude) {
+    sol_region_t *reg;
     if (sol_innate_is_door(dude) != SOL_SUCCESS) { return NULL; }
 
-    sol_entity_t *door2 = sol_region_find_entity_by_id(sol_region_manager_get_current(), dude->ds_id + 1);
+    sol_entity_t *door2;
+    sol_region_manager_get_current(&reg);
+    sol_region_find_entity_by_id(reg, dude->ds_id + 1, &door2);
     if (door2 == NULL || (dude->ds_id % 2)) { return NULL; }
 
     if ((door2->mapx == dude->mapx) || (dude->mapy == door2->mapy)) {
@@ -380,16 +390,18 @@ void map_render_anims() {
 }
 
 extern sol_status_t sol_map_update_active_player(const int prev) {
+    sol_entity_t *pr, *player;
+    sol_region_t *reg;
+
     if (!cmap) { return SOL_NOT_INITIALIZED; }
-    sol_entity_t *pr;
-    sol_entity_t *player;
     sol_player_get(prev, &pr);
     sol_player_get_active(&player);
     if (!pr || !player) { return SOL_NOT_FOUND; }
     player->mapx = pr->mapx;
     player->mapy = pr->mapy;
-    sol_region_remove_entity(sol_region_manager_get_current(), pr);
-    sol_region_add_entity(sol_region_manager_get_current(), player);
+    sol_region_manager_get_current(&reg);
+    sol_region_remove_entity(reg, pr);
+    sol_region_add_entity(reg, player);
     player->anim.scmd = pr->anim.scmd;
     port_entity_update_scmd(player);
     sol_map_place_entity(player);
@@ -447,7 +459,7 @@ sol_entity_t* get_entity_at_location(const uint32_t x, const uint32_t y) {
 
 static void update_mouse_icon() {
     enum sol_mouse_state_e ms;
-    power_t *power;
+    sol_power_t *power;
     cdude = get_entity_at_location(sol_get_camerax() + mousex, sol_get_cameray() + mousey);
     const float zoom = settings_zoom();
     sol_dude_t *player, *active;
@@ -479,7 +491,9 @@ static void update_mouse_icon() {
         } else if (ms == MOUSE_TALK) { sol_mouse_set_state(MOUSE_NO_TALK);
         } else if (ms == MOUSE_POWER) {
             sol_mouse_get_power(&power);
-            switch(power_get_target_type(power)) {
+            enum sol_target_shape_e e;
+            sol_power_get_target_type(power, &e);
+            switch(e) {
                 case TARGET_ALLY:
                 case TARGET_ENEMY:
                 case TARGET_MULTI:
@@ -567,8 +581,9 @@ static int map_handle_mouse_down(const uint32_t button, const uint32_t x, const 
     const float zoom = settings_zoom();
     int tilex = (xoffset + mousex) / (16 * zoom);
     int tiley = (yoffset + mousey) / (16 * zoom);
-    power_t *power;
+    sol_power_t *power;
     sol_entity_t *active;
+    sol_region_t *reg;
 
     sol_mouse_get_state(&ms);
     if (!cmap) { return 0; }
@@ -607,7 +622,8 @@ static int map_handle_mouse_down(const uint32_t button, const uint32_t x, const 
     //printf("-> %d, %d\n", tilex, tiley);
     if (ms == MOUSE_POINTER && button == SOL_MOUSE_BUTTON_LEFT) {
         sol_player_get_active(&active);
-        sol_region_generate_move(sol_region_manager_get_current(), active, tilex, tiley, 2);
+        sol_region_manager_get_current(&reg);
+        sol_region_generate_move(reg, active, tilex, tiley, 2);
     }
     //printf("No dude there bruh.\n");
 

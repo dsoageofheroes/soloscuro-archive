@@ -79,17 +79,20 @@ static const int8_t racial_stats[][6][2] = {
       {  3, 15 }, },
 };
 
-extern void sol_dnd2e_race_apply_mods(entity_t *pc) {
-    if (pc->race < RACE_HUMAN || pc->race > RACE_THRIKREEN) { return; }
+extern sol_status_t sol_dnd2e_race_apply_mods(sol_entity_t *pc) {
+    if (!pc) { return SOL_NULL_ARGUMENT; }
+    if (pc->race < RACE_HUMAN || pc->race > RACE_THRIKREEN) { return SOL_OUT_OF_RANGE; }
     pc->stats.str += race_mods[pc->race][0];
     pc->stats.dex += race_mods[pc->race][1];
     pc->stats.con += race_mods[pc->race][2];
     pc->stats.intel += race_mods[pc->race][3];
     pc->stats.wis += race_mods[pc->race][4];
     pc->stats.cha += race_mods[pc->race][5];
+    return SOL_SUCCESS;
 }
 
-extern void sol_dnd2e_race_apply_initial_stats(entity_t *pc) {
+extern sol_status_t sol_dnd2e_race_apply_initial_stats(sol_entity_t *pc) {
+    if (!pc) { return SOL_NULL_ARGUMENT; }
     if (pc->stats.str   < racial_stats[pc->race][0][0]) { pc->stats.str   = racial_stats[pc->race][0][1]; }
     if (pc->stats.dex   < racial_stats[pc->race][1][0]) { pc->stats.dex   = racial_stats[pc->race][1][1]; }
     if (pc->stats.con   < racial_stats[pc->race][2][0]) { pc->stats.con   = racial_stats[pc->race][2][1]; }
@@ -103,5 +106,5 @@ extern void sol_dnd2e_race_apply_initial_stats(entity_t *pc) {
     if (pc->stats.intel > racial_stats[pc->race][3][1]) { pc->stats.intel = racial_stats[pc->race][3][0]; }
     if (pc->stats.wis   > racial_stats[pc->race][4][1]) { pc->stats.wis   = racial_stats[pc->race][4][0]; }
     if (pc->stats.cha   > racial_stats[pc->race][5][1]) { pc->stats.cha   = racial_stats[pc->race][5][0]; }
-
+    return SOL_SUCCESS;
 }

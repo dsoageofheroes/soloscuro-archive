@@ -217,7 +217,7 @@ static void monster_set_animation(sol_entity_t *monster, sol_entity_action_t *ac
 }
 
 extern int sol_combat_add_attack_animation(sol_region_t *reg, sol_dude_t *dude, sol_entity_t *target,
-                                        power_t *power, enum sol_entity_action_e action) {
+                                        sol_power_t *power, enum sol_entity_action_e action) {
     sol_attack_t     attack;
     sol_status_t     status = SOL_UNKNOWN_ERROR;
     combat_region_t *cr     = NULL;
@@ -279,21 +279,21 @@ static void monster_action(sol_region_t *reg, sol_entity_t *monster) {
     monster->stats.combat.move--;
 }
 
-extern void sol_combat_update(sol_region_t *reg) {
+extern sol_status_t sol_combat_update(sol_region_t *reg) {
     sol_entity_t *combatant;
     combat_region_t *cr = NULL;
     sol_status_t status = SOL_NOT_IMPLEMENTED;
     int slot;
 
-    if (reg == NULL) { return; }
+    if (!reg) { return SOL_NULL_ARGUMENT; }
 
     status = sol_arbiter_combat_region(reg, &cr);
-    if (cr == NULL) { return; }
+    if (cr == NULL) { return SOL_NOT_FOUND; }
 
     if (sol_combat_check_if_over(cr)) {
         sol_combat_clear(cr);
         sol_arbiter_combat_check(reg);
-        return;
+        return SOL_STOPPED;
     }
 
     combatant = sol_combat_get_current(cr);
@@ -306,33 +306,35 @@ extern void sol_combat_update(sol_region_t *reg) {
     if (combatant->stats.combat.move <= 0) {
         sol_combat_next_combatant(cr);
         monster_step = -1;
-        return;
+        return SOL_SUCCESS;
     }
 
     //printf("2combatant = %s: %d\n", combatant->name, combatant->stats.combat.attack_num);
     if (sol_player_get_slot(combatant, &slot) == SOL_SUCCESS && slot  >= 0) { // It is an active player's turn
-        return;
+        return SOL_ACTIVE;
     }
 
     // still waiting on last animation to complete.
     if (sol_entity_animation_list_empty(&combatant->actions) != SOL_SUCCESS
         || sol_entity_animation_list_empty(&reg->actions) != SOL_SUCCESS
-        ) { return; }
+        ) { return SOL_WAIT_ACTIONS; }
 
     // Now check for guard: TODO: also check if we just moved and multi-guard
-    if (sol_combat_guard_check(cr)) { return; }
+    if (sol_combat_guard_check(cr)) { return SOL_SUCCESS; }
     monster_action(reg, combatant);
+    return SOL_SUCCESS;
 }
 
-extern int sol_combat_activate_power(power_t *pw, sol_entity_t *source, sol_entity_t *target, const int32_t x, const int32_t y) {
+extern int sol_combat_activate_power(sol_power_t *pw, sol_entity_t *source, sol_entity_t *target, const int32_t x, const int32_t y) {
     if (!pw || !source) { return 0; }
-    sol_region_t *reg = sol_region_manager_get_current();
-    power_instance_t pi;
+    sol_region_t *reg;
+    sol_region_manager_get_current(&reg);
+    sol_power_instance_t pi;
     if (!reg) { error ("current region is null!\n"); }
 
     powers_load(pw);
 
-    memset(&pi, 0x0, sizeof(power_instance_t));
+    memset(&pi, 0x0, sizeof(sol_power_instance_t));
     pi.entity = source;
     if (!pw->actions.pay(&pi, pw->level)) { return 0; }
     // We are now committed to make this work.
@@ -383,9 +385,11 @@ extern int sol_combat_guard(sol_entity_t *entity) {
     sol_status_t status;
     combat_region_t *cr = NULL;
     sol_entity_t *dude = sol_combat_get_current(cr);
+    sol_region_t *reg;
     int pos, slot;
 
-    status = sol_arbiter_combat_region(sol_region_manager_get_current(), &cr);
+    sol_region_manager_get_current(&reg);
+    status = sol_arbiter_combat_region(reg, &cr);
 
     if (!dude) { return 0; }
     if (sol_player_get_slot(dude, &slot) == SOL_SUCCESS && slot < 0 && !entity) { return 0; }
@@ -415,10 +419,11 @@ extern void sol_combat_kill_all_enemies() {
     sol_status_t status = SOL_NOT_IMPLEMENTED;
     sol_dude_t *dude;
     sol_dude_t *player;
-    sol_region_t *reg = sol_region_manager_get_current();
+    sol_region_t *reg;
     combat_region_t *cr = NULL;
     int slot;
 
+    sol_region_manager_get_current(&reg);
     sol_player_get_active(&player);
     status = sol_arbiter_combat_region(reg, &cr);
 

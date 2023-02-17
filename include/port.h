@@ -74,7 +74,7 @@ extern void port_window_render();
 extern void port_start_display_frame();
 extern void port_commit_display_frame();
 
-extern void sol_mouse_set_as_power(power_t *pw);
+extern void sol_mouse_set_as_power(sol_power_t *pw);
 extern void sol_draw_cone(int sx, int sy, int range);
 extern uint32_t sol_get_camerax();
 extern uint32_t sol_get_cameray();

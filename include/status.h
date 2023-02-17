@@ -55,6 +55,7 @@ typedef enum sol_status_e {
     SOL_NOT_INITIALIZED,
     SOL_NO,
     SOL_GAME_OVER,
+    SOL_PAUSED,
     SOL_UNKNOWN_ERROR,
 } sol_status_t;
 
@@ -77,12 +78,6 @@ gff-map.h
 gfftypes.h
 gff-xmi.h
 port.h
-portrait.h
-powers.h
-psionic.h
-race.h
-region.h
-region-manager.h
 replay.h
 rules.h
 save-load.h

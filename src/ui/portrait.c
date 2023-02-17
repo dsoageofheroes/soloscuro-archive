@@ -12,8 +12,8 @@
 static int loaded = 0;
 static sol_sprite_t portraits[MAX_PORTRAITS];
 
-void sol_portrait_load() {
-    if (loaded) { return; }
+extern sol_status_t sol_portrait_load() {
+    if (loaded) { return SOL_SUCCESS; }
     unsigned char *data;
     unsigned char buf[PORT_MAX];
     unsigned int w, h, id;
@@ -38,10 +38,12 @@ void sol_portrait_load() {
     if (ids) { free(ids); }
 
     loaded = 1;
+
+    return SOL_SUCCESS;
 }
 
-void sol_portrait_display(const uint32_t id, const uint32_t x, const uint32_t y) {
-    if (id == 0) { return; }
+extern sol_status_t sol_portrait_display(const uint32_t id, const uint32_t x, const uint32_t y) {
+    if (id == 0) { return SOL_ILLEGAL_ARGUMENT; }
     sol_sprite_set_location(portraits[id], x, y);
-    sol_sprite_render(portraits[id]);
+    return sol_sprite_render(portraits[id]);
 }

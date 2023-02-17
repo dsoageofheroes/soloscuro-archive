@@ -57,9 +57,9 @@ static int race_sprite_ids[]         = { 2095, 2099, 2055, 2053, 2061, 2059, 209
 
 static int offsetx, offsety;
 static sol_entity_t pc;
-static psin_t psi; // psi group
+static sol_psin_t psi; // psi group
 static ssi_spell_list_t spells;
-static psionic_list_t psionics;
+static sol_psionic_list_t psionics;
 static uint8_t is_valid;
 static char sphere_text[32];
 static int current_textbox;
@@ -75,7 +75,7 @@ sol_status_t sol_new_character_get_pc(sol_entity_t **e) {
     return SOL_SUCCESS;
 }
 
-sol_status_t sol_new_character_get_psin(psin_t **p) {
+sol_status_t sol_new_character_get_psin(sol_psin_t **p) {
     if (!is_valid) { return SOL_NOT_INITIALIZED; }
     *p = &psi;
     return SOL_SUCCESS;
@@ -87,7 +87,7 @@ sol_status_t sol_new_character_get_spell_list(ssi_spell_list_t **s) {
     return SOL_SUCCESS;
 }
 
-sol_status_t sol_new_character_get_psionic_list(psionic_list_t **p) {
+sol_status_t sol_new_character_get_psionic_list(sol_psionic_list_t **p) {
     if (!is_valid) { return SOL_NOT_INITIALIZED; }
     *p = &psionics;
     return SOL_SUCCESS;

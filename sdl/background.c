@@ -54,7 +54,7 @@ extern sol_status_t sol_background_load_region(sol_region_t *_region) {
         //pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + region->map_id - 1;
         offset = 1;
     }
-    ids = sol_region_get_tile_ids(region);
+    sol_region_get_tile_ids(region, &ids);
     max_id = 256;
     tiles = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * max_id);
     memset(tiles, 0x0, sizeof(SDL_Texture*) * max_id);

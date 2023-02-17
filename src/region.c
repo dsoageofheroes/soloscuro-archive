@@ -40,24 +40,31 @@ static int is_region(const int gff_idx) {
     return has_rmap && has_gmap && has_tile && has_etab;
 }
 
-extern sol_region_t* sol_region_create_empty() {
+extern sol_status_t sol_region_create_empty(sol_region_t **r) {
+    if (!r) { return SOL_NULL_ARGUMENT; }
     sol_region_t *reg = calloc(1, sizeof(sol_region_t));
-    sol_entity_list_create(&reg->entities);
-
-    return reg;
+    if (!reg) { return SOL_MEMORY_ERROR; }
+    *r = reg;
+    return sol_entity_list_create(&reg->entities);
 }
 
-extern sol_region_t* sol_region_create(const int gff_file, const int region_id) {
-    if (!is_region(gff_file)) { return NULL; } // guard
+extern sol_status_t sol_region_create(const int gff_file, const int region_id, sol_region_t **r) {
+    if (!r) { return SOL_NULL_ARGUMENT; }
+    if (!is_region(gff_file)) { return SOL_NOT_FOUND; } // guard
+    sol_status_t status;
 
     uint32_t *tids = NULL;
-    sol_region_t *reg = sol_region_create_empty();
+    sol_region_t *reg;
+    if ((status = sol_region_create_empty(&reg)) != SOL_SUCCESS) {
+        return status;
+    }
+    *r = reg;
 
     reg->gff_file = gff_file;
     reg->region_id = region_id;
 
     tids = gff_get_id_list(reg->gff_file, GFF_ETAB); // temporary to find current id for palette!
-    if (!tids) { error("Unable to find current id for map\n"); return NULL; }
+    if (!tids) { error("Unable to find current id for map\n"); return SOL_NOT_FOUND; }
     reg->map_id = *tids;
     free(tids);
 
@@ -66,7 +73,7 @@ extern sol_region_t* sol_region_create(const int gff_file, const int region_id) 
     if (!reg->entry_table) {
         error("Unable to malloc entry table for region!\n");
         free(reg);
-        return NULL;
+        return SOL_MEMORY_ERROR;
     }
     gff_read_chunk(reg->gff_file, &chunk, reg->entry_table, chunk.length);
     open_files[reg->gff_file].num_objects = chunk.length / sizeof(gff_map_object_t);
@@ -76,34 +83,37 @@ extern sol_region_t* sol_region_create(const int gff_file, const int region_id) 
     load_tile_ids(reg);
     load_map_flags(reg);
 
-    return reg;
+    return SOL_SUCCESS;
 }
 
-extern void sol_region_remove_entity(sol_region_t *reg, sol_entity_t *entity) {
-    if (!reg || !entity) { return; }
+extern sol_status_t sol_region_remove_entity(sol_region_t *reg, sol_entity_t *entity) {
     sol_status_t status;
     sol_entity_list_node_t *node;
 
+    if (!reg || !entity) { return SOL_SUCCESS; }
+
     if ((status = sol_entity_list_find(reg->entities, entity, &node)) != SOL_SUCCESS) {
-        return;
+        return SOL_NOT_FOUND;
     }
-    sol_entity_list_remove(reg->entities, node);
+
+    return sol_entity_list_remove(reg->entities, node);
     //animation_list_remove(reg->anims, animation_list_find(reg->anims, &(entity->anim)));
 }
 
-extern uint32_t* sol_region_get_tile_ids(sol_region_t *reg) {
-    if (!reg) { return NULL; }
+extern sol_status_t sol_region_get_tile_ids(sol_region_t *reg, uint32_t **ids) {
+    if (!reg) { return SOL_NULL_ARGUMENT; }
     if (!reg->tile_ids) {
         load_tile_ids(reg);
     }
 
-    return reg->tile_ids;
+    *ids = reg->tile_ids;
+    return SOL_SUCCESS;
 }
 
-extern void sol_region_gui_free(sol_region_t *reg) {
-    if (!reg) { return; }
+extern sol_status_t sol_region_gui_free(sol_region_t *reg) {
+    if (!reg) { return SOL_NULL_ARGUMENT; }
     sol_region_manager_remove_players();
-    dude_t *dude = NULL;
+    sol_dude_t *dude = NULL;
 
     sol_entity_list_for_each(reg->entities, dude)  {
         sol_entity_gui_free(dude);
@@ -122,10 +132,11 @@ extern void sol_region_gui_free(sol_region_t *reg) {
     sol_entity_animation_list_free(&(reg->actions));
 
     sol_background_free();
+    return SOL_SUCCESS;
 }
 
-extern void sol_region_free(sol_region_t *reg) {
-    if (!reg) { return; }
+extern sol_status_t sol_region_free(sol_region_t *reg) {
+    if (!reg) { return SOL_NULL_ARGUMENT; }
 
     sol_region_gui_free(reg);
 
@@ -135,22 +146,25 @@ extern void sol_region_free(sol_region_t *reg) {
     }
 
     free(reg);
+    return SOL_SUCCESS;
 }
 
-extern int sol_region_get_tile(const sol_region_t *reg, const uint32_t image_id,
+extern sol_status_t sol_region_get_tile(const sol_region_t *reg, const uint32_t image_id,
         uint32_t *w, uint32_t *h, unsigned char **data) {
-    if (!data) { return 0; }
+    if (!data) { return SOL_NULL_ARGUMENT; }
 
     if (gff_image_is_png(reg->gff_file, GFF_TILE, image_id, 0)) {
-        return gff_image_load_png(reg->gff_file, GFF_TILE, image_id, 0, w, h, data);
+        return gff_image_load_png(reg->gff_file, GFF_TILE, image_id, 0, w, h, data)
+            ? SOL_SUCCESS
+            : SOL_UNKNOWN_ERROR;
     }
 
     *data = gff_get_frame_rgba_with_palette(reg->gff_file, GFF_TILE, image_id, 0, reg->palette_id);
-    if (!data) { return 0; }
+    if (!data) { return SOL_UNKNOWN_ERROR; }
     *w = gff_get_frame_width(reg->gff_file, GFF_TILE, image_id, 0);
     *h = gff_get_frame_height(reg->gff_file, GFF_TILE, image_id, 0);
 
-    return 1;
+    return SOL_SUCCESS;
 }
 
 static void load_tile_ids(sol_region_t *reg) {
@@ -196,14 +210,20 @@ out:
     free(gmap_ids);
 }
 
-extern sol_entity_t* sol_region_find_entity_by_id(const sol_region_t *reg, const int id) {
-    dude_t *dude = NULL;
+extern sol_status_t sol_region_find_entity_by_id(const sol_region_t *reg, const int id, sol_entity_t **e) {
+    sol_dude_t *dude = NULL;
+
+    *e = NULL;
+    if (!reg || !e) { return SOL_NULL_ARGUMENT; }
 
     sol_entity_list_for_each(reg->entities, dude)  {
-        if (dude->ds_id == id) { return dude; }
+        if (dude->ds_id == id) {
+            *e = dude;
+            return SOL_SUCCESS;
+        }
     }
 
-    return NULL;
+    return SOL_NOT_FOUND;
 }
 
 static uint8_t* get_block(sol_region_t *region, const int row, const int column) {
@@ -217,41 +237,50 @@ static uint8_t* get_block(sol_region_t *region, const int row, const int column)
     return &(region->flags[row][column]);
 }
 
-extern int sol_region_is_block(sol_region_t *region, int row, int column) {
+extern sol_status_t sol_region_is_block(sol_region_t *region, int row, int column) {
     uint8_t *block = get_block(region, row, column);
 
-    return block ? (*block & MAP_BLOCK) : -1;
+    if (!block) { return SOL_NULL_ARGUMENT; }
+    return (*block & MAP_BLOCK) ? SOL_SUCCESS : SOL_NOT_FOUND;
 }
 
-extern void sol_region_set_block(sol_region_t *region, int row, int column, int val) {
+extern sol_status_t sol_region_set_block(sol_region_t *region, int row, int column, int val) {
     uint8_t *block = get_block(region, row, column);
 
     if (block) { *block |= val; }
+    return SOL_SUCCESS;
 }
 
-extern void sol_region_clear_block(sol_region_t *region, int row, int column, int val) {
+extern sol_status_t sol_region_clear_block(sol_region_t *region, int row, int column, int val) {
     uint8_t *block = get_block(region, row, column);
 
     if (block) { region->flags[row][column] &= ~val; }
+    return SOL_SUCCESS;
 }
 
 // Should be a quad tree if too slow.
-extern sol_entity_t* sol_region_find_entity_by_location(const sol_region_t *reg, const int x, const int y) {
-    dude_t *dude = NULL;
+extern sol_status_t sol_region_find_entity_by_location(const sol_region_t *reg, const int x, const int y, sol_entity_t **e) {
+    sol_dude_t *dude = NULL;
+
+    *e = NULL;
+    if (!reg || !e) { return SOL_NULL_ARGUMENT; }
 
     sol_entity_list_for_each(reg->entities, dude) {
         if (dude->mapx == x && dude->mapy == y && dude->stats.hp > 0) {
-            return dude;
+            *e = dude;
+            return SOL_SUCCESS;
         }
     }
 
-    return NULL;
+    return SOL_NOT_FOUND;
 }
 
-extern int sol_region_location_blocked(sol_region_t *reg, const int32_t x, const int32_t y) {
-    if (sol_region_is_block(reg, y, x)) { return 1; }
+extern sol_status_t sol_region_location_blocked(sol_region_t *reg, const int32_t x, const int32_t y) {
+    sol_entity_t *dude;
 
-    return sol_region_find_entity_by_location(reg, x, y) ? 1 : 0;
+    if (sol_region_is_block(reg, y, x) == SOL_SUCCESS) { return SOL_SUCCESS; }
+
+    return sol_region_find_entity_by_location(reg, x, y, &dude);
 }
 
 extern sol_status_t sol_region_add_entity(sol_region_t *reg, sol_entity_t *entity) {
@@ -293,18 +322,20 @@ static int move_entity(sol_entity_t *entity, const int x, const int y) {
     int ydiff = y - entity->mapy;
     int posx = entity->mapx;
     int posy = entity->mapy;
-    sol_region_t *reg = sol_region_manager_get_current();
+    sol_region_t *reg;
+
+    sol_region_manager_get_current(&reg);
     xdiff = (xdiff < 0) ? -1 : (xdiff > 0) ? 1 : 0;
     ydiff = (ydiff < 0) ? -1 : (ydiff > 0) ? 1 : 0;
 
     //printf("need to go to %d, %d @ (%d, %d)\n", x, y, entity->mapx, entity->mapy);
-    if (sol_region_location_blocked(reg, posx + xdiff, posy + ydiff)
+    if (sol_region_location_blocked(reg, posx + xdiff, posy + ydiff) == SOL_SUCCESS
         ){
-        if (!sol_region_location_blocked(reg, posx, posy + ydiff)) {
+        if (sol_region_location_blocked(reg, posx, posy + ydiff) != SOL_SUCCESS) {
             xdiff = 0;
-        } else if (!sol_region_location_blocked(reg, posx + xdiff, posy)) {
+        } else if (sol_region_location_blocked(reg, posx + xdiff, posy) != SOL_SUCCESS) {
             // TODO: Hack, fix RMAP and then add BFS for go.
-            if (!sol_region_location_blocked(reg, posx + 1, posy + ydiff)) {
+            if (sol_region_location_blocked(reg, posx + 1, posy + ydiff) != SOL_SUCCESS) {
                 xdiff = 1;
             } else {
                 ydiff = 0;
@@ -333,21 +364,22 @@ static int move_entity(sol_entity_t *entity, const int x, const int y) {
     return 1;
 }
 
-extern void sol_region_tick(sol_region_t *reg) {
-    dude_t *bad_dude = NULL, *dude;
+extern sol_status_t sol_region_tick(sol_region_t *reg) {
+    sol_dude_t *bad_dude = NULL, *dude;
     int xdiff, ydiff;
     int posx, posy, in_combat = 0;
     enum sol_entity_action_e action;
     combat_region_t *cr;
     sol_status_t status;
 
-    if (!reg || sol_map_is_paused() == SOL_SUCCESS) { return; }
+    if (!reg) { return SOL_NULL_ARGUMENT; }
+    if (sol_map_is_paused() == SOL_SUCCESS) { return SOL_PAUSED; }
     status = sol_arbiter_combat_region(reg, &cr);
     in_combat = sol_combat_active(cr);
 
     if (reg->actions.head) {
         if (sol_entity_animation_region_execute(reg) == SOL_SUCCESS) {
-            return;
+            return SOL_WAIT_ACTIONS;
         }
     }
 
@@ -391,48 +423,51 @@ extern void sol_region_tick(sol_region_t *reg) {
             //printf("Need to animate...\n");
         }
     }
+    return SOL_SUCCESS;
 }
 
-extern void sol_region_move_to_nearest(sol_region_t *reg, sol_entity_t *entity) {
-    if (!sol_region_location_blocked(reg, entity->mapx, entity->mapy + 1)) {
+extern sol_status_t sol_region_move_to_nearest(sol_region_t *reg, sol_entity_t *entity) {
+    if (!reg || !entity) { return SOL_NULL_ARGUMENT; }
+    if (sol_region_location_blocked(reg, entity->mapx, entity->mapy + 1) != SOL_SUCCESS) {
         entity->mapy = entity->mapy + 1;
-        return;
+        return SOL_SUCCESS;
     }
-    if (!sol_region_location_blocked(reg, entity->mapx - 1, entity->mapy + 1)) {
+    if (sol_region_location_blocked(reg, entity->mapx - 1, entity->mapy + 1) != SOL_SUCCESS) {
         entity->mapx = entity->mapx - 1;
         entity->mapy = entity->mapy + 1;
-        return;
+        return SOL_SUCCESS;
     }
-    if (!sol_region_location_blocked(reg, entity->mapx - 1, entity->mapy)) {
+    if (sol_region_location_blocked(reg, entity->mapx - 1, entity->mapy) != SOL_SUCCESS) {
         entity->mapx = entity->mapx - 1;
-        return;
+        return SOL_SUCCESS;
     }
-    if (!sol_region_location_blocked(reg, entity->mapx - 1, entity->mapy - 1)) {
+    if (sol_region_location_blocked(reg, entity->mapx - 1, entity->mapy - 1) != SOL_SUCCESS) {
         entity->mapx = entity->mapx - 1;
         entity->mapy = entity->mapy - 1;
-        return;
+        return SOL_SUCCESS;
     }
-    if (!sol_region_location_blocked(reg, entity->mapx, entity->mapy - 1)) {
+    if (sol_region_location_blocked(reg, entity->mapx, entity->mapy - 1) != SOL_SUCCESS) {
         entity->mapy = entity->mapy - 1;
-        return;
+        return SOL_SUCCESS;
     }
-    if (!sol_region_location_blocked(reg, entity->mapx + 1, entity->mapy - 1)) {
+    if (sol_region_location_blocked(reg, entity->mapx + 1, entity->mapy - 1) != SOL_SUCCESS) {
         entity->mapx = entity->mapx + 1;
         entity->mapy = entity->mapy - 1;
-        return;
+        return SOL_SUCCESS;
     }
-    if (!sol_region_location_blocked(reg, entity->mapx + 1, entity->mapy)) {
+    if (sol_region_location_blocked(reg, entity->mapx + 1, entity->mapy) != SOL_SUCCESS) {
         entity->mapx = entity->mapx + 1;
-        return;
+        return SOL_SUCCESS;
     }
-    if (!sol_region_location_blocked(reg, entity->mapx + 1, entity->mapy + 1)) {
+    if (sol_region_location_blocked(reg, entity->mapx + 1, entity->mapy + 1) != SOL_SUCCESS) {
         entity->mapx = entity->mapx + 1;
         entity->mapy = entity->mapy + 1;
-        return;
+        return SOL_SUCCESS;
     }
 
     error("Unable to place object, please update region_move_to_nearest!\n");
     exit(1);
+    return SOL_BLOCKED;
 }
 
 typedef struct action_node_s {
@@ -470,9 +505,11 @@ static void queue_add(action_node_t **head, action_node_t **tail, action_node_t 
 }
 
 // Just goes to the position.
-extern void sol_region_generate_move(sol_region_t *reg, sol_entity_t *dude, const int x, const int y, const int speed) {
+extern sol_status_t sol_region_generate_move(sol_region_t *reg, sol_entity_t *dude, const int x, const int y, const int speed) {
     static uint8_t visit_flags[MAP_ROWS][MAP_COLUMNS];
     action_node_t *queue = NULL, *tail = NULL;
+
+    if (!reg || !dude) { return SOL_NULL_ARGUMENT; }
     memset(visit_flags, 0x0, sizeof(uint8_t) * MAP_ROWS * MAP_COLUMNS);
     action_node_t *rover = (action_node_t*) malloc(sizeof(action_node_t));
     memset(rover, 0x0, sizeof(action_node_t));
@@ -500,7 +537,7 @@ extern void sol_region_generate_move(sol_region_t *reg, sol_entity_t *dude, cons
             continue;
         }
         if (visit_flags[rover->x][rover->y]) { free(rover); continue; }
-        if (sol_region_location_blocked(reg, rover->x, rover->y)) { free(rover); continue; }
+        if (sol_region_location_blocked(reg, rover->x, rover->y) == SOL_SUCCESS) { free(rover); continue; }
         visit_flags[rover->x][rover->y] = 1;// Mark as visited.
 
         if (rover->x == x && rover->y == y) {
@@ -519,7 +556,7 @@ extern void sol_region_generate_move(sol_region_t *reg, sol_entity_t *dude, cons
         free(rover);
     }
     // Did not find...
-    return;
+    return SOL_NOT_FOUND;
 
 found:
     for (int i = 0; i < rover->pos; i++) {
@@ -532,4 +569,5 @@ found:
         rover = rover->next;
         free(queue);
     }
+    return SOL_SUCCESS;
 }

@@ -59,11 +59,11 @@ extern void   sol_combat_set_hunt(combat_region_t *cr, const uint32_t combat_id)
 extern void   sol_combat_set_scmd(entity_t *e, const combat_scmd_t scmd);
 extern void   sol_combat_update_scmd_info(entity_t *dude);
 extern void   sol_combat_player_action(const sol_entity_action_t action);
-extern int    sol_combat_activate_power(power_t *pw, entity_t *source, entity_t *target, const int32_t x, const int32_t y);
+extern int    sol_combat_activate_power(sol_power_t *pw, entity_t *source, entity_t *target, const int32_t x, const int32_t y);
 extern int    sol_combat_add_attack_animation(sol_region_t *reg, dude_t *dude, entity_t *target,
-                                              power_t *power, enum sol_entity_action_e action);
+                                              sol_power_t *power, enum sol_entity_action_e action);
 extern int sol_combat_add_guard_animation(sol_region_t *reg, dude_t *dude, entity_t *target,
-                                        power_t *power, enum sol_entity_action_e action);
+                                        sol_power_t *power, enum sol_entity_action_e action);
 extern int    sol_combat_guard(entity_t *entity);
 extern void   sol_combat_kill_all_enemies();
 

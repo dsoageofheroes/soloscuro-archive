@@ -14,7 +14,8 @@ void tearDown() {
 int func() { return 40; }
 
 void test_simple(void) {
-    sol_region_t* reg = sol_region_create_empty();
+    sol_region_t* reg;
+    sol_region_create_empty(&reg);
     sol_region_tick(reg);
 
     for (size_t i = 0; i < MAP_ROWS; i++) {
@@ -51,7 +52,8 @@ void test_simple(void) {
 }
 
 void test_ds1_gff(void) {
-    sol_region_t *reg = sol_region_create(gff_find_index("rgn2a.gff"), 42);
+    sol_region_t *reg;
+    sol_region_create(gff_find_index("rgn2a.gff"), 42, &reg);
     sol_region_tick(reg);
     sol_combat_update(reg);
 
@@ -91,7 +93,8 @@ void test_ds1_gff(void) {
 }
 
 void test_get_ds1_tiles(void) {
-    sol_region_t *reg = sol_region_create(gff_find_index("rgn2a.gff"), 42);
+    sol_region_t *reg;
+    sol_region_create(gff_find_index("rgn2a.gff"), 42, &reg);
     uint32_t w, h;
     unsigned char *data = NULL;
 
@@ -110,7 +113,8 @@ void test_get_ds1_tiles(void) {
 
 void test_get_png_tiles(void) {
     int gff_file = gff_open("test/data/simple.gff");
-    sol_region_t* reg = sol_region_create_empty();
+    sol_region_t* reg;
+    sol_region_create_empty(&reg);
     uint32_t w, h;
     unsigned char *data = NULL;
 

@@ -296,7 +296,7 @@ int dnd2e_character_is_valid(const sol_entity_t *pc) {
     return 1;// passed the checks.
 }
 
-int dnd2e_psin_is_valid(ds_character_t *pc, psin_t *psi) {
+int dnd2e_psin_is_valid(ds_character_t *pc, sol_psin_t *psi) {
     int num_psionics = 0;
     int is_psionicist = 0;
 

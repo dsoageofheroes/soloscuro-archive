@@ -900,7 +900,7 @@ static int innate_index(power_entry_t pw) {
 static int psi, wiz, pri, innate;
 static char type[64];
 static void generate_activate(power_entry_t pw, char *name, FILE *file) {
-    fprintf(file, "\nstatic int %s_%s_can_activate (power_instance_t *source, const int16_t power_level) {\n", type, name);
+    fprintf(file, "\nstatic int %s_%s_can_activate (sol_power_instance_t *source, const int16_t power_level) {\n", type, name);
     fprintf(file, "    if (!source || !source->entity) { return 0;}\n");
     
     if (psi >= 0) {
@@ -922,7 +922,7 @@ static void generate_activate(power_entry_t pw, char *name, FILE *file) {
 }
 
 static void generate_pay(power_entry_t pw, char *name, FILE *file) {
-    fprintf(file, "\nstatic int %s_%s_pay          (power_instance_t *source, const int16_t power_level) {\n", type, name);
+    fprintf(file, "\nstatic int %s_%s_pay          (sol_power_instance_t *source, const int16_t power_level) {\n", type, name);
     fprintf(file, "    if (!source || !source->entity) { return 0;}\n");
     
     if (psi >= 0) {
@@ -963,7 +963,7 @@ const char *effect_names[] = {
 };
 
 static void generate_apply(power_entry_t pw, char *name, FILE *file) {
-    fprintf(file, "\nstatic void %s_%s_apply        (power_instance_t *source, entity_t *entity) {\n", type, name);
+    fprintf(file, "\nstatic void %s_%s_apply        (sol_power_instance_t *source, entity_t *entity) {\n", type, name);
     fprintf(file, "    if (!source || !entity) { return; }\n");
     fprintf(file, "    size_t num_dice = 0, mod = 0, damage = 0;\n");
     fprintf(file, "    uint64_t effect_type = 0;\n");
@@ -1046,7 +1046,7 @@ static void generate_apply(power_entry_t pw, char *name, FILE *file) {
 }
 
 static void generate_affect(power_entry_t pw, char *name, FILE *file) {
-    fprintf(file, "\nstatic int %s_%s_affect_power (power_instance_t *target) {\n", type, name);
+    fprintf(file, "\nstatic int %s_%s_affect_power (sol_power_instance_t *target) {\n", type, name);
     fprintf(file, "    if (!target) { return 0;}\n");
     
     if (psi >= 0) {
@@ -1062,7 +1062,7 @@ static void generate_affect(power_entry_t pw, char *name, FILE *file) {
 
 
 static void generate_update(power_entry_t pw, char *name, FILE *file) {
-    fprintf(file, "\nstatic int %s_%s_update       (power_t *power, power_instance_t *source) {\n", type, name);
+    fprintf(file, "\nstatic int %s_%s_update       (sol_power_t *power, sol_power_instance_t *source) {\n", type, name);
     fprintf(file, "    if (!power || ! source) { return 0;}\n");
     fprintf(file, "    uint8_t caster_level;\n");
     fprintf(file, "    sol_status_t status;\n");
@@ -1120,9 +1120,10 @@ static char* get_target_shape(power_entry_t pw) {
 }
 
 static void generate_setup(power_entry_t pw, char *name, FILE *file) {
-    fprintf(file, "\nextern void %s_%s_setup  (power_t *power) {\n", type, name);
+    fprintf(file, "\nextern void %s_%s_setup  (sol_power_t *power) {\n", type, name);
+    fprintf(file, "    size_t game_type;\n");
     fprintf(file, "    power->name                 = \"%s\";\n", pw.name);
-    fprintf(file, "    power->description          = power_spin_read_description(power_select_by_game(%d, %d, %d));\n",
+    fprintf(file, "    sol_power_select_by_game(%d, %d, %d, &game_type);\n",
             (!ds1_has_powerp(&pw))
             ? -1
             : (dso_pos < MAX_DSO_ICONS)
@@ -1134,21 +1135,25 @@ static void generate_setup(power_entry_t pw, char *name, FILE *file) {
             (dso_pos < MAX_DSO_ICONS)
             ? dso_icons[dso_pos].spin
             : -1);
+    fprintf(file, "    sol_power_spin_read_description(game_type, &(power->description));\n");
     fprintf(file, "    power->range                = -99999;\n");
     fprintf(file, "    power->aoe                  = -99999;\n");
     fprintf(file, "    power->level                = %d;\n", get_level());
     fprintf(file, "    power->shape                = %s;\n", get_target_shape(pw));
-    fprintf(file, "    power->cast_sound           = power_select_by_game(%d, %d, %d);\n",
+    fprintf(file, "    sol_power_select_by_game(%d, %d, %d, &game_type);\n",
             ds1pw.cast_sound, ds2pw.info.cast_sound, dsopw.info.cast_sound);
-    fprintf(file, "    power->thrown_sound         = power_select_by_game(%d, %d, %d);\n",
+    fprintf(file, "    power->cast_sound           = game_type;\n");
+    fprintf(file, "    sol_power_select_by_game(%d, %d, %d, &game_type);\n",
             ds1pw.thrown_sound, ds2pw.info.thrown_sound, dsopw.info.thrown_sound);
-    fprintf(file, "    power->hit_sound            = power_select_by_game(%d, %d, %d);\n",
+    fprintf(file, "    power->thrown_sound         = game_type;\n");
+    fprintf(file, "    sol_power_select_by_game(%d, %d, %d, &game_type);\n",
             ds1pw.hit_sound, ds2pw.info.hit_sound, dsopw.info.hit_sound);
+    fprintf(file, "    power->hit_sound            = game_type;\n");
     fprintf(file, "    power->actions.can_activate = %s_%s_can_activate;\n", type, name);
     fprintf(file, "    power->actions.pay          = %s_%s_pay;\n", type, name);
     fprintf(file, "    power->actions.apply        = %s_%s_apply;\n", type, name);
     fprintf(file, "    power->actions.affect_power = %s_%s_affect_power;\n", type, name);
-    fprintf(file, "    powers_set_icon(power, power_select_by_game(%d, %d, %d));\n",
+    fprintf(file, "    sol_power_select_by_game(%d, %d, %d, &game_type);\n",
             (dso_pos < MAX_DSO_ICONS) 
             ? ds1_icons[dso_pos].icon
             : -1,
@@ -1158,15 +1163,19 @@ static void generate_setup(power_entry_t pw, char *name, FILE *file) {
             (dso_pos < MAX_DSO_ICONS)
             ? dso_icons[dso_pos].icon
             : -1);
-    fprintf(file, "    powers_set_cast(power, power_select_by_game(%d, %d, %d)); // OJFF\n",
+    fprintf(file, "    sol_powers_set_icon(power, game_type);\n");
+    fprintf(file, "    sol_power_select_by_game(%d, %d, %d, &game_type);\n",
             ds1pw.cast, ds2pw.info.cast, dsopw.info.cast);
-    fprintf(file, "    powers_set_thrown(power, power_select_by_game(%d, %d, %d)); // OJFF.\n",
+    fprintf(file, "    sol_powers_set_cast(power, game_type); // OJFF\n");
+    fprintf(file, "    sol_power_select_by_game(%d, %d, %d, &game_type);\n",
             8100 + ds1pw.thrown,
             8100 + ds2pw.info.thrown,
             8100 + dsopw.info.thrown
             );
-    fprintf(file, "    powers_set_hit(power, power_select_by_game(%d, %d, %d)); // OJFF\n",
+    fprintf(file, "    sol_powers_set_thrown(power, game_type); // OJFF.\n");
+    fprintf(file, "    sol_power_select_by_game(%d, %d, %d, &game_type);\n",
             ds1pw.hit, ds2pw.info.hit, dsopw.info.hit);
+    fprintf(file, "    sol_powers_set_hit(power, game_type); // OJFF\n");
     fprintf(file, "}\n");
 }
 
@@ -1185,20 +1194,20 @@ static void generate_tables() {
     for (int i = 0; i < MAX_LEVELS; i++) {
         for (int j = 0; j < MAX_POWERS; j++) {
             if (wizard_powers[i][j] >= 0) {
-                fprintf(file, "extern void wizard_%s_setup(power_t *p);\n", power_names[wizard_powers[i][j]]);
+                fprintf(file, "extern void wizard_%s_setup(sol_power_t *p);\n", power_names[wizard_powers[i][j]]);
             }
         }
         fprintf(file, "\n");
     }
 
     fprintf(file, "\nvoid wizard_setup_powers() {\n");
-    fprintf(file, "    power_t *p;\n");
+    fprintf(file, "    sol_power_t *p;\n");
     for (int i = 0; i < MAX_LEVELS; i++) {
         for (int j = 0; j < MAX_POWERS; j++) {
             if (wizard_powers[i][j] >= 0) {
                 strncpy(buf, power_names[wizard_powers[i][j]], 127);
                 for (int i = 0; i < strlen(buf); i++) { buf[i] = toupper(buf[i]); }
-                fprintf(file, "    p = power_create();\n");
+                fprintf(file, "    sol_power_create(&p);\n");
                 fprintf(file, "    wizard_%s_setup(p);\n", power_names[wizard_powers[i][j]]);
                 fprintf(file, "    wizard_add_power(p, WIZ_%s);\n", buf);
             }

@@ -149,8 +149,10 @@ extern sol_status_t sol_arbiter_entity_attack(sol_entity_t *source, sol_entity_t
     sol_status_t        status = SOL_UNKNOWN_ERROR;
     static sol_attack_t error = { -2, 0 };
     combat_region_t    *cr = NULL;
+    sol_region_t       *reg;
 
-    status = sol_arbiter_combat_region(sol_region_manager_get_current(), &cr);
+    sol_region_manager_get_current(&reg);
+    status = sol_arbiter_combat_region(reg, &cr);
     sol_status_check(status, "Unable to get combat region!");
      
     // For now just use local until MMO is up.

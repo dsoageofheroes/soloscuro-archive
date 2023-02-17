@@ -154,6 +154,7 @@ static void request_door(const int16_t name, const int32_t op, const int32_t ran
 extern sol_status_t sol_gpl_request_impl(int16_t token, int16_t name,
         int32_t num1, int32_t num2) {
     disk_object_t dobj;
+    sol_region_t *reg;
 
     switch (token) {
         case REQUEST_HEALING:
@@ -186,15 +187,17 @@ extern sol_status_t sol_gpl_request_impl(int16_t token, int16_t name,
             if (!gff_read_object(num1, &dobj)) {
                 error("Unable to satisfy REQUEST_SWAP, not obj: %d\n", num1);
             }
-            sol_region_t *reg = sol_region_manager_get_current();
-            dude_t *dude = sol_region_find_entity_by_id(reg, name);
+            sol_region_manager_get_current(&reg);
+            dude_t *dude;
+            sol_region_find_entity_by_id(reg, name, &dude);
             dude->anim.bmp_id = dobj.bmp_id;
             sol_trigger_object_clear(name);
             port_swap_enitity(name, dude);
             break;
         case REQUEST_SET_BLOCK:
             debug("Need to set (BLOCK) the bit flags for %d map position (%d, %d) to %d & commit!\n", name, num1, num2, GB_BLOCK);
-            sol_region_set_block(sol_region_manager_get_current(), num2, num1, MAP_BLOCK);
+            sol_region_manager_get_current(&reg);
+            sol_region_set_block(reg, num2, num1, MAP_BLOCK);
             printf("Note to self: do I enable noorders here with the block?\n");
             // LUA-GPL: accum = gpl.request(10, gpl.get_gname(7), 30, 21)
             sol_trigger_noorders_enable();
@@ -202,7 +205,8 @@ extern sol_status_t sol_gpl_request_impl(int16_t token, int16_t name,
             break;
         case REQUEST_CLEAR_BLOCK:
             debug("I need to clear (UNBLOCK) the block at (%d, %d) with flags %d\n", num1, num2, GB_BLOCK);
-            sol_region_clear_block(sol_region_manager_get_current(), num2, num1, MAP_BLOCK);
+            sol_region_manager_get_current(&reg);
+            sol_region_clear_block(reg, num2, num1, MAP_BLOCK);
             break;
         case REQUEST_SET_LOS:
             debug("request SET_LOS not implemented\n");
@@ -644,7 +648,11 @@ static int16_t request_to_do(int16_t name, int16_t rectype, int (*request_proc)(
 static int req_animation(int16_t object, long notused1, long notused2) {
     (void)notused1;
     (void)notused2;
-    dude_t *dude = sol_region_find_entity_by_id(sol_region_manager_get_current(), object);
+    dude_t *dude;
+    sol_region_t *reg;
+
+    sol_region_manager_get_current(&reg);
+    sol_region_find_entity_by_id(reg, object, &dude);
     sol_gpl_set_gname(GNAME_PASSIVE, object);
 
     if (dude) {
@@ -670,8 +678,10 @@ static int req_animation(int16_t object, long notused1, long notused2) {
 
 static int req_set_allegiance(int16_t object, long allegiance, long notused2) {
     dude_t *dude = NULL;
+    sol_region_t *reg;
 
-    sol_entity_list_for_each(sol_region_manager_get_current()->entities, dude) {
+    sol_region_manager_get_current(&reg);
+    sol_entity_list_for_each(reg->entities, dude) {
         if (dude->ds_id == object) {
             //printf("set_allegiance: %d to %d\n", object, allegiance);
             dude->allegiance = allegiance;
@@ -682,9 +692,10 @@ static int req_set_allegiance(int16_t object, long allegiance, long notused2) {
 }
 
 static void request_door(const int16_t name, const int32_t op, const int32_t range) {
-    sol_region_t *reg = sol_region_manager_get_current();
+    sol_region_t *reg;
     dude_t *door = NULL;
 
+    sol_region_manager_get_current(&reg);
     sol_entity_list_for_each(reg->entities, door)  {
         //find the door
         if (door->ds_id == name || door->ds_id == (name - range)) {

@@ -78,7 +78,8 @@ static int toggle_inventory(lua_State *l) {
 }
 
 static int change_region(lua_State *l) {
-    sol_region_t* reg = sol_region_manager_get_region(luaL_checkinteger(l, 1), 0);
+    sol_region_t* reg;
+    sol_region_manager_get_region(luaL_checkinteger(l, 1), 0, &reg);
     if (!reg) { return lua_return_bool(l, 0); }
     sol_region_manager_set_current(reg);
     return lua_return_bool(l, 1);
@@ -119,8 +120,8 @@ static int debug_set_desc(lua_State *l) {
     const int type       = luaL_checkinteger(l, 1);
     const int level      = luaL_checkinteger(l, 2);
     const int idx        = luaL_checkinteger(l, 3);
-    power_list_t *powers = NULL;
-    power_instance_t *pi = NULL;
+    sol_power_list_t *powers = NULL;
+    sol_power_instance_t *pi = NULL;
 
     //printf("debug_set_desc(%d, %d, %d)\n", type, level, idx);
     if (type == 0) {
@@ -206,7 +207,7 @@ static const struct luaL_Reg sol_funcs[] = {
 // Note make sure to call this after the soloscuro table has been created.
 static void add_wizard_globals(lua_State *l) {
     char buf[128];
-    power_t *pw = NULL;
+    sol_power_t *pw = NULL;
 
     for (int i = 0; i < WIZ_MAX; i++) {
         pw = wizard_get_spell(i);

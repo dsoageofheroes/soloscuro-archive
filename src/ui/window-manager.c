@@ -108,7 +108,7 @@ extern int sol_window_load_region(const int region) {
     entity_t *dude;
     sol_region_t *reg = NULL;
 
-    reg = sol_region_manager_get_region(region, 0);
+    sol_region_manager_get_region(region, 0, &reg);
     sol_window_clear();
     sol_region_manager_set_current(reg);
 
@@ -119,7 +119,7 @@ extern int sol_window_load_region(const int region) {
     sol_status_check(sol_region_manager_load_etab(reg),
             "Unable to load etab");
 
-    sol_entity_list_for_each(sol_region_manager_get_current()->entities, dude) {
+    sol_entity_list_for_each(reg->entities, dude) {
         port_entity_update_scmd(dude);
         //sol_status_check(sol_animate_shift_entity(reg->entities, entity_list_find(reg->entities, dude)),
             //"Unable to shift entity during map load.");
@@ -128,7 +128,7 @@ extern int sol_window_load_region(const int region) {
     sol_center_on_player();
 
     // Now that we are loaded, execute the script!
-    sol_gpl_lua_execute_script(sol_region_manager_get_current()->map_id, 0, 1);
+    sol_gpl_lua_execute_script(reg->map_id, 0, 1);
     return 1;
 }
 

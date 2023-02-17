@@ -18,7 +18,7 @@ static int show_attack = 0;
 static int damage_amount = 0;
 
 typedef struct animate_sprite_node_list_s {
-    power_t *power;
+    sol_power_t *power;
     entity_t *source;
     entity_t *target;
     enum sol_entity_action_e action;
@@ -51,8 +51,8 @@ static void pop_list() {
     }
 
     if (delme->action == EA_POWER_HIT) {
-        power_instance_t pi;
-        memset(&pi, 0x0, sizeof(power_instance_t));
+        sol_power_instance_t pi;
+        memset(&pi, 0x0, sizeof(sol_power_instance_t));
         pi.entity = delme->target;
         pi.stats = delme->power;
         delme->power->actions.apply(&pi, delme->target);
@@ -97,7 +97,11 @@ void combat_status_init(const uint32_t x, const uint32_t y) {
 static void get_status() {
     sol_status_t status;
     combat_region_t *cr = NULL;
-    status = sol_arbiter_combat_region(sol_region_manager_get_current(), &cr);
+    sol_region_t *reg;
+
+
+    sol_region_manager_get_current(&reg);
+    status = sol_arbiter_combat_region(reg, &cr);
     entity_t *dude = sol_combat_get_current(cr);
 
     if (dude) {
@@ -120,6 +124,7 @@ void combat_status_render(void *data) {
     sol_status_t status;
     combat_region_t *cr = NULL;
     sol_sprite_info_t info;
+    sol_region_t *reg;
 
     if (show_attack) {
         sol_status_check(sol_sprite_get_info(combat_attacks, &info), "Unable to get combat attacks sprite info");
@@ -133,7 +138,8 @@ void combat_status_render(void *data) {
         sol_font_render_center(FONT_GREYLIGHT, buf, loc.x, loc.y, loc.w);
     }
 
-    status = sol_arbiter_combat_region(sol_region_manager_get_current(), &cr);
+    sol_region_manager_get_current(&reg);
+    status = sol_arbiter_combat_region(reg, &cr);
     if (!sol_combat_active(cr)) { return; }
 
     if (2 == 1) {

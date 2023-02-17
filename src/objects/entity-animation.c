@@ -370,7 +370,7 @@ extern sol_status_t sol_entity_animation_get_scmd(struct sol_entity_s *entity, c
 }
 
 extern sol_status_t sol_entity_animation_add(enum sol_entity_action_e action, sol_entity_t *source, sol_entity_t *target,
-        power_t *power, const int32_t amt) {
+        sol_power_t *power, const int32_t amt) {
     sol_status_t status;
     sol_entity_animation_list_t list;
     list.head = next_animation_head;
@@ -416,7 +416,7 @@ static void play_damage_sound(sol_entity_t *target) {
     sol_play_sound_effect(67);
 }
 
-static int region_damage_execute(power_t *pw, sol_region_t *reg) {
+static int region_damage_execute(sol_power_t *pw, sol_region_t *reg) {
     if (!reg || !reg->actions.head) { return 0; }
     sol_entity_action_t *action = &(reg->actions.head->ca);
 
@@ -456,7 +456,7 @@ static int region_damage_execute(power_t *pw, sol_region_t *reg) {
 // This is called right before the animation is freed.
 // It has already been removed from the region's list.
 static void region_animation_last_check(sol_region_t *reg, sol_entity_animation_node_t *todelete) {
-    power_instance_t pi;
+    sol_power_instance_t pi;
     sol_entity_t *target;
     sol_entity_action_t *action;
     sol_status_t status;
@@ -530,7 +530,7 @@ static int frame_offset(const sol_entity_t *source, const sol_entity_t *dest) {
 
 // sound 63: is PC doing range attack
 extern sol_status_t sol_entity_animation_region_execute(sol_region_t *reg) {
-    power_t pw;
+    sol_power_t pw;
     sol_sprite_info_t info;
     if (!reg)               { return SOL_NULL_ARGUMENT;}
     if (!reg->actions.head) { return SOL_NOT_EMPTY; }
@@ -582,7 +582,7 @@ extern sol_status_t sol_entity_animation_region_execute(sol_region_t *reg) {
         }
         return SOL_SUCCESS;
     }
-    power_t *power = reg->actions.head->ca.power;
+    sol_power_t *power = reg->actions.head->ca.power;
 
     for (int i = 0; i < action->speed; i++) {
         //printf("action->amt = %d (%d), ticks = %d, scmd_pos = %d of %d\n", action->amt, action->start_amt,
@@ -617,7 +617,10 @@ extern sol_status_t sol_entity_animation_region_execute(sol_region_t *reg) {
 }
 
 static int entity_animation_check_update(sol_entity_t *entity, const int16_t xdiff, const int16_t ydiff) {
-    if (sol_region_location_blocked(sol_region_manager_get_current(), entity->mapx + xdiff, entity->mapy + ydiff)) {
+    sol_region_t *reg;
+
+    sol_region_manager_get_current(&reg);
+    if (sol_region_location_blocked(reg, entity->mapx + xdiff, entity->mapy + ydiff)) {
         return 0;
     }
 
@@ -884,16 +887,16 @@ extern sol_status_t sol_entity_animation_list_free(sol_entity_animation_list_t *
 }
 
 extern sol_status_t sol_entity_animation_list_add_effect(sol_entity_animation_list_t *list, enum sol_entity_action_e action,
-        sol_entity_t *source, sol_entity_t *target, power_t *power, const int32_t amt, const int damage) {
+        sol_entity_t *source, sol_entity_t *target, sol_power_t *power, const int32_t amt, const int damage) {
      return sol_entity_animation_list_add_speed(list, action, source, target, power, amt, 1, damage);
 }
 
 extern sol_status_t sol_entity_animation_list_add(sol_entity_animation_list_t *list, enum sol_entity_action_e action,
-        sol_entity_t *source, sol_entity_t *target, power_t *power, const int32_t amt) {
+        sol_entity_t *source, sol_entity_t *target, sol_power_t *power, const int32_t amt) {
      return sol_entity_animation_list_add_speed(list, action, source, target, power, amt, 1, 0);
 }
 extern sol_status_t sol_entity_animation_list_add_speed(sol_entity_animation_list_t *list, enum sol_entity_action_e action,
-        sol_entity_t *source, sol_entity_t *target, struct power_s *power, const int32_t amt, const int32_t speed,
+        sol_entity_t *source, sol_entity_t *target, struct sol_power_s *power, const int32_t amt, const int32_t speed,
         const int32_t damage) {
     if (!list) { return SOL_NULL_ARGUMENT; }
     //printf("add_speed: %s, %d\n", source ? source->name : "?", speed);

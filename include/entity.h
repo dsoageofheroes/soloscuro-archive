@@ -15,7 +15,7 @@ typedef struct sol_ability_set_s {
     unsigned int hunt             : 1; unsigned int attackable       : 1;
     unsigned int talkable         : 1;
     unsigned int must_go          : 1; // given order to go to x,y
-    psi_abilities_t psi;
+    sol_psi_abilities_t psi;
     //struct spell_abilities_s spells; // NOT shown
     //struct class_abilities_s class;  // Not shown
     union {
@@ -31,7 +31,7 @@ typedef struct sol_class_s {
     int8_t class;
     int8_t level;
     uint8_t high_level; // for level drain.
-    psi_abilities_t psi;
+    sol_psi_abilities_t psi;
 } sol_class_t;
 
 typedef struct sol_entity_s {

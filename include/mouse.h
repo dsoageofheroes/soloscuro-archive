@@ -32,7 +32,7 @@ extern sol_status_t sol_mouse_free_item();
 extern sol_status_t sol_mouse_free();
 extern sol_status_t sol_mouse_set_state(const enum sol_mouse_state_e state);
 extern sol_status_t sol_mouse_get_item(sol_item_t **item);
-extern sol_status_t sol_mouse_get_power(power_t **power);
+extern sol_status_t sol_mouse_get_power(sol_power_t **power);
 extern sol_status_t sol_mouse_get_state(enum sol_mouse_state_e *ms);
 
 #endif
