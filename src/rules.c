@@ -69,7 +69,8 @@ static void do_level_up(sol_entity_t *pc, const uint32_t class_idx, const uint32
     set_psp(pc);
 }
 
-void dnd2e_set_exp(sol_entity_t *pc, const uint32_t amt) {
+extern sol_status_t sol_dnd2e_set_exp(sol_entity_t *pc, const uint32_t amt) {
+    if (!pc) { return SOL_NULL_ARGUMENT;}
     pc->stats.hp = pc->stats.high_hp = 0;
     for (int i = 0; i < 3; i++) {
         if (pc->class[i].class > -1) {
@@ -80,10 +81,10 @@ void dnd2e_set_exp(sol_entity_t *pc, const uint32_t amt) {
     pc->class[0].current_xp = 0;
     pc->class[1].current_xp = 0;
     pc->class[2].current_xp = 0;
-    dnd2e_award_exp(pc, amt);
+    return sol_dnd2e_award_exp(pc, amt);
 }
 
-void dnd2e_award_exp_to_class(sol_entity_t *pc, const int index, const uint32_t amt) {
+static void dnd2e_award_exp_to_class(sol_entity_t *pc, const int index, const uint32_t amt) {
     pc->class[index].current_xp += amt;
     uint8_t next_level;
 
@@ -96,8 +97,10 @@ void dnd2e_award_exp_to_class(sol_entity_t *pc, const int index, const uint32_t 
     }
 }
 
-void dnd2e_award_exp(sol_entity_t *pc, const uint32_t amt) {
+extern sol_status_t sol_dnd2e_award_exp(sol_entity_t *pc, const uint32_t amt) {
     int num_classes = 0;
+
+    if (!pc) { return SOL_NULL_ARGUMENT; }
     for (int i = 0; i < 3 && pc->class[i].level > -1; i++) {
         //printf("pc->leve[%d] = %d\n",i, pc->level[i]);
         num_classes++;
@@ -105,12 +108,14 @@ void dnd2e_award_exp(sol_entity_t *pc, const uint32_t amt) {
     for (int i = 0; i < num_classes; i++) {
         dnd2e_award_exp_to_class(pc, i, amt / num_classes);
     }
+
+    return SOL_SUCCESS;
 }
 
-int16_t dnd2e_get_ac_pc(sol_entity_t *pc) {
+extern int16_t dnd2e_get_ac_pc(sol_entity_t *pc) {
     int ac_bonus = 0;
 
-    if (!dnd2e_character_is_valid(pc)) { return 10; }
+    if (sol_dnd2e_character_is_valid(pc)) { return 10; }
 
     if (pc->inv) {
         sol_item_t *item = pc->inv;
@@ -124,20 +129,24 @@ int16_t dnd2e_get_ac_pc(sol_entity_t *pc) {
     return pc->stats.base_ac + sol_dnd2e_ac_mod(&pc->stats) + ac_bonus;
 }
 
-int16_t dnd2e_get_attack_num(const sol_entity_t *pc, const sol_item_t *item) {
+extern int16_t dnd2e_get_attack_num(const sol_entity_t *pc, const sol_item_t *item) {
     int16_t attack_num;
+
+    if (pc == NULL) { return 0;}
     if (item == NULL || !item->ds_id) { return pc->stats.attacks[0].number; }
     // For some reason double attacks are stored for missiles...
     sol_dnd2e_class_attack_num(pc, item, &attack_num);
     return item->attack.number + attack_num;
 }
 
-int16_t dnd2e_get_attack_sides_pc(const sol_entity_t *pc, const sol_item_t *item) {
+extern int16_t dnd2e_get_attack_sides_pc(const sol_entity_t *pc, const sol_item_t *item) {
+    if (pc == NULL) { return 0;}
     if (item == NULL || !item->ds_id) { return pc->stats.attacks[0].sides; }
     return item->attack.sides;
 }
 
-int16_t dnd2e_get_attack_die_pc(const sol_entity_t *pc, const sol_item_t *item) {
+extern int16_t dnd2e_get_attack_die_pc(const sol_entity_t *pc, const sol_item_t *item) {
+    if (pc == NULL) { return 0;}
     if (item == NULL || !item->ds_id) { return pc->stats.attacks[0].num_dice; }
     return item->attack.num_dice;
 }
@@ -151,10 +160,10 @@ enum {
     MATERIAL_LEATHER = (1<<3),
 };
 
-int16_t dnd2e_get_attack_mod_pc(const sol_entity_t *pc, const sol_item_t *item) {
+extern int16_t dnd2e_get_attack_mod_pc(const sol_entity_t *pc, const sol_item_t *item) {
     uint16_t material_mod = 0;
 
-    if (!dnd2e_character_is_valid(pc)) { return 0; }
+    if (sol_dnd2e_character_is_valid(pc)) { return 0; }
 
     if (item == NULL || !item->ds_id) {
         return pc->stats.attacks[0].bonus
@@ -195,7 +204,10 @@ static int calc_starting_exp(sol_entity_t *pc) {
     return most_exp * starting_level * num_classes;
 }
 
-void dnd2e_randomize_stats_pc(sol_entity_t *pc) {
+extern sol_status_t sol_dnd2e_randomize_stats_pc(sol_entity_t *pc) {
+    sol_status_t status;
+    if (!pc) { return SOL_NULL_ARGUMENT; }
+
     pc->stats.str = 10 + (rand() % 11);
     pc->stats.dex = 10 + (rand() % 11);
     pc->stats.con = 10 + (rand() % 11);
@@ -204,13 +216,17 @@ void dnd2e_randomize_stats_pc(sol_entity_t *pc) {
     pc->stats.cha = 10 + (rand() % 11);
     pc->stats.base_ac = 10;
 
-    sol_dnd2e_race_apply_mods(pc);
-    dnd2e_loop_creation_stats(pc);
-    dnd2e_set_starting_level(pc);
+    status = sol_dnd2e_race_apply_mods(pc);
+    if (status != SOL_SUCCESS) { return status; }
+
+    status = sol_dnd2e_loop_creation_stats(pc);
+    if (status != SOL_SUCCESS) { return status; }
+
+    return sol_dnd2e_set_starting_level(pc);
 }
 
-void dnd2e_set_starting_level(sol_entity_t *pc) {
-    dnd2e_set_exp(pc, calc_starting_exp(pc)); // Also sets HP & PSP
+extern sol_status_t sol_dnd2e_set_starting_level(sol_entity_t *pc) {
+    return sol_dnd2e_set_exp(pc, calc_starting_exp(pc)); // Also sets HP & PSP
 }
 
 static void adjust_creation_hp(sol_entity_t *pc) {
@@ -251,8 +267,9 @@ static void adjust_creation_hp(sol_entity_t *pc) {
     //printf("(%d, %d) %d %d %d\n", min_hp, max_hp, pc->class[0].class, pc->class[1].class, pc->class[2].class);
 }
 
-void dnd2e_loop_creation_stats(sol_entity_t *pc) {
-    if (!pc || pc->race < 0 || pc->race > RACE_THRIKREEN) { return; }
+extern sol_status_t sol_dnd2e_loop_creation_stats(sol_entity_t *pc) {
+    if (!pc) {return SOL_NULL_ARGUMENT; }
+    if (pc->race < 0 || pc->race > RACE_THRIKREEN) { return SOL_OUT_OF_RANGE; }
 
     sol_dnd2e_race_apply_initial_stats(pc);
 
@@ -262,19 +279,21 @@ void dnd2e_loop_creation_stats(sol_entity_t *pc) {
 
     adjust_creation_hp(pc);
     set_psp(pc);
+
+    return SOL_SUCCESS;
 }
 
-int dnd2e_character_is_valid(const sol_entity_t *pc) {
-    if (!sol_dnd2e_stats_valid(&pc->stats)) { return 0; }
-    if (sol_dnd2e_is_class_allowed(pc->race, pc->class) != SOL_SUCCESS) { return 0; }
-    if (pc->gender != GENDER_MALE && pc->gender != GENDER_FEMALE) { return 0; }
-    if (pc->alignment < LAWFUL_GOOD || pc->alignment > CHAOTIC_EVIL) { return 0; }
-    if (pc->class[0].level < 1) { return 0; }
-    if (pc->class[1].class > -1 && pc->class[1].level < 1) { return 0; }
-    if (pc->class[2].class > -1 && pc->class[2].level < 1) { return 0; }
-    if (pc->stats.magic_resistance < 0 || pc->stats.magic_resistance > 100) { return 0; }
-    if (pc->allegiance != 1) { return 0; }
-    if (pc->size < 0) { return 0; }
+extern sol_status_t sol_dnd2e_character_is_valid(const sol_entity_t *pc) {
+    if (!sol_dnd2e_stats_valid(&pc->stats)) { return SOL_ILLEGAL_STATS; }
+    if (sol_dnd2e_is_class_allowed(pc->race, pc->class) != SOL_SUCCESS) { return SOL_ILLEGAL_CLASS; }
+    if (pc->gender != GENDER_MALE && pc->gender != GENDER_FEMALE) { return SOL_NO_SEX; }
+    if (pc->alignment < LAWFUL_GOOD || pc->alignment > CHAOTIC_EVIL) { return SOL_ILLEGAL_ALIGNMENT; }
+    if (pc->class[0].level < 1) { return SOL_ILLEGAL_LEVEL; }
+    if (pc->class[1].class > -1 && pc->class[1].level < 1) { return SOL_ILLEGAL_LEVEL; }
+    if (pc->class[2].class > -1 && pc->class[2].level < 1) { return SOL_ILLEGAL_LEVEL; }
+    if (pc->stats.magic_resistance < 0 || pc->stats.magic_resistance > 100) { return SOL_ILLEGAL_MAGIC_RESISTANCE; }
+    if (pc->allegiance != 1) { return SOL_ILLEGAL_ALLEGIANCE; }
+    if (pc->size < 0) { return SOL_ILLEGAL_SIZE; }
     // Not checked:
     // pc->id
     // pc->data1
@@ -293,12 +312,14 @@ int dnd2e_character_is_valid(const sol_entity_t *pc) {
     // pc->attack_sound
     // pc->psi_group
     // pc->pallette
-    return 1;// passed the checks.
+    return SOL_SUCCESS;// passed the checks.
 }
 
-int dnd2e_psin_is_valid(ds_character_t *pc, sol_psin_t *psi) {
+extern sol_status_t sol_dnd2e_psin_is_valid(ds_character_t *pc, sol_psin_t *psi) {
     int num_psionics = 0;
     int is_psionicist = 0;
+
+    if (!pc || !psi) { return SOL_NULL_ARGUMENT; }
 
     for (int i = 0; i < 7; i++) {
         if (psi->types[i]) { num_psionics++; }
@@ -307,12 +328,13 @@ int dnd2e_psin_is_valid(ds_character_t *pc, sol_psin_t *psi) {
         if (pc->real_class[i] == REAL_CLASS_PSIONICIST) { is_psionicist = 1; }
     }
 
-    if (is_psionicist) { return num_psionics == 3; }
+    if (is_psionicist) { return num_psionics == 3 ? SOL_SUCCESS : SOL_ILLEGAL_PSIN; }
 
-    return num_psionics == 1;
+    return num_psionics == 1 ? SOL_SUCCESS : SOL_ILLEGAL_PSIN;
 }
 
-int16_t dnd2e_get_move(sol_entity_t *pc) {
+extern int16_t dnd2e_get_move(sol_entity_t *pc) {
+    if (!pc) { return 0; }
     return pc->stats.base_move;
 }
 
@@ -335,8 +357,9 @@ static int item_thac0_mod(sol_item_t *item) {
     return thac0_mod;
 }
 
-int16_t dnd2e_get_thac0(sol_entity_t *pc, int slot) {
+extern int16_t dnd2e_get_thac0(sol_entity_t *pc, int slot) {
     int32_t class_thac0;
+
     sol_status_check(
             sol_dnd2e_class_thac0(pc, &class_thac0),
             "Unable to class thac0.");
@@ -367,15 +390,20 @@ extern int16_t dnd2e_dice_roll(const uint16_t num, const uint16_t sides) {
 
 // Missle modification is in original DS engine, so is d10. Although DS was highest goes first, we are lowest.
 // TODO: Add mods for race, spell efects, etc...
-int dnd2e_roll_initiative(sol_entity_t *entity) {
-    return (rand() % 10) + sol_dnd2e_reaction_mod(&entity->stats);
+extern sol_status_t sol_dnd2e_roll_initiative(sol_entity_t *entity) {
+    if (!entity) { return SOL_NULL_ARGUMENT; }
+    entity->stats.combat.initiative = (rand() % 10) + sol_dnd2e_reaction_mod(&entity->stats);
+    return SOL_SUCCESS;
 }
-int dnd2e_roll_sub_roll() {
+
+static int dnd2e_roll_sub_roll() {
     return rand();
 }
 
-int16_t dnd2e_calc_ac(sol_entity_t *entity) {
+extern int16_t dnd2e_calc_ac(sol_entity_t *entity) {
     int ac_bonus = 0;
+
+    if (!entity) { return 10; }
 
     if (entity->inv) {
         sol_item_t *item = entity->inv;
@@ -395,7 +423,7 @@ static int droll(const int max) {
     return 1 + (rand() % max);
 }
 
-static int16_t roll_damage_innate(innate_attack_t *attack) {
+static int16_t roll_damage_innate(sol_innate_attack_t *attack) {
     int16_t amt = 0;
 
     for (int i = 0; i < attack->num_dice; i++) {
@@ -507,9 +535,10 @@ static int get_next_attack(sol_entity_t *source, const int attack_num, const int
     return attack_sequence[attack_num];
 }
 
-extern int16_t dnd2e_can_melee_again(sol_entity_t *source, const int attack_num, const int round) {
+extern sol_status_t sol_dnd2e_can_melee_again(sol_entity_t *source, const int attack_num, const int round) {
+    if (!source) { return SOL_NULL_ARGUMENT; }
     int next_attack = get_next_attack(source, attack_num, round, EA_MELEE);
-    return next_attack != -1 && next_attack != SLOT_END;
+    return (next_attack != -1 && next_attack != SLOT_END) ? SOL_SUCCESS : SOL_NO_MELEE_LEFT;
 }
 
 static sol_attack_t sol_dnd2e_attack(sol_entity_t *source, sol_entity_t *target, const int round, const int type) {

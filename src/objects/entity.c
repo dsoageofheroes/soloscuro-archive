@@ -15,7 +15,7 @@
 
 extern char *strdup(const char *s); // Not in standard.
 
-static void apply_combat(dude_t *dude, ds1_combat_t *combat) {
+static void apply_combat(sol_dude_t *dude, ds1_combat_t *combat) {
     // Not used from combat: char_index, id, read_item_index, weapon_index, pack_index, icon
     //                       ac, move, status, thac0, priority, flags
     dude->stats.hp = combat->hp;
@@ -35,7 +35,7 @@ static void apply_combat(dude_t *dude, ds1_combat_t *combat) {
     dude->name = strdup(combat->name);
 }
 
-static void apply_character(dude_t *dude, ds_character_t *ch) {
+static void apply_character(sol_dude_t *dude, ds_character_t *ch) {
     // Not used from ch: id, legal_class, num_blows, spell_group, psi_group, palette.
     dude->class[0].current_xp = ch->current_xp;
     dude->class[0].high_xp = ch->high_xp;
@@ -138,14 +138,14 @@ extern sol_status_t sol_entity_create(const int add_inventory, sol_entity_t **re
 }
 
 extern sol_status_t sol_entity_create_from_objex(const int id, sol_entity_t **ret) {
-    dude_t *dude = malloc(sizeof(dude_t));
+    sol_dude_t *dude = malloc(sizeof(sol_dude_t));
     char *buf = NULL;
     rdff_disk_object_t *rdff = NULL;
     disk_object_t dobj;
     size_t rdff_pos = 0;
 
     if (!dude) { return SOL_MEMORY_ERROR; }
-    memset(dude, 0x0, sizeof(dude_t));
+    memset(dude, 0x0, sizeof(sol_dude_t));
     dude->anim.spr = SPRITE_ERROR;
 
     gff_chunk_header_t chunk = gff_find_chunk_header(OBJEX_GFF_INDEX, GFF_RDFF, -1 * id);
@@ -286,7 +286,7 @@ extern sol_status_t sol_entity_load_from_gff(sol_entity_t *entity, const int gff
 }
 
 extern sol_status_t sol_entity_create_from_etab(gff_map_object_t *entry_table, uint32_t id, sol_entity_t **ret) {
-    dude_t *dude = calloc(1, sizeof(dude_t));
+    sol_dude_t *dude = calloc(1, sizeof(sol_dude_t));
     if (!dude) { return SOL_MEMORY_ERROR; }
     const gff_map_object_t *gm = entry_table + id;
     disk_object_t disk_object;
@@ -390,8 +390,12 @@ extern sol_status_t sol_entity_free(sol_entity_t *dude) {
     return SOL_SUCCESS;
 }
 
-extern sol_status_t sol_entity_attempt_move(dude_t *dude, const int xdiff, const int ydiff, const int speed) {
-    combat_region_t          *cr = NULL;
+extern sol_status_t sol_entity_update_scmd(sol_entity_t *entity) {
+    sol_sprite_set_frame(entity->anim.spr, entity->anim.scmd[entity->anim.pos].bmp_idx);
+}
+
+extern sol_status_t sol_entity_attempt_move(sol_dude_t *dude, const int xdiff, const int ydiff, const int speed) {
+    sol_combat_region_t          *cr = NULL;
     enum sol_entity_action_e  action;
     sol_region_t             *region;
     sol_entity_t             *target;
@@ -413,7 +417,7 @@ extern sol_status_t sol_entity_attempt_move(dude_t *dude, const int xdiff, const
     // If we are in combat and it isn't our turn, do nothing.
     sol_region_manager_get_current(&region);
     status = sol_arbiter_combat_region(region, &cr);
-    if (cr && sol_combat_get_current(cr) != dude) {
+    if (cr && (sol_combat_get_current(cr, &target) != SOL_SUCCESS || target != dude)) {
         return SOL_NOT_TURN;
     }
 
@@ -591,7 +595,7 @@ extern sol_status_t sol_entity_get_ranger_level(sol_entity_t *entity, uint8_t *l
 }
 
 extern sol_status_t sol_entity_create_fake(const int mapx, const int mapy, sol_entity_t **ret) {
-    dude_t *dude = calloc(1, sizeof(dude_t));
+    sol_dude_t *dude = calloc(1, sizeof(sol_dude_t));
     if (!dude) { return SOL_MEMORY_ERROR; }
     dude->mapx = mapx;
     dude->mapy = mapy;

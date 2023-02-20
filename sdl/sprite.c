@@ -359,10 +359,6 @@ extern sol_status_t sol_sprite_free(const sol_sprite_t id) {
     return SOL_SUCCESS;
 }
 
-extern void port_entity_update_scmd(entity_t *entity) {
-    sol_sprite_set_frame(entity->anim.spr, entity->anim.scmd[entity->anim.pos].bmp_idx);
-}
-
 extern sol_status_t sol_sprite_create_from_data(unsigned char *data, const uint32_t w, const uint32_t h, sol_sprite_t *spr) {
     int sprite_id = get_next_sprite_id();
     if (sprite_id == SPRITE_ERROR) {

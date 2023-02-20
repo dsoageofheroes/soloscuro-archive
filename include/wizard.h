@@ -271,26 +271,25 @@ typedef struct ssi_spell_list_s {
     uint8_t spells[MAX_SPELLS/8];
 } ssi_spell_list_t;
 
-extern void spell_get_psionic_name(uint8_t psi, char name[32]);
-extern void spell_get_wizard_name(uint8_t spell, char name[32]);
-extern void spell_get_cleric_name(uint8_t spell, char name[32]);
-extern void spell_get_psin_name(uint8_t psin, char name[32]);
-extern void spell_set_psin(sol_psin_t *psin, const uint8_t psi, const int on);
-extern int  spell_has_psin(sol_psin_t *psin, const uint8_t psi);
-extern void spell_set_psionic(sol_psionic_list_t *psi, uint16_t power);
-extern int  spell_has_psionic(sol_psionic_list_t *psi, uint16_t power);
-extern void spell_set_spell(ssi_spell_list_t *psi, uint16_t spell);
-extern int  spell_has_spell(ssi_spell_list_t *psi, uint16_t spell);
+extern sol_status_t sol_spell_get_psionic_name(uint8_t psi, char name[32]);
+extern sol_status_t sol_spell_get_wizard_name(uint8_t spell, char name[32]);
+extern sol_status_t sol_spell_get_cleric_name(uint8_t spell, char name[32]);
+extern sol_status_t sol_spell_get_psin_name(uint8_t psin, char name[32]);
+extern sol_status_t sol_spell_set_psin(sol_psin_t *psin, const uint8_t psi, const int on);
+extern sol_status_t sol_spell_has_psin(sol_psin_t *psin, const uint8_t psi);
+extern sol_status_t sol_spell_set_psionic(sol_psionic_list_t *psi, uint16_t power);
+extern sol_status_t sol_spell_has_psionic(sol_psionic_list_t *psi, uint16_t power);
+extern sol_status_t sol_spell_set_spell(ssi_spell_list_t *psi, uint16_t spell);
+extern sol_status_t sol_spell_has_spell(ssi_spell_list_t *psi, uint16_t spell);
 
 // NEW INTERFACE
 //extern spell_t* spell_get_spell(const uint16_t id);
-extern char* spells_read_description(const uint16_t id);
-
-extern void wizard_init();
-extern void wizard_add_power(sol_power_t *pw, const int index);
-extern void wizard_setup_powers();
-extern void wizard_cleanup();
-extern sol_power_list_t* wizard_get_spells(const int level);
-extern sol_power_t* wizard_get_spell(const int idx);
+extern sol_status_t sol_spells_read_description(const uint16_t id, char **);
+extern sol_status_t sol_wizard_init();
+extern sol_status_t sol_wizard_add_power(sol_power_t *pw, const int index);
+extern sol_status_t sol_wizard_cleanup();
+extern sol_status_t sol_wizard_setup_powers();
+extern sol_status_t sol_wizard_get_spells(const int level, sol_power_list_t **);
+extern sol_status_t sol_wizard_get_spell(const int idx, sol_power_t **p);
 
 #endif

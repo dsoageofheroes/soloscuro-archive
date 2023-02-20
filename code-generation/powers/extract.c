@@ -963,7 +963,7 @@ const char *effect_names[] = {
 };
 
 static void generate_apply(power_entry_t pw, char *name, FILE *file) {
-    fprintf(file, "\nstatic void %s_%s_apply        (sol_power_instance_t *source, entity_t *entity) {\n", type, name);
+    fprintf(file, "\nstatic void %s_%s_apply        (sol_power_instance_t *source, sol_entity_t *entity) {\n", type, name);
     fprintf(file, "    if (!source || !entity) { return; }\n");
     fprintf(file, "    size_t num_dice = 0, mod = 0, damage = 0;\n");
     fprintf(file, "    uint64_t effect_type = 0;\n");
@@ -1066,7 +1066,7 @@ static void generate_update(power_entry_t pw, char *name, FILE *file) {
     fprintf(file, "    if (!power || ! source) { return 0;}\n");
     fprintf(file, "    uint8_t caster_level;\n");
     fprintf(file, "    sol_status_t status;\n");
-    fprintf(file, "    entity_t *entity = source->entity;\n");
+    fprintf(file, "    sol_entity_t *entity = source->entity;\n");
     //fprintf(file, "    int made_save = 0;\n");
     //fprintf(file, "    item_t *item = source->item;\n\n");
     fprintf(file, "\n");
@@ -1200,7 +1200,7 @@ static void generate_tables() {
         fprintf(file, "\n");
     }
 
-    fprintf(file, "\nvoid wizard_setup_powers() {\n");
+    fprintf(file, "\nextern sol_status_t sol_wizard_setup_powers() {\n");
     fprintf(file, "    sol_power_t *p;\n");
     for (int i = 0; i < MAX_LEVELS; i++) {
         for (int j = 0; j < MAX_POWERS; j++) {
@@ -1209,11 +1209,12 @@ static void generate_tables() {
                 for (int i = 0; i < strlen(buf); i++) { buf[i] = toupper(buf[i]); }
                 fprintf(file, "    sol_power_create(&p);\n");
                 fprintf(file, "    wizard_%s_setup(p);\n", power_names[wizard_powers[i][j]]);
-                fprintf(file, "    wizard_add_power(p, WIZ_%s);\n", buf);
+                fprintf(file, "    sol_wizard_add_power(p, WIZ_%s);\n", buf);
             }
         }
         fprintf(file, "\n");
     }
+    fprintf(file, "    return SOL_SUCCESS;\n");
     fprintf(file, "}\n");
 
     fclose(file);

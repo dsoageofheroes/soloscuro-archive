@@ -19,7 +19,7 @@ void tearDown() {
 
 void test_basic(void) {
     sol_player_init();
-    entity_t *dude, *player;
+    sol_entity_t *dude, *player;
     TEST_ASSERT_EQUAL_INT(0, sol_player_exists(0) != SOL_SUCCESS);
     TEST_ASSERT_EQUAL_INT(0, sol_player_exists(1) != SOL_SUCCESS);
     TEST_ASSERT_EQUAL_INT(0, sol_player_exists(2) != SOL_SUCCESS);

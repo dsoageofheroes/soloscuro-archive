@@ -34,7 +34,7 @@ static sol_sprite_t psionic_label; // 2047
 static sol_sprite_t sphere_label; // 2046
 static sol_sprite_t done_button;
 static sol_sprite_t exit_button;
-static textbox_t* name_tb;
+static sol_textbox_t* name_tb;
 
 // Store this so we don't trigger mouseup events in sprites/labels we didn't mousedown in
 static sol_sprite_t last_sprite_mousedowned;
@@ -95,7 +95,7 @@ sol_status_t sol_new_character_get_psionic_list(sol_psionic_list_t **p) {
 
 sol_status_t sol_new_character_get_name(char **n) {
     if (!is_valid) { return SOL_NOT_INITIALIZED; }
-    *n = sol_textbox_get_text(name_tb);
+    *n = name_tb->text;
     return SOL_SUCCESS;
 }
 
@@ -241,7 +241,8 @@ static void new_character_init(const uint32_t _x, const uint32_t _y) {
             "unable to load new character spr.");
     sol_status_check(sol_sprite_new(pal, 255 + x, 156 + y, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 2058, &exit_button),
             "unable to load new character spr.");
-    name_tb = sol_textbox_create(32, 34 + offsetx / zoom, 124 + offsety / zoom);
+    sol_status_check(sol_textbox_create(32, 34 + offsetx / zoom, 124 + offsety / zoom, &name_tb),
+                "unable to create name text box");
     sol_textbox_set_current(name_tb);
 
     init_pc();
@@ -309,7 +310,7 @@ static void new_character_init(const uint32_t _x, const uint32_t _y) {
 
     srand(time(NULL));
     load_character_sprite();
-    dnd2e_randomize_stats_pc(&pc);
+    sol_dnd2e_randomize_stats_pc(&pc);
     sol_item_set_starting(&pc);
     set_class_frames(); // go ahead and setup the new class frames
     select_class(2); // Fighter is the default class
@@ -333,7 +334,7 @@ static void update_die_countdown() {
             die_pos = 5 + (rand() % 6);
         }
         if (die_pos != last_die_pos) {
-            dnd2e_randomize_stats_pc(&pc);
+            sol_dnd2e_randomize_stats_pc(&pc);
         }
         last_die_pos = die_pos;
     }
@@ -459,7 +460,7 @@ void update_stats_alignment_hp(int i, uint32_t button)
         break;
     }
 
-    dnd2e_loop_creation_stats(&pc);
+    sol_dnd2e_loop_creation_stats(&pc);
 }
 
 static int find_class_selection(const uint8_t real_class) {
@@ -504,19 +505,19 @@ static void set_ps_sel_frames() {
 
     // Setup selection correctly
     if (show_psionic_label) {
-        sol_sprite_set_frame(ps_sel[0], spell_has_psin(&psi, PSIONIC_PSYCHOKINETIC));
-        sol_sprite_set_frame(ps_sel[1], spell_has_psin(&psi, PSIONIC_PSYCHOMETABOLISM));
-        sol_sprite_set_frame(ps_sel[2], spell_has_psin(&psi, PSIONIC_TELEPATH));
+        sol_sprite_set_frame(ps_sel[0], sol_spell_has_psin(&psi, PSIONIC_PSYCHOKINETIC) == SOL_SUCCESS);
+        sol_sprite_set_frame(ps_sel[1], sol_spell_has_psin(&psi, PSIONIC_PSYCHOMETABOLISM) == SOL_SUCCESS);
+        sol_sprite_set_frame(ps_sel[2], sol_spell_has_psin(&psi, PSIONIC_TELEPATH) == SOL_SUCCESS);
         sol_sprite_set_frame(ps_sel[3], 0);
 
-        ps_selections = spell_has_psin(&psi, PSIONIC_PSYCHOKINETIC)
-               + spell_has_psin(&psi, PSIONIC_PSYCHOMETABOLISM)
-               + spell_has_psin(&psi, PSIONIC_TELEPATH);
+        ps_selections = sol_spell_has_psin(&psi, PSIONIC_PSYCHOKINETIC) == SOL_SUCCESS
+               + sol_spell_has_psin(&psi, PSIONIC_PSYCHOMETABOLISM) == SOL_SUCCESS
+               + sol_spell_has_psin(&psi, PSIONIC_TELEPATH) == SOL_SUCCESS;
 
         if (ps_selections > 0) {
-            sol_sprite_set_frame(psionic_devotion[0], spell_has_psin(&psi, PSIONIC_PSYCHOKINETIC) ? 0 : 2);
-            sol_sprite_set_frame(psionic_devotion[1], spell_has_psin(&psi, PSIONIC_PSYCHOMETABOLISM) ? 0 : 2);
-            sol_sprite_set_frame(psionic_devotion[2], spell_has_psin(&psi, PSIONIC_TELEPATH) ? 0 : 2);
+            sol_sprite_set_frame(psionic_devotion[0], sol_spell_has_psin(&psi, PSIONIC_PSYCHOKINETIC) == SOL_SUCCESS ? 0 : 2);
+            sol_sprite_set_frame(psionic_devotion[1], sol_spell_has_psin(&psi, PSIONIC_PSYCHOMETABOLISM) == SOL_SUCCESS ? 0 : 2);
+            sol_sprite_set_frame(psionic_devotion[2], sol_spell_has_psin(&psi, PSIONIC_TELEPATH) == SOL_SUCCESS ? 0 : 2);
         } else {
             sol_sprite_set_frame(psionic_devotion[0], 0);
             sol_sprite_set_frame(psionic_devotion[1], 0);
@@ -545,13 +546,13 @@ static void set_ps_sel_frames() {
 static void toggle_psi(const uint16_t i) {
     sol_sprite_info_t info;
     sol_status_check(sol_sprite_get_info(ps_sel[i], &info), "Unable to get sprite info.");
-    int ps_selections = spell_has_psin(&psi, PSIONIC_PSYCHOKINETIC)
-           + spell_has_psin(&psi, PSIONIC_PSYCHOMETABOLISM)
-           + spell_has_psin(&psi, PSIONIC_TELEPATH);
+    int ps_selections = sol_spell_has_psin(&psi, PSIONIC_PSYCHOKINETIC) == SOL_SUCCESS
+           + sol_spell_has_psin(&psi, PSIONIC_PSYCHOMETABOLISM) == SOL_SUCCESS
+           + sol_spell_has_psin(&psi, PSIONIC_TELEPATH) == SOL_SUCCESS;
 
     if (ps_selections > 2) { return; }
 
-    spell_set_psin(&psi, i, info.current_frame == 1 ? 0 : 1);
+    sol_spell_set_psin(&psi, i, info.current_frame == 1 ? 0 : 1);
 
     set_ps_sel_frames();
 }
@@ -573,9 +574,9 @@ static void deselect_class(uint8_t class_selection) {
     }
 
     if (convert_to_actual_class(class_selection) == REAL_CLASS_PSIONICIST) {
-        spell_set_psin(&psi, PSIONIC_PSYCHOKINETIC, 0);
-        spell_set_psin(&psi, PSIONIC_PSYCHOMETABOLISM, 0);
-        spell_set_psin(&psi, PSIONIC_TELEPATH, 0);
+        sol_spell_set_psin(&psi, PSIONIC_PSYCHOKINETIC, 0);
+        sol_spell_set_psin(&psi, PSIONIC_PSYCHOMETABOLISM, 0);
+        sol_spell_set_psin(&psi, PSIONIC_TELEPATH, 0);
     }
 
     // If the player doesn't have a Cleric, Druid, or Ranger class, reset their sphere
@@ -590,7 +591,7 @@ static void deselect_class(uint8_t class_selection) {
     set_class_frames();
     set_ps_sel_frames();
 
-    dnd2e_set_exp(&pc, 4000);
+    sol_dnd2e_set_exp(&pc, 4000);
     
     if (pc.class[0].class == -1) {
         pc.alignment = TRUE_NEUTRAL;
@@ -609,13 +610,13 @@ static void select_class(uint8_t class) {
     set_class_frames();
 
     if (pc.class[pos].class == REAL_CLASS_PSIONICIST) {
-        spell_set_psin(&psi, PSIONIC_PSYCHOKINETIC, 1);
-        spell_set_psin(&psi, PSIONIC_PSYCHOMETABOLISM, 1);
-        spell_set_psin(&psi, PSIONIC_TELEPATH, 1);
-    } else if (!spell_has_psin(&psi, PSIONIC_PSYCHOKINETIC) &&
-               !spell_has_psin(&psi, PSIONIC_PSYCHOMETABOLISM) &&
-               !spell_has_psin(&psi, PSIONIC_TELEPATH)) {
-        spell_set_psin(&psi, PSIONIC_PSYCHOKINETIC, 1); // Default psi discipline
+        sol_spell_set_psin(&psi, PSIONIC_PSYCHOKINETIC, 1);
+        sol_spell_set_psin(&psi, PSIONIC_PSYCHOMETABOLISM, 1);
+        sol_spell_set_psin(&psi, PSIONIC_TELEPATH, 1);
+    } else if (!sol_spell_has_psin(&psi, PSIONIC_PSYCHOKINETIC) == SOL_SUCCESS &&
+               !sol_spell_has_psin(&psi, PSIONIC_PSYCHOMETABOLISM) == SOL_SUCCESS &&
+               !sol_spell_has_psin(&psi, PSIONIC_TELEPATH) == SOL_SUCCESS) {
+        sol_spell_set_psin(&psi, PSIONIC_PSYCHOKINETIC, 1); // Default psi discipline
     }
 
     // Force Cleric/Druid/Ranger to have a sphere chosen
@@ -623,9 +624,9 @@ static void select_class(uint8_t class) {
         sphere_selection = 0;
 
     set_ps_sel_frames();
-    dnd2e_set_exp(&pc, 4000);
+    sol_dnd2e_set_exp(&pc, 4000);
     fix_alignment(1); // 1 = next alignment
-    dnd2e_loop_creation_stats(&pc); // in case something need adjustment
+    sol_dnd2e_loop_creation_stats(&pc); // in case something need adjustment
 }
 
 static void fix_race_gender() { // move the race/gender to the appropiate spot
@@ -663,8 +664,8 @@ static void fix_race_gender() { // move the race/gender to the appropiate spot
     load_character_sprite(); // go ahead and get the new sprite
     set_class_frames(); // go ahead and setup the new class frames
     select_class(2); // Default to Fighter whenever race changes
-    dnd2e_randomize_stats_pc(&pc);
-    dnd2e_loop_creation_stats(&pc); // in case something need adjustment
+    sol_dnd2e_randomize_stats_pc(&pc);
+    sol_dnd2e_loop_creation_stats(&pc); // in case something need adjustment
     sol_item_set_starting(&pc);
 }
 
@@ -816,7 +817,7 @@ int new_character_handle_mouse_down(const uint32_t button, const uint32_t x, con
         }
     }
     
-    sol_textbox_set_focus(name_tb, (sol_textbox_is_in(name_tb, x, y)));
+    sol_textbox_set_focus(name_tb, (sol_textbox_is_in(name_tb, x, y)) == SOL_SUCCESS);
 
     return 1; // handle
 }
@@ -886,13 +887,13 @@ int new_character_handle_mouse_up(const uint32_t button, const uint32_t x, const
             sol_status_check(sol_sprite_get_info(class_sel[i], &info), "Unable to get sprite info.");
             if (info.current_frame == 1) {
                 deselect_class(i);
-                dnd2e_set_starting_level(&pc);
+                sol_dnd2e_set_starting_level(&pc);
                 sol_item_set_starting(&pc);
             } else {
                 sol_status_check(sol_sprite_get_info(classes[i], &info), "Unable to get sprite info.");
                 if (info.current_frame < 2) {
                     select_class(i);
-                    dnd2e_set_starting_level(&pc);
+                    sol_dnd2e_set_starting_level(&pc);
                     sol_item_set_starting(&pc);
                 }
             } 

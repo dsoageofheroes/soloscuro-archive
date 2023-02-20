@@ -77,9 +77,9 @@ typedef struct sol_effect_s {
     uint16_t duration_left;
     uint16_t preventions; // does this prevent something (Example: attacking.)
     uint16_t fx;// Special Effect (invisibility, shimmer, etc...)
-    int32_t (*affect)                (const entity_t *target, enum sol_stat_e stat, const uint64_t effect_type, const int32_t amt);
+    int32_t (*affect)                (const sol_entity_t *target, enum sol_stat_e stat, const uint64_t effect_type, const int32_t amt);
     // Some spell have an end of effect trigger. (EX: Spirit Armor: need to save vs spell or suffer 2d3 damage.)
-    void    (*end_of_effect_trigger) (entity_t *source);
+    void    (*end_of_effect_trigger) (sol_entity_t *source);
 } sol_effect_t;
 
 extern sol_status_t sol_effect_apply_damage(sol_entity_t *source, sol_entity_t *target, const int32_t damage, sol_effect_type_t type);

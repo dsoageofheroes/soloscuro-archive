@@ -180,52 +180,52 @@ const int16_t cha_mods[][3] = {
     {   50,          20,            14 }, // 25
 };
 
-extern int8_t sol_dnd2e_melee_damage_mod(const stats_t *stats) {
+extern int8_t sol_dnd2e_melee_damage_mod(const sol_stats_t *stats) {
     return str_mods[stats->str][STR_DAM];
 }
 
-extern int8_t sol_dnd2e_melee_hit_mod(const stats_t *stats) {
+extern int8_t sol_dnd2e_melee_hit_mod(const sol_stats_t *stats) {
     return str_mods[stats->str][STR_HIT];
 }
 
-extern int8_t sol_dnd2e_range_damage_mod(const stats_t *stats) {
+extern int8_t sol_dnd2e_range_damage_mod(const sol_stats_t *stats) {
     (void)stats;
     return 0;
 }
 
-extern int8_t sol_dnd2e_range_hit_mod(const stats_t *stats) {
+extern int8_t sol_dnd2e_range_hit_mod(const sol_stats_t *stats) {
     return dex_mods[stats->dex][DEX_MISSILE];
 }
 
-extern int8_t sol_dnd2e_reaction_mod(const stats_t *stats) {
+extern int8_t sol_dnd2e_reaction_mod(const sol_stats_t *stats) {
     return dex_mods[stats->dex][DEX_REACTION];
 }
 
-extern int8_t sol_dnd2e_ac_mod(const stats_t *stats) {
+extern int8_t sol_dnd2e_ac_mod(const sol_stats_t *stats) {
     return dex_mods[stats->dex][DEX_AC];
 }
 
-extern int8_t sol_dnd2e_hp_mod(const stats_t *stats) {
+extern int8_t sol_dnd2e_hp_mod(const sol_stats_t *stats) {
     return con_mods[stats->con][CON_HP];
 }
 
-extern int8_t sol_dnd2e_shock_mod(const stats_t *stats) {
+extern int8_t sol_dnd2e_shock_mod(const sol_stats_t *stats) {
     return con_mods[stats->con][CON_SHOCK];
 }
 
-extern int8_t sol_dnd2e_res_mod(const stats_t *stats) {
+extern int8_t sol_dnd2e_res_mod(const sol_stats_t *stats) {
     return con_mods[stats->con][CON_RES];
 }
 
-extern int8_t sol_dnd2e_poison_mod(const stats_t *stats) {
+extern int8_t sol_dnd2e_poison_mod(const sol_stats_t *stats) {
     return con_mods[stats->con][CON_POISON_SAVE];
 }
 
-extern int8_t sol_dnd2e_regen_mod(const stats_t *stats) {
+extern int8_t sol_dnd2e_regen_mod(const sol_stats_t *stats) {
     return con_mods[stats->con][CON_REGEN];
 }
 
-extern int8_t sol_dnd2e_stats_valid(const stats_t *stats) {
+extern int8_t sol_dnd2e_stats_valid(const sol_stats_t *stats) {
     if (stats->str < 0 || stats->str > 25) { return 0; }
     if (stats->dex < 0 || stats->dex > 25) { return 0; }
     if (stats->con < 0 || stats->con > 25) { return 0; }

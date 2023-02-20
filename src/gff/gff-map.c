@@ -53,7 +53,7 @@ int gff_map_get_object_frame_count(int gff_index, int res_id, int obj_id) {
     return gff_get_frame_count(OBJEX_GFF_INDEX, GFF_BMP, disk_object.bmp_id);
 }
 
-int gff_map_fill_scmd_info(dude_t *dude, int gff_index, int res_id, int obj_id, int scmd_index) {
+int gff_map_fill_scmd_info(sol_dude_t *dude, int gff_index, int res_id, int obj_id, int scmd_index) {
     int num_objects = gff_map_get_num_objects(gff_index, res_id);
     disk_object_t disk_object;
 

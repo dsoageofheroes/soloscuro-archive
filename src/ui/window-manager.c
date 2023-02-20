@@ -25,17 +25,18 @@
 static sol_wops_t windows[MAX_SCREENS];
 static uint32_t window_pos = 0;
 
-extern void sol_window_init() {
+extern sol_status_t sol_window_init() {
     memset(windows, 0x0, sizeof(sol_wops_t) * MAX_SCREENS);
+    return SOL_SUCCESS;
 }
 
 static uint32_t default_get_width() { return 320 * settings_zoom(); }
 static uint32_t default_get_height() { return 200 * settings_zoom(); }
 
-extern void sol_window_load(int layer, sol_wops_t *window, const uint32_t x, const uint32_t y) {
+extern sol_status_t sol_window_load(int layer, sol_wops_t *window, const uint32_t x, const uint32_t y) {
     int grey_out_map = 0;
 
-    if (layer < 0 || layer > MAX_SCREENS) { return; }
+    if (layer < 0 || layer > MAX_SCREENS) { return SOL_OUT_OF_RANGE; }
 
     if (windows[layer].render) {
         // cleanup?
@@ -59,9 +60,11 @@ extern void sol_window_load(int layer, sol_wops_t *window, const uint32_t x, con
     if (grey_out_map) {
         sol_map_apply_alpha(127);
     }
+
+    return SOL_SUCCESS;
 }
 
-extern void sol_window_toggle(sol_wops_t *the_window, const uint32_t x, const uint32_t y) {
+extern sol_status_t sol_window_toggle(sol_wops_t *the_window, const uint32_t x, const uint32_t y) {
     uint32_t pos;
     sol_wops_t tmp;
     for (pos = 0; pos < window_pos; pos++) {
@@ -70,7 +73,7 @@ extern void sol_window_toggle(sol_wops_t *the_window, const uint32_t x, const ui
 
     if (pos >= window_pos) { // not found so turn on.
         sol_window_load(window_pos++, the_window, x, y);
-        return;
+        return SOL_SUCCESS;
     }
 
     tmp = windows[pos]; // Found, so we bring to the front, then pop.
@@ -82,10 +85,10 @@ extern void sol_window_toggle(sol_wops_t *the_window, const uint32_t x, const ui
 
     windows[window_pos - 1] = tmp;
 
-    sol_window_pop();
+    return sol_window_pop();
 }
 
-extern void sol_window_push(sol_wops_t *window, const uint32_t x, const uint32_t y) {
+extern sol_status_t sol_window_push(sol_wops_t *window, const uint32_t x, const uint32_t y) {
     sol_wops_t tmp;
     for (uint32_t i = 0; i <= window_pos; i++) {
         if (windows[i].render == window->render) {
@@ -94,18 +97,15 @@ extern void sol_window_push(sol_wops_t *window, const uint32_t x, const uint32_t
                 windows[j - 1] = windows[j];
             }
             windows[window_pos - 1] = tmp;
-            return;
+            return SOL_SUCCESS;
         }
     }
     sol_window_load(window_pos++, window, x, y);
+    return SOL_SUCCESS;
 }
 
-int port_load_region(const int region) {
-    return sol_window_load_region(region);
-}
-
-extern int sol_window_load_region(const int region) {
-    entity_t *dude;
+extern sol_status_t sol_window_load_region(const int region) {
+    sol_entity_t *dude;
     sol_region_t *reg = NULL;
 
     sol_region_manager_get_region(region, 0, &reg);
@@ -120,7 +120,7 @@ extern int sol_window_load_region(const int region) {
             "Unable to load etab");
 
     sol_entity_list_for_each(reg->entities, dude) {
-        port_entity_update_scmd(dude);
+        sol_entity_update_scmd(dude);
         //sol_status_check(sol_animate_shift_entity(reg->entities, entity_list_find(reg->entities, dude)),
             //"Unable to shift entity during map load.");
     }
@@ -129,10 +129,10 @@ extern int sol_window_load_region(const int region) {
 
     // Now that we are loaded, execute the script!
     sol_gpl_lua_execute_script(reg->map_id, 0, 1);
-    return 1;
+    return SOL_SUCCESS;
 }
 
-extern void sol_window_render(const uint32_t xmappos, const uint32_t ymappos) {
+extern sol_status_t sol_window_render(const uint32_t xmappos, const uint32_t ymappos) {
     port_start_display_frame();
 
     for (int i = 0; i < MAX_SCREENS; i++) {
@@ -142,11 +142,13 @@ extern void sol_window_render(const uint32_t xmappos, const uint32_t ymappos) {
     }
 
     port_commit_display_frame();
+
+    return SOL_SUCCESS;
 }
 
 static uint32_t mousex, mousey;
 
-extern void sol_window_handle_mouse(const uint32_t x, const uint32_t y) {
+extern sol_status_t sol_window_handle_mouse(const uint32_t x, const uint32_t y) {
     mousex = x;
     mousey = y;
     for (int i = MAX_SCREENS-1; i >= 0; i--) {
@@ -154,40 +156,45 @@ extern void sol_window_handle_mouse(const uint32_t x, const uint32_t y) {
             i = 0; // exit loop, mouse has been handled!
         }
     }
+    return SOL_SUCCESS;
 }
 
-extern void sol_window_handle_mouse_down(const sol_mouse_button_t button, const uint32_t x, const uint32_t y) {
+extern sol_status_t sol_window_handle_mouse_down(const sol_mouse_button_t button, const uint32_t x, const uint32_t y) {
     for (int i = MAX_SCREENS-1; i >= 0; i--) {
         if (windows[i].mouse_down && windows[i].mouse_down(button, x, y)) {
             i = 0; // exit loop, mouse has been handled!
+            return SOL_SUCCESS;
         }
     }
+    return SOL_NOT_HANDLED;
 }
 
-extern int sol_window_handle_key_down(const enum sol_entity_action_e action) {
+extern sol_status_t sol_window_handle_key_down(const enum sol_entity_action_e action) {
     for (int i = MAX_SCREENS-1; i >= 0; i--) {
         if (windows[i].key_down && windows[i].key_down(action)) {
-            return 1;
+            return SOL_SUCCESS;
         }
     }
-    return 0;
+    return SOL_NOT_HANDLED;
 }
 
-extern int sol_window_handle_key_press(const enum sol_key_e e) {
+extern sol_status_t sol_window_handle_key_press(const enum sol_key_e e) {
     for (int i = MAX_SCREENS-1; i >= 0; i--) {
         if (windows[i].key_press && windows[i].key_press(e)) {
-            return 1;
+            return SOL_SUCCESS;
         }
     }
-    return 0;
+    return SOL_NOT_HANDLED;
 }
 
-extern void sol_window_handle_mouse_up(const sol_mouse_button_t button, const uint32_t x, const uint32_t y) {
+extern sol_status_t sol_window_handle_mouse_up(const sol_mouse_button_t button, const uint32_t x, const uint32_t y) {
     for (int i = MAX_SCREENS-1; i >= 0; i--) {
         if (windows[i].mouse_up && windows[i].mouse_up(button, x, y)) {
             i = 0; // exit loop, mouse has been handled!
+            return SOL_SUCCESS;
         }
     }
+    return SOL_NOT_HANDLED;
 }
 
 static void destroy_window(const int pos) {
@@ -198,13 +205,14 @@ static void destroy_window(const int pos) {
     memset(windows + pos, 0x0, sizeof(sol_wops_t));
 }
 
-void sol_window_clear() {
+extern sol_status_t sol_window_clear() {
     while(window_pos) {
         sol_window_pop();
     }
+    return SOL_SUCCESS;
 }
 
-void sol_window_pop() {
+extern sol_status_t sol_window_pop() {
     int grey_out_map = 0;
 
     destroy_window(--window_pos);
@@ -220,14 +228,16 @@ void sol_window_pop() {
     if (!grey_out_map) {
         sol_map_apply_alpha(255);
     }
+
+    return SOL_SUCCESS;
 }
 
-void sol_window_free() {
+extern sol_status_t sol_window_free() {
     for (int i = 0; i < MAX_SCREENS; i++) {
         if (windows[i].cleanup) {
             windows[i].cleanup();
         }
     }
 
-    sol_font_free();
+    return sol_font_free();
 }

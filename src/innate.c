@@ -9,7 +9,7 @@
 #define ITEM_COINS1 (1389)
 #define ITEM_COINS2 (1384)
 
-extern sol_status_t sol_innate_is_door(dude_t *dude) {
+extern sol_status_t sol_innate_is_door(sol_dude_t *dude) {
     return
         (abs(dude->ds_id) >= 1131 && abs(dude->ds_id) <= 1181)
         || (abs(dude->ds_id) >= 2051 && abs(dude->ds_id) <= 2200)
@@ -18,9 +18,9 @@ extern sol_status_t sol_innate_is_door(dude_t *dude) {
         : SOL_NOT_FOUND;
 }
 
-static entity_t* find_twin(entity_t *door) {
+static sol_entity_t* find_twin(sol_entity_t *door) {
     sol_region_t *reg;
-    entity_t *twin_door;
+    sol_entity_t *twin_door;
     if (!door) { return NULL; }
 
 
@@ -38,9 +38,9 @@ static entity_t* find_twin(entity_t *door) {
     return NULL;
 }
 
-static void set_door_blocks(dude_t *door, int door_is_open) {
+static void set_door_blocks(sol_dude_t *door, int door_is_open) {
     sol_region_t *reg;
-    entity_t *twin_door = find_twin(door);
+    sol_entity_t *twin_door = find_twin(door);
     sol_sprite_info_t info;
 
     sol_region_manager_get_current(&reg);
@@ -74,7 +74,7 @@ static void set_door_blocks(dude_t *door, int door_is_open) {
     }
 }
 
-extern sol_status_t sol_innate_activate_door(dude_t *door) {
+extern sol_status_t sol_innate_activate_door(sol_dude_t *door) {
     sol_sprite_info_t info;
     sol_status_check(sol_sprite_get_info(door->anim.spr, &info), "Unable to get door's sprite info");
     enum sol_entity_action_e action = info.current_frame == 0 ? EA_DOOR_OPEN : EA_DOOR_CLOSE;
@@ -85,18 +85,18 @@ extern sol_status_t sol_innate_activate_door(dude_t *door) {
     return SOL_SUCCESS;
 }
 
-static sol_status_t custom_action(dude_t *dude) {
+static sol_status_t custom_action(sol_dude_t *dude) {
     ds1_item_t ds1_item;
     sol_entity_t *active;
     sol_region_t *reg;
     char msg[1024];
 
     if (sol_innate_is_door(dude) == SOL_SUCCESS) {
-        entity_t *door = dude;
+        sol_entity_t *door = dude;
         //printf("DOOR: %d, %d, %d\n", dude->ds_id, dude->mapx, dude->mapy);
         // The GPL appears to only operate on one of the doors
         // So we have to find the other...
-        entity_t *twin_door = find_twin(door);
+        sol_entity_t *twin_door = find_twin(door);
 
         sol_innate_activate_door(door);
         if (twin_door) {
@@ -126,7 +126,7 @@ static sol_status_t custom_action(dude_t *dude) {
     return SOL_NO_CUSTOM_ACTION;
 }
 
-extern sol_status_t sol_innate_action(dude_t *dude) {
+extern sol_status_t sol_innate_action(sol_dude_t *dude) {
     if (!dude) { return SOL_UNKNOWN_ERROR; }
     if (custom_action(dude) == SOL_SUCCESS) { return SOL_SUCCESS; }
 

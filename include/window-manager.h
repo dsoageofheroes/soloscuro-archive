@@ -23,19 +23,19 @@ typedef struct sol_wops_s {
     void *data;
 } sol_wops_t;
 
-void sol_window_init();
-void sol_window_render(const uint32_t xmappos, const uint32_t ymappos);
-void sol_window_load(int layer, sol_wops_t *window, const uint32_t x, const uint32_t y);
-void sol_window_push(sol_wops_t *window, const uint32_t x, const uint32_t y);
-void sol_window_toggle(sol_wops_t *window, const uint32_t x, const uint32_t y);
-void sol_window_pop();
-void sol_window_handle_mouse(const uint32_t x, const uint32_t y);
-void sol_window_handle_mouse_down(const sol_mouse_button_t button, const uint32_t x, const uint32_t y);
-void sol_window_handle_mouse_up(const sol_mouse_button_t button, const uint32_t x, const uint32_t y);
-int  sol_window_handle_key_down(const enum sol_entity_action_e);
-int  sol_window_handle_key_press(const enum sol_key_e e);
-int  sol_window_load_region(const int region);
-void sol_window_clear();
-void sol_window_free();
+extern sol_status_t sol_window_init();
+extern sol_status_t sol_window_render(const uint32_t xmappos, const uint32_t ymappos);
+extern sol_status_t sol_window_load(int layer, sol_wops_t *window, const uint32_t x, const uint32_t y);
+extern sol_status_t sol_window_push(sol_wops_t *window, const uint32_t x, const uint32_t y);
+extern sol_status_t sol_window_toggle(sol_wops_t *window, const uint32_t x, const uint32_t y);
+extern sol_status_t sol_window_pop();
+extern sol_status_t sol_window_handle_mouse(const uint32_t x, const uint32_t y);
+extern sol_status_t sol_window_handle_mouse_down(const sol_mouse_button_t button, const uint32_t x, const uint32_t y);
+extern sol_status_t sol_window_handle_mouse_up(const sol_mouse_button_t button, const uint32_t x, const uint32_t y);
+extern sol_status_t sol_window_handle_key_down(const enum sol_entity_action_e);
+extern sol_status_t sol_window_handle_key_press(const enum sol_key_e e);
+extern sol_status_t sol_window_load_region(const int region);
+extern sol_status_t sol_window_clear();
+extern sol_status_t sol_window_free();
 
 #endif

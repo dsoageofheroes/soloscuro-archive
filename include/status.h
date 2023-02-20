@@ -56,6 +56,20 @@ typedef enum sol_status_e {
     SOL_NO,
     SOL_GAME_OVER,
     SOL_PAUSED,
+    SOL_ILLEGAL_STATS,
+    SOL_NO_SEX,
+    SOL_ILLEGAL_MAGIC_RESISTANCE,
+    SOL_ILLEGAL_ALLEGIANCE,
+    SOL_ILLEGAL_SIZE,
+    SOL_ILLEGAL_PSIN,
+    SOL_NO_MELEE_LEFT,
+    SOL_IN_COMBAT_ERROR,
+    SOL_IN_NARRATE_ERROR,
+    SOL_FILESYSTEM_ERROR,
+    SOL_LUA_NO_INSTANCE,
+    SOL_LUA_NO_FUNCTION,
+    SOL_NO_TARGET,
+    SOL_NOT_HANDLED,
     SOL_UNKNOWN_ERROR,
 } sol_status_t;
 
@@ -67,9 +81,10 @@ extern void sol_status_warn(sol_status_t status, const char *msg);
 #endif
 
 /*
- * Headers to look at next for update to status paradigm
-combat.h
-combat-region.h
+Revisit for updates:
+port.h
+
+These were left out so we could separate them.
 gff-char.h
 gff-common.h
 gff.h
@@ -77,27 +92,9 @@ gff-image.h
 gff-map.h
 gfftypes.h
 gff-xmi.h
-port.h
-replay.h
-rules.h
-save-load.h
-settings.h
-sol-lua-manager.h
-sol-lua-settings.h
-sol_textbox.h
 ssi-gui.h
 ssi-item.h
 ssi-object.h
 ssi-scmd.h
-statics.h
-stats.h
-status.h
-trigger.h
-view-character.h
-window-main.h
-window-manager.h
-wizard.h
 
-Revisit:
-entity.h
  */

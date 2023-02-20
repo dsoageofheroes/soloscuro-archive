@@ -30,7 +30,7 @@ extern sol_status_t sol_player_get_active( sol_entity_t **e);
 extern sol_status_t sol_player_get_inventory(const int slot, sol_inventory_t **i);
 extern sol_status_t sol_player_get_sprite(const int slot, sol_sprite_t *sprite);
 extern sol_status_t sol_player_exists(const int slot);
-extern sol_status_t sol_player_get_slot(entity_t *entity, int *slot);
+extern sol_status_t sol_player_get_slot(sol_entity_t *entity, int *slot);
 extern sol_status_t sol_player_ai(const int slot);
 
 enum{PLAYER_UP = 0x01, PLAYER_DOWN = 0x02, PLAYER_LEFT = 0x04, PLAYER_RIGHT = 0x08};

@@ -19,7 +19,7 @@ SDL_Texture* create_texture(const uint32_t gff_file,
     return ret;
 }
 
-extern void sol_draw_cone(int sx, int sy, int range) {
+extern sol_status_t sol_draw_cone(int sx, int sy, int range) {
     //Lets draw a triangle...
     SDL_Renderer *renderer = main_get_rend();
     SDL_SetRenderDrawColor(renderer, 192, 192, 192, 128);
@@ -41,4 +41,5 @@ extern void sol_draw_cone(int sx, int sy, int range) {
             }
         }
     }
+    return SOL_SUCCESS;
 }

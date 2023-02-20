@@ -717,7 +717,7 @@ static const struct luaL_Reg lslib [] = {
       {NULL, NULL}  /* sentinel */
     };
 
-extern const struct luaL_Reg* sol_ds_get_lib() { return lslib;}
+extern sol_status_t sol_ds_get_lib(const struct luaL_Reg **l) { *l = lslib; return SOL_SUCCESS; }
 
 // How Lua registers the functions.
 int luaopen_libds (lua_State *L){

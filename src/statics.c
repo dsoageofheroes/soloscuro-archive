@@ -1,6 +1,6 @@
 #include "statics.h"
 
-extern sol_status_t sol_static_from_entity(entity_t *entity, sol_static_t *s) {
+extern sol_status_t sol_static_from_entity(sol_entity_t *entity, sol_static_t *s) {
     s->ds_id = entity->ds_id;
     s->mapx = entity->mapx;
     s->mapy = entity->mapy;

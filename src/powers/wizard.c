@@ -8,43 +8,52 @@
 static sol_power_list_t* wizard_spells[10] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 static sol_power_t*      wizard_spell_list[WIZ_MAX];
 
-extern sol_power_list_t* wizard_get_spells(const int level) {
-    if (level < 1 || level > 10) { return NULL; }
-    return wizard_spells[level - 1];
+extern sol_status_t sol_wizard_get_spells(const int level, sol_power_list_t **pl) {
+    if (!pl) { return SOL_NULL_ARGUMENT;}
+    if (level < 1 || level > 10) { return SOL_OUT_OF_RANGE; }
+    *pl = wizard_spells[level - 1];
+    return SOL_SUCCESS;
 }
 
-extern sol_power_t* wizard_get_spell(const int idx) {
-    if (idx < 0 || idx >= WIZ_MAX) { return NULL; }
+extern sol_status_t sol_wizard_get_spell(const int idx, sol_power_t **p) {
+    if (!p) { return SOL_NULL_ARGUMENT;}
+    if (idx < 0 || idx >= WIZ_MAX) { return SOL_OUT_OF_RANGE; }
     //if (idx < 0 || idx >= WIZ_MAX) { return NULL; }
     //if (!wizard_spell_list) { exit(1); }
     //return (power_t*) 0x1000;
-    return wizard_spell_list[idx];
+    *p = wizard_spell_list[idx];
+    return SOL_SUCCESS;
 }
 
-extern void wizard_init() {
+extern sol_status_t sol_wizard_init() {
     memset(wizard_spell_list, 0x0, sizeof(sol_power_t*) * WIZ_MAX);
+    return SOL_SUCCESS;
 }
 
-extern void wizard_add_power(sol_power_t *pw, const int idx) {
+extern sol_status_t sol_wizard_add_power(sol_power_t *pw, const int idx) {
     int index = pw->level - 1;
-    if (index < 0 || index > 9) { return; }
+
+    if (!pw) { return SOL_NULL_ARGUMENT; }
+    if (index < 0 || index > 9) { return SOL_OUT_OF_RANGE; }
     if (!wizard_spells[index]) { sol_power_list_create(&wizard_spells[index]); }
     if (!pw->description) {
         sol_power_free(pw);
-        return;
+        return SOL_NULL_ARGUMENT;
     }
     sol_power_list_add(wizard_spells[index], pw);
     wizard_spell_list[idx] = pw;
     debug("Added %s to wizard level %d (%p)\n", pw->name, pw->level, pw);
+    return SOL_SUCCESS;
 }
 
-extern void wizard_cleanup() {
+extern sol_status_t sol_wizard_cleanup() {
     for (int i = 0; i < 10; i++) {
         if (wizard_spells[i]) {
             sol_power_list_free(wizard_spells[i]);
             wizard_spells[i] = NULL;
         }
     }
+    return SOL_SUCCESS;
 }
 
 static void load_name_from_gff(const uint8_t id, const uint16_t offset, const uint8_t max, char name[32]) {
@@ -70,19 +79,22 @@ static void load_name_from_gff(const uint8_t id, const uint16_t offset, const ui
     name[pos] = '\0';
 }
 
-void spell_get_psionic_name(uint8_t psi, char name[32]) {
+extern sol_status_t sol_spell_get_psionic_name(uint8_t psi, char name[32]) {
     load_name_from_gff(psi, 139, PSIONIC_MAX, name);
+    return SOL_SUCCESS;
 }
 
-void spell_get_wizard_name(uint8_t spell, char name[32]) {
+extern sol_status_t sol_spell_get_wizard_name(uint8_t spell, char name[32]) {
     load_name_from_gff(spell, 0, WIZ_MAX, name);
+    return SOL_SUCCESS;
 }
 
-void spell_get_cleric_name(uint8_t spell, char name[32]) {
+extern sol_status_t sol_spell_get_cleric_name(uint8_t spell, char name[32]) {
     load_name_from_gff(spell, 68, CLERIC_MAX, name);
+    return SOL_SUCCESS;
 }
 
-void spell_get_psin_name(uint8_t psin, char name[32]) {
+extern sol_status_t sol_spell_get_psin_name(uint8_t psin, char name[32]) {
     switch(psin) {
         case PSIONIC_PSYCHOKINETIC:
             strcpy(name, "Psyhchokinetic");
@@ -107,26 +119,28 @@ void spell_get_psin_name(uint8_t psin, char name[32]) {
             break;
         default:
             strcpy(name, "UNKNOWN");
+            return SOL_NOT_FOUND;
     }
+    return SOL_SUCCESS;
 }
 
-int spell_has_psin(sol_psin_t *psin, const uint8_t psi) {
+extern sol_status_t sol_spell_has_psin(sol_psin_t *psin, const uint8_t psi) {
     switch (psi) {
         case PSIONIC_PSYCHOKINETIC:
-            return psin->types[0];
+            return psin->types[0] ? SOL_SUCCESS : SOL_NOT_FOUND;
             break;
         case PSIONIC_PSYCHOMETABOLISM:
-            return psin->types[2];
+            return psin->types[2] ? SOL_SUCCESS : SOL_NOT_FOUND;
             break;
         case PSIONIC_TELEPATH:
-            return psin->types[4];
+            return psin->types[4] ? SOL_SUCCESS : SOL_NOT_FOUND;
             break;
     }
 
-    return 0;
+    return SOL_NOT_FOUND;
 }
 
-void spell_set_psin(sol_psin_t *psin, const uint8_t psi, const int on) {
+extern sol_status_t sol_spell_set_psin(sol_psin_t *psin, const uint8_t psi, const int on) {
     switch (psi) {
         case PSIONIC_PSYCHOKINETIC:
             psin->types[0] = (on) ? 1 : 0;
@@ -137,27 +151,35 @@ void spell_set_psin(sol_psin_t *psin, const uint8_t psi, const int on) {
         case PSIONIC_TELEPATH:
             psin->types[4] = (on) ? 1 : 0;
             break;
+        default: return SOL_NOT_FOUND;
     }
+    return SOL_SUCCESS;
 }
 
-void spell_set_psionic(sol_psionic_list_t *psi, uint16_t power) {
-    if (power < 0 || power >= PSIONIC_MAX) { return; }
+extern sol_status_t sol_spell_set_psionic(sol_psionic_list_t *psi, uint16_t power) {
+    if (!psi) { return SOL_NULL_ARGUMENT; }
+    if (power < 0 || power >= PSIONIC_MAX) { return SOL_OUT_OF_RANGE; }
     psi->psionics[power] = 1;
 }
 
-int spell_has_psionic(sol_psionic_list_t *psi, uint16_t power) {
-    if (power < 0 || power >= PSIONIC_MAX) { return 0; }
-    return psi->psionics[power];
+extern sol_status_t sol_spell_has_psionic(sol_psionic_list_t *psi, uint16_t power) {
+    if (!psi) { return SOL_NULL_ARGUMENT; }
+    if (power < 0 || power >= PSIONIC_MAX) { return SOL_OUT_OF_RANGE; }
+    return psi->psionics[power] ? SOL_SUCCESS : SOL_NOT_FOUND;
 }
 
-void spell_set_spell(ssi_spell_list_t *spells, uint16_t spell) {
-    if (spell < 0 || spell >= WIZ_MAX) { return; }
+extern sol_status_t sol_spell_set_spell(ssi_spell_list_t *spells, uint16_t spell) {
+    if (!spells) { return SOL_NULL_ARGUMENT; }
+    if (spell < 0 || spell >= WIZ_MAX) { return SOL_OUT_OF_RANGE; }
     spells->spells[spell / 8] |= 1<<(spell % 8);
 }
 
-int spell_has_spell(ssi_spell_list_t *spells, uint16_t spell) {
-    if (spell < 0 || spell >= WIZ_MAX) { return 0; }
-    return (spells->spells[spell / 8] >> (spell % 8)) & 0x01;
+extern sol_status_t sol_spell_has_spell(ssi_spell_list_t *spells, uint16_t spell) {
+    if (!spells) { return SOL_NULL_ARGUMENT; }
+    if (spell < 0 || spell >= WIZ_MAX) { return SOL_OUT_OF_RANGE; }
+    return (spells->spells[spell / 8] >> (spell % 8)) & 0x01
+        ? SOL_SUCCESS
+        : SOL_NOT_FOUND;
 }
 
 extern void spells_set_icon(sol_power_t *spell, const uint16_t id) {
@@ -190,14 +212,15 @@ extern void spells_set_hit(sol_power_t *spell, const uint16_t id) {
     */
 }
 
-extern char* spells_read_description(const uint16_t id) {
+extern sol_status_t sol_spells_read_description(const uint16_t id, char **msg) {
     char *description = NULL;
 
     gff_chunk_header_t chunk = gff_find_chunk_header(RESOURCE_GFF_INDEX, GFF_SPIN, id);
-    if (chunk.length <= 0) { return NULL; }
+    if (chunk.length <= 0) { return SOL_GFF_ERROR; }
     description = calloc(1, chunk.length + 1);
     gff_read_chunk(RESOURCE_GFF_INDEX, &chunk, description, chunk.length);
 
-    return description;
+    *msg = description;
+    return SOL_SUCCESS;
 }
 

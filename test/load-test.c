@@ -54,9 +54,9 @@ void create_players() {
     pc.saving_throw.breath = 14;
     pc.saving_throw.spell = 15;
     pc.allegiance = 1;
-    spell_set_psin(&psi, PSIONIC_PSYCHOKINETIC, 1);
-    spell_set_psin(&psi, PSIONIC_PSYCHOMETABOLISM, 0);
-    spell_set_psin(&psi, PSIONIC_TELEPATH, 0);
+    sol_spell_set_psin(&psi, PSIONIC_PSYCHOKINETIC, 1);
+    sol_spell_set_psin(&psi, PSIONIC_PSYCHOMETABOLISM, 0);
+    sol_spell_set_psin(&psi, PSIONIC_TELEPATH, 0);
     // Probably should add some psionics
     // Probably should add some spells
     ssi_item_load(&(inv.hand0), -1252); // long sword.
@@ -91,9 +91,9 @@ void create_players() {
     pc.saving_throw.breath = 13;
     pc.saving_throw.spell = 14;
     pc.allegiance = 1;
-    spell_set_psin(&psi, PSIONIC_PSYCHOKINETIC, 0);
-    spell_set_psin(&psi, PSIONIC_PSYCHOMETABOLISM, 1);
-    spell_set_psin(&psi, PSIONIC_TELEPATH, 0);
+    sol_spell_set_psin(&psi, PSIONIC_PSYCHOKINETIC, 0);
+    sol_spell_set_psin(&psi, PSIONIC_PSYCHOMETABOLISM, 1);
+    sol_spell_set_psin(&psi, PSIONIC_TELEPATH, 0);
     // Probably should add some psionics
     // Probably should add some spells
     ds_player_replace(1, &pc, &psi, &spells, &psionics, &inv, "Dwarf");
@@ -126,16 +126,16 @@ void create_players() {
     pc.saving_throw.breath = 13;
     pc.saving_throw.spell = 14;
     pc.allegiance = 1;
-    spell_set_psin(&psi, PSIONIC_PSYCHOKINETIC, 1);
-    spell_set_psin(&psi, PSIONIC_PSYCHOMETABOLISM, 1);
-    spell_set_psin(&psi, PSIONIC_TELEPATH, 1);
+    sol_spell_set_psin(&psi, PSIONIC_PSYCHOKINETIC, 1);
+    sol_spell_set_psin(&psi, PSIONIC_PSYCHOMETABOLISM, 1);
+    sol_spell_set_psin(&psi, PSIONIC_TELEPATH, 1);
     // Probably should add some psionics
-    spell_set_psionic(&psionics, PSIONIC_MENTAL_BARRIER);
-    spell_set_psionic(&psionics, PSIONIC_ENHANCED_STRENGTH);
-    spell_set_psionic(&psionics, PSIONIC_GRAFT_WEAPON);
-    spell_set_psionic(&psionics, PSIONIC_CONTROL_BODY);
-    spell_set_psionic(&psionics, PSIONIC_DETONATE);
-    spell_set_psionic(&psionics, PSIONIC_DISINTEGRATE);
+    sol_spell_set_psionic(&psionics, PSIONIC_MENTAL_BARRIER);
+    sol_spell_set_psionic(&psionics, PSIONIC_ENHANCED_STRENGTH);
+    sol_spell_set_psionic(&psionics, PSIONIC_GRAFT_WEAPON);
+    sol_spell_set_psionic(&psionics, PSIONIC_CONTROL_BODY);
+    sol_spell_set_psionic(&psionics, PSIONIC_DETONATE);
+    sol_spell_set_psionic(&psionics, PSIONIC_DISINTEGRATE);
     // Probably should add some spells
     ds_player_replace(2, &pc, &psi, &spells, &psionics, &inv, "Mel");
 
@@ -167,9 +167,9 @@ void create_players() {
     pc.saving_throw.breath = 13;
     pc.saving_throw.spell = 14;
     pc.allegiance = 1;
-    spell_set_psin(&psi, PSIONIC_PSYCHOKINETIC, 0);
-    spell_set_psin(&psi, PSIONIC_PSYCHOMETABOLISM, 0);
-    spell_set_psin(&psi, PSIONIC_TELEPATH, 1);
+    sol_spell_set_psin(&psi, PSIONIC_PSYCHOKINETIC, 0);
+    sol_spell_set_psin(&psi, PSIONIC_PSYCHOMETABOLISM, 0);
+    sol_spell_set_psin(&psi, PSIONIC_TELEPATH, 1);
     spell_set_spell(&spells, WIZ_ARMOR);
     spell_set_spell(&spells, WIZ_BURNING_HANDS);
     spell_set_spell(&spells, WIZ_CHARM_PERSON);
@@ -291,13 +291,13 @@ void test_load_save_char(void) {
     TEST_ASSERT_EQUAL_INT(1, spell_has_psin(ds_player_get_psi(2), PSIONIC_PSYCHOKINETIC));
     TEST_ASSERT_EQUAL_INT(1, spell_has_psin(ds_player_get_psi(2), PSIONIC_PSYCHOMETABOLISM));
     TEST_ASSERT_EQUAL_INT(1, spell_has_psin(ds_player_get_psi(2), PSIONIC_TELEPATH));
-    TEST_ASSERT_EQUAL_INT(1, spell_has_psionic(ds_player_get_psionics(2), PSIONIC_MENTAL_BARRIER));
-    TEST_ASSERT_EQUAL_INT(1, spell_has_psionic(ds_player_get_psionics(2), PSIONIC_ENHANCED_STRENGTH));
-    TEST_ASSERT_EQUAL_INT(1, spell_has_psionic(ds_player_get_psionics(2), PSIONIC_GRAFT_WEAPON));
-    TEST_ASSERT_EQUAL_INT(1, spell_has_psionic(ds_player_get_psionics(2), PSIONIC_CONTROL_BODY));
-    TEST_ASSERT_EQUAL_INT(1, spell_has_psionic(ds_player_get_psionics(2), PSIONIC_DETONATE));
-    TEST_ASSERT_EQUAL_INT(1, spell_has_psionic(ds_player_get_psionics(2), PSIONIC_DISINTEGRATE));
-    TEST_ASSERT_EQUAL_INT(0, spell_has_psionic(ds_player_get_psionics(2), PSIONIC_MIND_BLANK));
+    TEST_ASSERT_EQUAL_INT(1, sol_spell_has_psionic(ds_player_get_psionics(2) == SOL_SUCCESS, PSIONIC_MENTAL_BARRIER));
+    TEST_ASSERT_EQUAL_INT(1, sol_spell_has_psionic(ds_player_get_psionics(2) == SOL_SUCCESS, PSIONIC_ENHANCED_STRENGTH));
+    TEST_ASSERT_EQUAL_INT(1, sol_spell_has_psionic(ds_player_get_psionics(2) == SOL_SUCCESS, PSIONIC_GRAFT_WEAPON));
+    TEST_ASSERT_EQUAL_INT(1, sol_spell_has_psionic(ds_player_get_psionics(2) == SOL_SUCCESS, PSIONIC_CONTROL_BODY));
+    TEST_ASSERT_EQUAL_INT(1, sol_spell_has_psionic(ds_player_get_psionics(2) == SOL_SUCCESS, PSIONIC_DETONATE));
+    TEST_ASSERT_EQUAL_INT(1, sol_spell_has_psionic(ds_player_get_psionics(2) == SOL_SUCCESS, PSIONIC_DISINTEGRATE));
+    TEST_ASSERT_EQUAL_INT(0, sol_spell_has_psionic(ds_player_get_psionics(2) == SOL_SUCCESS, PSIONIC_MIND_BLANK));
     // Probably should add some spells
     TEST_ASSERT_EQUAL_STRING("Edwin",  ds_player_get_combat(3)->name); // make sure it was cleared.
     TEST_ASSERT_EQUAL_INT(10000, ds_player_get_char(3)->current_xp);

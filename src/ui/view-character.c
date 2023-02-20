@@ -61,7 +61,8 @@ static sol_dim_t apply_params(const sol_dim_t rect, const uint32_t x, const uint
 
 static void set_power(const int type, const int level) {
     char buf[64];
-    sol_power_list_t *powers = wizard_get_spells(level);
+    sol_power_list_t *powers;
+    sol_wizard_get_spells(level, &powers);
     sol_power_instance_t *rover = powers ? powers->head : NULL;
     size_t power_pos = 0;
     if (!rover) { return; }
@@ -542,7 +543,7 @@ void view_character_return_control () {
         sol_psionic_list_t* psionics;
         sol_new_character_get_psionic_list(&psionics);
         if (pc && psi && spells && psionics) {
-            if (dnd2e_character_is_valid(pc)) {
+            if (sol_dnd2e_character_is_valid(pc) == SOL_SUCCESS) {
                 sol_player_set(slot_clicked, pc);
                 sol_player_load(slot_clicked);
                 warn ("TODO: Add back character creation to added list of chars!\n");

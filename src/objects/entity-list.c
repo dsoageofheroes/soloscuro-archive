@@ -199,7 +199,7 @@ extern sol_status_t sol_entity_list_load_etab(sol_entity_list_t *list, sol_stati
     int num_objs = gff_map_get_num_objects(gff_idx, map_id);
 
     for (int i = 0; i < num_objs; i++) {
-        dude_t *dude;
+        sol_dude_t *dude;
         sol_entity_create_from_etab(open_files[gff_idx].entry_table, i, &dude);
         //dude->anim.scmd = gff_map_get_object_scmd(gff_idx, map_id, i, 0);
         gff_map_fill_scmd_info(dude, gff_idx, map_id, i, 0);

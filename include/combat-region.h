@@ -5,25 +5,24 @@
 
 #define MAX_COMBAT_OBJS (200)
 
-typedef struct combat_round_s {
+typedef struct sol_combat_round_s {
     sol_entity_list_t entities;
     uint16_t num;
-} combat_round_t;
+} sol_combat_round_t;
 
 // Represents all combatants in the entire region.
-typedef struct combat_region_s {
+typedef struct sol_combat_region_s {
     sol_entity_list_t combatants;
-    combat_round_t round;
-} combat_region_t;
+    sol_combat_round_t round;
+} sol_combat_region_t;
 
-extern void      sol_combat_region_init(combat_region_t *cr);
-extern int       sol_combat_check_if_over(combat_region_t *cr);
-extern void      sol_combat_clear(combat_region_t *cr);
-extern int       sol_combat_guard_check(combat_region_t *cr);
-extern entity_t* sol_combat_get_current(combat_region_t *cr);
-extern void      sol_combat_next_combatant(combat_region_t *cr);
-extern sol_status_t sol_combat_attempt_action(combat_region_t *cr, dude_t *dude);
-extern void      sol_combat_put_front(combat_region_t *cr, dude_t *dude);
-extern entity_t* sol_combat_get_closest_enemy(combat_region_t *cr, const int x, const int y);
+extern sol_status_t sol_combat_region_init(sol_combat_region_t *cr);
+extern sol_status_t sol_combat_check_if_over(sol_combat_region_t *cr);
+extern sol_status_t sol_combat_clear(sol_combat_region_t *cr);
+extern sol_status_t sol_combat_guard_check(sol_combat_region_t *cr);
+extern sol_status_t sol_combat_get_current(sol_combat_region_t *cr, sol_entity_t **e);
+extern sol_status_t sol_combat_next_combatant(sol_combat_region_t *cr);
+extern sol_status_t sol_combat_attempt_action(sol_combat_region_t *cr, sol_dude_t *dude);
+extern sol_status_t sol_combat_get_closest_enemy(sol_combat_region_t *cr, const int x, const int y, sol_entity_t **e);
 
 #endif

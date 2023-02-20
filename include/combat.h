@@ -16,7 +16,7 @@ typedef struct sol_attack_s {
     sol_effect_type_t effect;
 } sol_attack_t;
 
-typedef enum combat_scmd_e {
+typedef enum sol_combat_scmd_e {
     COMBAT_SCMD_STAND_DOWN,
     COMBAT_SCMD_STAND_UP,
     COMBAT_SCMD_STAND_RIGHT,
@@ -36,7 +36,7 @@ typedef enum combat_scmd_e {
     COMBAT_POWER_CAST,
     COMBAT_POWER_THROW,
     COMBAT_POWER_HIT,
-} combat_scmd_t;
+} sol_combat_scmd_t;
 
 enum {
     COMBAT_STATUS_OK          = 1,
@@ -50,24 +50,14 @@ enum {
     COMBAT_STATUS_MAX
 };
 
-void          sol_combat_init(combat_region_t *cr);
-void          sol_combat_free(combat_region_t *rc);
-scmd_t*       sol_combat_get_scmd(const combat_scmd_t type);
-entity_t*     sol_combat_get_current(combat_region_t *cr);
-extern int    sol_combat_active(combat_region_t *cr);
-extern void   sol_combat_set_hunt(combat_region_t *cr, const uint32_t combat_id);
-extern void   sol_combat_set_scmd(entity_t *e, const combat_scmd_t scmd);
-extern void   sol_combat_update_scmd_info(entity_t *dude);
-extern void   sol_combat_player_action(const sol_entity_action_t action);
-extern int    sol_combat_activate_power(sol_power_t *pw, entity_t *source, entity_t *target, const int32_t x, const int32_t y);
-extern int    sol_combat_add_attack_animation(sol_region_t *reg, dude_t *dude, entity_t *target,
+extern sol_status_t sol_combat_set_scmd(sol_entity_t *e, const sol_combat_scmd_t scmd);
+extern sol_status_t sol_combat_update_scmd_info(sol_entity_t *dude);
+extern sol_status_t sol_combat_get_scmd(const sol_combat_scmd_t type, scmd_t **);
+extern sol_status_t sol_combat_active(sol_combat_region_t *cr);
+extern sol_status_t sol_combat_activate_power(sol_power_t *pw, sol_entity_t *source, sol_entity_t *target, const int32_t x, const int32_t y);
+extern sol_status_t sol_combat_add_attack_animation(sol_region_t *reg, sol_dude_t *dude, sol_entity_t *target,
                                               sol_power_t *power, enum sol_entity_action_e action);
-extern int sol_combat_add_guard_animation(sol_region_t *reg, dude_t *dude, entity_t *target,
-                                        sol_power_t *power, enum sol_entity_action_e action);
-extern int    sol_combat_guard(entity_t *entity);
-extern void   sol_combat_kill_all_enemies();
-
-// pre-processor ordering.
-extern void   sol_combat_is_defeated(sol_region_t *reg, entity_t *dude);
+extern sol_status_t sol_combat_guard(sol_entity_t *entity);
+extern sol_status_t sol_combat_kill_all_enemies();
 
 #endif

@@ -21,7 +21,7 @@ static void sol_render() {
     sol_region_manager_get_current(&reg);
     sol_region_tick(reg);
     sol_combat_update(reg);
-    port_window_render();
+    sol_window_render(sol_get_camerax(), sol_get_cameray());
 }
 
 extern sol_status_t sol_still_running() { return done ? SOL_STOPPED : SOL_SUCCESS; }
@@ -87,7 +87,7 @@ extern sol_status_t sol_game_loop() {
     int16_t gn;
     sol_status_t status = SOL_UNKNOWN_ERROR;
     int ticks_to_increment_time = TICKS_PER_ROUND;
-    combat_region_t *cr = NULL;
+    sol_combat_region_t *cr = NULL;
     sol_region_t *reg;
     while (!done) {
         port_handle_input();
@@ -98,7 +98,7 @@ extern sol_status_t sol_game_loop() {
 
         sol_region_manager_get_current(&reg);
         status = sol_arbiter_combat_region(reg, &cr);
-        if (!sol_combat_active(cr)) {
+        if (sol_combat_active(cr) != SOL_SUCCESS) {
             ticks_to_increment_time--;
         }
         if (ticks_to_increment_time <= 0) {

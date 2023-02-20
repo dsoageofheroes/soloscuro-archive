@@ -13,10 +13,10 @@ static sol_sprite_t box;
 static char action_text[16];
 static char name_text[32];
 static char info_text[32];
-static entity_t *entity = NULL;
+static sol_entity_t *entity = NULL;
 static sol_dim_t action_loc, name_loc, info_loc;
 
-void interact_set_entity(entity_t *_entity) {
+void interact_set_entity(sol_entity_t *_entity) {
     entity = _entity;
     if (entity) {
         strcpy(name_text, entity->name);

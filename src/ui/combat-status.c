@@ -19,8 +19,8 @@ static int damage_amount = 0;
 
 typedef struct animate_sprite_node_list_s {
     sol_power_t *power;
-    entity_t *source;
-    entity_t *target;
+    sol_entity_t *source;
+    sol_entity_t *target;
     enum sol_entity_action_e action;
     int cycles;
     int is_moving;
@@ -96,14 +96,15 @@ void combat_status_init(const uint32_t x, const uint32_t y) {
 
 static void get_status() {
     sol_status_t status;
-    combat_region_t *cr = NULL;
+    sol_combat_region_t *cr = NULL;
     sol_region_t *reg;
 
 
     sol_region_manager_get_current(&reg);
     status = sol_arbiter_combat_region(reg, &cr);
-    entity_t *dude = sol_combat_get_current(cr);
+    sol_entity_t *dude;
 
+    sol_combat_get_current(cr, &dude);
     if (dude) {
         strcpy(combat_status.name, dude->name);
         combat_status.current_hp = dude->stats.hp;
@@ -122,7 +123,7 @@ void combat_status_render(void *data) {
     char buf[128];
     static int last_action = 0;
     sol_status_t status;
-    combat_region_t *cr = NULL;
+    sol_combat_region_t *cr = NULL;
     sol_sprite_info_t info;
     sol_region_t *reg;
 
@@ -140,7 +141,7 @@ void combat_status_render(void *data) {
 
     sol_region_manager_get_current(&reg);
     status = sol_arbiter_combat_region(reg, &cr);
-    if (!sol_combat_active(cr)) { return; }
+    if (sol_combat_active(cr) != SOL_SUCCESS) { return; }
 
     if (2 == 1) {
         sol_draw_cone(100, 100, 200);
@@ -206,7 +207,7 @@ extern sol_status_t sol_combat_action(const sol_entity_action_t *ca) {
             cast->y = info.y + sol_get_camerax();
             cast->destx = cast->x;
             cast->desty = cast->y;
-            cast->scmd = sol_combat_get_scmd(COMBAT_POWER_CAST);
+            sol_combat_get_scmd(COMBAT_POWER_CAST, &cast->scmd);
             //add_node_list(cast, ca->power->cast_sound, ca);
             break;
         case EA_POWER_THROW: // handled in entity-animations
@@ -220,7 +221,7 @@ extern sol_status_t sol_combat_action(const sol_entity_action_t *ca) {
             hit->y = info.y + sol_get_cameray();
             hit->destx = hit->x;
             hit->desty = hit->y;
-            hit->scmd = sol_combat_get_scmd(COMBAT_POWER_CAST);
+            sol_combat_get_scmd(COMBAT_POWER_CAST, &hit->scmd);
             //add_node_list(hit, ca->power->hit_sound, ca);
         default:
             break;

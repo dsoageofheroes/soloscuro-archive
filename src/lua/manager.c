@@ -4,10 +4,11 @@
 #include "gpl-state.h"
 
 static lua_State *lua_state = NULL;
-static int sol_lua_run(const char *filename, const char *name);
+static sol_status_t sol_lua_run(const char *filename, const char *name);
 
-extern lua_State* sol_lua_get_state() {
-    if (lua_state) { return lua_state; }
+extern sol_status_t sol_lua_get_state(lua_State **l) {
+    if (!l) { return SOL_NULL_ARGUMENT; }
+    if (lua_state) { *l = lua_state; return SOL_SUCCESS; }
 
     lua_state = luaL_newstate();
     luaL_openlibs(lua_state);
@@ -20,10 +21,11 @@ extern lua_State* sol_lua_get_state() {
     luaL_dostring(lua_state, "function keyup() end\n");
     luaL_dostring(lua_state, "function idle() end\n");
 
-    return lua_state;
+    *l = lua_state;
+    return SOL_SUCCESS;
 }
 
-extern int sol_lua_load(const char *filename) {
+extern sol_status_t sol_lua_load(const char *filename) {
     return sol_lua_run(filename, "init");
 }
 
@@ -33,24 +35,25 @@ static int sol_lua_error(const char *msg) {
     return 0;
 }
 
-extern int sol_lua_run_function(const char *function) {
+extern sol_status_t sol_lua_run_function(const char *function) {
 
     lua_getglobal(lua_state, function);
     if (lua_pcall(lua_state, 0, 0, 0)) {
         sol_lua_error("Can't call");
         lua_pop(lua_state, 1);
-        return 1;
+        return SOL_LUA_NO_FUNCTION;
     }
 
-    return 0;
+    return SOL_SUCCESS;
 }
 
-static int sol_lua_run(const char *filename, const char *name) {
-    sol_lua_get_state();
+static sol_status_t sol_lua_run(const char *filename, const char *name) {
+    lua_State *l;
+    sol_lua_get_state(&l);
 
     if (luaL_loadfile(lua_state, filename)) {
         error("unable to open '%s'.\n", filename);
-        return 1;
+        return SOL_FILESYSTEM_ERROR;
     }
 
     if (lua_pcall(lua_state, 0, 0, 0)) { sol_lua_error("Can't prime"); return 1;}

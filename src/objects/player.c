@@ -250,7 +250,7 @@ extern sol_status_t sol_player_get_active(sol_entity_t **e) {
     return sol_player_get(active, e);
 }
 
-extern sol_status_t sol_player_get_slot(entity_t *entity, int *slot) {
+extern sol_status_t sol_player_get_slot(sol_entity_t *entity, int *slot) {
     if (!entity || !slot) { return SOL_NULL_ARGUMENT; }
 
     *slot = -1;
@@ -286,7 +286,7 @@ extern sol_status_t sol_player_load_graphics(const int slot) {
     if (slot < 0 || slot >= MAX_PCS) { return SOL_OUT_OF_RANGE; }
     sol_dude_t *dude;
     sol_player_get(slot, &dude);
-    dude->anim.scmd = sol_combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
+    sol_combat_get_scmd(COMBAT_SCMD_STAND_DOWN, &dude->anim.scmd);
     return load_character_sprite(slot, settings_zoom());
 }
 
@@ -387,12 +387,17 @@ extern sol_status_t sol_player_load(const int slot) {
 
 extern sol_status_t sol_player_set_delay(const int amt) {
     if (amt < 0) { return SOL_OUT_OF_RANGE; }
+    scmd_t *s = NULL;
 
     for (int i = 0; i < 4; i++) {
-        sol_combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_DOWN)[i].delay = amt;
-        sol_combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_UP)[i].delay = amt;
-        sol_combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_LEFT)[i].delay = amt;
-        sol_combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_RIGHT)[i].delay = amt;
+        sol_combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_DOWN, &s);
+        s[i].delay = amt;
+        sol_combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_UP, &s);
+        s[i].delay = amt;
+        sol_combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_LEFT, &s);
+        s[i].delay = amt;
+        sol_combat_get_scmd(COMBAT_SCMD_PLAYER_MOVE_RIGHT, &s);
+        s[i].delay = amt;
     }
 
     return SOL_SUCCESS;

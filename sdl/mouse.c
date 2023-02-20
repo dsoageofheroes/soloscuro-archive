@@ -180,11 +180,12 @@ extern sol_status_t sol_mouse_get_power(sol_power_t **p) {
     return SOL_SUCCESS;
 }
 
-extern void sol_mouse_set_as_power(sol_power_t *pw) {
-    if (!pw) { return; }
+extern sol_status_t sol_mouse_set_as_power(sol_power_t *pw) {
+    if (!pw) { return SOL_NULL_ARGUMENT; }
     if (power_cursor) { SDL_FreeCursor(power_cursor); }
 
     power = pw;
     power_cursor = create_cursor(RESOURCE_GFF_INDEX, GFF_ICON, pw->icon_id);
     sol_mouse_set_state(MOUSE_POWER);
+    return SOL_SUCCESS;
 }

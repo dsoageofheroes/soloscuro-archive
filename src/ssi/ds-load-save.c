@@ -263,7 +263,7 @@ static int load_player(const int id, const int player, const int res_id) {
         sol_player_free(player);
         sol_player_get(player, &dude);
         sol_entity_load_from_object(dude, buf + offset);
-        dude->anim.scmd = sol_combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
+        sol_combat_get_scmd(COMBAT_SCMD_STAND_DOWN, &dude->anim.scmd);
         offset += rdff->len;
     }
 

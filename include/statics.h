@@ -22,7 +22,7 @@ typedef struct sol_static_list_s {
     sol_static_t *statics;
 } sol_static_list_t;
 
-extern sol_status_t sol_static_from_entity(entity_t *entity, sol_static_t *s);
+extern sol_status_t sol_static_from_entity(sol_entity_t *entity, sol_static_t *s);
 extern sol_status_t sol_static_list_init(sol_static_list_t *ssl);
 extern sol_status_t sol_static_list_cleanup(sol_static_list_t *ssl);
 extern sol_status_t sol_static_list_add(sol_static_list_t *ssl, sol_static_t *s);

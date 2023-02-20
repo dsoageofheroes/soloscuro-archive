@@ -64,7 +64,7 @@ extern sol_status_t sol_region_manager_cleanup(int _free_entities) {
 
 // private: we assume entity and reg are valid.
 static int entity_is_in_region(const sol_entity_t *entity, const sol_region_t *reg) {
-    dude_t *dude;
+    sol_dude_t *dude;
 
     sol_entity_list_for_each(reg->entities, dude) {
         if (dude == entity) { return 1; }

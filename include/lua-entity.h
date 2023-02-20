@@ -4,6 +4,6 @@
 #include "lua-inc.h"
 #include "entity.h"
 
-extern sol_status_t sol_lua_entity_function(entity_t *entity, const char *func, lua_State *l);
+extern sol_status_t sol_lua_entity_function(sol_entity_t *entity, const char *func, lua_State *l);
 
 #endif

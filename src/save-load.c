@@ -20,7 +20,7 @@ static int save_item(FILE *file, sol_item_t *item, const char *name) {
     return 1;
 }
 
-static int save_inventory(FILE *file, entity_t *entity, const char *name) {
+static int save_inventory(FILE *file, sol_entity_t *entity, const char *name) {
     if (!entity->inv) { return 0; }
 
     for (int i = 0; i < SLOT_END; i++) {
@@ -42,7 +42,7 @@ static void trim_end(char *str) {
     }
 }
 
-static int write_entity(FILE *file, entity_t *entity, const char *name) {
+static int write_entity(FILE *file, sol_entity_t *entity, const char *name) {
     sol_sprite_info_t info;
 
     if (entity->name) {
@@ -142,7 +142,7 @@ static int write_entity(FILE *file, entity_t *entity, const char *name) {
 }
 
 static int write_players(FILE *file) {
-    dude_t *dude;
+    sol_dude_t *dude;
     for (int i = 0; i < MAX_PCS; i++) {
         sol_player_get(i, &dude);
         if (dude) {
@@ -169,7 +169,7 @@ static int write_region(FILE *file, sol_region_t *reg) {
 
 static int write_regions(FILE *file) {
     int slot;
-    dude_t *entity = NULL;
+    sol_dude_t *entity = NULL;
     sol_region_t *reg;
 
     sol_region_manager_get_current(&reg);
@@ -189,20 +189,22 @@ static int write_regions(FILE *file) {
     return 1;
 }
 
-extern int sol_save_to_file(const char *filepath, const char *name) {
+extern sol_status_t sol_save_to_file(const char *filepath, const char *name) {
     printf("Need to save to %s\n", filepath);
     sol_status_t status = SOL_UNKNOWN_ERROR;
-    combat_region_t *cr = NULL;
+    sol_combat_region_t *cr = NULL;
     FILE *file;
     sol_region_t *reg;
+    sol_dude_t   *dude;
+
     sol_region_manager_get_current(&reg);
     status = sol_arbiter_combat_region(reg, &cr);
-    if (sol_combat_get_current(cr) != NULL) { return 0; }
-    if (sol_narrate_is_open() == SOL_SUCCESS) { return 0; }
+    if (sol_combat_get_current(cr, &dude) != SOL_SUCCESS && dude != NULL) { return SOL_IN_COMBAT_ERROR; }
+    if (sol_narrate_is_open() == SOL_SUCCESS) { return SOL_IN_NARRATE_ERROR; }
 
     //file = fopen("quick.sav", "wb");
     file = fopen(filepath, "wb");
-    if (!file) { return 0; }
+    if (!file) { return SOL_FILESYSTEM_ERROR; }
 
     fprintf(file, "name = \"%s\"\n", name);
     fprintf(file, "function init()\n");
@@ -216,15 +218,15 @@ extern int sol_save_to_file(const char *filepath, const char *name) {
     fprintf(file, "end\n");
 
     fclose(file);
-    return 1;
+    return SOL_SUCCESS;
 }
 
-extern int sol_load_get_name(const char *filepath, char *name, const size_t len) {
+extern sol_status_t sol_load_get_name(const char *filepath, char *name, const size_t len) {
     FILE *file = fopen(filepath, "rb");
     char c;
     size_t pos = 0;
 
-    if (!file) { return 0; }
+    if (!file) { return SOL_FILESYSTEM_ERROR; }
 
     while ((c = fgetc(file)) != EOF && c != '"') {;}
     while ((c = fgetc(file)) != EOF && c != '"') {
@@ -234,10 +236,10 @@ extern int sol_load_get_name(const char *filepath, char *name, const size_t len)
     name[pos] = '\0';
     fclose(file);
 
-    return 1;
+    return SOL_SUCCESS;
 }
 
-extern int sol_load_from_file(const char *filepath) {
+extern sol_status_t sol_load_from_file(const char *filepath) {
     sol_window_clear();
     sol_region_manager_cleanup(1);
     sol_gpl_cleanup();
@@ -246,5 +248,5 @@ extern int sol_load_from_file(const char *filepath) {
     sol_gpl_init();
     sol_gameloop_init();
     sol_lua_load(filepath);
-    return 0;
+    return SOL_SUCCESS;
 }

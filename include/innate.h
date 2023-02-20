@@ -8,8 +8,8 @@
 #include "status.h"
 #include "entity.h"
 
-extern sol_status_t sol_innate_action(dude_t *dude);
-extern sol_status_t sol_innate_is_door(dude_t *dude);
-extern sol_status_t sol_innate_activate_door(dude_t *door);
+extern sol_status_t sol_innate_action(sol_dude_t *dude);
+extern sol_status_t sol_innate_is_door(sol_dude_t *dude);
+extern sol_status_t sol_innate_activate_door(sol_dude_t *door);
 
 #endif

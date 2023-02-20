@@ -20,7 +20,7 @@ uint8_t command_implemented = 0; // Temporary while I figure out each function.
 
 /* Globals */
 void get_parameters(int16_t amt);
-static entity_t *other = NULL;
+static sol_entity_t *other = NULL;
 
 sol_gpl_param_t param;
 /* End Globals */
@@ -36,7 +36,7 @@ extern sol_status_t sol_gpl_get_global(enum sol_gpl_global_e what, sol_entity_t 
     return SOL_GPL_UNKNOWN_TYPE;
 }
 
-extern sol_status_t sol_gpl_set_global(enum sol_gpl_global_e what, entity_t *entity) {
+extern sol_status_t sol_gpl_set_global(enum sol_gpl_global_e what, sol_entity_t *entity) {
     switch(what) {
         case GPL_OTHER: other = entity; return SOL_SUCCESS;
         default: warn("unknown type: %d\n", what); break;

@@ -52,7 +52,7 @@ void create_players() {
     dude->mapy = 20;
 }
 
-static entity_t *monsters[100];
+static sol_entity_t *monsters[100];
 static int num_monsters = 0;
 
 static void create_basic_monsters(region_t *reg) {

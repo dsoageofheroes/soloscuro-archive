@@ -3,7 +3,7 @@
 #include <math.h>
 
 // The assembly didn't make sense, so I'm taking a guess...
-static int is_less(entity_t *e0, entity_t *e1) {
+static int is_less(sol_entity_t *e0, sol_entity_t *e1) {
     int map0y = e0->mapy; // * 16 + a0->entity->sprite.yoffset)
     int map1y = e1->mapy; // * 16 + a1->entity->sprite.yoffset)
     sol_sprite_info_t info;
@@ -38,7 +38,7 @@ static void swap_with_next(sol_entity_list_node_t *en) {
 }
 
 // WARNING: This may change the head of the animation list!
-extern sol_status_t sol_animate_sprite_tick(sol_entity_action_t *action, entity_t *entity ) {
+extern sol_status_t sol_animate_sprite_tick(sol_entity_action_t *action, sol_entity_t *entity ) {
     if (!entity || !action)        { return SOL_NULL_ARGUMENT; }
     if (action->action == EA_SCMD) { return SOL_SUCCESS; }
     animate_sprite_t *anim = &entity->anim;

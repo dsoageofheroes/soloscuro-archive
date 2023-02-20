@@ -37,20 +37,16 @@
 
 #include "sprite.h"
 
-// Narrate functions
-
-extern void port_swap_enitity(int obj_id, entity_t *dude);
-
 extern sol_status_t sol_play_sound_effect(const uint16_t id);
+extern sol_status_t sol_set_lua_globals(lua_State *l);
+extern sol_status_t sol_mouse_set_as_power(sol_power_t *pw);
+extern sol_status_t sol_draw_cone(int sx, int sy, int range);
+extern uint32_t sol_get_camerax();
+extern uint32_t sol_get_cameray();
+extern sol_status_t sol_camera_scrollx(const int amt);
+extern sol_status_t sol_camera_scrolly(const int amt);
 
-extern void port_load_item(sol_item_t *item);
-extern int port_load_region(const int region);
-
-extern void port_start();
-extern void port_init();
-extern void port_close();
-
-typedef enum game_config_e {
+typedef enum sol_game_config_e {
     CONFIG_REPEAT,
     CONFIG_XSCROLL,
     CONFIG_YSCROLL,
@@ -61,26 +57,17 @@ typedef enum game_config_e {
     CONFIG_SET_QUIET,
     CONFIG_EXIT,
     CONFIG_RUN_BROWSER,
-} game_config_t;
+} sol_game_config_t;
 
-extern void port_set_config(game_config_t gc, ssize_t val);
-
-extern void port_set_lua_globals(lua_State *l);
-extern void port_entity_update_scmd(entity_t *entity);
-
+// TODO: clean these up at some point.
+extern void port_start();
+extern void port_init();
+extern void port_close();
+extern void port_set_config(sol_game_config_t gc, ssize_t val);
 extern void port_handle_input();
 extern void port_tick();
-extern void port_window_render();
 extern void port_start_display_frame();
 extern void port_commit_display_frame();
-
-extern void sol_mouse_set_as_power(sol_power_t *pw);
-extern void sol_draw_cone(int sx, int sy, int range);
-extern uint32_t sol_get_camerax();
-extern uint32_t sol_get_cameray();
-
 extern void sol_center_on_player();
-extern void sol_camera_scrollx(const int amt);
-extern void sol_camera_scrolly(const int amt);
 
 #endif

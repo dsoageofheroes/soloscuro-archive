@@ -7,7 +7,7 @@
 #include <string.h>
 
 static sol_window_t *win = NULL;
-static dude_t       *entity_to_examine = NULL;
+static sol_dude_t       *entity_to_examine = NULL;
 static uint32_t      winx, winy;
 static sol_sprite_t  bar = SPRITE_ERROR;
 static char          level_text[32];
@@ -17,14 +17,14 @@ static void update_ui() {
 
     if (entity_to_examine) {
         sol_sprite_set_frame_keep_loc(win->buttons[0].spr,
-            sol_trigger_get_look(entity_to_examine->ds_id).obj ? 0 : 2); // GET
+            sol_trigger_has_look(entity_to_examine->ds_id) == SOL_SUCCESS ? 0 : 2); // GET
         sol_sprite_set_frame_keep_loc(win->buttons[1].spr,
-            sol_trigger_get_use(entity_to_examine->ds_id).obj ? 0 : 2); // USE
+            sol_trigger_has_use(entity_to_examine->ds_id) == SOL_SUCCESS ? 0 : 2); // USE
         sol_sprite_set_frame_keep_loc(win->buttons[2].spr,
-            sol_trigger_get_talkto(entity_to_examine->ds_id).obj ? 0 : 2); // TALK
+            sol_trigger_has_talkto(entity_to_examine->ds_id) == SOL_SUCCESS ? 0 : 2); // TALK
 
         if (entity_to_examine->name == NULL) {
-            entity_t* t;
+            sol_entity_t* t;
             sol_entity_create_from_objex(entity_to_examine->ds_id, &t);
             entity_to_examine->name = strdup(t->name ? t->name : "");
             entity_to_examine->class[0].level = t->class[0].level;
@@ -43,12 +43,12 @@ static void update_ui() {
 extern sol_status_t sol_examine_is_open() { return entity_to_examine == NULL ? SOL_IS_CLOSED : SOL_SUCCESS; }
 
 // returns if examine window should pop up
-extern sol_status_t sol_examine_entity(entity_t *dude) {
+extern sol_status_t sol_examine_entity(sol_entity_t *dude) {
     int amt = 0;
 
-    amt += sol_trigger_get_talkto(dude->ds_id).obj ? 1 : 0;
-    amt += sol_trigger_get_look(dude->ds_id).obj ? 1 : 0;
-    amt += sol_trigger_get_use(dude->ds_id).obj ? 1 : 0;
+    amt += sol_trigger_has_talkto(dude->ds_id) == SOL_SUCCESS ? 1 : 0;
+    amt += sol_trigger_has_look(dude->ds_id) == SOL_SUCCESS ? 1 : 0;
+    amt += sol_trigger_has_use(dude->ds_id) == SOL_SUCCESS ? 1 : 0;
 
     if (amt < 1) { return SOL_NO_EXAMINE_TRIGGER; }
 

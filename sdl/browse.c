@@ -1048,13 +1048,13 @@ static void render_entry_spst() {
     pos = snprintf(buf, BUF_MAX, "Character Wizard/Cleric abilities: ");
     for (int i = 0; i < WIZ_MAX; i++) {
         if (spells.spells[i]) {
-            spell_get_wizard_name(i, name);
+            sol_spell_get_wizard_name(i, name);
             pos += snprintf(buf + pos, BUF_MAX - pos, "%s, ", name);
         }
     }
     for (int i = 0; i < CLERIC_MAX; i++) {
         if (spells.spells[68 + i]) {
-            spell_get_cleric_name(i, name);
+            sol_spell_get_cleric_name(i, name);
             pos += snprintf(buf + pos, BUF_MAX - pos, "%s, ", name);
         }
     }
@@ -1073,7 +1073,7 @@ static void render_entry_psst() {
     pos = snprintf(buf, BUF_MAX, "Character Psionic abilities: ");
     for (int i = 0; i < 34; i++) {
         if (psionics[i]) {
-            spell_get_psionic_name(i, name);
+            sol_spell_get_psionic_name(i, name);
             pos += snprintf(buf + pos, BUF_MAX - pos, "%s, ", name);
         }
     }
@@ -1348,7 +1348,7 @@ static void render_entry_psin() {
     for (int i = 0; i < 3; i++) {
         if (psin.types[2*i]) {
             //printf("i = %d\n", i);
-            spell_get_psin_name(i, name);
+            sol_spell_get_psin_name(i, name);
             pos += snprintf(buf + pos, BUF_MAX - pos, "%s, ", name);
         }
     }

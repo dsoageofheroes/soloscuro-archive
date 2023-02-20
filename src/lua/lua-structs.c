@@ -74,7 +74,7 @@ extern sol_status_t sol_lua_dumpstack (lua_State *L) {
   return SOL_SUCCESS;
 }
 
-extern sol_status_t sol_lua_load_entity (lua_State *l, dude_t *dude) {
+extern sol_status_t sol_lua_load_entity (lua_State *l, sol_dude_t *dude) {
     lua_newtable(l); // entity table
     lua_pushlightuserdata(l, dude);
     lua_setfield(l, -2, "ptr__");
@@ -164,7 +164,7 @@ static int create_player (lua_State *l) {
 
 static int create_entity (lua_State *l) {
     int has_inventory = luaL_checkinteger(l, 1);
-    dude_t *dude;
+    sol_dude_t *dude;
     sol_entity_create(has_inventory, &dude);
     return sol_lua_load_entity(l, dude) == SOL_SUCCESS ? 1 : 0;
 }
@@ -256,12 +256,13 @@ static int test_pass (lua_State *l) {
 
 static int in_combat (lua_State *l) {
     sol_status_t status = SOL_UNKNOWN_ERROR;
-    combat_region_t *cr = NULL;
+    sol_combat_region_t *cr = NULL;
     sol_region_t *reg;
+    sol_dude_t   *dude;
 
     sol_region_manager_get_current(&reg);
     sol_arbiter_combat_region(reg, &cr);
-    lua_pushboolean(l, sol_combat_get_current(cr) != NULL);
+    lua_pushboolean(l, sol_combat_get_current(cr, &dude) == SOL_SUCCESS && dude != NULL);
     return 1;
 }
 
@@ -291,8 +292,9 @@ static const struct luaL_Reg sol_lib [] = {
     {NULL, NULL}
 };
 
-extern const struct luaL_Reg* lua_struct_get_funcs() {
-    return sol_lib;
+extern sol_status_t sol_lua_struct_get_funcs(const struct luaL_Reg **r) {
+    *r = sol_lib;
+    return SOL_SUCCESS;
 }
 
 static int entity_get(lua_State *l) {
@@ -385,7 +387,7 @@ static const luaL_Reg entity_methods[] = {
 
 static int stats_get(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    stats_t *stats;
+    sol_stats_t *stats;
 
     sol_lua_get_userdata(l, -3, (void**)&stats);
     //printf("indexing '%s' of stats %p\n", str, stats);
@@ -418,7 +420,7 @@ static int stats_get(lua_State *l) {
 
 static int stats_set(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    stats_t *stats;
+    sol_stats_t *stats;
 
     sol_lua_get_userdata(l, -4, (void**)&stats);
     if (lua_isinteger(l, 3)) {
@@ -512,7 +514,7 @@ static const luaL_Reg animate_methods[] = {
 
 static int attack_get(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    innate_attack_t *attack;
+    sol_innate_attack_t *attack;
 
     sol_lua_get_userdata(l, -3, (void**)&attack);
     //printf("indexing '%s' of attack %p\n", str, attack);
@@ -529,7 +531,7 @@ static int attack_get(lua_State *l) {
 
 static int attack_set(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    innate_attack_t *attack;
+    sol_innate_attack_t *attack;
 
     sol_lua_get_userdata(l, -4, (void**)&attack);
     if (lua_isinteger(l, 3)) {
@@ -591,7 +593,7 @@ static const luaL_Reg gff_methods[] = {
 
 static int saves_get(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    saving_throws_t *saves;
+    sol_saving_throws_t *saves;
 
     sol_lua_get_userdata(l, -3, (void**)&saves);
     //printf("indexing '%s' of saves %p\n", str, saves);
@@ -608,7 +610,7 @@ static int saves_get(lua_State *l) {
 
 static int saves_set(lua_State *l) {
     const char *str = luaL_checkstring(l, 2);
-    saving_throws_t *saves;
+    sol_saving_throws_t *saves;
 
     sol_lua_get_userdata(l, -4, (void**)&saves);
     if (lua_isinteger(l, 3)) {
@@ -817,7 +819,8 @@ static void setup_metatable(lua_State *l, const char *name, const luaL_Reg *meth
     lua_setglobal(l, global);
 }
 
-extern void lua_struct_register(lua_State *l) {
+extern sol_status_t sol_lua_struct_register(lua_State *l) {
+    if (!l) { return SOL_NULL_ARGUMENT; }
     setup_metatable(l, "soloscuro.entity", entity_methods, "entity__");
     setup_metatable(l, "soloscuro.stats", stats_methods, "stats__");
     setup_metatable(l, "soloscuro.slots", slots_methods, "slots__");
@@ -829,4 +832,5 @@ extern void lua_struct_register(lua_State *l) {
     setup_metatable(l, "soloscuro.region", region_methods, "region__");
     setup_metatable(l, "soloscuro.ability", ability_methods, "ability__");
     setup_metatable(l, "soloscuro.gff", gff_methods, "gff__");
+    return SOL_SUCCESS;
 }

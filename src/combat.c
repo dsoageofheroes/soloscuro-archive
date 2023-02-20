@@ -216,21 +216,23 @@ static void monster_set_animation(sol_entity_t *monster, sol_entity_action_t *ac
     }
 }
 
-extern int sol_combat_add_attack_animation(sol_region_t *reg, sol_dude_t *dude, sol_entity_t *target,
+extern sol_status_t sol_combat_add_attack_animation(sol_region_t *reg, sol_dude_t *dude, sol_entity_t *target,
                                         sol_power_t *power, enum sol_entity_action_e action) {
     sol_attack_t     attack;
     sol_status_t     status = SOL_UNKNOWN_ERROR;
-    combat_region_t *cr     = NULL;
+    sol_combat_region_t *cr     = NULL;
+
+    if (!reg || !dude || !target || !power) { return SOL_NULL_ARGUMENT; }
 
     status = sol_arbiter_combat_region(reg, &cr);
 
     status = sol_arbiter_entity_attack(dude, target, cr->round.num, action, &attack);
 
-    if (attack.damage == -2) { return -2; } // not your move!
+    if (attack.damage == -2) { return SOL_NOT_TURN; } // not your move!
 
     if (attack.damage <= -1) {
         dude->stats.combat.move = 0;
-        return -1;
+        return SOL_NO_MOVES_LEFT;
     }
 
     sol_entity_animation_list_add_effect(&(dude->actions), action, dude, target, power, 30, 30);
@@ -242,7 +244,7 @@ extern int sol_combat_add_attack_animation(sol_region_t *reg, sol_dude_t *dude, 
         sol_entity_animation_list_add_effect(&reg->actions, EA_DAMAGE_APPLY, dude, target, NULL, 0, attack.damage);
     }
 
-    return 0;
+    return SOL_SUCCESS;
 }
 
 static void monster_action(sol_region_t *reg, sol_entity_t *monster) {
@@ -281,7 +283,7 @@ static void monster_action(sol_region_t *reg, sol_entity_t *monster) {
 
 extern sol_status_t sol_combat_update(sol_region_t *reg) {
     sol_entity_t *combatant;
-    combat_region_t *cr = NULL;
+    sol_combat_region_t *cr = NULL;
     sol_status_t status = SOL_NOT_IMPLEMENTED;
     int slot;
 
@@ -290,16 +292,16 @@ extern sol_status_t sol_combat_update(sol_region_t *reg) {
     status = sol_arbiter_combat_region(reg, &cr);
     if (cr == NULL) { return SOL_NOT_FOUND; }
 
-    if (sol_combat_check_if_over(cr)) {
+    if (sol_combat_check_if_over(cr) == SOL_SUCCESS) {
         sol_combat_clear(cr);
         sol_arbiter_combat_check(reg);
         return SOL_STOPPED;
     }
 
-    combatant = sol_combat_get_current(cr);
+    sol_combat_get_current(cr, &combatant);
     if (!combatant) {
         sol_arbiter_next_round(cr);
-        combatant = sol_combat_get_current(cr);
+        sol_combat_get_current(cr, &combatant);
     }
     //printf("combatant = %s: %d\n", combatant->name, combatant->stats.combat.attack_num);
 
@@ -320,19 +322,19 @@ extern sol_status_t sol_combat_update(sol_region_t *reg) {
         ) { return SOL_WAIT_ACTIONS; }
 
     // Now check for guard: TODO: also check if we just moved and multi-guard
-    if (sol_combat_guard_check(cr)) { return SOL_SUCCESS; }
+    if (sol_combat_guard_check(cr) == SOL_SUCCESS) { return SOL_SUCCESS; }
     monster_action(reg, combatant);
     return SOL_SUCCESS;
 }
 
-extern int sol_combat_activate_power(sol_power_t *pw, sol_entity_t *source, sol_entity_t *target, const int32_t x, const int32_t y) {
-    if (!pw || !source) { return 0; }
+extern sol_status_t sol_combat_activate_power(sol_power_t *pw, sol_entity_t *source, sol_entity_t *target, const int32_t x, const int32_t y) {
+    if (!pw || !source) { return SOL_NULL_ARGUMENT; }
     sol_region_t *reg;
     sol_region_manager_get_current(&reg);
     sol_power_instance_t pi;
-    if (!reg) { error ("current region is null!\n"); }
+    if (!reg) { error ("current region is null!\n"); return SOL_NULL_ARGUMENT;}
 
-    powers_load(pw);
+    sol_powers_load(pw);
 
     memset(&pi, 0x0, sizeof(sol_power_instance_t));
     pi.entity = source;
@@ -375,25 +377,26 @@ extern int sol_combat_activate_power(sol_power_t *pw, sol_entity_t *source, sol_
         default:
             warn("pw->shape %d not implemented\n", pw->shape);
     }
-    return 1;
+    return SOL_SUCCESS;
 }
 
 #define BUF_LEN (128)
 // entity == NULL, means for any player.
-extern int sol_combat_guard(sol_entity_t *entity) {
+extern sol_status_t sol_combat_guard(sol_entity_t *entity) {
     char buf[BUF_LEN];
     sol_status_t status;
-    combat_region_t *cr = NULL;
-    sol_entity_t *dude = sol_combat_get_current(cr);
+    sol_combat_region_t *cr = NULL;
+    sol_entity_t *dude;
     sol_region_t *reg;
     int pos, slot;
 
+    sol_combat_get_current(cr, &dude);
     sol_region_manager_get_current(&reg);
     status = sol_arbiter_combat_region(reg, &cr);
 
-    if (!dude) { return 0; }
-    if (sol_player_get_slot(dude, &slot) == SOL_SUCCESS && slot < 0 && !entity) { return 0; }
-    if (entity && dude != entity) { return 0; }
+    if (!dude) { return SOL_NULL_ARGUMENT; }
+    if (sol_player_get_slot(dude, &slot) == SOL_SUCCESS && slot < 0 && !entity) { return SOL_OUT_OF_RANGE; }
+    if (entity && dude != entity) { return SOL_NOT_TURN; }
 
     pos = snprintf(buf, BUF_LEN - 1, "%s guards", dude->name);
     buf[pos] = '\0';
@@ -401,33 +404,37 @@ extern int sol_combat_guard(sol_entity_t *entity) {
     sol_combat_next_combatant(cr);
     sol_popup_quick_message(buf);
     sol_window_push(&popup_window, 0, 0);
-    return 1;
+    return SOL_SUCCESS;
 }
 
-extern int sol_combat_active(combat_region_t *cr) {
-    if (!cr) { return 0; }
-    return cr->combatants.head != 0;
+extern sol_status_t sol_combat_active(sol_combat_region_t *cr) {
+    if (!cr) { return SOL_NULL_ARGUMENT; }
+    return cr->combatants.head != 0
+        ? SOL_SUCCESS
+        : SOL_NOT_IN_COMBAT;
 }
 
-extern void sol_combat_set_scmd(sol_entity_t *dude, const combat_scmd_t scmd) {
-    dude->anim.scmd = sol_combat_get_scmd(scmd);
+extern sol_status_t sol_combat_set_scmd(sol_entity_t *dude, const sol_combat_scmd_t scmd) {
+    if (!dude) { return SOL_NULL_ARGUMENT; }
+    sol_combat_get_scmd(scmd, &dude->anim.scmd);
     dude->anim.scmd_info.gff_idx = -1;
     dude->anim.scmd_info.res_id = scmd;
+    return SOL_SUCCESS;
 }
 
-extern void sol_combat_kill_all_enemies() {
+extern sol_status_t sol_combat_kill_all_enemies() {
     sol_status_t status = SOL_NOT_IMPLEMENTED;
     sol_dude_t *dude;
     sol_dude_t *player;
     sol_region_t *reg;
-    combat_region_t *cr = NULL;
+    sol_combat_region_t *cr = NULL;
     int slot;
 
     sol_region_manager_get_current(&reg);
     sol_player_get_active(&player);
     status = sol_arbiter_combat_region(reg, &cr);
 
-    if (!cr || !reg || !player) { return; }
+    if (!cr || !reg || !player) { return SOL_NULL_ARGUMENT; }
 
     sol_entity_list_for_each((&cr->combatants), dude) {
         if (sol_player_get_slot(dude, &slot) == SOL_SUCCESS && slot >= 0) { continue; }
@@ -448,7 +455,7 @@ extern void sol_combat_kill_all_enemies() {
         if (sol_player_get_slot(dude, &slot) == SOL_SUCCESS && slot < 0) {
             sol_entity_free(dude);
         }
-        return;
+        return SOL_SUCCESS;
     }
-
+    return SOL_SUCCESS;
 }

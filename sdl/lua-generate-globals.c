@@ -3,7 +3,7 @@
 
 #define BUF_MAX (128)
 
-extern void port_set_lua_globals(lua_State *l) {
+extern sol_status_t sol_set_lua_globals(lua_State *l) {
     char buf[BUF_MAX];
     snprintf(buf, BUF_MAX, "DSLK_RETURN = %d", SDLK_RETURN); luaL_dostring(l, buf);
     snprintf(buf, BUF_MAX, "DSLK_ESCAPE = %d", SDLK_ESCAPE); luaL_dostring(l, buf);
@@ -244,4 +244,5 @@ extern void port_set_lua_globals(lua_State *l) {
     snprintf(buf, BUF_MAX, "DSLK_APP2 = %d", SDLK_APP2); luaL_dostring(l, buf);
     snprintf(buf, BUF_MAX, "DSLK_AUDIOREWIND = %d", SDLK_AUDIOREWIND); luaL_dostring(l, buf);
     snprintf(buf, BUF_MAX, "DSLK_AUDIOFASTFORWARD = %d", SDLK_AUDIOFASTFORWARD); luaL_dostring(l, buf);
+    return SOL_SUCCESS;
 }

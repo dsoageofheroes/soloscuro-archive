@@ -49,7 +49,7 @@ extern sol_status_t sol_key_down(const sol_key_e key) {
         case SOLK_F12:     sol_add_load_save_set_mode(ACTION_LOAD);
                            sol_window_toggle(&als_window, 0, 0);
                            break;
-        case SOLK_KP_PLUS: if (sol_save_to_file(QUICK_SAVE_LOC, "quick save")) {
+        case SOLK_KP_PLUS: if (sol_save_to_file(QUICK_SAVE_LOC, "quick save") == SOL_SUCCESS) {
                                sol_popup_quick_message("Game saved to quick.sav");
                            } else {
                                sol_popup_quick_message("Can't save");

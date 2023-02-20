@@ -7,7 +7,7 @@
 #include "gff.h"
 #include "settings.h"
 
-int textbox_handle_keydown(textbox_t *tb, SDL_Keysym ks) {
+int textbox_handle_keydown(sol_textbox_t *tb, SDL_Keysym ks) {
     if (!tb) { return 0; }
     if (!tb->in_focus) { return 0; }
     if (ks.sym == SDLK_ESCAPE) { tb->in_focus = 0; }
@@ -49,14 +49,14 @@ int textbox_handle_keydown(textbox_t *tb, SDL_Keysym ks) {
     return 1;
 }
 
-int textbox_handle_keyup(textbox_t *tb, SDL_Keysym ks) {
+int textbox_handle_keyup(sol_textbox_t *tb, SDL_Keysym ks) {
     if (!tb) { return 0; }
     if (!tb->in_focus) { return 0; }
     if (ks.sym == SDLK_RETURN) { tb->in_focus = 0; }
     return 1;
 }
 
-static uint16_t calc_offset(textbox_t *tb) {
+static uint16_t calc_offset(sol_textbox_t *tb) {
     if (!tb) { return 0; }
     uint16_t offset = 0;
 
@@ -67,7 +67,7 @@ static uint16_t calc_offset(textbox_t *tb) {
     return offset;
 }
 
-extern sol_status_t sol_textbox_render(textbox_t *tb) {
+extern sol_status_t sol_textbox_render(sol_textbox_t *tb) {
     sol_status_t status;
     if (!tb) { return SOL_NULL_ARGUMENT; }
 

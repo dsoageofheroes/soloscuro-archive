@@ -15,6 +15,6 @@ typedef struct player_character_s {
 } player_character_t;
 
 extern int gff_char_delete(const int id);
-extern int gff_char_add_character(entity_t *pc, sol_psin_t *psi, ssi_spell_list_t *spells, sol_psionic_list_t *psionics, char *name);
+extern int gff_char_add_character(sol_entity_t *pc, sol_psin_t *psi, ssi_spell_list_t *spells, sol_psionic_list_t *psionics, char *name);
 
 #endif

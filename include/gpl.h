@@ -45,7 +45,7 @@ extern sol_status_t sol_gpl_write_local_state(FILE *file);
 extern sol_status_t sol_gpl_write_global_state(FILE *file);
 
 extern sol_status_t sol_gpl_cleanup();
-extern sol_status_t sol_gpl_set_global(enum sol_gpl_global_e what, entity_t *entity);
+extern sol_status_t sol_gpl_set_global(enum sol_gpl_global_e what, sol_entity_t *entity);
 
 extern sol_status_t sol_gpl_request_impl(int16_t token, int16_t name,
         int32_t num1, int32_t num2);

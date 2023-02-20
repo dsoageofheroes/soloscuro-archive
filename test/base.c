@@ -20,7 +20,7 @@ int8_t port_narrate_open(int16_t action, const char *text, int16_t index) {
     return 0;
 }
 
-void port_swap_enitity(int obj_id, entity_t *dude) {
+void port_swap_enitity(int obj_id, sol_entity_t *dude) {
 }
 
 int port_ask_yes_no() {
@@ -28,9 +28,6 @@ int port_ask_yes_no() {
 }
 
 void port_change_region(sol_region_t *reg) {
-}
-
-extern void port_load_item(sol_item_t *item) {
 }
 
 //extern void port_load_sprite(sprite_info_t *spr, gff_palette_t *pal, const int gff_index, const int type, const uint32_t id) {
@@ -42,7 +39,7 @@ extern sol_status_t port_play_sound_effect(const uint16_t id) {
 extern void port_start() {
 }
 
-extern void port_set_config(game_config_t gc, ssize_t val) {
+extern void port_set_config(sol_game_config_t gc, ssize_t val) {
 }
 
 extern void port_player_load(const int slot) {
@@ -52,7 +49,7 @@ extern int port_load_region(const int region) {
     return 1;
 }
 
-extern void port_set_lua_globals(lua_State *l) {
+extern sol_status_t sol_set_lua_globals(lua_State *l) {
 }
 
 extern void port_init() {
@@ -114,8 +111,8 @@ sol_status_t sol_sprite_print(const sol_sprite_t sprite_id) {return SOL_SUCCESS;
 sol_status_t sol_print_line_len(const sol_font_t font, const char *text, size_t x, size_t y, const uint32_t len) {return SOL_SUCCESS;}
 sol_status_t sol_font_render_center(sol_font_t font, const char *str, const uint16_t x, const uint16_t y, const uint16_t w) {return SOL_SUCCESS;}
 
-void sol_mouse_set_as_power(sol_power_t *pw) {}
-void sol_draw_cone(int sx, int sy, int range) {}
+extern sol_status_t sol_mouse_set_as_power(sol_power_t *pw) {}
+extern sol_status_t sol_draw_cone(int sx, int sy, int range) {}
 uint32_t sol_get_camerax() {return 100;}
 uint32_t sol_get_cameray() {return 100;}
 
@@ -143,11 +140,10 @@ void port_window_render() {}
 void port_start_display_frame() {}
 void port_commit_display_frame() {}
 
-void       sol_textbox_set_current(textbox_t *tb) {}
+extern sol_status_t sol_textbox_set_current(sol_textbox_t *tb) {return SOL_SUCCESS;}
 void sol_font_free() {}
 sol_status_t sol_play_sound_effect(const uint16_t id) {return SOL_SUCCESS; }
-sol_status_t sol_textbox_render(textbox_t *tb) {return SOL_SUCCESS; }
-void port_entity_update_scmd(entity_t *entity) {}
-extern void sol_camera_scrollx(const int amt) {}
-extern void sol_camera_scrolly(const int amt) {}
+sol_status_t sol_textbox_render(sol_textbox_t *tb) {return SOL_SUCCESS; }
+extern sol_status_t sol_camera_scrollx(const int amt) {return SOL_SUCCESS;}
+extern sol_status_t sol_camera_scrolly(const int amt) {return SOL_SUCCESS;}
 extern uint16_t     sol_sprite_get_frame_count(const uint16_t id){ return 0;}

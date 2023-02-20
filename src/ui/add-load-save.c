@@ -24,7 +24,7 @@ static sol_sprite_t action_btn, exit_btn, delete_btn;
 static sol_sprite_t title;
 static sol_sprite_t bar;
 static uint32_t xoffset, yoffset;
-static textbox_t *name_tb = NULL;
+static sol_textbox_t *name_tb = NULL;
 
 extern char *strdup(const char *s);
 
@@ -180,7 +180,8 @@ void add_load_save_init(const uint32_t x, const uint32_t y) {
     sol_status_check(
         sol_sprite_new(pal, 45 + x / zoom, 31 + y / zoom, zoom, RESOURCE_GFF_INDEX, GFF_ICON, 18100, &bar),
         "Unable to load als bar.");
-    name_tb = sol_textbox_create(32, 50 + x / zoom, 148 + y / zoom);
+    sol_status_check(sol_textbox_create(32, 50 + x / zoom, 148 + y / zoom, &name_tb),
+            "Unable to create name text box.");
     sol_textbox_set_current(name_tb);
 
     switch(mode) {
@@ -314,7 +315,7 @@ int add_load_save_handle_mouse_down(const sol_mouse_button_t button, const uint3
         }
     }
 
-    sol_textbox_set_focus(name_tb, (sol_textbox_is_in(name_tb, x, y)));
+    sol_textbox_set_focus(name_tb, (sol_textbox_is_in(name_tb, x, y)) == SOL_SUCCESS);
 
     return 1; // means I captured the mouse click
 }
@@ -350,8 +351,8 @@ int add_load_save_handle_mouse_up(const sol_mouse_button_t button, const uint32_
             }
             if (selection < 0) { return 0; }
             snprintf(filename, 31, SAVE_FORMAT, selection);
-            if (sol_save_to_file(filename, sol_textbox_get_text(name_tb))) {
-                sprintf(msg, "Game %s saved.", sol_textbox_get_text(name_tb));
+            if (sol_save_to_file(filename, name_tb->text) == SOL_SUCCESS) {
+                sprintf(msg, "Game %s saved.", name_tb->text);
                 sol_window_pop();
                 sol_window_push(&popup_window, 100, 75);
                 sol_popup_quick_message(msg);

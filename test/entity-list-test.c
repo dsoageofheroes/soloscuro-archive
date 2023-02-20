@@ -43,7 +43,7 @@ void test_basic(void) {
 
 void test_load_etab(void) {
     char gff_name[32];
-    dude_t *dude;
+    sol_dude_t *dude;
     size_t xsum = 0;
     size_t ysum = 0;
     sol_entity_list_t *list = NULL;

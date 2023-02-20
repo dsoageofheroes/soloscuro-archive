@@ -49,10 +49,12 @@ static char *ds1_gffs = NULL;
 static uint32_t xmappos, ymappos;
 static int32_t xmapdiff, ymapdiff;
 
-static textbox_t *textbox = NULL;
+static sol_textbox_t *textbox = NULL;
 
-extern void sol_textbox_set_current(textbox_t *tb) {
+extern sol_status_t sol_textbox_set_current(sol_textbox_t *tb) {
+    if (!tb) { return SOL_NULL_ARGUMENT; }
     textbox = tb;
+    return SOL_SUCCESS;
 }
 
 #define NUM_KEYS (256)
@@ -128,15 +130,15 @@ void handle_input() {
             case SDL_KEYUP:
                 if (ignore_repeat && event.key.repeat != 0) { break; }
                 if (textbox_handle_keyup(textbox, event.key.keysym)) { return; }
-                if (sol_lua_keyup(event.key.keysym.sym)) { break; }
-                if (sol_window_handle_key_press(keys[event.key.keysym.sym & 0xFF])) { return; }
+                if (sol_lua_keyup(event.key.keysym.sym) == SOL_SUCCESS) { break; }
+                if (sol_window_handle_key_press(keys[event.key.keysym.sym & 0xFF]) == SOL_SUCCESS) { return; }
                 sol_key_up(keys[event.key.keysym.sym & 0xFF]);
                 break;
             case SDL_KEYDOWN:
-                if (sol_window_handle_key_down(sdl_to_ea(event.key.keysym))) { break; }
+                if (sol_window_handle_key_down(sdl_to_ea(event.key.keysym)) == SOL_SUCCESS) { break; }
                 if (ignore_repeat && event.key.repeat != 0) { break; }
                 if (textbox_handle_keydown(textbox, event.key.keysym)) { return; }
-                if (sol_lua_keydown(event.key.keysym.sym)) { break; }
+                if (sol_lua_keydown(event.key.keysym.sym) == SOL_SUCCESS) { break; }
                 sol_key_down(keys[event.key.keysym.sym & 0xFF]);
                 break;
             case SDL_MOUSEMOTION:
@@ -168,22 +170,18 @@ void port_handle_input() {
 
 void main_set_ignore_repeat(int repeat) { ignore_repeat = repeat; }
 
-extern void sol_camera_scrollx(const int amt) { xmappos += amt; }
-extern void sol_camera_scrolly(const int amt) { ymappos += amt; }
+extern sol_status_t sol_camera_scrollx(const int amt) { xmappos += amt; return SOL_SUCCESS; }
+extern sol_status_t sol_camera_scrolly(const int amt) { ymappos += amt; return SOL_SUCCESS; }
 
 void sol_center_on_player() {
     int w, h;
 
     SDL_GetRendererOutputSize(renderer, &w, &h);
-    dude_t *dude;
+    sol_dude_t *dude;
     sol_player_get_active(&dude);
 
     xmappos = dude->mapx * 16 * settings_zoom() - w / 2;
     ymappos = dude->mapy * 16 * settings_zoom() - h / 2;
-}
-
-void port_window_render() {
-    sol_window_render(xmappos, ymappos);
 }
 
 // Simple timing for now...
@@ -387,7 +385,7 @@ void main_exit_system() {
     sol_game_loop_signal(WAIT_FINAL, 0);
 }
 
-extern void port_set_config(game_config_t gc, ssize_t val) {
+extern void port_set_config(sol_game_config_t gc, ssize_t val) {
     switch(gc) {
         case CONFIG_REPEAT: main_set_ignore_repeat(val); break;
         //case CONFIG_XSCROLL: main_set_xscroll(val); break;

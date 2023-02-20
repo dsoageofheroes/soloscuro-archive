@@ -17,7 +17,7 @@
 #include <string.h>
 
 // For now one combat region per region_t, later add more.
-static combat_region_t combat_regions[MAX_REGIONS];
+static sol_combat_region_t combat_regions[MAX_REGIONS];
 static char            region_in_combat[MAX_REGIONS] = {0};
 
 extern sol_status_t sol_arbiter_hits(sol_entity_animation_node_t *ea) {
@@ -32,7 +32,7 @@ static int get_dist(sol_entity_t *entity, const uint16_t x, const uint16_t y) {
     return (xdiff > ydiff) ? xdiff : ydiff;
 }
 
-extern sol_status_t sol_arbiter_combat_region(sol_region_t *reg, combat_region_t **cr) {
+extern sol_status_t sol_arbiter_combat_region(sol_region_t *reg, sol_combat_region_t **cr) {
     if (!reg) {return SOL_NULL_ARGUMENT; }
     if (reg->map_id < 0 || reg->map_id >= MAX_REGIONS) { return SOL_ILLEGAL_ARGUMENT; }
 
@@ -45,19 +45,19 @@ extern sol_status_t sol_arbiter_combat_region(sol_region_t *reg, combat_region_t
     return SOL_SUCCESS;
 }
 
-static void place_combatants(combat_region_t *cr) {
+static void place_combatants(sol_combat_region_t *cr) {
     if (!cr) { return; }
     sol_dude_t *entity = NULL;
 
     sol_entity_list_for_each((&(cr->combatants)), entity) {
-        memset(&entity->stats.combat, 0x0, sizeof(combat_round_stats_t));
-        entity->stats.combat.initiative = dnd2e_roll_initiative(entity);
+        memset(&entity->stats.combat, 0x0, sizeof(sol_combat_round_stats_t));
+        sol_dnd2e_roll_initiative(entity);
         entity->stats.combat.move = dnd2e_get_move(entity);
         sol_entity_list_add_by_init((&cr->round.entities), entity, NULL);
     }
 }
 
-extern sol_status_t sol_arbiter_next_round(combat_region_t* cr) {
+extern sol_status_t sol_arbiter_next_round(sol_combat_region_t* cr) {
     if (!cr) { return SOL_NULL_ARGUMENT; }
     int16_t gn;
     sol_status_t status;
@@ -75,7 +75,7 @@ extern sol_status_t sol_arbiter_next_round(combat_region_t* cr) {
 extern sol_status_t sol_arbiter_enter_combat(sol_region_t *reg, const uint16_t x, const uint16_t y) {
     const int        dist = 10; // distance of the sphere;
     sol_dude_t          *enemy = NULL;
-    combat_region_t *cr = NULL;
+    sol_combat_region_t *cr = NULL;
     sol_status_t     status = SOL_UNKNOWN_ERROR;
 
     // validate args and confirm we can enter combat.
@@ -112,7 +112,7 @@ extern sol_status_t sol_arbiter_enter_combat(sol_region_t *reg, const uint16_t x
         }
     }
 
-    if (sol_combat_check_if_over(cr)) {
+    if (sol_combat_check_if_over(cr) == SOL_SUCCESS) {
         sol_combat_clear(cr);
         return region_in_combat[reg->map_id] = 0;
     }
@@ -128,7 +128,7 @@ extern sol_status_t sol_arbiter_enter_combat(sol_region_t *reg, const uint16_t x
 extern sol_status_t sol_arbiter_combat_check(sol_region_t* reg) {
     if (!reg || reg->map_id < 0 || reg->map_id >= MAX_REGIONS) { return SOL_NULL_ARGUMENT; }
 
-    if (sol_combat_check_if_over(combat_regions + reg->map_id)) {
+    if (sol_combat_check_if_over(combat_regions + reg->map_id) == SOL_SUCCESS) {
         region_in_combat[reg->map_id] = 0;
         sol_trigger_noorders_event();
     }
@@ -148,21 +148,22 @@ extern sol_status_t sol_arbiter_combat_check(sol_region_t* reg) {
 extern sol_status_t sol_arbiter_entity_attack(sol_entity_t *source, sol_entity_t *target, int round, enum sol_entity_action_e action, sol_attack_t *attack) {
     sol_status_t        status = SOL_UNKNOWN_ERROR;
     static sol_attack_t error = { -2, 0 };
-    combat_region_t    *cr = NULL;
+    sol_combat_region_t    *cr = NULL;
     sol_region_t       *reg;
+    sol_entity_t       *cur;
 
     sol_region_manager_get_current(&reg);
     status = sol_arbiter_combat_region(reg, &cr);
     sol_status_check(status, "Unable to get combat region!");
      
     // For now just use local until MMO is up.
-    if (sol_combat_get_current(cr) != source && source->combat_status != EA_GUARD) {
+    if (sol_combat_get_current(cr, &cur) != SOL_SUCCESS || (cur != source && source->combat_status != EA_GUARD)) {
         *attack = error;
         return SOL_ILLEGAL_ATTACK;
     }
 
     switch (action) {
-        case EA_GUARD:   if (!dnd2e_can_melee_again(source, source->stats.combat.attack_num ,round)) {
+        case EA_GUARD:   if (sol_dnd2e_can_melee_again(source, source->stats.combat.attack_num ,round) != SOL_SUCCESS) {
                              *attack = error;
                              return SOL_ILLEGAL_ARGUMENT;
                          }

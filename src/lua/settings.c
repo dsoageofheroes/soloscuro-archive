@@ -15,6 +15,7 @@
 #include "sol-lua-manager.h"
 #include "sol-lua-settings.h"
 #include "region-manager.h"
+#include "lua-inc.h"
 #include <string.h>
 #include <ctype.h>
 
@@ -125,7 +126,7 @@ static int debug_set_desc(lua_State *l) {
 
     //printf("debug_set_desc(%d, %d, %d)\n", type, level, idx);
     if (type == 0) {
-        powers = wizard_get_spells(level);
+        sol_wizard_get_spells(level, &powers);
     }
 
     if (!powers) { return 0; }
@@ -210,7 +211,7 @@ static void add_wizard_globals(lua_State *l) {
     sol_power_t *pw = NULL;
 
     for (int i = 0; i < WIZ_MAX; i++) {
-        pw = wizard_get_spell(i);
+        sol_wizard_get_spell(i, &pw);
         if (pw) {
             snprintf(buf, 128, "soloscuro.WIZ_%s=%d", pw->name, i);
             for (int j = 9; j < 128 && buf[j] != '=' && buf[j] != '\0'; j++) {
@@ -222,27 +223,36 @@ static void add_wizard_globals(lua_State *l) {
     }
 }
 
-extern void sol_lua_settings_register(lua_State *l) {
+extern sol_status_t sol_lua_settings_register(lua_State *l) {
+    const struct luaL_Reg *r;
     set_globals(l);
     pos = 0;
     memset(sol_lib, 0x0, sizeof(sol_lib));
     lua_newtable(l);
-    add_funcs(lua_struct_get_funcs());
+    sol_lua_struct_get_funcs(&r);
+    add_funcs(r);
     add_funcs(sol_funcs);
-    add_funcs(sol_ds_get_lib());
+    sol_ds_get_lib(&r);
+    add_funcs(r);
 
     luaL_setfuncs(l, sol_lib, 0);
     lua_setglobal(l, "soloscuro");
 
-    lua_struct_register(l);
+    sol_lua_struct_register(l);
+    return SOL_SUCCESS;
 }
 
-extern void sol_lua_register_globals() {
-    add_wizard_globals(sol_lua_get_state());
+extern sol_status_t sol_lua_register_globals() {
+    lua_State *l;
+    sol_lua_get_state(&l);
+    add_wizard_globals(l);
+    return SOL_SUCCESS;
 }
 
 static int sol_lua_error(const char *msg) {
-    error("%s: %s\n", msg, lua_tostring(sol_lua_get_state(), -1));
+    lua_State *l;
+    sol_lua_get_state(&l);
+    error("%s: %s\n", msg, lua_tostring(l, -1));
     return 0;
 }
 
@@ -263,8 +273,9 @@ static void write_generic_settings() {
 
 static void load_game() {
     const char *lua_str = NULL;
-    lua_State *sol_lua = sol_lua_get_state();
+    lua_State *sol_lua;
 
+    sol_lua_get_state(&sol_lua);
     if (lua_pcall(sol_lua, 0, 0, 0)) { sol_lua_error("Can't prime"); }
 
     lua_getglobal(sol_lua, "settings");
@@ -304,43 +315,48 @@ static void load_game() {
     }
 }
 
-extern int sol_lua_load_preload(const char *filename) {
-    lua_State *sol_lua = sol_lua_get_state();
+extern sol_status_t sol_lua_load_preload(const char *filename) {
+    lua_State *sol_lua;
 
+    sol_lua_get_state(&sol_lua);
     if (luaL_loadfile(sol_lua, "solconfig.lua")) {
         write_generic_settings();
 
         if (luaL_loadfile(sol_lua, "solconfig.lua")) {
             error("unable to open '%s'.\n", "solconfig.lua");
-            return 0;
+            return SOL_FILESYSTEM_ERROR;
         }
     }
 
     load_game();
 
-    return 0;
+    return SOL_SUCCESS;
 }
 
-extern int sol_lua_keydown(const int key_code) {
-    lua_State *sol_lua = sol_lua_get_state();
-    if (!sol_lua) { return 0; }
+extern sol_status_t sol_lua_keydown(const int key_code) {
+    lua_State *sol_lua;
+
+    sol_lua_get_state(&sol_lua);
+    if (!sol_lua) { return SOL_LUA_NO_INSTANCE; }
 
     lua_getglobal(sol_lua, "keydown");
     lua_pushnumber(sol_lua, key_code);
     if (lua_pcall(sol_lua, 1, 1, 0)) { return sol_lua_error("Can't call keydown()"); }
 
-    return lua_toboolean(sol_lua, -1);
+    return lua_toboolean(sol_lua, -1) ? SOL_SUCCESS : SOL_UNKNOWN_KEY;
 }
 
-extern int sol_lua_keyup(const int key_code) {
-    lua_State *sol_lua = sol_lua_get_state();
-    if (!sol_lua) { return 0; }
+extern sol_status_t sol_lua_keyup(const int key_code) {
+    lua_State *sol_lua;
+
+    sol_lua_get_state(&sol_lua);
+    if (!sol_lua) { return SOL_LUA_NO_INSTANCE; }
 
     lua_getglobal(sol_lua, "keyup");
     lua_pushnumber(sol_lua, key_code);
     if (lua_pcall(sol_lua, 1, 1, 0)) { return sol_lua_error("Can't call keyup()"); }
 
-    return lua_toboolean(sol_lua, -1);
+    return lua_toboolean(sol_lua, -1) ? SOL_SUCCESS : SOL_UNKNOWN_KEY;
 }
 
 #define BUF_MAX (128)
@@ -351,5 +367,5 @@ static void set_globals(lua_State *l) {
     snprintf(buf, BUF_MAX, "PLAYER_RIGHT = %d", PLAYER_RIGHT); luaL_dostring(l, buf);
     snprintf(buf, BUF_MAX, "PLAYER_UP = %d", PLAYER_DOWN); luaL_dostring(l, buf);
     snprintf(buf, BUF_MAX, "PLAYER_DOWN = %d", PLAYER_UP); luaL_dostring(l, buf);
-    port_set_lua_globals(l);
+    sol_set_lua_globals(l);
 }

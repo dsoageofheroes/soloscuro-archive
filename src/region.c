@@ -369,13 +369,13 @@ extern sol_status_t sol_region_tick(sol_region_t *reg) {
     int xdiff, ydiff;
     int posx, posy, in_combat = 0;
     enum sol_entity_action_e action;
-    combat_region_t *cr;
+    sol_combat_region_t *cr;
     sol_status_t status;
 
     if (!reg) { return SOL_NULL_ARGUMENT; }
     if (sol_map_is_paused() == SOL_SUCCESS) { return SOL_PAUSED; }
     status = sol_arbiter_combat_region(reg, &cr);
-    in_combat = sol_combat_active(cr);
+    in_combat = sol_combat_active(cr) == SOL_SUCCESS;
 
     if (reg->actions.head) {
         if (sol_entity_animation_region_execute(reg) == SOL_SUCCESS) {

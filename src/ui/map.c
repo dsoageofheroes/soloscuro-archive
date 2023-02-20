@@ -40,7 +40,7 @@ static int map_pause = 0;
 void map_free(map_t *map);
 static void map_load_current_region();
 static map_t *create_map();
-static dude_t *cdude = NULL;
+static sol_dude_t *cdude = NULL;
 
 static void sprite_load_animation(sol_entity_t *entity, gff_palette_t *pal);
 void map_render_anims();
@@ -91,7 +91,7 @@ static void map_load_current_region() {
         pal = open_files[RESOURCE_GFF_INDEX].pals->palettes;
     }
 
-    dude_t *dude;
+    sol_dude_t *dude;
     sol_entity_list_for_each(map->region->entities, dude) {
         if (dude->anim.spr == SPRITE_ERROR) {
             sprite_load_animation(dude, pal);
@@ -403,7 +403,7 @@ extern sol_status_t sol_map_update_active_player(const int prev) {
     sol_region_remove_entity(reg, pr);
     sol_region_add_entity(reg, player);
     player->anim.scmd = pr->anim.scmd;
-    port_entity_update_scmd(player);
+    sol_entity_update_scmd(player);
     sol_map_place_entity(player);
 
     return SOL_SUCCESS;
@@ -428,7 +428,8 @@ extern sol_status_t sol_map_place_entity(sol_entity_t *entity) {
     return SOL_SUCCESS;
 }
 
-void port_swap_enitity(int obj_id, sol_entity_t *dude) {
+extern sol_status_t sol_swap_enitity(int obj_id, sol_entity_t *dude) {
+    if (!dude) { return SOL_NULL_ARGUMENT; }
     gff_palette_t *pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + cmap->region->map_id - 1;
     const int zoom = 2.0;
 
@@ -436,6 +437,7 @@ void port_swap_enitity(int obj_id, sol_entity_t *dude) {
     sol_status_check(
         sol_sprite_new(pal, 0, 0, zoom, OBJEX_GFF_INDEX, GFF_BMP, dude->anim.bmp_id, &dude->anim.spr),
         "Unable to load spr for swap.");
+    return SOL_SUCCESS;
 }
 
 #define CLICKABLE (0x10)
@@ -514,7 +516,7 @@ static void update_mouse_icon() {
 extern sol_status_t sol_map_clear_highlight() { dude_highlighted = NULL; return SOL_SUCCESS; }
 
 static void handle_highlight() {
-    dude_t *old_dude = dude_highlighted;
+    sol_dude_t *old_dude = dude_highlighted;
 
     dude_highlighted = get_entity_at_location(sol_get_camerax() + mousex, sol_get_cameray() + mousey);
     if (dude_highlighted && (sol_arbiter_in_combat(dude_highlighted) == SOL_IN_COMBAT)) {
@@ -630,14 +632,15 @@ static int map_handle_mouse_down(const uint32_t button, const uint32_t x, const 
     return 1; // map always intercepts the mouse...
 }
 
-extern void port_load_item(sol_item_t *item) {
+extern sol_status_t sol_load_item(sol_item_t *item) {
     //warn("Need to load item %d.\n", item->ds_id);
-    if (!item) { return; }
+    if (!item) { return SOL_NULL_ARGUMENT; }
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
 
     sol_status_check(sol_sprite_new(pal, 0, 0, settings_zoom(),
             OBJEX_GFF_INDEX, GFF_BMP, item->anim.bmp_id, &item->anim.spr),
         "Unable to load item's spr.");
+    return SOL_SUCCESS;
 }
 
 extern sol_status_t sol_map_game_over() {

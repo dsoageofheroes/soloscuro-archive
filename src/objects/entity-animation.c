@@ -274,29 +274,30 @@ static scmd_t *combat_types[] = {
     throw_anim_scmd + 60,
 };
 
-scmd_t* sol_combat_get_scmd(const combat_scmd_t type) {
-    return combat_types[type];
+extern sol_status_t sol_combat_get_scmd(const sol_combat_scmd_t type, scmd_t **s) {
+    if (!s) { return SOL_NULL_ARGUMENT; }
+    *s = combat_types[type];
+    return SOL_SUCCESS;
 }
 
 static scmd_t* get_scmd(scmd_t *current_scmd, const int xdiff, const int ydiff) {
-    if (xdiff < 0) { return sol_combat_get_scmd(COMBAT_SCMD_MOVE_LEFT); }
-    if (xdiff > 0) { return sol_combat_get_scmd(COMBAT_SCMD_MOVE_RIGHT); }
-    if (ydiff < 0) { return sol_combat_get_scmd(COMBAT_SCMD_MOVE_UP); }
-    if (ydiff > 0) { return sol_combat_get_scmd(COMBAT_SCMD_MOVE_DOWN); }
+    if (xdiff < 0) { return combat_types[COMBAT_SCMD_MOVE_LEFT]; }
+    if (xdiff > 0) { return combat_types[COMBAT_SCMD_MOVE_RIGHT]; }
+    if (ydiff < 0) { return combat_types[COMBAT_SCMD_MOVE_UP]; }
+    if (ydiff > 0) { return combat_types[COMBAT_SCMD_MOVE_DOWN]; }
 
     // xdiff and ydiff == 0.
-    if (current_scmd == sol_combat_get_scmd(COMBAT_SCMD_MOVE_LEFT) 
-        || current_scmd == sol_combat_get_scmd(COMBAT_SCMD_MELEE_LEFT)) {
-        return sol_combat_get_scmd(COMBAT_SCMD_STAND_LEFT);
-    } else if (current_scmd == sol_combat_get_scmd(COMBAT_SCMD_MOVE_RIGHT)
-        || current_scmd == sol_combat_get_scmd(COMBAT_SCMD_MELEE_RIGHT)) {
-        return sol_combat_get_scmd(COMBAT_SCMD_STAND_RIGHT);
-    } else if (current_scmd == sol_combat_get_scmd(COMBAT_SCMD_MOVE_UP)
-        || current_scmd == sol_combat_get_scmd(COMBAT_SCMD_MELEE_UP)) {
-        return sol_combat_get_scmd(COMBAT_SCMD_STAND_UP);
-    } else if (current_scmd == sol_combat_get_scmd(COMBAT_SCMD_MOVE_DOWN)
-        || current_scmd == sol_combat_get_scmd(COMBAT_SCMD_MELEE_DOWN)) {
-        return sol_combat_get_scmd(COMBAT_SCMD_STAND_DOWN);
+    if (current_scmd == combat_types[COMBAT_SCMD_MOVE_LEFT] 
+        || current_scmd == combat_types[COMBAT_SCMD_MELEE_LEFT]) {
+        return combat_types[COMBAT_SCMD_STAND_LEFT];
+    } else if (current_scmd == combat_types[COMBAT_SCMD_MOVE_RIGHT]
+        || current_scmd == combat_types[COMBAT_SCMD_MELEE_RIGHT]) {
+        return combat_types[COMBAT_SCMD_STAND_RIGHT];
+    } else if (current_scmd == combat_types[COMBAT_SCMD_MOVE_UP]
+        || current_scmd == combat_types[COMBAT_SCMD_MELEE_UP]) {
+        return combat_types[COMBAT_SCMD_STAND_UP];
+    } else if (current_scmd == combat_types[COMBAT_SCMD_MOVE_DOWN] || current_scmd == combat_types[COMBAT_SCMD_MELEE_DOWN]) {
+        return combat_types[COMBAT_SCMD_STAND_DOWN];
     }
 
     return current_scmd;
@@ -306,14 +307,14 @@ static scmd_t* get_entity_scmd(scmd_t *current_scmd, enum sol_entity_action_e ac
     current_scmd = get_scmd(current_scmd, 0, 0);
 
     if (action == EA_MELEE) {
-        if (current_scmd == sol_combat_get_scmd(COMBAT_SCMD_STAND_LEFT)) {
-            return sol_combat_get_scmd(COMBAT_SCMD_MELEE_LEFT);
-        } else if (current_scmd == sol_combat_get_scmd(COMBAT_SCMD_STAND_RIGHT)) {
-            return sol_combat_get_scmd(COMBAT_SCMD_MELEE_RIGHT);
-        } else if (current_scmd == sol_combat_get_scmd(COMBAT_SCMD_STAND_UP)) {
-            return sol_combat_get_scmd(COMBAT_SCMD_MELEE_UP);
-        } else if (current_scmd == sol_combat_get_scmd(COMBAT_SCMD_STAND_DOWN)) {
-            return sol_combat_get_scmd(COMBAT_SCMD_MELEE_DOWN);
+        if (current_scmd == combat_types[COMBAT_SCMD_STAND_LEFT]) {
+            return combat_types[COMBAT_SCMD_MELEE_LEFT];
+        } else if (current_scmd == combat_types[COMBAT_SCMD_STAND_RIGHT]) {
+            return combat_types[COMBAT_SCMD_MELEE_RIGHT];
+        } else if (current_scmd == combat_types[COMBAT_SCMD_STAND_UP]) {
+            return combat_types[COMBAT_SCMD_MELEE_UP];
+        } else if (current_scmd == combat_types[COMBAT_SCMD_STAND_DOWN]) {
+            return combat_types[COMBAT_SCMD_MELEE_DOWN];
         }
     } 
     switch(action) {
@@ -460,7 +461,7 @@ static void region_animation_last_check(sol_region_t *reg, sol_entity_animation_
     sol_entity_t *target;
     sol_entity_action_t *action;
     sol_status_t status;
-    combat_region_t *cr = NULL;
+    sol_combat_region_t *cr = NULL;
     int slot;
 
     switch(todelete->ca.action) {
@@ -703,7 +704,7 @@ static scmd_t* entity_get_next_scmd(sol_entity_t *entity, const enum sol_entity_
         case EA_WALK_RIGHT: entity->direction = EA_WALK_RIGHT; return combat_move_right;
         case EA_WALK_UP: entity->direction = EA_WALK_UP; return combat_move_up;
         case EA_WALK_DOWN: entity->direction = EA_WALK_DOWN; return combat_move_down;
-        case EA_POWER_CAST: return sol_combat_get_scmd(COMBAT_POWER_CAST);
+        case EA_POWER_CAST: return combat_types[COMBAT_POWER_CAST];
         case EA_MELEE: return get_melee_scmd(entity);
         case EA_NONE:
             switch(entity->direction) {
@@ -821,7 +822,7 @@ extern sol_status_t sol_entity_animation_execute(sol_entity_t *entity) {
             }
             entity->anim.pos = action->scmd_pos = ssi_scmd_next_pos(entity->anim.scmd, action->scmd_pos);
             //printf("HERE: %d\n", entity->anim.pos);
-            port_entity_update_scmd(entity);
+            sol_entity_update_scmd(entity);
             //sprite_set_frame(entity->anim.spr, entity->anim.scmd[entity->anim.pos].bmp_idx);
             action->ticks = 0;
         }
@@ -978,11 +979,16 @@ extern sol_status_t sol_animation_render(const sol_entity_action_t *ea) {
     return SOL_SUCCESS;
 }
 
-extern void sol_combat_update_scmd_info(sol_entity_t *dude) {
-    if (!dude || dude->anim.scmd_info.gff_idx >= 0) { return; }
+extern sol_status_t sol_combat_update_scmd_info(sol_entity_t *dude) {
+    if (!dude) { return SOL_NULL_ARGUMENT; }
+    if (dude->anim.scmd_info.gff_idx >= 0) { return SOL_OUT_OF_RANGE; }
+
     for (int i = 0; i < 20; i++) {
         if (dude->anim.scmd == combat_types[i]) {
             dude->anim.scmd_info.res_id = i;
+            return SOL_SUCCESS;
         }
     }
+
+    return SOL_NOT_FOUND;
 }

@@ -86,7 +86,7 @@ static sol_status_t push_region_function(lua_State *l, sol_region_t *region, int
 }
 
 static int get_first_entity(lua_State *l) {
-    dude_t *dude = NULL;
+    sol_dude_t *dude = NULL;
     const char *name = luaL_checkstring(l, 1);
     sol_region_t *region = (sol_region_t*) lua_touserdata(l, lua_upvalueindex(1));
 

@@ -157,13 +157,13 @@ extern sol_status_t sol_powers_set_hit(sol_power_t *power, const uint32_t id) {
 }
 
 extern sol_status_t sol_powers_init() {
-    wizard_init();
-    wizard_setup_powers();
+    sol_wizard_init();
+    sol_wizard_setup_powers();
     return SOL_SUCCESS;
 }
 
 extern sol_status_t powers_cleanup() {
-    wizard_cleanup();
+    sol_wizard_cleanup();
     return SOL_SUCCESS;
 }
 
@@ -197,7 +197,7 @@ extern sol_status_t sol_power_get_target_type(sol_power_t *power, enum sol_targe
     return SOL_SUCCESS;
 }
 
-static void load_power_sprite(animate_sprite_t *spr, combat_scmd_t type) {
+static void load_power_sprite(animate_sprite_t *spr, sol_combat_scmd_t type) {
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + 0;
 
     sol_status_check(
@@ -206,11 +206,11 @@ static void load_power_sprite(animate_sprite_t *spr, combat_scmd_t type) {
         "Unable to create sprite for power.");
 
     if (spr->spr && spr->spr != SPRITE_ERROR) {
-        spr->scmd = sol_combat_get_scmd(type);
+        sol_combat_get_scmd(type, &spr->scmd);
     }
 }
 
-extern sol_status_t powers_load(sol_power_t *power) {
+extern sol_status_t sol_powers_load(sol_power_t *power) {
     if (!power) { return SOL_NULL_ARGUMENT; }
     if (power->cast.spr == 0 || power->cast.spr == SPRITE_ERROR) {
         load_power_sprite(&(power->cast), COMBAT_POWER_CAST);

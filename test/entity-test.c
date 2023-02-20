@@ -19,7 +19,7 @@ void tearDown() {
 }
 
 void test_basic(void) {
-    entity_t* slig;
+    sol_entity_t* slig;
     sol_entity_create_from_objex(-269, &slig);
     TEST_ASSERT_EQUAL_INT(18, slig->stats.hp);
     TEST_ASSERT_EQUAL_INT(12, slig->stats.str);
@@ -35,7 +35,7 @@ void test_basic(void) {
     TEST_ASSERT_EQUAL_INT(0, slig->stats.attacks[0].bonus);
     TEST_ASSERT_EQUAL_INT(0, slig->stats.attacks[1].number);
     TEST_ASSERT_EQUAL_INT(0, slig->stats.attacks[2].number);
-    entity_t* slig2;
+    sol_entity_t* slig2;
     sol_entity_create_clone(slig, &slig2);
     TEST_ASSERT_EQUAL_INT(slig->stats.base_move, slig2->stats.base_move);
     sol_entity_free(slig);
@@ -43,7 +43,7 @@ void test_basic(void) {
 }
 
 void test_fake(void) {
-    entity_t* fake;
+    sol_entity_t* fake;
     sol_entity_create_fake(1, 1, &fake);
     TEST_ASSERT_EQUAL_INT(1, sol_entity_is_fake(fake));
 
@@ -53,16 +53,16 @@ void test_fake(void) {
 void test_etab(void) {
     sol_region_t* reg;
     sol_region_manager_get_region(42, 0, &reg);
-    entity_t* obj;
+    sol_entity_t* obj;
     sol_entity_create_from_etab(reg->entry_table, 3, &obj);
     sol_entity_free(obj);
 }
 
 // TODO:
 void test_gff(void) {
-    //entity_t dude;
+    //sol_entity_t dude;
     //entity_load_from_gff(&dude, const int gff_idx, const int player, const int res_id);
-    //entity_t* obj = entity_create_from_etab(reg->entry_table, 3);
+    //sol_entity_t* obj = entity_create_from_etab(reg->entry_table, 3);
     //entity_free(obj);
 }
 

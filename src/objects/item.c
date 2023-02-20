@@ -3,6 +3,7 @@
 #include "item.h"
 #include "ssi-item.h"
 #include "gpl.h"
+#include "map.h"
 #include "port.h"
 #include "entity.h"
 #include "sprite.h"
@@ -77,8 +78,7 @@ extern sol_status_t sol_item_convert_from_ds1(sol_item_t *item, const ds1_item_t
     item->anim.bmp_id = get_bmp_id(item);
     item->item_index = ds1_item->item_index;
 
-    port_load_item(item);
-    return SOL_SUCCESS;
+    return sol_load_item(item);
 }
 
 extern sol_status_t sol_item_allowed_in_slot(sol_item_t *item, const int slot) {
@@ -192,7 +192,7 @@ extern sol_status_t sol_item_icon(sol_item_t *item, animate_sprite_t **d) {
     return SOL_SUCCESS;
 }
 
-extern sol_status_t sol_give_ds1_item(entity_t *pc, const int slot, const int item_index, const int id) {
+extern sol_status_t sol_give_ds1_item(sol_entity_t *pc, const int slot, const int item_index, const int id) {
     if (!pc) { return SOL_NULL_ARGUMENT; }
     if (!pc->inv) { sol_inventory_create(&pc->inv); }
     ds1_item_t ds1_item;

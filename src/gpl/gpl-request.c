@@ -3,6 +3,7 @@
 #include "region.h"
 #include "region-manager.h"
 #include "gpl-state.h"
+#include "map.h"
 #include "port.h"
 #include "trigger.h"
 #include "innate.h"
@@ -188,11 +189,11 @@ extern sol_status_t sol_gpl_request_impl(int16_t token, int16_t name,
                 error("Unable to satisfy REQUEST_SWAP, not obj: %d\n", num1);
             }
             sol_region_manager_get_current(&reg);
-            dude_t *dude;
+            sol_dude_t *dude;
             sol_region_find_entity_by_id(reg, name, &dude);
             dude->anim.bmp_id = dobj.bmp_id;
             sol_trigger_object_clear(name);
-            port_swap_enitity(name, dude);
+            sol_swap_enitity(name, dude);
             break;
         case REQUEST_SET_BLOCK:
             debug("Need to set (BLOCK) the bit flags for %d map position (%d, %d) to %d & commit!\n", name, num1, num2, GB_BLOCK);
@@ -648,7 +649,7 @@ static int16_t request_to_do(int16_t name, int16_t rectype, int (*request_proc)(
 static int req_animation(int16_t object, long notused1, long notused2) {
     (void)notused1;
     (void)notused2;
-    dude_t *dude;
+    sol_dude_t *dude;
     sol_region_t *reg;
 
     sol_region_manager_get_current(&reg);
@@ -668,7 +669,7 @@ static int req_animation(int16_t object, long notused1, long notused2) {
         if (dude->anim.pos == SCMD_MAX_SIZE) { dude->anim.pos = 0; }
         //printf("->%d\n", dude->anim.pos);
         //sol_trigger_noorders_enable();
-        port_entity_update_scmd(dude);
+        sol_entity_update_scmd(dude);
     } else {
         error("Unable to find object %d\n", object);
     }
@@ -677,7 +678,7 @@ static int req_animation(int16_t object, long notused1, long notused2) {
 }
 
 static int req_set_allegiance(int16_t object, long allegiance, long notused2) {
-    dude_t *dude = NULL;
+    sol_dude_t *dude = NULL;
     sol_region_t *reg;
 
     sol_region_manager_get_current(&reg);
@@ -693,7 +694,7 @@ static int req_set_allegiance(int16_t object, long allegiance, long notused2) {
 
 static void request_door(const int16_t name, const int32_t op, const int32_t range) {
     sol_region_t *reg;
-    dude_t *door = NULL;
+    sol_dude_t *door = NULL;
 
     sol_region_manager_get_current(&reg);
     sol_entity_list_for_each(reg->entities, door)  {

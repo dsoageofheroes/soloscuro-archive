@@ -634,7 +634,7 @@ void inventory_window_return_control () {
         sol_new_character_get_psionic_list(&psionics);
         //char *name = new_character_get_name();
         if (pc && psi && spells && psionics) {
-            if (dnd2e_character_is_valid(pc)) {// && dnd2e_psin_is_valid(pc, psi)) {
+            if (sol_dnd2e_character_is_valid(pc) == SOL_SUCCESS) {// && dnd2e_psin_is_valid(pc, psi)) {
                 warn ("TODO: PUT BACK IN CHARACTER ADDING!\n");
                 //gff_char_add_character(pc, psi, spells, psionics, name);
                 sol_player_load_zoom(slot_clicked, settings_zoom());
