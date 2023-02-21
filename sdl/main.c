@@ -205,9 +205,6 @@ static int sdl_init(const int what) {
     return SDL_Init(what);
 }
 
-static void init_sdl() {
-}
-
 static void gui_init() {
     xmappos = 0;
     ymappos = 0;

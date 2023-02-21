@@ -80,7 +80,7 @@ extern sol_status_t sol_entity_load_from_gff(sol_entity_t *entity, const int gff
 extern sol_status_t sol_entity_copy_item(sol_entity_t *entity, sol_item_t *item, const size_t slot);
 extern sol_status_t sol_entity_clear_item(sol_entity_t *entity, const size_t slot);
 extern sol_status_t sol_entity_load_from_object(sol_entity_t *entity, const char *data);
-extern sol_status_t sol_entity_get_total_exp(sol_entity_t *entity, uint32_t *exp);
+extern sol_status_t sol_entity_get_total_exp(sol_entity_t *entity, int32_t *exp);
 extern sol_status_t sol_entity_attempt_move(sol_dude_t *dude, const int xdiff, const int ydiff, const int speed);
 extern sol_status_t sol_entity_has_class(const sol_entity_t *entity, const uint16_t class);
 extern sol_status_t sol_entity_get_level(sol_entity_t *entity, const int class, uint8_t *level);

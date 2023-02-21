@@ -325,7 +325,7 @@ extern sol_status_t sol_entity_clear_item(sol_entity_t *entity, const size_t slo
     return SOL_SUCCESS;
 }
 
-extern sol_status_t sol_entity_get_total_exp(sol_entity_t *entity, uint32_t *exp) {
+extern sol_status_t sol_entity_get_total_exp(sol_entity_t *entity, int32_t *exp) {
     if (!entity) { return SOL_NULL_ARGUMENT; }
     uint32_t total_exp = 0;
 
@@ -391,7 +391,7 @@ extern sol_status_t sol_entity_free(sol_entity_t *dude) {
 }
 
 extern sol_status_t sol_entity_update_scmd(sol_entity_t *entity) {
-    sol_sprite_set_frame(entity->anim.spr, entity->anim.scmd[entity->anim.pos].bmp_idx);
+    return sol_sprite_set_frame(entity->anim.spr, entity->anim.scmd[entity->anim.pos].bmp_idx);
 }
 
 extern sol_status_t sol_entity_attempt_move(sol_dude_t *dude, const int xdiff, const int ydiff, const int speed) {

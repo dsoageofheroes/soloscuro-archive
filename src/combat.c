@@ -12,11 +12,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static int current_player = 0;
-static int wait_on_player = 0;
 static sol_entity_action_t monster_actions[MAX_COMBAT_ACTIONS]; // list of actions for a monster's turn.
 static int monster_step = -1; // keep track of what step of the action the monster is on.
-static enum sol_entity_action_e player_action;
 
 // For BFS
 typedef struct action_node_s {
@@ -192,8 +189,6 @@ static void generate_monster_move_attack_closest(sol_region_t *reg, sol_entity_t
     printf("NEED TO move and guard!\n");
 }
 
-static sol_entity_action_t clear = { NULL, NULL, 0, EA_NONE };
-
 static void monster_set_animation(sol_entity_t *monster, sol_entity_action_t *action) {
     int32_t xdiff = 0, ydiff = 0;
     switch(action->action) {
@@ -213,20 +208,22 @@ static void monster_set_animation(sol_entity_t *monster, sol_entity_action_t *ac
             ydiff = -1; xdiff = 0; break;
         case EA_WALK_DOWN:
             ydiff = 1; xdiff = 0; break;
+        default:
+            xdiff = 999; ydiff = 999; break;
     }
+    printf("set animation? %d, %d)\n", xdiff, ydiff);
 }
 
 extern sol_status_t sol_combat_add_attack_animation(sol_region_t *reg, sol_dude_t *dude, sol_entity_t *target,
                                         sol_power_t *power, enum sol_entity_action_e action) {
     sol_attack_t     attack;
-    sol_status_t     status = SOL_UNKNOWN_ERROR;
     sol_combat_region_t *cr     = NULL;
 
     if (!reg || !dude || !target || !power) { return SOL_NULL_ARGUMENT; }
 
-    status = sol_arbiter_combat_region(reg, &cr);
+    sol_arbiter_combat_region(reg, &cr);
 
-    status = sol_arbiter_entity_attack(dude, target, cr->round.num, action, &attack);
+    sol_arbiter_entity_attack(dude, target, cr->round.num, action, &attack);
 
     if (attack.damage == -2) { return SOL_NOT_TURN; } // not your move!
 
@@ -284,12 +281,11 @@ static void monster_action(sol_region_t *reg, sol_entity_t *monster) {
 extern sol_status_t sol_combat_update(sol_region_t *reg) {
     sol_entity_t *combatant;
     sol_combat_region_t *cr = NULL;
-    sol_status_t status = SOL_NOT_IMPLEMENTED;
     int slot;
 
     if (!reg) { return SOL_NULL_ARGUMENT; }
 
-    status = sol_arbiter_combat_region(reg, &cr);
+    sol_arbiter_combat_region(reg, &cr);
     if (cr == NULL) { return SOL_NOT_FOUND; }
 
     if (sol_combat_check_if_over(cr) == SOL_SUCCESS) {
@@ -384,7 +380,6 @@ extern sol_status_t sol_combat_activate_power(sol_power_t *pw, sol_entity_t *sou
 // entity == NULL, means for any player.
 extern sol_status_t sol_combat_guard(sol_entity_t *entity) {
     char buf[BUF_LEN];
-    sol_status_t status;
     sol_combat_region_t *cr = NULL;
     sol_entity_t *dude;
     sol_region_t *reg;
@@ -392,7 +387,7 @@ extern sol_status_t sol_combat_guard(sol_entity_t *entity) {
 
     sol_combat_get_current(cr, &dude);
     sol_region_manager_get_current(&reg);
-    status = sol_arbiter_combat_region(reg, &cr);
+    sol_arbiter_combat_region(reg, &cr);
 
     if (!dude) { return SOL_NULL_ARGUMENT; }
     if (sol_player_get_slot(dude, &slot) == SOL_SUCCESS && slot < 0 && !entity) { return SOL_OUT_OF_RANGE; }
@@ -423,7 +418,6 @@ extern sol_status_t sol_combat_set_scmd(sol_entity_t *dude, const sol_combat_scm
 }
 
 extern sol_status_t sol_combat_kill_all_enemies() {
-    sol_status_t status = SOL_NOT_IMPLEMENTED;
     sol_dude_t *dude;
     sol_dude_t *player;
     sol_region_t *reg;
@@ -432,7 +426,7 @@ extern sol_status_t sol_combat_kill_all_enemies() {
 
     sol_region_manager_get_current(&reg);
     sol_player_get_active(&player);
-    status = sol_arbiter_combat_region(reg, &cr);
+    sol_arbiter_combat_region(reg, &cr);
 
     if (!cr || !reg || !player) { return SOL_NULL_ARGUMENT; }
 

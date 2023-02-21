@@ -25,7 +25,6 @@ static int32_t gpl_lua_read_complex(char *buf, size_t *buf_pos, const size_t siz
 static uint16_t gpl_lua_get_word();
 static void validate_number(const char *num, const char *message);
 static void print_label();
-static int control_test(const char *str);
 
 extern void gpl_lua_byte_dec(void);
 extern void gpl_lua_word_dec(void);
@@ -840,18 +839,13 @@ extern void gpl_lua_search(void) {
     uint8_t b;
     //uint32_t answer = 0L;
     gpl_lua_read_number(object, BUF_SIZE);
-    int16_t low_field;
-    int16_t high_field;
     int16_t field_level = -1, depth = 1;
-    int32_t search_for = 0, temp_for = 0;
-    uint16_t field[16];
+    //int32_t temp_for = 0;
     uint8_t type = 0;
-    char *i;
+    //char *i;
 
     sol_gpl_get_byte(&b);
-    low_field = b;
     sol_gpl_get_byte(&b);
-    high_field = b;
     do {
         sol_gpl_peek_one_byte(&b);
         if (b == OBJ_QUALIFIER) {
@@ -859,7 +853,7 @@ extern void gpl_lua_search(void) {
         }
         field_level++;
         sol_gpl_peek_one_byte(&b);
-        field[field_level] = b;
+        //field[field_level] = b;
         sol_gpl_peek_one_byte(&b);
         type = b;
         if (type >= EQU_SEARCH && type <= GT_SEARCH) {
@@ -867,11 +861,11 @@ extern void gpl_lua_search(void) {
             validate_number(buf, "gpl_lua_search");
             lprintf("gpl.find_item_on_party(%s)\n", buf);
             //temp_for = read_number();
-            temp_for = atoi(buf);
+            //temp_for = atoi(buf);
             if (field_level > 0) {
-                field[++field_level] = (uint16_t) temp_for;
+                //field[++field_level] = (uint16_t) temp_for;
             } else {
-                search_for = temp_for;
+                //search_for = temp_for;
             }
         }
         depth--;
@@ -879,7 +873,7 @@ extern void gpl_lua_search(void) {
 
     //i = (object == PARTY || object < 0)
         //? NULL_OBJECT : object;
-    i = object;
+    //i = object;
 
     /*
     do {
@@ -1658,12 +1652,12 @@ static void gpl_lua_load_simple_variable(uint16_t type, uint16_t vnum) {
 
 static size_t gpl_lua_read_number(char *buf, const size_t size) {
     int32_t paren_level = 0;
-    int8_t do_next, b;
+    int8_t do_next;
+    uint8_t b;
     int16_t opstack[MAX_PARENS];
     int32_t accums[MAX_PARENS];
-    char    tmp[1024];
     //char taccum[BUF_SIZE];
-    int16_t cop, next_op; // current operation
+    uint16_t cop, next_op; // current operation
     int32_t cval = 0; // current value, temporary value
     size_t buf_pos = 0;
 
@@ -2079,17 +2073,5 @@ int gpl_lua_read_simple_num_var(char *buf, const size_t buf_size) {
             lua_exit("ERROR: Unknown type in read_simple_num_var.\n");
             break;
     }
-    return 0;
-}
-
-static int control_test(const char *str) {
-    if (!str) { return 0; }
-
-    printf("----------->'%s'\n", str);
-
-    while (isspace(*str++)) { ; }
-
-    if (*str == 'i' && *(str+1) == 'f') { return 1; }
-
     return 0;
 }

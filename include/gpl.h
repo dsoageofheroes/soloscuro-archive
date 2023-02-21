@@ -56,6 +56,9 @@ extern sol_status_t sol_gpl_peek_one_byte(uint8_t *d);
 extern sol_status_t sol_gpl_get_byte(uint8_t *d);
 /* End Parsing functions */ 
 
+extern sol_status_t gpl_lua_debug();
+extern sol_status_t gpl_set_exit();
+
 extern uint8_t command_implemented; // Temporary while I figure out each function.
 
 #endif

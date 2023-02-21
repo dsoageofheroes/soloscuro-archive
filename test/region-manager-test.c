@@ -29,7 +29,7 @@ void test_set_get(void) {
     sol_region_manager_init();
     sol_region_t* reg, *test;
     sol_region_manager_get_region(42, 0, &reg);
-    sol_region_t* empty;
+    sol_region_t* empty = NULL;
     sol_region_create_empty(&reg);
 
     TEST_ASSERT_NOT_NULL(reg);

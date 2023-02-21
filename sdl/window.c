@@ -17,8 +17,7 @@
 #include "region.h"
 #include "sprite.h"
 
-static SDL_Renderer *renderer = NULL;
-static SDL_Surface *surface = NULL;
+extern void narrate_init(const uint32_t x, const uint32_t y);
 
 void load_window(const char *arg) {
     if (!strcmp(arg, "main")) {

@@ -26,8 +26,8 @@ set_target_properties(adl_lib PROPERTIES IMPORTED_LOCATION ${BINARY_DIR}/libADLM
 set (ADL_INC ${SOURCE_DIR}/include/)
 # end external project...
 
-set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fsanitize=address -g -fno-omit-frame-pointer")
-set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fsanitize=address -g -fno-omit-frame-pointer")
+set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Wall -Werror -fsanitize=address -g -fno-omit-frame-pointer")
+set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -Wall -Werror -fsanitize=address -g -fno-omit-frame-pointer")
 
 add_subdirectory(code-generation/powers/)
 add_subdirectory(src/)

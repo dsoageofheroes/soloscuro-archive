@@ -255,7 +255,6 @@ static int test_pass (lua_State *l) {
 }
 
 static int in_combat (lua_State *l) {
-    sol_status_t status = SOL_UNKNOWN_ERROR;
     sol_combat_region_t *cr = NULL;
     sol_region_t *reg;
     sol_dude_t   *dude;

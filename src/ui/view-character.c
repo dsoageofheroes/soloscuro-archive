@@ -272,17 +272,6 @@ static void render_powers() {
     sprite_highlight(mousex, mousey);
 }
 
-static int get_next_len(const char *str, const int max) {
-    int ret = 0;
-    for (int i = 0; i < max; i++) {
-        if (str[i] == ' ') { ret = i + 1; }
-        if (str[i] == '\0') {
-            return i;
-        }
-    }
-    return ret;
-}
-
 #define BUF_MAX (1<<12)
 
 void view_character_render(void *data) {

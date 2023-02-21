@@ -30,7 +30,7 @@ void test_basic(void) {
     TEST_ASSERT_EQUAL_INT(0, sol_player_exists(1) != SOL_SUCCESS);
     TEST_ASSERT_EQUAL_INT(0, sol_player_exists(2) != SOL_SUCCESS);
     TEST_ASSERT_EQUAL_INT(0, sol_player_exists(3) != SOL_SUCCESS);
-    TEST_ASSERT_NOT_NULL(sol_player_get(1, &player) == SOL_SUCCESS);
+    TEST_ASSERT(sol_player_get(1, &player) == SOL_SUCCESS);
     player->name = strdup("HELLO!");
     sol_player_cleanup();
 }

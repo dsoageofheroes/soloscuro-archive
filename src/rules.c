@@ -36,7 +36,8 @@ static void set_psp(sol_entity_t *pc) {
 static void do_level_up(sol_entity_t *pc, const uint32_t class_idx, const uint32_t class) {
     int clevel = pc->class[class_idx].level;
     int num_classes = 0;
-    uint8_t current_hit_die, next_hit_die, class_hit_die;
+    int8_t class_hit_die;
+    uint8_t next_hit_die, current_hit_die;
     sol_status_t status;
 
     for (int i = 0; i < 3 && pc->class[i].class > -1; i++) {
@@ -184,11 +185,9 @@ extern int16_t dnd2e_get_attack_mod_pc(const sol_entity_t *pc, const sol_item_t 
 
 static int calc_starting_exp(sol_entity_t *pc) {
     int num_classes = 0;
-    int most_exp_class = -1;
     int most_exp = -1;
     int starting_level = -1;
-    uint8_t next_level = -1;
-    sol_status_t status;
+    int8_t next_level = -1;
 
     for (int i = 0; i < 3; i++) {
         if (pc->class[0].class >= 0 ) { num_classes++; }
@@ -197,7 +196,7 @@ static int calc_starting_exp(sol_entity_t *pc) {
     starting_level = (num_classes > 1) ? 2 : 3;
 
     for (int i = 0; i < 3; i++) {
-        status = sol_dnd2e_next_level_exp(pc->class[0].class, starting_level - 1, &next_level);
+        sol_dnd2e_next_level_exp(pc->class[0].class, starting_level - 1, &next_level);
         most_exp = most_exp > next_level ? most_exp : next_level;
     }
 
@@ -394,10 +393,6 @@ extern sol_status_t sol_dnd2e_roll_initiative(sol_entity_t *entity) {
     if (!entity) { return SOL_NULL_ARGUMENT; }
     entity->stats.combat.initiative = (rand() % 10) + sol_dnd2e_reaction_mod(&entity->stats);
     return SOL_SUCCESS;
-}
-
-static int dnd2e_roll_sub_roll() {
-    return rand();
 }
 
 extern int16_t dnd2e_calc_ac(sol_entity_t *entity) {

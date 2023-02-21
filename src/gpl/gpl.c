@@ -44,8 +44,7 @@ extern sol_status_t sol_gpl_set_global(enum sol_gpl_global_e what, sol_entity_t 
     return SOL_GPL_UNKNOWN_TYPE;
 }
 
-extern sol_status_t gpl_change_region(const int region_id) {
-    sol_status_t status;
+extern sol_status_t sol_gpl_change_region(const int region_id) {
     sol_region_t *reg;
     //gpl_execute_subroutine(region_id, 0, 1);
     sol_region_manager_get_region(region_id, 0, &reg);
@@ -73,7 +72,7 @@ extern sol_status_t sol_gpl_init() {
 }
 
 extern sol_status_t sol_gpl_cleanup() {
-    powers_cleanup();
+    sol_powers_cleanup();
     free(sol_gpl_global_string);
     free(sol_gpl_local_strings);
     free(sol_gpl_global_strings);

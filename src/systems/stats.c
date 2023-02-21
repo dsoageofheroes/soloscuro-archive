@@ -235,4 +235,5 @@ extern int8_t sol_dnd2e_stats_valid(const sol_stats_t *stats) {
     if (stats->hp < 1) { return 0; }
     if (stats->high_hp < 1) { return 0; }
     if (stats->high_psp < 0) { return 0; }
+    return 1;
 }

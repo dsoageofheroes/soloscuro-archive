@@ -106,7 +106,6 @@ static power_info_t ds1pw;
 static power_entry_t ds2pw;
 static power_entry_t dsopw;
 
-static char test_buf[256];
 static void generate_power(power_entry_t pw);
 static void generate_tables();
 
@@ -114,6 +113,7 @@ const char *saves[] = {
     "NONE", "Poison", "Wands", "Petrification", "Breath", "Spells", "Paralyze", "Death", "Magic"
 };
 
+/*
 static int find_level(int32_t power[MAX_LEVELS][MAX_POWERS], const int id) {
     for (int i = 0; i < MAX_LEVELS; i++) {
         for (int j = 0; j < MAX_POWERS; j++) {
@@ -124,10 +124,11 @@ static int find_level(int32_t power[MAX_LEVELS][MAX_POWERS], const int id) {
     exit(1);
     return -1;
 }
+*/
 
-static int find_wizard_level(const int id) { return find_level(wizard_powers, id); }
-static int find_priest_level(const int id) { return find_level(priest_powers, id); }
-static int find_psionic_level(const int id) { return find_level(psionic_powers, id); }
+//static int find_wizard_level(const int id) { return find_level(wizard_powers, id); }
+//static int find_priest_level(const int id) { return find_level(priest_powers, id); }
+//static int find_psionic_level(const int id) { return find_level(psionic_powers, id); }
 
 static char save_buf[256];
 static char* get_save() {
@@ -971,6 +972,11 @@ static void generate_apply(power_entry_t pw, char *name, FILE *file) {
     fprintf(file, "    sol_status_t status = (source->entity)\n");
     fprintf(file, "            ? sol_entity_get_%s_level(source->entity, &caster_level)\n", type);
     fprintf(file, "            : sol_item_get_%s_level(source->item, &caster_level);\n\n", type);
+    fprintf(file, "    sol_status_check(status, \"Unable to get level for casting %s:%s\");\n", type, name);
+    fprintf(file, "    (void) effect_type;\n");
+    fprintf(file, "    (void) damage;\n");
+    fprintf(file, "    (void) mod;\n");
+    fprintf(file, "    (void) num_dice;\n");
     
     //if (pw.info.damage.dice > 0) {
     if (pw.info.damage.sides > 0) {
@@ -1024,11 +1030,9 @@ static void generate_apply(power_entry_t pw, char *name, FILE *file) {
         fprintf(file, "    damage = dnd2e_dice_roll(num_dice, %d) + mod;\n", pw.info.damage.sides);
         fprintf(file, "    effect_type = 0");
 
-        int is_first = 1;
         for (int i = 0; i < 16; i++) {
             if (pw.info.effect_type & (1<<i)) {
                 fprintf(file, " | %s", effect_names[i]);
-                is_first = 0;
             }
         }
         fprintf(file, ";\n");
@@ -1062,24 +1066,24 @@ static void generate_affect(power_entry_t pw, char *name, FILE *file) {
 
 
 static void generate_update(power_entry_t pw, char *name, FILE *file) {
+    fprintf(file, "/*\n");
     fprintf(file, "\nstatic int %s_%s_update       (sol_power_t *power, sol_power_instance_t *source) {\n", type, name);
     fprintf(file, "    if (!power || ! source) { return 0;}\n");
     fprintf(file, "    uint8_t caster_level;\n");
-    fprintf(file, "    sol_status_t status;\n");
     fprintf(file, "    sol_entity_t *entity = source->entity;\n");
     //fprintf(file, "    int made_save = 0;\n");
     //fprintf(file, "    item_t *item = source->item;\n\n");
     fprintf(file, "\n");
 
     fprintf(file, "    if (entity) {\n");
-    fprintf(file, "        status = sol_entity_get_%s_level(entity, &caster_level);\n", type);
+    fprintf(file, "        sol_entity_get_%s_level(entity, &caster_level);\n", type);
     fprintf(file, "        power->range = %d",
         (dsopw.info.range) < 0
         ? 0
         : dsopw.info.range
         );
     if (pw.info.range_per_level > 0) {
-        fprintf(file, " + (%d * caster_level)");
+        fprintf(file, " + (%d * caster_level)", pw.info.range_per_level);
     }
         //snprintf(range_buf, 255, "%d feet + %d per level", pw.info.range, pw.info.range_per_level);
     fprintf(file, ";\n");
@@ -1089,7 +1093,7 @@ static void generate_update(power_entry_t pw, char *name, FILE *file) {
         : dsopw.info.area
         );
     if (pw.info.area_per_level > 0) {
-        fprintf(file, " + (%d * caster_level)");
+        fprintf(file, " + (%d * caster_level)", pw.info.area_per_level);
     }
         //snprintf(range_buf, 255, "%d feet + %d per level", pw.info.range, pw.info.range_per_level);
     fprintf(file, ";\n");
@@ -1101,6 +1105,7 @@ static void generate_update(power_entry_t pw, char *name, FILE *file) {
 
     fprintf(file, "    return 1;\n");
     fprintf(file, "}\n");
+    fprintf(file, "*/\n");
 }
 
 static char* get_target_shape(power_entry_t pw) {

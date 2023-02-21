@@ -89,21 +89,6 @@ static void setup_character_selection() {
     }
 }
 
-static char* read_save_name(const char *path) {
-    int gff_id = gff_open(path);
-    char buf[32];
-
-    if (gff_id < 0) { return "<error>"; }
-
-    gff_chunk_header_t chunk = gff_find_chunk_header(gff_id, GFF_STXT, 0);
-    gff_read_chunk(gff_id, &chunk, buf, 32);
-    buf[chunk.length > 31 ? 31 : chunk.length] = '\0'; // guard.
-
-    gff_close(gff_id);
-
-    return strdup(buf);
-}
-
 static void setup_save_load_selection() {
     char filename[128];
     char buf[BUF_MAX];
@@ -127,7 +112,7 @@ static void setup_save_load_selection() {
     num_valid_entries = 0;
 
     for (size_t i = 0; i < 100; i++) {
-        sprintf(filename, SAVE_FORMAT, i);
+        sprintf(filename, SAVE_FORMAT, (int)i);
         file = fopen(filename, "rb");
 
         if (!file) {

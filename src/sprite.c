@@ -1,13 +1,12 @@
 /*
  * General sprite functions (not to be confused with implementation of sprite.
  */
-#include "sprite.h"
 #include "animation.h"
+#include "settings.h"
+#include "sprite.h"
 
 extern sol_status_t sol_sprite_load(struct animate_sprite_s *anim, gff_palette_t *pal, const int gff_index,
                 const int type, const uint32_t id, const int num_load) {
-    sol_status_t status;
-
     if (!anim) { return SOL_NULL_ARGUMENT; }
 
     if (anim->scmd) {

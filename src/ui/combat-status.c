@@ -30,36 +30,16 @@ typedef struct animate_sprite_node_list_s {
 
 animate_sprite_node_list_t *list = NULL;
 
+/*
 static void start_node() {
     if (!list) { return; }
     sol_audio_play_voc(RESOURCE_GFF_INDEX, GFF_BVOC, list->sound, 1.0);
 }
+*/
 
 extern sol_status_t sol_combat_clear_damage() {
     show_attack = 0;
     return SOL_SUCCESS;
-}
-
-static void pop_list() {
-    if (!list) { return; }
-
-    animate_sprite_node_list_t *delme = list;
-    list = list->next;
-
-    if (sol_entity_is_fake(delme->target) == SOL_SUCCESS) {
-        sol_entity_free(delme->target);
-    }
-
-    if (delme->action == EA_POWER_HIT) {
-        sol_power_instance_t pi;
-        memset(&pi, 0x0, sizeof(sol_power_instance_t));
-        pi.entity = delme->target;
-        pi.stats = delme->power;
-        delme->power->actions.apply(&pi, delme->target);
-    }
-
-    free(delme);
-    start_node();
 }
 
 extern sol_status_t sol_combat_status_get(combat_status_t **cs) {
@@ -95,13 +75,12 @@ void combat_status_init(const uint32_t x, const uint32_t y) {
 }
 
 static void get_status() {
-    sol_status_t status;
     sol_combat_region_t *cr = NULL;
     sol_region_t *reg;
 
 
     sol_region_manager_get_current(&reg);
-    status = sol_arbiter_combat_region(reg, &cr);
+    sol_arbiter_combat_region(reg, &cr);
     sol_entity_t *dude;
 
     sol_combat_get_current(cr, &dude);
@@ -114,15 +93,10 @@ static void get_status() {
     }
 }
 
-static int count = 30;
-
 void combat_status_render(void *data) {
     const float zoom = settings_zoom();
-    const int delta = 5 * zoom;
     sol_dim_t loc;
     char buf[128];
-    static int last_action = 0;
-    sol_status_t status;
     sol_combat_region_t *cr = NULL;
     sol_sprite_info_t info;
     sol_region_t *reg;
@@ -140,7 +114,7 @@ void combat_status_render(void *data) {
     }
 
     sol_region_manager_get_current(&reg);
-    status = sol_arbiter_combat_region(reg, &cr);
+    sol_arbiter_combat_region(reg, &cr);
     if (sol_combat_active(cr) != SOL_SUCCESS) { return; }
 
     if (2 == 1) {
@@ -172,10 +146,7 @@ void combat_status_render(void *data) {
 extern sol_status_t sol_combat_action(const sol_entity_action_t *ca) {
     if (!ca) { return SOL_NULL_ARGUMENT; }
     // DO NOT STORE THE POINTER TO CA!!!!!!!!
-    float const zoom = settings_zoom();
-    animate_sprite_t *as = NULL, *source = NULL, *cast = NULL,
-        *dest = NULL, *hit = NULL, *throw = NULL;
-    int dir = 0;
+    animate_sprite_t *as = NULL, *cast = NULL, *hit = NULL;
     sol_sprite_info_t info;
 
     switch (ca->action) {
@@ -200,7 +171,7 @@ extern sol_status_t sol_combat_action(const sol_entity_action_t *ca) {
             return SOL_SUCCESS;
         case EA_POWER_CAST:
             sol_status_check(sol_sprite_get_info(cast->spr, &info), "Unable to get cast sprite info");
-            source = &(ca->source->anim);
+            //source = &(ca->source->anim);
             cast = &(ca->power->cast);
             //sol_sprite_center_spr(cast->spr, source->spr);
             cast->x = info.x + sol_get_camerax();
@@ -214,7 +185,7 @@ extern sol_status_t sol_combat_action(const sol_entity_action_t *ca) {
             break;
         case EA_POWER_HIT:
             sol_status_check(sol_sprite_get_info(hit->spr, &info), "Unable to get cast sprite info");
-            dest = &(ca->target->anim);
+            //dest = &(ca->target->anim);
             hit = &(ca->power->hit);
             //sol_sprite_center_spr(hit->spr, dest->spr);
             hit->x = info.x + sol_get_camerax();

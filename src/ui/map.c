@@ -73,12 +73,6 @@ void map_free(map_t *map) {
     free(map);
 }
 
-static int cmap_is_block(const int row, const int column) {
-    sol_region_t *reg;
-    sol_region_manager_get_current(&reg);
-    return reg->flags[row][column];
-}
-
 static void map_load_current_region() {
     gff_palette_t *pal = NULL;
     sol_entity_t *active;
@@ -464,7 +458,7 @@ static void update_mouse_icon() {
     sol_power_t *power;
     cdude = get_entity_at_location(sol_get_camerax() + mousex, sol_get_cameray() + mousey);
     const float zoom = settings_zoom();
-    sol_dude_t *player, *active;
+    sol_dude_t *active;
 
     sol_mouse_get_state(&ms);
     //printf("update_mouse_icon!, cdude = %p, ms = %d\n", cdude, ms);

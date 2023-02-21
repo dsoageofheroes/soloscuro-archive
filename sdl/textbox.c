@@ -87,4 +87,6 @@ extern sol_status_t sol_textbox_render(sol_textbox_t *tb) {
             tb->cursor_countdown = 60;
         }
     }
+
+    return SOL_SUCCESS;
 }

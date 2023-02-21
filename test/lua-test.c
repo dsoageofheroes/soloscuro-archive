@@ -23,7 +23,7 @@ void tearDown() {
 void test_basic(void) {
     sol_gpl_manager_init();
     sol_gpl_push_context();
-    gpl_pop_context();
+    sol_gpl_pop_context();
     sol_gpl_manager_cleanup();
 }
 
@@ -37,7 +37,7 @@ void test_basic_script(void) {
     sol_gpl_manager_init();
     sol_gpl_push_context();
     sol_gpl_execute_string(basic_test);
-    gpl_pop_context();
+    sol_gpl_pop_context();
     sol_gpl_manager_cleanup();
 }
 
@@ -49,7 +49,7 @@ void test_combat_smoke(void) {
     }
     //sol_test_info_t sti = sol_get_lua_test();
     //TEST_ASSERT_MESSAGE(!sti.failed, sti.msg);
-    gpl_pop_context();
+    sol_gpl_pop_context();
     sol_gpl_manager_cleanup();
 }
 
@@ -86,7 +86,7 @@ void test_combat_multi_round(void) {
     //sol_test_info_t sti = sol_get_lua_test();
     //printf("----------------->%s\n", sti.msg);
     //TEST_ASSERT_MESSAGE(!sti.failed, sti.msg);
-    gpl_pop_context();
+    sol_gpl_pop_context();
     sol_gpl_manager_cleanup();
 }
 

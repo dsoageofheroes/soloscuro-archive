@@ -10,6 +10,7 @@
 #include "region-manager.h"
 #include "sol-lua-manager.h"
 #include "trigger.h"
+#include "window-manager.h"
 
 static int done = 0, started = 0;
 static uint8_t wait_flags[WAIT_MAX_SIGNALS];
@@ -85,7 +86,6 @@ extern sol_status_t sol_gameloop_init() {
 #define TICKS_PER_ROUND (300) // TODO: Is this really 60?
 extern sol_status_t sol_game_loop() {
     int16_t gn;
-    sol_status_t status = SOL_UNKNOWN_ERROR;
     int ticks_to_increment_time = TICKS_PER_ROUND;
     sol_combat_region_t *cr = NULL;
     sol_region_t *reg;
@@ -97,14 +97,14 @@ extern sol_status_t sol_game_loop() {
         port_tick();
 
         sol_region_manager_get_current(&reg);
-        status = sol_arbiter_combat_region(reg, &cr);
+        sol_arbiter_combat_region(reg, &cr);
         if (sol_combat_active(cr) != SOL_SUCCESS) {
             ticks_to_increment_time--;
         }
         if (ticks_to_increment_time <= 0) {
             ticks_to_increment_time = TICKS_PER_ROUND;
             // TODO: this is a guess...
-            status = sol_gpl_get_gname(GNAME_TIME, &gn);
+            sol_gpl_get_gname(GNAME_TIME, &gn);
             gn += 1;
             sol_gpl_set_gname(GNAME_TIME, gn);
             // Time to check for noorders

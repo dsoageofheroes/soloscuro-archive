@@ -366,15 +366,13 @@ static int move_entity(sol_entity_t *entity, const int x, const int y) {
 
 extern sol_status_t sol_region_tick(sol_region_t *reg) {
     sol_dude_t *bad_dude = NULL, *dude;
-    int xdiff, ydiff;
-    int posx, posy, in_combat = 0;
-    enum sol_entity_action_e action;
+    int in_combat = 0;
     sol_combat_region_t *cr;
     sol_status_t status;
 
     if (!reg) { return SOL_NULL_ARGUMENT; }
     if (sol_map_is_paused() == SOL_SUCCESS) { return SOL_PAUSED; }
-    status = sol_arbiter_combat_region(reg, &cr);
+    if ((status = sol_arbiter_combat_region(reg, &cr)) != SOL_SUCCESS) { return status; }
     in_combat = sol_combat_active(cr) == SOL_SUCCESS;
 
     if (reg->actions.head) {

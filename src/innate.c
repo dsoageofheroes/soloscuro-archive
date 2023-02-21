@@ -1,5 +1,6 @@
 #include "innate.h"
 #include "gpl.h"
+#include "map.h"
 #include "popup.h"
 #include "player.h"
 #include "region-manager.h"
@@ -87,7 +88,6 @@ extern sol_status_t sol_innate_activate_door(sol_dude_t *door) {
 
 static sol_status_t custom_action(sol_dude_t *dude) {
     ds1_item_t ds1_item;
-    sol_entity_t *active;
     sol_region_t *reg;
     char msg[1024];
 

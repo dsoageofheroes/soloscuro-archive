@@ -416,6 +416,7 @@ static void render_entry_bvoc();
 static void render_entry_wind();
 static void render_entry_apfm();
 static void render_entry_butn();
+static void render_entry_ebox();
 
 static void render_entry() {
     sol_settings_set_zoom(1.0);
@@ -571,7 +572,6 @@ static void render_entry_tile() {
 }
 
 static void render_entry_wall() {
-    int num;
     gff_palette_t *pal = open_files[RESOURCE_GFF_INDEX].pals->palettes;
     
     pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + ((res_ids[res_idx] / 100) - 1);
@@ -1712,7 +1712,7 @@ void render_entry_butn() {
     render_entry_as_image(gff_idx, GFF_ICON, button->icon_id, open_files[pal_idx].pals->palettes, 320, 92);
 }
 
-void render_entry_ebox() {
+static void render_entry_ebox() {
     render_entry_header();
     char buf[4096];
     ssi_ebox_t *ebox = NULL;

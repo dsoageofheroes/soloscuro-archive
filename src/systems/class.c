@@ -257,6 +257,7 @@ static const uint32_t preserver_levels[][3] = {
 };
 
 //         exp   hdlimit      hapr
+/*
 static const uint32_t defiler_levels[][3] = {
     {        0,        0,        0 }, // 00 - the third parameter is how many half-attacks per round.
     {        0,        1,        0 }, // 01
@@ -280,6 +281,7 @@ static const uint32_t defiler_levels[][3] = {
     {  2430000,        0,        0 }, // 19
     {  2700000,        0,        0 }, // 20
 };
+*/
 
 static const int8_t class_mininum[][6] = {
     // REAL_CLASS_NONE,
@@ -425,7 +427,6 @@ static int8_t ranger_spell_slots[][10] = {
 extern sol_status_t sol_dnd2e_class_update_max_spell_slots(sol_entity_t *pc) {
     if (!pc) { return SOL_NULL_ARGUMENT; }
     uint8_t wizard_level = 0, priest_level = 0, ranger_level = 0;
-    sol_status_t status;
 
     sol_entity_get_wizard_level(pc, &wizard_level);
     sol_entity_get_priest_level(pc, &priest_level);

@@ -510,9 +510,9 @@ static void set_ps_sel_frames() {
         sol_sprite_set_frame(ps_sel[2], sol_spell_has_psin(&psi, PSIONIC_TELEPATH) == SOL_SUCCESS);
         sol_sprite_set_frame(ps_sel[3], 0);
 
-        ps_selections = sol_spell_has_psin(&psi, PSIONIC_PSYCHOKINETIC) == SOL_SUCCESS
-               + sol_spell_has_psin(&psi, PSIONIC_PSYCHOMETABOLISM) == SOL_SUCCESS
-               + sol_spell_has_psin(&psi, PSIONIC_TELEPATH) == SOL_SUCCESS;
+        ps_selections = (sol_spell_has_psin(&psi, PSIONIC_PSYCHOKINETIC) == SOL_SUCCESS)
+               + (sol_spell_has_psin(&psi, PSIONIC_PSYCHOMETABOLISM) == SOL_SUCCESS)
+               + (sol_spell_has_psin(&psi, PSIONIC_TELEPATH) == SOL_SUCCESS);
 
         if (ps_selections > 0) {
             sol_sprite_set_frame(psionic_devotion[0], sol_spell_has_psin(&psi, PSIONIC_PSYCHOKINETIC) == SOL_SUCCESS ? 0 : 2);
@@ -546,9 +546,9 @@ static void set_ps_sel_frames() {
 static void toggle_psi(const uint16_t i) {
     sol_sprite_info_t info;
     sol_status_check(sol_sprite_get_info(ps_sel[i], &info), "Unable to get sprite info.");
-    int ps_selections = sol_spell_has_psin(&psi, PSIONIC_PSYCHOKINETIC) == SOL_SUCCESS
-           + sol_spell_has_psin(&psi, PSIONIC_PSYCHOMETABOLISM) == SOL_SUCCESS
-           + sol_spell_has_psin(&psi, PSIONIC_TELEPATH) == SOL_SUCCESS;
+    int ps_selections = (sol_spell_has_psin(&psi, PSIONIC_PSYCHOKINETIC) == SOL_SUCCESS)
+           + (sol_spell_has_psin(&psi, PSIONIC_PSYCHOMETABOLISM) == SOL_SUCCESS)
+           + (sol_spell_has_psin(&psi, PSIONIC_TELEPATH) == SOL_SUCCESS);
 
     if (ps_selections > 2) { return; }
 

@@ -33,12 +33,11 @@ static sol_status_t push_entity_function(lua_State *l, sol_entity_t *entity, int
 }
 
 static int in_combat(lua_State *l) {
-    sol_status_t status = SOL_UNKNOWN_ERROR;
     sol_dude_t *dude = (sol_dude_t*) lua_touserdata(l, lua_upvalueindex(1));
     sol_region_t *reg;
     sol_region_manager_get_region_with_entity(dude, &reg);
     sol_combat_region_t *cr = NULL;
-    status = sol_arbiter_combat_region(reg, &cr);
+    sol_arbiter_combat_region(reg, &cr);
     lua_pushboolean(l, sol_combat_get_current(cr, &dude) == SOL_SUCCESS && dude != NULL);
     return 1;
 }
@@ -48,9 +47,8 @@ static int is_combat_turn(lua_State *l) {
     sol_region_t *reg;
     sol_region_manager_get_region_with_entity(dude, &reg);
     sol_combat_region_t *cr = NULL;
-    sol_status_t status = SOL_UNKNOWN_ERROR;
 
-    status = sol_arbiter_combat_region(reg, &cr);
+    sol_arbiter_combat_region(reg, &cr);
     lua_pushboolean(l, sol_combat_get_current(cr, &other) == SOL_SUCCESS && other == dude);
     return 1;
 }
@@ -104,6 +102,8 @@ static int set_class(lua_State *l) {
     uint16_t  class = luaL_checkinteger(l, 2);
     dude->class[which].class = class;
     dude->class[which].level = 0;
+
+    return 0;
 }
 
 static int award_exp(lua_State *l) {
@@ -111,6 +111,8 @@ static int award_exp(lua_State *l) {
     uint32_t  exp = luaL_checkinteger(l, 1);
 
     sol_dnd2e_award_exp(dude, exp);
+
+    return 0;
 }
 
 static int give_ds1_item(lua_State *l) {
@@ -126,12 +128,11 @@ static int give_ds1_item(lua_State *l) {
 
 static int get_closest_enemy(lua_State *l) {
     sol_dude_t   *dude = (sol_dude_t*) lua_touserdata(l, lua_upvalueindex(1));
-    sol_status_t status = SOL_UNKNOWN_ERROR;
     sol_combat_region_t *cr = NULL;
     sol_region_t *reg;
 
     sol_region_manager_get_current(&reg);
-    status = sol_arbiter_combat_region(reg, &cr);
+    sol_arbiter_combat_region(reg, &cr);
     sol_entity_t *enemy;
     sol_combat_get_closest_enemy(cr, dude->mapx, dude->mapy, &enemy);
 

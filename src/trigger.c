@@ -297,17 +297,7 @@ extern sol_status_t sol_trigger_object_clear(const uint32_t obj) {
 extern sol_status_t sol_trigger_noorders_enable()  { trigger_noorders = 1; return SOL_SUCCESS; }
 extern sol_status_t sol_trigger_noorders_disable() { trigger_noorders = 0; return SOL_SUCCESS; }
 
-static int on_object(sol_dude_t *dude, const uint32_t x, const uint32_t y) {
-    if (!dude) { return 0; }
-
-    return ((dude->mapx == x || dude->mapx - 1 == x )
-            && (dude->mapy) == y);
-}
-
 extern sol_status_t sol_trigger_noorders(uint32_t x, uint32_t y) {
-    static sol_trigger_node_t *last_door_trigger = NULL;
-    static int32_t last_door_y = -1;
-    uint8_t found_door = 0;
     //sol_trigger_node_t *rover = triggers->noorders_list;
     if (trigger_noorders) {
         trigger_noorders = 0;

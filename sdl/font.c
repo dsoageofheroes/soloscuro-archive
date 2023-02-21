@@ -147,7 +147,7 @@ extern void font_init(SDL_Renderer *renderer) {
 
 static sol_status_t font_render_center(SDL_Renderer *rend, sol_font_t font, const char *str, const SDL_Rect loc) {
     int len = strlen(str);
-    int pixel_width = 0;
+    uint32_t pixel_width = 0;
     sol_status_t status;
 
     if ((status = sol_font_pixel_width(font, str, len, &pixel_width)) != SOL_SUCCESS) {

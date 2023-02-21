@@ -30,7 +30,6 @@ static void create_table_entry_ss(lua_State *L, const char *key, const char *val
 static void push_ds1_combat(lua_State *L, ds1_combat_t *dc);
 //static void push_ds1_monster(lua_State *L, gff_monster_entry_t *me);
 static void push_ds1_item(lua_State *L, ds1_item_t *dc);
-static void push_scmd(lua_State *L, scmd_t *script);
 /* End Helper Functions */
 
 static int lua_gff_init(lua_State *L) {
@@ -631,7 +630,7 @@ static int lua_scmd_sound_idx(lua_State *L) {
 
 static int lua_gpl_change_region(lua_State *L) {
     lua_Integer region_id = luaL_checkinteger (L, 1);
-    gpl_change_region(region_id);
+    sol_gpl_change_region(region_id);
     return 0;
 }
 
@@ -728,18 +727,6 @@ int luaopen_libds (lua_State *L){
     //luaL_register(L, "sol", lslib);
     debug("Functions Registered.\n");
     return 1;
-}
-
-static void push_scmd(lua_State *L, scmd_t *script) {
-    scmd_t *cmd = script;
-    int len = 1;
-    if (!script) { return; }
-    while (!(cmd->flags & SCMD_LAST)) {
-        cmd++;
-        len++;
-    }
-    void *lscmd = lua_newuserdata(L, sizeof(scmd_t) * len);
-    memcpy(lscmd, script, sizeof(scmd_t) * len);
 }
 
 static void push_ds1_combat(lua_State *L, ds1_combat_t *dc) {

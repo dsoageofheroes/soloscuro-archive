@@ -183,7 +183,6 @@ extern sol_status_t sol_entity_list_find(sol_entity_list_t *list, sol_entity_t *
 extern sol_status_t sol_entity_list_load_etab(sol_entity_list_t *list, sol_static_list_t *ssl, const int gff_idx, const int map_id) {
     if (!list) { return SOL_NULL_ARGUMENT; }
     sol_static_t s;
-    sol_status_t status = SOL_NOT_IMPLEMENTED;
 
     if (!open_files[gff_idx].entry_table) {
         gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_ETAB, map_id);

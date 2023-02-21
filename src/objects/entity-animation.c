@@ -11,7 +11,6 @@
 
 static void clear_scmd_status(sol_entity_t *entity);
 
-static sol_entity_animation_node_t *last;
 static sol_entity_animation_node_t *next_animation_head = NULL;
 
 static scmd_t combat_move_down[] = {
@@ -389,6 +388,7 @@ static void play_death_sound(sol_entity_t *target) {
     }
 }
 
+/*
 static void play_melee_sound(sol_entity_t *source) {
     if (source->attack_sound) {
         sol_play_sound_effect(source->attack_sound);
@@ -404,6 +404,7 @@ static void play_melee_sound(sol_entity_t *source) {
     // sound 7: general melee sound.
     sol_play_sound_effect(7);
 }
+*/
 
 static void play_damage_sound(sol_entity_t *target) {
     if (!target) { return; }
@@ -421,7 +422,7 @@ static int region_damage_execute(sol_power_t *pw, sol_region_t *reg) {
     if (!reg || !reg->actions.head) { return 0; }
     sol_entity_action_t *action = &(reg->actions.head->ca);
 
-    sol_entity_t *source = action->source;
+    //sol_entity_t *source = action->source;
     sol_entity_t *target = action->target;
 
     switch(action->action) {
@@ -460,7 +461,6 @@ static void region_animation_last_check(sol_region_t *reg, sol_entity_animation_
     sol_power_instance_t pi;
     sol_entity_t *target;
     sol_entity_action_t *action;
-    sol_status_t status;
     sol_combat_region_t *cr = NULL;
     int slot;
 
@@ -482,7 +482,7 @@ static void region_animation_last_check(sol_region_t *reg, sol_entity_animation_
                 target->combat_status = COMBAT_STATUS_DYING;
                 play_death_sound(target);
                 warn("NEED TO IMPLEMENT death animation!\n");
-                status = sol_arbiter_combat_region(reg, &cr);
+                sol_arbiter_combat_region(reg, &cr);
                 if (!sol_entity_list_remove_entity(&cr->combatants, target)) {
                     error("Unable to remove entity from combat region!\n");
                 }
@@ -726,7 +726,6 @@ static scmd_t* entity_get_next_scmd(sol_entity_t *entity, const enum sol_entity_
 }
 
 static int apply_action(sol_entity_t *entity, sol_entity_action_t *action) {
-    animate_sprite_t *anim = &entity->anim;
     int ret = 1;
 
     switch (action->action) {
@@ -743,6 +742,9 @@ static int apply_action(sol_entity_t *entity, sol_entity_action_t *action) {
                                 clear_scmd_status(entity);
                                 sol_sprite_set_frame_keep_loc(entity->anim.spr, entity->anim.scmd[entity->anim.pos].bmp_idx);
                                 break;
+        default:
+                                error("Unhandled action: %d\n", action->action);
+                                exit(1);
     }
 
     //printf("(%d, %d)\n", entity->mapx, entity->mapy);

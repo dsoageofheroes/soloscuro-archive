@@ -162,7 +162,7 @@ extern sol_status_t sol_powers_init() {
     return SOL_SUCCESS;
 }
 
-extern sol_status_t powers_cleanup() {
+extern sol_status_t sol_powers_cleanup() {
     sol_wizard_cleanup();
     return SOL_SUCCESS;
 }

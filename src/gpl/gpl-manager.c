@@ -143,7 +143,7 @@ extern sol_status_t sol_gpl_push_context() {
     return SOL_SUCCESS;
 }
 
-extern sol_status_t gpl_pop_context() {
+extern sol_status_t sol_gpl_pop_context() {
     if (lua_stack_pos <= 0) {
         error("Trying to close a gpl lua that DNE!");
         exit(1);
@@ -180,7 +180,7 @@ extern sol_status_t sol_gpl_lua_execute_script(size_t file, size_t addr, uint8_t
             is_mas ? "MAS" : "GPL",
             file, addr);
         error("error: %s\n", lua_tostring(clua, -1));
-        gpl_pop_context();
+        sol_gpl_pop_context();
         return SOL_GPL_EXECUTE_ERROR;
     }
     lua_getglobal(clua, func);
@@ -193,7 +193,7 @@ extern sol_status_t sol_gpl_lua_execute_script(size_t file, size_t addr, uint8_t
     }
 
     debug("exiting execute_script(" PRI_SIZET ", " PRI_SIZET ", %d)\n", file, addr, is_mas);
-    gpl_pop_context();
+    sol_gpl_pop_context();
 
     return SOL_SUCCESS;
 }

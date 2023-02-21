@@ -87,7 +87,7 @@ extern sol_status_t sol_gpl_state_debug() {
     }
     printf("\n");
 
-    printf("GSTRS: %d", gpl_global_strs[0]);
+    printf("GSTRS: %s", gpl_global_strs[0]);
     for (size_t i = 1; i < MAX_GSTRS && i < max_print; i++) {
         printf(", '%s'", gpl_global_strs[i]);
     }
@@ -141,7 +141,7 @@ extern sol_status_t sol_gpl_write_global_state(FILE *file) {
 }
 
 static int set_while_callback(lua_State *l) {
-    const char *val = luaL_checkstring(l, 2);
+    //const char *val = luaL_checkstring(l, 2);
     //lua_Integer state = luaL_checkinteger(l, 1);
     return 0;
 }
@@ -329,7 +329,7 @@ static int get_pov(lua_State *l) {
         exit(1);
     }
     //printf("GNAME----------------------------------------------------->[" PRI_LI "] = %d\n", id, gpl_gnames[id]);
-    warn("get_pov (%d): not implemented!\n", id);
+    warn("get_pov (%d): not implemented!\n", (int)id);
     lua_pushnumber(l, 0);
     return 1;
 }

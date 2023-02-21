@@ -160,6 +160,7 @@ extern sol_status_t sol_spell_set_psionic(sol_psionic_list_t *psi, uint16_t powe
     if (!psi) { return SOL_NULL_ARGUMENT; }
     if (power < 0 || power >= PSIONIC_MAX) { return SOL_OUT_OF_RANGE; }
     psi->psionics[power] = 1;
+    return SOL_SUCCESS;
 }
 
 extern sol_status_t sol_spell_has_psionic(sol_psionic_list_t *psi, uint16_t power) {
@@ -172,6 +173,7 @@ extern sol_status_t sol_spell_set_spell(ssi_spell_list_t *spells, uint16_t spell
     if (!spells) { return SOL_NULL_ARGUMENT; }
     if (spell < 0 || spell >= WIZ_MAX) { return SOL_OUT_OF_RANGE; }
     spells->spells[spell / 8] |= 1<<(spell % 8);
+    return SOL_SUCCESS;
 }
 
 extern sol_status_t sol_spell_has_spell(ssi_spell_list_t *spells, uint16_t spell) {

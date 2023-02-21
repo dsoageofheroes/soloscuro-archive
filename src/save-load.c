@@ -14,12 +14,6 @@
 #include <stdio.h>
 #include <string.h>
 
-static int save_item(FILE *file, sol_item_t *item, const char *name) {
-    fprintf(file, "%s.ds_id = %d\n", name, item->ds_id);
-    fprintf(file, "-- Need to finish saving the item...\n");
-    return 1;
-}
-
 static int save_inventory(FILE *file, sol_entity_t *entity, const char *name) {
     if (!entity->inv) { return 0; }
 
@@ -191,14 +185,13 @@ static int write_regions(FILE *file) {
 
 extern sol_status_t sol_save_to_file(const char *filepath, const char *name) {
     printf("Need to save to %s\n", filepath);
-    sol_status_t status = SOL_UNKNOWN_ERROR;
     sol_combat_region_t *cr = NULL;
     FILE *file;
     sol_region_t *reg;
     sol_dude_t   *dude;
 
     sol_region_manager_get_current(&reg);
-    status = sol_arbiter_combat_region(reg, &cr);
+    sol_arbiter_combat_region(reg, &cr);
     if (sol_combat_get_current(cr, &dude) != SOL_SUCCESS && dude != NULL) { return SOL_IN_COMBAT_ERROR; }
     if (sol_narrate_is_open() == SOL_SUCCESS) { return SOL_IN_NARRATE_ERROR; }
 

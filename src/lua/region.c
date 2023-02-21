@@ -12,21 +12,6 @@
 
 extern char *strdup(const char *s); // Not in standard.
 
-static int region_set_tile(lua_State *l) {
-    //sol_region_t *region = get_userdata(l, 1);
-    sol_region_t *region = (sol_region_t*) lua_touserdata(l, lua_upvalueindex(1));
-    const int x = luaL_checkinteger(l, 2);
-    const int y = luaL_checkinteger(l, 3);
-    const int tile = luaL_checkinteger(l, 4);
-
-    if (x > 0 && x < 99 && y > 0 && y < 128) {
-        region->tiles[x-1][y-1] = tile;
-    }
-    //printf("%p (%d, %d) to %d!\n", region, x, y, tile);
-    //uint8_t tiles[MAP_ROWS][MAP_COLUMNS];
-    return 0;
-}
-
 // this is just annoying lua...
 static int region_set_flag_ids(lua_State *l) {
     sol_region_t *region = (sol_region_t*) lua_touserdata(l, lua_upvalueindex(1));
@@ -102,7 +87,6 @@ static int get_first_entity(lua_State *l) {
 
 static int enter_combat (lua_State *l) {
     luaL_checktype(l, 1, LUA_TTABLE);
-    sol_status_t status = SOL_SUCCESS;
     const int x = luaL_checkinteger(l, 2);
     const int y = luaL_checkinteger(l, 3);
 
