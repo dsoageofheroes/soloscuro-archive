@@ -209,6 +209,7 @@ extern sol_status_t sol_player_init() {
 extern sol_status_t sol_player_get(const int slot, sol_entity_t **e) {
     if (slot < 0 || slot >= MAX_PCS) { return SOL_NULL_ARGUMENT; }
     *e = players[slot];
+    //printf("player[%d] = %p\n", slot, players[slot]);
     return SOL_SUCCESS;
 }
 

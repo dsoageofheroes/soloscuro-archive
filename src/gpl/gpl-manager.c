@@ -103,12 +103,12 @@ static sol_status_t gpl_lua_load_script(const uint32_t script_id, const uint8_t 
 extern sol_status_t sol_gpl_lua_load_all_scripts() {
     sol_status_t status;
 
-    for (int i = 0; i < 100; i++) {
+    for (int i = 1; i < 100; i++) {
         if ((status = gpl_lua_load_script(i, 0)) != SOL_SUCCESS) {
-            return status;
+            //printf("Failed to load %d.gpl\n", i);
         }
         if ((status = gpl_lua_load_script(i, 1)) != SOL_SUCCESS) {
-            return status;
+            //printf("Failed to load %d.mas\n", i);
         }
     }
 

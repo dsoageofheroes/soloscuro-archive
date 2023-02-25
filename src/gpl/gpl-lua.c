@@ -12,7 +12,7 @@
 static int print_cmd();
 static int varnum = 0;
 static int funcnum = 0;
-static int in_func = 0;
+static int in_func = 0, in_retval = 0;
 static size_t cfunc_num = 0;
 static char is_master_mas = 0;
 static int compare_level = 0;
@@ -23,7 +23,7 @@ static int gpl_lua_read_simple_num_var(char *buf, const size_t buf_size);
 static uint8_t gpl_lua_access_complex(int16_t *header, uint16_t *depth, uint16_t *element, int32_t *obj_name);
 static int32_t gpl_lua_read_complex(char *buf, size_t *buf_pos, const size_t size);
 static uint16_t gpl_lua_get_word();
-static void validate_number(const char *num, const char *message);
+//static void validate_number(const char *num, const char *message);
 static void print_label();
 
 extern void gpl_lua_byte_dec(void);
@@ -240,6 +240,7 @@ static int needs_quotes(const char *str) {
     return 1;
 }
 
+/*
 static void validate_number(const char *num, const char *message) {
     char msg[BUF_SIZE];
     const char *ptr = num;
@@ -251,6 +252,7 @@ static void validate_number(const char *num, const char *message) {
         lua_exit(msg);
     }
 }
+*/
 // END lua manipulation variabels and functions
 
 static void gpl_lua_get_parameters(int16_t amt) {
@@ -414,13 +416,44 @@ gpl_lua_operation_t gpl_lua_operations[] = {
     { gpl_lua_get_range, "gpl get range" }, // 0x80
 };
 
-static void do_lua_gpl_command(uint8_t cmd) {
-    //fflush(stdout);
-    //debug("[%p:%d]command byte = 0x%x (%s)\n", (void*)get_data_start_ptr(),
-        //(int32_t) (get_data_ptr() - get_data_start_ptr()), cmd, gpl_operations[cmd].name);
-    //exit_gpl = 0;
-    //printf("cmd = 0x%x (do_lua_gpl_command.)\n", cmd);
+static void do_retval_command(uint8_t cmd) {
+    in_retval = 1;
+    //This is a bit of a precarious situation because we are inside the calculation
+    //of an accum. So only certain operations will work here.
+    switch(cmd) {
+        case 0x0f:// get status
+        case 0x10:// get los
+        case 0x1e:// nametonum
+        case 0x1f:// numtoname
+        case 0x20:// bitsnoop
+        case 0x22:// gplrequest
+        case 0x25:// gplclone
+        case 0x2f:// drop
+        case 0x33:// search
+        case 0x34:// get_party
+        case 0x38:// yes_no
+        case 0x39:// give
+        case 0x3d:// readorders
+        case 0x41:// setother
+        case 0x49:// setthing
+        case 0x52:// rand
+        case 0x5a:// string compare
+        case 0x59:// statroll
+        case 0x80:// range
+            // The above look good.
+            // These are okay
+            break;
+        case 0x1a:// global return?
+            lprintf("false -- global return, this is probably wrong.\n");
+            break;
+        default:
+            error ("unrecognized command in a RETVAL: 0x%x\n", cmd);
+            exit(1);
+            
+    }
+    //printf("RETVAL cmd = 0x%x (%s)\n", cmd, gpl_lua_operations[cmd].name);
     (*gpl_lua_operations[cmd].func)();
+    in_retval = 0;
     //print_vars(0);
 }
 
@@ -453,12 +486,14 @@ static void gpl_lua_pass(unsigned char *gpl, const size_t len, const int pass_nu
     is_master_mas = (script_id == 99 && is_mas);
     //printf("gpl = %p, len = %ld\n", gpl, len);
     while (diff < len && print_cmd()) {
+        sol_gpl_get_data_ptr(&data_ptr);
         diff = (size_t)data_ptr - start;
+        //printf("diff = %ld, len = %ld\n", diff, len);
     }
     while (lua_depth-- > 0) {
         lprintf("end\n");
     }
-    //printf("tranversed = %ld, len = %ld\n", (size_t)gpl_get_data_ptr() - (size_t)start, len);
+    //printf("tranversed = %ld, len = %ld\n", (unsigned long)data_ptr - (size_t)start, len);
     sol_gpl_pop_data_ptr(NULL);
 }
 
@@ -543,7 +578,7 @@ static int print_cmd() {
         exit(1);
         return 0;
     }
-    //printf("print_cmd: command = 0x%x\n", command);
+    //printf("print_cmd: command = 0x%x, '%s'\n", command, gpl_lua_operations[command].name);
     (*gpl_lua_operations[command].func)();
     return 1;
 }
@@ -683,6 +718,13 @@ extern void gpl_lua_source_line_num(void) {
 
 extern void gpl_lua_drop(void) {
     gpl_lua_get_parameters(3);
+
+    if (in_retval) {
+        lprintf("gpl.drop(%s, %s, %s)",
+            lparams.params[0], lparams.params[1], lparams.params[2]);
+        return;
+    }
+
     lprintf("if %s == %d then \n", lparams.params[2], PARTY);
     lua_depth++;
     lprintf("-- all pary members need to drop %s of %s\n", lparams.params[0], lparams.params[1]);
@@ -833,73 +875,180 @@ extern void gpl_lua_fetch(void) {
 #define LT_SEARCH      (5)
 #define GT_SEARCH      (6)
 
+// Right now I haven't fully figured out gpl_lua_search
+/* First test set:
+ * Bytes: 0x4d 0x50 0x48 0x4 0x91 0x75 0x62
+ * What I've got:
+ * 0x4d 0x50 0x48 
+ * 0x4 = EQ, IE: We are testing for equality
+ * 0x91 == GET_WORD, IE, get the next two bytes which are:
+ * 0x75 0x62 = Aposstal
+ * Second test set
+ * Bytes: 0x0 0x0 0x48 0x4 0x91 0x75 0x57
+ * What I've got:
+ * 0x0 0x0 0x48
+ * 0x4 = EQ
+ * 0x91 = GET_WORD
+ * 0x75 0x57 = WyvernHook
+ * Third test set
+ * Bytes: 0x4d 0x50 0x52 0x02 
+ * What I've got:
+ * 0x4d 0x50 0x52 
+ * 0x02 TOTAL
+ * fourth test set
+ * Bytes: 0x4d 0x50 0x48 0x03 0x87 0x21 0x24 0x91 0x00 0x6b 0x16 0x8c 0x33 0x89 0x27 0x4d 
+ * What I've got:
+ * 0x4d 0x50 0x48
+ * 0x03 COUNT SEARCH
+ * Fifth test set
+ * bytes of start: 
+ * 0x4d 0x50 0x48 0x04 0x91 0x05 0x71 0x53 0x48 0x03 0x82 0x00 0x16 0x8c 0x33 0x7f 
+ * What I've got:
+ * 0x4d 0x50 0x48
+ * 0x04 EQ
+ * 0x91 GET WORD 
+ * 0x05 0x71
+ * 0x53 CONTINUE
+ * 0x48 ID
+ * 0x03 COUNT
+ */
+static size_t search_grab_first_arg(char *buf, const size_t len) {
+    uint8_t b;
+    size_t buf_pos = 0;
+
+    sol_gpl_get_byte(&b);
+    switch (b) {
+        case 0x4d: // portion
+            buf_pos += snprintf(buf + buf_pos, len - buf_pos, "gpl.search");
+            break;
+        case 0x00: // everything
+            buf_pos += snprintf(buf + buf_pos, len - buf_pos, "gpl.search");
+            break;
+        default:
+            error("Unexpected search search byte 0.\n");
+            exit(1);
+    }
+
+    sol_gpl_get_byte(&b);
+    switch (b) {
+        case 0x50: // portion?
+            buf_pos += snprintf(buf + buf_pos, len - buf_pos, "_portion");
+            break;
+        case 0x00: // everything?
+            buf_pos += snprintf(buf + buf_pos, len - buf_pos, "_everything");
+            break;
+        default:
+            error("Unexpected search search byte 1.\n");
+            exit(1);
+    }
+
+    sol_gpl_get_byte(&b); // What is this for?
+    switch (b) {
+        case 0x48:
+            //buf_pos += snprintf(buf + buf_pos, len - buf_pos, "_pov");
+            break;
+        case 0x52:
+            //buf_pos += snprintf(buf + buf_pos, len - buf_pos, "_party");
+            break;
+        default:
+            error("Unexpected search search byte 2: 0x%2x.\n", b);
+            exit(1);
+    }
+    return buf_pos;
+}
+
 extern void gpl_lua_search(void) {
     char object[BUF_SIZE];
     char buf[BUF_SIZE - 128];
-    uint8_t b;
-    //uint32_t answer = 0L;
+    size_t buf_pos = 0;
+    uint8_t b, op;
+
     gpl_lua_read_number(object, BUF_SIZE);
-    int16_t field_level = -1, depth = 1;
-    //int32_t temp_for = 0;
-    uint8_t type = 0;
-    //char *i;
+    //printf("object = '%s'\n", object);
 
-    sol_gpl_get_byte(&b);
-    sol_gpl_get_byte(&b);
-    do {
-        sol_gpl_peek_one_byte(&b);
-        if (b == OBJ_QUALIFIER) {
-            sol_gpl_get_byte(&b);
-        }
-        field_level++;
-        sol_gpl_peek_one_byte(&b);
-        //field[field_level] = b;
-        sol_gpl_peek_one_byte(&b);
-        type = b;
-        if (type >= EQU_SEARCH && type <= GT_SEARCH) {
-            gpl_lua_read_number(buf, BUF_SIZE - 128);
-            validate_number(buf, "gpl_lua_search");
-            lprintf("gpl.find_item_on_party(%s)\n", buf);
-            //temp_for = read_number();
-            //temp_for = atoi(buf);
-            if (field_level > 0) {
-                //field[++field_level] = (uint16_t) temp_for;
-            } else {
-                //search_for = temp_for;
-            }
-        }
-        depth--;
-    } while ( sol_gpl_peek_one_byte(&b) == SOL_SUCCESS && b == OBJ_QUALIFIER);
+    //printf("gpl_search: bytes of start: ");
+    //gpl_print_next_bytes(16);
+    //printf("\n");
 
-    //i = (object == PARTY || object < 0)
-        //? NULL_OBJECT : object;
-    //i = object;
-
-    /*
-    do {
-        if (type == LOW_SEARCH) {
-            answer = 0x7FFFFFFFL;
-        }
-    } while ( (object == PARTY) && (i != NULL_OBJECT));
-    */
-    /*
-    lprintf("--I need to find object %s, i = %s, low_field = %d, high_field = %d\n",
-        object, i, low_field, high_field);
-    lprintf("--Field parameters:");
-    for (int idx = 0; idx < depth; idx++) {
-        warn("%d ", field[idx]);
+    buf_pos += search_grab_first_arg(buf, BUF_SIZE - 128);
+    sol_gpl_get_byte(&op);
+    switch(op) {
+        case EQU_SEARCH: buf_pos += snprintf(buf + buf_pos, BUF_SIZE - buf_pos, "_eq"); break;
+        case TOTAL_SEARCH: buf_pos += snprintf(buf + buf_pos, BUF_SIZE - buf_pos, "_total(%s)", object); goto check_if_end;
+        case COUNT_SEARCH: buf_pos += snprintf(buf + buf_pos, BUF_SIZE - buf_pos, "_count(%s)", object); goto check_if_end;
+        default:
+            error("unknown op for search: 0x%x\n", op);
+            exit(1);
     }
-    lprintf("--search_for = %d\n", search_for);
 
-    lprintf("--search command to be implemented later...\n");
-    lprintf("accum = answer\n");
-    */
+    sol_gpl_get_byte(&b);
+    // This should be a function call!
+    switch(b) {
+        case GPL_IMMED_NAME|0x80:
+            buf_pos += snprintf(buf + buf_pos, BUF_SIZE - buf_pos, "(%s, %d)", object, get_half_word());
+            break;
+        case GPL_LNUM|0x80:
+            sol_gpl_global_big_num += b & 0x7F;
+            buf_pos += gpl_lua_read_simple_num_var(buf + buf_pos, BUF_SIZE - buf_pos);
+            break;
+        default:
+            error("unknown get for search: 0x%x\n", b);
+            exit(1);
+    }
+
+check_if_end:
+    // Now test if the search statement continues
+    sol_gpl_peek_one_byte(&op);
+    if (op != OBJ_QUALIFIER) {
+        // We are done.
+        lprintf(buf);
+        return;
+    }
+
+    // We need to continue...
+    sol_gpl_get_byte(&b);
+    sol_gpl_get_byte(&b);
+    switch(b) {
+        case 0x55: // SLOT?
+            buf_pos += snprintf(buf + buf_pos, BUF_SIZE - buf_pos, " | SLOT ");
+            break;
+        case 0x48: // ID?
+            buf_pos += snprintf(buf + buf_pos, BUF_SIZE - buf_pos, " | ID ");
+            break;
+        default:
+            error ("Unknown byte after search.\n");
+            exit(1);
+    }
+
+    sol_gpl_get_byte(&b);
+    switch (b) {
+        case EQU_SEARCH: buf_pos += snprintf(buf + buf_pos, BUF_SIZE - buf_pos, " == "); break;
+        case COUNT_SEARCH: buf_pos += snprintf(buf + buf_pos, BUF_SIZE - buf_pos, " COUNT "); goto check_if_end;
+        default:
+            error ("Unknown op byte after search.\n");
+            exit(1);
+    }
+
+    // This should be the same function call as above.
+    sol_gpl_get_byte(&b);
+    switch (b) {
+        case GPL_IMMED_BYTE|0x80:
+            sol_gpl_get_byte(&b);
+            buf_pos += snprintf(buf + buf_pos, BUF_SIZE - buf_pos, "%d", b);
+            break;
+        default:
+            error ("Unknown type byte after search.\n");
+            exit(1);
+    }
+
+    lprintf(buf);
 }
 
 extern void gpl_lua_getparty(void) {
     char buf[BUF_SIZE];
     gpl_lua_read_number(buf, BUF_SIZE);
-    lprintf("gpl.get_party(%s)\n", buf);
+    lprintf("gpl.get_party(%s)%s", buf,
+            in_retval ? "" : "\n");
     //lprintf("gOther = %s\n", buf);
     //lprintf("accum = %s\n", buf);
 }
@@ -923,15 +1072,17 @@ extern void gpl_lua_follow(void) {
 }
 
 extern void gpl_lua_getyn(void) {
-    lprintf("gpl.ask_yes_no()\n");
+    lprintf("gpl.ask_yes_no()%s",
+            in_retval ? "" : "\n");
 }
 
 extern void gpl_lua_give(void) {
     gpl_lua_get_parameters(4);
     //lprintf("--need to give and set accumulator!");
     //set_accumulator(give(param.val[0], param.val[1], param.val[2], param.val[3], GPL_NEW_SLOT));
-    lprintf("gpl.give(%s, %s, %s, %s, GPL_NEW_SLOT)\n",
-        lparams.params[0], lparams.params[1], lparams.params[2], lparams.params[3]);
+    lprintf("gpl.give(%s, %s, %s, %s, GPL_NEW_SLOT)%s",
+        lparams.params[0], lparams.params[1], lparams.params[2], lparams.params[3],
+        in_retval ? "" : "\n");
 }
 
 extern void gpl_lua_go(void) {
@@ -953,14 +1104,15 @@ extern void gpl_lua_goxy(void) {
 extern void gpl_lua_readorders(void) {
     char buf[BUF_SIZE];
     gpl_lua_read_number(buf, BUF_SIZE);
-    lprintf("gpl.read_order(%s)\n", buf);
+    lprintf("gpl.read_order(%s)%s", buf,
+            in_retval ? "" : "\n");
 }
 
 extern void gpl_lua_if(void) {
     // The paramter is ignored, in the original it probably was the address
     // to jump to if the if was not taken.
     gpl_lua_get_parameters(1);
-    lprintf("if gpl.is_true(accum) then \n");
+    lprintf("if accum == true then -- \"if\"\n");
     lua_depth++;
 }
 
@@ -1006,7 +1158,8 @@ extern void gpl_lua_setrecord(void) {
 extern void gpl_lua_setother(void) {
     char buf[BUF_SIZE];
     gpl_lua_read_number(buf, BUF_SIZE);
-    lprintf("gpl.set_other_check(%s)\n", buf);
+    lprintf("gpl.set_other_check(%s)%s", buf,
+            in_retval ? "" : "\n");
 }
 
 extern void gpl_lua_end_control(void) {
@@ -1090,6 +1243,7 @@ extern void gpl_lua_menu(void) {
 extern void gpl_lua_setthing(void) {
     gpl_lua_get_parameters(2);
     //lprintf("--move character's %s's itme of type %s\n", lparams.params[0], lparams.params[1]);
+    //The can be in_retval
     lprintf("gpl.setthing(%s, %s)", lparams.params[0], lparams.params[1]);
 }
 
@@ -1113,7 +1267,8 @@ extern void gpl_lua_printnl(void) {
 extern void gpl_lua_rand(void) {
     char buf[BUF_SIZE];
     gpl_lua_read_number(buf, BUF_SIZE);
-    lprintf("gpl.rand() %% %d\n", atoi(buf) + 1);
+    lprintf("gpl.rand() %% %d%s", atoi(buf) + 1,
+            in_retval ? "" : "\n");
     //set_accumulator((int32_t)rand() % (read_number() + 1));
 }
 
@@ -1129,6 +1284,10 @@ extern void gpl_lua_skillroll(void) {
 
 extern void gpl_lua_statroll(void) {
     gpl_lua_get_parameters(3);
+    if (in_retval) {
+        lprintf("gpl.gpl_stat_rol_retval(%s)", lparams.params[0]);
+        return;
+    }
     lprintf("accum = 0\n");
     lprintf("if lparams.params[0] == PARTY then\n");
     lua_depth++;
@@ -1142,8 +1301,14 @@ extern void gpl_lua_statroll(void) {
 }
 
 extern void gpl_lua_string_compare(void) {
-    lprintf("accum = 0\n");
     gpl_lua_get_parameters(2);
+
+    if (in_retval) {
+        lprintf("gpl.string_compare(%s, %s)", lparams.params[0], lparams.params[1]);
+        return;
+    }
+
+    lprintf("accum = 0\n");
     lprintf("if %s == %s then\n", lparams.params[0], lparams.params[1]);
     lua_depth++;
     lprintf("accum = 1\n");
@@ -1198,18 +1363,8 @@ extern void gpl_lua_tport(void) {
 
 extern void gpl_lua_bitsnoop(void) {
     gpl_lua_get_parameters(2);
-    lprintf("((%s & %s) == %s)\n", lparams.params[0], lparams.params[1], lparams.params[1]);
-    /*
-    lprintf("if %s & %s == %s then\n", lparams.params[0], lparams.params[1], lparams.params[1]);
-    lua_depth++;
-    lprintf("accum = 1\n");
-    lua_depth--;
-    lprintf("else\n");
-    lua_depth++;
-    lprintf("accum = 0\n");
-    lua_depth--;
-    lprintf("end\n");
-    */
+    lprintf("((%s & %s) == %s)%s", lparams.params[0], lparams.params[1], lparams.params[1],
+            in_retval ? "" : "\n");
 }
 
 extern void gpl_lua_award(void) {
@@ -1232,11 +1387,12 @@ extern void gpl_lua_award(void) {
 extern void gpl_lua_request(void) {
     gpl_lua_get_parameters(4);
     //lprintf("accum = gpl.request(%s, %s, %s, %s)\n",
-    lprintf("gpl.request(%s, %s, %s, %s)\n",
+    lprintf("gpl.request(%s, %s, %s, %s)%s",
         (lparams.params[0]),
         (lparams.params[1]),
         (lparams.params[2]),
-        (lparams.params[3]));
+        (lparams.params[3]),
+        in_retval ? "" : "\n");
     //lprintf("obj = accum\n");
 }
 
@@ -1314,13 +1470,15 @@ extern void gpl_lua_shop(void) {
 extern void gpl_lua_clone(void) {
     gpl_lua_get_parameters(6);
 
-    lprintf("obj = gpl.clone(%s, %s, %s, %s, %s, %s)\n",
+    lprintf("%sgpl.clone(%s, %s, %s, %s, %s, %s)%s",
+        in_retval ? "" : "obj = ",
         lparams.params[0],
         lparams.params[1],
         lparams.params[2],
         lparams.params[3],
         lparams.params[4],
-        lparams.params[5]);
+        lparams.params[5],
+        in_retval ? "" : "\n");
 }
 
 extern void gpl_lua_changemoney(void) {
@@ -1340,14 +1498,22 @@ extern void gpl_lua_toggle_accum(void) {
 extern void gpl_lua_getstatus(void) {
     char buf[BUF_SIZE];
     gpl_lua_read_number(buf, BUF_SIZE);
+
+    if (in_retval) {
+        lprintf("gpl.get_character_status(%s)", buf);
+        return;
+    }
+
     lprintf("accum = gpl.get_character_status(%s);\n", buf);
 }
 
 extern void gpl_lua_getlos(void) {
     gpl_lua_get_parameters(3);
-    lprintf("gpl.los(%s, %s, %s) -- los from %s to %s < %s\n",
+    //lprintf("gpl.los(%s, %s, %s) -- los from %s to %s < %s%s",
+    lprintf("gpl.los(%s, %s, %s)%s",
         lparams.params[0], lparams.params[1], lparams.params[2],
-        lparams.params[0], lparams.params[1], lparams.params[2]);
+        //lparams.params[0], lparams.params[1], lparams.params[2],
+        in_retval ? "" : "\n");
 }
 
 extern void gpl_lua_long_times_equal(void) {
@@ -1479,15 +1645,17 @@ extern void gpl_lua_long_minus_equal(void) {
 }
 
 uint16_t gpl_range(int16_t obj0, int16_t obj1) {
-    lprintf("--Must compute range from %d to %d\n", obj0, obj1);
+    lprintf("--Must compute range from %d to %d%s", obj0, obj1,
+            in_retval ? "" : "\n");
     lprintf("gpl.error()");
     return 10;//Totally bogus
 }
 
 extern void gpl_lua_get_range(void) {
     gpl_lua_get_parameters(2);
-    lprintf("gpl.range(%s, %s)\n",
-        lparams.params[0], lparams.params[1]);
+    lprintf("gpl.range(%s, %s)%s",
+        lparams.params[0], lparams.params[1],
+        in_retval ? "" : "\n");
 }
 
 extern void gpl_lua_compare(void) {
@@ -1590,22 +1758,24 @@ extern void gpl_lua_clear_los(void) {
 
 extern void gpl_lua_nametonum(void) {
     char buf[BUF_SIZE];
+    char *newline = in_retval ? "" : "\n";
     gpl_lua_read_number(buf, BUF_SIZE);
     if (buf[0] != '-') {
-        lprintf("-%s\n", buf);
+        lprintf("-%s%s", buf, newline);
     } else {
-        lprintf("%s\n", buf + 1);
+        lprintf("%s%s", buf + 1, newline);
     }
     //set_accumulator(gpl_lua_read_number() * -1);
 }
 
 extern void gpl_lua_numtoname(void) {
     char buf[BUF_SIZE];
+    char *newline = in_retval ? "" : "\n";
     gpl_lua_read_number(buf, BUF_SIZE);
     if (buf[0] != '-') {
-        lprintf("-%s\n", buf);
+        lprintf("-%s%s", buf, newline);
     } else {
-        lprintf("%s\n", buf + 1);
+        lprintf("%s%s", buf + 1, newline);
     }
     //set_accumulator(gpl_lua_read_number() * -1);
 }
@@ -1668,7 +1838,7 @@ static size_t gpl_lua_read_number(char *buf, const size_t size) {
     do {
      //   taccum[0] = '\0';
         do_next = 0;
-        //printf("buf_pos = %zu\n", buf_pos);
+        //lprintf("---- buf_pos = %zu\n", buf_pos);
         sol_gpl_get_byte(&b);
         cop = b; // current operation
         //printf("current operation = 0x%x\n", cop);
@@ -1705,21 +1875,22 @@ static size_t gpl_lua_read_number(char *buf, const size_t size) {
                 case GPL_GSTRING|0x80:
                 case GPL_LSTRING|0x80: {
                     sol_gpl_global_big_num += cop & 0x7F;
-                    //read_simple_num_var();
                     cval = sol_gpl_global_big_num;
-                    buf_pos += gpl_lua_read_simple_num_var(buf + buf_pos, size - buf_pos);
-                    //printf("updating buf_pos = %d\n", buf_pos);
+                    int amt = gpl_lua_read_simple_num_var(buf + buf_pos, size - buf_pos);
+                    //printf("amt = %d, buf = '%s'\n", amt, buf);
+                    buf_pos += amt;
                     break;
                 }
                 case GPL_RETVAL|0x80: {
+                    //printf("DOUBLE PAREN\n");
                     int tpos = lua_pos;
                     char *tptr = lua_buf + lua_pos;
 
-                    // TODO: should this be a function call?
                     lprintf("((");
                     sol_gpl_get_byte(&b);
-                    int cmd = b;
-                    do_lua_gpl_command(cmd);
+
+                    do_retval_command(b);
+
                     lprintf("))");
 
                     buf_pos += strlen(strncpy(buf + buf_pos, tptr, size - buf_pos));
@@ -1844,6 +2015,7 @@ static size_t gpl_lua_read_number(char *buf, const size_t size) {
                         exit(1);
                     }
                     */
+                    //printf("SINGLE PAREN\n");
                     ++paren_level;
                     buf_pos += snprintf(buf + buf_pos, size - buf_pos, "(");
                     //printf("updating buf_pos = %d\n", buf_pos);
@@ -1858,6 +2030,7 @@ static size_t gpl_lua_read_number(char *buf, const size_t size) {
                         //fprintf(stderr, "ERROR: paren level is < 0!\n");
                         //exit(1);
                     //}
+                    //printf("CLOSE PAREN, buf_pos = %ld\n", buf_pos);
                     --paren_level;
                     //printf("CLOSEbuf_pos = %d\n", buf_pos);
                     buf_pos += snprintf(buf + buf_pos, size - buf_pos, ")");
@@ -1871,14 +2044,13 @@ static size_t gpl_lua_read_number(char *buf, const size_t size) {
                 }
             }
         }
-    } while (do_next || 
-        ((sol_gpl_preview_byte(0, &next_op) == SOL_SUCCESS && next_op > OPERATOR_OFFSET && next_op <= OPERATOR_LAST)
-            || (paren_level > 0 && next_op == GPL_HI_CLOSE_PAREN)));
-    // We need to look if that above else was executed!
-    //printf("accums[0] = %d\n", accums[0]);
-    //return accums[0];
-    //printf("exiting with buf_pos = %d, buf = '%s'\n", buf_pos, buf);
-    //lprintf("---- read_number_end, buf  '%s'\n", buf);
+        if (!do_next) {
+            do_next = ((sol_gpl_preview_byte(0, &next_op) == SOL_SUCCESS && next_op > OPERATOR_OFFSET && next_op <= OPERATOR_LAST));
+        }
+    } while (do_next || paren_level > 0);
+        //((sol_gpl_preview_byte(0, &next_op) == SOL_SUCCESS && next_op > OPERATOR_OFFSET && next_op <= OPERATOR_LAST)));
+            //|| (paren_level > 0 && next_op == GPL_HI_CLOSE_PAREN)));
+    //printf("exiting with buf_pos = %ld, buf = '%s'\n", buf_pos, buf);
     return buf_pos;
 }
 
@@ -2012,6 +2184,7 @@ int gpl_lua_read_simple_num_var(char *buf, const size_t buf_size) {
     }
     //if (debug) { printf("temps16 = %d\n", temps16); }
 
+    //printf("sol_gpl_global_big_num = %d, temps16 = %d\n", sol_gpl_global_big_num, temps16);
     switch(sol_gpl_global_big_num) {
         case GPL_GFLAG: {
             return snprintf(buf, buf_size, "gpl.get_gf(%d)", temps16);
@@ -2041,8 +2214,10 @@ int gpl_lua_read_simple_num_var(char *buf, const size_t buf_size) {
             if (temps16 >= 0x20 && temps16 < 0x2F) {
                 //return snprintf(buf, buf_size, "global_simple_var[%d]", temps16 - 0x20);
                 //return snprintf(buf, buf_size, "\"gpl.get_gname(%d)\"", temps16 - 0x20);
+                //printf("gpl.get_gname(%d)\n", temps16 - 0x20);
                 return snprintf(buf, buf_size, "gpl.get_gname(%d)", temps16 - 0x20);
             } else {
+                //printf("NO VARIABLE GNAME!\n");
                 lua_exit("ERROR: No variable GNAME!!!\n");
             }
             //debug("reading gname @ %d is equal to %d\n", temps16, gpl_global_big_num);

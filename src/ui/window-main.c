@@ -20,7 +20,7 @@ static sol_sprite_t background, sun, start, create_characters, load_save, exit_d
 static int mousex = 0, mousey = 0;
 static int mouse_down = 0;
 static int count_down = 0;
-static uint16_t count_down_spr = SPRITE_ERROR;
+static sol_sprite_t count_down_spr = SPRITE_ERROR;
 static uint32_t xoffset, yoffset;
 
 void main_init(const uint32_t x, const uint32_t y) {
@@ -48,7 +48,7 @@ static int click_action() {
     sol_entity_t *active;
 
     if (count_down_spr == exit_dos) { sol_game_loop_signal(WAIT_FINAL, 0); }
-    if (count_down_spr == create_characters) { sol_window_push(&view_character_window, 0, 10); }
+    if (count_down_spr == create_characters) { sol_window_push(&view_character_window, 0, 10); return 1; }
     if (count_down_spr == start) {
         if(sol_player_get_active(&active) == SOL_SUCCESS && active->name) {
             sol_window_pop();
@@ -63,6 +63,7 @@ static int click_action() {
             sol_popup_set_option(0, "Ok");
             sol_popup_set_option(1, "");
             sol_popup_set_option(2, "CANCEL");
+            return 1;
         }
     }
 
@@ -86,7 +87,9 @@ void main_render(void *data) {
         count_down--;
         if (count_down == 0) {
             sol_sprite_set_frame(count_down_spr, 0);
-            if (click_action()) { return; }
+            if (click_action()) { 
+                return; 
+            }
             count_down_spr = SPRITE_ERROR;
         }
     }
@@ -97,7 +100,7 @@ void main_render(void *data) {
     sol_sprite_render(exit_dos);
 }
 
-static uint16_t get_sprite(const uint32_t x, const uint32_t y) {
+static sol_sprite_t get_sprite(const uint32_t x, const uint32_t y) {
     if (sol_sprite_in_rect(start, x, y) == SOL_SUCCESS) { return start; }
     if (sol_sprite_in_rect(create_characters, x, y) == SOL_SUCCESS) { return create_characters; }
     if (sol_sprite_in_rect(load_save, x, y) == SOL_SUCCESS) { return load_save; }
@@ -109,7 +112,7 @@ static uint16_t get_sprite(const uint32_t x, const uint32_t y) {
 int main_handle_mouse_movement(const uint32_t x, const uint32_t y) {
     mousex = x; mousey = y;
     static uint16_t last_sprite = SPRITE_ERROR;
-    uint16_t cur_sprite = get_sprite(x, y);
+    sol_sprite_t cur_sprite = get_sprite(x, y);
 
     if (last_sprite != cur_sprite) {
         sol_sprite_increment_frame(cur_sprite, 1);

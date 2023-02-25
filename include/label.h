@@ -59,6 +59,7 @@ typedef enum sol_screen_type_e {
 } sol_screen_type_t;
 
 extern sol_status_t sol_label_create_group();
+extern sol_status_t sol_label_free(sol_label_t *l);
 extern sol_status_t sol_label_render(sol_label_t *label);
 extern sol_status_t sol_label_set(sol_label_t *label, const char *buf, const int32_t x, const int32_t y);
 extern sol_status_t sol_label_set_text(sol_label_t  *label, const char* string);

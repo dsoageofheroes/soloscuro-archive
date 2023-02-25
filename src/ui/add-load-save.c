@@ -251,15 +251,13 @@ int add_load_save_handle_mouse_movement(const uint32_t x, const uint32_t y) {
     sol_sprite_set_frame(exit_btn, 0);
     sol_sprite_set_frame(delete_btn, 0);
 
-    sol_status_check(sol_sprite_get_info(cspr, &info), "Unable to get sprite info.");
-    //if (sol_sprite_get_frame(cspr) < 2) {
-    if (info.current_frame < 2) {
+    if (sol_sprite_get_info(cspr, &info) == SOL_SUCCESS
+            && (info.current_frame < 2)) {
         sol_sprite_set_frame(cspr, 1);
     }
 
     if (last_spr != SPRITE_ERROR && last_spr != cspr) {
         sol_status_check(sol_sprite_get_info(last_spr, &info), "Unable to get sprite info.");
-        //if (sol_sprite_get_frame(last_spr) < 2) {
         if (info.current_frame < 2) {
             sol_sprite_set_frame(last_spr, 0);
         }

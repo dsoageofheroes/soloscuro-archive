@@ -285,7 +285,7 @@ void clear_local_vars() {
 }
 
 extern sol_status_t sol_gpl_pop_data_ptr(unsigned char **d) {
-    if (gpl_state_pos < 0) {
+    if (gpl_state_pos <= 0) {
         return SOL_OUT_OF_RANGE;
     }
 
@@ -569,3 +569,10 @@ void print_vars(int what) {
         printf("\n");
     }
 }
+
+extern void gpl_print_next_bytes(int amt) {
+    for (int i = 0; i < amt; i++) {
+        printf("0x%02x ", (uint8_t) *(gpl_data + i));
+    }
+}
+

@@ -80,6 +80,17 @@ extern sol_status_t sol_label_create_at_pos(int parent, int id, char* text, sol_
     return SOL_SUCCESS;
 }
 
+extern sol_status_t sol_label_free(sol_label_t *l) {
+    if (!l) { return SOL_NULL_ARGUMENT; }
+
+    if (l->text) {
+        free(l->text);
+        l->text = NULL;
+    }
+
+    return SOL_SUCCESS;
+}
+
 extern sol_status_t sol_label_point_in(sol_label_t *label, const int32_t x, const int32_t y, sol_label_t **l) {
     uint32_t font_h, font_w;
 

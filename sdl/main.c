@@ -305,9 +305,6 @@ static void init() {
     if (extract_items) {
         export_all_items(extract_items);
     }
-    if (extract_gpl) {
-        sol_gpl_lua_load_all_scripts();
-    }
 }
 
 void parse_args(int argc, char *argv[]) {
@@ -358,6 +355,11 @@ int main(int argc, char *argv[]) {
         // gff_init is not handled in sol_lua_load_preload IF the game_type is DARKSUN_UNKNOWN
         gff_init();
         gff_load_directory(ds1_gffs);
+    }
+
+    if (extract_gpl) {
+        sol_gpl_init();
+        return sol_gpl_lua_load_all_scripts();
     }
 
     gui_init();

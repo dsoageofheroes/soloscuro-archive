@@ -35,7 +35,7 @@ extern sol_status_t sol_gpl_read_text(char **ret) {
         case STRING_COMPRESSED:
             sol_gpl_get_byte(&b);
             read_compressed();
-            //printf("STRING_COMPRESSED: gpl_global_string = '%s'\n", gpl_global_string);
+            //printf("STRING_COMPRESSED: gpl_global_string = '%s'\n", sol_gpl_global_string);
             *ret = (char*)sol_gpl_global_string;
             return SOL_SUCCESS;
     }

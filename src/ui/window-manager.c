@@ -24,6 +24,7 @@
 
 static sol_wops_t windows[MAX_SCREENS];
 static uint32_t window_pos = 0;
+static uint32_t mousex, mousey;
 
 extern sol_status_t sol_window_init() {
     memset(windows, 0x0, sizeof(sol_wops_t) * MAX_SCREENS);
@@ -72,8 +73,7 @@ extern sol_status_t sol_window_toggle(sol_wops_t *the_window, const uint32_t x, 
     }
 
     if (pos >= window_pos) { // not found so turn on.
-        sol_window_load(window_pos++, the_window, x, y);
-        return SOL_SUCCESS;
+        return sol_window_load(window_pos++, the_window, x, y);
     }
 
     tmp = windows[pos]; // Found, so we bring to the front, then pop.
@@ -100,8 +100,8 @@ extern sol_status_t sol_window_push(sol_wops_t *window, const uint32_t x, const 
             return SOL_SUCCESS;
         }
     }
-    sol_window_load(window_pos++, window, x, y);
-    return SOL_SUCCESS;
+
+    return sol_window_load(window_pos++, window, x, y);
 }
 
 extern sol_status_t sol_window_load_region(const int region) {
@@ -146,8 +146,6 @@ extern sol_status_t sol_window_render(const uint32_t xmappos, const uint32_t yma
     return SOL_SUCCESS;
 }
 
-static uint32_t mousex, mousey;
-
 extern sol_status_t sol_window_handle_mouse(const uint32_t x, const uint32_t y) {
     mousex = x;
     mousey = y;
@@ -162,7 +160,6 @@ extern sol_status_t sol_window_handle_mouse(const uint32_t x, const uint32_t y) 
 extern sol_status_t sol_window_handle_mouse_down(const sol_mouse_button_t button, const uint32_t x, const uint32_t y) {
     for (int i = MAX_SCREENS-1; i >= 0; i--) {
         if (windows[i].mouse_down && windows[i].mouse_down(button, x, y)) {
-            i = 0; // exit loop, mouse has been handled!
             return SOL_SUCCESS;
         }
     }

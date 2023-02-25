@@ -195,7 +195,8 @@ extern sol_status_t sol_sprite_set_frame(const sol_sprite_t id, const uint16_t f
 
 extern sol_status_t sol_sprite_increment_frame(const sol_sprite_t id, const int16_t amt) {
     if (!valid_id(id))            { return SOL_SPRITE_NOT_FOUND; }
-    if (sprites[id].pos + amt >= sprites[id].len) { return SOL_OUT_OF_RANGE; }
+    if (sprites[id].pos + amt >= sprites[id].len
+            || sprites[id].pos + amt < 0) { return SOL_OUT_OF_RANGE; }
     sprites[id].pos += amt;
 
     return SOL_SUCCESS;
