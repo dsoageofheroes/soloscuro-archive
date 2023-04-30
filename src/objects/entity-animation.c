@@ -651,7 +651,7 @@ extern sol_status_t sol_entity_animation_update(sol_entity_t *entity, const int1
 
 
 extern sol_status_t sol_entity_animation_list_empty(sol_entity_animation_list_t *list) {
-    return (list && list->head) ? SOL_SUCCESS : SOL_NOT_EMPTY;
+    return (list && list->head) ? SOL_NOT_EMPTY : SOL_SUCCESS;
 }
 
 static void set_anim(sol_entity_t *entity) {
@@ -744,7 +744,7 @@ static int apply_action(sol_entity_t *entity, sol_entity_action_t *action) {
                                 break;
         default:
                                 error("Unhandled action: %d\n", action->action);
-                                exit(1);
+                                //exit(1);
     }
 
     //printf("(%d, %d)\n", entity->mapx, entity->mapy);

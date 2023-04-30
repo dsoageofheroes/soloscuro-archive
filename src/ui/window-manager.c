@@ -119,16 +119,26 @@ extern sol_status_t sol_window_load_region(const int region) {
     sol_status_check(sol_region_manager_load_etab(reg),
             "Unable to load etab");
 
+    sol_status_check(sol_region_load_sprites(reg), "Unable to load region's sprites.");
+
     sol_entity_list_for_each(reg->entities, dude) {
-        sol_entity_update_scmd(dude);
+        //printf("ID: %d\n", dude->ds_id);
+        sol_status_check(sol_entity_update_scmd(dude), "Unable to update dude's scmd!\n");
         //sol_status_check(sol_animate_shift_entity(reg->entities, entity_list_find(reg->entities, dude)),
-            //"Unable to shift entity during map load.");
+        sol_entity_list_node_t *node;
+        sol_entity_list_find(reg->entities, dude, &node);
+        sol_status_check(sol_animate_shift_entity(reg->entities, node),
+            "Unable to shift entity during map load.");
     }
+    // 10511, 2600
+    // -1203, bmp:1860
+    //exit(1);
 
     sol_center_on_player();
 
     // Now that we are loaded, execute the script!
     sol_gpl_lua_execute_script(reg->map_id, 0, 1);
+
     return SOL_SUCCESS;
 }
 

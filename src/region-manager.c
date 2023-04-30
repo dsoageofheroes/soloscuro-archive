@@ -165,7 +165,7 @@ extern sol_status_t sol_region_manager_set_current(sol_region_t *region) {
     if (!region) { return SOL_NULL_ARGUMENT; }
 
     sol_entity_t *player;
-    sol_player_get_active(&player);
+    if (sol_player_get_active(&player) != SOL_SUCCESS) { player = NULL; }
     sol_region_manager_remove_players();
 
     for (int i = 0; i < MAX_REGIONS; i++) {
@@ -179,7 +179,7 @@ extern sol_status_t sol_region_manager_set_current(sol_region_t *region) {
     }
 
     if (player) {
-        sol_entity_list_add(region->entities, player, NULL);
+        sol_status_check(sol_entity_list_add(region->entities, player, NULL), "Could not add player to region.");
         if (!player->anim.scmd) { player->anim.scmd = ssi_scmd_empty(); }
     }
     sol_gpl_set_gname(GNAME_REGION, region->map_id);
@@ -195,8 +195,8 @@ extern sol_status_t sol_region_manager_remove_players() {
     if (!reg) { return SOL_NULL_ARGUMENT; }
 
     for (int i = 0; i < MAX_PCS; i++) {
-        sol_player_get(i, &player);
-        sol_entity_list_find(reg->entities, player, &node);
+        if (sol_player_get(i, &player) != SOL_SUCCESS) { continue; }
+        if (sol_entity_list_find(reg->entities, player, &node) != SOL_SUCCESS) { continue; }
         sol_entity_list_remove(reg->entities, node);
     }
     return SOL_SUCCESS;

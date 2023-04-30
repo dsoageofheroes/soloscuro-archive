@@ -64,6 +64,10 @@ static sol_status_t load_character_sprite(const int slot, const float zoom) {
                 zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2095 : 2099,
                 &players_spr[slot].main),
                     "Unable to load main sprite for half-elf");
+            sol_status_check(sol_sprite_new(pal, 0, 0,
+                zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2095 : 2099,
+                &dude->anim.spr),
+                    "Unable to load dude sprite for half-elf");
             dude->anim.bmp_id = (dude->gender == GENDER_MALE) ? 2095 : 2099;
             break;
         case RACE_HUMAN:
@@ -75,8 +79,11 @@ static sol_status_t load_character_sprite(const int slot, const float zoom) {
                 zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2095 : 2099,
                 &players_spr[slot].main),
                     "Unable to load main sprite for human");
+            sol_status_check(sol_sprite_new(pal, 0, 0,
+                zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2095 : 2099,
+                &dude->anim.spr),
+                    "Unable to load dude sprite for human");
             dude->anim.bmp_id = (dude->gender == GENDER_MALE) ? 2095 : 2099;
-            dude->anim.spr = players_spr[slot].main;
             break;
         case RACE_DWARF:
             sol_status_check(sol_sprite_new(pal, 0, 0,
@@ -87,6 +94,10 @@ static sol_status_t load_character_sprite(const int slot, const float zoom) {
                 zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2055 : 2053,
                 &players_spr[slot].main),
                     "Unable to load main sprite for dwarf");
+            sol_status_check(sol_sprite_new(pal, 0, 0,
+                zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2055 : 2053,
+                &dude->anim.spr),
+                    "Unable to load dude sprite for dwarf");
             dude->anim.bmp_id = (dude->gender == GENDER_MALE) ? 2055 : 2053;
             break;
         case RACE_ELF:
@@ -98,6 +109,10 @@ static sol_status_t load_character_sprite(const int slot, const float zoom) {
                 zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2061 : 2059,
                 &players_spr[slot].main),
                     "Unable to load main sprite for elf");
+            sol_status_check(sol_sprite_new(pal, 0, 0,
+                zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2061 : 2059,
+                &dude->anim.spr),
+                    "Unable to load dude sprite for elf");
             dude->anim.bmp_id = (dude->gender == GENDER_MALE) ? 2061 : 2059;
             break;
         case RACE_HALFGIANT:
@@ -109,6 +124,10 @@ static sol_status_t load_character_sprite(const int slot, const float zoom) {
                 zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2072 : 2074,
                 &players_spr[slot].main),
                     "Unable to load main sprite for half-giant");
+            sol_status_check(sol_sprite_new(pal, 0, 0,
+                zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2072 : 2074,
+                &dude->anim.spr),
+                    "Unable to load dude sprite for half-giant");
             dude->anim.bmp_id = (dude->gender == GENDER_MALE) ? 2072 : 2074;
             break;
         case RACE_HALFLING:
@@ -120,6 +139,10 @@ static sol_status_t load_character_sprite(const int slot, const float zoom) {
                 zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2068 : 2070,
                 &players_spr[slot].main),
                     "Unable to load main sprite for halfling");
+            sol_status_check(sol_sprite_new(pal, 0, 0,
+                zoom, OBJEX_GFF_INDEX, GFF_BMP, (dude->gender == GENDER_MALE) ? 2068 : 2070,
+                &dude->anim.spr),
+                    "Unable to load dude sprite for halfling");
             dude->anim.bmp_id = (dude->gender == GENDER_MALE) ? 2068 : 2070;
             break;
         case RACE_MUL:
@@ -131,6 +154,10 @@ static sol_status_t load_character_sprite(const int slot, const float zoom) {
                 zoom, OBJEX_GFF_INDEX, GFF_BMP, 2093,
                 &players_spr[slot].main),
                     "Unable to load main sprite for mul");
+            sol_status_check(sol_sprite_new(pal, 0, 0,
+                zoom, OBJEX_GFF_INDEX, GFF_BMP, 2093,
+                &dude->anim.spr),
+                    "Unable to load dude sprite for mul");
             dude->anim.bmp_id = 2093;
             break;
         case RACE_THRIKREEN:
@@ -142,7 +169,15 @@ static sol_status_t load_character_sprite(const int slot, const float zoom) {
                 zoom, OBJEX_GFF_INDEX, GFF_BMP, 2097,
                 &players_spr[slot].main),
                     "Unable to load main sprite for thrikreen");
+            sol_status_check(sol_sprite_new(pal, 0, 0,
+                zoom, OBJEX_GFF_INDEX, GFF_BMP, 2097,
+                &dude->anim.spr),
+                    "Unable to load dude sprite for thrikreen");
             dude->anim.bmp_id = 2097;
+            break;
+        default:
+            fprintf(stderr, "UNKNOWN RACE!\n");
+            exit(1);
             break;
     }
     return SOL_SUCCESS;
@@ -334,12 +369,13 @@ extern sol_status_t sol_player_update() {
         //sol_trigger_noorders(dude->mapx, dude->mapy);
         //sol_trigger_los_check();
     }
+
     if (xdiff != 0 || ydiff != 0) {
         sol_trigger_box_check(dude->mapx, dude->mapy);
         sol_trigger_tile_check(dude->mapx, dude->mapy);
-    }
 
-    sol_entity_attempt_move(dude, xdiff, ydiff, speed);
+        sol_status_warn(sol_entity_attempt_move(dude, xdiff, ydiff, speed), "trying to move...");
+    }
 
     count = settings_ticks_per_move() / speed;
     return SOL_SUCCESS;
@@ -379,7 +415,6 @@ extern sol_status_t sol_player_load(const int slot) {
 
     if (players[slot]->anim.spr == SPRITE_ERROR) {
         sol_player_load_zoom(slot, settings_zoom());
-        sol_player_load_graphics(slot);
         sol_player_get(slot, &player);
         sol_map_place_entity(player);
     }

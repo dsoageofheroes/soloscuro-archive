@@ -351,8 +351,10 @@ extern sol_status_t sol_entity_has_class(const sol_entity_t *dude, const uint16_
 extern sol_status_t sol_entity_gui_free(sol_entity_t *entity) {
     if (!entity) { return SOL_NULL_ARGUMENT; }
 
-    sol_status_warn(sol_sprite_free(entity->anim.spr), "Unable to free sprite.");
-    entity->anim.spr = SPRITE_ERROR;
+    if (entity->anim.spr != SPRITE_ERROR) {
+        sol_status_check(sol_sprite_free(entity->anim.spr), "Unable to free sprite.");
+        entity->anim.spr = SPRITE_ERROR;
+    }
 
     return SOL_SUCCESS;
 }
@@ -360,7 +362,6 @@ extern sol_status_t sol_entity_gui_free(sol_entity_t *entity) {
 extern sol_status_t sol_entity_free(sol_entity_t *dude) {
     if (!dude) { return SOL_NULL_ARGUMENT; }
     sol_region_t *reg;
-    sol_status_t status;
     sol_entity_list_node_t *node;
 
     sol_region_manager_get_current(&reg);
@@ -369,10 +370,9 @@ extern sol_status_t sol_entity_free(sol_entity_t *dude) {
 
     if (reg) {
         sol_entity_animation_list_remove_references(&reg->actions, dude);
-        if ((status = sol_entity_list_find(reg->entities, dude, &node)) != SOL_SUCCESS) {
-            return status;
+        if (sol_entity_list_find(reg->entities, dude, &node) == SOL_SUCCESS) {
+            sol_entity_list_remove(reg->entities, node);
         }
-        sol_entity_list_remove(reg->entities, node);
     }
 
     sol_entity_gui_free(dude);
@@ -421,8 +421,10 @@ extern sol_status_t sol_entity_attempt_move(sol_dude_t *dude, const int xdiff, c
         return SOL_NOT_TURN;
     }
 
+    printf("%d, %d, %d\n", xdiff, ydiff, sol_region_is_block(region, dude->mapy + ydiff, dude->mapx + xdiff));
+    printf("%d, %d, %d\n", xdiff, ydiff, sol_region_location_blocked(region, dude->mapy + ydiff, dude->mapx + xdiff));
     if (sol_region_is_block(region, dude->mapy + ydiff, dude->mapx + xdiff) == SOL_SUCCESS
-        || sol_region_location_blocked(region, dude->mapx + xdiff, dude->mapy + ydiff)) {
+        || sol_region_location_blocked(region, dude->mapx + xdiff, dude->mapy + ydiff) == SOL_SUCCESS) {
 
         if (cr && (xdiff != 0 || ydiff != 0)) {
             if ((status = sol_combat_attempt_action(cr, dude)) != SOL_SUCCESS) { return status; }
@@ -454,21 +456,20 @@ extern sol_status_t sol_entity_attempt_move(sol_dude_t *dude, const int xdiff, c
 
     if (cr && (status = sol_combat_attempt_action(cr, dude)) != SOL_SUCCESS) { return status; }
 
-    sol_entity_animation_list_add_speed(&(dude->actions), action, dude, NULL,
-            NULL, settings_ticks_per_move(), speed, 0);
+    sol_status_check(sol_entity_animation_list_add_speed(&(dude->actions), action, dude, NULL,
+            NULL, settings_ticks_per_move(), speed, 0), "failed to add animation.");
 
     //dude->mapx += xdiff;
     //dude->mapy += ydiff;
     //dude->anim.destx += (xdiff * 32);
     //dude->anim.desty += (ydiff * 32);
 
-    sol_region_t *reg;
-    sol_region_manager_get_current(&reg);
-    if (reg) {
-        if ((status = sol_entity_list_find(reg->entities, dude, &node)) != SOL_SUCCESS) {
+    if (region) {
+        if ((status = sol_entity_list_find(region->entities, dude, &node)) != SOL_SUCCESS) {
             return status;
         }
-        return sol_animate_shift_entity(reg->entities, node);
+    printf("HERE\n");
+        return sol_animate_shift_entity(region->entities, node);
     }
 
     return SOL_SUCCESS;

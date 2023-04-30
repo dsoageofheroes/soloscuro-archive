@@ -439,6 +439,7 @@ void inventory_window_render(void *data) {
     render_character();
 
     for (int i = 0; i < 4; i++) {
+        if (sol_player_exists(i) != SOL_SUCCESS) { continue; }
         sol_player_center(i, xoffset + 12 * zoom, yoffset + (4 + 48 * i) * zoom, 34 * zoom, 34 * zoom);
         sol_sprite_t spr;
         sol_player_get_sprite(i, &spr);

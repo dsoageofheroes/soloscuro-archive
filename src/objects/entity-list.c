@@ -182,7 +182,6 @@ extern sol_status_t sol_entity_list_find(sol_entity_list_t *list, sol_entity_t *
 
 extern sol_status_t sol_entity_list_load_etab(sol_entity_list_t *list, sol_static_list_t *ssl, const int gff_idx, const int map_id) {
     if (!list) { return SOL_NULL_ARGUMENT; }
-    sol_static_t s;
 
     if (!open_files[gff_idx].entry_table) {
         gff_chunk_header_t chunk = gff_find_chunk_header(gff_idx, GFF_ETAB, map_id);
@@ -199,25 +198,29 @@ extern sol_status_t sol_entity_list_load_etab(sol_entity_list_t *list, sol_stati
 
     for (int i = 0; i < num_objs; i++) {
         sol_dude_t *dude;
-        sol_entity_create_from_etab(open_files[gff_idx].entry_table, i, &dude);
+        sol_status_check(sol_entity_create_from_etab(open_files[gff_idx].entry_table, i, &dude), "Unable to create entity from etab!");
         //dude->anim.scmd = gff_map_get_object_scmd(gff_idx, map_id, i, 0);
         gff_map_fill_scmd_info(dude, gff_idx, map_id, i, 0);
         gff_map_load_scmd(dude);
-        sol_entity_list_add(list, dude, NULL);
         //if ((status = sol_animate_shift_entity(list, entity_list_add(list, dude)))) {
             //return status;
         //}
         if (dude->anim.scmd != NULL && !(dude->anim.scmd->flags & SCMD_LAST)) {
+            //printf("entity: %d\n", dude->ds_id);
+            sol_status_check(sol_entity_list_add(list, dude, NULL), "Unable to add entity to region's list!");
             sol_entity_animation_list_add(&dude->actions, EA_SCMD, dude, NULL, NULL, 30);
             // Animations are continued in the entity action list
         } else {
             // NEED TO ADD STATICS HERE!
-            sol_static_from_entity(dude, &s);
+            //printf("static: %d\n", dude->ds_id);
+            sol_static_t s;
+            sol_status_check(sol_static_from_entity(dude, &s), "Unable to create static.\n");
             //printf("have a non animating: (%d, %d, %d): %d + (%d, %d)\n",
                     //dude->mapx, dude->mapy, dude->mapz, dude->anim.bmp_id,
                     //dude->anim.xoffset, dude->anim.yoffset
                     //);
-            sol_static_list_add(ssl, &s);
+            sol_status_check(sol_static_list_add(ssl, &s), "Unable to add static.\n");
+            sol_status_check(sol_entity_free(dude), "Unable to free entity for static creation.");
         }
     }
 

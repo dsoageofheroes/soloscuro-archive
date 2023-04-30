@@ -52,7 +52,7 @@ static int32_t xmapdiff, ymapdiff;
 static sol_textbox_t *textbox = NULL;
 
 extern sol_status_t sol_textbox_set_current(sol_textbox_t *tb) {
-    if (!tb) { return SOL_NULL_ARGUMENT; }
+    // tb == NULL clears the textbox.
     textbox = tb;
     return SOL_SUCCESS;
 }

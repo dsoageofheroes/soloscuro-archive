@@ -57,5 +57,6 @@ extern sol_status_t sol_region_find_entity_by_id(const sol_region_t *reg, const 
 extern sol_status_t sol_region_find_entity_by_location(const sol_region_t *reg, const int x, const int y, sol_entity_t **e);
 extern sol_status_t sol_region_location_blocked(sol_region_t *reg, const int32_t x, const int32_t y);
 extern sol_status_t sol_region_is_block(sol_region_t *region, int row, int column);
+extern sol_status_t sol_region_load_sprites(sol_region_t *reg);
 
 #endif

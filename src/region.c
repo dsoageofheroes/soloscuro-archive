@@ -569,3 +569,60 @@ found:
     }
     return SOL_SUCCESS;
 }
+
+extern sol_status_t sol_region_load_sprites(sol_region_t *reg) {
+    sol_sprite_info_t  info;
+    sol_static_list_t *ssl;
+    sol_dude_t        *dude;
+    gff_palette_t     *pal;
+
+    if (!reg) { return SOL_NULL_ARGUMENT; }
+
+    ssl = &reg->statics;
+    pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + reg->map_id - 1;
+    for (size_t i = 0; i < ssl->pos; i++) {
+        animate_sprite_t *anim = &ssl->statics[i].anim;
+        if (ssl->statics[i].anim.spr == SPRITE_ERROR) {
+            //printf("loading static: %d, ", ssl->statics[i].ds_id);
+            sol_status_check(sol_sprite_new(pal,
+                anim->xoffset,
+                anim->yoffset,
+                settings_zoom(), OBJEX_GFF_INDEX, GFF_BMP,
+                anim->bmp_id, &anim->spr),
+                    "Unable to create sprite for static.");
+            sol_status_check(sol_sprite_get_info(anim->spr, &info), "Unable to get anim sprite info.");
+            anim->w = info.w;
+            anim->h = info.h;
+            anim->x = (ssl->statics[i].mapx * 16 + anim->xoffset) * settings_zoom();
+            anim->y = (ssl->statics[i].mapy * 16 + anim->yoffset + ssl->statics[i].mapz) * settings_zoom();
+            anim->destx = anim->x;
+            //entity->anim.destx -= sol_sprite_getw(entity->anim.spr) / 2;
+            anim->desty = anim->y;
+            //printf("(%d, %d)\n", anim->x, anim->y);
+            //sol_sprite_set_frame(anim->spr, anim->load_frame);
+        }
+    }
+
+    sol_entity_list_for_each(reg->entities, dude) {
+        if (dude->anim.spr == SPRITE_ERROR) {
+            animate_sprite_t *anim = &dude->anim;
+            sol_status_check(sol_sprite_new(pal,
+                anim->xoffset,
+                anim->yoffset,
+                settings_zoom(), OBJEX_GFF_INDEX, GFF_BMP,
+                anim->bmp_id, &anim->spr),
+                    "Unable to create sprite for static.");
+            sol_status_check(sol_sprite_get_info(anim->spr, &info), "Unable to get anim sprite info.");
+            anim->w = info.w;
+            anim->h = info.h;
+            anim->x = (dude->mapx * 16 + anim->xoffset) * settings_zoom();
+            anim->y = (dude->mapy * 16 + anim->yoffset + dude->mapz) * settings_zoom();
+            anim->destx = anim->x;
+            //entity->anim.destx -= sol_sprite_getw(entity->anim.spr) / 2;
+            anim->desty = anim->y;
+            //sol_sprite_set_frame(anim->spr, anim->load_frame);
+        }
+    }
+
+    return SOL_SUCCESS;
+}

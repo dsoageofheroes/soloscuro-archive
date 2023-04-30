@@ -52,6 +52,8 @@ void map_load(const uint32_t _x, const uint32_t _y) {
     if (!cmap && reg) {
         cmap = create_map();
         cmap->region = reg;
+    }
+    if (reg) {
         map_load_current_region();
         sol_center_on_player();
     }
@@ -81,6 +83,7 @@ static void map_load_current_region() {
     sol_background_load_region(map->region);
     if (map->region->map_id < 100 && map->region->map_id > 0) {
         pal = open_files[DSLDATA_GFF_INDEX].pals->palettes + map->region->map_id - 1;
+        //pal = open_files[RESOURCE_GFF_INDEX].pals->palettes + map->region->map_id - 1;
     } else {
         pal = open_files[RESOURCE_GFF_INDEX].pals->palettes;
     }
@@ -88,6 +91,7 @@ static void map_load_current_region() {
     sol_dude_t *dude;
     sol_entity_list_for_each(map->region->entities, dude) {
         if (dude->anim.spr == SPRITE_ERROR) {
+            //printf("Need to load: %s\n", dude->name ? dude->name : "");
             sprite_load_animation(dude, pal);
         }
     }
@@ -378,7 +382,6 @@ void map_render_anims() {
         sol_sprite_render_flip(anim->spr, hflip, vflip);
         //sol_sprite_render_black(anim->spr, hflip, vflip);
     }
-    //printf("amt = %d\n", amt);
 
     sol_animation_render(&(cmap->region->actions.head->ca));
 }

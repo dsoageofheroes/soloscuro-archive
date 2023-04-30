@@ -157,7 +157,6 @@ static int create_player (lua_State *l) {
     sol_entity_t *dude;
     sol_entity_create_default_human(&dude);
     sol_player_set(n, dude);
-    sol_player_load(n);
     sol_player_get(n, &player);
     return sol_lua_load_entity(l, player) == SOL_SUCCESS ? 1 : 0;
 }
